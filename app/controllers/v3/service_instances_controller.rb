@@ -12,9 +12,8 @@ require 'fetchers/service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
   def show
-    service_instance = ServiceInstance.where(guid: hashed_params[:guid]).first
-    service_instance_not_found! if service_instance.nil?
-    service_instance_not_found! unless can_read_service_instance?(service_instance)
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
 
     presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance)
     render status: :ok, json: presenter.to_json
@@ -101,6 +100,14 @@ class ServiceInstancesV3Controller < ApplicationController
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+  end
+
+  def credentials
+    service_instance = UserProvidedServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(service_instance.space.guid, service_instance.space.organization.guid)
+
+    render status: :ok, json: (service_instance.credentials || {})
   end
 
   private

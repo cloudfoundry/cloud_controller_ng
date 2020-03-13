@@ -196,6 +196,9 @@ module VCAP::CloudController::Presenters::V3
             },
             self: {
               href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
+            },
+            credentials: {
+              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/credentials"
             }
           }
         })

@@ -430,11 +430,11 @@ RSpec.describe 'V3 service plans' do
         get '/v3/service_plans?include=space.organization', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
-        expect(parsed_response['included']['spaces']).to have(2).element
+        expect(parsed_response['included']['spaces']).to have(2).elements
         expect(parsed_response['included']['spaces'][0]['guid']).to eq(space_1.guid)
         expect(parsed_response['included']['spaces'][1]['guid']).to eq(space_2.guid)
 
-        expect(parsed_response['included']['organizations']).to have(2).element
+        expect(parsed_response['included']['organizations']).to have(2).elements
         expect(parsed_response['included']['organizations'][0]['guid']).to eq(space_1.organization.guid)
         expect(parsed_response['included']['organizations'][1]['guid']).to eq(space_2.organization.guid)
       end

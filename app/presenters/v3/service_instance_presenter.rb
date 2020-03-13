@@ -8,44 +8,26 @@ module VCAP::CloudController
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
         def to_hash
-          h = {
+          correct_order(
+            hash_common.deep_merge(
+              if service_instance.class == ManagedServiceInstance
+                hash_additions_managed
+              else
+                hash_additions_user_provided
+              end
+            )
+          )
+        end
+
+        private
+
+        def hash_common
+          {
             guid: service_instance.guid,
             created_at: service_instance.created_at,
             updated_at: service_instance.updated_at,
             name: service_instance.name,
-            tags: service_instance.tags
-          }
-
-          h = if service_instance.class == ManagedServiceInstance
-                h.merge({
-                  type: 'managed',
-                  maintenance_info: maintenance_info,
-                  upgrade_available: upgrade_available,
-                  dashboard_url: service_instance.dashboard_url,
-                  last_operation: last_operation,
-                  relationships: {
-                    service_plan: {
-                      data: {
-                        guid: service_instance.service_plan.guid,
-                        name: service_instance.service_plan.name,
-                      }
-                    }
-                  },
-                  links: {
-                    service_plan: {
-                      href: url_builder.build_url(path: "/v3/service_plans/#{service_instance.service_plan.guid}")
-                    }
-                  }
-                })
-              else
-                h.merge({
-                  type: 'user-provided',
-                  syslog_drain_url: service_instance.syslog_drain_url,
-                  route_service_url: service_instance.route_service_url
-                })
-              end
-
-          h.deep_merge({
+            tags: service_instance.tags,
             relationships: {
               space: {
                 data: {
@@ -65,10 +47,55 @@ module VCAP::CloudController
                 href: url_builder.build_url(path: "/v3/spaces/#{service_instance.space.guid}")
               }
             }
-          })
+          }
         end
 
-        private
+        def hash_additions_managed
+          {
+            type: 'managed',
+            maintenance_info: maintenance_info,
+            upgrade_available: upgrade_available,
+            dashboard_url: service_instance.dashboard_url,
+            last_operation: last_operation,
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: service_instance.service_plan.guid,
+                  name: service_instance.service_plan.name,
+                }
+              }
+            },
+            links: {
+              service_plan: {
+                href: url_builder.build_url(path: "/v3/service_plans/#{service_instance.service_plan.guid}")
+              }
+            }
+          }
+        end
+
+        def hash_additions_user_provided
+          {
+            type: 'user-provided',
+            syslog_drain_url: service_instance.syslog_drain_url,
+            route_service_url: service_instance.route_service_url,
+            links: {
+              credentials: {
+                href: url_builder.build_url(path: "/v3/service_instances/#{service_instance.guid}/credentials")
+              }
+            }
+          }
+        end
+
+        def correct_order(hash)
+          relationships = hash.delete(:relationships)
+          metadata = hash.delete(:metadata)
+          links = hash.delete(:links)
+          hash.merge({
+                       relationships: relationships,
+                       metadata: metadata,
+                       links: links,
+                     })
+        end
 
         def url_builder
           VCAP::CloudController::Presenters::ApiUrlBuilder.new
