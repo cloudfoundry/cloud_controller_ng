@@ -1,0 +1,51 @@
+### Bind a staging security group to spaces
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups/[guid]/relationships/staging_spaces" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+  "data": [{ "guid": "space-guid1" }, { "guid": "space-guid2" }]
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :staging_security_group_spaces %>
+```
+
+This endpoint binds one or more spaces to a security group with the staging lifecycle.
+
+Staging app containers within these spaces will inherit the rules specified by this security group.
+
+Apps within these spaces must be restaged for these changes to take effect.
+
+Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+
+#### Definition
+`POST /v3/security_groups/:guid/relationships/staging_spaces`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-many relationship_](#to-many-relationships) | Space guids that will be bound to the security group.
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Space Manager | Can bind visible security groups to their spaces (visible groups are globally–enabled security groups or groups associated with a space they can see).
+Org Manager | Can bind visible security groups to their organizations' spaces (visible groups are globally–enabled security groups or groups associated with a space they can see).
