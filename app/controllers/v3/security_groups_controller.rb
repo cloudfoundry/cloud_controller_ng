@@ -141,6 +141,23 @@ class SecurityGroupsController < ApplicationController
     unprocessable!(e)
   end
 
+  def delete_staging_spaces
+    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
+    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+
+    space = Space.find(guid: hashed_params[:space_guid])
+    unprocessable_space! unless space
+    unprocessable_space! unless security_group.staging_spaces.include?(space)
+
+    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+
+    SecurityGroupUnapply.unapply_staging(security_group, space)
+
+    render status: :no_content, json: {}
+  rescue SecurityGroupUnapply::Error => e
+    unprocessable!(e)
+  end
+
   def unprocessable_space!
     unprocessable!("Unable to unbind security group from space with guid '#{hashed_params[:space_guid]}'. Ensure the space is bound to this security group.")
   end
