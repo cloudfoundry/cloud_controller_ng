@@ -1102,4 +1102,89 @@ RSpec.describe 'Security_Groups Request' do
       end
     end
   end
+
+  describe 'DELETE /v3/security_groups/:security_group_guid/relationships/running_spaces' do
+    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:api_call) { lambda { |user_headers| delete "/v3/security_groups/#{security_group.guid}/relationships/running_spaces/#{space.guid}", nil, user_headers } }
+
+    context 'unbinding a running security group from a space' do
+      context 'when the security group is NOT globally enabled NOR associated with any spaces' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 422 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group is NOT globally enabled, associated with spaces' do
+        before do
+          security_group.add_space(space)
+        end
+
+        let(:db_check) do
+          lambda do
+            expect(security_group.reload.spaces.count).to eq(0)
+          end
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 204 }
+          h['space_manager'] = { code: 204 }
+          h['org_manager'] = { code: 204 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group is globally enabled and associated with spaces' do
+        before do
+          security_group.update(running_default: true)
+          security_group.add_space(space)
+        end
+
+        let(:db_check) do
+          lambda do
+            expect(security_group.reload.spaces.count).to eq(0)
+          end
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 204 }
+          h['space_manager'] = { code: 204 }
+          h['org_manager'] = { code: 204 }
+          h
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group does not exist' do
+        it 'returns a 404' do
+          delete "/v3/security_groups/non-existent-group/relationships/running_spaces/#{space.guid}", nil, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Security group not found')
+        end
+      end
+
+      context 'when the space is invalid' do
+        it 'returns an error' do
+          delete "/v3/security_groups/#{security_group.guid}/relationships/running_spaces/fake-space", nil, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message("Unable to unbind security group from space with guid 'fake-space'. Ensure the space is bound to this security group.")
+        end
+      end
+    end
+  end
 end

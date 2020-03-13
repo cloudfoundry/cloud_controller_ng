@@ -5,6 +5,7 @@ require 'messages/security_group_update_message'
 require 'actions/security_group_create'
 require 'actions/security_group_apply'
 require 'actions/security_group_update'
+require 'actions/security_group_unapply'
 require 'presenters/v3/security_group_presenter'
 require 'fetchers/security_group_list_fetcher'
 
@@ -121,5 +122,26 @@ class SecurityGroupsController < ApplicationController
     )
   rescue SecurityGroupUpdate::Error => e
     unprocessable!(e)
+  end
+
+  def delete_running_spaces
+    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
+    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+
+    space = Space.find(guid: hashed_params[:space_guid])
+    unprocessable_space! unless space
+    unprocessable_space! unless security_group.spaces.include?(space)
+
+    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+
+    SecurityGroupUnapply.unapply_running(security_group, space)
+
+    render status: :no_content, json: {}
+  rescue SecurityGroupUnapply::Error => e
+    unprocessable!(e)
+  end
+
+  def unprocessable_space!
+    unprocessable!("Unable to unbind security group from space with guid '#{hashed_params[:space_guid]}'. Ensure the space is bound to this security group.")
   end
 end

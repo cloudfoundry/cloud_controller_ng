@@ -169,6 +169,7 @@ Rails.application.routes.draw do
   get '/security_groups/:guid', to: 'security_groups#show'
   get '/security_groups', to: 'security_groups#index'
   patch '/security_groups/:guid', to: 'security_groups#update'
+  delete '/security_groups/:guid/relationships/running_spaces/:space_guid', to: 'security_groups#delete_running_spaces'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

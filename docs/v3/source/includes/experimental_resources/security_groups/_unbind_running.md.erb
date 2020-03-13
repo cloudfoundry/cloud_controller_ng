@@ -1,0 +1,35 @@
+### Unbind a running security group from a space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups/[guid]/relationships/running_spaces/[space_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+Content-Type: application/json
+```
+
+This endpoint removes a space from a security group with the running lifecycle.
+
+Apps within this space must be restarted for these changes to take effect.
+
+#### Definition
+`DELETE /v3/security_groups/:guid/relationships/running_spaces/:space_guid`
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Space Manager | Can unbind visible security groups from their spaces (visible groups are globally–enabled security groups or groups associated with a space they can see).
+Org Manager | Can unbind visible security groups from their organizations' spaces (visible groups are globally–enabled security groups or groups associated with a space they can see).
