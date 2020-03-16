@@ -288,6 +288,7 @@ includes:
   - experimental_resources/security_groups/get
   - experimental_resources/security_groups/list
   - experimental_resources/security_groups/update
+  - experimental_resources/security_groups/delete
   - experimental_resources/security_groups/bind_running
   - experimental_resources/security_groups/bind_staging
   - experimental_resources/security_groups/unbind_running
