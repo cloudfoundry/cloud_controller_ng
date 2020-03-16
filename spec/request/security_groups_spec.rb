@@ -1272,4 +1272,70 @@ RSpec.describe 'Security_Groups Request' do
       end
     end
   end
+
+  describe 'DELETE /v3/security_groups/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
+    let(:db_check) do
+      lambda do
+        last_job = VCAP::CloudController::PollableJobModel.last
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+        expect(last_job.resource_type).to eq('security_group')
+
+        get "/v3/jobs/#{last_job.guid}", nil, admin_header
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['operation']).to eq('security_group.delete')
+        expect(parsed_response['links']['security_group']['href']).to match(%r(/v3/security_groups/#{security_group.guid}))
+
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+        get "/v3/security_groups/#{security_group.guid}", nil, admin_header
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the security group is only globally enabled' do
+      let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the security group is applied to a space but not globally enabled' do
+      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before do
+        security_group.add_staging_space(space)
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the security group is neither globally enabled nor associated with any spaces' do
+      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = { code: 202 }
+        h['global_auditor'] = { code: 403 }
+        h['admin_read_only'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+  end
 end

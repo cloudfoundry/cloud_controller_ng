@@ -6,6 +6,7 @@ require 'actions/security_group_create'
 require 'actions/security_group_apply'
 require 'actions/security_group_update'
 require 'actions/security_group_unapply'
+require 'actions/security_group_delete'
 require 'presenters/v3/security_group_presenter'
 require 'fetchers/security_group_list_fetcher'
 
@@ -156,6 +157,20 @@ class SecurityGroupsController < ApplicationController
     render status: :no_content, json: {}
   rescue SecurityGroupUnapply::Error => e
     unprocessable!(e)
+  end
+
+  def destroy
+    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
+    unauthorized! unless permission_queryer.can_write_globally?
+    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+
+    delete_action = SecurityGroupDeleteAction.new
+
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(SecurityGroup, security_group.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def unprocessable_space!
