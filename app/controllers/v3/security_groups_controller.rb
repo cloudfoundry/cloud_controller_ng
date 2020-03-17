@@ -40,11 +40,11 @@ class SecurityGroupsController < ApplicationController
     end
     unauthorized! if unwritable_space_guids.any?
 
-    applied_spaces = SecurityGroupApply.apply_running(security_group, message, permission_queryer.readable_space_guids)
+    SecurityGroupApply.apply_running(security_group, message, permission_queryer.readable_space_guids)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "security_groups/#{security_group.guid}",
-      applied_spaces,
+      security_group.spaces,
       'running_spaces',
       build_related: false
     )
@@ -65,11 +65,11 @@ class SecurityGroupsController < ApplicationController
     end
     unauthorized! if unwritable_space_guids.any?
 
-    applied_spaces = SecurityGroupApply.apply_staging(security_group, message, permission_queryer.readable_space_guids)
+    SecurityGroupApply.apply_staging(security_group, message, permission_queryer.readable_space_guids)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "security_groups/#{security_group.guid}",
-      applied_spaces,
+      security_group.staging_spaces,
       'staging_spaces',
       build_related: false
     )

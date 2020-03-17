@@ -203,9 +203,11 @@ RSpec.describe 'Security_Groups Request' do
 
       context 'when the security group is NOT globally enabled, associated with spaces' do
         before do
+          security_group.add_space(another_space)
           security_group.add_staging_space(space)
         end
 
+        let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
         let(:params) do
           {
             'data': [
@@ -216,9 +218,10 @@ RSpec.describe 'Security_Groups Request' do
 
         let(:expected_response) do
           {
-            data: [
+            data: contain_exactly(
               { guid: 'space-guid' },
-            ],
+              { guid: 'another-space-guid' },
+            ),
             links: {
               self: {
                 href: "#{link_prefix}/v3/security_groups/#{security_group.guid}/relationships/running_spaces"
@@ -351,9 +354,11 @@ RSpec.describe 'Security_Groups Request' do
 
       context 'when the security group is NOT globally enabled, associated with spaces' do
         before do
-          security_group.add_staging_space(space)
+          security_group.add_space(space)
+          security_group.add_staging_space(another_space)
         end
 
+        let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
         let(:params) do
           {
             'data': [
@@ -364,9 +369,10 @@ RSpec.describe 'Security_Groups Request' do
 
         let(:expected_response) do
           {
-            data: [
+            data: contain_exactly(
               { guid: 'space-guid' },
-            ],
+              { guid: 'another-space-guid' },
+            ),
             links: {
               self: {
                 href: "#{link_prefix}/v3/security_groups/#{security_group.guid}/relationships/staging_spaces"
