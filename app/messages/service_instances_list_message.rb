@@ -6,6 +6,8 @@ module VCAP::CloudController
       :names,
       :space_guids,
       :type,
+      :service_plan_guids,
+      :service_plan_names
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -16,7 +18,7 @@ module VCAP::CloudController
       }
 
     def self.from_params(params)
-      super(params, %w(names space_guids))
+      super(params, %w(names space_guids service_plan_guids service_plan_names))
     end
 
     def valid_order_by_values

@@ -13,6 +13,8 @@ module VCAP::CloudController
           'space_guids' => 'space-1, space-2, space-3',
           'label_selector' => 'key=value',
           'type' => 'managed',
+          'service_plan_names' => 'plan1, plan2',
+          'service_plan_guids' => 'guid1, guid2'
         }.with_indifferent_access
       end
 
@@ -28,6 +30,8 @@ module VCAP::CloudController
         expect(message.space_guids).to match_array(['space-1', 'space-2', 'space-3'])
         expect(message.label_selector).to eq('key=value')
         expect(message.type).to eq('managed')
+        expect(message.service_plan_guids).to match_array(['guid1', 'guid2'])
+        expect(message.service_plan_names).to match_array(['plan1', 'plan2'])
       end
 
       it 'converts requested keys to symbols' do
@@ -39,21 +43,13 @@ module VCAP::CloudController
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:space_guids)).to be_truthy
         expect(message.requested?(:label_selector)).to be_truthy
+        expect(message.requested?(:type)).to be_truthy
+        expect(message.requested?(:service_plan_guids)).to be_truthy
+        expect(message.requested?(:service_plan_names)).to be_truthy
       end
     end
 
     describe 'fields' do
-      it 'accepts a set of fields' do
-        message = ServiceInstancesListMessage.from_params({
-            page: 1,
-            per_page: 5,
-            order_by: 'created_at',
-            names: ['rabbitmq', 'redis'],
-            space_guids: ['space-1', 'space-2'],
-        }.with_indifferent_access)
-        expect(message).to be_valid
-      end
-
       it 'accepts an empty set' do
         message = ServiceInstancesListMessage.from_params({})
         expect(message).to be_valid

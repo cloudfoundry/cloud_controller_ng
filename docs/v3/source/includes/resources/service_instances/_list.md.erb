@@ -32,8 +32,10 @@ This includes access granted by service instance sharing.
 Name | Type | Description
 ---- | ---- | ------------
 **names** | _list of strings_ | Comma-delimited list of service instance names to filter by.
-**space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
 **type** | _string_ | Filter by type. Valid values are `managed` and `user-provided`.
+**space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**service_plan_guids** | _list of strings_ | Comma-delimited list of service plan guids to filter by.
+**service_plan_names** | _list of strings_ | Comma-delimited list of service plan names to filter by.
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
 **label_selector** | _string_ | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements.

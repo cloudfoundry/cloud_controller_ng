@@ -12,6 +12,10 @@ module VCAP::CloudController
         end
       end
 
+      if message.requested?(:service_plan_names) || message.requested?(:service_plan_guids)
+        dataset = dataset.left_join(:service_plans, id: Sequel[:service_instances][:service_plan_id])
+      end
+
       filter(dataset, message).
         select_all(:service_instances).
         distinct
@@ -38,6 +42,14 @@ module VCAP::CloudController
           (Sequel[:spaces][:guid] =~ message.space_guids) |
           (Sequel[:service_instance_shares][:target_space_guid] =~ message.space_guids)
         end
+      end
+
+      if message.requested?(:service_plan_guids)
+        dataset = dataset.where { Sequel[:service_plans][:guid] =~ message.service_plan_guids }
+      end
+
+      if message.requested?(:service_plan_names)
+        dataset = dataset.where { Sequel[:service_plans][:name] =~ message.service_plan_names }
       end
 
       if message.requested?(:label_selector)

@@ -107,7 +107,9 @@ RSpec.describe 'V3 service instances' do
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo,bar',
-          type: 'managed'
+          type: 'managed',
+          service_plan_guids: ['guid-1', 'guid-2'],
+          service_plan_names: ['plan-1', 'plan-2']
         }
       end
 
@@ -200,6 +202,22 @@ RSpec.describe 'V3 service instances' do
           create_managed_json(msi_1),
           create_managed_json(msi_2),
           create_managed_json(ssi),
+        )
+      end
+
+      it 'filters by service_plan_guids' do
+        get "/v3/service_instances?service_plan_guids=#{msi_1.service_plan.guid},#{msi_2.service_plan.guid}", nil, admin_headers
+        check_filtered_instances(
+          create_managed_json(msi_1),
+          create_managed_json(msi_2)
+        )
+      end
+
+      it 'filters by service_plan_names' do
+        get "/v3/service_instances?service_plan_names=#{msi_1.service_plan.name},#{msi_2.service_plan.name}", nil, admin_headers
+        check_filtered_instances(
+          create_managed_json(msi_1),
+          create_managed_json(msi_2)
         )
       end
     end

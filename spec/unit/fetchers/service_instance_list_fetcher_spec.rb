@@ -90,6 +90,26 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'by service_plan_names' do
+          let!(:msi_4) { ManagedServiceInstance.make(space: space_1, service_plan: msi_1.service_plan) }
+          let(:filters) { { service_plan_names: [msi_1.service_plan.name, msi_2.service_plan.name, 'non-existent'] } }
+
+          it 'returns instances with matching service plan names' do
+            expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_4)
+            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1, msi_4)
+          end
+        end
+
+        context 'by service_plan_guids' do
+          let!(:msi_4) { ManagedServiceInstance.make(space: space_1, service_plan: msi_1.service_plan) }
+          let(:filters) { { service_plan_guids: [msi_1.service_plan.guid, msi_2.service_plan.guid, 'non-existent'] } }
+
+          it 'returns instances with matching service plan guids' do
+            expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_4)
+            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1, msi_4)
+          end
+        end
       end
     end
   end
