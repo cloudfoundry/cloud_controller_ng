@@ -24,6 +24,15 @@ module VCAP::CloudController
         dataset = dataset.where(service_instances__name: message.names)
       end
 
+      if message.requested?(:type)
+        dataset = case message.type
+                  when 'managed'
+                    dataset.where { (Sequel[:service_instances][:is_gateway_service] =~ true) }
+                  when 'user-provided'
+                    dataset.where { (Sequel[:service_instances][:is_gateway_service] =~ false) }
+                  end
+      end
+
       if message.requested?(:space_guids)
         dataset = dataset.where do
           (Sequel[:spaces][:guid] =~ message.space_guids) |

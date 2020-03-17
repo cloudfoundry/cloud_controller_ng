@@ -107,6 +107,7 @@ RSpec.describe 'V3 service instances' do
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo,bar',
+          type: 'managed'
         }
       end
 
@@ -190,6 +191,15 @@ RSpec.describe 'V3 service instances' do
           create_managed_json(msi_1, labels: { fruit: 'strawberry' }),
           create_user_provided_json(upsi_2, labels: { fruit: 'strawberry' }),
           create_managed_json(ssi, labels: { fruit: 'strawberry' }),
+        )
+      end
+
+      it 'filters by type' do
+        get '/v3/service_instances?type=managed', nil, admin_headers
+        check_filtered_instances(
+          create_managed_json(msi_1),
+          create_managed_json(msi_2),
+          create_managed_json(ssi),
         )
       end
     end

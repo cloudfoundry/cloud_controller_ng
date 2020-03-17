@@ -49,26 +49,46 @@ module VCAP::CloudController
             expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1)
           end
         end
-      end
 
-      context 'by space_guids' do
-        let(:filters) { { space_guids: [space_1.guid, 'no-such-space-guid'] } }
+        context 'by space_guids' do
+          let(:filters) { { space_guids: [space_1.guid, 'no-such-space-guid'] } }
 
-        it 'returns instances with matching space guids' do
-          expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, upsi)
-          expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_1, upsi)
-        end
-      end
-
-      context 'by label selector' do
-        let(:filters) { { 'label_selector' => 'key=value' } }
-        before do
-          ServiceInstanceLabelModel.make(resource_guid: msi_2.guid, key_name: 'key', value: 'value')
+          it 'returns instances with matching space guids' do
+            expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, upsi)
+            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_1, upsi)
+          end
         end
 
-        it 'returns instances with matching labels' do
-          expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_2)
-          expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_2)
+        context 'by label selector' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+          before do
+            ServiceInstanceLabelModel.make(resource_guid: msi_2.guid, key_name: 'key', value: 'value')
+          end
+
+          it 'returns instances with matching labels' do
+            expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_2)
+            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_2)
+          end
+        end
+
+        context 'by type' do
+          context 'managed' do
+            let(:filters) { { type: 'managed' } }
+
+            it 'returns instances with matching type' do
+              expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_3, ssi)
+              expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1)
+            end
+          end
+
+          context 'user-provided' do
+            let(:filters) { { type: 'user-provided' } }
+
+            it 'returns instances with matching type' do
+              expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(upsi)
+              expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(upsi)
+            end
+          end
         end
       end
     end

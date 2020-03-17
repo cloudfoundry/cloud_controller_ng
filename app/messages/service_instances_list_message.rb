@@ -5,12 +5,15 @@ module VCAP::CloudController
     register_allowed_keys [
       :names,
       :space_guids,
+      :type,
     ]
 
     validates_with NoAdditionalParamsValidator
 
-    validates :names, array: true, allow_nil: true
-    validates :space_guids, array: true, allow_nil: true
+    validates :type, allow_nil: true, inclusion: {
+        in: %w(managed user-provided),
+        message: "must be one of 'managed', 'user-provided'"
+      }
 
     def self.from_params(params)
       super(params, %w(names space_guids))
