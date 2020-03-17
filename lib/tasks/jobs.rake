@@ -62,11 +62,7 @@ namespace :jobs do
 
     def start_working
       config = RakeConfig.config
-      if RakeConfig.context == :api
-        BackgroundJobEnvironment.new(config).setup_environment
-      else
-        BackgroundJobEnvironment.new(config).setup_environment(RakeConfig.config.get(:readiness_port, :cloud_controller_worker))
-      end
+      BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
       if config.get(:loggregator) && config.get(:loggregator, :router)
@@ -79,6 +75,22 @@ namespace :jobs do
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
       worker.start
+    end
+
+    private
+
+    def readiness_port
+      if is_first_generic_worker_on_machine?
+        RakeConfig.config.get(:readiness_port, :cloud_controller_worker)
+      else
+        nil
+      end
+    end
+
+    private
+
+    def is_first_generic_worker_on_machine?
+      RakeConfig.context != :api && ENV['INDEX']&.to_i == 1
     end
   end
 end
