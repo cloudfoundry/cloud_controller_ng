@@ -10,11 +10,10 @@ module CloudFoundry
         request = ActionDispatch::Request.new(env)
 
         @logger.info(
-          sprintf('Started %<method>s "%<path>s" for user: %<user>s, ip: %<ip>s with vcap-request-id: %<request_id>s at %<at>s',
+          sprintf('Started %<method>s "%<path>s" for user: %<user>s with vcap-request-id: %<request_id>s at %<at>s',
             method: request.request_method,
             path: request.filtered_path,
             user: env['cf.user_guid'],
-            ip: request.ip,
             request_id: env['cf.request_id'],
             at: Time.now.utc)
         )
