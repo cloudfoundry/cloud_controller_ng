@@ -82,12 +82,8 @@ namespace :jobs do
     def readiness_port
       if is_first_generic_worker_on_machine?
         RakeConfig.config.get(:readiness_port, :cloud_controller_worker)
-      else
-        nil
       end
     end
-
-    private
 
     def is_first_generic_worker_on_machine?
       RakeConfig.context != :api && ENV['INDEX']&.to_i == 1
