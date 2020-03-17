@@ -56,7 +56,7 @@ RSpec.describe 'V3 service instances' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'shared service' do
+    context 'shared service instance' do
       let(:another_space) { VCAP::CloudController::Space.make }
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
       let(:guid) { instance.guid }
@@ -70,6 +70,7 @@ RSpec.describe 'V3 service instances' do
           code: 200,
           response_object: create_managed_json(instance),
         )
+
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -203,45 +204,11 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances/:guid/credentials' do
-    let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
-
-    let(:credentials) { { 'fake-key' => 'fake-value' } }
-    let(:guid) { instance.guid }
-
-    context 'service instance does not exist' do
-      let(:guid) { 'no-such-service-instance' }
-
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    context 'no credentials set' do
-      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: nil) }
-
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: {},
-        )
-
-        h['global_auditor'] = { code: 403 }
-        h['space_manager'] = { code: 403 }
-        h['space_auditor'] = { code: 403 }
-        h['org_manager'] = { code: 403 }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    context 'a user-provided service instance' do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
+      let(:credentials) { { 'fake-key' => 'fake-value' } }
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: credentials) }
+      let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
@@ -258,18 +225,176 @@ RSpec.describe 'V3 service instances' do
         h['no_role'] = { code: 404 }
         h
       end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'managed service instance' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    it 'responds with an empty obect when no credentials were set' do
+      upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: nil)
+      get "/v3/service_instances/#{upsi.guid}/credentials", nil, admin_headers
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response).to match_json_response({})
+    end
+
+    it 'responds with 404 when the instance does not exist' do
+      get '/v3/service_instances/does-not-exist/credentials', nil, admin_headers
+      expect(last_response).to have_status_code(404)
+    end
+
+    it 'responds with 404 for a managed service instance' do
+      msi = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      get "/v3/service_instances/#{msi.guid}/credentials", nil, admin_headers
+      expect(last_response).to have_status_code(404)
+    end
+  end
+
+  describe 'GET /v3/service_instances/:guid/parameters' do
+    let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:body) { {}.to_json }
+    let(:response_code) { 200 }
+
+    before do
+      stub_request(:get, %r{#{instance.service.service_broker.broker_url}/v2/service_instances/#{guid_pattern}}).
+        with(basic_auth: basic_auth(service_broker: instance.service.service_broker)).
+        to_return(status: response_code, body: body)
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
+      let(:parameters) { { 'some-key' => 'some-value' } }
+      let(:body) { { 'parameters' => parameters }.to_json }
+      let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
-      end
+        h = Hash.new(
+          code: 200,
+          response_object: parameters,
+        )
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+    end
+
+    context 'when the instance does not support retrievable instances' do
+      let(:service) { VCAP::CloudController::Service.make(instances_retrievable: false) }
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'This service does not support fetching service instance parameters.',
+          'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
+          'code' => 120004,
+        }))
+      end
+    end
+
+    context 'when the broker returns no parameters' do
+      it 'returns an empty object' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to match_json_response({})
+      end
+    end
+
+    context 'when the broker returns invalid parameters' do
+      let(:body) { { 'parameters' => 'not valid' }.to_json }
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(502)
+        expect(parsed_response['errors']).to include(include({
+          'title' => 'CF-ServiceBrokerResponseMalformed',
+          'code' => 10001,
+        }))
+      end
+    end
+
+    context 'when the broker returns invalid JSON' do
+      let(:body) { 'this is not json' }
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(502)
+        expect(parsed_response['errors']).to include(include({
+          'title' => 'CF-ServiceBrokerResponseMalformed',
+          'code' => 10001,
+        }))
+      end
+    end
+
+    context 'when the broker returns a non-200 response code' do
+      let(:response_code) { 500 }
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(502)
+        expect(parsed_response['errors']).to include(include({
+          'title' => 'CF-ServiceBrokerBadResponse',
+          'code' => 10001,
+        }))
+      end
+    end
+
+    context 'when the broker returns a 422 (update in progress) response code' do
+      let(:response_code) { 422 }
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(502)
+        expect(parsed_response['errors']).to include(include({
+          'title' => 'CF-ServiceBrokerBadResponse',
+          'code' => 10001,
+        }))
+      end
+    end
+
+    context 'when the instance is shared' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, service_plan: service_plan) }
+        let(:parameters) { { 'some-key' => 'some-value' } }
+        let(:body) { { 'parameters' => parameters }.to_json }
+        let(:guid) { instance.guid }
+
+        before do
+          instance.add_shared_space(space)
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_object: parameters,
+          )
+
+          h['space_developer'] = { code: 403 }
+          h['space_manager'] = { code: 403 }
+          h['space_auditor'] = { code: 403 }
+          h['org_manager'] = { code: 403 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
+    end
+
+    context 'when the instance does not exist' do
+      it 'responds with 404' do
+        get '/v3/service_instances/does-not-exist/parameters', nil, admin_headers
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the instance is user-provided' do
+      it 'responds with 404' do
+        upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space)
+        get "/v3/service_instances/#{upsi.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(404)
+      end
     end
   end
 
@@ -304,13 +429,16 @@ RSpec.describe 'V3 service instances' do
       },
       links: {
         self: {
-          href: %r(#{Regexp.escape(link_prefix)}/v3/service_instances/#{instance.guid})
+          href: "#{link_prefix}/v3/service_instances/#{instance.guid}"
         },
         space: {
-          href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
+          href: "#{link_prefix}/v3/spaces/#{instance.space.guid}"
         },
         service_plan: {
-          href: %r(#{Regexp.escape(link_prefix)}/v3/service_plans/#{instance.service_plan.guid})
+          href: "#{link_prefix}/v3/service_plans/#{instance.service_plan.guid}"
+        },
+        parameters: {
+          href: "#{link_prefix}/v3/service_instances/#{instance.guid}/parameters"
         },
       },
     }
@@ -506,6 +634,9 @@ RSpec.describe 'V3 service instances' do
               },
               'self' => {
                 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}"
+              },
+              'parameters' => {
+                'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/parameters"
               }
             },
             'metadata' => {

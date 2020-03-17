@@ -68,6 +68,9 @@ module VCAP::CloudController
             links: {
               service_plan: {
                 href: url_builder.build_url(path: "/v3/service_plans/#{service_instance.service_plan.guid}")
+              },
+              parameters: {
+                href: url_builder.build_url(path: "/v3/service_instances/#{service_instance.guid}/parameters")
               }
             }
           }

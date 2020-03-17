@@ -90,6 +90,9 @@ module VCAP::CloudController::Presenters::V3
             },
             self: {
               href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
+            },
+            parameters: {
+              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/parameters"
             }
           }
         })

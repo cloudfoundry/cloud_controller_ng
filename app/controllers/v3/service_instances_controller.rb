@@ -110,6 +110,18 @@ class ServiceInstancesV3Controller < ApplicationController
     render status: :ok, json: (service_instance.credentials || {})
   end
 
+  def parameters
+    service_instance = ManagedServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless can_read_space?(service_instance.space)
+
+    begin
+      render status: :ok, json: ServiceInstanceRead.new.fetch_parameters(service_instance)
+    rescue ServiceInstanceRead::NotSupportedError
+      raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
+    end
+  end
+
   private
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)

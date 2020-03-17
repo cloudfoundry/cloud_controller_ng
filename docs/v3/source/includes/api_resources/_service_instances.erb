@@ -194,3 +194,20 @@
   }
 }
 <% end %>
+
+<% content_for :user_provided_service_instance_credentials do %>
+{
+  "username": "my-username",
+  "password": "super-secret",
+  "other": "credential"
+}
+<% end %>
+
+<% content_for :managed_service_instance_parameters do %>
+{
+  "key_1": "value_1",
+  "key_2": "value_2"
+}
+<% end %>
+
+
