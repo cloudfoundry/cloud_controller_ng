@@ -1603,12 +1603,10 @@ RSpec.describe 'Domains Request' do
           )
 
           h['admin_read_only'] = {
-            scopes: ['cloud_controller.write'],
             code: 204
           }
 
           h['global_auditor'] = {
-            scopes: ['cloud_controller.write'],
             code: 204
           }
 

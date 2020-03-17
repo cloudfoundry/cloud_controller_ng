@@ -455,8 +455,6 @@ RSpec.describe 'V3 service plans' do
 
       let(:expected_codes_and_responses) do
         Hash.new(code: 404).tap do |h|
-          h['admin_read_only'] = { code: 403 }
-          h['global_auditor'] = { code: 403 }
           h['unauthenticated'] = { code: 401 }
         end
       end

@@ -579,6 +579,7 @@ module VCAP::CloudController
         }
       ]
     end
+    running_default { false }
     staging_default { false }
   end
 

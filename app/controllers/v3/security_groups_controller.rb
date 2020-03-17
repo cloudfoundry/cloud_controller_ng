@@ -131,9 +131,8 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unprocessable_space! unless security_group.spaces.include?(space)
-
     unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unprocessable_space! unless security_group.spaces.include?(space)
 
     SecurityGroupUnapply.unapply_running(security_group, space)
 
@@ -148,9 +147,8 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unprocessable_space! unless security_group.staging_spaces.include?(space)
-
     unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unprocessable_space! unless security_group.staging_spaces.include?(space)
 
     SecurityGroupUnapply.unapply_staging(security_group, space)
 
