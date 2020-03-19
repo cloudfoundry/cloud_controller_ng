@@ -1,6 +1,7 @@
 require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
 require 'messages/service_instance_update_message'
+require 'messages/service_instance_create_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -35,6 +36,18 @@ class ServiceInstancesV3Controller < ApplicationController
       path: '/v3/service_instances',
       message: message
     )
+  end
+
+  def create
+    FeatureFlag.raise_unless_enabled!(:service_instance_creation) unless admin?
+
+    message = ServiceInstanceCreateMessage.new(hashed_params[:body])
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    space = Space.where(guid: message.space_guid).first
+    unauthorized! if space&.in_suspended_org? && !admin?
+
+    render status: :ok, json: '{}'
   end
 
   def update
@@ -123,6 +136,10 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   private
+
+  def admin?
+    permission_queryer.can_write_globally?
+  end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
     unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }

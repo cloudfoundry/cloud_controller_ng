@@ -426,6 +426,81 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'POST /v3/service_instances' do
+    let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
+    let(:type) { 'user-provided' }
+    let(:space_guid) { space.guid }
+    let(:request_body) {
+      {
+        type: type,
+        relationships: {
+          space: {
+            data: {
+              guid: space_guid
+            }
+          }
+        }
+      }
+    }
+
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+
+    context 'when service_instance_creation flag is disabled' do
+      before do
+        VCAP::CloudController::FeatureFlag.create(name: 'service_instance_creation', enabled: false)
+      end
+
+      it 'makes non_admins unable to create any type of service' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include({ 'detail' => 'Feature Disabled: service_instance_creation' })
+        )
+      end
+
+      it 'does not impact admins ability create services' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
+    context 'when the target organization is suspended' do
+      before do
+        org.status = VCAP::CloudController::Organization::SUSPENDED
+        org.save
+      end
+
+      it 'makes non-admins unable to create any type of service' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include({ 'detail' => 'You are not authorized to perform the requested action' })
+        )
+      end
+
+      it 'does not impact admins ability to create services' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
+    context 'when the request body is invalid' do
+      let(:request_body) { { type: 'foo' } }
+
+      it 'returns a bad request' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include({ 'detail' => include("Type must be one of 'managed', 'user-provided'") })
+        )
+      end
+    end
+  end
+
   def create_managed_json(instance, labels: {})
     {
       guid: instance.guid,
