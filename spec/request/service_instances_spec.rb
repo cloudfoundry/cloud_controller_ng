@@ -220,14 +220,60 @@ RSpec.describe 'V3 service instances' do
           create_managed_json(msi_2)
         )
       end
+
+      def check_filtered_instances(*instances)
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].length).to be(instances.length)
+        expect({ resources: parsed_response['resources'] }).to match_json_response(
+          { resources: instances }
+        )
+      end
     end
 
-    def check_filtered_instances(*instances)
-      expect(last_response).to have_status_code(200)
-      expect(parsed_response['resources'].length).to be(instances.length)
-      expect({ resources: parsed_response['resources'] }).to match_json_response(
-        { resources: instances }
-      )
+    context 'fields' do
+      it 'can include the space and organization name fields' do
+        get "/v3/service_instances?fields[space.organization]=name", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        included = {
+          spaces: [
+            {
+              name: space.name,
+              guid: space.guid,
+              relationships: {
+                organization: {
+                  data: {
+                    guid: space.organization.guid
+                  }
+                }
+              }
+            },
+            {
+              name: another_space.name,
+              guid: another_space.guid,
+              relationships: {
+                organization: {
+                  data: {
+                    guid: another_space.organization.guid
+                  }
+                }
+              }
+            }
+          ],
+          organizations: [
+            {
+              name: space.organization.name,
+              guid: space.organization.guid
+            },
+            {
+              name: another_space.organization.name,
+              guid: another_space.organization.guid
+            }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
     end
   end
 

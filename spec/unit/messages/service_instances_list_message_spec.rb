@@ -14,7 +14,8 @@ module VCAP::CloudController
           'label_selector' => 'key=value',
           'type' => 'managed',
           'service_plan_names' => 'plan1, plan2',
-          'service_plan_guids' => 'guid1, guid2'
+          'service_plan_guids' => 'guid1, guid2',
+          'fields' => {'space.organization' => 'name'},
         }.with_indifferent_access
       end
 
@@ -32,6 +33,7 @@ module VCAP::CloudController
         expect(message.type).to eq('managed')
         expect(message.service_plan_guids).to match_array(['guid1', 'guid2'])
         expect(message.service_plan_names).to match_array(['plan1', 'plan2'])
+        expect(message.fields).to match({:'space.organization' => 'name'})
       end
 
       it 'converts requested keys to symbols' do
@@ -46,10 +48,11 @@ module VCAP::CloudController
         expect(message.requested?(:type)).to be_truthy
         expect(message.requested?(:service_plan_guids)).to be_truthy
         expect(message.requested?(:service_plan_names)).to be_truthy
+        expect(message.requested?(:fields)).to be_truthy
       end
     end
 
-    describe 'fields' do
+    describe 'validations' do
       it 'accepts an empty set' do
         message = ServiceInstancesListMessage.from_params({})
         expect(message).to be_valid
@@ -61,9 +64,7 @@ module VCAP::CloudController
         expect(message).not_to be_valid
         expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
-    end
 
-    describe 'validations' do
       it 'validates metadata requirements' do
         message = ServiceInstancesListMessage.from_params({ 'label_selector' => '' }.with_indifferent_access)
 
@@ -72,6 +73,12 @@ module VCAP::CloudController
           with(message).
           and_call_original
         message.valid?
+      end
+
+      it 'validates `fields`' do
+        message = ServiceInstancesListMessage.from_params({'fields' => 'foo'}.with_indifferent_access)
+        expect(message).not_to be_valid
+        expect(message.errors[:fields][0]).to include("must be an object")
       end
 
       context 'type' do

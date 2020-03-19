@@ -303,6 +303,37 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'FieldsValidator' do
+      let(:fields_class) do
+        Class.new(fake_class) do
+          validates :field, fields: true
+        end
+      end
+
+      it 'allows `space.organization` as the key symbol and `name` as the value' do
+        fake_class = fields_class.new field: {:'space.organization' => 'name'}
+        expect(fake_class.valid?).to be_truthy
+      end
+
+      it 'rejects values that are not hashes' do
+        fake_class = fields_class.new field: 'foo'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an object'
+      end
+
+      it 'rejects a key that is not `space.organization`' do
+        fake_class = fields_class.new field: {:'foo' => 'name'}
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "key must be 'space.organization'"
+      end
+
+      it 'rejects a value that is not `name`' do
+        fake_class = fields_class.new field: {:'space.organization' => 'foo'}
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "value must be 'name'"
+      end
+    end
+
     describe 'HealthCheckValidator' do
       let(:health_check_class) do
         Class.new(fake_class) do
@@ -371,6 +402,31 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'DataValidator' do
+      class DataMessage < VCAP::CloudController::BaseMessage
+        register_allowed_keys [:data]
+        validates_with DataValidator
+
+        class Data < VCAP::CloudController::BaseMessage
+          register_allowed_keys [:foo]
+
+          validates :foo, numericality: true
+        end
+      end
+
+      it "adds data's error message to the base class" do
+        message = DataMessage.new({ data: { foo: 'not a number' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:data)).to include('Foo is not a number')
+      end
+
+      it 'returns early when base class data is not an object' do
+        message = DataMessage.new({ data: 'not an object' })
+        expect(message).to be_valid
+        expect(message.errors_on(:data)).to be_empty
+      end
+    end
+
     describe 'RelationshipValidator' do
       class RelationshipMessage < VCAP::CloudController::BaseMessage
         register_allowed_keys [:relationships]
@@ -398,31 +454,6 @@ module VCAP::CloudController::Validators
         message = RelationshipMessage.new({ relationships: 'not an object' })
         expect(message).not_to be_valid
         expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
-      end
-    end
-
-    describe 'DataValidator' do
-      class DataMessage < VCAP::CloudController::BaseMessage
-        register_allowed_keys [:data]
-        validates_with DataValidator
-
-        class Data < VCAP::CloudController::BaseMessage
-          register_allowed_keys [:foo]
-
-          validates :foo, numericality: true
-        end
-      end
-
-      it "adds data's error message to the base class" do
-        message = DataMessage.new({ data: { foo: 'not a number' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:data)).to include('Foo is not a number')
-      end
-
-      it 'returns early when base class data is not an object' do
-        message = DataMessage.new({ data: 'not an object' })
-        expect(message).to be_valid
-        expect(message.errors_on(:data)).to be_empty
       end
     end
 

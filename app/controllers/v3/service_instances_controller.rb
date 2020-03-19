@@ -10,6 +10,7 @@ require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
 require 'fetchers/service_instance_list_fetcher'
+require 'decorators/field_include_service_instance_space_organization_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
   def show
@@ -30,11 +31,15 @@ class ServiceInstancesV3Controller < ApplicationController
                 ServiceInstanceListFetcher.new.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
               end
 
+    decorators = []
+    decorators << FieldIncludeServiceInstanceSpaceOrganizationDecorator if FieldIncludeServiceInstanceSpaceOrganizationDecorator.match?(message.fields)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
-      message: message
+      message: message,
+      decorators: decorators
     )
   end
 

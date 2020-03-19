@@ -7,7 +7,8 @@ module VCAP::CloudController
       :space_guids,
       :type,
       :service_plan_guids,
-      :service_plan_names
+      :service_plan_names,
+      :fields
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -16,6 +17,8 @@ module VCAP::CloudController
         in: %w(managed user-provided),
         message: "must be one of 'managed', 'user-provided'"
       }
+
+    validates :fields, allow_nil: true, fields: true
 
     def self.from_params(params)
       super(params, %w(names space_guids service_plan_guids service_plan_names))
