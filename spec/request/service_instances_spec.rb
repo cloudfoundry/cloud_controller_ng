@@ -109,7 +109,8 @@ RSpec.describe 'V3 service instances' do
           label_selector: 'foo,bar',
           type: 'managed',
           service_plan_guids: ['guid-1', 'guid-2'],
-          service_plan_names: ['plan-1', 'plan-2']
+          service_plan_names: ['plan-1', 'plan-2'],
+          fields: { 'space.organization' => 'name' }
         }
       end
 
