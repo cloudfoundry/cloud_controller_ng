@@ -15,7 +15,7 @@ module VCAP::CloudController
           'type' => 'managed',
           'service_plan_names' => 'plan1, plan2',
           'service_plan_guids' => 'guid1, guid2',
-          'fields' => {'space.organization' => 'name'},
+          'fields' => { 'space.organization' => 'name' },
         }.with_indifferent_access
       end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
         expect(message.type).to eq('managed')
         expect(message.service_plan_guids).to match_array(['guid1', 'guid2'])
         expect(message.service_plan_names).to match_array(['plan1', 'plan2'])
-        expect(message.fields).to match({:'space.organization' => 'name'})
+        expect(message.fields).to match({ 'space.organization': 'name' })
       end
 
       it 'converts requested keys to symbols' do
@@ -76,9 +76,9 @@ module VCAP::CloudController
       end
 
       it 'validates `fields`' do
-        message = ServiceInstancesListMessage.from_params({'fields' => 'foo'}.with_indifferent_access)
+        message = ServiceInstancesListMessage.from_params({ 'fields' => 'foo' }.with_indifferent_access)
         expect(message).not_to be_valid
-        expect(message.errors[:fields][0]).to include("must be an object")
+        expect(message.errors[:fields][0]).to include('must be an object')
       end
 
       context 'type' do

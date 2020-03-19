@@ -311,7 +311,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'allows `space.organization` as the key symbol and `name` as the value' do
-        fake_class = fields_class.new field: {:'space.organization' => 'name'}
+        fake_class = fields_class.new field: { 'space.organization': 'name' }
         expect(fake_class.valid?).to be_truthy
       end
 
@@ -322,13 +322,13 @@ module VCAP::CloudController::Validators
       end
 
       it 'rejects a key that is not `space.organization`' do
-        fake_class = fields_class.new field: {:'foo' => 'name'}
+        fake_class = fields_class.new field: { 'foo': 'name' }
         expect(fake_class.valid?).to be_falsey
         expect(fake_class.errors[:field]).to include "key must be 'space.organization'"
       end
 
       it 'rejects a value that is not `name`' do
-        fake_class = fields_class.new field: {:'space.organization' => 'foo'}
+        fake_class = fields_class.new field: { 'space.organization': 'foo' }
         expect(fake_class.valid?).to be_falsey
         expect(fake_class.errors[:field]).to include "value must be 'name'"
       end

@@ -133,7 +133,6 @@ module VCAP::CloudController::Validators
     end
   end
 
-
   class HealthCheckValidator < ActiveModel::Validator
     def validate(record)
       if record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP

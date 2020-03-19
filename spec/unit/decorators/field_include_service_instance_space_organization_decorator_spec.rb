@@ -81,11 +81,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches hashes containing key symbol `space.organization` and value `name`' do
-        expect(described_class.match?({'space.organization': 'name', other: 'bar'})).to be_truthy
+        expect(described_class.match?({ 'space.organization': 'name', other: 'bar' })).to be_truthy
       end
 
       it 'does not match other values' do
-        expect(described_class.match?({'space.organization': 'foo', other: 'bar'})).to be_falsey
+        expect(described_class.match?({ 'space.organization': 'foo', other: 'bar' })).to be_falsey
       end
 
       it 'does not match non-hashes' do

@@ -232,7 +232,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'fields' do
       it 'can include the space and organization name fields' do
-        get "/v3/service_instances?fields[space.organization]=name", nil, admin_headers
+        get '/v3/service_instances?fields[space.organization]=name', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
         included = {
