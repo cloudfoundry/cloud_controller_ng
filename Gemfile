@@ -41,10 +41,10 @@ gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 5.2.2', '>= 5.2.2.1'
-gem 'actionview', '~> 5.2.2', '>= 5.2.2.1'
+gem 'actionpack', '~> 5.2.4', '>= 5.2.4.2'
+gem 'actionview', '~> 5.2.4', '>= 5.2.4.2'
 gem 'activemodel', '~> 5.2.0'
-gem 'railties', '~> 5.2.2', '>= 5.2.2.1'
+gem 'railties', '~> 5.2.4', '>= 5.2.4.2'
 
 # Blobstore and Bits Service Dependencies
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
@@ -74,7 +74,7 @@ end
 
 group :test do
   gem 'cf-perm-test-helpers', '~> 0.0.6'
-  gem 'codeclimate-test-reporter', require: false
+  gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'
@@ -82,9 +82,9 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-rails', '~> 3.8.2'
+  gem 'rspec-rails', '~> 3.8.3'
   gem 'rspec-wait'
-  gem 'rspec_api_documentation'
+  gem 'rspec_api_documentation', '>= 4.8.0'
   gem 'rubocop', '~> 0.79.0'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
