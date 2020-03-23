@@ -18,7 +18,7 @@ module VCAP::CloudController
         message: "must be one of 'managed', 'user-provided'"
       }
 
-    validates :fields, allow_nil: true, fields: true
+    validates :fields, allow_nil: true, fields: { allowed: { 'space.organization' => ['name'] } }
 
     def self.from_params(params)
       super(params, %w(names space_guids service_plan_guids service_plan_names))

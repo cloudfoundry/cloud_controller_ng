@@ -1,4 +1,5 @@
 require 'active_model'
+require 'set'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
 require 'models/helpers/metadata_error'
@@ -126,9 +127,9 @@ module VCAP::CloudController::Validators
         value.each do |key, inner_value|
           v = allowed_fields[key.to_s] || allowed_fields[key.to_sym]
           if v.nil?
-            record.errors.add(attribute, "key must be '#{allowed_fields.keys.map(&:to_s).join(',')}'")
-          elsif v != inner_value
-            record.errors.add(attribute, "value must be 'name'")
+            record.errors.add(attribute, "valid keys are: #{allowed_fields.keys.map { |k| "'#{k}'" }.join(', ')}")
+          elsif !inner_value.split(',').to_set.subset?(v.to_set)
+            record.errors.add(attribute, "valid values are: #{v.map { |i| "'#{i}'" }.join(', ')}")
           end
         end
       end

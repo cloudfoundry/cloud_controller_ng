@@ -313,13 +313,8 @@ module VCAP::CloudController::Validators
     describe 'FieldsValidator' do
       let(:fields_class) do
         Class.new(fake_class) do
-          validates :field, fields: { allowed: { 'space.organization' => 'name' } }
+          validates :field, fields: { allowed: { 'space.organization' => ['name'] } }
         end
-      end
-
-      it 'allows `space.organization` as the key symbol and `name` as the value' do
-        fake_class = fields_class.new field: { 'space.organization': 'name' }
-        expect(fake_class.valid?).to be_truthy
       end
 
       it 'rejects values that are not hashes' do
@@ -328,16 +323,52 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
-      it 'rejects a key that is not `space.organization`' do
-        fake_class = fields_class.new field: { 'foo': 'name' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include "key must be 'space.organization'"
+      context 'allowed fields' do
+        let(:fields_class_multiple_values) do
+          Class.new(fake_class) do
+            validates :field, fields: { allowed: { 'some.resource' => ['fake-value-1', 'fake-value-2'] } }
+          end
+        end
+
+        it 'allows a multiple values to be present' do
+          fake_class = fields_class_multiple_values.new field: { 'some.resource': 'fake-value-2,fake-value-1' }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'allows a subset of values' do
+          fake_class = fields_class_multiple_values.new field: { 'some.resource': 'fake-value-2' }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'reject values not in the list' do
+          fake_class = fields_class_multiple_values.new field: { 'some.resource': 'fake-value-2,url' }
+          expect(fake_class.valid?).to be_falsy
+          expect(fake_class.errors[:field]).to include "valid values are: 'fake-value-1', 'fake-value-2'"
+        end
       end
 
-      it 'rejects a value that is not `name`' do
-        fake_class = fields_class.new field: { 'space.organization': 'foo' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include "value must be 'name'"
+      context 'allowed keys' do
+        let(:fields_class_multiple_keys) do
+          Class.new(fake_class) do
+            validates :field, fields: { allowed: { 'a.resource' => ['fake-value'], 'another.resource' => ['another-fake-value'] } }
+          end
+        end
+
+        it 'allows a multiple keys to be present' do
+          fake_class = fields_class_multiple_keys.new field: { 'a.resource': 'fake-value', 'another.resource': 'another-fake-value' }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'allows a subset of the keys to be present' do
+          fake_class = fields_class_multiple_keys.new field: { 'another.resource': 'another-fake-value' }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'rejects keys not specified' do
+          fake_class = fields_class_multiple_keys.new field: { 'wrong.resource': 'another-fake-value' }
+          expect(fake_class.valid?).to be_falsey
+          expect(fake_class.errors[:field]).to include "valid keys are: 'a.resource', 'another.resource'"
+        end
       end
     end
 
