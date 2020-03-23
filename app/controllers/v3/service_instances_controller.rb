@@ -2,6 +2,7 @@ require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
 require 'messages/service_instance_update_message'
 require 'messages/service_instance_create_message'
+require 'messages/service_instance_show_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -11,13 +12,20 @@ require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_include_service_instance_space_organization_decorator'
+require 'decorators/field_service_instance_organization_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
   def show
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
 
-    presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance)
+    message = ServiceInstanceShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+
+    presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance, decorators: decorators)
     render status: :ok, json: presenter.to_json
   end
 

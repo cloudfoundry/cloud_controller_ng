@@ -239,5 +239,37 @@ module VCAP::CloudController
         expect(message.errors.full_messages[0]).to include("Invalid lifecycle_type: 'stuff'")
       end
     end
+
+    describe '.from_params' do
+      FakeFieldsClass = Class.new(BaseMessage) do
+        register_allowed_keys [:name, :names]
+      end
+
+      it 'creates an object with the hash keys as instance variables' do
+        instance = FakeFieldsClass.from_params({ 'name' => 'aname' }, [])
+        expect(instance.name).to eq('aname')
+
+        instance = FakeFieldsClass.from_params({ name: 'aname' }, [])
+        expect(instance.name).to eq('aname')
+      end
+
+      it 'converts comma-separated values to arrays when specified' do
+        instance = FakeFieldsClass.from_params({ 'names' => 'a-name,another-name' }, %w(names))
+        expect(instance.names).to contain_exactly('a-name', 'another-name')
+      end
+
+      it 'converts comma-separated hash values to arrays when specified' do
+        instance = FakeFieldsClass.from_params({ 'names' => { 'space' => 'a-name,another-name' } }, [], fields: %w(names))
+        expect(instance.names).to match({ space: ['a-name', 'another-name'] })
+      end
+
+      context 'when fields parameters are invalid' do
+        it 'skips the conversion' do
+          instance = FakeFieldsClass.from_params({ 'names' => 'foo' }, [], fields: %w(name names))
+          expect(instance.name).to be_nil
+          expect(instance.names).to eq('foo')
+        end
+      end
+    end
   end
 end

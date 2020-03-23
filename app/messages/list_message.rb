@@ -72,14 +72,9 @@ module VCAP::CloudController
     validates_with PaginationPageValidator
     validates_with PaginationOrderValidator, if: -> { @pagination_params[:order_by].present? }
 
-    def self.from_params(params, to_array_keys)
-      opts = params.dup
-      to_array_keys.each do |attribute|
-        to_array! opts, attribute
-      end
-
-      message = new(opts.symbolize_keys)
-      message.requirements = parse_label_selector(opts.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
+    def self.from_params(params, to_array_keys, fields: [])
+      message = super(params, to_array_keys, fields: fields)
+      message.requirements = parse_label_selector(params.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message
     end

@@ -1,0 +1,98 @@
+## Fields
+
+The `fields` parameter allows clients to fetch resources and include information of parent objects in the response.
+It works in a similar way to [include](#include), but only displays the fields that were requested.
+
+For example, a response to `/v3/service_instances/:guid?fields[space.organization]=name` will contain detailed
+information about the service instance, as well as the name of the organization it belongs to.
+
+Developers may choose to use the `fields` feature to reduce the number of API calls. The fields
+query param can be used with a single resource or a list of resources.
+
+The fields query parameter may also grant visibility to parts of resources where the whole resource is not visible.
+For instance, the name of an Organization may be retrieved with fields, where the whole Organization resource may
+not be visible.
+
+### Fields parameter
+The fields parameter is structured as: `fields[resource]=keys&fields[other.resource]=other,keys`
+
+- `resource` is the name of the resource being requested, qualified by the relationship to the current resource.
+For example `/v3/service_instances?fields[space]=name` where `space` is a direct relationship of a service instance,
+or `/v3/service_instances?fields[space.organization]=name` where `organization` is a relationship of `space`.
+- `keys` is a comma-separated list of the fields in the object being requested. For example,
+`/v3/service_instances?fields[space]=name,guid` will return just the `name` and `guid` of the space.
+
+### Fields Sample requests
+
+
+```
+Example request to service instances resource to include parent orgs and spaces
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances?fields[space]=name,guid,relationships.organization&fields[space.organization]=name,guid" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example response
+```
+
+```java
+{
+   "pagination": {
+      "total_results": 2
+      // rest of pagination omitted
+   },
+   "resources": [
+      {
+         "guid": "42ad8d5a-8124-4fc7-baf2-3f39bfe1c170",
+         "name": "service_instance_1"
+         // rest omitted
+      },
+      {
+         "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+         "name": "service_instance_2"
+         // rest omitted
+      }
+   ],
+   "included": {
+      "spaces": [
+         {
+            "guid": "134f95ad-b5eb-4b55-9ce0-b906c513d54b",
+            "name": "space1",
+            "relationships": {
+               "organization": {
+                  "data": {
+                     "guid": "b2075a71-28b6-411a-a896-56f75d892f58"
+                  }
+               }
+            }
+         },
+         {
+            "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+            "name": "space2"
+            "relationships": {
+               "organization": {
+                  "data": {
+                     "guid": "b56fbd01-296b-442b-8faf-a559aebf985e"
+                  }
+               }
+            }
+         }
+      ],
+      "organizations": [
+         {
+            "guid": "b2075a71-28b6-411a-a896-56f75d892f58",
+            "name": "org1"
+         },
+         {
+            "guid": "b56fbd01-296b-442b-8faf-a559aebf985e",
+            "name": "org2"
+         }
+      ]
+   }
+}
+```
+

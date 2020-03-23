@@ -49,11 +49,20 @@ module VCAP::CloudController
       params
     end
 
-    def self.from_params(params, to_array_keys)
+    def self.from_params(params, to_array_keys, fields: [])
       opts = params.dup
       to_array_keys.each do |attribute|
         to_array! opts, attribute
       end
+
+      fields.each do |key|
+        if opts[key].is_a?(Hash)
+          opts[key].keys.each do |attribute|
+            to_array! opts[key], attribute
+          end
+        end
+      end
+
       message = new(opts.symbolize_keys)
       message
     end

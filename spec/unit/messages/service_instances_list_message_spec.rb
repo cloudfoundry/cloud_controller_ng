@@ -33,7 +33,7 @@ module VCAP::CloudController
         expect(message.type).to eq('managed')
         expect(message.service_plan_guids).to match_array(['guid1', 'guid2'])
         expect(message.service_plan_names).to match_array(['plan1', 'plan2'])
-        expect(message.fields).to match({ 'space.organization': 'name' })
+        expect(message.fields).to match({ 'space.organization': ['name'] })
       end
 
       it 'converts requested keys to symbols' do

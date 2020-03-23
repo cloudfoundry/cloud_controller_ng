@@ -79,6 +79,27 @@ RSpec.describe 'V3 service instances' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
+
+    context 'fields' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:guid) { instance.guid }
+
+      it 'can include the space and organization name fields' do
+        get "/v3/service_instances/#{guid}?fields[space.organization]=name,guid", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        included = {
+            organizations: [
+              {
+                  name: space.organization.name,
+                  guid: space.organization.guid
+              }
+            ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+    end
   end
 
   describe 'GET /v3/service_instances' do

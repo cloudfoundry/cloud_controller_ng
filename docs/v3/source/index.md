@@ -46,6 +46,7 @@ includes:
   - concepts/errors
   - concepts/filters
   - concepts/includes
+  - concepts/fields
   - concepts/lifecycles
   - concepts/metadata
   - concepts/pagination

@@ -21,7 +21,7 @@ module VCAP::CloudController
     validates :fields, allow_nil: true, fields: { allowed: { 'space.organization' => ['name'] } }
 
     def self.from_params(params)
-      super(params, %w(names space_guids service_plan_guids service_plan_names))
+      super(params, %w(names space_guids service_plan_guids service_plan_names), fields: %w(fields))
     end
 
     def valid_order_by_values

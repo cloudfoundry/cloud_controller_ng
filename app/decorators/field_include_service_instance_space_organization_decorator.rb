@@ -2,7 +2,7 @@ module VCAP::CloudController
   class FieldIncludeServiceInstanceSpaceOrganizationDecorator
     class << self
       def match?(fields)
-        fields.is_a?(Hash) && fields[:'space.organization'] == 'name'
+        fields.is_a?(Hash) && fields[:'space.organization'] == ['name']
       end
 
       def decorate(hash, service_instances)

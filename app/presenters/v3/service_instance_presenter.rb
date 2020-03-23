@@ -8,7 +8,7 @@ module VCAP::CloudController
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
         def to_hash
-          correct_order(
+          hash = correct_order(
             hash_common.deep_merge(
               if service_instance.class == ManagedServiceInstance
                 hash_additions_managed
@@ -17,6 +17,8 @@ module VCAP::CloudController
               end
             )
           )
+
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [service_instance]) }
         end
 
         private
