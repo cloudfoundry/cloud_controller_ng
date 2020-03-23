@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'json', '>= 1.8.6'
+gem 'json', '>= 2.3.0'
 gem 'middleman', '>= 3.4.1'
 gem 'middleman-autoprefixer', '>= 2.6.1'
 gem 'middleman-gh-pages', '>= 0.0.3'
