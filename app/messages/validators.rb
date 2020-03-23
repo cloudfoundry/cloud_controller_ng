@@ -122,10 +122,12 @@ module VCAP::CloudController::Validators
       if !value.is_a?(Hash)
         record.errors.add(attribute, 'must be an object')
       else
+        allowed_fields = options[:allowed]
         value.each do |key, inner_value|
-          if key != :'space.organization'
-            record.errors.add(attribute, "key must be 'space.organization'")
-          elsif inner_value != 'name'
+          v = allowed_fields[key.to_s] || allowed_fields[key.to_sym]
+          if v.nil?
+            record.errors.add(attribute, "key must be '#{allowed_fields.keys.map(&:to_s).join(',')}'")
+          elsif v != inner_value
             record.errors.add(attribute, "value must be 'name'")
           end
         end

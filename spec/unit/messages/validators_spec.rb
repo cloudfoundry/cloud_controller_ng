@@ -1,5 +1,12 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/validators'
+require 'messages/base_message'
+require 'messages/empty_lifecycle_data_message'
+require 'messages/buildpack_lifecycle_data_message'
+require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
+require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
+require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'rspec/collection_matchers'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'Validators' do
@@ -306,7 +313,7 @@ module VCAP::CloudController::Validators
     describe 'FieldsValidator' do
       let(:fields_class) do
         Class.new(fake_class) do
-          validates :field, fields: true
+          validates :field, fields: { allowed: { 'space.organization' => 'name' } }
         end
       end
 
