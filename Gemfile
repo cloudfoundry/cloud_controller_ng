@@ -74,7 +74,7 @@ end
 
 group :test do
   gem 'cf-perm-test-helpers', '~> 0.0.6'
-  gem 'codeclimate-test-reporter', require: false
+  gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'
@@ -84,7 +84,7 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 3.8.3'
   gem 'rspec-wait'
-  gem 'rspec_api_documentation'
+  gem 'rspec_api_documentation', '>= 4.8.0'
   gem 'rubocop', '~> 0.79.0'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
