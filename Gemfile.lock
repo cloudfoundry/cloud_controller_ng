@@ -35,22 +35,22 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (5.2.2.1)
-      actionview (= 5.2.2.1)
-      activesupport (= 5.2.2.1)
-      rack (~> 2.0)
+    actionpack (5.2.4.2)
+      actionview (= 5.2.4.2)
+      activesupport (= 5.2.4.2)
+      rack (~> 2.0, >= 2.0.8)
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.0.2)
-    actionview (5.2.2.1)
-      activesupport (= 5.2.2.1)
+    actionview (5.2.4.2)
+      activesupport (= 5.2.4.2)
       builder (~> 3.1)
       erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.0.3)
-    activemodel (5.2.2.1)
-      activesupport (= 5.2.2.1)
-    activesupport (5.2.2.1)
+    activemodel (5.2.4.2)
+      activesupport (= 5.2.4.2)
+    activesupport (5.2.4.2)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 0.7, < 2)
       minitest (~> 5.1)
@@ -94,7 +94,7 @@ GEM
     bits_service_client (3.3.0)
       activesupport
       steno
-    builder (3.2.3)
+    builder (3.2.4)
     byebug (10.0.2)
     cf-copilot (0.0.14)
       grpc (~> 1.0)
@@ -116,7 +116,7 @@ GEM
     cookiejar (0.3.3)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
-    crass (1.0.5)
+    crass (1.0.6)
     daemons (1.2.6)
     debase (0.2.2)
       debase-ruby_core_source (>= 0.10.2)
@@ -253,7 +253,7 @@ GEM
       ruby_dep (~> 1.2)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.3.1)
+    loofah (2.4.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
@@ -286,7 +286,7 @@ GEM
     netaddr (2.0.4)
     netrc (0.11.0)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.10.8)
+    nokogiri (1.10.9)
       mini_portile2 (~> 2.4.0)
     os (1.0.1)
     palm_civet (1.1.0)
@@ -309,7 +309,7 @@ GEM
       byebug (~> 10.0)
       pry (~> 0.10)
     public_suffix (3.1.0)
-    rack (2.0.8)
+    rack (2.2.2)
     rack-protection (2.0.5)
       rack
     rack-test (1.1.0)
@@ -319,14 +319,14 @@ GEM
       nokogiri (>= 1.6)
     rails-html-sanitizer (1.3.0)
       loofah (~> 2.3)
-    railties (5.2.2.1)
-      actionpack (= 5.2.2.1)
-      activesupport (= 5.2.2.1)
+    railties (5.2.4.2)
+      actionpack (= 5.2.4.2)
+      activesupport (= 5.2.4.2)
       method_source
       rake (>= 0.8.7)
       thor (>= 0.19.0, < 2.0)
     rainbow (3.0.0)
-    rake (13.0.0)
+    rake (13.0.1)
     rb-fsevent (0.10.3)
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
@@ -480,8 +480,8 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (~> 5.2.2, >= 5.2.2.1)
-  actionview (~> 5.2.2, >= 5.2.2.1)
+  actionpack (~> 5.2.4, >= 5.2.4.2)
+  actionview (~> 5.2.4, >= 5.2.4.2)
   activemodel (~> 5.2.0)
   addressable
   allowy
@@ -531,7 +531,7 @@ DEPENDENCIES
   pry-byebug
   public_suffix
   rack-test
-  railties (~> 5.2.2, >= 5.2.2.1)
+  railties (~> 5.2.4, >= 5.2.4.2)
   rake
   rfc822
   roodi
@@ -539,7 +539,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 3.8.2)
+  rspec-rails (~> 3.8.3)
   rspec-wait
   rspec_api_documentation (>= 4.8.0)
   rubocop (~> 0.79.0)
