@@ -48,7 +48,7 @@ GEM
     i18n (0.7.0)
     json (2.3.0)
     kramdown (1.17.0)
-    libv8 (3.16.14.19)
+    libv8 (7.3.492.27.1)
     listen (3.0.8)
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
@@ -96,6 +96,8 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2019.1009)
     mini_portile2 (2.4.0)
+    mini_racer (0.2.9)
+      libv8 (>= 6.9.411)
     minitest (5.14.0)
     multi_json (1.14.1)
     nokogiri (1.10.9)
@@ -116,7 +118,6 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     redcarpet (3.3.3)
-    ref (2.0.0)
     rouge (1.10.1)
     sass (3.4.25)
     sprockets (2.12.5)
@@ -130,9 +131,6 @@ GEM
       sprockets (~> 2.0)
       tilt (~> 1.1)
     temple (0.8.2)
-    therubyracer (0.12.3)
-      libv8 (~> 3.16.14.15)
-      ref
     thor (1.0.1)
     thread_safe (0.3.6)
     tilt (1.4.1)
@@ -155,11 +153,11 @@ DEPENDENCIES
   middleman-gh-pages (>= 0.0.3)
   middleman-livereload (>= 3.4.6)
   middleman-syntax (>= 2.0.0)
+  mini_racer
   nokogiri
   rake (>= 12.3.3)
   redcarpet
   rouge
-  therubyracer
 
 BUNDLED WITH
    1.17.3
