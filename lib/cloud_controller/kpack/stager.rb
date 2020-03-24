@@ -42,7 +42,7 @@ module Kpack
           serviceAccount: registry_service_account_name,
           builder: {
             name: 'cf-autodetect-builder',
-            kind: 'ClusterBuilder'
+            kind: 'Builder'
           },
           tag: "#{registry_tag_base}/#{staging_details.package.guid}",
           source: {

@@ -63,7 +63,7 @@ module Kpack
             serviceAccount: 'gcr-service-account',
             builder: {
               name: 'cf-autodetect-builder',
-              kind: 'ClusterBuilder'
+              kind: 'Builder'
             },
             source: {
               blob: {
