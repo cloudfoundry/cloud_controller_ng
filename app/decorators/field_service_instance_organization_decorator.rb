@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class FieldServiceInstanceOrganizationDecorator
-
     def self.allowed
       Set['name', 'guid']
     end
