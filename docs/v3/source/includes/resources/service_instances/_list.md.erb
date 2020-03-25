@@ -39,7 +39,7 @@ Name | Type | Description
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
 **label_selector** | _string_ | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements.
-**fields** | _string_ | **Experimental** - Must be `fields[space.organization]=name` and will include just enough of the space and organizations relationships to enable the space name and organization name for a service instance to be determined.
+**fields** | _string_ | **Experimental** -Allowed resources: Field `space` with keys: `guid`, `relationships.organization`. Field `space.organization` with keys: `name`, `guid`.
 
 #### Permitted roles
  |

@@ -11,7 +11,7 @@ require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
 require 'fetchers/service_instance_list_fetcher'
-require 'decorators/field_include_service_instance_space_organization_decorator'
+require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
@@ -40,7 +40,8 @@ class ServiceInstancesV3Controller < ApplicationController
               end
 
     decorators = []
-    decorators << FieldIncludeServiceInstanceSpaceOrganizationDecorator if FieldIncludeServiceInstanceSpaceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceSpaceDecorator.new(message.fields) if FieldServiceInstanceSpaceDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,

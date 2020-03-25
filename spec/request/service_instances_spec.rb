@@ -84,7 +84,7 @@ RSpec.describe 'V3 service instances' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:guid) { instance.guid }
 
-      it 'can include the space and organization name fields' do
+      it 'can include the organization name and guid fields' do
         get "/v3/service_instances/#{guid}?fields[space.organization]=name,guid", nil, admin_headers
         expect(last_response).to have_status_code(200)
 
@@ -253,14 +253,13 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'fields' do
-      it 'can include the space and organization name fields' do
-        get '/v3/service_instances?fields[space.organization]=name', nil, admin_headers
+      it 'can include the space and organization name and guid fields' do
+        get '/v3/service_instances?fields[space]=guid,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
         included = {
           spaces: [
             {
-              name: space.name,
               guid: space.guid,
               relationships: {
                 organization: {
@@ -271,7 +270,6 @@ RSpec.describe 'V3 service instances' do
               }
             },
             {
-              name: another_space.name,
               guid: another_space.guid,
               relationships: {
                 organization: {

@@ -2,14 +2,19 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class ServiceInstancesListMessage < MetadataListMessage
-    register_allowed_keys [
+    @array_keys = [
       :names,
       :space_guids,
-      :type,
       :service_plan_guids,
       :service_plan_names,
+    ]
+
+    @single_keys = [
+      :type,
       :fields
     ]
+
+    register_allowed_keys(@single_keys + @array_keys)
 
     validates_with NoAdditionalParamsValidator
 
@@ -18,10 +23,10 @@ module VCAP::CloudController
         message: "must be one of 'managed', 'user-provided'"
       }
 
-    validates :fields, allow_nil: true, fields: { allowed: { 'space.organization' => ['name'] } }
+    validates :fields, allow_nil: true, fields: { allowed: { 'space' => ['guid', 'relationships.organization'], 'space.organization' => ['name', 'guid'] } }
 
     def self.from_params(params)
-      super(params, %w(names space_guids service_plan_guids service_plan_names), fields: %w(fields))
+      super(params, @array_keys.map(&:to_s), fields: %w(fields))
     end
 
     def valid_order_by_values

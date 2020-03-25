@@ -82,8 +82,12 @@ module VCAP::CloudController
         expect(described_class.match?({ 'space.organization': ['name', 'guid', 'something'], other: ['bar'] })).to be_truthy
       end
 
-      it 'does not match other values' do
-        expect(described_class.match?({ 'space.organization': ['foo'], other: ['bar'] })).to be_falsey
+      it 'does not match other values for a valid key' do
+        expect(described_class.match?({ 'space.organization': ['foo'] })).to be_falsey
+      end
+
+      it 'does not match other key values' do
+        expect(described_class.match?({ other: ['bar'] })).to be_falsey
       end
 
       it 'does not match non-hashes' do

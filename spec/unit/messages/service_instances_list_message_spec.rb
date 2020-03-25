@@ -75,10 +75,59 @@ module VCAP::CloudController
         message.valid?
       end
 
-      it 'validates `fields`' do
-        message = ServiceInstancesListMessage.from_params({ 'fields' => 'foo' }.with_indifferent_access)
-        expect(message).not_to be_valid
-        expect(message.errors[:fields][0]).to include('must be an object')
+      context 'fields' do
+        it 'validates `fields` is a hash' do
+          message = described_class.from_params({ 'fields' => 'foo' }.with_indifferent_access)
+          expect(message).not_to be_valid
+          expect(message.errors[:fields][0]).to include('must be an object')
+        end
+
+        it 'accepts the `fields` parameter with `[space]=relationships.organization`' do
+          message = described_class.from_params({ 'fields' => { 'space': 'relationships.organization' } })
+          expect(message).to be_valid
+          expect(message.requested?(:fields)).to be_truthy
+          expect(message.fields).to match({ 'space': %w(relationships.organization) })
+        end
+
+        it 'accepts the `fields` parameter with `[space]=guid`' do
+          message = described_class.from_params({ 'fields' => { 'space': 'guid' } })
+          expect(message).to be_valid
+          expect(message.requested?(:fields)).to be_truthy
+          expect(message.fields).to match({ 'space': %w(guid) })
+        end
+
+        it 'accepts the `fields` parameter with `[space.organization]=name,guid`' do
+          message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid' } })
+          expect(message).to be_valid
+          expect(message.requested?(:fields)).to be_truthy
+          expect(message.fields).to match({ 'space.organization': %w(name guid) })
+        end
+
+        it 'accepts the `fields` parameter with `[space.organization]=name`' do
+          message = described_class.from_params({ 'fields' => { 'space.organization': 'name' } })
+          expect(message).to be_valid
+          expect(message.requested?(:fields)).to be_truthy
+          expect(message.fields).to match({ 'space.organization': %w(name) })
+        end
+
+        it 'accepts the `fields` parameter with `[space.organization]=guid`' do
+          message = described_class.from_params({ 'fields' => { 'space.organization': 'guid' } })
+          expect(message).to be_valid
+          expect(message.requested?(:fields)).to be_truthy
+          expect(message.fields).to match({ 'space.organization': %w(guid) })
+        end
+
+        it 'does not accept fields values that are not `name` or `guid`' do
+          message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid,foo' } })
+          expect(message).not_to be_valid
+          expect(message.errors[:fields]).to include("valid values are: 'name', 'guid'")
+        end
+
+        it 'does not accept fields keys that are not `space.organization` or `space`' do
+          message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
+          expect(message).not_to be_valid
+          expect(message.errors[:fields]).to include("valid keys are: 'space', 'space.organization'")
+        end
       end
 
       context 'type' do
