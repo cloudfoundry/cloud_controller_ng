@@ -132,15 +132,37 @@ RSpec.describe 'V3 service plans' do
   describe 'GET /v3/service_plans' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_plans', nil, user_headers } }
 
-    context 'when there are no service plans' do
-      let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 200,
-          response_objects: []
-        )
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_plans' }
+      let(:message) { VCAP::CloudController::ServicePlansListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          broker_catalog_ids: %w(foo bar),
+          names: %w(baz qux),
+          organization_guids: %w(quux quuz),
+          service_broker_guids: %w(hoge piyo),
+          service_broker_names: %w(fuga hogera),
+          service_instance_guids: %w(foo bar),
+          service_offering_guids: %w(baz qux),
+          service_offering_names: %w(quux quuz),
+          space_guids: %w(hoge piyo),
+          include: 'space.organization',
+          available: true,
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+          label_selector: 'foo==bar',
+        }
       end
+    end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+    context 'when there are no service plans' do
+      it 'returns an empty list' do
+        get '/v3/service_plans', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources']).to be_empty
+      end
     end
 
     describe 'visibility of service plans' do

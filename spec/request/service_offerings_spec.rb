@@ -188,15 +188,32 @@ RSpec.describe 'V3 service offerings' do
   describe 'GET /v3/service_offerings' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_offerings', nil, user_headers } }
 
-    context 'when there are no service offerings' do
-      let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 200,
-          response_objects: []
-        )
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_offerings' }
+      let(:message) { VCAP::CloudController::ServiceOfferingsListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          available: true,
+          service_broker_guids: %w(foo bar),
+          service_broker_names: %w(baz qux),
+          names: %w(quux quuz),
+          space_guids: %w(hoge piyo),
+          organization_guids: %w(fuga hogera),
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+          label_selector: 'foo==bar',
+        }
       end
+    end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+    context 'when there are no service offerings' do
+      it 'returns an empty list' do
+        get '/v3/service_offerings', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources']).to be_empty
+      end
     end
 
     context 'visibility of service offerings' do
