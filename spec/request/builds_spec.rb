@@ -15,7 +15,7 @@ RSpec.describe 'Builds' do
   let(:rails_logger) { double('rails_logger', info: nil) }
 
   before do
-    CloudController::DependencyLocator.instance.register(:kpack_client, kpack_client)
+    allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
     allow(kpack_client).to receive(:create_image)
   end
 
