@@ -13,6 +13,8 @@ require 'actions/service_instance_update'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
+require 'decorators/field_service_instance_offering_decorator'
+require 'decorators/field_service_instance_broker_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
   def show
@@ -24,6 +26,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
     decorators = []
     decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
 
     presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance, decorators: decorators)
     render status: :ok, json: presenter.to_json

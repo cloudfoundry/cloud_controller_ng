@@ -117,16 +117,16 @@ module VCAP::CloudController
           expect(message.fields).to match({ 'space.organization': %w(guid) })
         end
 
-        it 'does not accept fields values that are not `name` or `guid`' do
+        it 'does not accept fields keys that are not `name` or `guid`' do
           message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid,foo' } })
           expect(message).not_to be_valid
-          expect(message.errors[:fields]).to include("valid values are: 'name', 'guid'")
+          expect(message.errors[:fields]).to include("valid keys for 'space.organization' are: 'name', 'guid'")
         end
 
-        it 'does not accept fields keys that are not `space.organization` or `space`' do
+        it 'does not accept fields resources that are not `space.organization` or `space`' do
           message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
           expect(message).not_to be_valid
-          expect(message.errors[:fields]).to include("valid keys are: 'space', 'space.organization'")
+          expect(message.errors[:fields]).to include("[space.foo] valid resources are: 'space', 'space.organization'")
         end
       end
 

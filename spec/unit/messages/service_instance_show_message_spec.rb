@@ -1,39 +1,22 @@
 require 'spec_helper'
 require 'messages/service_instance_show_message'
+require 'field_message_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceShowMessage do
-    it 'accepts the `fields` parameter with `[space.organization]=name,guid`' do
-      message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid' } })
-      expect(message).to be_valid
-      expect(message.requested?(:fields)).to be_truthy
-      expect(message.fields).to match({ 'space.organization': %w(name guid) })
-    end
+    it_behaves_like 'field query parameter', 'space.organization', 'name,guid'
 
-    it 'accepts the `fields` parameter with `[space.organization]=name`' do
-      message = described_class.from_params({ 'fields' => { 'space.organization': 'name' } })
-      expect(message).to be_valid
-      expect(message.requested?(:fields)).to be_truthy
-      expect(message.fields).to match({ 'space.organization': %w(name) })
-    end
+    it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid'
 
-    it 'accepts the `fields` parameter with `[space.organization]=guid`' do
-      message = described_class.from_params({ 'fields' => { 'space.organization': 'guid' } })
-      expect(message).to be_valid
-      expect(message.requested?(:fields)).to be_truthy
-      expect(message.fields).to match({ 'space.organization': %w(guid) })
-    end
+    it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
 
-    it 'does not accept fields values that are not `name` or `guid`' do
-      message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid,foo' } })
-      expect(message).not_to be_valid
-      expect(message.errors[:fields]).to include("valid values are: 'name', 'guid'")
-    end
-
-    it 'does not accept fields keys that are not `space.organization`' do
+    it 'does not accept fields resources that are not allowed' do
       message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
       expect(message).not_to be_valid
-      expect(message.errors[:fields]).to include("valid keys are: 'space.organization'")
+      expect(message.errors[:fields]).to include(
+        '[space.foo] valid resources are: ' \
+        "'space.organization', 'service_plan.service_offering', 'service_plan.service_offering.service_broker'"
+      )
     end
 
     it 'does not accept other parameters' do

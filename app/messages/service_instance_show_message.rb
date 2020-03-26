@@ -3,7 +3,13 @@ module VCAP::CloudController
     register_allowed_keys [:fields]
 
     validates_with NoAdditionalParamsValidator
-    validates :fields, allow_nil: true, fields: { allowed: { 'space.organization' => ['name', 'guid'] } }
+    validates :fields, allow_nil: true, fields: {
+      allowed: {
+        'space.organization' => ['name', 'guid'],
+        'service_plan.service_offering' => ['name', 'guid'],
+        'service_plan.service_offering.service_broker' => ['name', 'guid']
+      }
+    }
 
     def self.from_params(params)
       instance = super(params, [], fields: %w(fields))

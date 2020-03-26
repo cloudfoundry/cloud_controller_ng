@@ -1,7 +1,7 @@
 ## Fields
 
 The `fields` parameter allows clients to fetch resources and include information of parent objects in the response.
-It works in a similar way to [include](#include), but only displays the fields that were requested.
+It works in a similar way to [include](#include), but the include section only displays the fields that were requested.
 
 For example, a response to `/v3/service_instances/:guid?fields[space.organization]=name` will contain detailed
 information about the service instance, as well as the name of the organization it belongs to.
@@ -14,13 +14,13 @@ For instance, the name of an Organization may be retrieved with fields, where th
 not be visible.
 
 ### Fields parameter
-The fields parameter is structured as: `fields[resource]=keys&fields[other.resource]=other,keys`
+The fields parameter is structured as: `fields[resource]=keys&fields[parent.resource]=other,keys`
 
 - `resource` is the name of the resource being requested, qualified by the relationship to the current resource.
 For example `/v3/service_instances?fields[space]=name` where `space` is a direct relationship of a service instance,
 or `/v3/service_instances?fields[space.organization]=name` where `organization` is a relationship of `space`.
 - `keys` is a comma-separated list of the fields in the object being requested. For example,
-`/v3/service_instances?fields[space]=name,guid` will return just the `name` and `guid` of the space.
+`/v3/service_instances?fields[space]=name,guid` will return just the `name` and `guid` of the space in the includes section.
 
 ### Fields Sample requests
 

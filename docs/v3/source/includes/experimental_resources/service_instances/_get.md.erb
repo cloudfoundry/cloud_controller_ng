@@ -42,7 +42,16 @@ This endpoint retrieves the service instance by GUID.
 
 Name | Type | Description
 ---- | ---- | ------------
-**fields** | [_fields parameter_](#fields-parameter) | Allowed resources: `space.organization` With keys: `name`, `guid`.
+**fields** | [_fields parameter_](#fields-parameter) | [_Allowed values_](#service-instance-fields)
+
+
+##### Service Instance Fields
+
+Resource            | Allowed Keys
+------------------- | ----
+space.organization | `name`, `guid`
+service_plan.service_offering| `name`, `guid`
+service_plan.service_offering.service_broker| `name`, `guid`
 
 #### Permitted roles
  |

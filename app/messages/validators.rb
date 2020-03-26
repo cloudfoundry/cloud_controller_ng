@@ -123,13 +123,13 @@ module VCAP::CloudController::Validators
       if !value.is_a?(Hash)
         record.errors.add(attribute, 'must be an object')
       else
-        allowed_fields = options[:allowed]
-        value.each do |key, inner_value|
-          v = allowed_fields[key.to_s] || allowed_fields[key.to_sym]
-          if v.nil?
-            record.errors.add(attribute, "valid keys are: #{allowed_fields.keys.map { |k| "'#{k}'" }.join(', ')}")
-          elsif !inner_value.to_set.subset?(v.to_set)
-            record.errors.add(attribute, "valid values are: #{v.map { |i| "'#{i}'" }.join(', ')}")
+        allowed_resources = options[:allowed]
+        value.each do |resource, keys|
+          allowed_keys = allowed_resources[resource.to_s] || allowed_resources[resource.to_sym]
+          if allowed_keys.nil?
+            record.errors.add(attribute, "[#{resource}] valid resources are: #{allowed_resources.keys.map { |k| "'#{k}'" }.join(', ')}")
+          elsif !keys.to_set.subset?(allowed_keys.to_set)
+            record.errors.add(attribute, "valid keys for '#{resource}' are: #{allowed_keys.map { |i| "'#{i}'" }.join(', ')}")
           end
         end
       end
