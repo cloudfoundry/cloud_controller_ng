@@ -2,6 +2,7 @@ module Kpack
   class Stager
     APP_GUID_LABEL_KEY = 'cloudfoundry.org/app_guid'.freeze
     BUILD_GUID_LABEL_KEY = 'cloudfoundry.org/build_guid'.freeze
+    STAGING_SOURCE_LABEL_KEY = 'cloudfoundry.org/source_type'.freeze
 
     def initialize(builder_namespace:, registry_service_account_name:, registry_tag_base:)
       @builder_namespace = builder_namespace
@@ -32,7 +33,8 @@ module Kpack
           namespace: builder_namespace,
           labels: {
             APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
-            BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid
+            BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid,
+            STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
           },
           annotations: {
             'sidecar.istio.io/inject' => 'false'

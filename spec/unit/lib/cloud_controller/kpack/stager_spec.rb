@@ -53,6 +53,7 @@ module Kpack
             labels: {
               Stager::APP_GUID_LABEL_KEY => package.app.guid,
               Stager::BUILD_GUID_LABEL_KEY => build.guid,
+              Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
             },
             annotations: {
               'sidecar.istio.io/inject' => 'false'
