@@ -10,6 +10,7 @@ require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
+require 'actions/service_instance_create_user_provided'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
@@ -62,10 +63,15 @@ class ServiceInstancesV3Controller < ApplicationController
     message = ServiceInstanceCreateMessage.new(hashed_params[:body])
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    space = Space.where(guid: message.space_guid).first
+    space = Space.first(guid: message.space_guid)
+    unprocessable_space! unless space && can_read_space?(space)
     unauthorized! if space&.in_suspended_org? && !admin?
+    unauthorized! unless can_write_space?(space)
 
-    render status: :ok, json: '{}'
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
+
+    render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
   end
 
   def update
@@ -212,5 +218,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def service_instance_not_found!
     resource_not_found!(:service_instance)
+  end
+
+  def unprocessable_space!
+    unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
   end
 end

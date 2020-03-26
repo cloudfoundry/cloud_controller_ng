@@ -89,12 +89,12 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(200)
 
         included = {
-            organizations: [
-              {
-                  name: space.organization.name,
-                  guid: space.organization.guid
-              }
-            ]
+          organizations: [
+            {
+              name: space.organization.name,
+              guid: space.organization.guid
+            }
+          ]
         }
 
         expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
@@ -516,11 +516,14 @@ RSpec.describe 'V3 service instances' do
 
   describe 'POST /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
-    let(:type) { 'user-provided' }
     let(:space_guid) { space.guid }
+
+    let(:name) { Sham.name }
+    let(:type) { 'user-provided' }
     let(:request_body) {
       {
         type: type,
+        name: name,
         relationships: {
           space: {
             data: {
@@ -535,6 +538,33 @@ RSpec.describe 'V3 service instances' do
       org.add_user(user)
       space.add_developer(user)
       headers_for(user)
+    end
+
+    describe 'permissions' do
+      let(:response) do
+        create_user_provided_json({
+          guid: UUID_REGEX,
+          name: name,
+          space: {
+            guid: UUID_REGEX
+          }
+        })
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['space_developer'] = {
+            code: 201,
+            response_object: response
+          }
+          h['admin'] = {
+            code: 201,
+            response_object: response
+          }
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when service_instance_creation flag is disabled' do
@@ -552,7 +582,7 @@ RSpec.describe 'V3 service instances' do
 
       it 'does not impact admins ability create services' do
         api_call.call(admin_headers)
-        expect(last_response).to have_status_code(200)
+        expect(last_response).to have_status_code(201)
       end
     end
 
@@ -572,7 +602,7 @@ RSpec.describe 'V3 service instances' do
 
       it 'does not impact admins ability to create services' do
         api_call.call(admin_headers)
-        expect(last_response).to have_status_code(200)
+        expect(last_response).to have_status_code(201)
       end
     end
 
@@ -585,6 +615,63 @@ RSpec.describe 'V3 service instances' do
         expect(parsed_response['errors']).to include(
           include({ 'detail' => include("Type must be one of 'managed', 'user-provided'") })
         )
+      end
+    end
+
+    context 'when the space is not readable' do
+      it 'fails saying the space cannot be found' do
+        request_body[:relationships][:space][:data][:guid] = VCAP::CloudController::Space.make.guid
+
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(
+          include({ 'detail' => 'Invalid space. Ensure that the space exists and you have access to it.' })
+        )
+      end
+    end
+
+    context 'when all possible parameters are specified' do
+      let(:request_body) do
+        {
+          type: type,
+          name: name,
+          relationships: {
+            space: {
+              data: {
+                guid: space_guid
+              }
+            }
+          },
+          credentials: {
+            foo: 'bar',
+            baz: 'qux'
+          },
+          tags: %w(foo bar baz),
+          syslog_drain_url: 'https://syslog.com/drain',
+          route_service_url: 'https://route.com/service',
+          metadata: {
+            annotations: {
+              foo: 'bar'
+            },
+            labels: {
+              baz: 'qux'
+            }
+          }
+        }
+      end
+
+      let(:response) do
+        create_user_provided_json(
+          VCAP::CloudController::ServiceInstance.last,
+          labels: { baz: 'qux' },
+          annotations: { foo: 'bar' }
+        )
+      end
+
+      it 'succeeds' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to match_json_response(response)
       end
     end
   end
@@ -635,7 +722,7 @@ RSpec.describe 'V3 service instances' do
     }
   end
 
-  def create_user_provided_json(instance, labels: {})
+  def create_user_provided_json(instance, labels: {}, annotations: {})
     {
       guid: instance.guid,
       name: instance.name,
@@ -643,11 +730,11 @@ RSpec.describe 'V3 service instances' do
       updated_at: iso8601,
       type: 'user-provided',
       syslog_drain_url: instance.syslog_drain_url,
-      route_service_url: nil,
-      tags: [],
+      route_service_url: instance.route_service_url,
+      tags: instance.tags,
       metadata: {
         labels: labels,
-        annotations: {},
+        annotations: annotations,
       },
       relationships: {
         space: {

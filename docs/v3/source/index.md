@@ -330,6 +330,7 @@ includes:
   - experimental_resources/service_plan_visibility/apply
   - experimental_resources/service_plan_visibility/delete
   - experimental_resources/service_instances/header
+  - experimental_resources/service_instances/create_user_provided
   - experimental_resources/service_instances/get
   - experimental_resources/service_instances/credentials
   - experimental_resources/service_instances/parameters

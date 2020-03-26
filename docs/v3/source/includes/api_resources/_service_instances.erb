@@ -181,8 +181,8 @@
     }
   },
   "metadata": {
-    "labels": {},
-    "annotations": {}
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
   },
   "links": {
     "self": {
