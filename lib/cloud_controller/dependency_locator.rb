@@ -376,7 +376,7 @@ module CloudController
         ca_crt: File.open(kubernetes_config[:ca_file]).read
       })
 
-      @dependencies[:kpack_client] ||= Kubernetes::KpackClient.new(kube_client)
+      Kubernetes::KpackClient.new(kube_client)
     end
 
     private

@@ -739,5 +739,9 @@ RSpec.describe CloudController::DependencyLocator do
       expect(kube_client.auth_options).to eq({ bearer_token: 'token' })
       expect(kube_client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
     end
+
+    it 'always creates a new kpack client object from config' do
+      expect(locator.kpack_client).not_to eq(locator.kpack_client)
+    end
   end
 end
