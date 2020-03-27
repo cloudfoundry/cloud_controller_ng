@@ -13,8 +13,11 @@ module VCAP::CloudController
     end
 
     def decorate(hash, service_instances)
+      managed_service_instances = service_instances.select(&:managed_instance?)
+      return hash if managed_service_instances.empty?
+
       hash[:included] ||= {}
-      plans = service_instances.map(&:service_plan).uniq
+      plans = managed_service_instances.map(&:service_plan).uniq
       brokers = plans.map(&:service_broker).uniq
 
       hash[:included][:service_brokers] = brokers.sort_by(&:created_at).map do |broker|

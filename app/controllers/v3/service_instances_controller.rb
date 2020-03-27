@@ -16,6 +16,7 @@ require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
 require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
+require 'decorators/field_service_instance_plan_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
   def show
@@ -47,6 +48,9 @@ class ServiceInstancesV3Controller < ApplicationController
     decorators = []
     decorators << FieldServiceInstanceSpaceDecorator.new(message.fields) if FieldServiceInstanceSpaceDecorator.match?(message.fields)
     decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstancePlanDecorator.new(message.fields) if FieldServiceInstancePlanDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
