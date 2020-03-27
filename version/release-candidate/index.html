@@ -617,7 +617,7 @@ query param can be used with a single resource or a list of resources.</p>
 <h2 id="fields">Fields</h2>
 
 <p>The <code class="prettyprint">fields</code> parameter allows clients to fetch resources and include information of parent objects in the response.
-It works in a similar way to <a href="#include">include</a>, but only displays the fields that were requested.</p>
+It works in a similar way to <a href="#include">include</a>, but the include section only displays the fields that were requested.</p>
 
 <p>For example, a response to <code class="prettyprint">/v3/service_instances/:guid?fields[space.organization]=name</code> will contain detailed
 information about the service instance, as well as the name of the organization it belongs to.</p>
@@ -631,14 +631,14 @@ not be visible.</p>
 
 <h3 id="fields-parameter">Fields parameter</h3>
 
-<p>The fields parameter is structured as: <code class="prettyprint">fields[resource]=keys&amp;fields[other.resource]=other,keys</code></p>
+<p>The fields parameter is structured as: <code class="prettyprint">fields[resource]=keys&amp;fields[parent.resource]=other,keys</code></p>
 
 <ul>
 <li><code class="prettyprint">resource</code> is the name of the resource being requested, qualified by the relationship to the current resource.
 For example <code class="prettyprint">/v3/service_instances?fields[space]=name</code> where <code class="prettyprint">space</code> is a direct relationship of a service instance,
 or <code class="prettyprint">/v3/service_instances?fields[space.organization]=name</code> where <code class="prettyprint">organization</code> is a relationship of <code class="prettyprint">space</code>.</li>
 <li><code class="prettyprint">keys</code> is a comma-separated list of the fields in the object being requested. For example,
-<code class="prettyprint">/v3/service_instances?fields[space]=name,guid</code> will return just the <code class="prettyprint">name</code> and <code class="prettyprint">guid</code> of the space.</li>
+<code class="prettyprint">/v3/service_instances?fields[space]=name,guid</code> will return just the <code class="prettyprint">name</code> and <code class="prettyprint">guid</code> of the space in the includes section.</li>
 </ul>
 
 <h3 id="fields-sample-requests">Fields Sample requests</h3>
@@ -25870,7 +25870,29 @@ have are no longer provided by the Service Broker.</p>
 <tr>
 <td><strong>fields</strong></td>
 <td><a href="#fields-parameter"><em>fields parameter</em></a></td>
-<td>Allowed resources: <code class="prettyprint">space.organization</code> With keys: <code class="prettyprint">name</code>, <code class="prettyprint">guid</code>.</td>
+<td><a href="#service-instance-fields"><em>Allowed values</em></a></td>
+</tr>
+</tbody></table>
+
+<h5 id="service-instance-fields">Service Instance Fields</h5>
+
+<table><thead>
+<tr>
+<th>Resource</th>
+<th>Allowed Keys</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>space.organization</td>
+<td><code class="prettyprint">name</code>, <code class="prettyprint">guid</code></td>
+</tr>
+<tr>
+<td>service_plan.service_offering</td>
+<td><code class="prettyprint">name</code>, <code class="prettyprint">guid</code></td>
+</tr>
+<tr>
+<td>service_plan.service_offering.service_broker</td>
+<td><code class="prettyprint">name</code>, <code class="prettyprint">guid</code></td>
 </tr>
 </tbody></table>
 
