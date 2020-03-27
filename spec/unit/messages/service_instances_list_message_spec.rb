@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'messages/service_instances_list_message'
+require 'field_message_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstancesListMessage do
@@ -82,51 +83,22 @@ module VCAP::CloudController
           expect(message.errors[:fields][0]).to include('must be an object')
         end
 
-        it 'accepts the `fields` parameter with `[space]=relationships.organization`' do
-          message = described_class.from_params({ 'fields' => { 'space': 'relationships.organization' } })
-          expect(message).to be_valid
-          expect(message.requested?(:fields)).to be_truthy
-          expect(message.fields).to match({ 'space': %w(relationships.organization) })
-        end
+        it_behaves_like 'field query parameter', 'space', 'guid,relationships.organization'
 
-        it 'accepts the `fields` parameter with `[space]=guid`' do
-          message = described_class.from_params({ 'fields' => { 'space': 'guid' } })
-          expect(message).to be_valid
-          expect(message.requested?(:fields)).to be_truthy
-          expect(message.fields).to match({ 'space': %w(guid) })
-        end
+        it_behaves_like 'field query parameter', 'space.organization', 'name,guid'
 
-        it 'accepts the `fields` parameter with `[space.organization]=name,guid`' do
-          message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid' } })
-          expect(message).to be_valid
-          expect(message.requested?(:fields)).to be_truthy
-          expect(message.fields).to match({ 'space.organization': %w(name guid) })
-        end
+        it_behaves_like 'field query parameter', 'service_plan', 'guid,relationships.service_offering'
 
-        it 'accepts the `fields` parameter with `[space.organization]=name`' do
-          message = described_class.from_params({ 'fields' => { 'space.organization': 'name' } })
-          expect(message).to be_valid
-          expect(message.requested?(:fields)).to be_truthy
-          expect(message.fields).to match({ 'space.organization': %w(name) })
-        end
+        it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,relationships.service_broker'
 
-        it 'accepts the `fields` parameter with `[space.organization]=guid`' do
-          message = described_class.from_params({ 'fields' => { 'space.organization': 'guid' } })
-          expect(message).to be_valid
-          expect(message.requested?(:fields)).to be_truthy
-          expect(message.fields).to match({ 'space.organization': %w(guid) })
-        end
+        it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
 
-        it 'does not accept fields keys that are not `name` or `guid`' do
-          message = described_class.from_params({ 'fields' => { 'space.organization': 'name,guid,foo' } })
-          expect(message).not_to be_valid
-          expect(message.errors[:fields]).to include("valid keys for 'space.organization' are: 'name', 'guid'")
-        end
-
-        it 'does not accept fields resources that are not `space.organization` or `space`' do
+        it 'does not accept fields resources that are not allowed' do
           message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
           expect(message).not_to be_valid
-          expect(message.errors[:fields]).to include("[space.foo] valid resources are: 'space', 'space.organization'")
+          expect(message.errors[:fields]).to include(
+            "[space.foo] valid resources are: 'space', 'space.organization', " \
+            "'service_plan', 'service_plan.service_offering', 'service_plan.service_offering.service_broker'")
         end
       end
 

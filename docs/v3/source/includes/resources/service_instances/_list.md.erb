@@ -39,7 +39,18 @@ Name | Type | Description
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
 **label_selector** | _string_ | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements.
-**fields** | _string_ | **Experimental** -Allowed resources: Field `space` with keys: `guid`, `relationships.organization`. Field `space.organization` with keys: `name`, `guid`.
+**fields** | [_fields parameter_](#fields-parameter) | **Experimental** [_Allowed values_](#service-instances-list-fields)
+
+
+##### Service Instances List Fields
+
+Resource            | Allowed Keys
+------------------- | ----
+space | `guid`, `relationships.organization`
+space.organization| `guid`, `name`
+service_plan| `guid`, `relationships.service_offering`
+service_plan.service_offering| `guid`, `name`, `relationships.service_broker`
+service_plan.service_offering.service_broker| `guid`, `name`
 
 #### Permitted roles
  |

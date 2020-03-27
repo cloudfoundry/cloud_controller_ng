@@ -12,7 +12,6 @@ module VCAP::CloudController
 
       let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
-      let!(:service_instance_3) { UserProvidedServiceInstance.make }
 
       it 'decorated the given hash with offering name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
@@ -58,6 +57,42 @@ module VCAP::CloudController
         })
       end
 
+      it 'decorated the given hash with offering relationship to broker from service instances' do
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        decorator = described_class.new({ 'service_plan.service_offering': ['relationships.service_broker', 'foo'] })
+
+        hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
+
+        expect(hash).to match({
+          foo: 'bar',
+          included: {
+            monkeys: %w(zach greg),
+            service_offerings: [
+              {
+                relationships: {
+                  service_broker: {
+                    data: {
+                      name: offering1.service_broker.name,
+                      guid: offering1.service_broker.guid
+                    }
+                  }
+                }
+              },
+              {
+                relationships: {
+                  service_broker: {
+                    data: {
+                      name: offering2.service_broker.name,
+                      guid: offering2.service_broker.guid
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        })
+      end
+
       context 'when instances are from the same offering' do
         let(:plan3) { ServicePlan.make(service: offering1) }
         let!(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan3) }
@@ -66,6 +101,18 @@ module VCAP::CloudController
           decorator = described_class.new({ 'service_plan.service_offering': ['name'] })
           hash = decorator.decorate({}, [service_instance_1, service_instance_3])
           expect(hash[:included][:service_offerings]).to have(1).element
+        end
+      end
+
+      context 'for user provided service instances' do
+        let!(:service_instance_3) { UserProvidedServiceInstance.make }
+
+        it 'should return the unchanged hash' do
+          undecorated_hash = { foo: 'bar' }
+          decorator = described_class.new({ 'service_plan.service_offering': ['relationships.service_broker'] })
+
+          hash = decorator.decorate(undecorated_hash, [service_instance_3])
+          expect(hash[:included]).to be_nil
         end
       end
     end
@@ -79,8 +126,12 @@ module VCAP::CloudController
         expect(described_class.match?({ 'service_plan.service_offering': ['guid'], other: ['bar'] })).to be_truthy
       end
 
-      it 'matches hashes containing key symbol `service_plan.service_offering` and value `name,guid`' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['name', 'guid', 'something'], other: ['bar'] })).to be_truthy
+      it 'matches hashes containing key symbol `service_plan.service_offering` and value `relationships.service_broker`' do
+        expect(described_class.match?({ 'service_plan.service_offering': ['relationships.service_broker'], other: ['bar'] })).to be_truthy
+      end
+
+      it 'matches hashes containing key symbol `service_plan.service_offering` and value `name,guid,relationships.service_broker`' do
+        expect(described_class.match?({ 'service_plan.service_offering': ['name', 'guid', 'relationships.service_broker', 'something'], other: ['bar'] })).to be_truthy
       end
 
       it 'does not match other values for a valid key' do

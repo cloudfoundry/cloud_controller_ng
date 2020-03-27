@@ -13,7 +13,6 @@ module VCAP::CloudController
 
       let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
-      let!(:service_instance_3) { UserProvidedServiceInstance.make }
 
       it 'decorated the given hash with broker name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
@@ -68,6 +67,18 @@ module VCAP::CloudController
           decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['name'] })
           hash = decorator.decorate({}, [service_instance_1, service_instance_3])
           expect(hash[:included][:service_brokers]).to have(1).element
+        end
+      end
+
+      context 'for user provided service instances' do
+        let!(:service_instance_3) { UserProvidedServiceInstance.make }
+
+        it 'should return the unchanged hash' do
+          undecorated_hash = { foo: 'bar' }
+          decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['name'] })
+
+          hash = decorator.decorate(undecorated_hash, [service_instance_3])
+          expect(hash[:included]).to be_nil
         end
       end
     end
