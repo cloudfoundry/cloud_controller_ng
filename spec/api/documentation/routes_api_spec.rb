@@ -24,6 +24,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
       and_return(routing_api_client)
     allow(routing_api_client).to receive(:router_group).and_return(router_group)
     allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
+    TestConfig.override(kubernetes: {})
   end
 
   authenticated_request

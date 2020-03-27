@@ -7,6 +7,7 @@ RSpec.describe 'Routes' do
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    TestConfig.override(kubernetes: {})
 
     stub_request(:get, 'http://localhost:3000/routing/v1/router_groups').
       to_return(status: 200, body: '{}', headers: {})

@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:logger) { instance_double(Steno::Logger) }
       let(:user_audit_info) { instance_double(UserAuditInfo) }
       let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
+      let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
       let(:host) { 'some-host' }
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
@@ -26,7 +27,8 @@ module VCAP::CloudController
 
       describe '#create_route' do
         before do
-          allow(Copilot::Adapter).to receive(:create_route)
+          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+          allow(route_crd_client).to receive(:create_route)
           allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
           allow(route_event_repo).to receive(:record_route_create)
         end
@@ -45,15 +47,32 @@ module VCAP::CloudController
           end
         end
 
-        it 'creates a route and notifies copilot' do
-          expect {
-            route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
+        context 'when targeting a Kubernetes API' do
+          it 'creates a route resource in Kubernetes' do
+            expect {
+              route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
+              expect(route_crd_client).to have_received(:create_route).with(route)
+              expect(route.host).to eq(host)
+              expect(route.path).to eq(path)
+            }.to change { Route.count }.by(1)
+          end
+        end
 
-            expect(Copilot::Adapter).to have_received(:create_route).with(route)
-            expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
-            expect(route.host).to eq(host)
-            expect(route.path).to eq(path)
-          }.to change { Route.count }.by(1)
+        context 'when not targeting a Kubernetes API' do
+          before do
+            TestConfig.override(
+              kubernetes: {}
+            )
+          end
+
+          it 'does not create a route resource in Kubernetes' do
+            expect {
+              route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
+              expect(route_crd_client).not_to have_received(:create_route)
+              expect(route.host).to eq(host)
+              expect(route.path).to eq(path)
+            }.to change { Route.count }.by(1)
+          end
         end
       end
     end

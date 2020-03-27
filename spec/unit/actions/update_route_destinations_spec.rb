@@ -34,6 +34,13 @@ module VCAP::CloudController
       }
     end
 
+    before do
+      TestConfig.override(
+        kubernetes: {
+        },
+      )
+    end
+
     describe '#add' do
       context 'when all destinations are valid' do
         let(:params) do
@@ -347,6 +354,38 @@ module VCAP::CloudController
           expect(RouteMappingModel.count).to eq(100)
         end
       end
+
+      context 'when a kubernetes api is enabled' do
+        let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 7000,
+              weight: nil,
+            }
+          ]
+        end
+
+        before do
+          TestConfig.override(
+            kubernetes: {
+              host_url: 'some-kubernetes-host-url'
+            },
+          )
+          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+          allow(route_crd_client).to receive(:update_destinations)
+        end
+
+        it 'updates the route resource in kubernetes' do
+          expect {
+            subject.add(params, route, apps_hash, user_audit_info)
+          }.to change { RouteMappingModel.count }.by(1)
+
+          expect(route_crd_client).to have_received(:update_destinations).with(route)
+        end
+      end
     end
 
     describe '#replace' do
@@ -571,6 +610,39 @@ module VCAP::CloudController
           ).and change { RouteMappingModel.count }.by(0)
         end
       end
+
+      context 'when a kubernetes api is enabled' do
+        let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 7000,
+              weight: nil,
+            }
+          ]
+        end
+
+        before do
+          TestConfig.override(
+            kubernetes: {
+              host_url: 'some-kubernetes-host-url'
+            },
+          )
+          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+          allow(route_crd_client).to receive(:update_destinations)
+        end
+
+        it 'updates the route resource in kubernetes' do
+          expect {
+            subject.replace(params, route, apps_hash, user_audit_info)
+          }.to change { RouteMappingModel.count }.by(0)
+
+          expect(route_crd_client).to have_received(:update_destinations).with(route)
+        end
+      end
     end
 
     describe '#delete' do
@@ -680,6 +752,28 @@ module VCAP::CloudController
             subject.delete(RouteMappingModel.last, route, user_audit_info)
           }.not_to raise_error
           expect(RouteMappingModel.count).to eq(102)
+        end
+      end
+
+      context 'when a kubernetes api is enabled' do
+        let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+
+        before do
+          TestConfig.override(
+            kubernetes: {
+              host_url: 'some-kubernetes-host-url'
+            },
+          )
+          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+          allow(route_crd_client).to receive(:update_destinations)
+        end
+
+        it 'updates the route resource in kubernetes' do
+          expect {
+            subject.delete(existing_destination, route, user_audit_info)
+          }.to change { RouteMappingModel.count }.by(-1)
+
+          expect(route_crd_client).to have_received(:update_destinations).with(route)
         end
       end
     end

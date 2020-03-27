@@ -7,6 +7,7 @@ RSpec.describe 'RouteMappings' do
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    TestConfig.override(kubernetes: {})
   end
 
   describe 'GET /v2/route_mappings/:guid' do

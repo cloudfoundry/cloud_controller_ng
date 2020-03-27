@@ -15,6 +15,7 @@ RSpec.describe 'App Manifests' do
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    TestConfig.override(kubernetes: {})
   end
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do

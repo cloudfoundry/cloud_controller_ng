@@ -14,6 +14,10 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     parameter :guid, 'The guid of the App'
   end
 
+  before do
+    TestConfig.override(kubernetes: {})
+  end
+
   def self.request_fields(required)
     fields_info(required).reject { |f| [:detected_start_command].include?(f[:name]) }
   end
@@ -122,7 +126,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
-      TestConfig.override(diego: { staging: 'optional', running: 'optional' })
+      TestConfig.override(diego: { staging: 'optional', running: 'optional' }, kubernetes: {})
     end
 
     standard_model_delete_without_async :app

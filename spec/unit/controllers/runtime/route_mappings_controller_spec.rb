@@ -2,6 +2,10 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::RouteMappingsController do
+    before do
+      TestConfig.override(kubernetes: {})
+    end
+
     describe 'Route Mappings' do
       describe 'Query Parameters' do
         it { expect(VCAP::CloudController::RouteMappingsController).to be_queryable_by(:app_guid) }
@@ -159,25 +163,6 @@ module VCAP::CloudController
 
             warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
             expect(warning).to include('Route has been mapped to app port 8080.')
-          end
-
-          context 'when copilot is enabled' do
-            before do
-              TestConfig.override(copilot: { enabled: true })
-              allow(Copilot::Adapter).to receive(:map_route)
-            end
-
-            it 'notifies copilot' do
-              post '/v2/route_mappings', body
-
-              expect(last_response).to have_status_code(201)
-              expect(decoded_response['entity']['app_port']).to eq(8080)
-
-              warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-              expect(warning).to include('Route has been mapped to app port 8080.')
-
-              expect(Copilot::Adapter).to have_received(:map_route)
-            end
           end
 
           context 'when another mapping with the same port already exists' do
@@ -412,7 +397,7 @@ module VCAP::CloudController
 
             before do
               route
-              TestConfig.override(routing_api: nil)
+              TestConfig.override(routing_api: nil, kubernetes: {})
             end
 
             it 'returns 201 created' do

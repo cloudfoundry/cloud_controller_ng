@@ -27,6 +27,7 @@ module VCAP::CloudController
       allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_3).and_return(router_groups[2])
       allow(routing_api_client).to receive(:router_group).with(http_group).and_return(router_groups[3])
+      TestConfig.override(kubernetes: {})
     end
 
     describe 'Query Parameters' do
@@ -270,26 +271,6 @@ module VCAP::CloudController
         expect(last_response.body).to include(created_route.guid)
         expect(last_response.body).to include(created_route.host)
         expect(created_route.host).to eq('example')
-      end
-
-      context 'when copilot is enabled' do
-        before do
-          TestConfig.override(copilot: { enabled: true })
-          allow(Copilot::Adapter).to receive(:create_route)
-        end
-
-        it 'creates a route and notifies Copilot' do
-          post '/v2/routes', MultiJson.dump(req)
-
-          created_route = Route.last
-          expect(last_response).to have_status_code(201)
-          expect(last_response.headers).to include('Location')
-          expect(last_response.headers['Location']).to eq("#{RoutesController.path}/#{created_route.guid}")
-          expect(last_response.body).to include(created_route.guid)
-          expect(last_response.body).to include(created_route.host)
-          expect(created_route.host).to eq('example')
-          expect(Copilot::Adapter).to have_received(:create_route)
-        end
       end
 
       context 'when the requested route specifies a system hostname and a system domain' do

@@ -296,6 +296,7 @@ kubernetes:
   service_account:
     token_file: "spec/fixtures/service_accounts/k8s.token"
   ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
+  workloads_namespace: 'cf-workloads'
   kpack:
     builder_namespace: 'cf-workloads'
     registry_service_account_name: 'fake-registry-service-account'

@@ -95,16 +95,14 @@ module VCAP::CloudController
             key_file: String
           },
 
-          optional(:copilot) => {
-            enabled: bool,
-            optional(:host) => String,
-            optional(:port) => Integer,
-            optional(:client_ca_file) => String,
-            optional(:client_key_file) => String,
-            optional(:client_chain_file) => String,
-            optional(:temporary_istio_domains) => Array,
+          optional(:kubernetes) => {
+            host_url: String,
+            service_account: {
+              token_file: String,
+            },
+            ca_file: String,
+            workloads_namespace: String,
           },
-
           staging: {
             timeout_in_seconds: Integer,
             auth: {

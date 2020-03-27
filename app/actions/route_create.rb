@@ -11,8 +11,8 @@ module VCAP::CloudController
       route = Route.new(
         host: message.host || '',
         path: message.path || '',
-        space_guid: message.space_guid,
-        domain_guid: message.domain_guid
+        space: space,
+        domain: domain,
       )
 
       Route.db.transaction do
@@ -27,12 +27,25 @@ module VCAP::CloudController
         message.audit_hash,
         manifest_triggered: false,
       )
+
+      if kubernetes_api_configured?
+        route_crd_client.create_route(route)
+      end
+
       route
     rescue Sequel::ValidationFailed => e
       validation_error!(e, route.host, route.path, space, domain)
     end
 
     private
+
+    def route_crd_client
+      @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
+    end
+
+    def kubernetes_api_configured?
+      !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
+    end
 
     def validation_error!(error, host, path, space, domain)
       if error.errors.on(:domain)&.include?(:invalid_relation)

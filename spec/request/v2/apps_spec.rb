@@ -9,6 +9,7 @@ RSpec.describe 'Apps' do
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    TestConfig.override(kubernetes: {})
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
   end
 

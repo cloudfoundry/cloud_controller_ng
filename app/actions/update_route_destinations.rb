@@ -96,6 +96,13 @@ module VCAP::CloudController
         end
 
         route.reload
+
+        if kubernetes_api_configured?
+          client = route_crd_client
+          client.update_destinations(route)
+        end
+
+        route
       end
 
       def update_processes(processes_to_ports_map)
@@ -158,6 +165,14 @@ module VCAP::CloudController
           route: route,
           weight: destination.weight
         }
+      end
+
+      def route_crd_client
+        CloudController::DependencyLocator.instance.route_crd_client
+      end
+
+      def kubernetes_api_configured?
+        !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
       end
 
       def validate_unique!(new_route_mappings)

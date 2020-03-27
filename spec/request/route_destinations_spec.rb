@@ -7,6 +7,10 @@ RSpec.describe 'Route Destinations Request' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
 
+  before do
+    TestConfig.override(kubernetes: {})
+  end
+
   context 'buildpack table test' do
     let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
     let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }

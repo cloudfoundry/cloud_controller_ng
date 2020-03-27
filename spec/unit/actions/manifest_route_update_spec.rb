@@ -18,6 +18,10 @@ module VCAP::CloudController
       let!(:process) { ProcessModel.make(app: app) }
       let!(:another_process) { ProcessModel.make(app: app) }
 
+      before do
+        TestConfig.override(kubernetes: {})
+      end
+
       context 'when the route already exists' do
         let(:domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }
         let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path', space: app.space) }

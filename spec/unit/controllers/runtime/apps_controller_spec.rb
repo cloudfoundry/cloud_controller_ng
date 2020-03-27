@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:app_event_repository) { Repositories::AppEventRepository.new }
     before do
       set_current_user(non_admin_user)
+      TestConfig.override(kubernetes: { host_url: nil })
       CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository)
     end
 

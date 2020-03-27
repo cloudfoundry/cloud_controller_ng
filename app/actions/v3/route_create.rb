@@ -4,12 +4,22 @@ module VCAP::CloudController
       class << self
         def create_route(route_hash:, logger:, user_audit_info:, manifest_triggered: false)
           route = Route.create_from_hash(route_hash)
-
-          Copilot::Adapter.create_route(route)
+          if kubernetes_api_configured?
+            client = route_crd_client
+            client.create_route(route)
+          end
 
           Repositories::RouteEventRepository.new.record_route_create(route, user_audit_info, route_hash, manifest_triggered: manifest_triggered)
 
           route
+        end
+
+        def route_crd_client
+          CloudController::DependencyLocator.instance.route_crd_client
+        end
+
+        def kubernetes_api_configured?
+          !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
         end
       end
     end

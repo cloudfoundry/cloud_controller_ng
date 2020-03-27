@@ -19,6 +19,7 @@ module VCAP::CloudController
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+        TestConfig.override(kubernetes: {})
       end
 
       it 'deletes both space records' do

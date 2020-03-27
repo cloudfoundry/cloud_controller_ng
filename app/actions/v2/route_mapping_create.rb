@@ -42,12 +42,14 @@ module VCAP::CloudController
           route_mapping.save
           route_handler.update_route_information
 
-          Copilot::Adapter.map_route(route_mapping)
-
           app_event_repository.record_map_route(
             user_audit_info,
             route_mapping
           )
+        end
+
+        if kubernetes_api_configured?
+          route_crd_client.update_destinations(route_mapping.route)
         end
 
         route_mapping
@@ -62,6 +64,10 @@ module VCAP::CloudController
       private
 
       attr_reader :request_attrs, :user_audit_info, :app, :route, :process
+
+      def route_crd_client
+        @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
+      end
 
       def requested_port
         @requested_port ||= request_attrs.key?('app_port') ? request_attrs['app_port'] : process.ports.try(:first)
@@ -122,6 +128,10 @@ module VCAP::CloudController
         if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
           raise RoutingApiDisabledError.new('Routing API is disabled')
         end
+      end
+
+      def kubernetes_api_configured?
+        !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
       end
     end
   end

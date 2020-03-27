@@ -360,6 +360,7 @@ module VCAP::CloudController
               token_file: String,
             },
             ca_file: String,
+            workloads_namespace: String,
             optional(:kpack) => {
               builder_namespace: String,
               registry_service_account_name: String,

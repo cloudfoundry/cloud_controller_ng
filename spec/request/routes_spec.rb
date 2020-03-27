@@ -7,6 +7,10 @@ RSpec.describe 'Routes Request' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
 
+  before do
+    TestConfig.override(kubernetes: {})
+  end
+
   describe 'GET /v3/routes' do
     let(:other_space) { VCAP::CloudController::Space.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
