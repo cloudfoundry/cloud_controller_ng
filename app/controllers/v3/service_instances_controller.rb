@@ -2,6 +2,8 @@ require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
 require 'messages/service_instance_update_message'
 require 'messages/service_instance_create_message'
+require 'messages/service_instance_create_managed_message'
+require 'messages/service_instance_create_user_provided_message'
 require 'messages/service_instance_show_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
@@ -11,14 +13,18 @@ require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
 require 'actions/service_instance_create_user_provided'
+require 'actions/service_instance_create_managed'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
 require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
+require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
+  include ServicePermissions
+
   def show
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
@@ -64,18 +70,19 @@ class ServiceInstancesV3Controller < ApplicationController
   def create
     FeatureFlag.raise_unless_enabled!(:service_instance_creation) unless admin?
 
-    message = ServiceInstanceCreateMessage.new(hashed_params[:body])
-    invalid_param!(message.errors.full_messages) unless message.valid?
+    message = build_create_message(hashed_params[:body])
 
     space = Space.first(guid: message.space_guid)
     unprocessable_space! unless space && can_read_space?(space)
     unauthorized! if space&.in_suspended_org? && !admin?
     unauthorized! unless can_write_space?(space)
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-    instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
-
-    render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
+    case message.type
+    when 'user-provided'
+      create_user_provided(message)
+    when 'managed'
+      create_managed(message, space: space)
+    end
   end
 
   def update
@@ -165,6 +172,29 @@ class ServiceInstancesV3Controller < ApplicationController
 
   private
 
+  def create_user_provided(message)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
+    render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
+  rescue ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance => e
+    unprocessable!(e.message)
+  end
+
+  def create_managed(message, space:)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    unprocessable_service_plan! unless service_plan &&
+      visible_to_current_user?(plan: service_plan) &&
+      service_plan.visible_in_space?(space)
+
+    job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  rescue ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
+    unprocessable!(e.message)
+  end
+
   def admin?
     permission_queryer.can_write_globally?
   end
@@ -220,11 +250,29 @@ class ServiceInstancesV3Controller < ApplicationController
     permission_queryer.can_write_to_space?(space.guid)
   end
 
+  def build_create_message(params)
+    generic_message = ServiceInstanceCreateMessage.new(params)
+    invalid_param!(generic_message.errors.full_messages) unless generic_message.valid?
+
+    specific_message = if generic_message.type == 'managed'
+                         ServiceInstanceCreateManagedMessage.new(params)
+                       else
+                         ServiceInstanceCreateUserProvidedMessage.new(params)
+                       end
+
+    invalid_param!(specific_message.errors.full_messages) unless specific_message.valid?
+    specific_message
+  end
+
   def service_instance_not_found!
     resource_not_found!(:service_instance)
   end
 
   def unprocessable_space!
     unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
+  end
+
+  def unprocessable_service_plan!
+    unprocessable!('Invalid service plan. Ensure that the service plan exists and you have access to it.')
   end
 end

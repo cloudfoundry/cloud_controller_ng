@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'actions/service_instance_create_user_provided'
-require 'support/stepper'
+require 'messages/service_instance_create_user_provided_message'
 
 module VCAP
   module CloudController
@@ -8,8 +8,9 @@ module VCAP
       subject(:action) { described_class.new(event_repository) }
 
       let(:space) { Space.make }
-      let(:message) { ServiceInstanceCreateMessage.new(request) }
+      let(:message) { ServiceInstanceCreateUserProvidedMessage.new(request) }
       let(:instance) { ServiceInstance.last }
+      let(:name) { 'my-service-instance' }
 
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
@@ -20,7 +21,7 @@ module VCAP
       let(:request) do
         {
           type: 'user-provided',
-          name: 'my-service-instance',
+          name: name,
           credentials: {
             foo: 'bar',
             baz: 'qux'
@@ -101,15 +102,27 @@ module VCAP
         end
       end
 
+      context 'name is already taken' do
+        it 'raises an error' do
+          ServiceInstance.make(name: name, space: space)
+
+          expect { action.create(message) }.
+            to raise_error(
+              ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
+              "The service instance name is taken: #{name}"
+            )
+        end
+      end
+
       context 'SQL validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new
           errors.add(:blork, 'is busted')
-          expect(VCAP::CloudController::UserProvidedServiceInstance).to receive(:create).
+          expect(UserProvidedServiceInstance).to receive(:create).
             and_raise(Sequel::ValidationFailed.new(errors))
 
           expect { action.create(message) }.
-            to raise_error(VCAP::CloudController::ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'blork is busted')
+            to raise_error(ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'blork is busted')
         end
       end
     end

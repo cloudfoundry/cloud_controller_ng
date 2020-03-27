@@ -618,7 +618,8 @@ RSpec.describe 'V3 service instances' do
 
     let(:name) { Sham.name }
     let(:type) { 'user-provided' }
-    let(:request_body) {
+    let(:request_body_additions) { {} }
+    let(:request_body) do
       {
         type: type,
         name: name,
@@ -629,8 +630,8 @@ RSpec.describe 'V3 service instances' do
             }
           }
         }
-      }
-    }
+      }.merge(request_body_additions)
+    end
 
     let(:space_dev_headers) do
       org.add_user(user)
@@ -728,7 +729,7 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
-    context 'when all possible parameters are specified' do
+    context 'user-provided service instance' do
       let(:request_body) do
         {
           type: type,
@@ -758,23 +759,297 @@ RSpec.describe 'V3 service instances' do
         }
       end
 
-      let(:response) do
-        create_user_provided_json(
-          VCAP::CloudController::ServiceInstance.last,
-          labels: { baz: 'qux' },
-          annotations: { foo: 'bar' }
+      it 'responds with the created object' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to match_json_response(
+          create_user_provided_json(
+            VCAP::CloudController::ServiceInstance.last,
+            labels: { baz: 'qux' },
+            annotations: { foo: 'bar' }
+          )
         )
       end
 
-      it 'succeeds' do
+      it 'creates a service instance in the database' do
         api_call.call(space_dev_headers)
-        expect(last_response).to have_status_code(201)
-        expect(parsed_response).to match_json_response(response)
+
+        instance = VCAP::CloudController::ServiceInstance.last
+
+        expect(instance.name).to eq(name)
+        expect(instance.syslog_drain_url).to eq('https://syslog.com/drain')
+        expect(instance.route_service_url).to eq('https://route.com/service')
+        expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
+        expect(instance.credentials).to match({ 'foo' => 'bar', 'baz' => 'qux' })
+        expect(instance.space).to eq(space)
+        expect(instance.annotations[0].key_name).to eq('foo')
+        expect(instance.annotations[0].value).to eq('bar')
+        expect(instance.labels[0].key_name).to eq('baz')
+        expect(instance.labels[0].value).to eq('qux')
+      end
+
+      context 'when the name has already been taken' do
+        it 'fails when the same name is already used in this space' do
+          VCAP::CloudController::ServiceInstance.make(name: name, space: space)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({ 'detail' => include("The service instance name is taken: #{name}") })
+          )
+        end
+
+        it 'succeeds when the same name is used in another space' do
+          VCAP::CloudController::ServiceInstance.make(name: name, space: another_space)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(201)
+        end
+      end
+    end
+
+    context 'managed service instance' do
+      let(:type) { 'managed' }
+      let(:maintenance_info) do
+        {
+          version: '1.2.3',
+          description: 'amazing version'
+        }
+      end
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, maintenance_info: maintenance_info) }
+      let(:service_plan_guid) { service_plan.guid }
+      let(:request_body) do
+        {
+          type: type,
+          name: name,
+          relationships: {
+            space: {
+              data: {
+                guid: space_guid
+              }
+            },
+            service_plan: {
+              data: {
+                guid: service_plan_guid
+              }
+            }
+          },
+          parameters: {
+            foo: 'bar',
+            baz: 'qux'
+          },
+          tags: %w(foo bar baz),
+          metadata: {
+            annotations: {
+              foo: 'bar'
+            },
+            labels: {
+              baz: 'qux'
+            }
+          }
+        }
+      end
+      let(:instance) { VCAP::CloudController::ServiceInstance.last }
+      let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+      it 'creates a service instance in the database' do
+        api_call.call(space_dev_headers)
+
+        expect(instance.name).to eq(name)
+        expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
+        expect(instance.space).to eq(space)
+        expect(instance.service_plan).to eq(service_plan)
+        expect(instance.annotations[0].key_name).to eq('foo')
+        expect(instance.annotations[0].value).to eq('bar')
+        expect(instance.labels[0].key_name).to eq('baz')
+        expect(instance.labels[0].value).to eq('qux')
+        expect(instance.last_operation.type).to eq('create')
+        expect(instance.last_operation.state).to eq('in progress')
+      end
+
+      it 'responds with job resource' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(202)
+        expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+        expect(job.operation).to eq('service_instance.create')
+        expect(job.resource_guid).to eq(instance.guid)
+        expect(job.resource_type).to eq('service_instances')
+      end
+
+      context 'when the name has already been taken' do
+        it 'fails when the same name is already used in this space' do
+          VCAP::CloudController::ServiceInstance.make(name: name, space: space)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({ 'detail' => include("The service instance name is taken: #{name}") })
+          )
+        end
+
+        it 'succeeds when the same name is used in another space' do
+          VCAP::CloudController::ServiceInstance.make(name: name, space: another_space)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(202)
+        end
+      end
+
+      context 'when the plan is org-restricted' do
+        let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+
+        before do
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+        end
+
+        it 'can be created in a space in that org' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(202)
+          expect(instance.name).to eq(name)
+        end
+      end
+
+      describe 'service plan checks' do
+        context 'does not exist' do
+          let(:service_plan_guid) { 'does-not-exist' }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'not readable by the user' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'not enabled in that org' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'not active' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'space-scoped plan from a different space' do
+          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: another_space) }
+          let(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, active: true, public: false) }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+      end
+
+      describe 'the job' do
+        let(:request_body_additions) { { parameters: { foo: 'bar', baz: 'qux' } } }
+        let(:broker_response) { { dashboard_url: 'http://dashboard.url' } }
+        let(:broker_status_code) { 201 }
+
+        before do
+          api_call.call(space_dev_headers)
+          instance = VCAP::CloudController::ServiceInstance.last
+          stub_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+            to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+        end
+
+        it 'sends the right arguments to the service broker' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(
+            a_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+              with(body: {
+                service_id: service_plan.service.unique_id,
+                plan_id: service_plan.unique_id,
+                context: {
+                  platform: 'cloudfoundry',
+                  organization_guid: org.guid,
+                  organization_name: org.name,
+                  space_guid: space.guid,
+                  space_name: space.name,
+                  instance_name: instance.name
+                },
+                organization_guid: org.guid,
+                space_guid: space.guid,
+                parameters: {
+                  foo: 'bar',
+                  baz: 'qux'
+                },
+                maintenance_info: maintenance_info
+              })
+          ).to have_been_made.once
+        end
+
+        it 'marks the service instance as created' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(instance.dashboard_url).to eq('http://dashboard.url')
+          expect(instance.last_operation.type).to eq('create')
+          expect(instance.last_operation.state).to eq('succeeded')
+        end
+
+        it 'completes' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+        end
+
+        context 'when the broker responds with an error' do
+          let(:broker_status_code) { 400 }
+
+          it 'marks the service instance as failed' do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            expect(instance.last_operation.type).to eq('create')
+            expect(instance.last_operation.state).to eq('failed')
+            expect(instance.last_operation.description).to include('Status Code: 400 Bad Request')
+          end
+
+          it 'competes with failure' do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+          end
+        end
       end
     end
   end
 
-  def create_managed_json(instance, labels: {})
+  def create_managed_json(instance, labels: {}, annotations: {})
     {
       guid: instance.guid,
       name: instance.name,
@@ -788,7 +1063,7 @@ RSpec.describe 'V3 service instances' do
       tags: [],
       metadata: {
         labels: labels,
-        annotations: {},
+        annotations: annotations,
       },
       relationships: {
         space: {

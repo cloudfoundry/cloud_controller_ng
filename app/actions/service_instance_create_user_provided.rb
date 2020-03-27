@@ -1,7 +1,10 @@
 require 'repositories/service_instance_share_event_repository'
+require 'actions/mixins/service_instance_create'
 
 module VCAP::CloudController
   class ServiceInstanceCreateUserProvided
+    include ServiceInstanceCreateMixin
+
     class InvalidUserProvidedServiceInstance < ::StandardError
     end
 
@@ -26,10 +29,14 @@ module VCAP::CloudController
 
       instance
     rescue Sequel::ValidationFailed => e
-      raise InvalidUserProvidedServiceInstance.new(e.errors.full_messages.join(','))
+      validation_error!(e, name: message.name)
     end
 
     private
+
+    def error!(message)
+      raise InvalidUserProvidedServiceInstance.new(message)
+    end
 
     attr_reader :service_event_repository
   end
