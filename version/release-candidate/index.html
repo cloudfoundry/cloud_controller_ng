@@ -27332,9 +27332,9 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 
 <h3 id="security-groups-in-v3">Security Groups in V3</h3>
 
-<p>In V2, security groups which apply to <em>all</em> spaces in a foundation are termed &ldquo;default&rdquo;, as in &ldquo;default for running apps&rdquo; and &ldquo;default for staging apps&rdquo;. For example, to apply a default security group to all apps in the running lifecycle, one would <code class="prettyprint">PUT /v2/config/running_security_groups/:guid</code></p>
+<p>In V2, security groups which apply to <em>all</em> spaces in a Cloud Foundry deployment are termed &ldquo;default&rdquo;, as in &ldquo;default for running apps&rdquo; and &ldquo;default for staging apps&rdquo;. For example, to apply a default security group to all apps in the running lifecycle, one would <code class="prettyprint">PUT /v2/config/running_security_groups/:guid</code></p>
 
-<p>In V3, security groups which apply to <em>all</em> spaces in a foundation are termed &ldquo;global&rdquo;, as in &ldquo;globally-enabled running apps&rdquo; and &ldquo;globally-enabled staging apps.&rdquo; For example, to apply a security group globally to all apps in the running lifecycle, one would <code class="prettyprint">PATCH /v3/security_groups/:guid</code> with a body specifying the <code class="prettyprint">globally_enabled</code> key. See <a href="#update-a-security-group">here</a> for an example.</p>
+<p>In V3, security groups which apply to <em>all</em> spaces in a Cloud Foundry deployment are termed &ldquo;global&rdquo;, as in &ldquo;globally-enabled running apps&rdquo; and &ldquo;globally-enabled staging apps.&rdquo; For example, to apply a security group globally to all apps in the running lifecycle, one would <code class="prettyprint">PATCH /v3/security_groups/:guid</code> with a body specifying the <code class="prettyprint">globally_enabled</code> key. See <a href="#update-a-security-group">here</a> for an example.</p>
 
 <p>In V2, on creation, one can specify the spaces to which the security group applies, but not whether it applies globally (by default). To set the group globally to all spaces in the foundation one would <code class="prettyprint">PUT /v2/config/running_security_groups/43e0441d-c9c1-4250-b8d5-7fb624379e02</code>.</p>
 
