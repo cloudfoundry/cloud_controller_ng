@@ -217,6 +217,19 @@ includes:
   - resources/routes/replace_destinations
   - resources/routes/remove_destination
   - resources/routes/delete_unmapped
+  - resources/security_groups/header
+  - resources/security_groups/object
+  - resources/security_groups/create
+  - resources/security_groups/get
+  - resources/security_groups/list
+  - resources/security_groups/update
+  - resources/security_groups/delete
+  - resources/security_groups/bind_running
+  - resources/security_groups/bind_staging
+  - resources/security_groups/unbind_running
+  - resources/security_groups/unbind_staging
+  - resources/security_groups/list_running_security_groups
+  - resources/security_groups/list_staging_security_groups
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/list
@@ -283,19 +296,6 @@ includes:
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
-  - experimental_resources/security_groups/header
-  - experimental_resources/security_groups/object
-  - experimental_resources/security_groups/create
-  - experimental_resources/security_groups/get
-  - experimental_resources/security_groups/list
-  - experimental_resources/security_groups/update
-  - experimental_resources/security_groups/delete
-  - experimental_resources/security_groups/bind_running
-  - experimental_resources/security_groups/bind_staging
-  - experimental_resources/security_groups/unbind_running
-  - experimental_resources/security_groups/unbind_staging
-  - experimental_resources/security_groups/list_running_security_groups
-  - experimental_resources/security_groups/list_staging_security_groups
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

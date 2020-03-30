@@ -65,8 +65,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/routes",
           },
           'security_groups' => {
-            'href' => "#{link_prefix}/v3/security_groups",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/security_groups"
           },
           'service_brokers' => {
             'href' => "#{link_prefix}/v3/service_brokers",
