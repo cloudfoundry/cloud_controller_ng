@@ -21661,30 +21661,30 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><code class="prettyprint">null</code></td>
 </tr>
 <tr>
-<td><strong><a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types">type</a></strong></td>
+<td><strong>type</strong></td>
 <td><em>integer</em></td>
-<td>Type required for ICMP protocol. Valid values are between -1 and 255 (inclusive)</td>
+<td><a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types">Type</a> required for ICMP protocol. Valid values are between -1 and 255 (inclusive), where -1 allows all.</td>
 <td>no</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
 <tr>
-<td><strong><a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes">code</a></strong></td>
+<td><strong>code</strong></td>
 <td><em>integer</em></td>
-<td>Code required for ICMP protocol. Valid values are between -1 and 255 (inclusive)</td>
+<td><a href="https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes">Code</a> required for ICMP protocol. Valid values are between -1 and 255 (inclusive), where -1 allows all.</td>
 <td>no</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
 <tr>
 <td><strong>description</strong></td>
 <td><em>string</em></td>
-<td>A description for the rule</td>
+<td>A description for the rule. This field is limited to 16MB.</td>
 <td>no</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
 <tr>
 <td><strong>log</strong></td>
 <td><em>boolean</em></td>
-<td>Enable logging for rule</td>
+<td>Enable logging for rule, only valid for tcp rules</td>
 <td>no</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
