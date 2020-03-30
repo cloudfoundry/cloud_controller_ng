@@ -7,6 +7,7 @@ Example Manifest
 
 ```yaml
 ---
+version: 1
 applications:
 - name: app1
   buildpacks:
@@ -72,6 +73,7 @@ applications:
 Field | Description
 ---- | -----------
 **applications**  | An array of App configurations
+**version**  | An integer indicating the manifest schema version
 
 #### App-level configuration
 This configuration is specified at the top-level and applies to all of the app's processes.
