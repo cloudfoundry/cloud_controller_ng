@@ -251,6 +251,9 @@ includes:
   - resources/space_features/get
   - resources/space_features/list
   - resources/space_features/update
+  - resources/space_manifest/header
+  - resources/space_manifest/object
+  - resources/space_manifest/apply
   - resources/space_quotas/header
   - resources/space_quotas/object
   - resources/space_quotas/create
@@ -342,9 +345,6 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - experimental_resources/space_manifest/header
-  - experimental_resources/space_manifest/object
-  - experimental_resources/space_manifest/apply
   - upgrade_guide/upgrade_guide
 
 ---
