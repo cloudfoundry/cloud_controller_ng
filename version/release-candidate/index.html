@@ -26854,6 +26854,7 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <pre class="highlight plaintext"><code>Example Manifest
 </code></pre>
 <pre class="highlight yaml"><code><span class="nn">---</span>
+<span class="s">version</span><span class="pi">:</span> <span class="s">1</span>
 <span class="s">applications</span><span class="pi">:</span>
 <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">app1</span>
   <span class="s">buildpacks</span><span class="pi">:</span>
@@ -26925,6 +26926,10 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <tr>
 <td><strong>applications</strong></td>
 <td>An array of App configurations</td>
+</tr>
+<tr>
+<td><strong>version</strong></td>
+<td>An integer indicating the manifest schema version</td>
 </tr>
 </tbody></table>
 
