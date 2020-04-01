@@ -40,7 +40,6 @@ module VCAP::CloudController
       def cancel_deployment
         deployment.db.transaction do
           deployment.lock!
-          coerce_legacy_webish_process_types_to_web
 
           app.lock!
           deploying_web_process.lock!
@@ -65,7 +64,6 @@ module VCAP::CloudController
       def scale_deployment
         deployment.db.transaction do
           deployment.lock!
-          coerce_legacy_webish_process_types_to_web
 
           oldest_web_process_with_instances.lock!
           app.lock!
@@ -88,16 +86,6 @@ module VCAP::CloudController
           scale_down_oldest_web_process_with_instances
           deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end
-      end
-
-      def coerce_legacy_webish_process_types_to_web
-        legacy_webish_processes.each do |process|
-          process.update(type: ProcessTypes::WEB)
-        end
-      end
-
-      def legacy_webish_processes
-        app.processes.select(&:legacy_webish?)
       end
 
       def app

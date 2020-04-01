@@ -541,10 +541,6 @@ module VCAP::CloudController
       type == ProcessTypes::WEB
     end
 
-    def legacy_webish?
-      ProcessTypes.legacy_webish?(type)
-    end
-
     def docker_ports
       if !self.needs_staging? && desired_droplet.present?
         return desired_droplet.docker_ports
