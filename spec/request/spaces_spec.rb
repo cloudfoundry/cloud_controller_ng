@@ -1033,6 +1033,10 @@ RSpec.describe 'Spaces' do
       },
       'organization' => {
         'href' => "#{link_prefix}/v3/organizations/#{space.organization_guid}"
+      },
+      'apply_manifest' => {
+        'href' => "#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest",
+        'method' => 'POST'
       }
     }
   end

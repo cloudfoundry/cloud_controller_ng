@@ -50,6 +50,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
         expect(result[:links][:features][:href]).to match(%r{/v3/spaces/#{space.guid}/features$})
         expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{space.organization_guid}")
+        expect(result[:links][:apply_manifest][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest")
+        expect(result[:links][:apply_manifest][:method]).to eq('POST')
         expect(result[:links][:quota]).to be_nil
         expect(result[:relationships][:organization][:data][:guid]).to eq(space.organization_guid)
         expect(result[:relationships][:quota][:data]).to be_nil

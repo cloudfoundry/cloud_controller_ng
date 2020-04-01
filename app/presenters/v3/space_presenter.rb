@@ -56,6 +56,10 @@ module VCAP::CloudController::Presenters::V3
         },
         features: {
           href: url_builder.build_url(path: "/v3/spaces/#{space.guid}/features")
+        },
+        apply_manifest: {
+          href: url_builder.build_url(path: "/v3/spaces/#{space.guid}/actions/apply_manifest"),
+          method: 'POST'
         }
       }
 

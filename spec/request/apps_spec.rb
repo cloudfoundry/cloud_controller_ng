@@ -510,6 +510,10 @@ RSpec.describe 'Apps' do
                     'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
                   },
                   'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
+                  'apply_manifest' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest",
+                    'method' => 'POST'
+                  },
                 }
               }]
             }
@@ -1180,6 +1184,10 @@ RSpec.describe 'Apps' do
                     'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
                   },
                   'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
+                  'apply_manifest' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest",
+                    'method' => 'POST'
+                  },
                 }
               }]
             }
