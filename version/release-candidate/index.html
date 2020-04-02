@@ -17694,8 +17694,38 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td><strong>fields</strong></td>
-<td><em>string</em></td>
-<td><strong>Experimental</strong> -Allowed resources: Field <code class="prettyprint">space</code> with keys: <code class="prettyprint">guid</code>, <code class="prettyprint">relationships.organization</code>. Field <code class="prettyprint">space.organization</code> with keys: <code class="prettyprint">name</code>, <code class="prettyprint">guid</code>.</td>
+<td><a href="#fields-parameter"><em>fields parameter</em></a></td>
+<td><strong>Experimental</strong> <a href="#service-instances-list-fields"><em>Allowed values</em></a></td>
+</tr>
+</tbody></table>
+
+<h5 id="service-instances-list-fields">Service Instances List Fields</h5>
+
+<table><thead>
+<tr>
+<th>Resource</th>
+<th>Allowed Keys</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>space</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">relationships.organization</code></td>
+</tr>
+<tr>
+<td>space.organization</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code></td>
+</tr>
+<tr>
+<td>service_plan</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">relationships.service_offering</code></td>
+</tr>
+<tr>
+<td>service_plan.service_offering</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationships.service_broker</code></td>
+</tr>
+<tr>
+<td>service_plan.service_offering.service_broker</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code></td>
 </tr>
 </tbody></table>
 
