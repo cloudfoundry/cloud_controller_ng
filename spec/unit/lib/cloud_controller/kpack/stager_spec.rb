@@ -77,6 +77,19 @@ module Kpack
         stager.stage(staging_details)
         expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
       end
+
+      context 'when staging fails' do
+        before do
+          allow(client).to receive(:create_image).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
+        end
+
+        # TODO: marks the build as failed too (need to bring in a "staging completion handler")
+        it 'bubbles the error' do
+          expect {
+            stager.stage(staging_details)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
     end
   end
 end

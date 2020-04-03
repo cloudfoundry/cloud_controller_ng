@@ -12,6 +12,9 @@ module Kpack
 
     def stage(staging_details)
       client.create_image(image_resource(staging_details))
+    rescue CloudController::Errors::ApiError => e
+      logger.error('stage.package', package_guid: staging_details.package.guid, staging_guid: staging_details.staging_guid, error: e)
+      raise e
     end
 
     def stop_stage
@@ -54,6 +57,10 @@ module Kpack
           }
         }
       })
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.stager')
     end
 
     def client
