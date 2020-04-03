@@ -1,25 +1,29 @@
 require 'spec_helper'
+require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/bbs_task_client'
 
 module VCAP::CloudController::Diego
   RSpec.describe BbsTaskClient do
-    let(:task_guid) { 'task-guid' }
+    let(:task) { instance_double(VCAP::CloudController::TaskModel, guid: 'task-guid') }
+    let(:config) { instance_double(VCAP::CloudController::Config) }
     let(:domain) { 'foobar-domain' }
     let(:bbs_client) { instance_double(::Diego::Client) }
+    let(:recipe_builder) { instance_double(TaskRecipeBuilder) }
 
-    subject(:client) { BbsTaskClient.new(bbs_client) }
+    subject(:client) { BbsTaskClient.new(config, bbs_client, recipe_builder) }
 
     describe '#desire_task' do
       let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
 
       before do
         allow(bbs_client).to receive(:desire_task).and_return(::Diego::Bbs::Models::TaskLifecycleResponse.new)
+        allow(recipe_builder).to receive(:build_app_task).with(config, task).and_return(task_definition)
       end
 
       it 'desires a task' do
-        client.desire_task(task_guid, task_definition, domain)
+        client.desire_task(task, domain)
 
-        expect(bbs_client).to have_received(:desire_task).with(task_definition: task_definition, task_guid: task_guid, domain: 'foobar-domain')
+        expect(bbs_client).to have_received(:desire_task).with(task_definition: task_definition, task_guid: task.guid, domain: 'foobar-domain')
       end
 
       context 'when bbs client errors' do
@@ -29,7 +33,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.desire_task(task_guid, task_definition, domain)
+            client.desire_task(task, domain)
           }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
@@ -48,7 +52,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.desire_task(task_guid, task_definition, domain)
+            client.desire_task(task, domain)
           }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
@@ -62,8 +66,8 @@ module VCAP::CloudController::Diego
       end
 
       it 'cancels the task' do
-        client.cancel_task(task_guid)
-        expect(bbs_client).to have_received(:cancel_task).with(task_guid)
+        client.cancel_task(task.guid)
+        expect(bbs_client).to have_received(:cancel_task).with(task.guid)
       end
 
       context 'when bbs client errors' do
@@ -73,7 +77,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.cancel_task(task_guid)
+            client.cancel_task(task.guid)
           }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
@@ -102,14 +106,14 @@ module VCAP::CloudController::Diego
 
           it 'succeeds without error' do
             expect {
-              client.cancel_task(task_guid)
+              client.cancel_task(task.guid)
             }.to_not raise_error
           end
         end
 
         it 'raises an api error' do
           expect {
-            client.cancel_task(task_guid)
+            client.cancel_task(task.guid)
           }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
@@ -150,8 +154,8 @@ module VCAP::CloudController::Diego
 
           it 'returns nil without error' do
             expect {
-              task = client.fetch_task(task_guid)
-              expect(task).to be_nil
+              fetched_task = client.fetch_task(task.guid)
+              expect(fetched_task).to be_nil
             }.to_not raise_error
           end
         end

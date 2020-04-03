@@ -432,11 +432,19 @@ module CloudController
     end
 
     def build_opi_task_client
-      ::OPI::TaskClient.new(config)
+      ::OPI::TaskClient.new(config, build_task_completion_callback_generator, VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
     end
 
     def build_bbs_task_client
-      VCAP::CloudController::Diego::BbsTaskClient.new(build_bbs_client)
+      VCAP::CloudController::Diego::BbsTaskClient.new(config, build_bbs_client, build_task_recipe_builder)
+    end
+
+    def build_task_recipe_builder
+      VCAP::CloudController::Diego::TaskRecipeBuilder.new
+    end
+
+    def build_task_completion_callback_generator
+      VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config)
     end
 
     def build_instances_client

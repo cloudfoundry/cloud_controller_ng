@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'cloud_controller/dependency_locator'
+require 'cloud_controller/diego/task_recipe_builder'
 
 RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
@@ -672,13 +673,15 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#bbs_task_client' do
     context 'opi is disabled' do
       let(:diego_client) { double }
+      let(:recipe_builder) { double }
 
       before do
         allow(::Diego::Client).to receive(:new).and_return(diego_client)
+        allow(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
       end
 
       it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(diego_client)
+        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client, recipe_builder)
         expect(::OPI::TaskClient).to_not receive(:new)
         locator.bbs_task_client
       end
@@ -702,7 +705,10 @@ RSpec.describe CloudController::DependencyLocator do
       end
 
       it 'uses the configured opi url' do
-        expect(::OPI::TaskClient).to receive(:new).with(locator.config)
+        expect(::OPI::TaskClient).to receive(:new).with(
+          locator.config,
+          instance_of(VCAP::CloudController::Diego::TaskCompletionCallbackGenerator),
+          VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
         locator.bbs_task_client
       end
     end
