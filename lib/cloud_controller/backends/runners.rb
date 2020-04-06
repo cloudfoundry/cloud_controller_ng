@@ -13,6 +13,8 @@ module VCAP::CloudController
     end
 
     def runner_for_process(process)
+      # TODO: stop using this Copilot wrapper since no more Copilot
+      # see: https://github.com/cloudfoundry/istio-release#deprecated
       CopilotRunnerDelegator.new(diego_runner(process), process)
     end
 

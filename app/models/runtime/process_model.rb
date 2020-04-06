@@ -96,7 +96,20 @@ module VCAP::CloudController
       end
 
       def buildpack_type
-        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
+        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes)
+      end
+
+      def kpack_type
+        inner_join(KpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes)
+      end
+
+      def non_docker_type
+        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes).
+          union(inner_join(KpackLifecycleDataModel.table_name, app_guid: :app_guid).
+            select_all(:processes))
       end
     end
 

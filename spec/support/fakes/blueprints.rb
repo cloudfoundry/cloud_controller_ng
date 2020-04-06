@@ -124,6 +124,14 @@ module VCAP::CloudController
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
+  DropletModel.blueprint(:kpack) do
+    guid { Sham.guid }
+    droplet_hash { nil }
+    sha256_checksum { nil }
+    state { VCAP::CloudController::DropletModel::STAGED_STATE }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
   DeploymentModel.blueprint do
     state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     status_value { VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE }
@@ -402,6 +410,15 @@ module VCAP::CloudController
     instances { 1 }
     type { Sham.name }
     metadata { {} }
+  end
+
+  ProcessModel.blueprint(:kpack) do
+    app { AppModel.make(:kpack, droplet: DropletModel.make(:kpack)) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
   end
 
   ProcessModel.blueprint(:nonmatching_guid) do
