@@ -89,6 +89,7 @@ logging:
   file: /tmp/cloud_controller.log
   level: debug2
   syslog: vcap.example
+  anonymize_ips: false
 
 telemetry_log_path: spec/artifacts/cloud_controller_telemetry.log
 
