@@ -34,7 +34,7 @@ module Kpack
     def mark_build_as_failed(build, message)
       build.class.db.transaction do
         build.lock!
-        build.fail_to_stage!('StagingError', %Q(Failed to create Image resource for Kpack: '#{message}'))
+        build.fail_to_stage!('StagingError', "Failed to create Image resource for Kpack: '#{message}'")
       end
     end
 
