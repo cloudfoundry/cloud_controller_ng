@@ -17,7 +17,7 @@ RSpec.describe Kubernetes::KpackClient do
 
     context 'when there is an error' do
       it 'raises as an ApiError' do
-        allow(kube_client).to receive(:create_image).and_raise(Kubeclient::HttpError.new(422, "foo", "bar"))
+        allow(kube_client).to receive(:create_image).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
 
         expect {
           subject.create_image(*args)

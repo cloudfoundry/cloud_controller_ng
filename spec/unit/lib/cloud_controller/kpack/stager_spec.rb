@@ -91,7 +91,7 @@ module Kpack
           build.reload
           expect(build.state).to eq(VCAP::CloudController::BuildModel::FAILED_STATE)
           expect(build.error_id).to eq('StagingError')
-          expect(build.error_description).to eq(%q(StagingError: Failed to create Image resource for Kpack 'staging failed'))
+          expect(build.error_description).to eq("Staging error: Failed to create Image resource for Kpack 'Staging error: staging failed'")
         end
       end
     end
