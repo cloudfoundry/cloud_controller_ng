@@ -12,6 +12,11 @@ module Kpack
 
     def stage(staging_details)
       client.create_image(image_resource(staging_details))
+    rescue CloudController::Errors::ApiError => e
+      build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
+      mark_build_as_failed(build, e.message) if build
+      logger.error('stage.package', package_guid: staging_details.package.guid, staging_guid: staging_details.staging_guid, error: e)
+      raise e
     end
 
     def stop_stage
@@ -25,6 +30,13 @@ module Kpack
     private
 
     attr_reader :builder_namespace, :registry_service_account_name, :registry_tag_base
+
+    def mark_build_as_failed(build, message)
+      build.class.db.transaction do
+        build.lock!
+        build.fail_to_stage!('StagingError', "Failed to create Image resource for Kpack: '#{message}'")
+      end
+    end
 
     def image_resource(staging_details)
       Kubeclient::Resource.new({
@@ -54,6 +66,10 @@ module Kpack
           }
         }
       })
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.stager')
     end
 
     def client

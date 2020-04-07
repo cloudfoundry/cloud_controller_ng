@@ -77,6 +77,23 @@ module Kpack
         stager.stage(staging_details)
         expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
       end
+
+      context 'when staging fails' do
+        before do
+          allow(client).to receive(:create_image).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
+        end
+
+        it 'bubbles the error' do
+          expect {
+            stager.stage(staging_details)
+          }.to raise_error(CloudController::Errors::ApiError)
+
+          build.reload
+          expect(build.state).to eq(VCAP::CloudController::BuildModel::FAILED_STATE)
+          expect(build.error_id).to eq('StagingError')
+          expect(build.error_description).to eq("Staging error: Failed to create Image resource for Kpack 'Staging error: staging failed'")
+        end
+      end
     end
   end
 end
