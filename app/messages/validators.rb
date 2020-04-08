@@ -1,4 +1,5 @@
 require 'active_model'
+require 'set'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
 require 'models/helpers/metadata_error'
@@ -115,10 +116,40 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class FieldsValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
+    def validate_each(record, attribute, value)
+      if !value.is_a?(Hash)
+        record.errors.add(attribute, 'must be an object')
+      else
+        allowed_resources = options[:allowed]
+        value.each do |resource, keys|
+          allowed_keys = allowed_resources[resource.to_s] || allowed_resources[resource.to_sym]
+          if allowed_keys.nil?
+            record.errors.add(attribute, "[#{resource}] valid resources are: #{allowed_resources.keys.map { |k| "'#{k}'" }.join(', ')}")
+          elsif !keys.to_set.subset?(allowed_keys.to_set)
+            record.errors.add(attribute, "valid keys for '#{resource}' are: #{allowed_keys.map { |i| "'#{i}'" }.join(', ')}")
+          end
+        end
+      end
+    end
+  end
+
   class HealthCheckValidator < ActiveModel::Validator
     def validate(record)
       if record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
         record.errors.add(:health_check_type, 'must be "http" to set a health check HTTP endpoint')
+      end
+    end
+  end
+
+  class OrgVisibilityValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      return if value.nil?
+
+      if value.reject { |o| o.is_a?(Hash) && o.key?(:guid) && o[:guid].is_a?(String) }.any?
+        record.errors.add(attribute, "organizations list must be structured like this: \"#{attribute}\": [{\"guid\": \"valid-guid\"}]")
       end
     end
   end
@@ -146,6 +177,18 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class DataValidator < ActiveModel::Validator
+    def validate(record)
+      return if !record.data.is_a?(Hash)
+
+      data = record.class::Data.new(record.data.symbolize_keys)
+
+      if !data.valid?
+        record.errors[:data].concat(data.errors.full_messages)
+      end
+    end
+  end
+
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
       if !record.relationships.is_a?(Hash)
@@ -162,18 +205,6 @@ module VCAP::CloudController::Validators
 
       if !rel.valid?
         record.errors[:relationships].concat(rel.errors.full_messages)
-      end
-    end
-  end
-
-  class DataValidator < ActiveModel::Validator
-    def validate(record)
-      return if !record.data.is_a?(Hash)
-
-      data = record.class::Data.new(record.data.symbolize_keys)
-
-      if !data.valid?
-        record.errors[:data].concat(data.errors.full_messages)
       end
     end
   end

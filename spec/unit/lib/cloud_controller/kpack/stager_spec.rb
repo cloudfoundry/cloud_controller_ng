@@ -52,13 +52,18 @@ module Kpack
             namespace: 'namespace',
             labels: {
               Stager::APP_GUID_LABEL_KEY => package.app.guid,
+              Stager::BUILD_GUID_LABEL_KEY => build.guid,
+              Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
+            },
+            annotations: {
+              'sidecar.istio.io/inject' => 'false'
             }
           },
           spec: {
             tag: "gcr.io/capi-images/#{package.guid}",
             serviceAccount: 'gcr-service-account',
             builder: {
-              name: 'capi-builder',
+              name: 'cf-autodetect-builder',
               kind: 'Builder'
             },
             source: {
@@ -71,6 +76,23 @@ module Kpack
 
         stager.stage(staging_details)
         expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
+      end
+
+      context 'when staging fails' do
+        before do
+          allow(client).to receive(:create_image).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
+        end
+
+        it 'bubbles the error' do
+          expect {
+            stager.stage(staging_details)
+          }.to raise_error(CloudController::Errors::ApiError)
+
+          build.reload
+          expect(build.state).to eq(VCAP::CloudController::BuildModel::FAILED_STATE)
+          expect(build.error_id).to eq('StagingError')
+          expect(build.error_description).to eq("Staging error: Failed to create Image resource for Kpack: 'Stager error: staging failed'")
+        end
       end
     end
   end

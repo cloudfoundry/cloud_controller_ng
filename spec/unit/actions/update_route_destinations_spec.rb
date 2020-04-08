@@ -308,6 +308,45 @@ module VCAP::CloudController
           }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
         end
       end
+
+      context 'when there are already at least 100 destinations' do
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 7000,
+              weight: nil,
+            },
+            {
+              app_guid: app_model2.guid,
+              process_type: 'worker',
+              app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
+              weight: nil,
+            },
+          ]
+        end
+        before do
+          99.times do |i|
+            VCAP::CloudController::RouteMappingModel.make(
+              app: app_model,
+              route: route,
+              process_type: 'existing',
+              app_port: 4001 + i,
+            )
+          end
+        end
+
+        it 'rejects any inserts' do
+          expect {
+            subject.add(params, route, apps_hash, user_audit_info)
+          }.to raise_error(
+            UpdateRouteDestinations::Error,
+            'Routes can be mapped to at most 100 destinations.'
+          ).and change { RouteMappingModel.count }.by(0)
+          expect(RouteMappingModel.count).to eq(100)
+        end
+      end
     end
 
     describe '#replace' do
@@ -503,6 +542,35 @@ module VCAP::CloudController
           }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
         end
       end
+
+      context 'when adding over 100 destinations' do
+        before do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_model,
+            route: route,
+            process_type: 'existing',
+            app_port: 4001,
+          )
+        end
+
+        it 'rejects any inserts' do
+          params = (0..100).map do |i|
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 7000 + i,
+              weight: nil,
+            }
+          end
+
+          expect {
+            subject.replace(params, route, apps_hash, user_audit_info)
+          }.to raise_error(
+            UpdateRouteDestinations::Error,
+            'Routes can be mapped to at most 100 destinations.'
+          ).and change { RouteMappingModel.count }.by(0)
+        end
+      end
     end
 
     describe '#delete' do
@@ -592,6 +660,26 @@ module VCAP::CloudController
 
         it 'records an audit event for each new route mapping' do
           expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
+        end
+      end
+
+      context 'when there are more than 100 destinations' do
+        before do
+          102.times do |i|
+            VCAP::CloudController::RouteMappingModel.make(
+              app: app_model,
+              route: route,
+              process_type: 'existing-' + i.to_s,
+            )
+          end
+        end
+
+        it 'still permits deletions' do
+          expect(RouteMappingModel.count).to eq(103)
+          expect {
+            subject.delete(RouteMappingModel.last, route, user_audit_info)
+          }.not_to raise_error
+          expect(RouteMappingModel.count).to eq(102)
         end
       end
     end

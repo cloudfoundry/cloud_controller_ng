@@ -31,8 +31,9 @@ Sham.define do
 end
 
 module VCAP::CloudController
-  %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization
-     Package Process Revision Route ServiceInstance Space Stack Task User/.each do |root|
+  %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
+     Process Revision Route ServiceInstance ServiceOffering ServiceBroker Space Stack
+     ServicePlan Task User/.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end
@@ -46,6 +47,13 @@ module VCAP::CloudController
     name       { Sham.name }
     space      { Space.make }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
+  end
+
+  AppModel.blueprint(:kpack) do
+    name { Sham.name }
+    space { Space.make }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
@@ -72,6 +80,14 @@ module VCAP::CloudController
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make }
     kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
+    package { PackageModel.make(app: app) }
+  end
+
+  BuildModel.blueprint(:buildpack) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app { AppModel.make }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(build: object.save) }
   end
 
   PackageModel.blueprint do
@@ -105,6 +121,14 @@ module VCAP::CloudController
     sha256_checksum { nil }
     state { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet_guid: guid) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
+  DropletModel.blueprint(:kpack) do
+    guid { Sham.guid }
+    droplet_hash { nil }
+    sha256_checksum { nil }
+    state { VCAP::CloudController::DropletModel::STAGED_STATE }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
@@ -388,6 +412,15 @@ module VCAP::CloudController
     metadata { {} }
   end
 
+  ProcessModel.blueprint(:kpack) do
+    app { AppModel.make(:kpack, droplet: DropletModel.make(:kpack)) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
   ProcessModel.blueprint(:nonmatching_guid) do
     instances { 1 }
     type { 'web' }
@@ -563,6 +596,7 @@ module VCAP::CloudController
         }
       ]
     end
+    running_default { false }
     staging_default { false }
   end
 

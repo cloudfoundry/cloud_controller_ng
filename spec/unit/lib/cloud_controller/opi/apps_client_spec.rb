@@ -15,6 +15,8 @@ RSpec.describe(OPI::Client) do
     subject(:client) { described_class.new(config) }
     let(:img_url) { 'http://example.org/image1234' }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
+      lifecycle_type,
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
       docker_receipt_image: 'http://example.org/image1234',
       docker_receipt_username: 'docker-user',
       docker_receipt_password: 'docker-password',
@@ -179,7 +181,8 @@ RSpec.describe(OPI::Client) do
                   port: 7777
                 }
               ]
-            }
+            },
+            user_defined_annotations: {}
         }
       }
 
@@ -204,7 +207,39 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when app belongs to buildpack lifecycle' do
+      context 'when the app has annotations' do
+        before do
+          ::VCAP::CloudController::AppAnnotationModel.create(
+            resource_guid: app_model.guid,
+            key: 'namespace',
+            value: 'secret-namespace'
+          )
+          ::VCAP::CloudController::AppAnnotationModel.create(
+            resource_guid: app_model.guid,
+            key_prefix: 'prometheus.io',
+            key: 'port',
+            value: '6666'
+          )
+          ::VCAP::CloudController::AppAnnotationModel.create(
+            resource_guid: app_model.guid,
+            key_prefix: 'the_prometheus.io',
+            key: 'blah',
+            value: 'whatever'
+          )
+        end
+
+        it 'propagates only those that start with prometheus.io' do
+          response = client.desire_app(lrp)
+
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            actual_body[:user_defined_annotations] == { 'prometheus.io/port': '6666' }
+          }
+        end
+      end
+
+      context 'when droplet belongs to buildpack lifecycle' do
         let(:lifecycle_type) { :buildpack }
         let(:buildpack_lifecycle) {
           {
@@ -327,7 +362,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when app belongs to docker lifecycle' do
+      context 'when droplet belongs to docker lifecycle' do
         let(:lifecycle_type) { :docker }
         it 'sends a PUT request' do
           response = client.desire_app(lrp)

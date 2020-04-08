@@ -1,0 +1,39 @@
+### Get a space quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/space_quotas/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_space_quota %>
+```
+
+#### Definition
+`GET /v3/space_quotas/:guid`
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager | Can only query space quotas owned by affiliated organizations
+Space Auditor | Can only query space quotas applied to affiliated spaces
+Space Developer | Can only query space quotas applied to affiliated spaces
+Space Manager | Can only query space quotas applied to affiliated spaces
+
+**Note:** Response will not show any space guids that a user would not otherwise be able to see (see [space view permissions](#get-a-space)).

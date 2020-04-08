@@ -186,6 +186,36 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'when the missing process is a kpack-staged app' do
+            let!(:missing_process) { ProcessModel.make(:kpack) }
+
+            context 'with the diego_docker feature flag enabled' do
+              before do
+                VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
+              end
+
+              it 'creates missing lrps' do
+                allow(bbs_apps_client).to receive(:desire_app).with(missing_process)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:desire_app).with(missing_process)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'with the diego_docker feature flag disabled' do
+              before do
+                VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false)
+              end
+
+              it 'creates missing lrps' do
+                allow(bbs_apps_client).to receive(:desire_app).with(missing_process)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:desire_app).with(missing_process)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+          end
         end
 
         context 'when diego already contains the LRP' do

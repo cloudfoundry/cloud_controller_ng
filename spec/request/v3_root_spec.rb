@@ -4,7 +4,7 @@ RSpec.describe 'v3 root' do
   describe 'GET /v3' do
     it 'returns a list of links to resources available on the v3 API' do
       get '/v3'
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_status_code(200)
       expect(parsed_response).to be_a_response_like({
         'links' => {
           'self' => {
@@ -23,8 +23,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/builds"
           },
           'deployments' => {
-            'href' => "#{link_prefix}/v3/deployments",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/deployments"
           },
           'domains' => {
             'href' => "#{link_prefix}/v3/domains"
@@ -48,8 +47,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/organizations"
           },
           'organization_quotas' => {
-            'href' => "#{link_prefix}/v3/organization_quotas",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/organization_quotas"
           },
           'packages' => {
             'href' => "#{link_prefix}/v3/packages"
@@ -61,11 +59,13 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/resource_matches"
           },
           'roles' => {
-            'href' => "#{link_prefix}/v3/roles",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/roles"
           },
           'routes' => {
             'href' => "#{link_prefix}/v3/routes",
+          },
+          'security_groups' => {
+            'href' => "#{link_prefix}/v3/security_groups"
           },
           'service_brokers' => {
             'href' => "#{link_prefix}/v3/service_brokers",
@@ -78,8 +78,15 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/service_offerings",
             'experimental' => true
           },
+          'service_plans' => {
+            'href' => "#{link_prefix}/v3/service_plans",
+            'experimental' => true
+          },
           'spaces' => {
             'href' => "#{link_prefix}/v3/spaces"
+          },
+          'space_quotas' => {
+            'href' => "#{link_prefix}/v3/space_quotas"
           },
           'stacks' => {
             'href' => "#{link_prefix}/v3/stacks"
@@ -88,8 +95,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/tasks"
           },
           'users' => {
-            'href' => "#{link_prefix}/v3/users",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/users"
           }
         }
       })

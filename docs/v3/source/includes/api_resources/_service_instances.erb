@@ -19,7 +19,7 @@
 <% content_for :paginated_list_of_service_instances do | metadata={} | %>
 {
   "pagination": {
-    "total_results": 1,
+    "total_results": 2,
     "total_pages": 1,
     "first": {
       "href": "https://api.example.org/v3/service_instances?page=1&per_page=50"
@@ -32,24 +32,79 @@
   },
   "resources": [
     {
-      "guid": "85ccdcad-d725-4109-bca4-fd6ba062b5c8",
-      "created_at": "2017-11-17T13:54:21Z",
-      "updated_at": "2017-11-17T13:54:21Z",
-      "name": "my_service_instance",
+      "guid": "c89b3280-fe8d-4aa0-a42e-44465bb1c61c",
+      "created_at": "2020-03-10T15:49:29Z",
+      "updated_at": "2020-03-10T15:49:29Z",
+      "name": "my-managed-instance",
+      "tags": [],
+      "type": "managed",
+      "maintenance_info": {
+        "version": "1.0.0"
+      },
+      "upgrade_available": false,
+      "dashboard_url": "https://the-best-broker.cfapps.io/dashboard?time=2020-03-10T15:49:29.831Z",
+      "last_operation": {
+        "type": "create",
+        "state": "succeeded",
+        "description": "Operation succeeded",
+        "updated_at": "2020-03-10T15:49:32Z",
+        "created_at": "2020-03-10T15:49:29Z"
+      },
       "relationships": {
+        "service_plan": {
+          "data": {
+            "guid": "5358d122-638e-11ea-afca-bf6e756684ac",
+            "name": "my-service-plan"
+          }
+        },
         "space": {
           "data": {
-            "guid": "ae0031f9-dd49-461c-a945-df40e77c39cb"
+            "guid": "5a84d315-9513-4d74-95e5-f6a5501eeef7"
           }
         }
       },
       "metadata": {
-        "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
-        "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
+        "labels": {},
+        "annotations": {}
       },
       "links": {
+        "self": {
+          "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/c89b3280-fe8d-4aa0-a42e-44465bb1c61c"
+        },
+        "service_plan": {
+          "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_plans/5358d122-638e-11ea-afca-bf6e756684ac"
+        },
         "space": {
-          "href": "https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"
+          "href": "https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"
+        }
+      }
+    },
+    {
+      "guid": "88ce23e5-27c3-4381-a2df-32a28ec43133",
+      "created_at": "2020-03-10T15:56:08Z",
+      "updated_at": "2020-03-10T15:56:08Z",
+      "name": "my-user-provided-instance",
+      "tags": ["sql"],
+      "type": "user-provided",
+      "syslog_drain_url": "http://logs.com",
+      "route_service_url": "https://routes.com",
+      "relationships": {
+        "space": {
+          "data": {
+           "guid": "5a84d315-9513-4d74-95e5-f6a5501eeef7"
+          }
+        }
+      },
+      "metadata": {
+        "labels": {},
+        "annotations": {}
+      },
+      "links": {
+        "self": {
+          "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/88ce23e5-27c3-4381-a2df-32a28ec43133"
+        },
+        "space": {
+          "href": "https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"
         }
       }
     }
@@ -57,27 +112,102 @@
 }
 <% end %>
 
-<% content_for :single_service_instance do | metadata={} | %>
+<% content_for :single_managed_service_instance do | metadata={} | %>
 {
-  "guid": "85ccdcad-d725-4109-bca4-fd6ba062b5c8",
-  "created_at": "2017-11-17T13:54:21Z",
-  "updated_at": "2017-11-17T13:54:21Z",
-  "name": "my_service_instance",
+  "guid": "c89b3280-fe8d-4aa0-a42e-44465bb1c61c",
+  "created_at": "2020-03-10T15:49:29Z",
+  "updated_at": "2020-03-10T15:49:29Z",
+  "name": "my-managed-instance",
+  "tags": [],
+  "type": "managed",
+  "maintenance_info": {
+    "version": "1.0.0"
+  },
+  "upgrade_available": false,
+  "dashboard_url": "https://the-best-broker.cfapps.io/dashboard?time=2020-03-10T15:49:29.831Z",
+  "last_operation": {
+    "type": "create",
+    "state": "succeeded",
+    "description": "Operation succeeded",
+    "updated_at": "2020-03-10T15:49:32Z",
+    "created_at": "2020-03-10T15:49:29Z"
+  },
   "relationships": {
+    "service_plan": {
+      "data": {
+        "guid": "5358d122-638e-11ea-afca-bf6e756684ac",
+        "name": "my-service-plan"
+      }
+    },
     "space": {
       "data": {
-        "guid": "ae0031f9-dd49-461c-a945-df40e77c39cb"
+        "guid": "5a84d315-9513-4d74-95e5-f6a5501eeef7"
       }
     }
   },
   "metadata": {
-    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
-    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
+    "labels": {},
+    "annotations": {}
   },
   "links": {
+    "self": {
+      "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/c89b3280-fe8d-4aa0-a42e-44465bb1c61c"
+    },
+    "service_plan": {
+      "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_plans/5358d122-638e-11ea-afca-bf6e756684ac"
+    },
     "space": {
-      "href": "https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"
+      "href": "https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"
     }
   }
 }
 <% end %>
+
+<% content_for :single_user_provided_service_instance do | metadata={} | %>
+{
+  "guid": "88ce23e5-27c3-4381-a2df-32a28ec43133",
+  "created_at": "2020-03-10T15:56:08Z",
+  "updated_at": "2020-03-10T15:56:08Z",
+  "name": "my-user-provided-instance",
+  "tags": ["sql"],
+  "type": "user-provided",
+  "syslog_drain_url": "http://logs.com",
+  "route_service_url": "https://routes.com",
+  "relationships": {
+    "space": {
+      "data": {
+        "guid": "5a84d315-9513-4d74-95e5-f6a5501eeef7"
+      }
+    }
+  },
+  "metadata": {
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
+  },
+  "links": {
+    "self": {
+      "href": "https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/88ce23e5-27c3-4381-a2df-32a28ec43133"
+    },
+    "space": {
+      "href": "https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"
+    }
+  }
+}
+<% end %>
+
+<% content_for :user_provided_service_instance_credentials do %>
+{
+  "username": "my-username",
+  "password": "super-secret",
+  "other": "credential"
+}
+<% end %>
+
+<% content_for :managed_service_instance_parameters do %>
+{
+  "key_1": "value_1",
+  "key_2": "value_2"
+}
+<% end %>
+
+

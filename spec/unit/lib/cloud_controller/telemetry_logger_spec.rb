@@ -6,10 +6,7 @@ module VCAP::CloudController
     let(:file) { Tempfile.new('telemetry.log') }
 
     before do
-      TelemetryLogger.init(file.path)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v2_emit).and_call_original
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:internal_emit).and_call_original
+      TelemetryLogger.init(ActiveSupport::Logger.new(file.path))
     end
 
     it 'logs job name, timestamp, and event, anonymizing by default' do
@@ -42,6 +39,23 @@ module VCAP::CloudController
           'api-version' => 'v3',
           'anonymize_key' => Digest::SHA256.hexdigest('anonymize_value'),
           'safe_key' => 'safe-value',
+        }
+      })
+    end
+
+    it 'converts specified raw fields to int' do
+      TelemetryLogger.v3_emit(
+        'some-event',
+        {},
+        { 'memory-in-mb' => '1234' }
+      )
+
+      expect(JSON.parse(file.read)).to match({
+        'telemetry-source' => 'cloud_controller_ng',
+        'telemetry-time' => rfc3339,
+        'some-event' => {
+          'api-version' => 'v3',
+          'memory-in-mb' => 1234
         }
       })
     end

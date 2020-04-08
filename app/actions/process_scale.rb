@@ -5,8 +5,8 @@ module VCAP::CloudController
 
     def initialize(user_audit_info, process, message, manifest_triggered: false)
       @user_audit_info = user_audit_info
-      @process    = process
-      @message    = message
+      @process = process
+      @message = message
       @manifest_triggered = manifest_triggered
     end
 

@@ -29,7 +29,7 @@ RSpec.describe BuildsController, type: :controller do
     it 'eager loads associated resources that the presenter specifies' do
       set_current_user_as_role(role: 'admin', org: organization, space: space, user: user)
       expect_any_instance_of(VCAP::CloudController::BuildListFetcher).to receive(:fetch_all).with(
-        hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
+        hash_including(eager_loaded_associations: [:labels, :annotations, :kpack_lifecycle_data, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
       ).and_call_original
 
       get :index
@@ -395,9 +395,11 @@ RSpec.describe BuildsController, type: :controller do
           state: VCAP::CloudController::PackageModel::READY_STATE
         )
       end
+
       let(:docker_lifecycle) do
         { type: 'docker', data: {} }
       end
+
       let(:req_body) do
         {
           package: {
@@ -733,6 +735,7 @@ RSpec.describe BuildsController, type: :controller do
         context 'when the user cannot read the app' do
           before do
             disallow_user_read_access(user, space: space)
+            disallow_user_build_update_access(user)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -747,6 +750,7 @@ RSpec.describe BuildsController, type: :controller do
           before do
             allow_user_read_access_for(user, spaces: [space])
             disallow_user_write_access(user, space: space)
+            disallow_user_build_update_access(user)
           end
 
           it 'raises ApiError NotAuthorized' do

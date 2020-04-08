@@ -8,6 +8,8 @@ module VCAP::CloudController
       it { is_expected.to have_associated :service }
       it { is_expected.to have_associated :service_instances, class: ManagedServiceInstance }
       it { is_expected.to have_associated :service_plan_visibilities }
+      it { is_expected.to have_associated :labels, class: ServicePlanLabelModel }
+      it { is_expected.to have_associated :annotations, class: ServicePlanAnnotationModel }
     end
 
     describe 'Validations' do
@@ -151,11 +153,16 @@ module VCAP::CloudController
     describe '#destroy' do
       let(:service_plan) { ServicePlan.make }
 
-      it 'destroys all service plan visibilities' do
+      it 'destroys associated dependencies' do
         service_plan_visibility = ServicePlanVisibility.make(service_plan: service_plan)
-        expect { service_plan.destroy }.to change {
-          ServicePlanVisibility.where(id: service_plan_visibility.id).any?
-        }.to(false)
+        service_plan_label = ServicePlanLabelModel.make(resource_guid: service_plan.guid, key_name: 'flavor', value: 'pear')
+        service_plan_annotation = ServicePlanAnnotationModel.make(resource_guid: service_plan.guid, key_name: 'colour', value: 'purple')
+
+        service_plan.destroy
+
+        expect(ServicePlanVisibility.where(id: service_plan_visibility.id)).to be_empty
+        expect(ServiceOfferingLabelModel.where(id: service_plan_label.id)).to be_empty
+        expect(ServicePlanAnnotationModel.where(id: service_plan_annotation.id)).to be_empty
       end
 
       it 'cannot be destroyed if associated service_instances exist' do
@@ -356,6 +363,61 @@ module VCAP::CloudController
       end
     end
 
+    describe '#plan_updateable?' do
+      let(:service_plan) { ServicePlan.make(service: service, plan_updateable: plan_updateable) }
+
+      context 'when the plan does not specify if it is updateable' do
+        let(:plan_updateable) { nil }
+
+        context 'and the service is plan_updateable' do
+          let(:service) { Service.make(plan_updateable: true) }
+          specify { expect(service_plan).to be_plan_updateable }
+        end
+
+        context 'and the service is not plan_updateable' do
+          let(:service) { Service.make(plan_updateable: false) }
+          specify { expect(service_plan).not_to be_plan_updateable }
+        end
+      end
+
+      context 'when the plan is explicitly set to not be updateable' do
+        let(:plan_updateable) { false }
+
+        context 'and the service is plan_updateable' do
+          let(:service) { Service.make(plan_updateable: true) }
+          specify { expect(service_plan).not_to be_plan_updateable }
+        end
+
+        context 'and the service is not plan_updateable' do
+          let(:service) { Service.make(plan_updateable: false) }
+          specify { expect(service_plan).not_to be_plan_updateable }
+        end
+      end
+
+      context 'when the plan is explicitly set to be updateable' do
+        let(:plan_updateable) { true }
+
+        context 'and the service is updateable' do
+          let(:service) { Service.make(plan_updateable: true) }
+          specify { expect(service_plan).to be_plan_updateable }
+        end
+
+        context 'and the service is not updateable' do
+          let(:service) { Service.make(plan_updateable: false) }
+          specify { expect(service_plan).to be_plan_updateable }
+        end
+      end
+
+      context 'when updateable is nil' do
+        let(:plan_updateable) { nil }
+
+        context 'and the service updateable is also nil' do
+          let(:service) { Service.make(plan_updateable: nil) }
+          specify { expect(service_plan.plan_updateable?).to be(false) }
+        end
+      end
+    end
+
     describe '#broker_space_scoped?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
         space = Space.make
@@ -370,6 +432,35 @@ module VCAP::CloudController
         plan = ServicePlan.make
 
         expect(plan.broker_space_scoped?).to be_falsey
+      end
+    end
+
+    describe '.visibility_type' do
+      it 'returns "public" for public plans' do
+        plan = ServicePlan.make(public: true)
+
+        expect(plan.visibility_type).to eq('public')
+      end
+
+      it 'returns "admin" for private plans' do
+        plan = ServicePlan.make(public: false)
+
+        expect(plan.visibility_type).to eq('admin')
+      end
+
+      it 'returns "space" for plans from space-scoped brokers' do
+        plan = ServicePlan.make(service: Service.make(service_broker: ServiceBroker.make(space: Space.make)))
+
+        expect(plan.visibility_type).to eq('space')
+      end
+
+      it 'returns "organization" for org restricted plans' do
+        plan = ServicePlanVisibility.make(
+          service_plan: ServicePlan.make(public: false),
+          organization: Organization.make
+        ).service_plan
+
+        expect(plan.visibility_type).to eq('organization')
       end
     end
   end

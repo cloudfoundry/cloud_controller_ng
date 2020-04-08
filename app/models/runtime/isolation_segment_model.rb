@@ -16,10 +16,8 @@ module VCAP::CloudController
       right_primary_key: :guid,
       join_table: :organizations_isolation_segments, without_guid_generation: true
 
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-    end
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     def validate
       validates_format ISOLATION_SEGMENT_MODEL_REGEX, :name, message: Sequel.lit('Isolation Segment names can only contain non-blank unicode characters')

@@ -1,0 +1,52 @@
+### List security groups
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_security_group %>
+```
+
+#### Definition
+`GET /v3/security_groups`
+
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**guids** | _list of strings_ | Comma-delimited list of security group guids to filter by.
+**names** | _list of strings_ | Comma-delimited list of security group names to filter by.
+**globally_enabled_running** | _boolean_ | If true, only include the security groups that are enabled for running.
+**globally_enabled_staging** | _boolean_ | If true, only include the security groups that are enabled for staging.
+**running_space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**staging_space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
+
+#### Permitted roles
+Role | Notes
+--- | ---
+Admin | Can see all security groups
+Admin Read-Only | Can see all security groups
+Global Auditor | Can see all security groups
+Org Auditor | Can see globally–enabled security groups
+Org Billing Manager | Can see globally–enabled security groups
+Org Manager | Can see globally–enabled security groups or groups associated with a space they can see
+Space Auditor | Can see globally–enabled security groups or groups associated with a space they can see
+Space Developer | Can see globally–enabled security groups or groups associated with a space they can see
+Space Manager | Can see globally–enabled security groups or groups associated with a space they can see

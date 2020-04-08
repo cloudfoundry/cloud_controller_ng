@@ -1,0 +1,20 @@
+<%content_for :single_space_feature do %>
+{
+  "name": "ssh",
+  "description": "Enable SSHing into apps in the space.",
+  "enabled": true
+}
+<% end %>
+
+<%content_for :list_space_features do %>
+{
+  "resources": [
+    {
+      "name": "ssh",
+      "description": "Enable SSHing into apps in the space.",
+      "enabled": false
+    }
+  ]
+}
+<% end %>
+

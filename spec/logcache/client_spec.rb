@@ -4,7 +4,7 @@ require 'openssl'
 
 module Logcache
   RSpec.describe Client do
-    let(:logcache_envelopes) { [42, :woof] }
+    let(:logcache_envelopes) { [:fake_envelope_1, :fake_envelope_2] }
     let(:logcache_service) { instance_double(Logcache::V1::Egress::Stub, read: logcache_envelopes) }
     let(:logcache_request) { instance_double(Logcache::V1::ReadRequest) }
 
@@ -17,12 +17,13 @@ module Logcache
     let(:credentials) { instance_double(GRPC::Core::ChannelCredentials) }
     let(:channel_arg_hash) do
       {
-        channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name }
+          channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name }
       }
     end
     let(:client) do
       Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                           client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
+                           client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                           temporary_ignore_server_unavailable_errors: false)
     end
     let(:expected_request_options) { { 'headers' => { 'Authorization' => 'bearer oauth-token' } } }
     let(:client_ca) { File.open(client_ca_path).read }
@@ -46,7 +47,7 @@ module Logcache
       it 'calls Logcache with the correct parameters and returns envelopes' do
         expect(
           client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-        ).to eq([42, :woof])
+        ).to eq([:fake_envelope_1, :fake_envelope_2])
 
         expect(Logcache::V1::ReadRequest).to have_received(:new).with(
           source_id: process.guid,
@@ -58,20 +59,84 @@ module Logcache
         )
         expect(logcache_service).to have_received(:read).with(logcache_request)
       end
+    end
 
-      context 'when an error occurs' do
-        before do
-          allow(client).to receive(:sleep)
-          allow(logcache_service).to receive(:read).and_raise(StandardError)
+    describe 'when logcache is unavailable' do
+      let(:instance_count) { 0 }
+      let(:bad_status) { GRPC::BadStatus.new(14) }
+      let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+
+      before do
+        expect(GRPC::Core::ChannelCredentials).to receive(:new).
+          with(client_ca, client_key, client_cert).
+          and_return(credentials)
+        expect(Logcache::V1::Egress::Stub).to receive(:new).
+          with("#{host}:#{port}", credentials, channel_arg_hash).
+          and_return(logcache_service)
+        allow(client).to receive(:sleep)
+        allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
+        allow(logcache_service).to receive(:read).and_raise(bad_status)
+      end
+
+      context 'and operator has enabled temporary_ignore_server_unavailable_errors' do
+        let(:client) do
+          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                               temporary_ignore_server_unavailable_errors: true)
         end
 
-        it 'retries the request three times' do
-          expect {
+        it 'returns an empty envelope' do
+          expect(
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          }.to raise_error(StandardError)
+          ).to be_a(Logcache::EmptyEnvelope)
+        end
+
+        # TODO: fix calling the function under test separately
+        it 'retries the request three times' do
+          client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
 
           expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
         end
+      end
+
+      context 'and operator has disabled temporary_ignore_server_unavailable_errors' do
+        let(:client) do
+          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                               temporary_ignore_server_unavailable_errors: false)
+        end
+
+        it 'retries the request three times and raises an exception' do
+          expect {
+            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          }.to raise_error(bad_status)
+
+          expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
+        end
+      end
+    end
+
+    describe 'when the logcache service has any other error' do
+      let(:bad_status) { GRPC::BadStatus.new(13) }
+      let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+      let(:instance_count) { 2 }
+
+      before do
+        expect(GRPC::Core::ChannelCredentials).to receive(:new).
+          with(client_ca, client_key, client_cert).
+          and_return(credentials)
+        expect(Logcache::V1::Egress::Stub).to receive(:new).
+          with("#{host}:#{port}", credentials, channel_arg_hash).
+          and_return(logcache_service)
+        allow(client).to receive(:sleep)
+        allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
+        allow(logcache_service).to receive(:read).and_raise(bad_status)
+      end
+
+      it 'raises the exception' do
+        expect {
+          client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+        }.to raise_error(bad_status)
       end
     end
   end

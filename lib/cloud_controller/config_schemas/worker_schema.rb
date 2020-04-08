@@ -14,7 +14,9 @@ module VCAP::CloudController
           external_protocol: String,
           internal_service_hostname: String,
           disable_private_domain_cross_space_context_path_route_sharing: bool,
-
+          readiness_port: {
+            cloud_controller_worker: Integer,
+          },
           default_health_check_timeout: Integer,
           maximum_health_check_timeout: Integer,
 
@@ -33,6 +35,7 @@ module VCAP::CloudController
           stacks_file: String,
           newrelic_enabled: bool,
 
+          optional(:max_migration_duration_in_minutes) => Integer,
           db: {
             optional(:database) => Hash, # db connection hash for sequel
             max_connections: Integer, # max connections in the connection pool
@@ -191,6 +194,7 @@ module VCAP::CloudController
             optional(:client_chain_file) => String,
           },
           volume_services_enabled: bool,
+          route_services_enabled: bool,
 
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,

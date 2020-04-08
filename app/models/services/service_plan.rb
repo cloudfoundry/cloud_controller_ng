@@ -2,11 +2,20 @@ module VCAP::CloudController
   class ServicePlan < Sequel::Model
     many_to_one :service
     one_to_many :service_instances
-    one_to_many :service_plan_visibilities
 
-    plugin :serialization
+    one_to_many :service_plan_visibilities, clearer: (lambda do
+      service_plan_visibilities_dataset.delete
+    end)
 
     add_association_dependencies service_plan_visibilities: :destroy
+
+    one_to_many :labels, class: 'VCAP::CloudController::ServicePlanLabelModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+
+    one_to_many :annotations, class: 'VCAP::CloudController::ServicePlanAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies annotations: :destroy
+
+    plugin :serialization
 
     export_attributes :name,
                       :free,
@@ -44,6 +53,8 @@ module VCAP::CloudController
     serialize_attributes :json, :maintenance_info
 
     strip_attributes :name
+
+    alias_method :public?, :public
 
     alias_method :active?, :active
 
@@ -134,6 +145,12 @@ module VCAP::CloudController
       service.bindable?
     end
 
+    def plan_updateable?
+      return plan_updateable unless plan_updateable.nil?
+
+      !!service.plan_updateable
+    end
+
     def service_broker
       service.service_broker if service
     end
@@ -145,6 +162,16 @@ module VCAP::CloudController
     def visible_in_space?(space)
       visible_plans = ServicePlan.space_visible(space)
       visible_plans.include?(self)
+    end
+
+    def visibility_type
+      return ServicePlanVisibilityTypes::PUBLIC if public?
+
+      return ServicePlanVisibilityTypes::SPACE if broker_space_scoped?
+
+      return ServicePlanVisibilityTypes::ORGANIZATION if service_plan_visibilities.any?
+
+      return ServicePlanVisibilityTypes::ADMIN
     end
 
     private
@@ -164,5 +191,12 @@ module VCAP::CloudController
         errors.add(:public, 'may not be true for plans belonging to private service brokers')
       end
     end
+  end
+
+  class ServicePlanVisibilityTypes
+    PUBLIC = 'public'.freeze
+    ADMIN = 'admin'.freeze
+    SPACE = 'space'.freeze
+    ORGANIZATION = 'organization'.freeze
   end
 end

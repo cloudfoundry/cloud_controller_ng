@@ -16,7 +16,7 @@ class BuildsController < ApplicationController
                 build_list_fetcher.fetch_all(eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               else
                 build_list_fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids,
-                                                    eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
+                  eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -50,7 +50,6 @@ class BuildsController < ApplicationController
         'app-id' => package.app.guid,
         'build-id' => build.guid,
         'user-id' => current_user.guid,
-        # can we get the build guid here?
       },
       {
         'lifecycle' => build.lifecycle_type,
@@ -76,16 +75,18 @@ class BuildsController < ApplicationController
 
   def update
     build = BuildModel.find(guid: hashed_params[:guid])
+    build_not_found! unless build.present?
 
-    build_not_found! unless build
     space = build.package.space
-    build_not_found! unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    build_not_found! unless can_read_build?(space)
 
-    message = VCAP::CloudController::BuildUpdateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    if hashed_params[:body].key?(:state)
+      unauthorized! unless permission_queryer.can_update_build_state?
+    else
+      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    end
 
-    build = BuildUpdate.new.update(build, message)
+    build = BuildUpdate.new.update(build, create_valid_update_message)
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end
@@ -99,6 +100,16 @@ class BuildsController < ApplicationController
   end
 
   private
+
+  def can_read_build?(space)
+    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+  end
+
+  def create_valid_update_message
+    message = VCAP::CloudController::BuildUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    message
+  end
 
   def build_not_found!
     resource_not_found!(:build)

@@ -11,7 +11,9 @@ module VCAP::CloudController
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,
-
+          readiness_port: {
+            clock: Integer,
+          },
           app_usage_events: {
             cutoff_age_in_days: Integer
           },
@@ -42,6 +44,7 @@ module VCAP::CloudController
 
           newrelic_enabled: bool,
 
+          optional(:max_migration_duration_in_minutes) => Integer,
           db: {
             optional(:database) => Hash, # db connection hash for sequel
             max_connections: Integer, # max connections in the connection pool

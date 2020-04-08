@@ -713,7 +713,7 @@ RSpec.describe 'Roles Request' do
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{'a-new-user-guid'}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/a-new-user-guid) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
           }
         }
@@ -939,9 +939,9 @@ RSpec.describe 'Roles Request' do
             space_guids: ['foo', 'bar'],
             user_guids: ['foo', 'bar'],
             types: ['foo', 'bar'],
-            per_page:   '10',
+            per_page: '10',
             page: 2,
-            order_by:   'updated_at',
+            order_by: 'updated_at',
             include: 'user, space',
           }
         end
@@ -1087,6 +1087,7 @@ RSpec.describe 'Roles Request' do
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
             domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains) },
             default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains/default) },
+            quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{org.quota_definition.guid}) }
           }
         }
       end
@@ -1100,6 +1101,9 @@ RSpec.describe 'Roles Request' do
           relationships: {
             organization: {
               data: { guid: org.guid }
+            },
+            quota: {
+              data: nil
             }
           },
           metadata: {
@@ -1109,6 +1113,8 @@ RSpec.describe 'Roles Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features) },
+            apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/actions/apply_manifest), method: 'POST' }
           }
         }
       end
@@ -1161,6 +1167,9 @@ RSpec.describe 'Roles Request' do
             relationships: {
               organization: {
                 data: { guid: another_space.organization.guid }
+              },
+              quota: {
+                data: nil
               }
             },
             metadata: {
@@ -1170,6 +1179,8 @@ RSpec.describe 'Roles Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}) },
               organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_space.organization.guid}) },
+              features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}\/features) },
+              apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}/actions/apply_manifest), method: 'POST' }
             }
           }
         end
@@ -1194,6 +1205,7 @@ RSpec.describe 'Roles Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}) },
               domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}\/domains) },
               default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}\/domains/default) },
+              quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{another_org.quota_definition.guid}) }
             }
           }
         end
@@ -1405,6 +1417,7 @@ RSpec.describe 'Roles Request' do
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
             domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains) },
             default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains/default) },
+            quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{org.quota_definition.guid}) }
           }
         }
       end
@@ -1418,6 +1431,9 @@ RSpec.describe 'Roles Request' do
           relationships: {
             organization: {
               data: { guid: org.guid }
+            },
+            quota: {
+              data: nil
             }
           },
           metadata: {
@@ -1427,6 +1443,8 @@ RSpec.describe 'Roles Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features) },
+            apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/actions/apply_manifest), method: 'POST' }
           }
         }
       end

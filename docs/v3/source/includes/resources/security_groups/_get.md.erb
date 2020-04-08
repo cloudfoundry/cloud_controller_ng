@@ -1,0 +1,39 @@
+### Get a security group
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_security_group %>
+```
+
+#### Definition
+`GET /v3/security_groups/:guid`
+
+#### Permitted roles
+Role | Notes
+--- | ---
+Admin | Can see all security groups
+Admin Read-Only | Can see all security groups
+Global Auditor | Can see all security groups
+Org Auditor | Can see globally enabled security groups
+Org Billing Manager | Can see globally enabled security groups
+Org Manager | Can see globally enabled security groups or groups associated with a space they can see
+Space Auditor | Can see globally enabled security groups or groups associated with a space they can see
+Space Developer | Can see globally enabled security groups or groups associated with a space they can see
+Space Manager | Can see globally enabled security groups or groups associated with a space they can see
+

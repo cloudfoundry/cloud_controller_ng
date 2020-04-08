@@ -74,7 +74,13 @@ class SpaceManifestsController < ApplicationController
     Mime::Type.lookup(request.content_type) == :yaml
   end
 
+  def check_version_is_supported!
+    version = params[:body]['version']
+    raise unprocessable!('Unsupported manifest schema version. Currently supported versions: [1].') unless !version || version == 1
+  end
+
   def parsed_app_manifests
+    check_version_is_supported!
     parsed_applications = params[:body]['applications']
     raise invalid_request!('Invalid app manifest') unless parsed_applications.present?
 

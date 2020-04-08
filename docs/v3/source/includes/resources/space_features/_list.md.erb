@@ -1,0 +1,38 @@
+### List space features
+
+This endpoint retrieves the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/[guid]/features" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :list_space_features %>
+```
+
+#### Definition
+`GET /v3/spaces/:guid/features` <br>
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

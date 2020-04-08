@@ -43,13 +43,10 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::BuildLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::BuildAnnotationModel', key: :resource_guid, primary_key: :guid
 
-    add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies buildpack_lifecycle_data: :destroy, kpack_lifecycle_data: :destroy
 
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-      super
-    end
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     def lifecycle_type
       return Lifecycles::BUILDPACK if buildpack_lifecycle_data
@@ -68,6 +65,7 @@ module VCAP::CloudController
 
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
+      return kpack_lifecycle_data if kpack_lifecycle_data
 
       DockerLifecycleDataModel.new
     end

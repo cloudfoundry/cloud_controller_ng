@@ -6,6 +6,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_BILLING_MANAGER,
   ].freeze
 
+  ROLES_FOR_ORG_CONTENT_READING = [
+    VCAP::CloudController::Membership::ORG_MANAGER,
+  ].freeze
+
   ROLES_FOR_ORG_WRITING = [
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
@@ -81,6 +85,14 @@ class VCAP::CloudController::Permissions
       org_guids_from_space_guids = space_guids.map { |guid| VCAP::CloudController::Space.find(guid: guid).organization.guid }
 
       (org_guids + org_guids_from_space_guids).uniq
+    end
+  end
+
+  def readable_org_contents_org_guids
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+    else
+      membership.org_guids_for_roles(ROLES_FOR_ORG_CONTENT_READING)
     end
   end
 
@@ -168,6 +180,18 @@ class VCAP::CloudController::Permissions
 
   def readable_route_mapping_guids
     VCAP::CloudController::RouteMappingModel.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
+  def readable_space_quota_guids
+    VCAP::CloudController::SpaceQuotaDefinition.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
+  def readable_security_group_guids
+    VCAP::CloudController::SecurityGroup.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
+  def can_update_build_state?
+    can_write_globally? || roles.build_state_updater?
   end
 
   private

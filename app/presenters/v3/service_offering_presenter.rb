@@ -7,23 +7,38 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ServiceOfferingPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
+          metadata = broker_metadata
+
           {
             guid: service_offering.guid,
             name: service_offering.label,
             description: service_offering.description,
             available: service_offering.active,
-            bindable: service_offering.bindable,
-            broker_service_offering_metadata: service_offering.extra,
-            broker_service_offering_id: service_offering.unique_id,
             tags: service_offering.tags,
             requires: service_offering.requires,
             created_at: service_offering.created_at,
             updated_at: service_offering.updated_at,
-            plan_updateable: service_offering.plan_updateable,
-            shareable: shareable,
-            links: build_links,
+            shareable: shareable(metadata),
+            broker_catalog: {
+              id: service_offering.unique_id,
+              metadata: metadata,
+              features: {
+                plan_updateable: service_offering.plan_updateable,
+                bindable: service_offering.bindable,
+                instances_retrievable: service_offering.instances_retrievable,
+                bindings_retrievable: service_offering.bindings_retrievable,
+                allow_context_updates: service_offering.allow_context_updates,
+              }
+            },
             relationships: build_relationships,
+            metadata: {
+              labels: hashified_labels(service_offering.labels),
+              annotations: hashified_annotations(service_offering.annotations),
+            },
+            links: build_links,
           }
         end
 
@@ -33,16 +48,14 @@ module VCAP::CloudController
           @resource
         end
 
-        def shareable
-          begin
-            metadata = JSON.parse(service_offering.extra)
-            if metadata['shareable'] == true
-              return true
-            end
-          rescue JSON::ParserError
-          end
+        def shareable(metadata)
+          metadata['shareable'] == true
+        end
 
-          false
+        def broker_metadata
+          JSON.parse(service_offering.extra)
+        rescue JSON::ParserError
+          {}
         end
 
         def build_links

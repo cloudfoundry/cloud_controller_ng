@@ -20,6 +20,7 @@ class ServiceBrokersController < ApplicationController
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceBrokerPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      message: message,
       path: '/v3/service_brokers',
     )
 
@@ -42,6 +43,7 @@ class ServiceBrokersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     if message.space_guid
+      FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
       space = Space.where(guid: message.space_guid).first
       unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
@@ -101,12 +103,11 @@ class ServiceBrokersController < ApplicationController
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(service_event_repository)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(ServiceBroker, service_broker.guid, delete_action)
+
+    service_broker.update(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
-    service_broker.update(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
-
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 

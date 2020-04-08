@@ -112,7 +112,11 @@ module VCAP::CloudController
           end
 
           begin
-            start_process if with_start
+            if with_start
+              start_process
+            else
+              Repositories::AppUsageEventRepository.new.create_from_build(build, 'BUILDPACK_SET')
+            end
           rescue SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError => e
             payload[:error] = { message: e.message, id: DEFAULT_STAGING_ERROR }
             handle_failure(payload, with_start)

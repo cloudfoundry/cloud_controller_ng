@@ -17,7 +17,7 @@ module CloudController
             'buildpack'                  => buildpack_name_or_url(process.buildpack),
             'detected_buildpack'         => process.detected_buildpack,
             'detected_buildpack_guid'    => process.detected_buildpack_guid,
-            'environment_json'           => redact(process.environment_json, can_read_env?(process)),
+            'environment_json'           => redact(process.app.environment_variables, can_read_env?(process)),
             'memory'                     => process.memory,
             'instances'                  => process.instances,
             'disk_quota'                 => process.disk_quota,

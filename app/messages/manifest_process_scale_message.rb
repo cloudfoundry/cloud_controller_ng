@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :instances, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+    validates :instances, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 2000000 }, allow_nil: true
     validates :memory, numericality: { only_integer: true, greater_than: 0, message: INVALID_MB_VALUE_ERROR }, allow_nil: true
     validates :disk_quota, numericality: { only_integer: true, greater_than: 0, message: INVALID_MB_VALUE_ERROR }, allow_nil: true
 

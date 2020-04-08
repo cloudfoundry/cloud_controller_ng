@@ -84,7 +84,7 @@ each_run_block = proc do
   # Moving this line into the init-block means that changes in code files aren't detected.
   VCAP::CloudController::SpecBootstrap.init
 
-  Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
+  Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].sort.each { |file| require file }
 
   # each-run here?
   RSpec.configure do |rspec_config|
@@ -143,6 +143,14 @@ each_run_block = proc do
 
     rspec_config.before :each do
       Fog::Mock.reset
+
+      if Fog.mock?
+        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
+      end
+
       Delayed::Worker.destroy_failed_jobs = false
       Sequel::Deprecation.output = StringIO.new
       Sequel::Deprecation.backtrace_filter = 5
@@ -152,8 +160,6 @@ each_run_block = proc do
 
       VCAP::CloudController::SecurityContext.clear
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v2_emit)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit)
     end
 
     rspec_config.around :each do |example|

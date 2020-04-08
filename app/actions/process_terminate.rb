@@ -4,8 +4,8 @@ module VCAP::CloudController
 
     def initialize(user_audit_info, process, index)
       @user_audit_info = user_audit_info
-      @process    = process
-      @index      = index
+      @process = process
+      @index = index
     end
 
     def terminate

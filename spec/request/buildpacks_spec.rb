@@ -482,6 +482,15 @@ RSpec.describe 'buildpacks' do
       get "/v3/buildpacks/#{buildpack.guid}", {}, admin_headers
       expect(last_response.status).to eq(404)
     end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { buildpack }
+        let(:api_call) do
+          -> { delete "/v3/buildpacks/#{resource.guid}", nil, admin_headers }
+        end
+      end
+    end
   end
 
   describe 'POST /v3/buildpacks/:guid/upload' do

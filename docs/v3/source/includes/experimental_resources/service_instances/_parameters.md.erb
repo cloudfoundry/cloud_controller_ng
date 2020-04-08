@@ -1,0 +1,41 @@
+### Get Parameters for a Managed Service Instance
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/parameters" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :managed_service_instance_parameters %>
+```
+
+Queries the Service Broker for the parameters associated with this service instance.
+The broker catalog must have enabled the `instances_retrievable` feature for the Service Offering.
+Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag.
+This endpoint is not available for User-Provided Service Instances.
+
+#### Definition
+`GET /v3/service_instances/:guid/parameters`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

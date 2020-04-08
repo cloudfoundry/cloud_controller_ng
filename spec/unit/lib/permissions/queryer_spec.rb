@@ -359,6 +359,10 @@ module VCAP::CloudController
       it_behaves_like 'readable guids', 'org'
     end
 
+    describe '#readable_org_contents_org_guids' do
+      it_behaves_like 'readable guids', 'org_contents_org'
+    end
+
     describe '#can_read_from_org?' do
       before do
         allow(perm_permissions).to receive(:can_read_from_org?)

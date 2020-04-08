@@ -5,6 +5,11 @@ tls_port: 8182
 pid_filename: /tmp/cloud_controller.pid
 stacks_file: config/stacks.yml
 
+readiness_port:
+  cloud_controller_worker: -1
+  clock: -1
+  deployment_updater: -1
+
 external_protocol: http
 external_domain: api2.vcap.me
 temporary_disable_deployments: true
@@ -85,7 +90,7 @@ logging:
   level: debug2
   syslog: vcap.example
 
-telemetry_log_path: /tmp/cloud_controller_telemetry.log
+telemetry_log_path: spec/artifacts/cloud_controller_telemetry.log
 
 loggregator:
   router: "127.0.0.1:3456"
@@ -94,6 +99,7 @@ loggregator:
 logcache:
   host: 'http://doppler.service.cf.internal'
   port: 8080
+  temporary_ignore_server_unavailable_errors: false
 
 logcache_tls:
   key_file: 'spec/fixtures/certs/log_cache.key'
@@ -155,36 +161,37 @@ quota_definitions:
 default_quota_definition: default
 
 resource_pool:
+  maximum_size: 42
+  minimum_size: 1
   resource_directory_key: "spec-cc-resources"
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 packages:
   app_package_directory_key: "cc-packages"
+  max_package_size: 42
+  max_valid_packages_stored: 42
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
+  max_staged_droplets_stored: 42
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 db_encryption_key: "asdfasdfasdf"
 database_encryption:
@@ -286,8 +293,7 @@ opi:
 kubernetes:
   host_url: https://master.default.svc.cluster-domain.example
   service_account:
-    name: 'fake-opi-service-account'
-    token: 'fake-token'
+    token_file: "spec/fixtures/service_accounts/k8s.token"
   ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
   kpack:
     builder_namespace: 'cf-workloads'
@@ -303,7 +309,7 @@ newrelic_enabled: false
 
 max_annotations_per_resource: 200
 max_labels_per_resource: 50
-
+max_migration_duration_in_minutes: 45
 db:
   log_level: 'debug'
   ssl_verify_hostname: false
@@ -318,22 +324,6 @@ staging:
 
 index: 0
 name: api
-resource_pool:
-  maximum_size: 42
-  minimum_size: 1
-  fog_aws_storage_options: {}
-
-buildpacks:
-  fog_aws_storage_options: {}
-
-packages:
-  max_package_size: 42
-  max_valid_packages_stored: 42
-  fog_aws_storage_options: {}
-
-droplets:
-  max_staged_droplets_stored: 42
-  fog_aws_storage_options: {}
 
 request_timeout_in_seconds: 600
 skip_cert_verify: true
@@ -351,31 +341,6 @@ staging:
   auth:
     user: 'bob'
     password: 'laura'
-
-resource_pool:
-  resource_directory_key: ''
-  maximum_size: 42
-  minimum_size: 1
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-buildpacks:
-  buildpack_directory_key: ''
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-packages:
-  app_package_directory_key: ''
-  max_package_size: 42
-  max_valid_packages_stored: 42
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-droplets:
-  droplet_directory_key: ''
-  max_staged_droplets_stored: 42
-  fog_connection: {}
-  fog_aws_storage_options: {}
 
 bits_service:
   enabled: false
@@ -429,3 +394,5 @@ locket:
   key_file: 'spec/fixtures/certs/bbs_client.key'
 
 threadpool_size: 20
+
+default_app_lifecycle: buildpack

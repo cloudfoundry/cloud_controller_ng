@@ -18,11 +18,13 @@ module VCAP::CloudController
           previous_droplet = app.droplet
           target_state.apply_to_app(app, user_audit_info)
 
-          revision = if target_state.rollback_target_revision
-                       RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-                     else
-                       RevisionResolver.update_app_revision(app, user_audit_info)
-                     end
+          revision = nil
+          if target_state.rollback_target_revision
+            revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
+            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
+          else
+            revision = RevisionResolver.update_app_revision(app, user_audit_info)
+          end
 
           previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
 
@@ -181,6 +183,18 @@ module VCAP::CloudController
         else
           original_web_process.instances
         end
+      end
+
+      def log_rollback_event(app_guid, user_id, revision_id)
+        TelemetryLogger.v3_emit(
+          'rolled-back-app',
+          {
+            'app-id' => app_guid,
+            'user-id' => user_id,
+            'revision-id' => revision_id,
+          },
+          { 'strategy' => 'rolling' }
+        )
       end
     end
   end

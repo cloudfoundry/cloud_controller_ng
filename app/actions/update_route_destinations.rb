@@ -6,12 +6,15 @@ module VCAP::CloudController
     class DuplicateDestinationError < StandardError
     end
 
+    MAX_DESTINATIONS_FOR_ROUTE = 100
+
     class << self
       def add(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
 
+        validate_max_destinations!(existing_route_mappings, new_route_mappings)
         validate_unique!(new_route_mappings)
 
         if existing_route_mappings.any? { |rm| rm[:weight] }
@@ -28,6 +31,7 @@ module VCAP::CloudController
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
 
+        validate_max_destinations!([], new_route_mappings)
         validate_unique!(new_route_mappings)
 
         to_add = new_route_mappings - existing_route_mappings
@@ -158,6 +162,14 @@ module VCAP::CloudController
 
       def validate_unique!(new_route_mappings)
         raise DuplicateDestinationError.new('Destinations cannot contain duplicate entries') if new_route_mappings.any? { |rm| new_route_mappings.count(rm) > 1 }
+      end
+
+      def validate_max_destinations!(existing_route_mappings, new_route_mappings)
+        total_route_mapping_count = existing_route_mappings.count + new_route_mappings.count
+
+        if total_route_mapping_count > MAX_DESTINATIONS_FOR_ROUTE
+          raise Error.new('Routes can be mapped to at most 100 destinations.')
+        end
       end
     end
   end

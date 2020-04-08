@@ -44,6 +44,20 @@ module VCAP::CloudController
       }
     end
 
+    describe '#destroy' do
+      let(:service_offering) { Service.make }
+
+      it 'deletes associated resources' do
+        label = ServiceOfferingLabelModel.make(resource_guid: service_offering.guid, key_name: 'foo', value: 'bar')
+        annotation = ServiceOfferingAnnotationModel.make(resource_guid: service_offering.guid, key: 'alpha', value: 'beta')
+
+        service_offering.destroy
+
+        expect(ServiceOfferingLabelModel.where(id: label.id)).to be_empty
+        expect(ServiceOfferingAnnotationModel.where(id: annotation.id)).to be_empty
+      end
+    end
+
     describe '#user_visibility_filter' do
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }
@@ -321,6 +335,8 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: org) }
       let(:dev) { make_developer_for_space(space) }
 
+      let(:expected_service_names) { [@private_service, @visible_service].map(&:label) }
+
       before(:each) do
         @private_broker = ServiceBroker.make(space: space)
         @private_service = Service.make(service_broker: @private_broker, active: true, label: 'Private Service')
@@ -328,7 +344,7 @@ module VCAP::CloudController
 
         @public_broker = ServiceBroker.make
         @visible_service = Service.make(service_broker: @public_broker, active: true, label: 'Visible Service')
-        @visible_plan = ServicePlan.make(service: @visible_service, name: 'Visible Plan')
+        @visible_plan = ServicePlan.make(service: @visible_service, public: true, active: true, name: 'Visible Plan')
         @hidden_service = Service.make(service_broker: @public_broker, active: true, label: 'Hidden Service')
         @hidden_plan = ServicePlan.make(service: @hidden_service, public: false, name: 'Hidden Plan')
       end
@@ -339,20 +355,24 @@ module VCAP::CloudController
         expect(visible_services.map(&:label)).to match_array expected_service_names
       end
 
-      it 'only returns private broker services to Space<Managers/Auditors/Developers>' do
-        expected_service_names = [@private_service, @visible_service].map(&:label)
-
+      it 'only returns private broker services to Space<Users>' do
         visible_services = Service.space_or_org_visible_for_user(space, dev).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Space</Developers>' do
         auditor = make_developer_for_space(space)
         visible_services = Service.space_or_org_visible_for_user(space, auditor).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Space<Managers>' do
         manager = make_manager_for_space(space)
         visible_services = Service.space_or_org_visible_for_user(space, manager).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Organization<Users>' do
         user = make_user_for_org(space.organization)
         visible_services = Service.space_or_org_visible_for_user(space, user).all
         expect(visible_services.map(&:label)).to match_array [@visible_service.label]
@@ -455,6 +475,25 @@ module VCAP::CloudController
         it 'returns a null broker client' do
           expect(service.client).to be_a(VCAP::Services::ServiceBrokers::NullClient)
         end
+      end
+    end
+
+    describe '#public' do
+      it 'is false when there are no service plans' do
+        service_offering = Service.make
+        expect(service_offering.public?).to be false
+      end
+
+      it 'is false when there are non-public service plans' do
+        service_offering = Service.make
+        ServicePlan.make(public: false, service: service_offering)
+        expect(service_offering.public?).to be false
+      end
+
+      it 'is true when there are public service plans' do
+        service_offering = Service.make
+        ServicePlan.make(public: true, service: service_offering)
+        expect(service_offering.public?).to be true
       end
     end
   end

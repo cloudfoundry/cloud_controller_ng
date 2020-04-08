@@ -24,12 +24,17 @@ includes:
   - api_resources/revisions
   - api_resources/roles
   - api_resources/routes
+  - api_resources/security_groups
   - api_resources/service_bindings
   - api_resources/service_brokers
   - api_resources/service_offerings
+  - api_resources/service_plans
+  - api_resources/service_plan_visibility
   - api_resources/service_instances
   - api_resources/sidecars
   - api_resources/spaces
+  - api_resources/space_features
+  - api_resources/space_quotas
   - api_resources/stacks
   - api_resources/tasks
   - api_resources/users
@@ -41,6 +46,7 @@ includes:
   - concepts/errors
   - concepts/filters
   - concepts/includes
+  - concepts/fields
   - concepts/lifecycles
   - concepts/metadata
   - concepts/pagination
@@ -60,9 +66,16 @@ includes:
   - resources/apps/env
   - resources/apps/environment_variables
   - resources/apps/current_droplet
+  - resources/apps/ssh_enabled
   - resources/apps/start
   - resources/apps/stop
   - resources/apps/update_environment_variables
+  - resources/app_features/header
+  - resources/app_features/object
+  - resources/app_features/supported_features
+  - resources/app_features/get
+  - resources/app_features/list
+  - resources/app_features/update
   - resources/audit_events/header
   - resources/audit_events/object
   - resources/audit_events/get
@@ -82,6 +95,13 @@ includes:
   - resources/buildpacks/update
   - resources/buildpacks/delete
   - resources/buildpacks/upload_bits
+  - resources/deployments/header
+  - resources/deployments/object
+  - resources/deployments/create
+  - resources/deployments/get
+  - resources/deployments/list
+  - resources/deployments/update
+  - resources/deployments/cancel
   - resources/domains/header
   - resources/domains/object
   - resources/domains/create
@@ -141,6 +161,14 @@ includes:
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain
   - resources/organizations/get_usage_summary
+  - resources/organization_quotas/header
+  - resources/organization_quotas/object
+  - resources/organization_quotas/create
+  - resources/organization_quotas/get
+  - resources/organization_quotas/list
+  - resources/organization_quotas/apply
+  - resources/organization_quotas/delete
+  - resources/organization_quotas/update
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
@@ -167,6 +195,13 @@ includes:
   - resources/resource_matches/header
   - resources/resource_matches/object
   - resources/resource_matches/create
+  - resources/roles/header
+  - resources/roles/object
+  - resources/roles/valid_roles
+  - resources/roles/create
+  - resources/roles/get
+  - resources/roles/list
+  - resources/roles/delete
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object
@@ -182,6 +217,19 @@ includes:
   - resources/routes/replace_destinations
   - resources/routes/remove_destination
   - resources/routes/delete_unmapped
+  - resources/security_groups/header
+  - resources/security_groups/object
+  - resources/security_groups/create
+  - resources/security_groups/get
+  - resources/security_groups/list
+  - resources/security_groups/update
+  - resources/security_groups/delete
+  - resources/security_groups/bind_running
+  - resources/security_groups/bind_staging
+  - resources/security_groups/unbind_running
+  - resources/security_groups/unbind_staging
+  - resources/security_groups/list_running_security_groups
+  - resources/security_groups/list_staging_security_groups
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/list
@@ -198,6 +246,23 @@ includes:
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
   - resources/spaces/manage_isolation_segment
+  - resources/space_features/header
+  - resources/space_features/object
+  - resources/space_features/get
+  - resources/space_features/list
+  - resources/space_features/update
+  - resources/space_manifest/header
+  - resources/space_manifest/object
+  - resources/space_manifest/apply
+  - resources/space_quotas/header
+  - resources/space_quotas/object
+  - resources/space_quotas/create
+  - resources/space_quotas/get
+  - resources/space_quotas/list
+  - resources/space_quotas/update
+  - resources/space_quotas/delete
+  - resources/space_quotas/apply
+  - resources/space_quotas/remove
   - resources/stacks/header
   - resources/stacks/object
   - resources/stacks/create
@@ -213,44 +278,27 @@ includes:
   - resources/tasks/list_for_app
   - resources/tasks/update
   - resources/tasks/cancel
+  - resources/users/header
+  - resources/users/object
+  - resources/users/create
+  - resources/users/get
+  - resources/users/list
+  - resources/users/update
+  - resources/users/delete
   - experimental_resources/header
-  - experimental_resources/app_features/header
-  - experimental_resources/app_features/object
-  - experimental_resources/app_features/supported_features
-  - experimental_resources/app_features/get
-  - experimental_resources/app_features/list
-  - experimental_resources/app_features/update
   - experimental_resources/app_manifest/header
   - experimental_resources/app_manifest/object
   - experimental_resources/app_manifest/get
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
-  - experimental_resources/app_ssh_enabled/header
-  - experimental_resources/app_ssh_enabled/get
-  - experimental_resources/deployments/header
-  - experimental_resources/deployments/object
-  - experimental_resources/deployments/create
-  - experimental_resources/deployments/get
-  - experimental_resources/deployments/list
-  - experimental_resources/deployments/update
-  - experimental_resources/deployments/cancel
-  - experimental_resources/organization_quotas/header
-  - experimental_resources/organization_quotas/object
-  - experimental_resources/organization_quotas/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
+  - experimental_resources/revisions/environment_variables
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
-  - experimental_resources/roles/header
-  - experimental_resources/roles/object
-  - experimental_resources/roles/valid_roles
-  - experimental_resources/roles/create
-  - experimental_resources/roles/get
-  - experimental_resources/roles/list
-  - experimental_resources/roles/delete
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
@@ -266,8 +314,29 @@ includes:
   - experimental_resources/service_brokers/delete
   - experimental_resources/service_offerings/header
   - experimental_resources/service_offerings/visibility
+  - experimental_resources/service_offerings/object
   - experimental_resources/service_offerings/get
   - experimental_resources/service_offerings/list
+  - experimental_resources/service_offerings/update
+  - experimental_resources/service_offerings/delete
+  - experimental_resources/service_plans/header
+  - experimental_resources/service_plans/object
+  - experimental_resources/service_plans/get
+  - experimental_resources/service_plans/list
+  - experimental_resources/service_plans/update
+  - experimental_resources/service_plans/delete
+  - experimental_resources/service_plan_visibility/header
+  - experimental_resources/service_plan_visibility/object
+  - experimental_resources/service_plan_visibility/visibility_types
+  - experimental_resources/service_plan_visibility/get
+  - experimental_resources/service_plan_visibility/update
+  - experimental_resources/service_plan_visibility/apply
+  - experimental_resources/service_plan_visibility/delete
+  - experimental_resources/service_instances/header
+  - experimental_resources/service_instances/create
+  - experimental_resources/service_instances/get
+  - experimental_resources/service_instances/credentials
+  - experimental_resources/service_instances/parameters
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
@@ -276,16 +345,6 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - experimental_resources/space_manifest/header
-  - experimental_resources/space_manifest/object
-  - experimental_resources/space_manifest/apply
-  - experimental_resources/users/header
-  - experimental_resources/users/object
-  - experimental_resources/users/create
-  - experimental_resources/users/get
-  - experimental_resources/users/list
-  - experimental_resources/users/update
-  - experimental_resources/users/delete
   - upgrade_guide/upgrade_guide
 
 ---

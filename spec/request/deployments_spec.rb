@@ -13,15 +13,10 @@ RSpec.describe 'Deployments' do
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
   let(:metadata) { { 'labels' => {}, 'annotations' => {} } }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     TestConfig.override(temporary_disable_deployments: false)
     app_model.update(droplet_guid: droplet.guid)
-
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/deployments' do
@@ -58,7 +53,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -126,7 +124,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -177,8 +178,6 @@ RSpec.describe 'Deployments' do
       end
 
       it 'should create a deployment object using the droplet associated with the revision' do
-        app_model.update(revisions_enabled: true)
-
         revision_count = VCAP::CloudController::RevisionModel.count
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
@@ -256,8 +255,6 @@ RSpec.describe 'Deployments' do
       end
 
       it 'fails' do
-        app_model.update(revisions_enabled: true)
-
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(422)
 
@@ -314,7 +311,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -359,10 +359,6 @@ RSpec.describe 'Deployments' do
             },
           }
         }
-      end
-
-      before do
-        app_model.update(revisions_enabled: true)
       end
 
       it 'creates a deployment with a reference to the new revision' do
@@ -464,7 +460,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -508,8 +507,26 @@ RSpec.describe 'Deployments' do
     end
 
     context 'telemetry' do
+      let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webboo' }) }
+      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
+      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+
       let(:create_request) do
         {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+      let(:revision_create_request) do
+        {
+          revision: {
+            guid: revision.guid
+          },
           relationships: {
             app: {
               data: {
@@ -522,8 +539,6 @@ RSpec.describe 'Deployments' do
 
       it 'should log the required fields when a deployment is created' do
         Timecop.freeze do
-          post '/v3/deployments', create_request.to_json, user_header
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
@@ -534,8 +549,31 @@ RSpec.describe 'Deployments' do
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+      it 'should log the roll back app request' do
+        app_model.update(revisions_enabled: true)
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'rolled-back-app' => {
+              'api-version' => 'v3',
+              'strategy' => 'rolling',
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'revision-id' => Digest::SHA256.hexdigest(revision.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).twice
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json)).at_most(:once)
+
+          post '/v3/deployments', revision_create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
         end
       end
     end
@@ -587,7 +625,10 @@ RSpec.describe 'Deployments' do
             'droplet' => {
               'guid' => droplet.guid
             },
-            'revision' => nil,
+            'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
             'previous_droplet' => {
               'guid' => droplet.guid
             },
@@ -640,7 +681,10 @@ RSpec.describe 'Deployments' do
             'droplet' => {
               'guid' => droplet.guid
             },
-            'revision' => nil,
+            'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
             'previous_droplet' => {
               'guid' => droplet.guid
             },

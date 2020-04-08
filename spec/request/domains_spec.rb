@@ -1399,6 +1399,15 @@ RSpec.describe 'Domains Request' do
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { shared_domain }
+          let(:api_call) do
+            -> { delete "/v3/domains/#{resource.guid}", nil, admin_headers }
+          end
+        end
+      end
     end
 
     describe 'when deleting a private domain' do
@@ -1594,12 +1603,10 @@ RSpec.describe 'Domains Request' do
           )
 
           h['admin_read_only'] = {
-            scopes: ['cloud_controller.write'],
             code: 204
           }
 
           h['global_auditor'] = {
-            scopes: ['cloud_controller.write'],
             code: 204
           }
 

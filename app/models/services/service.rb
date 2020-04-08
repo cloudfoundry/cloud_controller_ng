@@ -4,8 +4,12 @@ module VCAP::CloudController
 
     many_to_one :service_broker
     one_to_many :service_plans
-
     add_association_dependencies service_plans: :destroy
+
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceOfferingLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceOfferingAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
@@ -20,6 +24,8 @@ module VCAP::CloudController
                       :allow_context_updates
 
     strip_attributes :label
+
+    alias_method :name, :label
 
     class << self
       def public_visible
@@ -44,7 +50,9 @@ module VCAP::CloudController
       end
 
       def space_or_org_visible_for_user(space, user)
-        organization_visible(space.organization).union(space_visible(space, user), alias: :services)
+        org_visible = organization_visible(space.organization)
+        space_visible = space_visible(space, user)
+        org_visible.union(space_visible, alias: :services, all: true)
       end
 
       def organization_visible(organization)
@@ -143,6 +151,10 @@ module VCAP::CloudController
 
     def deleted_field
       nil
+    end
+
+    def public?
+      self.service_plans.any?(&:public)
     end
 
     alias_method :provider, :deleted_field

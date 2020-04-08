@@ -139,6 +139,11 @@ Rails.application.routes.draw do
 
   # organization_quotas
   post '/organization_quotas', to: 'organization_quotas#create'
+  get  '/organization_quotas/:guid', to: 'organization_quotas#show'
+  get  '/organization_quotas', to: 'organization_quotas#index'
+  patch '/organization_quotas/:guid', to: 'organization_quotas#update'
+  delete '/organization_quotas/:guid', to: 'organization_quotas#destroy'
+  post '/organization_quotas/:guid/relationships/organizations', to: 'organization_quotas#apply_to_organizations'
 
   # resource_matches
   post '/resource_matches', to: 'resource_matches#create'
@@ -157,6 +162,17 @@ Rails.application.routes.draw do
   patch '/routes/:guid/destinations', to: 'routes#replace_destinations'
   delete '/routes/:guid/destinations/:destination_guid', to: 'routes#destroy_destination'
 
+  # security_groups
+  post '/security_groups', to: 'security_groups#create'
+  post '/security_groups/:guid/relationships/running_spaces', to: 'security_groups#create_running_spaces'
+  post '/security_groups/:guid/relationships/staging_spaces', to: 'security_groups#create_staging_spaces'
+  get '/security_groups/:guid', to: 'security_groups#show'
+  get '/security_groups', to: 'security_groups#index'
+  patch '/security_groups/:guid', to: 'security_groups#update'
+  delete '/security_groups/:guid/relationships/running_spaces/:space_guid', to: 'security_groups#delete_running_spaces'
+  delete '/security_groups/:guid/relationships/staging_spaces/:space_guid', to: 'security_groups#delete_staging_spaces'
+  delete '/security_groups/:guid', to: 'security_groups#destroy'
+
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
@@ -173,14 +189,55 @@ Rails.application.routes.draw do
   # service_offerings
   get '/service_offerings', to: 'service_offerings#index'
   get '/service_offerings/:guid', to: 'service_offerings#show'
+  patch '/service_offerings/:guid', to: 'service_offerings#update'
+  delete '/service_offerings/:guid', to: 'service_offerings#destroy'
+
+  # service_plans
+  get '/service_plans', to: 'service_plans#index'
+  get '/service_plans/:guid', to: 'service_plans#show'
+  patch '/service_plans/:guid', to: 'service_plans#update'
+  delete '/service_plans/:guid', to: 'service_plans#destroy'
+
+  # service_plan_visibility
+  get '/service_plans/:guid/visibility', to: 'service_plan_visibility#show'
+  patch '/service_plans/:guid/visibility', to: 'service_plan_visibility#update'
+  post '/service_plans/:guid/visibility', to: 'service_plan_visibility#apply'
+  delete '/service_plans/:guid/visibility/:org_guid', to: 'service_plan_visibility#destroy'
+
+  # service_instances
+  get '/service_instances', to: 'service_instances_v3#index'
+  get '/service_instances/:guid', to: 'service_instances_v3#show'
+  get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
+  get '/service_instances/:guid/credentials', to: 'service_instances_v3#credentials'
+  get '/service_instances/:guid/parameters', to: 'service_instances_v3#parameters'
+  post '/service_instances', to: 'service_instances_v3#create'
+  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
+  patch '/service_instances/:guid', to: 'service_instances_v3#update'
+  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
+
+  # space_features
+  get '/spaces/:guid/features/:name', to: 'space_features#show'
+  get '/spaces/:guid/features', to: 'space_features#index'
+  patch '/spaces/:guid/features/:name', to: 'space_features#update'
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
+
+  # space_quotas
+  post '/space_quotas', to: 'space_quotas#create'
+  get '/space_quotas/:guid', to: 'space_quotas#show'
+  get '/space_quotas', to: 'space_quotas#index'
+  patch '/space_quotas/:guid', to: 'space_quotas#update'
+  post '/space_quotas/:guid/relationships/spaces', to: 'space_quotas#apply_to_spaces'
+  delete '/space_quotas/:guid/relationships/spaces/:space_guid', to: 'space_quotas#remove_from_space'
+  delete '/space_quotas/:guid', to: 'space_quotas#destroy'
 
   # spaces
   post '/spaces', to: 'spaces_v3#create'
   get '/spaces', to: 'spaces_v3#index'
   get '/spaces/:guid', to: 'spaces_v3#show'
+  get '/spaces/:guid/running_security_groups', to: 'spaces_v3#running_security_groups'
+  get '/spaces/:guid/staging_security_groups', to: 'spaces_v3#staging_security_groups'
   patch '/spaces/:guid', to: 'spaces_v3#update'
   delete 'spaces/:guid', to: 'spaces_v3#destroy'
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'
@@ -196,13 +253,6 @@ Rails.application.routes.draw do
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
-
-  # service_instances
-  get '/service_instances', to: 'service_instances_v3#index'
-  get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
-  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
-  patch '/service_instances/:guid', to: 'service_instances_v3#update'
-  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # stacks
   get '/stacks', to: 'stacks#index'
@@ -248,4 +298,8 @@ Rails.application.routes.draw do
 
   # info
   get '/info', to: 'info#show'
+
+  namespace :internal do
+    patch '/builds/:guid', to: 'builds#update'
+  end
 end

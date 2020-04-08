@@ -51,6 +51,7 @@ module VCAP::CloudController
             :ca_file => String,
             :client_timeout => Integer,
             optional(:symmetric_secret) => String,
+            optional(:symmetric_secret2) => String,
           },
 
           logging: {
@@ -71,6 +72,7 @@ module VCAP::CloudController
           stacks_file: String,
           newrelic_enabled: bool,
 
+          optional(:max_migration_duration_in_minutes) => Integer,
           db: {
             optional(:database) => Hash, # db connection hash for sequel
             max_connections: Integer, # max connections in the connection pool
@@ -204,6 +206,7 @@ module VCAP::CloudController
           logcache: {
             host: String,
             port: Integer,
+            temporary_ignore_server_unavailable_errors: bool,
           },
 
           logcache_tls: {
@@ -353,8 +356,7 @@ module VCAP::CloudController
           optional(:kubernetes) => {
             host_url: String,
             service_account: {
-              name: String,
-              token: String,
+              token_file: String,
             },
             ca_file: String,
             optional(:kpack) => {
@@ -363,6 +365,7 @@ module VCAP::CloudController
               registry_tag_base: String,
             }
           },
+          default_app_lifecycle: String,
         }
       end
       # rubocop:enable Metrics/BlockLength

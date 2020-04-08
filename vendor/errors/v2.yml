@@ -18,6 +18,11 @@
   http_code: 400
   message: "Invalid content type, expected: %s"
 
+1004:
+  name: BadRequest
+  http_code: 400
+  message: "Bad request: %s"
+
 10000:
   name: NotFound
   http_code: 404
@@ -1278,3 +1283,13 @@
   name: StopDisabledDuringDeployment
   http_code: 422
   message: "Cannot stop the app while it is deploying, please cancel the deployment before stopping the app."
+
+400001:
+  name: KubernetesRouteResourceError
+  http_code: 422
+  message: "Failed to create/update/delete Route resource with guid '%s' on Kubernetes"
+
+400002:
+  name: KpackImageCreateError
+  http_code: 422
+  message: "Failed to create Image resource for staging: '%s'"

@@ -1,0 +1,160 @@
+<% content_for :single_space_quota do %>
+{
+  "guid": "f919ef8a-e333-472a-8172-baaf2c30d301",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:41Z",
+  "name": "don-quixote",
+  "apps": {
+    "total_memory_in_mb": 5120,
+    "per_process_memory_in_mb": 1024,
+    "total_instances": 10,
+    "per_app_tasks": null
+  },
+  "services": {
+    "paid_services_allowed": true,
+    "total_service_instances": 10,
+    "total_service_keys": 20
+  },
+  "routes": {
+    "total_routes": 8,
+    "total_reserved_ports": 20
+  },
+  "relationships": {
+    "organization": {
+      "data": {
+        "guid": "9b370018-c38e-44c9-86d6-155c76801104"
+      }
+    },
+    "spaces": {
+      "data": [
+        {
+          "guid": "45bb0018-c38e-44c9-86d6-155c76803600"
+        }
+      ]
+    }
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301"
+    },
+    "organization": {
+      "href": "https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104"
+    }
+  }
+}
+<% end %>
+
+<% content_for :list_space_quotas do %>
+{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 1,
+    "first": {
+      "href": "https://api.example.org/v3/space_quotas?page=1&per_page=50"
+    },
+    "last": {
+      "href": "https://api.example.org/v3/space_quotas?page=1&per_page=50"
+    },
+    "next": null,
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "f919ef8a-e333-472a-8172-baaf2c30d301",
+      "created_at": "2016-05-04T17:00:41Z",
+      "updated_at": "2016-05-04T17:00:41Z",
+      "name": "don-quixote",
+      "apps": {
+        "total_memory_in_mb": 5120,
+        "per_process_memory_in_mb": 1024,
+        "total_instances": 10,
+        "per_app_tasks": null
+      },
+      "services": {
+        "paid_services_allowed": true,
+        "total_service_instances": 10,
+        "total_service_keys": 20
+      },
+      "routes": {
+        "total_routes": 8,
+        "total_reserved_ports": 20
+      },
+      "relationships": {
+        "organizations": {
+          "data": {
+            "guid": "9b370018-c38e-44c9-86d6-155c76801104"
+          }
+        },
+        "spaces": {
+          "data": [
+            {
+              "guid": "45bb0018-c38e-44c9-86d6-155c76803600"
+            }
+          ]
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301"
+        },
+        "organization": {
+          "href": "https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104"
+        }
+      }
+    },
+    {
+      "guid": "554bcf32-7032-4cb0-92bc-738f9d2089d3",
+      "created_at": "2017-05-04T17:00:41Z",
+      "updated_at": "2017-05-04T17:00:41Z",
+      "name": "sancho-panza",
+      "apps": {
+        "total_memory_in_mb": 2048,
+        "per_process_memory_in_mb": 1024,
+        "total_instances": 5,
+        "per_app_tasks": 2
+      },
+      "services": {
+        "paid_services_allowed": true,
+        "total_service_instances": 10,
+        "total_service_keys": 20
+      },
+      "routes": {
+        "total_routes": 8,
+        "total_reserved_ports": 4
+      },
+      "relationships": {
+        "organizations": {
+          "data": {
+            "guid": "9b370018-c38e-44c9-86d6-155c76801104"
+          }
+        },
+        "spaces": {
+          "data": []
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/space_quotas/554bcf32-7032-4cb0-92bc-738f9d2089d3"
+        },
+        "organization": {
+          "href": "https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104"
+        }
+      }
+    }
+  ]
+}
+<% end %>
+
+
+<% content_for :apply_space_quota do %>
+  {
+    "data": [
+      { "guid": "space-guid1" },
+      { "guid": "space-guid2" },
+      { "guid": "previous-space-guid" }
+    ],
+    "links": {
+      "self": { "href": "https://api.example.org/v3/space_quotas/quota-guid/relationships/spaces" }
+    }
+  }
+<% end %>

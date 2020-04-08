@@ -275,31 +275,50 @@ module VCAP::CloudController
         end
       end
 
-      context 'the model does not contain buildpack_lifecycle_data' do
+      context 'the model contains kpack_lifecycle_data' do
+        before { KpackLifecycleDataModel.make(app: app_model) }
+
+        it 'returns the string "kpack" if kpack_lifecycle_data is on the model' do
+          expect(app_model.lifecycle_type).to eq('kpack')
+        end
+      end
+
+      context 'the model does not contain buildpack_lifecycle_data or kpack_lifecycle_data' do
         before do
           app_model.buildpack_lifecycle_data = nil
+          app_model.kpack_lifecycle_data = nil
           app_model.save
         end
 
-        it 'returns the string "docker" if buildpack_lifecycle data is not on the model' do
+        it 'returns the string "docker"' do
           expect(app_model.lifecycle_type).to eq('docker')
         end
       end
     end
 
     describe '#lifecycle_data' do
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
+      context 'buildpack_lifecycle_data' do
+        let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
 
-      it 'returns buildpack_lifecycle_data if it is on the model' do
-        expect(app_model.lifecycle_data).to eq(lifecycle_data)
+        it 'returns buildpack_lifecycle_data if it is on the model' do
+          expect(app_model.lifecycle_data).to eq(buildpack_lifecycle_data)
+        end
+
+        it 'is a persistable hash' do
+          expect(app_model.reload.lifecycle_data.buildpacks).to eq(buildpack_lifecycle_data.buildpacks)
+          expect(app_model.reload.lifecycle_data.stack).to eq(buildpack_lifecycle_data.stack)
+        end
       end
 
-      it 'is a persistable hash' do
-        expect(app_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
-        expect(app_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+      context 'kpack_lifecycle_data' do
+        let!(:kpack_lifecycle_data) { KpackLifecycleDataModel.make(app: app_model) }
+
+        it 'returns kpack_lifecycle_data if it is on the model' do
+          expect(app_model.lifecycle_data).to eq(kpack_lifecycle_data)
+        end
       end
 
-      context 'buildpack_lifecycle_data is nil' do
+      context 'buildpack_lifecycle_data and kpack_lifecycle_data is nil' do
         let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do

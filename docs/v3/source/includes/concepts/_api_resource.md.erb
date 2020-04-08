@@ -32,12 +32,12 @@ Name | Type | Description
 **guid** | _uuid_ | The unique identifier for the resource.
 **created_at** | _datetime_ | The ISO8601 compatible date and time when resource was created.
 **updated_at** | _datetime_ | The ISO8601 compatible date and time when resource was last updated.
-**links** | [_links object_](#links) | Provide URLs to related resources and actions for the current resource.
+**links** | [_links object_](#links) | URLs to related resources and actions for the current resource.
 
 
 ### Links
 
-Links provide URLs to [relationships](#relationships) and actions for a resource. Links are represented as a JSON object and will always contain at least a `self` link.
+Links provide URLs to [relationships](#relationships) and actions for a resource. Links are represented as a JSON object and always contain a `self` link.
 
 Each link is keyed by its type and will include a `href` for the URL and an optional `method` for links that cannot be followed using `GET`.
 

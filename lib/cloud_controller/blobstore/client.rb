@@ -25,7 +25,8 @@ module CloudController
       :download_uri,
       :blob,
       :files_for,
-      :root_dir
+      :root_dir,
+      :ensure_bucket_exists
     end
   end
 end

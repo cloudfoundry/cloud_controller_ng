@@ -18,7 +18,6 @@ module VCAP::CloudController
           end
 
           Organization.db.transaction do
-            delete_metadata(org)
             org.destroy
           end
         end
@@ -27,13 +26,6 @@ module VCAP::CloudController
       def timeout_error(dataset)
         org_name = dataset.first.name
         CloudController::Errors::ApiError.new_from_details('OrganizationDeleteTimeout', org_name)
-      end
-
-      private
-
-      def delete_metadata(org_model)
-        LabelDelete.delete(org_model.labels)
-        AnnotationDelete.delete(org_model.annotations)
       end
     end
   end

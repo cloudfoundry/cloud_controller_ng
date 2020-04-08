@@ -189,6 +189,25 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq(403)
       end
     end
+
+    context 'filters' do
+      let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:destination2) { VCAP::CloudController::RouteMappingModel.make(app: app_model2, route: route, process_type: 'web') }
+
+      context 'when filtering on app_guids' do
+        it 'returns only the destinations for the requested app_guids' do
+          get "/v3/routes/#{route.guid}/destinations?app_guids=#{app_model.guid}", nil, admin_header
+          expect(parsed_response).to match_json_response(response_json)
+        end
+      end
+
+      context 'when filtering on destination guids' do
+        it 'returns only the destinations for the requested destination guids' do
+          get "/v3/routes/#{route.guid}/destinations?guids=#{destination.guid}", nil, admin_header
+          expect(parsed_response).to match_json_response(response_json)
+        end
+      end
+    end
   end
 
   describe 'POST /v3/routes/:guid/destinations' do

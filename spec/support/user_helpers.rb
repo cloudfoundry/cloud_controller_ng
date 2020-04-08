@@ -134,6 +134,10 @@ module UserHelpers
         scopes << 'cloud_controller.global_auditor'
       end
 
+      if opts[:update_build_state]
+        scopes << 'cloud_controller.update_build_state'
+      end
+
       encoding_opts = {
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
         email: opts[:email],
@@ -245,6 +249,10 @@ module UserHelpers
 
   def disallow_user_read_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
+  end
+
+  def disallow_user_build_update_access(user)
+    allow(permissions_double(user)).to receive(:can_update_build_state?).and_return(false)
   end
 
   def disallow_user_secret_access(user, space:)

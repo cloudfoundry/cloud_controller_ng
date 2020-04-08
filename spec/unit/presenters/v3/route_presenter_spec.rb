@@ -3,6 +3,7 @@ require 'presenters/v3/route_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RoutePresenter do
+    let!(:app) { VCAP::CloudController::AppModel.make }
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }
     let(:route_host) { 'host' }
@@ -20,6 +21,26 @@ module VCAP::CloudController::Presenters::V3
           path: path,
           space: space,
           domain: domain
+        )
+      end
+
+      let!(:destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app,
+          app_port: 1234,
+          route: route,
+          process_type: 'web',
+          weight: 55
+        )
+      end
+
+      let!(:destination2) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app,
+          app_port: 5678,
+          route: route,
+          process_type: 'other-process',
+          weight: 45
         )
       end
 
@@ -47,6 +68,33 @@ module VCAP::CloudController::Presenters::V3
         expect(subject[:host]).to eq(route_host)
         expect(subject[:path]).to eq(path)
         expect(subject[:url]).to eq("#{route.host}.#{domain.name}#{route.path}")
+
+        expected_destinations = [
+          {
+            guid: destination.guid,
+            app: {
+              guid: destination.app_guid,
+              process: {
+                type: destination.process_type
+              }
+            },
+            weight: destination.weight,
+            port: destination.presented_port
+          },
+          {
+            guid: destination2.guid,
+            app: {
+              guid: destination2.app_guid,
+              process: {
+                type: destination2.process_type
+              }
+            },
+            weight: destination2.weight,
+            port: destination2.presented_port
+          }
+        ]
+        expect(subject[:destinations]).to match_array(expected_destinations)
+
         expect(subject[:metadata][:labels]).to eq({ 'pfx.com/potato' => 'baked' })
         expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
         expect(subject[:relationships][:space][:data]).to eq({ guid: space.guid })

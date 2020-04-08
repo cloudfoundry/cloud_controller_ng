@@ -439,7 +439,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
 
       it 'raises an error' do
         bottom = bottoms.first
-        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
+        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(CloudController::Errors::ApiError, /Could not find Middle/)
       end
     end
   end

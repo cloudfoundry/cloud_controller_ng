@@ -313,7 +313,7 @@ module VCAP::CloudController
       end
       context 'when an {admin, read_only_admin, global_auditor} lists users' do
         it 'sees all the org users in managed org' do
-          expect(User.readable_users_for_current_user(true, User.make(guid: 'global-user')).map(&:guid)).
+          expect(User.make(guid: 'global-user').readable_users(true).map(&:guid)).
             to(match_array([
               'global-user',
               'org_1_manager',
@@ -336,7 +336,7 @@ module VCAP::CloudController
 
       shared_examples 'an org_user' do
         it 'can view all other users in their org' do
-          expect(User.readable_users_for_current_user(false, role).map(&:guid)).
+          expect(role.readable_users(false).map(&:guid)).
             to(match_array(%w(
               org_1_manager
               org_1_billing_manager
@@ -386,7 +386,7 @@ module VCAP::CloudController
 
       context 'in the 2nd org' do
         it 'can view the users in their org but not in the first' do
-          expect(User.readable_users_for_current_user(false, space_2a_manager).map(&:guid)).
+          expect(space_2a_manager.readable_users(false).map(&:guid)).
             to(match_array([
               'space_2a_manager',
               'space_2a_auditor',

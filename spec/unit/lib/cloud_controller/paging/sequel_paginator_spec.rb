@@ -22,11 +22,11 @@ module VCAP::CloudController
 
       it 'pages properly' do
         options = { page: 1, per_page: per_page }
-        pagination_options     = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         first_paginated_result = paginator.get_page(dataset, pagination_options)
 
         options = { page: 2, per_page: per_page }
-        pagination_options      = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         second_paginated_result = paginator.get_page(dataset, pagination_options)
 
         expect(first_paginated_result.records.first.guid).to eq(app_model1.guid)

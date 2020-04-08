@@ -1,0 +1,41 @@
+### Get SSH enabled for an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/:guid/ssh_enabled" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_app_ssh_enabled %>
+```
+
+Returns if an application's runtime environment will accept ssh connections.
+If ssh is disabled,
+the `reason` field will describe
+whether it is disabled globally, at the space level, or at the app level.
+
+#### Definition
+`GET /v3/apps/:guid/ssh_enabled` <br>
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

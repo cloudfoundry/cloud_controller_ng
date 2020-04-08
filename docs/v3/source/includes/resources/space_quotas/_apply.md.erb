@@ -1,0 +1,48 @@
+### Apply a space quota to a space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/space_quotas/:quota_guid/relationships/spaces" \
+-X POST \
+-H "Authorization: bearer [token]" \
+-H "Content-type: application/json" \
+-d '{
+  "data": [{ "guid": "space-guid1" }, { "guid": "space-guid2" }]
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :apply_space_quota %>
+```
+
+
+This endpoint applies a space quota to one or more spaces.
+
+Only an admin or an org manager in the quota's parent organization can apply a space quota to a space.
+
+#### Definition
+`POST /v3/space_quotas/:quota_guid/relationships/spaces`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-many relationship_](#to-many-relationships) | Space guids that the quota will apply to.
+
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Org Manager | Can apply space quotas to spaces within their managed organizations.

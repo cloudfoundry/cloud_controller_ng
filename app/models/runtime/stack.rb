@@ -20,6 +20,9 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::StackLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::StackAnnotationModel', key: :resource_guid, primary_key: :guid
 
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     plugin :serialization
 
     export_attributes :name, :description
@@ -34,6 +37,8 @@ module VCAP::CloudController
 
     def before_destroy
       raise AppsStillPresentError.new if apps.present?
+
+      super
     end
 
     def self.configure(file_path)

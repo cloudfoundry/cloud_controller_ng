@@ -55,6 +55,8 @@ module VCAP::CloudController
     add_association_dependencies audited_organizations: :nullify
     add_association_dependencies spaces: :nullify
     add_association_dependencies managed_spaces: :nullify
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     export_attributes :admin, :active, :default_space_guid
 
@@ -67,12 +69,6 @@ module VCAP::CloudController
       :managed_space_guids,
       :audited_space_guids,
       :default_space_guid
-
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-      super
-    end
 
     def validate
       validates_presence :guid
@@ -197,18 +193,18 @@ module VCAP::CloudController
         distinct
     end
 
-    def self.uaa_users_info(user_guids)
-      uaa_client = CloudController::DependencyLocator.instance.uaa_client
-      uaa_client.users_for_ids(user_guids)
-    end
-
-    def self.readable_users_for_current_user(can_read_globally, current_user)
+    def readable_users(can_read_globally)
       if can_read_globally
         User.dataset
       else
-        readable_users = current_user.visible_users_in_my_orgs.union(User.where(id: current_user.id).select(:id))
+        readable_users = visible_users_in_my_orgs.union(User.where(id: id).select(:id))
         User.where(id: readable_users)
       end
+    end
+
+    def self.uaa_users_info(user_guids)
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      uaa_client.users_for_ids(user_guids)
     end
 
     def self.user_visibility_filter(_)

@@ -77,4 +77,12 @@ RSpec.shared_examples_for 'a blobstore client' do
       subject.files_for('aa')
     }.not_to raise_error
   end
+
+  describe '#ensure_bucket_exists' do
+    it 'creates a bucket if it doesnt exist' do
+      expect {
+        subject.ensure_bucket_exists
+      }.not_to raise_error
+    end
+  end
 end

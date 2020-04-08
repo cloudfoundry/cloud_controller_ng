@@ -10,7 +10,7 @@ module VCAP::CloudController
     validates :command, presence: true, string: true
     validates :process_types, array: true, length: {
       minimum: 1,
-      too_short: 'must have at least %{count} process_type'
+      too_short: 'must have at least %<count>i process_type'
     }
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   end

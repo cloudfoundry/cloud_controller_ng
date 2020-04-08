@@ -76,7 +76,7 @@ module VCAP::CloudController
         message = RolesListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'accepts a guids param' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
       it 'does not accept an include param that is invalid' do
         message = RolesListMessage.from_params({ include: ['garbage'] })
         expect(message).to be_invalid
-        expect(message.errors[:base]).to contain_exactly("Invalid included resource: 'garbage'")
+        expect(message.errors[:base]).to contain_exactly(include("Invalid included resource: 'garbage'"))
       end
 
       it 'reject an invalid order_by field' do

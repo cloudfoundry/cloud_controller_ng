@@ -5,6 +5,7 @@ require 'messages/space_delete_unmapped_routes_message'
 require 'messages/space_update_message'
 require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
+require 'messages/space_security_groups_list_message.rb'
 require 'messages/space_show_message'
 require 'actions/space_update_isolation_segment'
 require 'actions/space_create'
@@ -12,6 +13,7 @@ require 'actions/space_update'
 require 'actions/space_delete_unmapped_routes'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
+require 'fetchers/security_group_list_fetcher.rb'
 require 'jobs/v3/space_delete_unmapped_routes_job'
 
 class SpacesV3Controller < ApplicationController
@@ -90,6 +92,44 @@ class SpacesV3Controller < ApplicationController
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
+  def running_security_groups
+    message = SpaceSecurityGroupsListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    space = SpaceFetcher.new.fetch(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+
+    unfiltered_group_guids = fetch_running_security_group_guids(space)
+    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SecurityGroupPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: "/v3/spaces/#{space.guid}/running_security_groups",
+      message: message,
+      extra_presenter_args: { visible_space_guids: space.guid },
+    )
+  end
+
+  def staging_security_groups
+    message = SpaceSecurityGroupsListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    space = SpaceFetcher.new.fetch(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+
+    unfiltered_group_guids = fetch_staging_security_group_guids(space)
+    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SecurityGroupPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: "/v3/spaces/#{space.guid}/staging_security_groups",
+      message: message,
+      extra_presenter_args: { visible_space_guids: space.guid },
+    )
+  end
+
   def delete_unmapped_routes
     message = SpaceDeleteUnmappedRoutesMessage.new(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -158,6 +198,18 @@ class SpacesV3Controller < ApplicationController
 
   def fetch_isolation_segment(guid)
     IsolationSegmentModel.where(guid: guid).first
+  end
+
+  def fetch_running_security_group_guids(space)
+    space_level_groups = SecurityGroup.where(spaces: space)
+    global_groups = SecurityGroup.where(running_default: true)
+    space_level_groups.union(global_groups).distinct.map(&:guid)
+  end
+
+  def fetch_staging_security_group_guids(space)
+    space_level_groups = SecurityGroup.where(staging_spaces: space)
+    global_groups = SecurityGroup.where(staging_default: true)
+    space_level_groups.union(global_groups).distinct.map(&:guid)
   end
 
   def space_not_found!

@@ -1,0 +1,32 @@
+### Delete an organization quota
+
+Organization quotas cannot be deleted when applied to any organizations.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations_quotas/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Location: https://api.example.org/v3/jobs/[guid]
+```
+
+#### Definition
+`DELETE /v3/organization_quotas/:guid`
+
+#### Permitted roles
+
+Role  | Notes
+--- | ---
+Admin |
+

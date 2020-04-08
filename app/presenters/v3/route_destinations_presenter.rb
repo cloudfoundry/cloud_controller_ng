@@ -1,33 +1,36 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/v3/route_destination_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class RouteDestinationsPresenter < BasePresenter
+    def initialize(
+      resource,
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      route:
+    )
+      @route = route
+      super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: [])
+    end
+
     def to_hash
       {
-        destinations: build_destinations,
+        destinations: presented_destinations,
         links: build_links
       }
     end
 
     private
 
-    def route
+    attr_reader :route
+
+    def destinations
       @resource
     end
 
-    def build_destinations
-      route.route_mappings.map do |route_mapping|
-        {
-          guid: route_mapping.guid,
-          app: {
-            guid: route_mapping.app_guid,
-            process: {
-              type: route_mapping.process_type
-            }
-          },
-          weight: route_mapping.weight,
-          port: route_mapping.presented_port
-        }
+    def presented_destinations
+      destinations.map do |route_mapping|
+        RouteDestinationPresenter.new(route_mapping).to_hash
       end
     end
 

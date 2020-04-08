@@ -20,15 +20,15 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Feature Flags|Feature Flags|
 |Jobs|Jobs|
 |Organizations|Organizations|
-|Quota Definitions|Organization Quotas|
+|Quota Definitions|Organization Quotas|[Organization Quotas in V3](#organization-quotas-in-v3)
 |Resource Matches|Resource Matches|
 |Routes, Route Mappings|Routes|[Routes in V3](#routes-in-v3)|
-|Security Groups|Security Groups|
+|Security Groups|Security Groups|[Security Groups in V3](#security-groups-in-v3)|
 |Service Bindings, Service Keys|Service Keys|
 |Service Brokers|Service Brokers|
 |Service Instances, User-Provided Service Instances|Service Instances|
 |Spaces|Spaces|
-|Space Quota Definitions|Space Quotas|
+|Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
 |Stacks|Stacks|
 |Usage Events|Usage Events|
 |Users|Roles, Users|[Users and Roles in V3](#users-and-roles-in-v3)|
@@ -41,6 +41,29 @@ In V3, there is only one domain resource. A domain is "shared" if it has an "own
 
 Read more about the [domain resource](#domains).
 
+### Organization Quotas in V3
+
+In V2, `-1` represented an unlimited value for a quota limit.
+
+In V3, `null` is used to represent an unlimited value.
+
+The names of the limit fields have changed from V2 to V3.
+
+|**V2**|**V3**|
+|---|---|
+non_basic_services_allowed | services.paid_services_allowed
+total_services | services.total_service_instances
+total_service_keys | services.total_service_keys
+total_routes | routes.total_routes
+total_reserved_route_ports | routes.total_reserved_ports
+total_private_domains | domains.total_domains
+memory_limit | apps.total_memory_in_mb
+instance_memory_limit | apps.per_process_memory_in_mb
+app_instance_limit | apps.total_instances
+app_task_limit | apps.per_app_tasks
+
+Read more about the [organization quota resource](#organization-quotas).
+
 ### Routes in V3
 
 In V2, the route resource represented a URL that could be mapped to an app, and the route mapping resource represented a mapping between a route and an app.
@@ -48,6 +71,42 @@ In V2, the route resource represented a URL that could be mapped to an app, and 
 In V3, these concepts have been collapsed into a single route resource. Now, a route can have one or more "destinations" listed on it. These represent a mapping from the route to a resource that can serve traffic (e.g. a process of an app).
 
 Read more about [routes and destinations](#routes).
+
+### Security Groups in V3
+
+In V2, security groups which apply to _all_ spaces in a Cloud Foundry deployment are termed "default", as in "default for running apps" and "default for staging apps". For example, to apply a default security group to all apps in the running lifecycle, one would `PUT /v2/config/running_security_groups/:guid`
+
+In V3, security groups which apply to _all_ spaces in a Cloud Foundry deployment are termed "global", as in "globally-enabled running apps" and "globally-enabled staging apps." For example, to apply a security group globally to all apps in the running lifecycle, one would `PATCH /v3/security_groups/:guid` with a body specifying the `globally_enabled` key. See [here](#update-a-security-group) for an example.
+
+In V2, on creation, one can specify the spaces to which the security group applies, but not whether it applies globally (by default). To set the group globally to all spaces in the foundation one would `PUT /v2/config/running_security_groups/43e0441d-c9c1-4250-b8d5-7fb624379e02`.
+
+In V3, on creation, one can both specify the spaces to which it applies and also whether it applies globally (to staging and/or running) by specifying the `globally_enabled` key. See [here](#create-a-security-group) for more information.
+
+In V2, the endpoint to apply a security group to a space only includes the lifecycle ("running" or "staging") explicitly when applying to "staging" ("running" is the default lifecycle). For example, to unbind a security group from the running lifecycle, one would `DELETE /v2/security_groups/:guid/spaces/:space_guid`, from the staging lifecycle, `DELETE /v2/security_groups/:guid/staging_spaces/:space_guid`.
+
+In V3, the endpoint to apply a security group to a space includes the lifecycle. For example to unbind a security group from the running lifecycle, one would `DELETE /v3/security_groups/:guid/relationships/running_spaces/:space_guid`.
+
+### Space Quotas in V3
+
+In V2, `-1` represented an unlimited value for a quota limit.
+
+In V3, `null` is used to represent an unlimited value.
+
+The names of the limit fields have changed from V2 to V3.
+
+|**V2**|**V3**|
+|---|---|
+non_basic_services_allowed | services.paid_services_allowed
+total_services | services.total_service_instances
+total_service_keys | services.total_service_keys
+total_routes | routes.total_routes
+total_reserved_route_ports | routes.total_reserved_ports
+memory_limit | apps.total_memory_in_mb
+instance_memory_limit | apps.per_process_memory_in_mb
+app_instance_limit | apps.total_instances
+app_task_limit | apps.per_app_tasks
+
+Read more about the [space quota resource](#space-quotas).
 
 ### Users and Roles in V3
 

@@ -154,20 +154,66 @@ RSpec.describe 'V3 service offerings' do
         it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
     end
+
+    context 'when the service offering has labels and annotations' do
+      let(:service_offering) { VCAP::CloudController::ServicePlan.make.service }
+      let(:guid) { service_offering.guid }
+
+      before do
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid, key_name: 'one', value: 'foo')
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid, key_name: 'two', value: 'bar')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key: 'alpha', value: 'A1')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key: 'beta', value: 'B2')
+      end
+
+      it 'displays the metadata correctly' do
+        get "/v3/service_offerings/#{guid}", nil, admin_headers
+
+        expect(parsed_response.deep_symbolize_keys).to include({
+          metadata: {
+            labels: {
+              one: 'foo',
+              two: 'bar',
+            },
+            annotations: {
+              alpha: 'A1',
+              beta: 'B2',
+            }
+          }
+        })
+      end
+    end
   end
 
   describe 'GET /v3/service_offerings' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_offerings', nil, user_headers } }
 
-    context 'when there are no service offerings' do
-      let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 200,
-          response_objects: []
-        )
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_offerings' }
+      let(:message) { VCAP::CloudController::ServiceOfferingsListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          available: true,
+          service_broker_guids: %w(foo bar),
+          service_broker_names: %w(baz qux),
+          names: %w(quux quuz),
+          space_guids: %w(hoge piyo),
+          organization_guids: %w(fuga hogera),
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+          label_selector: 'foo==bar',
+        }
       end
+    end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+    context 'when there are no service offerings' do
+      it 'returns an empty list' do
+        get '/v3/service_offerings', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources']).to be_empty
+      end
     end
 
     context 'visibility of service offerings' do
@@ -400,34 +446,575 @@ RSpec.describe 'V3 service offerings' do
       end
     end
 
-    context 'when requesting one service offering per page' do
+    context 'pagination' do
       let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
       let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
 
-      it 'returns 200 OK and a body containing one broker with pagination information for the next' do
-        expect_filtered_service_offerings('per_page=1', [service_offering_1])
+      let(:resources) { [service_offering_1, service_offering_2] }
+      it_behaves_like 'paginated response', '/v3/service_offerings'
+    end
 
-        expect(parsed_response['pagination']['total_results']).to eq(2)
-        expect(parsed_response['pagination']['total_pages']).to eq(2)
+    context 'when the service offerings have labels and annotations' do
+      let(:service_offering_1) { VCAP::CloudController::ServicePlan.make.service }
+      let(:service_offering_2) { VCAP::CloudController::ServicePlan.make.service }
+      let(:guid_1) { service_offering_1.guid }
+      let(:guid_2) { service_offering_2.guid }
+
+      before do
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid_1, key_name: 'one', value: 'foo')
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid_2, key_name: 'two', value: 'bar')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_1, key: 'alpha', value: 'A1')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_2, key: 'beta', value: 'B2')
+      end
+
+      it 'displays the metadata correctly' do
+        get '/v3/service_offerings', nil, admin_headers
+
+        expect(parsed_response['resources'][0].deep_symbolize_keys).to include({
+          metadata: {
+            labels: { one: 'foo' },
+            annotations: { alpha: 'A1' }
+          }
+        })
+
+        expect(parsed_response['resources'][1].deep_symbolize_keys).to include({
+          metadata: {
+            labels: { two: 'bar' },
+            annotations: { beta: 'B2' }
+          }
+        })
+      end
+    end
+
+    context 'filters and sorting' do
+      context 'when filtering on the `available` property' do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?available=#{available}", nil, user_headers } }
+
+        let!(:service_offering_available) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+        let!(:service_offering_unavailable) do
+          offering = VCAP::CloudController::Service.make(active: false)
+          VCAP::CloudController::ServicePlan.make(public: true, active: true, service: offering)
+          offering
+        end
+
+        context 'filtering for available offerings' do
+          let(:available) { true }
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_objects: [
+                create_offering_json(service_offering_available),
+              ]
+            )
+          end
+
+          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+        end
+
+        context 'filtering for unavailable offerings' do
+          let(:available) { false }
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_objects: [
+                create_offering_json(service_offering_unavailable),
+              ]
+            )
+          end
+
+          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+        end
+      end
+
+      context 'when filtering by space GUID' do
+        let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+
+        let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+        let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+        let(:space_3) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+        let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_service_offering) { public_plan.service }
+
+        let!(:space_guids) { [space.guid, space_2.guid] }
+
+        it 'returns the right offerings' do
+          expect_filtered_service_offerings(
+            "space_guids=#{space_guids.join(',')}",
+            [service_offering_1, service_offering_2, public_service_offering]
+          )
+        end
+      end
+
+      context 'when filtering by org GUID' do
+        let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+
+        let(:org_2) { VCAP::CloudController::Organization.make }
+        let(:space_2) { VCAP::CloudController::Space.make(organization: org_2) }
+        let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+        let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+        let(:org_3) { VCAP::CloudController::Organization.make }
+        let(:space_3) { VCAP::CloudController::Space.make(organization: org_3) }
+        let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+        let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_service_offering) { public_plan.service }
+
+        let!(:org_guids) { [org.guid, org_2.guid] }
+
+        it 'returns the right offerings' do
+          expect_filtered_service_offerings(
+            "organization_guids=#{org_guids.join(',')}",
+            [service_offering_1, service_offering_2, public_service_offering]
+          )
+        end
+      end
+
+      context 'when filtering on the service broker GUID' do
+        let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let!(:service_offering_1) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_2) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
+        let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?service_broker_guids=#{service_broker_guids.join(',')}", nil, user_headers } }
+        let(:service_broker_guids) { [service_broker.guid, service_offering_3.service_broker.guid] }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1),
+              create_offering_json(service_offering_2),
+              create_offering_json(service_offering_3),
+            ]
+          )
+        end
+
+        it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when filtering on the service broker name' do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?service_broker_names=#{service_broker_names.join(',')}", nil, user_headers } }
+        let(:service_broker_names) { [service_broker.name, service_offering_4.service_broker.name] }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1),
+              create_offering_json(service_offering_2),
+              create_offering_json(service_offering_4),
+            ]
+          )
+        end
+
+        let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let!(:service_offering_1) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_2) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
+        let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+        it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when filtering on the name' do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?names=#{service_offering_names.join(',')}", nil, user_headers } }
+        let(:service_offering_names) { [service_offering_1.name, service_offering_4.name] }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1),
+              create_offering_json(service_offering_4),
+            ]
+          )
+        end
+
+        let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+
+        it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when filtering on labels' do
+        let(:api_call) { lambda { |user_headers| get '/v3/service_offerings?label_selector=flavor=orange', nil, user_headers } }
+
+        let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+        let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+
+        before do
+          VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_1.guid, key_name: 'flavor', value: 'orange')
+          VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_2.guid, key_name: 'flavor', value: 'orange')
+          VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_3.guid, key_name: 'flavor', value: 'apple')
+        end
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1, labels: { flavor: 'orange' }),
+              create_offering_json(service_offering_2, labels: { flavor: 'orange' }),
+            ]
+          )
+        end
+
+        it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
       end
     end
   end
 
-  def create_offering_json(service_offering)
+  describe 'DELETE /v3/service_offerings/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_offerings/#{guid}", nil, user_headers } }
+
+    let(:db_check) {
+      lambda do
+        expect(VCAP::CloudController::Service.all).to be_empty
+      end
+    }
+
+    context 'when the service offering does not exist' do
+      let(:guid) { 'non-existing-guid' }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has no plans' do
+      let!(:service_offering) { VCAP::CloudController::Service.make }
+      let(:guid) { service_offering.guid }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin'] = { code: 204 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { service_offering }
+          let(:api_call) do
+            -> { delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers }
+          end
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has public plans' do
+      let!(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true).service }
+      let(:guid) { service_offering.guid }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = { code: 422 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has org-scoped plans' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let(:guid) { service_plan.service.guid }
+
+      before do
+        VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = { code: 422 }
+          h['no_role'] = { code: 404 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering is from a space-scoped service broker' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+      let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let(:guid) { service_offering.guid }
+
+      before do
+        # Being a SpaceDeveloper in another space should make no difference
+        alternative_org = VCAP::CloudController::Organization.make
+        alternative_org.add_user(user)
+        alternative_space = VCAP::CloudController::Space.make(organization: alternative_org)
+        alternative_space.add_developer(user)
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin'] = { code: 204 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['space_manager'] = { code: 403 }
+          h['space_auditor'] = { code: 403 }
+          h['space_developer'] = { code: 204 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    describe 'audit events' do
+      let(:service_offering) { VCAP::CloudController::Service.make }
+
+      it 'emits an audit event' do
+        delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers
+
+        expect([
+          { type: 'audit.service.delete', actor: service_offering.service_broker.name },
+        ]).to be_reported_as_events
+      end
+    end
+
+    context 'when purge=true' do
+      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
+      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+      let(:guid) { service_instance.service_plan.service.guid }
+      let(:email) { Sham.email }
+      let(:admin_header) { admin_headers_for(user, email: email) }
+
+      it 'deletes the service offering and its dependencies' do
+        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+        expect(last_response).to have_status_code(204)
+        expect(VCAP::CloudController::Service.all).to be_empty
+        expect(VCAP::CloudController::ServicePlan.all).to be_empty
+        expect(VCAP::CloudController::ManagedServiceInstance.all).to be_empty
+        expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+      end
+
+      it 'emits audit events for all the deleted resources' do
+        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+        expect([
+          { type: 'audit.service.delete', actor: email },
+          { type: 'audit.service_instance.purge', actor: email },
+          { type: 'audit.service_binding.delete', actor: email },
+          { type: 'audit.service_key.delete', actor: email },
+        ]).to be_reported_as_events
+      end
+    end
+  end
+
+  describe 'PATCH /v3/service_offerings/:guid' do
+    let(:labels) { { potato: 'sweet' } }
+    let(:annotations) { { style: 'mashed', amount: 'all' } }
+    let(:update_request_body) {
+      {
+        metadata: {
+          labels: labels,
+          annotations: annotations
+        }
+      }
+    }
+
+    it 'can update labels and annotations' do
+      service_offering = VCAP::CloudController::ServicePlan.make(public: true, active: true).service
+
+      patch "/v3/service_offerings/#{service_offering.guid}", update_request_body.to_json, admin_headers
+
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response.deep_symbolize_keys).to include(update_request_body)
+    end
+
+    context 'when some labels are invalid' do
+      let(:labels) { { potato: 'sweet invalid potato' } }
+      let!(:service_offering) { VCAP::CloudController::Service.make(active: true) }
+
+      it 'returns a proper failure' do
+        patch "/v3/service_offerings/#{service_offering.guid}", update_request_body.to_json, admin_headers
+
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
+      end
+    end
+
+    context 'when some annotations are invalid' do
+      let(:annotations) { { '/style' => 'sweet invalid style' } }
+      let!(:service_offering) { VCAP::CloudController::Service.make(active: true) }
+
+      it 'returns a proper failure' do
+        patch "/v3/service_offerings/#{service_offering.guid}", update_request_body.to_json, admin_headers
+
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
+      end
+    end
+
+    context 'when the service offering does not exist' do
+      it 'returns a not found error' do
+        patch '/v3/service_offerings/some-invalid-guid', update_request_body.to_json, admin_headers
+
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/service_offerings/#{guid}", update_request_body.to_json, user_headers } }
+      let(:guid) { service_offering.guid }
+
+      context 'when the service offering exists and has no plans' do
+        let!(:service_offering) { VCAP::CloudController::Service.make(active: true) }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['admin'] = {
+              code: 200,
+              response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
+            }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the service offering exists and has public plans' do
+        let!(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = {
+              code: 200,
+              response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
+            }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the service offering exists and has org-scoped plans' do
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_offering) { service_plan.service }
+
+        before do
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+        end
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = {
+              code: 200,
+              response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
+            }
+            h['no_role'] = { code: 404 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the service offering is from a space-scoped service broker' do
+        let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+
+        before do
+          # Being a SpaceDeveloper in another space should make no difference
+          alternative_org = VCAP::CloudController::Organization.make
+          alternative_org.add_user(user)
+          alternative_space = VCAP::CloudController::Space.make(organization: alternative_org)
+          alternative_space.add_developer(user)
+        end
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['admin'] = {
+              code: 200,
+              response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
+            }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['space_manager'] = { code: 403 }
+            h['space_auditor'] = { code: 403 }
+            h['space_developer'] = {
+              code: 200,
+              response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
+            }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+    end
+  end
+
+  def create_offering_json(service_offering, labels: {}, annotations: {})
     {
       'guid' => service_offering.guid,
       'name' => service_offering.label,
       'description' => service_offering.description,
-      'available' => true,
-      'bindable' => true,
-      'broker_service_offering_metadata' => service_offering.extra,
-      'broker_service_offering_id' => service_offering.unique_id,
+      'available' => service_offering.active,
       'tags' => [],
       'requires' => [],
       'created_at' => iso8601,
       'updated_at' => iso8601,
-      'plan_updateable' => false,
       'shareable' => true,
+      'broker_catalog' => {
+        'id' => service_offering.unique_id,
+        'metadata' => JSON.parse(service_offering.extra),
+        'features' => {
+          'plan_updateable' => false,
+          'bindable' => true,
+          'instances_retrievable' => false,
+          'bindings_retrievable' => false,
+          'allow_context_updates' => false,
+        }
+      },
       'links' => {
         'self' => {
           'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\/#{service_offering.guid})
@@ -446,6 +1033,10 @@ RSpec.describe 'V3 service offerings' do
             'guid' => service_offering.service_broker.guid
           }
         }
+      },
+      'metadata' => {
+        'labels' => labels,
+        'annotations' => annotations
       }
     }
   end

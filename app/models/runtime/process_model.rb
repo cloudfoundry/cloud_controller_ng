@@ -96,7 +96,20 @@ module VCAP::CloudController
       end
 
       def buildpack_type
-        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
+        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes)
+      end
+
+      def kpack_type
+        inner_join(KpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes)
+      end
+
+      def non_docker_type
+        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
+          select_all(:processes).
+          union(inner_join(KpackLifecycleDataModel.table_name, app_guid: :app_guid).
+            select_all(:processes))
       end
     end
 
@@ -125,6 +138,8 @@ module VCAP::CloudController
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 
     add_association_dependencies events: :delete
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
@@ -368,8 +383,6 @@ module VCAP::CloudController
     def before_destroy
       lock!
       self.state = 'STOPPED'
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
       super
     end
 
@@ -541,10 +554,6 @@ module VCAP::CloudController
       type == ProcessTypes::WEB
     end
 
-    def legacy_webish?
-      ProcessTypes.legacy_webish?(type)
-    end
-
     def docker_ports
       if !self.needs_staging? && desired_droplet.present?
         return desired_droplet.docker_ports
@@ -593,12 +602,6 @@ module VCAP::CloudController
 
     def app_usage_event_repository
       @app_usage_event_repository ||= Repositories::AppUsageEventRepository.new
-    end
-
-    def create_app_usage_buildpack_event
-      return unless staged? && started?
-
-      app_usage_event_repository.create_from_process(self, 'BUILDPACK_SET')
     end
 
     def create_app_usage_event

@@ -806,6 +806,29 @@ module VCAP::CloudController
           expect(decoded_guids).to match_array(@inactive.map(&:guid))
         end
       end
+
+      describe 'get /v2/spaces/:guid/services?q=label:service_name' do
+        before(:each) do
+          @broker = ServiceBroker.make(space: space_one)
+          @spaced_scope_service = Service.make(service_broker: @broker, active: true)
+          @service_plan = ServicePlan.make(service: @spaced_scope_service, public: false)
+          @public_service = ServicePlan.make(public: true).service
+          ServicePlan.make(public: true)
+        end
+
+        it 'gets services filtered by label' do
+          get "/v2/spaces/#{space_one.guid}/services?q=label:#{@public_service.name}"
+          expect(last_response).to be_ok
+          expect(decoded_guids.length).to be(1)
+          expect(decoded_guids).to include(@public_service.guid)
+        end
+
+        it 'gets all services if no filter is specified' do
+          get "/v2/spaces/#{space_one.guid}/services"
+          expect(last_response).to be_ok
+          expect(decoded_guids.length).to be(3)
+        end
+      end
     end
 
     describe 'audit events' do

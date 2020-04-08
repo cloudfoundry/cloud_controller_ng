@@ -17,7 +17,7 @@ module VCAP::CloudController
       :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports
 
-    # rubocop:disable CyclomaticComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity
     def validate
       validates_presence :name
       validates_unique :name
@@ -34,7 +34,7 @@ module VCAP::CloudController
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
     end
-    # rubocop:enable CyclomaticComplexity
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def before_destroy
       if organizations.present?

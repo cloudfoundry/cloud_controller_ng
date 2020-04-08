@@ -331,6 +331,43 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when the version key is included' do
+      context 'when the version is supported' do
+        let(:yml_manifest) do
+          {
+            'version' => 1,
+            'applications' => [
+              { 'name' => app1_model.name },
+            ]
+          }.to_yaml
+        end
+
+        it 'applies the manifest' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+        end
+      end
+
+      context 'when the version is not supported' do
+        let(:yml_manifest) do
+          {
+            'version' => 2,
+            'applications' => [
+              { 'name' => app1_model.name },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns a 422' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Unsupported manifest schema version. Currently supported versions: [1].')
+        end
+      end
+    end
+
     describe 'audit events' do
       let!(:process1) { nil }
 

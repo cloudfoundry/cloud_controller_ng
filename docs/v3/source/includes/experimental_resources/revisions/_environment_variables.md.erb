@@ -1,0 +1,50 @@
+### Get environment variables for a revision
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/revisions/[guid]/environment_variables" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "var": {
+    "RAILS_ENV": "production"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/revisions/[guid]/environment_variables"
+    },
+    "revision": {
+      "href": "https://api.example.org/v3/revisions/[guid]"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/[app_guid]"
+    }
+  }
+}
+```
+
+Retrieve the environment variables that are associated with the revision.
+
+#### Definition
+`GET /v3/revisions/:guid/environment_variables`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Space Developer |
+

@@ -40,7 +40,7 @@ if ENV['NEW_RELIC_ENV'] == 'development'
 end
 
 module VCAP::CloudController
-  # rubocop:disable Debugger
+  # rubocop:disable Lint/Debugger
   binding.pry quiet: true
-  # rubocop:enable Debugger
+  # rubocop:enable Lint/Debugger
 end

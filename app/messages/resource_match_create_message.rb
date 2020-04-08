@@ -8,9 +8,9 @@ module VCAP::CloudController
 
     validates :resources, array: true, length: {
       maximum: 5000,
-      too_long: 'array can have at most %{count} resources',
+      too_long: 'array can have at most %<count>i resources',
       minimum: 1,
-      too_short: 'must have at least %{count} resource'
+      too_short: 'must have at least %<count>i resource'
     }
     validate :each_resource
 

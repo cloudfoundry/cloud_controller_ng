@@ -14,7 +14,16 @@ module VCAP::CloudController
     end
 
     def resource_exists?
-      model = resource_type == 'role' ? Role : Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
+      model = case resource_type
+              when 'role'
+                Role
+              when 'organization_quota'
+                QuotaDefinition
+              when 'space_quota'
+                SpaceQuotaDefinition
+              else
+                Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
+              end
       !!model.find(guid: resource_guid)
     end
 

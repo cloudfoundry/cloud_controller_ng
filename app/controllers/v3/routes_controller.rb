@@ -1,4 +1,5 @@
 require 'messages/route_create_message'
+require 'messages/route_destinations_list_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
@@ -13,6 +14,7 @@ require 'actions/route_delete'
 require 'actions/route_update'
 require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
+require 'fetchers/route_destinations_list_fetcher'
 
 class RoutesController < ApplicationController
   def index
@@ -112,7 +114,11 @@ class RoutesController < ApplicationController
     route = Route.find(guid: message.guid)
     route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+    destinations_message = RouteDestinationsListMessage.from_params(query_params)
+    unprocessable!(destinations_message.errors.full_messages) unless destinations_message.valid?
+    route_mappings = RouteDestinationsListFetcher.new(message: destinations_message).fetch_for_route(route: route)
+
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route_mappings, route: route)
   end
 
   def insert_destinations
@@ -132,7 +138,7 @@ class RoutesController < ApplicationController
 
     route = UpdateRouteDestinations.add(message.destinations_array, route, apps_hash, user_audit_info)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
   rescue UpdateRouteDestinations::Error => e
     unprocessable!(e.message)
   end
@@ -154,7 +160,7 @@ class RoutesController < ApplicationController
 
     route = UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash, user_audit_info)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
   rescue UpdateRouteDestinations::DuplicateDestinationError => e
     unprocessable!(e.message)
   end

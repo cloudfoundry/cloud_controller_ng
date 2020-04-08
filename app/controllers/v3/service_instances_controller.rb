@@ -1,6 +1,10 @@
 require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
 require 'messages/service_instance_update_message'
+require 'messages/service_instance_create_message'
+require 'messages/service_instance_create_managed_message'
+require 'messages/service_instance_create_user_provided_message'
+require 'messages/service_instance_show_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -8,24 +12,77 @@ require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
-require 'fetchers/managed_service_instance_list_fetcher'
+require 'actions/service_instance_create_user_provided'
+require 'actions/service_instance_create_managed'
+require 'fetchers/service_instance_list_fetcher'
+require 'decorators/field_service_instance_space_decorator'
+require 'decorators/field_service_instance_organization_decorator'
+require 'decorators/field_service_instance_offering_decorator'
+require 'decorators/field_service_instance_broker_decorator'
+require 'controllers/v3/mixins/service_permissions'
+require 'decorators/field_service_instance_plan_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
+  include ServicePermissions
+
+  def show
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+
+    message = ServiceInstanceShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
+
+    presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance, decorators: decorators)
+    render status: :ok, json: presenter.to_json
+  end
+
   def index
     message = ServiceInstancesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ManagedServiceInstanceListFetcher.new.fetch_all(message: message)
+                ServiceInstanceListFetcher.new.fetch(message, omniscient: true)
               else
-                ManagedServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: permission_queryer.readable_space_guids)
+                ServiceInstanceListFetcher.new.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
               end
+
+    decorators = []
+    decorators << FieldServiceInstanceSpaceDecorator.new(message.fields) if FieldServiceInstanceSpaceDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstancePlanDecorator.new(message.fields) if FieldServiceInstancePlanDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
+    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
-      message: message)
+      message: message,
+      decorators: decorators
+    )
+  end
+
+  def create
+    FeatureFlag.raise_unless_enabled!(:service_instance_creation) unless admin?
+
+    message = build_create_message(hashed_params[:body])
+
+    space = Space.first(guid: message.space_guid)
+    unprocessable_space! unless space && can_read_space?(space)
+    unauthorized! if space&.in_suspended_org? && !admin?
+    unauthorized! unless can_write_space?(space)
+
+    case message.type
+    when 'user-provided'
+      create_user_provided(message)
+    when 'managed'
+      create_managed(message, space: space)
+    end
   end
 
   def update
@@ -93,7 +150,54 @@ class ServiceInstancesV3Controller < ApplicationController
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
   end
 
+  def credentials
+    service_instance = UserProvidedServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(service_instance.space.guid, service_instance.space.organization.guid)
+
+    render status: :ok, json: (service_instance.credentials || {})
+  end
+
+  def parameters
+    service_instance = ManagedServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless can_read_space?(service_instance.space)
+
+    begin
+      render status: :ok, json: ServiceInstanceRead.new.fetch_parameters(service_instance)
+    rescue ServiceInstanceRead::NotSupportedError
+      raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
+    end
+  end
+
   private
+
+  def create_user_provided(message)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
+    render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
+  rescue ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance => e
+    unprocessable!(e.message)
+  end
+
+  def create_managed(message, space:)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    unprocessable_service_plan! unless service_plan &&
+      visible_to_current_user?(plan: service_plan) &&
+      service_plan.visible_in_space?(space)
+
+    job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  rescue ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
+    unprocessable!(e.message)
+  end
+
+  def admin?
+    permission_queryer.can_write_globally?
+  end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
     unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
@@ -144,5 +248,31 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def can_write_space?(space)
     permission_queryer.can_write_to_space?(space.guid)
+  end
+
+  def build_create_message(params)
+    generic_message = ServiceInstanceCreateMessage.new(params)
+    invalid_param!(generic_message.errors.full_messages) unless generic_message.valid?
+
+    specific_message = if generic_message.type == 'managed'
+                         ServiceInstanceCreateManagedMessage.new(params)
+                       else
+                         ServiceInstanceCreateUserProvidedMessage.new(params)
+                       end
+
+    invalid_param!(specific_message.errors.full_messages) unless specific_message.valid?
+    specific_message
+  end
+
+  def service_instance_not_found!
+    resource_not_found!(:service_instance)
+  end
+
+  def unprocessable_space!
+    unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
+  end
+
+  def unprocessable_service_plan!
+    unprocessable!('Invalid service plan. Ensure that the service plan exists and you have access to it.')
   end
 end

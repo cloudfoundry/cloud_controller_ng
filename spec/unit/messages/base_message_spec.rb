@@ -177,22 +177,22 @@ module VCAP::CloudController
     describe 'additional params validation' do
       let(:fake_class) do
         Class.new(BaseMessage) do
-          register_allowed_keys [:allowed]
+          register_allowed_keys [:allowed, :other_allowed]
           validates_with VCAP::CloudController::BaseMessage::NoAdditionalParamsValidator
         end
       end
 
-      it 'is valid with an allowed message' do
+      it 'is valid with an allowed BaseMessage' do
         message = fake_class.new({ allowed: 'something' })
 
         expect(message).to be_valid
       end
 
-      it 'is NOT valid with not allowed keys in the message' do
+      it 'is NOT valid with not allowed keys in the BaseMessage' do
         message = fake_class.new({ notallowed: 'something', extra: 'stuff' })
 
         expect(message).to be_invalid
-        expect(message.errors.full_messages[0]).to include("Unknown query parameter(s): 'notallowed', 'extra'")
+        expect(message.errors.full_messages[0]).to include("Unknown query parameter(s): 'notallowed', 'extra'. Valid parameters are: 'allowed', 'other_allowed'")
       end
     end
 
@@ -214,7 +214,7 @@ module VCAP::CloudController
         message = fake_class.new({ include: ['stuff'] })
 
         expect(message).to be_invalid
-        expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'")
+        expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'. Valid included resources are: 'foo', 'bar'")
       end
     end
 
@@ -237,6 +237,38 @@ module VCAP::CloudController
 
         expect(message).to be_invalid
         expect(message.errors.full_messages[0]).to include("Invalid lifecycle_type: 'stuff'")
+      end
+    end
+
+    describe '.from_params' do
+      FakeFieldsClass = Class.new(BaseMessage) do
+        register_allowed_keys [:name, :names]
+      end
+
+      it 'creates an object with the hash keys as instance variables' do
+        instance = FakeFieldsClass.from_params({ 'name' => 'aname' }, [])
+        expect(instance.name).to eq('aname')
+
+        instance = FakeFieldsClass.from_params({ name: 'aname' }, [])
+        expect(instance.name).to eq('aname')
+      end
+
+      it 'converts comma-separated values to arrays when specified' do
+        instance = FakeFieldsClass.from_params({ 'names' => 'a-name,another-name' }, %w(names))
+        expect(instance.names).to contain_exactly('a-name', 'another-name')
+      end
+
+      it 'converts comma-separated hash values to arrays when specified' do
+        instance = FakeFieldsClass.from_params({ 'names' => { 'space' => 'a-name,another-name' } }, [], fields: %w(names))
+        expect(instance.names).to match({ space: ['a-name', 'another-name'] })
+      end
+
+      context 'when fields parameters are invalid' do
+        it 'skips the conversion' do
+          instance = FakeFieldsClass.from_params({ 'names' => 'foo' }, [], fields: %w(name names))
+          expect(instance.name).to be_nil
+          expect(instance.names).to eq('foo')
+        end
       end
     end
   end

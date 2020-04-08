@@ -137,8 +137,18 @@ module VCAP::CloudController
       processes: :destroy,
       routes: :destroy,
       security_groups: :nullify,
-      staging_security_groups: :nullify,
+      staging_security_groups: :nullify
     )
+
+    # Unfortunately, because v2 non-recursive deletes expect labels and annotations to be
+    # recursively deleted, we can't use association_dependencies like most other models.
+    # The reason they are still deleted is because they would be stale metadata.
+    # TODO: Change this to use add_association_dependencies when v2 is removed
+    def before_destroy
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
+      super
+    end
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
@@ -247,7 +257,7 @@ module VCAP::CloudController
     def has_remaining_memory(mem)
       return true unless space_quota_definition
 
-      memory_remaining >= mem
+      space_quota_definition.memory_limit == SpaceQuotaDefinition::UNLIMITED || memory_remaining >= mem
     end
 
     def instance_memory_limit

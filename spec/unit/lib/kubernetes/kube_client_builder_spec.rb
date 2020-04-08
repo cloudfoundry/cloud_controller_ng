@@ -6,10 +6,7 @@ RSpec.describe Kubernetes::KubeClientBuilder do
     {
       api_group_url: 'https://my.kubernetes.io/apis/whatever',
       version: 'v1',
-      service_account: {
-        name: 'username',
-        token: 'token',
-      },
+      service_account_token: 'token',
       ca_crt: 'k8s_node_ca'
     }
   end
@@ -33,10 +30,7 @@ RSpec.describe Kubernetes::KubeClientBuilder do
       {
         api_group_url: 'https://my.kubernetes.io/api',
         version: 'v1',
-        service_account: {
-          name: 'username',
-          token: 'token',
-        },
+        service_account_token: 'token',
         ca_crt: nil
       }
     }

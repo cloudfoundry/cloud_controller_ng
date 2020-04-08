@@ -642,6 +642,15 @@ RSpec.describe 'Droplets' do
       get "/v3/droplets/#{droplet.guid}", {}, developer_headers
       expect(last_response.status).to eq(404)
     end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { droplet }
+        let(:api_call) do
+          -> { delete "/v3/droplets/#{droplet.guid}", nil, developer_headers }
+        end
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid/droplets' do

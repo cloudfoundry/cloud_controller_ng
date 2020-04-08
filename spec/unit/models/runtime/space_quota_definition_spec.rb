@@ -28,11 +28,11 @@ module VCAP::CloudController
 
       describe 'memory_limits' do
         it 'total memory_limit cannot be less than zero' do
-          space_quota_definition.memory_limit = -1
+          space_quota_definition.memory_limit = -2
           expect(space_quota_definition).not_to be_valid
-          expect(space_quota_definition.errors.on(:memory_limit)).to include(:less_than_zero)
+          expect(space_quota_definition.errors.on(:memory_limit)).to include(:invalid_memory_limit)
 
-          space_quota_definition.memory_limit = 0
+          space_quota_definition.memory_limit = -1
           expect(space_quota_definition).to be_valid
         end
 

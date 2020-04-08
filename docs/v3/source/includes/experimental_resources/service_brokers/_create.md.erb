@@ -54,15 +54,18 @@ Name | Type | Description
 
 #### Optional parameters
 
-Name | Type | Description | Default
----- | ---- | ----------- | -------
-**space** | [_to-one relationship_](#to-one-relationships) | If set, restricts broker visibility to the specified space. | `null`
+Name | Type | Description |
+---- | ---- | ----------- |
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | If set, restricts the service broker to the specified space.
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service broker.
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service broker.
 
 <%= yield_content :service_broker_credentials_object %>
 
 #### Permitted roles
  |
 --- | ---
-Space Developer |
 Admin |
+Space Developer* |
 
+*Space Developers can only create space-scoped brokers. Space-scoped brokers can only be created when the `space_scoped_private_broker_creation` feature flag is `true`.

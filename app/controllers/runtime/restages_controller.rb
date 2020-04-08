@@ -39,6 +39,18 @@ module VCAP::CloudController
 
       @app_event_repository.record_app_restage(process, UserAuditInfo.from_context(SecurityContext))
 
+      TelemetryLogger.v2_emit(
+        'restage-app',
+        {
+          'app-id' => process.app.guid,
+          'user-id' => current_user.guid,
+        }, {
+        'lifecycle' => process.app.lifecycle_type,
+        'buildpacks' => process.app.lifecycle_data.buildpacks,
+        'stack' => process.app.lifecycle_data.stack
+      }
+      )
+
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{process.guid}" },

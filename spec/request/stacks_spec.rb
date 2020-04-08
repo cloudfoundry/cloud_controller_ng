@@ -288,6 +288,7 @@ RSpec.describe 'Stacks Request' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
               }
             },
           ]
@@ -348,6 +349,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
                 }
               },
               {
@@ -384,6 +386,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
                 }
               }
             ]
@@ -542,6 +545,15 @@ RSpec.describe 'Stacks Request' do
 
       expect(last_response.status).to eq(204)
       expect(stack).to_not exist
+    end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { stack }
+        let(:api_call) do
+          -> { delete "/v3/stacks/#{resource.guid}", nil, headers }
+        end
+      end
     end
   end
 end

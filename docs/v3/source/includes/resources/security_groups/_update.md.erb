@@ -1,0 +1,67 @@
+### Update a security group
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+  "name": "my-group0",
+  "globally_enabled": {
+    "running": true
+  }
+  "rules": [
+    {
+      "protocol": "tcp",
+      "destination": "10.10.10.0/24",
+      "ports": "443,80,8080"
+    },
+    {
+      "protocol": "icmp",
+      "destination": "10.10.10.0/24",
+      "type": 8,
+      "code": 0,
+      "description": "Allow ping requests to private services"
+    }
+  ]
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_security_group %>
+```
+
+This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+
+Updates to the `rules` parameter will fully replace the current set of `rules` for the security group.
+
+Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
+
+#### Definition
+`PATCH /v3/security_groups/:guid`
+
+#### Optional parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the security group.
+**globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of all applications.
+**globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
+**globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
+**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group.
+
+#### Permitted roles
+ |
+--- | ---
+Admin |

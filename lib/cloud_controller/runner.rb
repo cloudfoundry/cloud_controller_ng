@@ -111,6 +111,7 @@ module VCAP::CloudController
       setup_logging
       setup_telemetry_logging
       setup_db
+      setup_blobstore
       @config.configure_components
 
       setup_loggregator_emitter
@@ -138,13 +139,20 @@ module VCAP::CloudController
       return if @setup_telemetry_logging
 
       @setup_telemetry_logging = true
-
-      TelemetryLogger.init(@config.get(:telemetry_log_path))
+      logger = ActiveSupport::Logger.new(@config.get(:telemetry_log_path))
+      TelemetryLogger.init(logger)
     end
 
     def setup_db
       db_logger = Steno.logger('cc.db')
       DB.load_models(@config.get(:db), db_logger)
+    end
+
+    def setup_blobstore
+      CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+      CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+      CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+      CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
     end
 
     def setup_loggregator_emitter

@@ -120,9 +120,12 @@ module VCAP::CloudController
                     eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
                     limit(BATCH_SIZE)
 
-        processes = processes.buildpack_type unless FeatureFlag.enabled?(:diego_docker)
-
-        processes.select_all(ProcessModel.table_name)
+        if FeatureFlag.enabled?(:diego_docker)
+          processes.select_all(ProcessModel.table_name)
+        else
+          # `select_all` is called by `non_docker_type`
+          processes.non_docker_type
+        end
       end
 
       def bbs_apps_client

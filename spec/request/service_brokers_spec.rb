@@ -155,7 +155,14 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } },
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v3.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v3.guid})
+              },
+            },
             metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } }
         }
       end
@@ -169,7 +176,14 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } },
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v2.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v2.guid})
+              },
+            },
             metadata: { labels: {}, annotations: {} }
         }
       end
@@ -208,6 +222,9 @@ RSpec.describe 'V3 service brokers' do
             links: {
                 self: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
+                },
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\?service_broker_guids=#{space_scoped_service_broker.guid})
                 },
                 space: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
@@ -256,14 +273,8 @@ RSpec.describe 'V3 service brokers' do
         VCAP::CloudController::ServiceBroker.make(name: 'test-broker-bar', space: space)
       }
 
-      context 'when requesting one broker per page' do
-        it 'returns 200 OK and a body containing one broker with pagination information for the next' do
-          expect_filtered_brokers('per_page=1', [global_service_broker])
-
-          expect(parsed_response['pagination']['total_results']).to eq(2)
-          expect(parsed_response['pagination']['total_pages']).to eq(2)
-        end
-      end
+      let(:resources) { [global_service_broker, space_scoped_service_broker] }
+      it_behaves_like 'paginated response', '/v3/service_brokers'
 
       context 'when requesting with a specific order by name' do
         context 'in ascending order' do
@@ -299,7 +310,8 @@ RSpec.describe 'V3 service brokers' do
 
       context 'when filtering on labels' do
         it 'filters by label selectors' do
-          VCAP::CloudController::ServiceBrokerLabelModel.create(key_name: 'boomerang', value: 'gel', service_broker: global_service_broker)
+          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: global_service_broker.guid, key_name: 'boomerang', value: 'gel')
+          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: space_scoped_service_broker.guid, key_name: 'boomerang', value: 'soi')
 
           expect_filtered_brokers('label_selector=boomerang=gel', [global_service_broker])
         end
@@ -349,7 +361,14 @@ RSpec.describe 'V3 service brokers' do
             available: true,
             metadata: { labels: {}, annotations: {} },
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v3.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v3.guid})
+              },
+            }
         }
       end
 
@@ -396,7 +415,10 @@ RSpec.describe 'V3 service brokers' do
                 self: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
                 },
-                space: {
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{space_scoped_service_broker.guid})
+                },
+               space: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
                 }
             }
@@ -652,7 +674,7 @@ RSpec.describe 'V3 service brokers' do
                   '(http://example.org/broker-url/v2/catalog) but can not be removed from Cloud Foundry while instances exist.' \
                   ' The plans have been deactivated to prevent users from attempting to provision new instances of these plans.' \
                   ' The broker should continue to support bind, unbind, and delete for existing instances; if these operations' \
-                  " fail contact your broker provider.\nservice_name-1\n  plan_name-1\n"
+                  " fail contact your broker provider.\n\nService Offering: service_name-1\nPlans deactivated: plan_name-1\n"
                     ),
                 })
               ],
@@ -697,7 +719,14 @@ RSpec.describe 'V3 service brokers' do
           available: false,
           metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } },
           relationships: {},
-          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX}) } }
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{UUID_REGEX})
+            },
+            service_offerings: {
+              href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{UUID_REGEX})
+            },
+          }
       }
     end
 
@@ -833,10 +862,13 @@ RSpec.describe 'V3 service brokers' do
             },
             links: {
                 self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX})
+                    href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{UUID_REGEX})
+                },
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{UUID_REGEX})
                 },
                 space: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
+                    href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid})
                 }
             }
         }
@@ -860,6 +892,39 @@ RSpec.describe 'V3 service brokers' do
         let(:after_request_check) do
           lambda do
             assert_broker_state(space_scoped_service_broker)
+          end
+        end
+      end
+
+      context 'when feature flag space_scoped_private_broker_creation is set' do
+        before do
+          VCAP::CloudController::FeatureFlag.create(name: 'space_scoped_private_broker_creation', enabled: false)
+          create_broker(space_scoped_broker_request_body, with: headers)
+        end
+
+        context 'space developer' do
+          let(:headers) do
+            org.add_user(user)
+            space.add_developer(user)
+            headers_for(user)
+          end
+
+          it 'returns an error saying the feature is disabled' do
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include('Feature Disabled: space_scoped_private_broker_creation')
+          end
+        end
+
+        context 'space manager' do
+          let(:headers) do
+            org.add_user(user)
+            space.add_manager(user)
+            headers_for(user)
+          end
+
+          it 'returns an error saying the feature is disabled' do
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include('Feature Disabled: space_scoped_private_broker_creation')
           end
         end
       end
@@ -1166,6 +1231,15 @@ RSpec.describe 'V3 service brokers' do
     let!(:global_broker_services) { VCAP::CloudController::Service.where(service_broker_id: global_broker.id) }
     let!(:global_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: global_broker_services.map(&:id)) }
 
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { global_broker }
+        let(:api_call) do
+          -> { delete "/v3/service_brokers/#{global_broker.guid}", nil, admin_headers }
+        end
+      end
+    end
+
     context 'when there are no service instances' do
       let(:broker) { global_broker }
       let(:api_call) { lambda { |user_headers| delete "/v3/service_brokers/#{broker.guid}", nil, user_headers } }
@@ -1183,6 +1257,7 @@ RSpec.describe 'V3 service brokers' do
 
       context 'global broker' do
         let(:broker) { global_broker }
+
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
             Hash.new(code: 404).tap do |h|

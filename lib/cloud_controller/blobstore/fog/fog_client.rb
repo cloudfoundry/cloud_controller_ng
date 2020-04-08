@@ -3,9 +3,7 @@ require 'find'
 require 'mime-types'
 require 'cloud_controller/blobstore/fog/providers'
 require 'cloud_controller/blobstore/base_client'
-require 'cloud_controller/blobstore/fog/directory'
 require 'cloud_controller/blobstore/fog/fog_blob'
-require 'cloud_controller/blobstore/fog/idempotent_directory'
 require 'cloud_controller/blobstore/fog/cdn'
 require 'cloud_controller/blobstore/errors'
 
@@ -124,6 +122,14 @@ module CloudController
         end
       end
 
+      def ensure_bucket_exists
+        return if local?
+
+        options = { max_keys: 1 }
+        options['limit'] = 1 if connection.service == Fog::Storage::OpenStack
+        connection.directories.get(@directory_key, options) || connection.directories.create(key: @directory_key, public: false)
+      end
+
       private
 
       def files
@@ -177,11 +183,7 @@ module CloudController
       end
 
       def dir
-        @dir ||= directory.get_or_create
-      end
-
-      def directory
-        @directory ||= IdempotentDirectory.new(Directory.new(connection, @directory_key))
+        @dir ||= connection.directories.new(key: @directory_key)
       end
 
       def connection

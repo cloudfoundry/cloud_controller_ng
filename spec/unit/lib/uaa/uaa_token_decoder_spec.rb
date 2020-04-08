@@ -61,7 +61,10 @@ module VCAP::CloudController
       let(:uaa_issuer_info_url) { "#{VCAP::CloudController::Config.config.get(:uaa, :internal_url)}/.well-known/openid-configuration" }
 
       context 'when symmetric key is used' do
-        before { uaa_config[:symmetric_secret] = 'symmetric-key' }
+        before {
+          uaa_config[:symmetric_secret] = 'symmetric-key'
+          uaa_config[:symmetric_secret2] = 'symmetric-key2'
+        }
 
         context 'when token is valid' do
           let(:token_content) do
@@ -77,18 +80,36 @@ module VCAP::CloudController
           context 'when the token issuer matches the UAA' do
             let(:token_issuer_string) { uaa_issuer_string }
 
-            it 'decodes the token' do
-              token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
+            context 'when the first key decodes the token' do
+              it 'decodes the token' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
 
-              expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+                expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+              end
+
+              it 'caches the issuer info from UAA' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
+                subject.decode_token("bearer #{token}")
+                subject.decode_token("bearer #{token}")
+
+                expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+              end
             end
 
-            it 'caches the issuer info from UAA' do
-              token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
-              subject.decode_token("bearer #{token}")
-              subject.decode_token("bearer #{token}")
+            context 'when the second key decodes the token' do
+              it 'decodes the token' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key2' })
 
-              expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+                expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+              end
+
+              it 'caches the issuer info from UAA' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key2' })
+                subject.decode_token("bearer #{token}")
+                subject.decode_token("bearer #{token}")
+
+                expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+              end
             end
           end
 

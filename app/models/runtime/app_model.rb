@@ -47,10 +47,18 @@ module VCAP::CloudController
                 key: :app_guid,
                 primary_key: :guid
 
+    one_to_one :kpack_lifecycle_data,
+                class: 'VCAP::CloudController::KpackLifecycleDataModel',
+                key: :app_guid,
+                primary_key: :guid
+
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies kpack_lifecycle_data: :destroy
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     strip_attributes :name
 
@@ -72,12 +80,14 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+      return KpackLifecycleDataModel::LIFECYCLE_TYPE if self.kpack_lifecycle_data
 
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
       return buildpack_lifecycle_data if self.buildpack_lifecycle_data
+      return kpack_lifecycle_data if self.kpack_lifecycle_data
 
       DockerLifecycleDataModel.new
     end

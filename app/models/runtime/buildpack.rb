@@ -13,6 +13,9 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::BuildpackLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::BuildpackAnnotationModel', key: :resource_guid, primary_key: :guid
 
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     def self.list_admin_buildpacks(stack_name=nil)
       scoped = exclude(key: nil).exclude(key: '')
       if stack_name.present?

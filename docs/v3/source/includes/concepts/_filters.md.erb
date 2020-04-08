@@ -1,6 +1,6 @@
 ## Filters
 
-Endpoints that return lists of resources support filtering down the returned resources using query parameters.
+Endpoints which return lists of resources also support filtering the returned resources using query parameters.
 The available filter parameters are described in a resource's "list" endpoint in the section "Query parameters".
 
 #### Examples
@@ -21,9 +21,9 @@ This will return all apps with name `the_name` OR `second_name`.
 This will return all spaces whose metadata has labels with keys `production` AND `east_coast`.
 
 ##### **Combined filters**
-`GET /v3/apps?names=the_name&state=STARTED`
+`GET /v3/apps?names=the_name&stacks=cflinuxfs3`
 
-This will return all apps with name `the_name` AND state `STARTED`.
+This will return all apps with name `the_name` AND stack `cflinuxfs3`.
 
 ##### **Empty filters**
 

@@ -849,6 +849,15 @@ RSpec.describe 'Users Request' do
       end
     end
 
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { user_to_delete }
+        let(:api_call) do
+          -> { delete "/v3/users/#{user_to_delete.guid}", nil, admin_headers }
+        end
+      end
+    end
+
     context 'when the actee is not associated with any org or space' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)

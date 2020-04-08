@@ -111,6 +111,12 @@ namespace :db do
     end
   end
 
+  desc 'Migrate and seed database'
+  task :setup_database do
+    Rake::Task['db:migrate'].invoke
+    Rake::Task['db:seed'].invoke
+  end
+
   desc 'Ensure migrations in DB match local migration files'
   task :ensure_migrations_are_current do
     RakeConfig.context = :migrate

@@ -121,4 +121,13 @@ module ControllerHelpers
     end
     @global_auditor_headers
   end
+
+  def build_state_updater_headers
+    if !@build_state_updater_headers
+      user = User.make
+      @build_state_updater_headers = headers_for(user, scopes: %w(cloud_controller.write cloud_controller.update_build_state))
+      user.destroy
+    end
+    @build_state_updater_headers
+  end
 end

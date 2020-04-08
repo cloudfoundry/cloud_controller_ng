@@ -148,6 +148,73 @@ module VCAP::CloudController::Perm
       end
     end
 
+    describe '#readable_org_contents_org_guids' do
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+      end
+
+      it 'returns all org guids for admins' do
+        allow(roles).to receive(:admin?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+
+        org_guids = permissions.readable_org_contents_org_guids
+
+        expect(org_guids).to include(org1.guid)
+        expect(org_guids).to include(org2.guid)
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+
+      it 'returns all org guids for read-only admins' do
+        allow(roles).to receive(:admin_read_only?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+
+        org_guids = permissions.readable_org_contents_org_guids
+
+        expect(org_guids).to include(org1.guid)
+        expect(org_guids).to include(org2.guid)
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+
+      it 'returns all org guids for global auditors' do
+        allow(roles).to receive(:global_auditor?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+
+        org_guids = permissions.readable_org_contents_org_guids
+
+        expect(org_guids).to include(org1.guid)
+        expect(org_guids).to include(org2.guid)
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+
+      it 'returns the list of org guids where the user has full read access to the org and its contents' do
+        readable_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
+
+        actions = %w(org.manager)
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: actions).
+          and_return(readable_org_guids)
+
+        expect(permissions.readable_org_contents_org_guids).to match_array(readable_org_guids)
+      end
+    end
+
     describe '#can_read_from_org?' do
       before do
         allow(roles).to receive(:admin?).and_return(false)

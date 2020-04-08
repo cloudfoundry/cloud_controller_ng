@@ -79,11 +79,11 @@ module UserHeaderHelpers
 
     case role.to_s
     when 'admin'
-      set_user_with_header_as_admin(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
+      set_user_with_header_as_admin(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
     when 'admin_read_only'
-      set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
+      set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
     when 'global_auditor'
-      set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
+      set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
     when 'space_developer'
       space.add_developer(current_user)
       set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)

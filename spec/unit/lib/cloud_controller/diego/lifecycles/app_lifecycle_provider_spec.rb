@@ -23,13 +23,37 @@ module VCAP::CloudController
             expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
           end
         end
+
+        context 'kpack type' do
+          let(:type) { 'kpack' }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppKpackLifecycle)
+          end
+        end
       end
 
       context 'when lifecycle type is not requested on the message' do
         let(:request) { {} }
 
-        it 'returns a AppBuildpackLifecycle' do
-          expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
+        context 'default_app_lifecycle is set to buildpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
+
+          it 'returns a AppBuildpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
+          end
+        end
+
+        context 'default_app_lifecycle is set to kpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'kpack')
+          end
+
+          it 'returns a AppBuildpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppKpackLifecycle)
+          end
         end
       end
     end
@@ -56,6 +80,14 @@ module VCAP::CloudController
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)
           end
         end
+
+        context 'kpack type' do
+          let(:type) { 'kpack' }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppKpackLifecycle)
+          end
+        end
       end
 
       context 'when lifecycle type is not requested on the message' do
@@ -74,6 +106,14 @@ module VCAP::CloudController
 
           it 'returns a AppDockerLifecycle' do
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppDockerLifecycle)
+          end
+        end
+
+        context 'kpack type' do
+          let(:app) { AppModel.make(:kpack) }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppKpackLifecycle)
           end
         end
       end

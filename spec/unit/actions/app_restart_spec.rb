@@ -52,11 +52,11 @@ module VCAP::CloudController
         before do
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process1, config: config, stop_in_runtime: true, revision: app.latest_revision).
+            with(process: process1, config: config, stop_in_runtime: true, revision: anything).
             and_call_original
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process2, config: config, stop_in_runtime: true, revision: app.latest_revision).
+            with(process: process2, config: config, stop_in_runtime: true, revision: anything).
             and_call_original
         end
 
@@ -77,10 +77,10 @@ module VCAP::CloudController
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process1, config: config, stop_in_runtime: true, revision: app.latest_revision)
+            with(process: process1, config: config, stop_in_runtime: true, revision: anything)
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process2, config: config, stop_in_runtime: true, revision: app.latest_revision)
+            with(process: process2, config: config, stop_in_runtime: true, revision: anything)
         end
 
         context 'when we need to make a new revision' do
@@ -128,11 +128,11 @@ module VCAP::CloudController
         before do
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process1, config: config, stop_in_runtime: false, revision: app.latest_revision).
+            with(process: process1, config: config, stop_in_runtime: false, revision: anything).
             and_call_original
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process2, config: config, stop_in_runtime: false, revision: app.latest_revision).
+            with(process: process2, config: config, stop_in_runtime: false, revision: anything).
             and_call_original
         end
 
@@ -152,10 +152,10 @@ module VCAP::CloudController
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process1, config: config, stop_in_runtime: false, revision: app.latest_revision)
+            with(process: process1, config: config, stop_in_runtime: false, revision: anything)
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process2, config: config, stop_in_runtime: false, revision: app.latest_revision)
+            with(process: process2, config: config, stop_in_runtime: false, revision: anything)
         end
 
         it 'generates a START usage event' do

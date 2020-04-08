@@ -1,5 +1,12 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/validators'
+require 'messages/base_message'
+require 'messages/empty_lifecycle_data_message'
+require 'messages/buildpack_lifecycle_data_message'
+require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
+require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
+require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'rspec/collection_matchers'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'Validators' do
@@ -303,6 +310,68 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'FieldsValidator' do
+      let(:fields_class) do
+        Class.new(fake_class) do
+          validates :field, fields: { allowed: { 'space.organization' => ['name'] } }
+        end
+      end
+
+      it 'rejects values that are not hashes' do
+        fake_class = fields_class.new field: 'foo'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an object'
+      end
+
+      context 'allowed keys' do
+        let(:fields_class_multiple_keys) do
+          Class.new(fake_class) do
+            validates :field, fields: { allowed: { 'some.resource' => ['fake-value-1', 'fake-value-2'] } }
+          end
+        end
+
+        it 'allows a multiple keys to be present' do
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2 fake-value-1) }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'allows a subset of keys' do
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2) }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'reject keys not in the list' do
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2 url) }
+          expect(fake_class.valid?).to be_falsy
+          expect(fake_class.errors[:field]).to include "valid keys for 'some.resource' are: 'fake-value-1', 'fake-value-2'"
+        end
+      end
+
+      context 'allowed resources' do
+        let(:fields_class_multiple_resources) do
+          Class.new(fake_class) do
+            validates :field, fields: { allowed: { 'a.resource' => ['fake-value'], 'another.resource' => ['another-fake-value'] } }
+          end
+        end
+
+        it 'allows a multiple resources to be present' do
+          fake_class = fields_class_multiple_resources.new field: { 'a.resource': %w(fake-value), 'another.resource': %w(another-fake-value) }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'allows a subset of the resources to be present' do
+          fake_class = fields_class_multiple_resources.new field: { 'another.resource': %w(another-fake-value) }
+          expect(fake_class.valid?).to be_truthy
+        end
+
+        it 'rejects resources not specified' do
+          fake_class = fields_class_multiple_resources.new field: { 'wrong.resource': %w(another-fake-value) }
+          expect(fake_class.valid?).to be_falsey
+          expect(fake_class.errors[:field]).to include "[wrong.resource] valid resources are: 'a.resource', 'another.resource'"
+        end
+      end
+    end
+
     describe 'HealthCheckValidator' do
       let(:health_check_class) do
         Class.new(fake_class) do
@@ -371,6 +440,31 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'DataValidator' do
+      class DataMessage < VCAP::CloudController::BaseMessage
+        register_allowed_keys [:data]
+        validates_with DataValidator
+
+        class Data < VCAP::CloudController::BaseMessage
+          register_allowed_keys [:foo]
+
+          validates :foo, numericality: true
+        end
+      end
+
+      it "adds data's error message to the base class" do
+        message = DataMessage.new({ data: { foo: 'not a number' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:data)).to include('Foo is not a number')
+      end
+
+      it 'returns early when base class data is not an object' do
+        message = DataMessage.new({ data: 'not an object' })
+        expect(message).to be_valid
+        expect(message.errors_on(:data)).to be_empty
+      end
+    end
+
     describe 'RelationshipValidator' do
       class RelationshipMessage < VCAP::CloudController::BaseMessage
         register_allowed_keys [:relationships]
@@ -398,31 +492,6 @@ module VCAP::CloudController::Validators
         message = RelationshipMessage.new({ relationships: 'not an object' })
         expect(message).not_to be_valid
         expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
-      end
-    end
-
-    describe 'DataValidator' do
-      class DataMessage < VCAP::CloudController::BaseMessage
-        register_allowed_keys [:data]
-        validates_with DataValidator
-
-        class Data < VCAP::CloudController::BaseMessage
-          register_allowed_keys [:foo]
-
-          validates :foo, numericality: true
-        end
-      end
-
-      it "adds data's error message to the base class" do
-        message = DataMessage.new({ data: { foo: 'not a number' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:data)).to include('Foo is not a number')
-      end
-
-      it 'returns early when base class data is not an object' do
-        message = DataMessage.new({ data: 'not an object' })
-        expect(message).to be_valid
-        expect(message.errors_on(:data)).to be_empty
       end
     end
 
@@ -477,6 +546,26 @@ module VCAP::CloudController::Validators
         invalid_one = to_many_class.new({ field: { data: { guid: '1234' } } })
         invalid_two = to_many_class.new({ field: { data: [{ guid: 1234 }, { guid: 1234 }] } })
         invalid_three = to_many_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
+
+        expect(valid).to be_valid
+        expect(invalid_one).not_to be_valid
+        expect(invalid_two).not_to be_valid
+        expect(invalid_three).not_to be_valid
+      end
+    end
+
+    describe 'OrgVisibilityValidator' do
+      let(:visibility_class) do
+        Class.new(fake_class) do
+          validates :field, org_visibility: true
+        end
+      end
+
+      it 'ensures that it has correct structure' do
+        valid = visibility_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
+        invalid_one = visibility_class.new({ field: { guid: '1234' } })
+        invalid_two = visibility_class.new({ field: [{ guid: 1234 }, { guid: 1234 }] })
+        invalid_three = visibility_class.new({ field: ['123'] })
 
         expect(valid).to be_valid
         expect(invalid_one).not_to be_valid

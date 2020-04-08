@@ -113,7 +113,7 @@ module Sequel::Plugins::VcapRelations
         if val
           ar    = self.class.association_reflection(name)
           other = ar.associated_class[guid: val]
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find #{ar.associated_class.name} with guid: #{val}") if other.nil?
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find #{ar.associated_class.name.demodulize} with guid: #{val}") if other.nil?
         end
         send("#{name}=", other)
       end

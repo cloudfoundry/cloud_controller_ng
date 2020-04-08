@@ -468,11 +468,20 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'DELETE /v3/isolation_segments/:guid' do
-    it 'deletes the specified isolation segment' do
-      isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment') }
 
+    it 'deletes the specified isolation segment' do
       delete "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header
       expect(last_response.status).to eq(204)
+    end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { isolation_segment_model }
+        let(:api_call) do
+          -> { delete "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header }
+        end
+      end
     end
   end
 end

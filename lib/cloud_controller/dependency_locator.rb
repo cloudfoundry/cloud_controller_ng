@@ -372,11 +372,11 @@ module CloudController
       kube_client = Kubernetes::KubeClientBuilder.build({
         api_group_url: "#{kubernetes_config[:host_url]}/apis/build.pivotal.io",
         version: 'v1alpha1',
-        service_account: kubernetes_config[:service_account],
+        service_account_token: File.open(kubernetes_config[:service_account][:token_file]).read,
         ca_crt: File.open(kubernetes_config[:ca_file]).read
       })
 
-      @dependencies[:kpack_client] ||= Kubernetes::KpackClient.new(kube_client)
+      Kubernetes::KpackClient.new(kube_client)
     end
 
     private
@@ -478,7 +478,8 @@ module CloudController
         client_ca_path: config.get(:logcache_tls, :ca_file),
         client_cert_path: config.get(:logcache_tls, :cert_file),
         client_key_path: config.get(:logcache_tls, :key_file),
-        tls_subject_name: config.get(:logcache_tls, :subject_name)
+        tls_subject_name: config.get(:logcache_tls, :subject_name),
+        temporary_ignore_server_unavailable_errors: config.get(:logcache, :temporary_ignore_server_unavailable_errors)
       )
     end
 

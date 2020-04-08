@@ -18,7 +18,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   subject(:cop) { RuboCop::Cop::MatchRequiresWithIncludes.new(RuboCop::Config.new({})) }
 
   it 'registers an offense if MetadataPresentationHelpers is included without requiring it', focus: true do
-    inspect_source(<<~RUBY.strip_indent)
+    inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C
@@ -32,7 +32,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   end
 
   it 'does not register an offense if metadata_presentation_helpers required' do
-    inspect_source(<<~RUBY.strip_indent)
+    inspect_source(<<~RUBY)
       require 'presenters/mixins/metadata_presentation_helpers'
       module M
       class C
@@ -45,7 +45,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   end
 
   it 'registers an offense if SubResource is included without requiring it', focus: true do
-    inspect_source(<<~RUBY.strip_indent)
+    inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C
@@ -59,7 +59,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   end
 
   it 'does not register an offense if metadata_presentation_helpers required' do
-    inspect_source(<<~RUBY.strip_indent)
+    inspect_source(<<~RUBY)
       require 'controllers/v3/mixins/sub_resource'
       module M
       class C
@@ -72,7 +72,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   end
 
   it 'finds multiple offences', focus: true do
-    inspect_source(<<~RUBY.strip_indent)
+    inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C

@@ -1,6 +1,13 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
     UNLIMITED = -1
+
+    # Default values
+    DEFAULT_NON_BASIC_SERVICES_ALLOWED = true
+    DEFAULT_MEMORY_LIMIT = UNLIMITED
+    DEFAULT_TOTAL_SERVICES = UNLIMITED
+    DEFAULT_TOTAL_ROUTES = UNLIMITED
+
     RESERVED_PORT_ERROR = Sequel.lit('Total reserved ports must be -1, 0, or a ' \
                                      'positive integer, must be less than or ' \
                                      'equal to total routes, and must be less ' \
@@ -27,7 +34,7 @@ module VCAP::CloudController
       validates_presence :organization
       validates_unique [:organization_id, :name]
 
-      errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
+      errors.add(:memory_limit, :invalid_memory_limit) if memory_limit && memory_limit < UNLIMITED
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED

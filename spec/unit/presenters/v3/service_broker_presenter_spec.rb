@@ -74,10 +74,12 @@ module VCAP::CloudController
           expect(result[:relationships].length).to eq(0)
         end
 
-        it 'includes a link to itself in the JSON' do
+        it 'includes the right links' do
           links = {
-            self: { href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}" }
+            self: { href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}" },
+            service_offerings: { href: "#{link_prefix}/v3/service_offerings?service_broker_guids=#{service_broker.guid}" },
           }
+
           expect(result[:links]).to eq(links)
         end
 

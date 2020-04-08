@@ -70,15 +70,16 @@ module VCAP::CloudController
       end
 
       rules.each_with_index do |rule, index|
-        protocol = rule['protocol']
+        stringified_rule = rule.stringify_keys
+        protocol = stringified_rule['protocol']
 
         validation_errors = case protocol
                             when 'tcp', 'udp'
-                              CloudController::TransportRuleValidator.validate(rule)
+                              CloudController::TransportRuleValidator.validate(stringified_rule)
                             when 'icmp'
-                              CloudController::ICMPRuleValidator.validate(rule)
+                              CloudController::ICMPRuleValidator.validate(stringified_rule)
                             when 'all'
-                              CloudController::RuleValidator.validate(rule)
+                              CloudController::RuleValidator.validate(stringified_rule)
                             else
                               ['contains an unsupported protocol']
                             end

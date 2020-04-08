@@ -2,7 +2,8 @@ namespace :jobs do
   desc 'Clear the delayed_job queue.'
   task :clear do
     RakeConfig.context = :worker
-    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment(RakeConfig.config.get(:readiness_port,
+                                                                                            :cloud_controller_worker)) do
       Delayed::Job.delete_all
     end
   end
@@ -10,9 +11,12 @@ namespace :jobs do
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
 
   task :local, [:name] do |t, args|
+    queue = VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s
+    args.with_defaults(name: queue)
+
     RakeConfig.context = :api
 
-    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s],
+    CloudController::DelayedWorker.new(queues: [queue],
                                        name: args.name).start_working
   end
 
@@ -58,7 +62,7 @@ namespace :jobs do
 
     def start_working
       config = RakeConfig.config
-      BackgroundJobEnvironment.new(config).setup_environment
+      BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
       if config.get(:loggregator) && config.get(:loggregator, :router)
@@ -71,6 +75,18 @@ namespace :jobs do
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
       worker.start
+    end
+
+    private
+
+    def readiness_port
+      if is_first_generic_worker_on_machine?
+        RakeConfig.config.get(:readiness_port, :cloud_controller_worker)
+      end
+    end
+
+    def is_first_generic_worker_on_machine?
+      RakeConfig.context != :api && ENV['INDEX']&.to_i == 1
     end
   end
 end

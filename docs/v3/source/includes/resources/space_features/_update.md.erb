@@ -1,0 +1,33 @@
+### Update space features
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/[guid]/features/[name]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]"
+  -d '{ "enabled": true }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_space_feature %>
+```
+
+#### Definition
+`PATCH /v3/spaces/:guid/features/:name`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Org Manager |
+Space Manager |

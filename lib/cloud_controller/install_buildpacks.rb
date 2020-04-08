@@ -9,6 +9,7 @@ module VCAP::CloudController
     def install(buildpacks)
       return unless buildpacks
 
+      CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
       job_factory = VCAP::CloudController::Jobs::Runtime::BuildpackInstallerFactory.new
 
       buildpack_install_jobs = []

@@ -1,0 +1,65 @@
+### Create an organization quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organization_quotas" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+        "name": "production"
+      }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_organization_quota %>
+```
+
+
+This endpoint creates a new organization quota, but does not assign it to a specific organization unless an organization GUID is provided in the `relationships.organizations` parameter.
+
+To create an organization quota you must be an admin.
+
+#### Definition
+`POST /v3/organization_quotas`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the quota.
+
+#### Optional parameters
+Name | Type | Description | Default |
+---- | ---- | ----------- | ------- |
+| **apps** | _object_ | Quotas that affect applications and application sub-resources. |
+| **apps.per_process_memory_in_mb** | _integer_ or `null` | Maximum memory for a single process or task. | null (infinite) |
+| **apps.total_memory_in_mb** | _integer_ or `null` | Total memory allowed for all the started processes and running tasks in an organization. | null (infinite) |
+| **apps.total_instances** | _integer_ or `null` | Total instances of all the started processes allowed in an organization. | null (infinite) |
+| **apps.per_app_tasks** | _integer_ or `null` | Maximum number of running tasks in a single application. | null (infinite) |
+| **services** | _object_ | Quotas that affect services. |
+| **services.paid_services_allowed** | _boolean_ | Specifies whether instances of paid service plans can be created. | true |
+| **services.total_service_instances** | _integer_ or `null` | Total number of service instances allowed in an organization. | null (infinite) |
+| **services.total_service_keys** | _integer_ or `null` | Total number of service keys allowed in an organization. | null (infinite) |
+| **routes** | _object_ | Quotas that affect routes. |
+| **routes.total_routes** | _integer_ or `null` | Total number of routes allowed in an organization. | null (infinite) |
+| **routes.total_reserved_ports** | _integer_ or `null` | Total number of ports that are reservable by routes in an organization. | null (infinite) |
+| **domains** | _object_ | Quotas that affect domains. |
+| **domains.total_domains** | _integer_ or `null` | Total number of domains that can be scoped to an organization. | null (infinite) |
+| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations where the quota is applied. | [] |
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |

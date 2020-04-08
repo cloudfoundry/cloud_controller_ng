@@ -41,6 +41,18 @@ class SidecarsController < ApplicationController
 
     sidecar = SidecarCreate.create(app.guid, message)
 
+    TelemetryLogger.v3_emit(
+      'create-sidecar',
+        {
+          'app-id' => app.guid,
+          'user-id' => current_user.guid,
+        },
+      {
+        'origin' => 'user',
+        'memory-in-mb' => sidecar.memory,
+        'process-types' => sidecar.process_types,
+      }
+    )
     render status: 201, json: Presenters::V3::SidecarPresenter.new(sidecar)
   rescue SidecarCreate::InvalidSidecar => e
     unprocessable!(e.message)
