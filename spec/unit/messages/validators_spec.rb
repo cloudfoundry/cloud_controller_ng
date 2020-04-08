@@ -303,10 +303,16 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'key must be a string'
       end
 
-      it 'does not allow variables with non-string values' do
+      it 'does not allow variables with array values' do
         fake_class = environment_variables_class.new field: { fibonacci: [1, 1, 2, 3, 5, 8] }
         expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'fibonacci', value '[1, 1, 2, 3, 5, 8]'"]
+        expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'fibonacci', value '[1,1,2,3,5,8]'"]
+      end
+
+      it 'does not allow variables with object values' do
+        fake_class = environment_variables_class.new field: { obj: { wow: 'cool' } }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'obj', value '{\"wow\":\"cool\"}'"]
       end
     end
 

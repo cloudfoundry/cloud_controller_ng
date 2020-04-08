@@ -109,7 +109,8 @@ module VCAP::CloudController::Validators
           elsif key.match?(/\APORT\z/i)
             record.errors.add(attribute, 'cannot set PORT')
           elsif ![String, NilClass].include?(inner_value.class)
-            record.errors.add(:base, "Non-string value in environment variable for key '#{key}', value '#{inner_value}'")
+            stringified = inner_value.to_json
+            record.errors.add(:base, "Non-string value in environment variable for key '#{key}', value '#{stringified}'")
           end
         end
       end
