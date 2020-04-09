@@ -10,19 +10,53 @@ module OPI
     def stage(staging_guid, staging_details)
       logger.info('stage.request', staging_guid: staging_guid)
 
-      if staging_details.lifecycle.type == VCAP::CloudController::Lifecycles::DOCKER
-        complete_staging(staging_guid, staging_details)
-      elsif staging_details.lifecycle.type == VCAP::CloudController::Lifecycles::BUILDPACK
-        staging_request = to_request(staging_guid, staging_details)
-        start_staging(staging_guid, staging_request)
-      else
+      unless [VCAP::CloudController::Lifecycles::DOCKER, VCAP::CloudController::Lifecycles::BUILDPACK].include?(staging_details.lifecycle.type)
         raise("lifecycle type `#{staging_details.lifecycle.type}` is invalid")
       end
+
+      request = to_request(staging_guid, staging_details)
+      start_staging(staging_guid, request)
     end
 
     def stop_staging(staging_guid); end
 
     private
+
+    class BuildpackLifecycle
+      def initialize(action_builder, staging_guid, cc_uploader_url)
+        @action_builder = action_builder
+        @staging_guid = staging_guid
+        @cc_uploader_url = cc_uploader_url
+      end
+
+      def to_hash
+        lifecycle_data = @action_builder.lifecycle_data
+        droplet_upload_uri = "#{@cc_uploader_url}/v1/droplet/#{@staging_guid}?cc-droplet-upload-uri=#{lifecycle_data[:droplet_upload_uri]}"
+        {
+          buildpack_lifecycle: {
+              droplet_upload_uri: droplet_upload_uri,
+              app_bits_download_uri: lifecycle_data[:app_bits_download_uri],
+              buildpacks: lifecycle_data[:buildpacks]
+          }
+        }
+      end
+    end
+
+    class DockerLifecycle
+      def initialize(staging_details)
+        @staging_details = staging_details
+      end
+
+      def to_hash
+        {
+          docker_lifecycle: {
+            image: @staging_details.package.image,
+            registry_username: @staging_details.package.docker_username,
+            registry_password: @staging_details.package.docker_password
+          }
+        }
+      end
+    end
 
     def start_staging(staging_guid, staging_request)
       payload = MultiJson.dump(staging_request)
@@ -34,32 +68,11 @@ module OPI
       end
     end
 
-    def complete_staging(staging_guid, staging_details)
-      build = VCAP::CloudController::BuildModel.find(guid: staging_guid)
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
-
-      completion_handler = VCAP::CloudController::Diego::Docker::StagingCompletionHandler.new(build)
-      payload = {
-        result: {
-          lifecycle_type: 'docker',
-          lifecycle_metadata: {
-            docker_image: staging_details.package.image
-          },
-          process_types: { web: '' },
-          execution_metadata: '{\"cmd\":[],\"ports\":[{\"Port\":8080,\"Protocol\":\"tcp\"}]}'
-        }
-      }
-      completion_handler.staging_complete(payload, staging_details.start_after_staging)
-    end
-
     def to_request(staging_guid, staging_details)
       lifecycle_type = staging_details.lifecycle.type
       action_builder = VCAP::CloudController::Diego::LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
-      lifecycle_data = action_builder.lifecycle_data
 
-      cc_uploader_url = config.get(:opi, :cc_uploader_url)
-      droplet_upload_uri = "#{cc_uploader_url}/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=#{lifecycle_data[:droplet_upload_uri]}"
-
+      lifecycle = get_lifecycle(staging_details, staging_guid, action_builder)
       {
           app_guid: staging_details.package.app_guid,
           app_name: staging_details.package.app.name,
@@ -68,17 +81,22 @@ module OPI
           org_guid: staging_details.package.app.organization.guid,
           space_name: staging_details.package.app.space.name,
           space_guid: staging_details.package.app.space.guid,
-          environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables,
+          environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables.to_a,
           completion_callback: staging_completion_callback(staging_details),
-          lifecycle_data: {
-              droplet_upload_uri: droplet_upload_uri,
-              app_bits_download_uri: lifecycle_data[:app_bits_download_uri],
-              buildpacks: lifecycle_data[:buildpacks]
-          },
+          lifecycle: lifecycle,
           cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
           disk_mb: staging_details.staging_disk_in_mb,
           memory_mb: staging_details.staging_memory_in_mb
       }
+    end
+
+    def get_lifecycle(staging_details, staging_guid, action_builder)
+      if staging_details.lifecycle.type == VCAP::CloudController::Lifecycles::DOCKER
+        DockerLifecycle.new(staging_details)
+      else
+        cc_uploader_url = config.get(:opi, :cc_uploader_url)
+        BuildpackLifecycle.new(action_builder, staging_guid, cc_uploader_url)
+      end
     end
 
     def staging_completion_callback(staging_details)
