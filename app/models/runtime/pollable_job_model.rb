@@ -3,6 +3,7 @@ module VCAP::CloudController
     PROCESSING_STATE = 'PROCESSING'.freeze
     COMPLETE_STATE = 'COMPLETE'.freeze
     FAILED_STATE = 'FAILED'.freeze
+    POLLING_STATE = 'POLLING'.freeze
 
     one_to_many :warnings, class: 'VCAP::CloudController::JobWarningModel', key: :job_id
 

@@ -1,4 +1,4 @@
-require 'jobs/v3/services/service_broker_catalog_updater'
+require 'jobs/v3/services/fetch_last_operation_job'
 
 module VCAP::CloudController
   module V3
@@ -9,26 +9,45 @@ module VCAP::CloudController
       end
 
       def perform
-        service_instance = ManagedServiceInstance.last(guid: service_instance_guid)
         client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
 
         begin
           broker_response = client.provision(
             service_instance,
-            accepts_incomplete: false,
-            arbitrary_parameters: arbitrary_parameters,
-            maintenance_info: service_instance.service_plan.maintenance_info
+              accepts_incomplete: true,
+              arbitrary_parameters: arbitrary_parameters,
+              maintenance_info: service_instance.service_plan.maintenance_info
           )
         rescue => e
           service_instance.save_with_new_operation({}, {
-            type: 'create',
-            state: 'failed',
-            description: e.message,
+              type: 'create',
+              state: 'failed',
+              description: e.message,
           })
           raise e
         end
 
         service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
+      end
+
+      def success(job)
+        pollable_job = PollableJobModel.first(delayed_job_guid: job.guid)
+        if service_instance.operation_in_progress?
+          polling_job = VCAP::CloudController::V3::FetchLastOperationJob.new(
+            service_instance_guid: service_instance.guid,
+            pollable_job_guid: pollable_job.guid,
+            request_attrs: @arbitrary_parameters
+          )
+          enqueuer = Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic)
+          delayed_job = enqueuer.enqueue
+
+          pollable_job.update(
+            state: PollableJobModel::POLLING_STATE,
+            delayed_job_guid: delayed_job.guid
+          )
+        else
+          pollable_job.update(state: PollableJobModel::COMPLETE_STATE)
+        end
       end
 
       def job_name_in_configuration
@@ -52,6 +71,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def service_instance
+        @service_instance ||= ManagedServiceInstance.first(guid: service_instance_guid)
+      end
 
       attr_reader :service_instance_guid, :arbitrary_parameters
     end

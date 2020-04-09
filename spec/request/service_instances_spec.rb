@@ -270,7 +270,7 @@ RSpec.describe 'V3 service instances' do
         expect(parsed_response['resources'].length).to be(instances.length)
         expect({ resources: parsed_response['resources'] }).to match_json_response(
           { resources: instances }
-        )
+                                                             )
       end
     end
 
@@ -499,10 +499,10 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'This service does not support fetching service instance parameters.',
-          'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
-          'code' => 120004,
-        }))
+                                                               'detail' => 'This service does not support fetching service instance parameters.',
+                                                               'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
+                                                               'code' => 120004,
+                                                             }))
       end
     end
 
@@ -521,9 +521,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerResponseMalformed',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerResponseMalformed',
+                                                               'code' => 10001,
+                                                             }))
       end
     end
 
@@ -534,9 +534,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerResponseMalformed',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerResponseMalformed',
+                                                               'code' => 10001,
+                                                             }))
       end
     end
 
@@ -547,9 +547,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerBadResponse',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerBadResponse',
+                                                               'code' => 10001,
+                                                             }))
       end
     end
 
@@ -560,9 +560,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerBadResponse',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerBadResponse',
+                                                               'code' => 10001,
+                                                             }))
       end
     end
 
@@ -642,12 +642,12 @@ RSpec.describe 'V3 service instances' do
     describe 'permissions' do
       let(:response) do
         create_user_provided_json({
-          guid: UUID_REGEX,
-          name: name,
-          space: {
-            guid: UUID_REGEX
-          }
-        })
+                                    guid: UUID_REGEX,
+                                    name: name,
+                                    space: {
+                                      guid: UUID_REGEX
+                                    }
+                                  })
       end
 
       let(:expected_codes_and_responses) do
@@ -676,7 +676,7 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(403)
         expect(parsed_response['errors']).to include(
           include({ 'detail' => 'Feature Disabled: service_instance_creation' })
-        )
+                                             )
       end
 
       it 'does not impact admins ability create services' do
@@ -696,7 +696,7 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(403)
         expect(parsed_response['errors']).to include(
           include({ 'detail' => 'You are not authorized to perform the requested action' })
-        )
+                                             )
       end
 
       it 'does not impact admins ability to create services' do
@@ -713,7 +713,7 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(
           include({ 'detail' => include("Type must be one of 'managed', 'user-provided'") })
-        )
+                                             )
       end
     end
 
@@ -725,7 +725,7 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(
           include({ 'detail' => 'Invalid space. Ensure that the space exists and you have access to it.' })
-        )
+                                             )
       end
     end
 
@@ -768,7 +768,7 @@ RSpec.describe 'V3 service instances' do
             labels: { baz: 'qux' },
             annotations: { foo: 'bar' }
           )
-        )
+                                   )
       end
 
       it 'creates a service instance in the database' do
@@ -796,7 +796,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({ 'detail' => include("The service instance name is taken: #{name}") })
-          )
+                                               )
         end
 
         it 'succeeds when the same name is used in another space' do
@@ -886,7 +886,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({ 'detail' => include("The service instance name is taken: #{name}") })
-          )
+                                               )
         end
 
         it 'succeeds when the same name is used in another space' do
@@ -920,7 +920,7 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
-            )
+                                                 )
           end
         end
 
@@ -932,7 +932,7 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
-            )
+                                                 )
           end
         end
 
@@ -944,7 +944,7 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
-            )
+                                                 )
           end
         end
 
@@ -956,7 +956,7 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
-            )
+                                                 )
           end
         end
 
@@ -970,79 +970,154 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
-            )
+                                                 )
           end
         end
       end
 
-      describe 'the job' do
+      describe 'the pollable job' do
         let(:request_body_additions) { { parameters: { foo: 'bar', baz: 'qux' } } }
         let(:broker_response) { { dashboard_url: 'http://dashboard.url' } }
         let(:broker_status_code) { 201 }
+        let(:last_operation_status_code) { 200 }
+        let(:last_operation_response) { { state: 'in progress' } }
 
         before do
           api_call.call(space_dev_headers)
           instance = VCAP::CloudController::ServiceInstance.last
           stub_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+            with(query: { 'accepts_incomplete' => true }).
             to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+
+          stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+            with(
+              query: {
+                operation: 'task12',
+                service_id: service_plan.service.unique_id,
+                plan_id: service_plan.unique_id,
+              }).
+            to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
         end
 
-        it 'sends the right arguments to the service broker' do
+        it 'sends a provision request with the right arguments to the service broker' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           expect(
             a_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
-              with(body: {
-                service_id: service_plan.service.unique_id,
-                plan_id: service_plan.unique_id,
-                context: {
-                  platform: 'cloudfoundry',
-                  organization_guid: org.guid,
-                  organization_name: org.name,
-                  space_guid: space.guid,
-                  space_name: space.name,
-                  instance_name: instance.name
-                },
-                organization_guid: org.guid,
-                space_guid: space.guid,
-                parameters: {
-                  foo: 'bar',
-                  baz: 'qux'
-                },
-                maintenance_info: maintenance_info
-              })
+              with(query: { accepts_incomplete: true },
+                   body: {
+                     service_id: service_plan.service.unique_id,
+                     plan_id: service_plan.unique_id,
+                     context: {
+                       platform: 'cloudfoundry',
+                       organization_guid: org.guid,
+                       organization_name: org.name,
+                       space_guid: space.guid,
+                       space_name: space.name,
+                       instance_name: instance.name
+                     },
+                     organization_guid: org.guid,
+                     space_guid: space.guid,
+                     parameters: {
+                       foo: 'bar',
+                       baz: 'qux'
+                     },
+                     maintenance_info: maintenance_info
+                   })
           ).to have_been_made.once
         end
 
-        it 'marks the service instance as created' do
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        context 'when the provision completes synchronously' do
+          it 'marks the service instance as created' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-          expect(instance.dashboard_url).to eq('http://dashboard.url')
-          expect(instance.last_operation.type).to eq('create')
-          expect(instance.last_operation.state).to eq('succeeded')
-        end
-
-        it 'completes' do
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-        end
-
-        context 'when the broker responds with an error' do
-          let(:broker_status_code) { 400 }
-
-          it 'marks the service instance as failed' do
-            execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
+            expect(instance.dashboard_url).to eq('http://dashboard.url')
             expect(instance.last_operation.type).to eq('create')
-            expect(instance.last_operation.state).to eq('failed')
-            expect(instance.last_operation.description).to include('Status Code: 400 Bad Request')
+            expect(instance.last_operation.state).to eq('succeeded')
           end
 
-          it 'competes with failure' do
-            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+          it 'completes' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+          end
+
+          context 'when the broker responds with an error' do
+            let(:broker_status_code) { 400 }
+
+            it 'marks the service instance as failed' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(instance.last_operation.type).to eq('create')
+              expect(instance.last_operation.state).to eq('failed')
+              expect(instance.last_operation.description).to include('Status Code: 400 Bad Request')
+            end
+
+            it 'completes with failure' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+        end
+
+        context 'when the provision is asynchronous' do
+          let(:broker_status_code) { 202 }
+          let(:broker_response) { { operation: 'task12' } }
+
+          it 'marks the job state as polling' do
+            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+          end
+
+          it 'calls last operation immediately' do
+            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            expect(
+              a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'task12',
+                    service_id: service_plan.service.unique_id,
+                    plan_id: service_plan.unique_id,
+                  })
+            ).to have_been_made.once
+          end
+
+          it 'enqueues the next fetch last operation job' do
+            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            expect(Delayed::Job.count).to eq(1)
+            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::V3::FetchLastOperationJob)
+          end
+
+          context 'when last operation eventually returns `create succeeded`' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'task12',
+                    service_id: service_plan.service.unique_id,
+                    plan_id: service_plan.unique_id,
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
+
+              execute_all_jobs(expected_successes: 2, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            it 'completes the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'sets the service instance last operation to create succeeded' do
+              expect(instance.last_operation.type).to eq('create')
+              expect(instance.last_operation.state).to eq('succeeded')
+            end
           end
         end
       end
@@ -1210,17 +1285,17 @@ RSpec.describe 'V3 service instances' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type: 'audit.service_instance.share',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          actee: service_instance1.guid,
-          actee_type: 'service_instance',
-          actee_name: service_instance1.name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.service_instance.share',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: user_email,
+                                          actor_username: user_name,
+                                          actee: service_instance1.guid,
+                                          actee_type: 'service_instance',
+                                          actee_name: service_instance1.name,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
         expect(event.metadata['target_space_guids']).to eq([target_space.guid])
       end
     end
@@ -1301,7 +1376,7 @@ RSpec.describe 'V3 service instances' do
               }
             }
           }
-        )
+                                   )
       end
     end
 
@@ -1330,17 +1405,17 @@ RSpec.describe 'V3 service instances' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type: 'audit.service_instance.unshare',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          actee: service_instance1.guid,
-          actee_type: 'service_instance',
-          actee_name: service_instance1.name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.service_instance.unshare',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: user_email,
+                                          actor_username: user_name,
+                                          actee: service_instance1.guid,
+                                          actee_type: 'service_instance',
+                                          actee_name: service_instance1.name,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
         expect(event.metadata['target_space_guid']).to eq(target_space.guid)
       end
 

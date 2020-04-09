@@ -13,6 +13,8 @@ Name           | Type | Description
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **operation**  | _string_ | Current desired operation of the job on a model.
-**state**      | _string_ | State of the job. Valid values are `PROCESSING`, `COMPLETE`, or` FAILED`.
+**state**      | _string_ | State of the job. Valid values are `PROCESSING`, `POLLING`, `COMPLETE`, or` FAILED`.
 **links**      | [_links object_](#links) | Links to related resources.
 **errors**     | [_errors list_](#errors) | Array of errors that occurred while processing the job.
+
+Note: `POLLING` happens during asynchronous services operations that require polling the last operation from the service broker.
