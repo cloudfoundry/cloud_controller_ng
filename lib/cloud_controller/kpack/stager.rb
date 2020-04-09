@@ -41,7 +41,7 @@ module Kpack
     def image_resource(staging_details)
       Kubeclient::Resource.new({
         metadata: {
-          name: staging_details.package.guid,
+          name: staging_details.package.app.guid,
           namespace: builder_namespace,
           labels: {
             APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
@@ -58,7 +58,7 @@ module Kpack
             name: 'cf-autodetect-builder',
             kind: 'Builder'
           },
-          tag: "#{registry_tag_base}/#{staging_details.package.guid}",
+          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
           source: {
             blob: {
               url: blobstore_url_generator.package_download_url(staging_details.package),

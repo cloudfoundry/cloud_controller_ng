@@ -48,7 +48,7 @@ module Kpack
       it 'creates an image using the kpack client' do
         expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
           metadata: {
-            name: package.guid,
+            name: package.app.guid,
             namespace: 'namespace',
             labels: {
               Stager::APP_GUID_LABEL_KEY => package.app.guid,
@@ -60,7 +60,7 @@ module Kpack
             }
           },
           spec: {
-            tag: "gcr.io/capi-images/#{package.guid}",
+            tag: "gcr.io/capi-images/#{package.app.guid}",
             serviceAccount: 'gcr-service-account',
             builder: {
               name: 'cf-autodetect-builder',
