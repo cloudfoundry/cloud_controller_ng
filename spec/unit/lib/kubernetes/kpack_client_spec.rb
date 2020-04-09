@@ -47,6 +47,16 @@ RSpec.describe Kubernetes::KpackClient do
         expect(image).to be_nil
       end
     end
+
+    context 'when there is an error' do
+      it 'raises as an ApiError' do
+        allow(kube_client).to receive(:get_image).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+
+        expect {
+          subject.get_image('name', 'namespace')
+        }.to raise_error(CloudController::Errors::ApiError)
+      end
+    end
   end
 
   describe '#update_image' do
@@ -61,6 +71,16 @@ RSpec.describe Kubernetes::KpackClient do
       subject.update_image(*args)
 
       expect(kube_client).to have_received(:update_image).with(*args).once
+    end
+
+    context 'when there is an error' do
+      it 'raises as an ApiError' do
+        allow(kube_client).to receive(:update_image).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+
+        expect {
+          subject.update_image(*args)
+        }.to raise_error(CloudController::Errors::ApiError)
+      end
     end
   end
 end

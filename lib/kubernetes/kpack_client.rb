@@ -16,10 +16,14 @@ module Kubernetes
       @client.get_image(name, namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
+    rescue Kubeclient::HttpError => e
+      raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'get', e.message)
     end
 
     def update_image(*args)
       @client.update_image(*args)
+    rescue Kubeclient::HttpError => e
+      raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'update', e.message)
     end
   end
 end
