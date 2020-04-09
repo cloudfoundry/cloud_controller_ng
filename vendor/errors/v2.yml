@@ -1290,6 +1290,6 @@
   message: "Failed to create/update/delete Route resource with guid '%s' on Kubernetes"
 
 400002:
-  name: KpackImageCreateError
+  name: KpackImageError
   http_code: 422
-  message: "Failed to create Image resource for staging: '%s'"
+  message: "Failed to %s Image resource for staging: '%s'"

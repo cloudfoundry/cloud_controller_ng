@@ -9,7 +9,7 @@ module Kubernetes
     def create_image(*args)
       @client.create_image(*args)
     rescue Kubeclient::HttpError => e
-      raise CloudController::Errors::ApiError.new_from_details('KpackImageCreateError', e.message)
+      raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'create', e.message)
     end
 
     def get_image(name, namespace)
