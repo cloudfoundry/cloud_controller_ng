@@ -25,4 +25,42 @@ RSpec.describe Kubernetes::KpackClient do
       end
     end
   end
+
+  describe '#get_image' do
+    let(:kube_client) { double(Kubeclient) }
+    let(:args) { [1, 2, 'a', 'b'] }
+    let(:response) { double(Kubeclient::Resource) }
+    subject(:kpack_client) { Kubernetes::KpackClient.new(kube_client) }
+
+    it 'fetches the image from Kubernetes' do
+      allow(kube_client).to receive(:get_image).with('name', 'namespace').and_return(response)
+
+      image = subject.get_image('name', 'namespace')
+      expect(image).to eq(response)
+    end
+
+    context 'when the image is not present' do
+      it 'returns nil' do
+        allow(kube_client).to receive(:get_image).with('name', 'namespace').and_raise(Kubeclient::ResourceNotFoundError.new(404, 'images not found', '{"kind": "Status"}'))
+
+        image = subject.get_image('name', 'namespace')
+        expect(image).to be_nil
+      end
+    end
+  end
+
+  describe '#update_image' do
+    let(:kube_client) { double(Kubeclient) }
+    let(:args) { [1, 2, 'a', 'b'] }
+    let(:response) { double(Kubeclient::Resource) }
+    subject(:kpack_client) { Kubernetes::KpackClient.new(kube_client) }
+
+    it 'proxies call to kubernetes client with the same args' do
+      allow(kube_client).to receive(:update_image).with(any_args)
+
+      subject.update_image(*args)
+
+      expect(kube_client).to have_received(:update_image).with(*args).once
+    end
+  end
 end

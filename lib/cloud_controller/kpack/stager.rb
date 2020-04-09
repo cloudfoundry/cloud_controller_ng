@@ -11,7 +11,12 @@ module Kpack
     end
 
     def stage(staging_details)
-      client.create_image(image_resource(staging_details))
+      existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
+      if existing_image.nil?
+        client.create_image(image_resource(staging_details))
+      else
+        client.update_image(update_image_resource(existing_image, staging_details))
+      end
     rescue CloudController::Errors::ApiError => e
       build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
       mark_build_as_failed(build, e.message) if build
@@ -36,6 +41,13 @@ module Kpack
         build.lock!
         build.fail_to_stage!('StagingError', "Failed to create Image resource for Kpack: '#{message}'")
       end
+    end
+
+    def update_image_resource(image, staging_details)
+      image.metadata.labels[BUILD_GUID_LABEL_KEY.to_sym] = staging_details.staging_guid
+      image.spec.source.blob.url = blobstore_url_generator.package_download_url(staging_details.package)
+
+      image
     end
 
     def image_resource(staging_details)

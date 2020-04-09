@@ -23,6 +23,8 @@ module Kpack
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
+
+      allow(client).to receive(:get_image).and_return(nil)
     end
 
     it_behaves_like 'a stager'
@@ -38,14 +40,19 @@ module Kpack
         details.lifecycle = lifecycle
         details
       end
-
       let(:lifecycle) do
         VCAP::CloudController::KpackLifecycle.new(package, {})
       end
-
       let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
 
+      it 'checks if the image exists' do
+        allow(client).to receive(:create_image)
+        expect(client).to receive(:get_image).with(package.app.guid, 'namespace').and_return(nil)
+        stager.stage(staging_details)
+      end
+
       it 'creates an image using the kpack client' do
+        expect(client).to_not receive(:update_image)
         expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
           metadata: {
             name: package.app.guid,
@@ -92,6 +99,57 @@ module Kpack
           expect(build.state).to eq(VCAP::CloudController::BuildModel::FAILED_STATE)
           expect(build.error_id).to eq('StagingError')
           expect(build.error_description).to eq("Staging error: Failed to create Image resource for Kpack: 'Stager error: staging failed'")
+        end
+      end
+
+      context 'when an image already exists' do
+        let(:existing_image) do
+          Kubeclient::Resource.new({
+            apiVersion: 'foo.api.version',
+            kind: 'Image',
+            metadata: {
+              name: package.app.guid,
+              namespace: 'namespace',
+              creationTimestamp: 'some-timestamp',
+              generation: 1,
+              labels: {
+                Stager::APP_GUID_LABEL_KEY => package.app.guid,
+                Stager::BUILD_GUID_LABEL_KEY => 'old-build-guid',
+                Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
+              },
+              annotations: {
+                'sidecar.istio.io/inject' => 'false'
+              }
+            },
+            spec: {
+              tag: "gcr.io/capi-images/#{package.app.guid}",
+              serviceAccount: 'gcr-service-account',
+              builder: {
+                name: 'cf-autodetect-builder',
+                kind: 'Builder'
+              },
+              source: {
+                blob: {
+                  url: 'old-package-url',
+                }
+              }
+            }
+          })
+        end
+
+        before do
+          allow(client).to receive(:get_image).with(package.app.guid, 'namespace').and_return(existing_image)
+        end
+
+        it 'updates the existing Image resource' do
+          updated_image = Kubeclient::Resource.new(existing_image.to_hash)
+          updated_image.metadata.labels[Kpack::Stager::BUILD_GUID_LABEL_KEY.to_sym] = build.guid
+          updated_image.spec.source.blob.url = 'package-download-url'
+
+          expect(client).to_not receive(:create_image)
+          expect(client).to receive(:update_image).with(updated_image)
+
+          subject.stage(staging_details)
         end
       end
     end
