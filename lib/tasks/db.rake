@@ -1,3 +1,5 @@
+require 'httpclient'
+
 namespace :db do
   desc 'Create a Sequel migration in ./db/migrate'
   task :create_migration do
@@ -151,6 +153,24 @@ namespace :db do
     end
   end
 
+  desc 'Wait for Istio sidecar to startup'
+  task :wait_for_istio do
+    puts 'Waiting indefinitely for Istio sidecar to be healthy'
+
+    sleep(5) until istio_sidecar_is_healthy?
+
+    puts 'Istio sidecar is now healthy'
+  end
+
+  desc 'Terminate Istio sidecar for migration job'
+  task :terminate_istio do
+    puts 'Terminating Istio sidecar'
+
+    terminate_istio_sidecar
+
+    puts 'Istio sidecar is now terminated'
+  end
+
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task :migrate do
@@ -236,5 +256,21 @@ namespace :db do
         DbConfig.reset_environment
       end
     end
+  end
+
+  def istio_sidecar_is_healthy?
+    begin
+      client = HTTPClient.new
+      response = client.request(:get, 'http://localhost:15020/healthz/ready')
+
+      response.code == 200
+    rescue StandardError
+    end
+  end
+
+  def terminate_istio_sidecar
+    client = HTTPClient.new
+    response = client.request(:post, 'http://localhost:15000/quitquitquit')
+    raise StandardError.new("Failed to terminate Istio sidecar. Received response code: #{response.code}") unless response.code == 200
   end
 end
