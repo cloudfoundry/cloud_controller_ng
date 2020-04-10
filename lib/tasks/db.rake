@@ -259,13 +259,11 @@ namespace :db do
   end
 
   def istio_sidecar_is_healthy?
-    begin
-      client = HTTPClient.new
-      response = client.request(:get, 'http://localhost:15020/healthz/ready')
+    client = HTTPClient.new
+    response = client.request(:get, 'http://localhost:15020/healthz/ready')
 
-      response.code == 200
-    rescue StandardError
-    end
+    response.code == 200
+  rescue StandardError
   end
 
   def terminate_istio_sidecar
