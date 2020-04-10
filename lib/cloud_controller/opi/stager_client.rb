@@ -23,10 +23,11 @@ module OPI
     private
 
     class BuildpackLifecycle
-      def initialize(action_builder, staging_guid, cc_uploader_url)
+      def initialize(action_builder, staging_guid, cc_uploader_url, config)
         @action_builder = action_builder
         @staging_guid = staging_guid
         @cc_uploader_url = cc_uploader_url
+        @config = config
       end
 
       def to_hash
@@ -36,9 +37,25 @@ module OPI
           buildpack_lifecycle: {
               droplet_upload_uri: droplet_upload_uri,
               app_bits_download_uri: lifecycle_data[:app_bits_download_uri],
-              buildpacks: lifecycle_data[:buildpacks]
+              buildpacks: lifecycle_data[:buildpacks],
+              buildpack_cache_download_uri: lifecycle_data[:build_artifacts_cache_download_uri],
+              buildpack_cache_checksum: lifecycle_data[:buildpack_cache_checksum],
+              buildpack_cache_checksum_algorithm: 'sha256',
+              buildpack_cache_upload_uri: upload_buildpack_artifacts_cache_uri(@staging_guid, lifecycle_data)
           }
         }
+      end
+
+      private
+
+      def upload_buildpack_artifacts_cache_uri(staging_guid, lifecycle_data)
+        upload_buildpack_artifacts_cache_uri       = URI(@config.get(:diego, :cc_uploader_url))
+        upload_buildpack_artifacts_cache_uri.path  = "/v1/build_artifacts/#{staging_guid}"
+        upload_buildpack_artifacts_cache_uri.query = {
+          'cc-build-artifacts-upload-uri' => lifecycle_data[:build_artifacts_cache_upload_uri],
+          'timeout'                       => @config.get(:staging, :timeout_in_seconds),
+        }.to_param
+        upload_buildpack_artifacts_cache_uri.to_s
       end
     end
 
@@ -95,7 +112,7 @@ module OPI
         DockerLifecycle.new(staging_details)
       else
         cc_uploader_url = config.get(:opi, :cc_uploader_url)
-        BuildpackLifecycle.new(action_builder, staging_guid, cc_uploader_url)
+        BuildpackLifecycle.new(action_builder, staging_guid, cc_uploader_url, config)
       end
     end
 
