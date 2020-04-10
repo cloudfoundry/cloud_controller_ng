@@ -508,14 +508,16 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when the request package is invalid' do
         before do
-          allow(build_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::BuildCreate::InvalidPackage)
+          allow(build_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::BuildCreate::InvalidPackage.new('some-error-message'))
         end
 
-        it 'returns a 400 InvalidRequest error' do
+        it 'returns a 400 BadRequest error' do
           post :create, params: req_body, as: :json
 
           expect(response.status).to eq(400)
-          expect(response.body).to include('InvalidRequest')
+          expect(response.body).to include('BadRequest')
+          expect(response.body).to include('some-error-message')
+
         end
       end
 

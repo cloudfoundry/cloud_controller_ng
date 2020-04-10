@@ -60,7 +60,7 @@ class BuildsController < ApplicationController
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e
-    invalid_request!(e.message)
+    bad_request!(e.message)
   rescue BuildCreate::SpaceQuotaExceeded => e
     unprocessable!("space's memory limit exceeded: #{e.message}")
   rescue BuildCreate::OrgQuotaExceeded => e
