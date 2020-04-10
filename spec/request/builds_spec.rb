@@ -17,6 +17,7 @@ RSpec.describe 'Builds' do
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
     allow(kpack_client).to receive(:create_image)
+    allow(kpack_client).to receive(:get_image)
   end
 
   describe 'POST /v3/builds' do
