@@ -517,7 +517,6 @@ RSpec.describe BuildsController, type: :controller do
           expect(response.status).to eq(400)
           expect(response.body).to include('BadRequest')
           expect(response.body).to include('some-error-message')
-
         end
       end
 
