@@ -75,11 +75,7 @@ RSpec.describe(OPI::StagerClient) do
             buildpack_lifecycle: {
               droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
                               app_bits_download_uri: 'http://download.me',
-                              buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }],
-                              buildpack_cache_download_uri: 'buildpacks-artifacts-cache-url-download',
-                              buildpack_cache_checksum: 'sumcheck',
-                              buildpack_cache_checksum_algorithm: 'sha256',
-                              buildpack_cache_upload_uri: 'https://cc-uploader.service.cf.internal:9091/v1/build_artifacts/some_staging_guid?cc-build-artifacts-upload-uri=buildpacks-artifacts-cache-url-upload&timeout=42'
+                              buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
             }
           },
           cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
@@ -113,11 +109,7 @@ RSpec.describe(OPI::StagerClient) do
               buildpack_lifecycle: {
                 droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
                                 app_bits_download_uri: 'http://download.me',
-                                buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }],
-                                buildpack_cache_download_uri: 'buildpacks-artifacts-cache-url-download',
-                                buildpack_cache_checksum: 'sumcheck',
-                                buildpack_cache_checksum_algorithm: 'sha256',
-                                buildpack_cache_upload_uri: 'https://cc-uploader.service.cf.internal:9091/v1/build_artifacts/some_staging_guid?cc-build-artifacts-upload-uri=buildpacks-artifacts-cache-url-upload&timeout=42'
+                                buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
               }
             },
             cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
@@ -237,10 +229,10 @@ RSpec.describe(OPI::StagerClient) do
        }
     ]
     data.droplet_upload_uri                         = 'http://upload.me'
-    data.build_artifacts_cache_download_uri         = 'buildpacks-artifacts-cache-url-download'
+    data.build_artifacts_cache_download_uri         = 'dont care'
     data.stack                                      = 'dont care'
-    data.build_artifacts_cache_upload_uri           = 'buildpacks-artifacts-cache-url-upload'
-    data.buildpack_cache_checksum                   = 'sumcheck'
+    data.build_artifacts_cache_upload_uri           = 'dont care'
+    data.buildpack_cache_checksum                   = 'dont care'
     data.app_bits_checksum                          = { type: 'sha256', value: 'also dont care' }
     data.message
   end
