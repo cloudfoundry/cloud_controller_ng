@@ -888,8 +888,11 @@ RSpec.describe 'Spaces' do
       s.add_shared_space(space)
       s
     end
+    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
 
     before do
+      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+
       VCAP::CloudController::AppModel.make(space: space)
       VCAP::CloudController::Route.make(space: space)
       org.add_user(associated_user)

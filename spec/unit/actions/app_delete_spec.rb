@@ -10,6 +10,11 @@ module VCAP::CloudController
 
     let!(:app) { AppModel.make }
     let!(:app_dataset) { [app] }
+    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+    end
 
     describe '#delete' do
       it 'deletes the app record' do
@@ -38,6 +43,11 @@ module VCAP::CloudController
           user_audit_info
         )
 
+        app_delete.delete(app_dataset)
+      end
+
+      it 'deletes the associated kpack Image' do
+        expect(kpack_client).to receive(:delete_image).with(app.guid, 'cf-workloads')
         app_delete.delete(app_dataset)
       end
 
@@ -317,29 +327,6 @@ module VCAP::CloudController
               }.to raise_error(StandardError, 'first')
             end
           end
-        end
-      end
-
-      context 'when targeting a kubernetes API' do
-        let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
-        let!(:config) do
-          TestConfig.override(
-            kubernetes: {
-                host_url: 'some-kubernetes-host-url',
-                kpack: {
-                  builder_namespace: 'builder-namespace',
-                },
-            },
-          )
-        end
-
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
-        end
-
-        it 'deletes the associated kpack Image' do
-          expect(kpack_client).to receive(:delete_image).with(app.guid, 'builder-namespace')
-          app_delete.delete(app_dataset)
         end
       end
     end

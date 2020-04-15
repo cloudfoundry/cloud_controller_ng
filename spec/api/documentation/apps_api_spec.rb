@@ -118,13 +118,16 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   describe 'Standard endpoints' do
+    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+      TestConfig.override(diego: { staging: 'optional', running: 'optional' })
+    end
+
     standard_model_delete_without_async :app
     standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: :app, response_fields: true
     standard_model_get 'ProcessModel', path: :app, nested_associations: [:stack, :space], response_fields: true
-
-    before do
-      TestConfig.override(diego: { staging: 'optional', running: 'optional' })
-    end
 
     def after_standard_model_delete(guid)
       event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid, actee_type: 'app')

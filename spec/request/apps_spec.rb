@@ -1461,6 +1461,11 @@ RSpec.describe 'Apps' do
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
     let(:user_email) { nil }
+    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+    end
 
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header

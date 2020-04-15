@@ -15,6 +15,11 @@ module VCAP::CloudController
       let(:space_dataset) { Space.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
+      let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+      end
 
       it 'deletes both space records' do
         expect {

@@ -7,7 +7,12 @@ module VCAP::CloudController
     let(:services_event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
+    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
     subject(:org_delete) { OrganizationDelete.new(space_delete, user_audit_info) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+    end
 
     describe '#delete' do
       let!(:org_1) { Organization.make }
@@ -51,8 +56,10 @@ module VCAP::CloudController
       let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
+      let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
 
       before do
+        allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
         stub_deprovision(service_instance, accepts_incomplete: true)
         stub_deprovision(service_instance_2, accepts_incomplete: true)
       end

@@ -948,8 +948,10 @@ module VCAP::CloudController
         let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
         let!(:service_instance_guid) { service_instance.guid }
         let!(:user) { make_manager_for_org(org) }
+        let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
 
         before do
+          allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
           stub_deprovision(service_instance, accepts_incomplete: true)
           set_current_user(user, admin: true)
         end

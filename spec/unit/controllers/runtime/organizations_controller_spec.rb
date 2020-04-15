@@ -1383,6 +1383,12 @@ module VCAP::CloudController
       end
 
       context 'with recursive=true' do
+        let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+        end
+
         it 'deletes the org and all of its spaces' do
           space_1 = Space.make(organization: org)
           space_2 = Space.make(organization: org)
