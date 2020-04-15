@@ -28,6 +28,8 @@ module Kubernetes
 
     def delete_image(name, namespace)
       @client.delete_image(name, namespace)
+    rescue Kubeclient::ResourceNotFoundError
+      nil
     rescue Kubeclient::HttpError => e
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'delete', e.message)
     end

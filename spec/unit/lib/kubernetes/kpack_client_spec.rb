@@ -102,6 +102,15 @@ RSpec.describe Kubernetes::KpackClient do
           subject.delete_image('resource-name', 'namespace')
         }.to raise_error(CloudController::Errors::ApiError)
       end
+
+      context 'when the image is not present' do
+        it 'returns nil' do
+          allow(kube_client).to receive(:delete_image).with('name', 'namespace').and_raise(Kubeclient::ResourceNotFoundError.new(404, 'images not found', '{"kind": "Status"}'))
+
+          image = subject.delete_image('name', 'namespace')
+          expect(image).to be_nil
+        end
+      end
     end
   end
 end
