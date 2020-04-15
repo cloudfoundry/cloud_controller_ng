@@ -9230,7 +9230,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
-<td>State of the job. Valid values are <code class="prettyprint">PROCESSING</code>, <code class="prettyprint">COMPLETE</code>, or<code class="prettyprint">FAILED</code>.</td>
+<td>State of the job. Valid values are <code class="prettyprint">PROCESSING</code>, <code class="prettyprint">POLLING</code>, <code class="prettyprint">COMPLETE</code>, or<code class="prettyprint">FAILED</code>.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -9243,6 +9243,8 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Array of errors that occurred while processing the job.</td>
 </tr>
 </tbody></table>
+
+<p>Note: <code class="prettyprint">POLLING</code> happens during asynchronous services operations that require polling the last operation from the service broker.</p>
 <h3 id="get-a-job">Get a job</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
