@@ -46,14 +46,17 @@ RSpec.describe(OPI::StagerClient) do
 
   context 'when staging an app' do
     before do
-      allow(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol).to receive(:new).and_return(lifecycle_protocol)
-
       stub_request(:post, "#{eirini_url}/stage/#{staging_guid}").
         to_return(status: 202)
     end
 
     context 'when lifecycle type is buildpack' do
       let(:lifecycle_type) { VCAP::CloudController::Lifecycles::BUILDPACK }
+
+      before do
+        allow(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol).to receive(:new).and_return(lifecycle_protocol)
+      end
+
       it 'should send the expected request' do
         stager_client.stage(staging_guid, staging_details)
         expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with(body: {
@@ -68,9 +71,12 @@ RSpec.describe(OPI::StagerClient) do
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
           completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
-          lifecycle_data: { droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
-                            app_bits_download_uri: 'http://download.me',
-                            buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
+          lifecycle: {
+            buildpack_lifecycle: {
+              droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
+                              app_bits_download_uri: 'http://download.me',
+                              buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
+            }
           },
           cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
           disk_mb: 100,
@@ -99,9 +105,12 @@ RSpec.describe(OPI::StagerClient) do
                           { name: 'MEMORY_LIMIT', value: '256m' },
                           { name: 'VCAP_SERVICES', value: '{}' }],
             completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
-            lifecycle_data: { droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
-                              app_bits_download_uri: 'http://download.me',
-                              buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
+            lifecycle: {
+              buildpack_lifecycle: {
+                droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
+                                app_bits_download_uri: 'http://download.me',
+                                buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
+              }
             },
             cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
             disk_mb: 100,
@@ -125,57 +134,60 @@ RSpec.describe(OPI::StagerClient) do
 
     context 'when lifecycle type is docker' do
       let(:lifecycle_type) { VCAP::CloudController::Lifecycles::DOCKER }
-      let(:staging_completion_handler) { instance_double(VCAP::CloudController::Diego::Docker::StagingCompletionHandler) }
-      let(:build_model) { instance_double(VCAP::CloudController::BuildModel) }
-      let(:payload) {
-        {
-        result: {
-          lifecycle_type: 'docker',
-          lifecycle_metadata: {
-            docker_image: 'docker.io/some/image'
+
+      let(:staging_action_builder) do
+        instance_double(VCAP::CloudController::Diego::Docker::StagingActionBuilder,
+          task_environment_variables: lifecycle_environment_variables,
+        )
+      end
+
+      let(:lifecycle_protocol) do
+        instance_double(VCAP::CloudController::Diego::Docker::LifecycleProtocol,
+          staging_action_builder: staging_action_builder
+        )
+      end
+
+      before do
+        allow(VCAP::CloudController::Diego::Docker::LifecycleProtocol).to receive(:new).and_return(lifecycle_protocol)
+      end
+
+      it 'should set a docker lifecycle' do
+        stager_client.stage(staging_guid, staging_details)
+        expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with(body: {
+          app_guid: 'thor',
+          app_name: 'the_thor',
+          staging_guid: staging_guid,
+          org_name: 'some-org',
+          org_guid: 'some-org-guid',
+          space_name: 'outer',
+          space_guid: 'outer-guid',
+          environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
+                        { name: 'MEMORY_LIMIT', value: '256m' },
+                        { name: 'VCAP_SERVICES', value: '{}' }],
+          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+          lifecycle: {
+            docker_lifecycle: {
+              image: 'docker.io/some/image',
+              registry_username: 'theone',
+              registry_password: 'notone'
+            }
           },
-          process_types: { web: '' },
-          execution_metadata: '{\"cmd\":[],\"ports\":[{\"Port\":8080,\"Protocol\":\"tcp\"}]}'
-        }
-      }
-      }
-
-      it 'should not make any http calls to eirini' do
-        allow(VCAP::CloudController::BuildModel).to receive(:find).and_return(build_model)
-        allow(VCAP::CloudController::Diego::Docker::StagingCompletionHandler).to receive(:new).and_return(staging_completion_handler)
-        allow(staging_completion_handler).to receive(:staging_complete)
-
-        stager_client.stage(staging_guid, staging_details)
-        expect(WebMock).not_to have_requested(:any, "#{eirini_url}/stage/#{staging_guid}")
-      end
-
-      it 'should mark staging as completed' do
-        expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: staging_guid).and_return(build_model)
-        expect(VCAP::CloudController::Diego::Docker::StagingCompletionHandler).to receive(:new).with(build_model).and_return(staging_completion_handler)
-        expect(staging_completion_handler).to receive(:staging_complete).with(payload, true)
-
-        staging_details.start_after_staging = true
-        stager_client.stage(staging_guid, staging_details)
-      end
-
-      context 'when build is not found' do
-        it 'should raise an error' do
-          expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: staging_guid).and_return(nil)
-          expect {
-            stager_client.stage(staging_guid, staging_details)
-          }.to raise_error(CloudController::Errors::ApiError, 'Build not found')
-        end
+          cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
+          disk_mb: 100,
+          memory_mb: 200
+        }.to_json
+        )
       end
     end
+  end
 
-    context 'when lifecycle type is invalid' do
-      let(:lifecycle_type) { 'dockerpack' }
+  context 'when lifecycle type is invalid' do
+    let(:lifecycle_type) { 'dockerpack' }
 
-      it 'should raise an error' do
-        expect {
-          stager_client.stage(staging_guid, staging_details)
-        }.to raise_error(RuntimeError, 'lifecycle type `dockerpack` is invalid')
-      end
+    it 'should raise an error' do
+      expect {
+        stager_client.stage(staging_guid, staging_details)
+      }.to raise_error(RuntimeError, 'lifecycle type `dockerpack` is invalid')
     end
   end
 
@@ -193,6 +205,8 @@ RSpec.describe(OPI::StagerClient) do
     package_model = VCAP::CloudController::PackageModel.make(
       type: 'docker',
       docker_image: 'docker.io/some/image',
+      docker_username: 'theone',
+      docker_password: 'notone',
       app: app_model)
 
     staging_details                                 = VCAP::CloudController::Diego::StagingDetails.new
