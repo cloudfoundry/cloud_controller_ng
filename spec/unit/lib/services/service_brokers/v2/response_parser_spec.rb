@@ -295,6 +295,16 @@ module VCAP::Services
           '{}'
         end
 
+        def self.broker_error_json(description: nil)
+          response = {
+            'error' => 'BadRequest',
+          }
+
+          response['description'] = description unless description.nil?
+
+          response.to_json
+        end
+
         def self.broker_non_empty_json
           {
             'last_operation' => {
@@ -768,6 +778,11 @@ module VCAP::Services
         test_case(:fetch_state, 409, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_state, 409, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_state, 409, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_state, 400, broker_empty_json,                                         result: client_result_with_state('failed', description: 'Bad request'))
+        test_case(:fetch_state, 400, broker_partial_json,                                       result: client_result_with_state('failed', description: 'Bad request'))
+        test_case(:fetch_state, 400, broker_malformed_json,                                     result: client_result_with_state('failed', description: 'Bad request'))
+        test_case(:fetch_state, 400, broker_error_json,                                         result: client_result_with_state('failed', description: 'Bad request'))
+        test_case(:fetch_state, 400, broker_error_json(description: 'Some description'),        result: client_result_with_state('failed', description: 'Some description'))
         test_case(:fetch_state, 410, broker_empty_json,                                         result: {})
         test_case(:fetch_state, 410, broker_partial_json,                                       result: {})
         test_case(:fetch_state, 410, broker_malformed_json,                                     result: {})

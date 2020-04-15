@@ -206,7 +206,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the broker responds with state is `in progress`' do
+        context 'when the broker responds with state `in progress`' do
           let(:state) { 'in progress' }
 
           it 'fetches and updates the service instance state' do
@@ -245,6 +245,92 @@ module VCAP::CloudController
             run_job(job)
 
             expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+          end
+        end
+
+        context 'when the broker responds with state `failed`' do
+          let(:state) { 'failed' }
+          let(:description) { 'soz' }
+
+          it 'fetches and updates the service instance state' do
+            run_job(job, successes: 0, failures: 1)
+
+            db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+            expect(db_service_instance.last_operation.state).to eq('failed')
+          end
+
+          it 'fails with an appropriate message' do
+            run_job(job, successes: 0, failures: 1)
+
+            pollable_job.reload
+
+            expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
+            expect(pollable_job.cf_api_error).
+              to include('The service broker reported an error during provisioning: soz')
+          end
+
+          it 'should not enqueue another fetch job' do
+            run_job(job, successes: 0, failures: 1)
+            expect(Delayed::Job.all).to have(1).jobs
+            expect(Delayed::Job.where(failed_at: nil).all).to have(0).jobs
+          end
+
+          it 'does not apply the instance attributes that were proposed in the operation' do
+            run_job(job, successes: 0, failures: 1)
+
+            db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+            expect(db_service_instance.service_plan).to_not eq(proposed_service_plan)
+            expect(db_service_instance.name).to eq(service_instance.name)
+          end
+
+          it 'should not create an audit event' do
+            run_job(job, successes: 0, failures: 1)
+
+            expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+          end
+        end
+
+        context 'when the job has fetched for more than the max poll duration' do
+          let(:state) { 'in progress' }
+
+          before do
+            run_job(job)
+            Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+            end
+          end
+
+          it 'should not enqueue another fetch job' do
+            Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+          end
+
+          it 'should mark the service instance operation as failed' do
+            service_instance.reload
+
+            expect(service_instance.last_operation.state).to eq('failed')
+            expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
+          end
+
+          it 'fails the job with an appropriate message' do
+            pollable_job.reload
+
+            expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
+            expect(pollable_job.cf_api_error).
+              to include('The job execution has timed out.')
+          end
+        end
+
+        context 'when enqueuing the job would exceed the max poll duration by the time it runs' do
+          let(:state) { 'in progress' }
+
+          it 'should not enqueue another fetch job' do
+            Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
+            run_job(job, failures: 1, successes: 0)
+
+            Timecop.freeze(Time.now + job.poll_interval * 2)
+            execute_all_jobs(expected_successes: 0, expected_failures: 0)
           end
         end
 
@@ -407,43 +493,6 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the last operation type is `create`' do
-            before do
-              service_instance.save_with_new_operation({}, { type: 'create' })
-            end
-
-            context 'when during create, a delete operation was started' do
-              before do
-                allow(client).to receive(:fetch_service_instance_last_operation) do
-                  service_instance.save_with_new_operation(
-                    {},
-                    {
-                      type: 'delete',
-                      state: 'in progress'
-                    }
-                  )
-
-                  last_operation_response
-                end
-
-                run_job(job)
-              end
-
-              let(:db_service_instance) { ManagedServiceInstance.first(guid: service_instance.guid) }
-
-              it 'does not finish creating' do
-                expect(db_service_instance.last_operation.type).to eq('delete')
-                expect(db_service_instance.last_operation.state).to eq('in progress')
-                expect(Event.find(type: 'audit.service_instance.create')).not_to be
-              end
-
-              it 'does not delete' do
-                expect(db_service_instance).not_to be_nil
-                expect(Event.find(type: 'audit.service_instance.delete')).not_to be
-              end
-            end
-          end
-
           context 'when the last operation type is `update`' do
             before do
               service_instance.last_operation.type = 'update'
@@ -482,101 +531,6 @@ module VCAP::CloudController
               expect(event.actee).to eq(service_instance.guid)
               expect(event.metadata['request']).to have_key('dummy_data')
             end
-          end
-        end
-
-        context 'when the state is `failed`' do
-          pending('do not run')
-          let(:state) { 'failed' }
-
-          it 'does not apply the instance attributes that were proposed in the operation' do
-            run_job(job)
-
-            db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-            expect(db_service_instance.service_plan).to_not eq(proposed_service_plan)
-            expect(db_service_instance.name).to eq(service_instance.name)
-          end
-
-          it 'fetches and updates the service instance state' do
-            run_job(job)
-
-            db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-            expect(db_service_instance.last_operation.state).to eq('failed')
-          end
-
-          it 'should not enqueue another fetch job' do
-            run_job(job)
-
-            expect(Delayed::Job.count).to eq 0
-          end
-
-          it 'should not create an audit event' do
-            run_job(job)
-
-            expect(Event.find(type: 'audit.service_instance.create')).to be_nil
-          end
-        end
-
-        context 'when the job has fetched for more than the max poll duration' do
-          let(:state) { 'in progress' }
-
-          before do
-            run_job(job)
-            Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            end
-          end
-
-          it 'should not enqueue another fetch job' do
-            Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
-            end
-          end
-
-          it 'should mark the service instance operation as failed' do
-            service_instance.reload
-
-            expect(service_instance.last_operation.state).to eq('failed')
-            expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
-          end
-        end
-
-        context 'when enqueuing the job would exceed the max poll duration by the time it runs' do
-          let(:state) { 'in progress' }
-
-          it 'should not enqueue another fetch job' do
-            Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
-            run_job(job)
-
-            Timecop.freeze(Time.now + job.poll_interval * 2)
-            execute_all_jobs(expected_successes: 0, expected_failures: 0)
-          end
-        end
-
-        context 'when the job was migrated before the addition of end_timestamp' do
-          let(:state) { 'in progress' }
-
-          it 'should compute the end_timestamp based on the current time' do
-            Timecop.freeze(Time.now)
-
-            run_job(job)
-
-            # should run enqueued job
-            Timecop.travel(Time.now + max_duration.minutes - 1.minute) do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            end
-
-            # should not run enqueued job
-            Timecop.travel(Time.now + max_duration.minutes) do
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
-            end
-          end
-
-          it 'should enqueue another fetch job' do
-            run_job(job)
-
-            expect(Delayed::Job.count).to eq 1
-            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(FetchLastOperationJob)
           end
         end
 

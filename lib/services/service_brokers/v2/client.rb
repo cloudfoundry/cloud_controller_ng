@@ -256,12 +256,10 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response     = @response_parser.parse_fetch_state(path, response)
       last_operation_hash = parsed_response.delete('last_operation') || {}
 
-      state = extract_state(instance, last_operation_hash)
-
       result = {
         last_operation:
           {
-            state: state
+            state: extract_state(instance, last_operation_hash)
           }
       }
 

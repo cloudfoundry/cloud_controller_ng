@@ -1119,6 +1119,37 @@ RSpec.describe 'V3 service instances' do
               expect(instance.last_operation.state).to eq('succeeded')
             end
           end
+
+          context 'when last operation eventually returns `create failed`' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'task12',
+                    service_id: service_plan.service.unique_id,
+                    plan_id: service_plan.unique_id,
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
+
+              execute_all_jobs(expected_successes: 2, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+            end
+
+            it 'completes the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+
+            it 'sets the service instance last operation to create failed' do
+              expect(instance.last_operation.type).to eq('create')
+              expect(instance.last_operation.state).to eq('failed')
+            end
+          end
         end
       end
     end

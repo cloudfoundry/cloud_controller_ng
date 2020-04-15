@@ -182,19 +182,25 @@ module VCAP::Services
           validator =
             case unvalidated_response.code
             when 200
-              JsonObjectValidator.new(@logger,
-                StateValidator.new(['succeeded', 'failed', 'in progress'],
-                  SuccessValidator.new))
+              JsonObjectValidator.new(
+                @logger,
+                StateValidator.new(
+                  ['succeeded', 'failed', 'in progress'],
+                  SuccessValidator.new
+                )
+              )
             when 201, 202
               JsonObjectValidator.new(@logger,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              )
+            when 400
+              BadRequestValidator.new
             when 410
               SuccessValidator.new { |res| {} }
             else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              CommonErrorValidator.new(FailingValidator.new(Errors::ServiceBrokerBadResponse))
             end
 
-          validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
         end
 
@@ -696,6 +702,24 @@ module VCAP::Services
 
           def remove_trailing_validation_schema_id(err_msg)
             err_msg.sub(/ in schema.*$/, '')
+          end
+        end
+
+        class BadRequestValidator
+          def validate(method:, uri:, code:, response:)
+            description = 'Bad request'
+            begin
+              parsed_response = MultiJson.load(response.body)
+              description = parsed_response['description'] if parsed_response.is_a?(Hash) && parsed_response.key?('description')
+            rescue MultiJson::ParseError
+            end
+
+            {
+              'last_operation' => {
+                'state' => 'failed',
+                'description' => description
+              }
+            }
           end
         end
       end

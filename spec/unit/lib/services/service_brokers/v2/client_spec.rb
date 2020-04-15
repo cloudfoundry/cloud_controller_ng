@@ -436,7 +436,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when the broker returns 410' do
+      context 'when the broker returns 410 (gone)' do
         let(:code) { 410 }
         let(:message) { 'GONE' }
         let(:response_data) do
@@ -468,6 +468,46 @@ module VCAP::Services::ServiceBrokers::V2
             expect(attrs).to include(
               last_operation: {
                 state: 'in progress'
+              }
+            )
+          end
+        end
+      end
+
+      context 'when the broker returns 400 (bad request)' do
+        let(:code) { 400 }
+        let(:message) { 'Bad Request' }
+
+        context 'when the response includes a description' do
+          let(:response_data) do
+            {
+              error: 'Bad Request',
+              description: 'The request is missing something important'
+            }
+          end
+
+          it 'returns attributes to indicate the service operation failed' do
+            attrs = client.fetch_service_instance_last_operation(instance)
+            expect(attrs).to include(
+              last_operation: {
+                state: 'failed',
+                description: 'The request is missing something important'
+              }
+            )
+          end
+        end
+
+        context 'when the response has no description' do
+          let(:response_data) do
+            {}
+          end
+
+          it 'returns attributes to indicate the service operation failed' do
+            attrs = client.fetch_service_instance_last_operation(instance)
+            expect(attrs).to include(
+              last_operation: {
+                state: 'failed',
+                description: 'Bad request'
               }
             )
           end

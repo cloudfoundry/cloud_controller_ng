@@ -44,6 +44,10 @@ module VCAP::CloudController
         last_operation_result = client.fetch_service_instance_last_operation(service_instance)
         update_with_attributes(last_operation_result[:last_operation], service_instance, intended_operation)
 
+        if last_operation_result[:last_operation][:state] == 'failed'
+          operation_failed!(last_operation_result[:last_operation][:description])
+        end
+
         @retry_after = last_operation_result[:retry_after]
       rescue HttpRequestError, HttpResponseError, Sequel::Error => e
         logger = Steno.logger('cc-background')
@@ -64,6 +68,10 @@ module VCAP::CloudController
 
       def aborted!
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'Create', 'delete in progress')
+      end
+
+      def operation_failed!(msg)
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceProvisionFailed', msg)
       end
 
       def pollable_job
@@ -100,6 +108,7 @@ module VCAP::CloudController
             description: 'Service Broker failed to provision within the required time.',
           }
         )
+        raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
       def apply_proposed_changes(service_instance)

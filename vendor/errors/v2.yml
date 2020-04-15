@@ -338,6 +338,11 @@
   http_code: 403
   message: "Cannot update %s of a service instance that belongs to inaccessible plan"
 
+60030:
+  name: ServiceInstanceProvisionFailed
+  http_code: 400
+  message: "The service broker reported an error during provisioning: %s"
+
 70001:
   name: RuntimeInvalid
   http_code: 400
