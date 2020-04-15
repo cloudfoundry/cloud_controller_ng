@@ -29,6 +29,7 @@ module VCAP::CloudController
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
+      @kpack_client = CloudController::DependencyLocator.instance.kpack_client
     end
 
     def delete(apps, record_event: true)
@@ -51,6 +52,14 @@ module VCAP::CloudController
           app.destroy
         end
         logger.info("Deleted app: #{app.guid}")
+
+        if kubernetes_api_configured?
+          logger.info('Deleting associated kpack image')
+          @kpack_client.delete_image(
+            app.guid,
+            VCAP::CloudController::Config.config.get(:kubernetes, :kpack, :builder_namespace)
+          )
+        end
       end
     end
 
@@ -59,6 +68,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def kubernetes_api_configured?
+      !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
+    end
 
     def record_audit_event(app)
       Repositories::AppEventRepository.new.record_app_delete_request(

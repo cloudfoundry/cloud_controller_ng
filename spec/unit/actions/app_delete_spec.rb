@@ -319,6 +319,29 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when targeting a kubernetes API' do
+        let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
+        let!(:config) do
+          TestConfig.override(
+            kubernetes: {
+                host_url: 'some-kubernetes-host-url',
+                kpack: {
+                  builder_namespace: 'builder-namespace',
+                },
+            },
+          )
+        end
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+        end
+
+        it 'deletes the associated kpack Image' do
+          expect(kpack_client).to receive(:delete_image).with(app.guid, 'builder-namespace')
+          app_delete.delete(app_dataset)
+        end
+      end
     end
 
     describe '#delete_without_event' do

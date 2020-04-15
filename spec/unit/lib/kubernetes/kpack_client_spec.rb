@@ -83,4 +83,25 @@ RSpec.describe Kubernetes::KpackClient do
       end
     end
   end
+
+  describe '#delete_image' do
+    let(:kube_client) { double(Kubeclient) }
+    subject(:kpack_client) { Kubernetes::KpackClient.new(kube_client) }
+
+    it 'proxies call to kubernetes client with the same args' do
+      expect(kube_client).to receive(:delete_image).with('resource-name', 'namespace')
+
+      subject.delete_image('resource-name', 'namespace')
+    end
+
+    context 'when there is an error' do
+      it 'raises as an ApiError' do
+        allow(kube_client).to receive(:delete_image).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+
+        expect {
+          subject.delete_image('resource-name', 'namespace')
+        }.to raise_error(CloudController::Errors::ApiError)
+      end
+    end
+  end
 end
