@@ -167,6 +167,18 @@ module VCAP::CloudController
             url: String,
             opi_staging: bool,
           },
+          optional(:kubernetes) => {
+            host_url: String,
+            service_account: {
+              token_file: String,
+            },
+            ca_file: String,
+            optional(:kpack) => {
+              builder_namespace: String,
+              registry_service_account_name: String,
+              registry_tag_base: String,
+            }
+          },
 
           allow_app_ssh_access: bool,
 
