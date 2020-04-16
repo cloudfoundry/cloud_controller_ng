@@ -13,11 +13,13 @@ RSpec.describe(OPI::StagerClient) do
         auth_user: 'internal_user',
         auth_password: 'internal_password'
       },
-      internal_service_hostname: 'api.internal.cf'
+      internal_service_hostname: 'api.internal.cf',
+      kubernetes: kubernetes_config,
     )
   end
   let(:eirini_url) { 'http://eirini.loves.heimdall:777' }
   let(:staging_guid) { 'some_staging_guid' }
+  let(:kubernetes_config) { {} }
 
   let(:staging_details) { stub_staging_details(lifecycle_type) }
   let(:lifecycle_data) { stub_lifecycle_data }
@@ -185,6 +187,22 @@ RSpec.describe(OPI::StagerClient) do
           memory_mb: 200
         }.to_json
         )
+      end
+
+      context 'when kubernetes is configured' do
+        let(:kubernetes_config) do
+          {
+            host_url: 'https://master.default.svc.cluster-domain.example',
+          }
+        end
+
+        it 'configures the callback url with http and relies on Istio for mTLS' do
+          stager_client.stage(staging_guid, staging_details)
+          expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with { |req|
+            parsed_json = JSON.parse(req.body)
+            parsed_json['completion_callback'] == 'http://internal_user:internal_password@api.internal.cf:80/internal/v3/staging//build_completed?start='
+          }
+        end
       end
     end
   end

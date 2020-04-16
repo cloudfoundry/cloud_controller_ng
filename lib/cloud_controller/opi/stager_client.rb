@@ -117,8 +117,13 @@ module OPI
     end
 
     def staging_completion_callback(staging_details)
-      port   = config.get(:tls_port)
-      scheme = 'https'
+      if !!config.get(:kubernetes, :host_url)
+        port   = 80
+        scheme = 'http'
+      else
+        port   = config.get(:tls_port)
+        scheme = 'https'
+      end
 
       auth      = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}"
       host_port = "#{config.get(:internal_service_hostname)}:#{port}"
