@@ -1,8 +1,8 @@
 module BackgroundJobHelpers
   include VCAP::CloudController
 
-  def execute_all_jobs(expected_successes:, expected_failures:)
-    successes, failures = Delayed::Worker.new.work_off
+  def execute_all_jobs(expected_successes:, expected_failures:, jobs_to_execute: 100)
+    successes, failures = Delayed::Worker.new.work_off(jobs_to_execute)
     failure_message = "Expected #{expected_successes} successful and #{expected_failures} failed jobs, got #{successes} successful and #{failures} failed jobs."
     fail_summaries = Delayed::Job.exclude(failed_at: nil).map { |j| "Handler: #{j.handler}, LastError: #{j.last_error}" }
     if fail_summaries.count > 0

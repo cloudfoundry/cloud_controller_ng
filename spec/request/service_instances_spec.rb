@@ -1136,7 +1136,7 @@ RSpec.describe 'V3 service instances' do
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
               Timecop.freeze(Time.now + 1.hour) do
-                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
             end
 
@@ -1148,6 +1148,12 @@ RSpec.describe 'V3 service instances' do
             it 'sets the service instance last operation to create failed' do
               expect(instance.last_operation.type).to eq('create')
               expect(instance.last_operation.state).to eq('failed')
+            end
+
+            it 'fires an orphan mitigation job' do
+              jobs = Delayed::Job.where(failed_at: nil).all
+              expect(jobs).to have(1).jobs
+              expect(jobs.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance)
             end
           end
         end

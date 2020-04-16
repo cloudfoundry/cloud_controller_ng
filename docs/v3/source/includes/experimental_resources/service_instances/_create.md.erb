@@ -99,7 +99,11 @@ Content-Type: application/json
 ```
 
 This endpoint creates a new service instance. Service instances can be of type `managed` or `user-provided`, and
-the required parameters are different for each type.
+the required parameters are different for each type. User provided service instances do not require interactions with
+service brokers.
+
+If failures occur when creating managed service instances, the API might execute orphan mitigation steps
+accordingly to cases outlined in the [OSBAPI specification](https://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#orphan-mitigation)
 
 #### Definition
 `POST /v3/service_instances`

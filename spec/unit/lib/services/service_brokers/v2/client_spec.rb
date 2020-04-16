@@ -436,6 +436,37 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the broker returns 200 (ok)' do
+        let(:code) { 200 }
+        let(:message) { 'OK' }
+
+        context 'when the state is `failed`' do
+          let(:response_data) do
+            {
+              state: 'failed'
+            }
+          end
+
+          it 'performs orphan mitigation' do
+            client.fetch_service_instance_last_operation(instance)
+            expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+          end
+        end
+
+        context 'when the state is something else' do
+          let(:response_data) do
+            {
+              state: 'succeeded'
+            }
+          end
+
+          it 'does not perform orphan mitigation' do
+            client.fetch_service_instance_last_operation(instance)
+            expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision)
+          end
+        end
+      end
+
       context 'when the broker returns 410 (gone)' do
         let(:code) { 410 }
         let(:message) { 'GONE' }
