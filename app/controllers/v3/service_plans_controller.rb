@@ -7,6 +7,7 @@ require 'actions/service_plan_delete'
 require 'messages/metadata_update_message'
 require 'actions/transactional_metadata_update'
 require 'decorators/include_service_plan_space_organization_decorator'
+require 'decorators/include_service_plan_service_offering_decorator'
 
 class ServicePlansController < ApplicationController
   include ServicePermissions
@@ -42,6 +43,7 @@ class ServicePlansController < ApplicationController
 
     decorators = []
     decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
+    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServicePlanPresenter,

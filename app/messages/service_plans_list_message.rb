@@ -22,7 +22,7 @@ module VCAP::CloudController
     register_allowed_keys(@single_keys + @array_keys)
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['space.organization']
+    validates_with IncludeParamValidator, valid_values: %w(space.organization service_offering)
     validates :available, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
 
     def self.from_params(params)

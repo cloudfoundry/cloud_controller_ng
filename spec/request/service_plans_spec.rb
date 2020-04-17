@@ -149,9 +149,9 @@ RSpec.describe 'V3 service plans' do
           space_guids: %w(hoge piyo),
           include: 'space.organization',
           available: true,
-          per_page:   '10',
+          per_page: '10',
           page: 2,
-          order_by:   'updated_at',
+          order_by: 'updated_at',
           label_selector: 'foo==bar',
         }
       end
@@ -443,12 +443,12 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'includes' do
-      let(:space_1) { VCAP::CloudController::Space.make }
-      let(:space_2) { VCAP::CloudController::Space.make }
-      let!(:space_scoped_plan_1) { generate_space_scoped_plan(space_1) }
-      let!(:space_scoped_plan_2) { generate_space_scoped_plan(space_2) }
-
       it 'can include `space.organization`' do
+        space_1 = VCAP::CloudController::Space.make
+        space_2 = VCAP::CloudController::Space.make
+        generate_space_scoped_plan(space_1)
+        generate_space_scoped_plan(space_2)
+
         get '/v3/service_plans?include=space.organization', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
@@ -459,6 +459,21 @@ RSpec.describe 'V3 service plans' do
         expect(parsed_response['included']['organizations']).to have(2).elements
         expect(parsed_response['included']['organizations'][0]['guid']).to eq(space_1.organization.guid)
         expect(parsed_response['included']['organizations'][1]['guid']).to eq(space_2.organization.guid)
+      end
+
+      it 'can include `service_offering`' do
+        offering_1 = VCAP::CloudController::Service.make
+        offering_2 = VCAP::CloudController::Service.make
+        VCAP::CloudController::ServicePlan.make(service: offering_1)
+        VCAP::CloudController::ServicePlan.make(service: offering_2)
+        VCAP::CloudController::ServicePlan.make(service: offering_2)
+
+        get '/v3/service_plans?include=service_offering', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_offerings']).to have(2).elements
+        expect(parsed_response['included']['service_offerings'][0]['guid']).to eq(offering_1.guid)
+        expect(parsed_response['included']['service_offerings'][1]['guid']).to eq(offering_2.guid)
       end
     end
   end
