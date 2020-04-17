@@ -471,6 +471,10 @@ query param can be used with a single resource or a list of resources.</p>
 <td><code class="prettyprint">domain</code></td>
 </tr>
 <tr>
+<td><strong>service_plans</strong></td>
+<td><code class="prettyprint">space.organization</code>, <code class="prettyprint">service_offering</code></td>
+</tr>
+<tr>
 <td><strong>spaces</strong></td>
 <td><code class="prettyprint">organization</code></td>
 </tr>
@@ -25639,6 +25643,11 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
+<td>Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">space.organization</code> and <code class="prettyprint">service_offering</code>.</td>
 </tr>
 </tbody></table>
 
