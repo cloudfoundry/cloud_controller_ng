@@ -24711,7 +24711,7 @@ They are only visible to members of that Space.</p>
 <td>All Roles</td>
 </tr>
 <tr>
-<td>Unauthenticated Users</td>
+<td>Unauthenticated Users (for service offerings with public plans, unless <code class="prettyprint">hide_marketplace_from_unauthenticated_users</code> is set)</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-offerings">List service offerings</h3>
@@ -24904,7 +24904,7 @@ They are only visible to members of that Space.</p>
 <td>All Roles</td>
 </tr>
 <tr>
-<td>Unauthenticated Users</td>
+<td>Unauthenticated Users (for service offerings with public plans, unless <code class="prettyprint">hide_marketplace_from_unauthenticated_users</code> is set)</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-offering">Update a service offering</h3>
@@ -25596,7 +25596,7 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td>Filter by the <code class="prettyprint">available</code> property. Valid values are <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</td>
 </tr>
 <tr>
-<td><strong>broker_catalog_id</strong></td>
+<td><strong>broker_catalog_ids</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of IDs provided by the Service Broker for the Service Plan to filter by.</td>
 </tr>
@@ -25804,7 +25804,7 @@ Service Brokers.</p>
 </code></pre>
 
 <p>This endpoint deletes a Service Plan. This is used to remove Service Plans from the Cloud Foundry database when they
-have are no longer provided by the Service Broker.</p>
+are no longer provided by the Service Broker.</p>
 
 <h4 id="definition">Definition</h4>
 
