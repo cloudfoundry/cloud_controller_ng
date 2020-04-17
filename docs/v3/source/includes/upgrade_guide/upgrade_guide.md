@@ -6,6 +6,105 @@ When moving to the V3 API, it is important to understand that the V3 API is back
 
 If you have questions, need help, or want to chat about the upgrade process, please reach out to us in [Cloud Foundry Slack](https://cloudfoundry.slack.com/messages/C07C04W4Q).
 
+## Deprecated Endpoints
+
+### Restage
+
+Due to changes to the app resource, the `/v2/apps/:guid/restage` endpoint no longer exists.
+The introduction of the [package, droplet, and build resources](#app-sub-resources) allows finer grain
+control over the lifecycle of an app. The increased flexibility enabled by these
+changes renders a restage endpoint ambiguous. The V3 API avoids making assumptions about which package/droplet to use when running an app and thus leaves it up to clients.
+
+#### Restage features introduced by new resource model
+
+The changes made to the app resource increase the flexibility and granularity of control available
+to clients in crafting a restage workflow. Examples of new capabilities include:
+
+- Staging packages to produce droplets without setting them as the current
+  droplet for an app
+- Changing the current droplet for an app more easily (e.g. rolling back to a
+  previous droplet)
+- Using the deployment resource when changing the droplet for a running app to minimize downtime
+
+#### Replicating behavior of the deprecated endpoint
+
+1. Get newest READY package for an app:
+
+    `GET /v3/packages?app_guids=:guid&order_by=-created_at&states=READY`
+
+1. Stage the package:
+
+    `POST /v3/builds`
+
+1. Poll staging process until the state becomes `STAGED`:
+
+    `GET /v3/builds/build-guid`
+
+1. Access the droplet guid from the finished build
+
+1. Choose one of the options below for pointing the app to the new droplet:
+    - Match the behavior of the deprecated endpoint. This option will cause app
+      downtime.
+        1. Stop app:
+
+            `POST /v3/apps/:guid/actions/stop`
+        1. Set current droplet:
+
+            `PATCH /v3/apps/:guid/relationships/current_droplet`
+        1. Start app:
+
+            `POST /v3/apps/:guid/actions/start`
+    - Use a rolling deployment, which will roll instances from the old web
+      process to the new one. This will minimize app downtime.
+      1. `POST /v3/deployments` with strategy rolling
+
+#### Event tracking
+
+As the API no longer has a concept of a "restage", the "audit.app.restage" audit
+event is no longer reported. Instead, the following events can be tracked:
+
+<table>
+<thead>
+<tr>
+<th>API Call</th>
+<th>Audit Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2"><code>POST /v3/builds</code></td>
+<td>audit.build.create</td>
+<td>A build is created (staging is initiated)</td>
+</tr>
+<tr>
+<td>audit.droplet.create</td>
+<td>A droplet is created (staging finishes successfully)</td>
+</tr>
+<tr>
+<td><code>POST /v3/apps/:guid/actions/stop<code></td>
+<td> audit.app.stop </td>
+<td>Stopping an app is initiated</td>
+</tr>
+<tr>
+<td><code>PATCH /v3/apps/:guid/relationships/current_droplet<code></td>
+<td> audit.app.droplet.mapped </td>
+<td>A droplet is set as the current droplet for an app</td>
+</tr>
+<tr>
+<td><code>POST /v3/apps/:guid/actions/start<code></td>
+<td> audit.app.start </td>
+<td>Starting an app is initiated</td>
+</tr>
+
+<tr>
+<td><code>POST /v3/deployments<code></td>
+<td> audit.app.deployment.create </td>
+<td>A deployment is initialized</td>
+</tr>
+</tbody>
+</table>
+
 ## Changed Resources
 
 This table shows how V2 resources map to their respective V3 counterparts. Note that some V2 resources have split into multiple V3 resources, and some V2 resources have been combined into a single resource on V3. As these resources are currently under active development, these mappings may change.
