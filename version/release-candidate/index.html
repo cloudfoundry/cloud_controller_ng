@@ -26259,7 +26259,11 @@ are no longer provided by the Service Broker.</p>
 </span></code></pre>
 
 <p>This endpoint creates a new service instance. Service instances can be of type <code class="prettyprint">managed</code> or <code class="prettyprint">user-provided</code>, and
-the required parameters are different for each type.</p>
+the required parameters are different for each type. User provided service instances do not require interactions with
+service brokers.</p>
+
+<p>If failures occur when creating managed service instances, the API might execute orphan mitigation steps
+accordingly to cases outlined in the <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#orphan-mitigation">OSBAPI specification</a></p>
 
 <h4 id="definition">Definition</h4>
 
