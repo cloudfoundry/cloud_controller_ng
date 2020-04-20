@@ -27,6 +27,7 @@ module VCAP::CloudController
 
       let(:user) { User.make }
       let(:user_email) { 'fake@mail.foo' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
       let(:status) { 200 }
       let(:state) { 'succeeded' }
@@ -60,6 +61,7 @@ module VCAP::CloudController
           service_instance_guid: service_instance.guid,
           request_attrs: request_attrs,
           pollable_job_guid: pollable_job_guid,
+          user_audit_info:  user_audit_info,
         )
       end
 
@@ -203,6 +205,32 @@ module VCAP::CloudController
             run_job(job)
 
             expect(pollable_job.reload.state).to eq(PollableJobModel::COMPLETE_STATE)
+          end
+
+          context 'audit events' do
+            context 'when user information is provided' do
+              it 'should create audit event' do
+                run_job(job)
+
+                event = Event.find(type: 'audit.service_instance.create')
+                expect(event).to be
+                expect(event.actee).to eq(service_instance.guid)
+                expect(event.metadata['request']).to have_key('dummy_data')
+              end
+            end
+
+            context 'when the user has gone away' do
+              it 'should create an audit event' do
+                user.destroy
+
+                run_job(job)
+
+                event = Event.find(type: 'audit.service_instance.create')
+                expect(event).to be
+                expect(event.actee).to eq(service_instance.guid)
+                expect(event.metadata['request']).to have_key('dummy_data')
+              end
+            end
           end
         end
 
@@ -504,32 +532,6 @@ module VCAP::CloudController
 
               event = Event.find(type: 'audit.service_instance.update')
               expect(event).to be
-            end
-          end
-
-          context 'when user information is provided' do
-            context 'and the last operation type is create' do
-              it 'should create audit event' do
-                run_job(job)
-
-                event = Event.find(type: 'audit.service_instance.create')
-                expect(event).to be
-                expect(event.actee).to eq(service_instance.guid)
-                expect(event.metadata['request']).to have_key('dummy_data')
-              end
-            end
-          end
-
-          context 'when the user has gone away' do
-            it 'should create an audit event' do
-              user.destroy
-
-              run_job(job)
-
-              event = Event.find(type: 'audit.service_instance.create')
-              expect(event).to be
-              expect(event.actee).to eq(service_instance.guid)
-              expect(event.metadata['request']).to have_key('dummy_data')
             end
           end
         end

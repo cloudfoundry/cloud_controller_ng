@@ -3,9 +3,10 @@ require 'jobs/v3/services/fetch_last_operation_job'
 module VCAP::CloudController
   module V3
     class CreateServiceInstanceJob < VCAP::CloudController::Jobs::CCJob
-      def initialize(service_instance_guid, arbitrary_parameters: {})
+      def initialize(service_instance_guid, arbitrary_parameters: {}, user_audit_info:)
         @service_instance_guid = service_instance_guid
         @arbitrary_parameters = arbitrary_parameters
+        @user_audit_info = user_audit_info
       end
 
       def perform
@@ -36,7 +37,8 @@ module VCAP::CloudController
           polling_job = VCAP::CloudController::V3::FetchLastOperationJob.new(
             service_instance_guid: service_instance.guid,
             pollable_job_guid: pollable_job.guid,
-            request_attrs: @arbitrary_parameters
+            request_attrs: @arbitrary_parameters,
+            user_audit_info: @user_audit_info,
           )
           enqueuer = Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic)
           delayed_job = enqueuer.enqueue
@@ -47,6 +49,7 @@ module VCAP::CloudController
           )
         else
           pollable_job.update(state: PollableJobModel::COMPLETE_STATE)
+          record_event(service_instance, @arbitrary_parameters)
         end
       end
 
@@ -71,6 +74,14 @@ module VCAP::CloudController
       end
 
       private
+
+      def repository
+        Repositories::ServiceEventRepository.new(@user_audit_info)
+      end
+
+      def record_event(service_instance, request_attrs)
+        repository.record_service_instance_event(:create, service_instance, request_attrs)
+      end
 
       def service_instance
         @service_instance ||= ManagedServiceInstance.first(guid: service_instance_guid)

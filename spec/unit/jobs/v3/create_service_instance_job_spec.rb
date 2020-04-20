@@ -37,16 +37,26 @@ module VCAP
           service_instance.service_instance_operation = operation
           service_instance
         end
+
+        let(:user) { User.make }
+        let(:user_email) { 'foo@example.com' }
+        let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
+        let(:request_attr) {
+          {
+            dummy_data: 'dummy_data'
+          }
+        }
         let(:job) do
           CreateServiceInstanceJob.new(
             service_instance.guid,
-            {}
+            arbitrary_parameters: request_attr,
+            user_audit_info: user_audit_info,
           )
         end
 
-        def run_job(job, jobs_succeeded: 2, jobs_failed: 0)
+        def run_job(job, jobs_succeeded: 2, jobs_failed: 0, jobs_to_execute: 100)
           pollable_job = Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue_pollable
-          execute_all_jobs(expected_successes: jobs_succeeded, expected_failures: jobs_failed)
+          execute_all_jobs(expected_successes: jobs_succeeded, expected_failures: jobs_failed, jobs_to_execute: jobs_to_execute)
           pollable_job
         end
 
@@ -95,6 +105,12 @@ module VCAP
             expect(service_instance.last_operation.type).to eq('create')
             expect(service_instance.last_operation.state).to eq('in progress')
           end
+
+          it 'does not create an audit event`' do
+            run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
+
+            expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+          end
         end
 
         context 'when broker returns `succeeded` on the provision request' do
@@ -131,6 +147,15 @@ module VCAP
             expect(service_instance.terminal_state?).to eq(true)
             expect(service_instance.last_operation.type).to eq('create')
             expect(service_instance.last_operation.state).to eq('succeeded')
+          end
+
+          it 'creates an audit event' do
+            run_job(job, jobs_succeeded: 1)
+
+            event = Event.find(type: 'audit.service_instance.create')
+            expect(event).to be
+            expect(event.actee).to eq(service_instance.guid)
+            expect(event.metadata['request']).to have_key('dummy_data')
           end
         end
 

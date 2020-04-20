@@ -181,7 +181,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_managed(message, space:)
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan &&
       visible_to_current_user?(plan: service_plan) &&

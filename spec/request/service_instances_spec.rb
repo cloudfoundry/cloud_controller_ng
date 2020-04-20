@@ -768,7 +768,7 @@ RSpec.describe 'V3 service instances' do
             labels: { baz: 'qux' },
             annotations: { foo: 'bar' }
           )
-                                   )
+        )
       end
 
       it 'creates a service instance in the database' do

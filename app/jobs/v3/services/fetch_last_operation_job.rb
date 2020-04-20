@@ -8,11 +8,12 @@ module VCAP::CloudController
 
       attr_accessor :service_instance_guid, :request_attrs, :poll_interval, :end_timestamp
 
-      def initialize(service_instance_guid:, request_attrs:, end_timestamp: nil, pollable_job_guid:)
+      def initialize(service_instance_guid:, request_attrs:, end_timestamp: nil, pollable_job_guid:, user_audit_info:)
         @service_instance_guid = service_instance_guid
         @request_attrs = request_attrs
         @end_timestamp = end_timestamp || new_end_timestamp
         @pollable_job_guid = pollable_job_guid
+        @user_audit_info = user_audit_info
         update_polling_interval
       end
 
@@ -74,6 +75,10 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceProvisionFailed', msg)
       end
 
+      def repository
+        Repositories::ServiceEventRepository.new(@user_audit_info)
+      end
+
       def pollable_job
         PollableJobModel.where(guid: @pollable_job_guid)
       end
@@ -84,6 +89,11 @@ module VCAP::CloudController
           state: PollableJobModel::POLLING_STATE,
           delayed_job_guid: delayed_job.guid
         )
+      end
+
+      def record_event(service_instance, request_attrs)
+        type = service_instance.last_operation.type
+        repository.record_service_instance_event(type, service_instance, request_attrs)
       end
 
       def update_with_attributes(last_operation, service_instance, intended_operation)
@@ -97,6 +107,7 @@ module VCAP::CloudController
 
           if service_instance.last_operation.state == 'succeeded'
             apply_proposed_changes(service_instance)
+            record_event(service_instance, @request_attrs)
           end
         end
       end
