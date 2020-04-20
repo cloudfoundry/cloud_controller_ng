@@ -84,7 +84,7 @@ module VCAP::CloudController
       end
 
       def try_again
-        delayed_job = retry_job(retry_after_header: @retry_interval)
+        delayed_job = retry_job(retry_after_header: @retry_after)
         pollable_job.update(
           state: PollableJobModel::POLLING_STATE,
           delayed_job_guid: delayed_job.guid

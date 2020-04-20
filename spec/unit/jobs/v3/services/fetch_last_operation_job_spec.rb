@@ -52,6 +52,7 @@ module VCAP::CloudController
 
       let(:pollable_job) {
         pollable_job = Jobs::Enqueuer.new(fake_job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue_pollable
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
         pollable_job.update(state: PollableJobModel::POLLING_STATE)
       }
       let(:pollable_job_guid) { pollable_job.guid }
@@ -62,11 +63,10 @@ module VCAP::CloudController
           request_attrs: request_attrs,
           pollable_job_guid: pollable_job_guid,
           user_audit_info:  user_audit_info,
-        )
+          )
       end
 
       def enqueue(job)
-        execute_all_jobs(expected_successes: 1, expected_failures: 0)
         delayed_job = Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
         pollable_job.update(delayed_job_guid: delayed_job.guid)
       end
@@ -425,6 +425,39 @@ module VCAP::CloudController
             end
           end
         end
+
+        include_examples 'when brokers return Retry-After header', :fetch_service_instance_last_operation
+
+        context 'when the poll_interval is changed after the job was created' do
+          let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
+          let(:new_polling_interval) { default_polling_interval * 2 }
+          let(:state) { 'in progress' }
+
+          before do
+            expect(job.poll_interval).to eq(default_polling_interval)
+            expect(default_polling_interval).not_to eq(new_polling_interval)
+            TestConfig.override(broker_client_default_async_poll_interval_seconds: new_polling_interval)
+          end
+
+          it 'updates the poll interval after the next run' do
+            Timecop.freeze(Time.now)
+            first_run_time = Time.now
+
+            Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            expect(Delayed::Job.count).to eq(1)
+
+            old_next_run_time = first_run_time + default_polling_interval.seconds + 1.second
+            Timecop.travel(old_next_run_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            new_next_run_time = first_run_time + new_polling_interval.seconds + 1.second
+            Timecop.travel(new_next_run_time) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+        end
       end
 
       context 'when the service instance has been purged' do
@@ -535,39 +568,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when the poll_interval is changed after the job was created' do
-          let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
-          let(:new_polling_interval) { default_polling_interval * 2 }
-          let(:state) { 'in progress' }
-
-          before do
-            expect(job.poll_interval).to eq(default_polling_interval)
-            expect(default_polling_interval).not_to eq(new_polling_interval)
-            TestConfig.override(broker_client_default_async_poll_interval_seconds: new_polling_interval)
-          end
-
-          it 'updates the poll interval after the next run' do
-            Timecop.freeze(Time.now)
-            first_run_time = Time.now
-
-            Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            expect(Delayed::Job.count).to eq(1)
-
-            old_next_run_time = first_run_time + default_polling_interval.seconds + 1.second
-            Timecop.travel(old_next_run_time) do
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
-            end
-
-            new_next_run_time = first_run_time + new_polling_interval.seconds + 1.second
-            Timecop.travel(new_next_run_time) do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            end
-          end
-        end
-
-        include_examples 'when brokers return Retry-After header', :fetch_service_instance_last_operation
       end
     end
   end
