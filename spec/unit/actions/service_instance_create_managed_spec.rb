@@ -20,8 +20,9 @@ module VCAP
       let(:instance) { ServiceInstance.last }
 
       let(:event_repository) do
-        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
+        dbl = double(Repositories::ServiceEventRepository)
         allow(dbl).to receive(:record_service_instance_event)
+        allow(dbl).to receive(:user_audit_info)
         dbl
       end
 
