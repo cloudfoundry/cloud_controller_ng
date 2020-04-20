@@ -1004,6 +1004,7 @@ RSpec.describe 'V3 service offerings' do
       'created_at' => iso8601,
       'updated_at' => iso8601,
       'shareable' => true,
+      'documentation_url' => 'https://some.url.for.docs/',
       'broker_catalog' => {
         'id' => service_offering.unique_id,
         'metadata' => JSON.parse(service_offering.extra),

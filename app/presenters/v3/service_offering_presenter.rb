@@ -22,6 +22,7 @@ module VCAP::CloudController
             created_at: service_offering.created_at,
             updated_at: service_offering.updated_at,
             shareable: shareable(metadata),
+            documentation_url: documentation_url(metadata),
             broker_catalog: {
               id: service_offering.unique_id,
               metadata: metadata,
@@ -50,6 +51,10 @@ module VCAP::CloudController
 
         def shareable(metadata)
           metadata['shareable'] == true
+        end
+
+        def documentation_url(metadata)
+          metadata['documentation_url'] || ''
         end
 
         def broker_metadata

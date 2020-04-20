@@ -6,6 +6,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:guid) { 'some-offering-guid' }
   let(:name) { 'some-offering-name' }
   let(:description) { 'some offering description' }
+  let(:documentation_url) { 'https://some.documentation.url/' }
   let(:available) { false }
   let(:bindable) { false }
   let(:extra) { '{"foo": "bar", "baz": {"answer": 42}' }
@@ -70,6 +71,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
         'created_at': created_at,
         'updated_at': service_offering.updated_at,
         'shareable': false,
+        'documentation_url': '',
         'broker_catalog': {
           'id': id,
           'metadata': {
@@ -164,30 +166,39 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       end
     end
 
-    context 'when `shareable` is true' do
-      let(:extra) { '{"shareable": true}' }
+    context 'extra' do
+      context 'when `shareable` is true' do
+        let(:extra) { '{"shareable": true}' }
 
-      it 'displays `true``' do
-        expect(result[:shareable]).to be true
+        it 'displays `true``' do
+          expect(result[:shareable]).to be true
+        end
+      end
+
+      context 'when `shareable` is non-boolean' do
+        let(:extra) { '{"shareable": "invalid value"}' }
+
+        it 'displays `false``' do
+          expect(result[:shareable]).to be false
+        end
+      end
+
+      context 'when `shareable` is explicitly false' do
+        let(:extra) { '{"shareable": false}' }
+
+        it 'displays `false``' do
+          expect(result[:shareable]).to be false
+        end
+      end
+
+      context 'when `documentation_url` is set' do
+        let(:extra) { '{"documentation_url": "https://some.documentation.url/"}' }
+
+        it 'displays the value` as a top level field' do
+          expect(result[:documentation_url]).to eq 'https://some.documentation.url/'
+        end
       end
     end
-
-    context 'when `shareable` is non-boolean' do
-      let(:extra) { '{"shareable": "invalid value"}' }
-
-      it 'displays `false``' do
-        expect(result[:shareable]).to be false
-      end
-    end
-
-    context 'when `shareable` is explicitly false' do
-      let(:extra) { '{"shareable": false}' }
-
-      it 'displays `false``' do
-        expect(result[:shareable]).to be false
-      end
-    end
-
     context 'when `metadata` is not set' do
       let(:extra) { nil }
 
