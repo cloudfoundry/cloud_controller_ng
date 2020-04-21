@@ -258,6 +258,18 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the blobstore file is invalid' do
+            let(:droplet_files) do
+              [double(:blob, key: 're/al/')]
+            end
+
+            it 'will never mark the blob as an orphan' do
+              expect(OrphanedBlob.count).to eq(0)
+              job.perform
+              expect(OrphanedBlob.count).to eq(0)
+            end
+          end
+
           context 'when the blobstore file starts with an ignored prefix' do
             let(:droplet_files) do
               [

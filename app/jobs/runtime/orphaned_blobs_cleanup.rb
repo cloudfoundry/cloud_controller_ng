@@ -132,14 +132,23 @@ module VCAP::CloudController
         end
 
         def blob_in_use?(blob_key)
-          path_parts             = blob_key.split(File::Separator)
-          potential_droplet_guid = path_parts[-2]
-          basename               = path_parts[-1]
+          path_parts = blob_key.split(File::Separator)
 
-          blob_key.start_with?(*IGNORED_DIRECTORY_PREFIXES) ||
-            DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
+          return true if blob_key.start_with?(*IGNORED_DIRECTORY_PREFIXES)
+
+          if path_parts.length == 4
+            potential_droplet_guid = path_parts[-2]
+            basename               = path_parts[-1]
+
+            DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present?
+          elsif path_parts.length == 3
+            basename = path_parts[-1]
+
             PackageModel.find(guid: basename).present? ||
             Buildpack.find(key: basename).present?
+          else
+            true
+          end
         end
 
         def delete_orphaned_blobs
