@@ -27,7 +27,7 @@ module VCAP::CloudController
       allowed: {
         'space' => ['guid', 'relationships.organization'],
         'space.organization' => ['name', 'guid'],
-        'service_plan' => ['guid', 'relationships.service_offering'],
+        'service_plan' => ['guid', 'name', 'relationships.service_offering'],
         'service_plan.service_offering' => ['name', 'guid', 'relationships.service_broker'],
         'service_plan.service_offering.service_broker' => ['name', 'guid']
       }

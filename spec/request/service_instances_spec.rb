@@ -318,7 +318,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       it 'can include the service plan, offering and broker name and guid fields' do
-        get '/v3/service_instances?fields[service_plan]=guid,relationships.service_offering&' \
+        get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
                 'fields[service_plan.service_offering]=name,guid,relationships.service_broker&' \
                 'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
 
@@ -328,6 +328,7 @@ RSpec.describe 'V3 service instances' do
           service_plans: [
             {
               guid: msi_1.service_plan.guid,
+              name: msi_1.service_plan.name,
               relationships: {
                 service_offering: {
                   data: {
@@ -338,6 +339,7 @@ RSpec.describe 'V3 service instances' do
             },
             {
               guid: msi_2.service_plan.guid,
+              name: msi_2.service_plan.name,
               relationships: {
                 service_offering: {
                   data: {
@@ -348,6 +350,7 @@ RSpec.describe 'V3 service instances' do
             },
             {
               guid: ssi.service_plan.guid,
+              name: ssi.service_plan.name,
               relationships: {
                 service_offering: {
                   data: {

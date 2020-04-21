@@ -10,9 +10,9 @@ module VCAP::CloudController
       let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
-      it 'decorated the given hash with plan guid from service instances' do
+      it 'decorated the given hash with plan guid and name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_plan': ['guid', 'foo'] })
+        decorator = described_class.new({ 'service_plan': ['guid', 'name', 'foo'] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -23,9 +23,11 @@ module VCAP::CloudController
             service_plans: [
               {
                 guid: plan1.guid,
+                name: plan1.name,
               },
               {
                 guid: plan2.guid,
+                name: plan2.name,
               }
             ]
           }
@@ -92,6 +94,10 @@ module VCAP::CloudController
     describe '.match?' do
       it 'matches hashes containing key symbol `service_plan` and value `guid`' do
         expect(described_class.match?({ 'service_plan': ['guid'], other: ['bar'] })).to be_truthy
+      end
+
+      it 'matches hashes containing key symbol `service_plan` and value `name`' do
+        expect(described_class.match?({ 'service_plan': ['name'], other: ['bar'] })).to be_truthy
       end
 
       it 'matches hashes containing key symbol `service_plan` and value `relationships.service_offering`' do
