@@ -34,6 +34,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     decorators = []
     decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
+    decorators << FieldServiceInstancePlanDecorator.new(message.fields) if FieldServiceInstancePlanDecorator.match?(message.fields)
     decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
     decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
 

@@ -100,6 +100,23 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
       end
 
+      it 'can include service plan guid and name fields' do
+        get "/v3/service_instances/#{guid}?fields[service_plan]=guid,name", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+
+        included = {
+          service_plans: [
+            {
+              guid: instance.service_plan.guid,
+              name: instance.service_plan.name,
+            }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
       it 'can include the offering and broker name and guid fields' do
         get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid&fields[service_plan.service_offering.service_broker]=name,guid", nil, admin_headers
         expect(last_response).to have_status_code(200)
