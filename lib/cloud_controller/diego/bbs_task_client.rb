@@ -4,16 +4,15 @@ require 'cloud_controller/diego/constants'
 module VCAP::CloudController
   module Diego
     class BbsTaskClient
-      def initialize(config, client, recipe_builder)
+      def initialize(config, client)
         @config = config
         @client = client
-        @recipe_builder = recipe_builder
       end
 
       def desire_task(task, domain)
         logger.info('task.request', task_guid: task.guid)
 
-        task_definition = @recipe_builder.build_app_task(@config, task)
+        task_definition = VCAP::CloudController::Diego::TaskRecipeBuilder.new.build_app_task(@config, task)
         handle_diego_errors do
           response = client.desire_task(task_guid: task.guid, task_definition: task_definition, domain: domain)
           logger.info('task.response', task_guid: task.guid, error: response.error)

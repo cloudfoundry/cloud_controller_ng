@@ -10,13 +10,14 @@ module VCAP::CloudController::Diego
     let(:bbs_client) { instance_double(::Diego::Client) }
     let(:recipe_builder) { instance_double(TaskRecipeBuilder) }
 
-    subject(:client) { BbsTaskClient.new(config, bbs_client, recipe_builder) }
+    subject(:client) { BbsTaskClient.new(config, bbs_client) }
 
     describe '#desire_task' do
       let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
 
       before do
         allow(bbs_client).to receive(:desire_task).and_return(::Diego::Bbs::Models::TaskLifecycleResponse.new)
+        allow(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
         allow(recipe_builder).to receive(:build_app_task).with(config, task).and_return(task_definition)
       end
 

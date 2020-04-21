@@ -29,10 +29,11 @@ RSpec.describe(OPI::TaskClient) do
   let(:environment_collector) { class_double(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector) }
   let(:environment) { [{ name: 'FOO', value: 'BAR' }] }
 
-  subject(:client) { described_class.new(config, task_completion_callback_generator, environment_collector) }
+  subject(:client) { described_class.new(config, environment_collector) }
 
   describe 'can desire a task' do
     before(:each) do
+      allow(VCAP::CloudController::Diego::TaskCompletionCallbackGenerator).to receive(:new).and_return(task_completion_callback_generator)
       allow(environment_collector).to receive(:for_task).with(task).and_return(environment)
       allow(task_completion_callback_generator).to receive(:generate).with(task).and_return('CALLBACK')
       stub_request(:post, "#{opi_url}/tasks/GUID").to_return(status: 202)
