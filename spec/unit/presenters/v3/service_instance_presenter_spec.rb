@@ -71,8 +71,7 @@ module VCAP::CloudController::Presenters::V3
           relationships: {
             service_plan: {
               data: {
-                guid: plan.guid,
-                name: plan.name
+                guid: plan.guid
               }
             },
             space: {

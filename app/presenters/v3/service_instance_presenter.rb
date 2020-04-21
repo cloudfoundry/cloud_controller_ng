@@ -62,8 +62,7 @@ module VCAP::CloudController
             relationships: {
               service_plan: {
                 data: {
-                  guid: service_instance.service_plan.guid,
-                  name: service_instance.service_plan.name,
+                  guid: service_instance.service_plan.guid
                 }
               }
             },

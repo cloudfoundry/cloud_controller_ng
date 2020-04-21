@@ -1205,8 +1205,7 @@ RSpec.describe 'V3 service instances' do
         },
         service_plan: {
           data: {
-            guid: instance.service_plan.guid,
-            name: instance.service_plan.name
+            guid: instance.service_plan.guid
           }
         }
       },
@@ -1403,8 +1402,7 @@ RSpec.describe 'V3 service instances' do
               },
               'service_plan' => {
                 'data' => {
-                  'guid' => service_instance1.service_plan.guid,
-                  'name' => service_instance1.service_plan.name
+                  'guid' => service_instance1.service_plan.guid
                 }
               }
             },
