@@ -83,7 +83,7 @@ module VCAP::CloudController
           expect(message.errors[:fields][0]).to include('must be an object')
         end
 
-        it_behaves_like 'field query parameter', 'space', 'guid,relationships.organization'
+        it_behaves_like 'field query parameter', 'space', 'guid,name,relationships.organization'
 
         it_behaves_like 'field query parameter', 'space.organization', 'name,guid'
 

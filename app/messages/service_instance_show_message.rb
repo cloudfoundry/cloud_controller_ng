@@ -5,6 +5,7 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
     validates :fields, allow_nil: true, fields: {
       allowed: {
+        'space' => ['name', 'guid'],
         'space.organization' => ['name', 'guid'],
         'service_plan' => ['name', 'guid'],
         'service_plan.service_offering' => ['name', 'guid'],

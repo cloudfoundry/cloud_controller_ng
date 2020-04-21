@@ -13,8 +13,8 @@ module VCAP::CloudController
       let!(:service_instance_1) { ManagedServiceInstance.make(space: space1) }
       let!(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
 
-      context 'when space guid and relationship.organizations are requested' do
-        let(:decorator) { described_class.new({ 'space': ['relationships.organization', 'guid'] }) }
+      context 'when space guid, name and relationship.organizations are requested' do
+        let(:decorator) { described_class.new({ 'space': ['relationships.organization', 'guid', 'name'] }) }
 
         it 'decorates the given hash with spaces guids and relationships to orgs from service instances' do
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
@@ -27,6 +27,7 @@ module VCAP::CloudController
               spaces: [
                 {
                   guid: space1.guid,
+                  name: space1.name,
                   relationships: {
                     organization: {
                       data: {
@@ -37,6 +38,7 @@ module VCAP::CloudController
                 },
                 {
                   guid: space2.guid,
+                  name: space2.name,
                   relationships: {
                     organization: {
                       data: {
@@ -74,13 +76,26 @@ module VCAP::CloudController
         end
       end
 
-      context 'when instances share a space' do
-        let(:decorator) { described_class.new({ 'space': ['guid'] }) }
-        let!(:service_instance_3) { ManagedServiceInstance.make(space: space1) }
+      context 'when only space names are requested' do
+        it 'decorates the given hash with spaces names' do
+          decorator = described_class.new({ 'space': ['name'] })
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
-        it 'does not duplicate the space' do
-          hash = decorator.decorate({}, [service_instance_1, service_instance_3])
-          expect(hash[:included][:spaces]).to have(1).element
+          expect(hash).to match({
+            foo: 'bar',
+            included: {
+              monkeys: %w(zach greg),
+              spaces: [
+                {
+                  name: space1.name,
+                },
+                {
+                  name: space2.name,
+                }
+              ]
+            }
+          })
         end
       end
 
@@ -118,11 +133,25 @@ module VCAP::CloudController
           })
         end
       end
+
+      context 'when instances share a space' do
+        let(:decorator) { described_class.new({ 'space': ['guid'] }) }
+        let!(:service_instance_3) { ManagedServiceInstance.make(space: space1) }
+
+        it 'does not duplicate the space' do
+          hash = decorator.decorate({}, [service_instance_1, service_instance_3])
+          expect(hash[:included][:spaces]).to have(1).element
+        end
+      end
     end
 
     describe '.match?' do
       it 'matches hashes containing key symbol `space` and value `guid`' do
         expect(described_class.match?({ 'space': ['guid'], other: ['bar'] })).to be_truthy
+      end
+
+      it 'matches hashes containing key symbol `space` and value `name`' do
+        expect(described_class.match?({ 'space': ['name'], other: ['bar'] })).to be_truthy
       end
 
       it 'matches hashes containing key symbol `space` and value `relationships.organization`' do

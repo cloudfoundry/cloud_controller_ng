@@ -100,6 +100,22 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
       end
 
+      it 'can include the space name and guid fields' do
+        get "/v3/service_instances/#{guid}?fields[space]=name,guid", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        included = {
+          spaces: [
+            {
+              name: space.name,
+              guid: space.guid
+            }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
       it 'can include service plan guid and name fields' do
         get "/v3/service_instances/#{guid}?fields[service_plan]=guid,name", nil, admin_headers
 
@@ -293,13 +309,14 @@ RSpec.describe 'V3 service instances' do
 
     context 'fields' do
       it 'can include the space and organization name and guid fields' do
-        get '/v3/service_instances?fields[space]=guid,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
+        get '/v3/service_instances?fields[space]=guid,name,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
         included = {
           spaces: [
             {
               guid: space.guid,
+              name: space.name,
               relationships: {
                 organization: {
                   data: {
@@ -310,6 +327,7 @@ RSpec.describe 'V3 service instances' do
             },
             {
               guid: another_space.guid,
+              name: another_space.name,
               relationships: {
                 organization: {
                   data: {

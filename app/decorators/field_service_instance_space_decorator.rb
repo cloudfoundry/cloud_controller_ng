@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def self.allowed
-      Set['guid', 'relationships.organization']
+      Set['guid', 'name', 'relationships.organization']
     end
 
     def initialize(fields)
@@ -19,6 +19,7 @@ module VCAP::CloudController
       hash[:included][:spaces] = spaces.sort_by(&:created_at).map do |space|
         temp = {}
         temp[:guid] = space.guid if @fields.include?('guid')
+        temp[:name] = space.name if @fields.include?('name')
         if @fields.include?('relationships.organization')
           temp[:relationships] =
             {

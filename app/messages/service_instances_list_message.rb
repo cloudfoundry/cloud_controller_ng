@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     validates :fields, allow_nil: true, fields: {
       allowed: {
-        'space' => ['guid', 'relationships.organization'],
+        'space' => ['guid', 'name', 'relationships.organization'],
         'space.organization' => ['name', 'guid'],
         'service_plan' => ['guid', 'name', 'relationships.service_offering'],
         'service_plan.service_offering' => ['name', 'guid', 'relationships.service_broker'],
