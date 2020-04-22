@@ -153,6 +153,7 @@ RSpec.describe 'V3 service plans' do
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo==bar',
+          fields: { 'service_offering.service_broker' => 'name' }
         }
       end
     end
@@ -474,6 +475,22 @@ RSpec.describe 'V3 service plans' do
         expect(parsed_response['included']['service_offerings']).to have(2).elements
         expect(parsed_response['included']['service_offerings'][0]['guid']).to eq(offering_1.guid)
         expect(parsed_response['included']['service_offerings'][1]['guid']).to eq(offering_2.guid)
+      end
+    end
+
+    describe 'fields' do
+      let!(:plan_1) { VCAP::CloudController::ServicePlan.make }
+      let!(:plan_2) { VCAP::CloudController::ServicePlan.make }
+
+      it 'can include service broker name and guid' do
+        get '/v3/service_plans?fields[service_offering.service_broker]=name,guid', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_brokers']).to have(2).elements
+        expect(parsed_response['included']['service_brokers'][0]['guid']).to eq(plan_1.service.service_broker.guid)
+        expect(parsed_response['included']['service_brokers'][0]['name']).to eq(plan_1.service.service_broker.name)
+        expect(parsed_response['included']['service_brokers'][1]['guid']).to eq(plan_2.service.service_broker.guid)
+        expect(parsed_response['included']['service_brokers'][1]['name']).to eq(plan_2.service.service_broker.name)
       end
     end
   end

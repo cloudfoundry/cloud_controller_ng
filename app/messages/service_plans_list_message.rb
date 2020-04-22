@@ -17,6 +17,7 @@ module VCAP::CloudController
     ]
     @single_keys = [
       :available,
+      :fields
     ]
 
     register_allowed_keys(@single_keys + @array_keys)
@@ -25,8 +26,14 @@ module VCAP::CloudController
     validates_with IncludeParamValidator, valid_values: %w(space.organization service_offering)
     validates :available, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
 
+    validates :fields, allow_nil: true, fields: {
+      allowed: {
+        'service_offering.service_broker' => ['guid', 'name']
+      }
+    }
+
     def self.from_params(params)
-      super(params, @array_keys.map(&:to_s))
+      super(params, @array_keys.map(&:to_s), fields: %w(fields))
     end
 
     def available?
