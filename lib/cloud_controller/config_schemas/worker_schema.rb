@@ -173,6 +173,7 @@ module VCAP::CloudController
               token_file: String,
             },
             ca_file: String,
+            workloads_namespace: String,
             optional(:kpack) => {
               builder_namespace: String,
               registry_service_account_name: String,
@@ -203,15 +204,6 @@ module VCAP::CloudController
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
           internal_route_vip_range: String,
-
-          optional(:kubernetes) => {
-            host_url: String,
-            service_account: {
-              token_file: String,
-            },
-            ca_file: String,
-            workloads_namespace: String,
-          },
         }
       end
       # rubocop:enable Metrics/BlockLength
