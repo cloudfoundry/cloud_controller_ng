@@ -542,8 +542,3 @@ Tasks are one-off jobs that are intended to execute a droplet, stop, and be clea
 Examples of this include database migrations and running batch jobs.
 
 Read more about the [task resource](#tasks).
-
-## Useful Links
-
-1. [V3 API Proposals](https://docs.google.com/document/d/1g48YPBfwXT8kNrJYroBNkhlCtROe53INEEzvhQaAUOI)
-2. [CAPI (Cloud Controller API) Slack Channel](https://cloudfoundry.slack.com/messages/C07C04W4Q)
