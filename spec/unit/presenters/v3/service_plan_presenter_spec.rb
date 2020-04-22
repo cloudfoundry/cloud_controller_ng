@@ -234,5 +234,22 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         })
       end
     end
+
+    context 'when a decorator is provided' do
+      class FakeDecorator
+        def self.decorate(hash, resources)
+          hash[:included] = { resource: { guid: resources[0].guid } }
+          hash
+        end
+      end
+
+      let(:result) { described_class.new(service_plan, decorators: [FakeDecorator]).to_hash.deep_symbolize_keys }
+
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+
+      it 'uses the decorator' do
+        expect(result[:included]).to match({ resource: { guid: service_plan.guid } })
+      end
+    end
   end
 end

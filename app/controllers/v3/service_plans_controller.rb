@@ -3,6 +3,7 @@ require 'fetchers/service_plan_list_fetcher'
 require 'fetchers/service_plan_fetcher'
 require 'controllers/v3/mixins/service_permissions'
 require 'messages/service_plans_list_message'
+require 'messages/service_plans_show_message'
 require 'actions/service_plan_delete'
 require 'messages/metadata_update_message'
 require 'actions/transactional_metadata_update'
@@ -16,11 +17,17 @@ class ServicePlansController < ApplicationController
   def show
     not_authenticated! if user_cannot_see_marketplace?
 
+    message = ServicePlansShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
     service_plan_not_found! if service_plan.nil?
     service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
 
-    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan)
+    decorators = []
+    decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
+
+    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators: decorators)
     render status: :ok, json: presenter.to_json
   end
 

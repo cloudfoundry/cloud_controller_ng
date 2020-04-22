@@ -26,6 +26,19 @@ This endpoint retrieves the service plan by GUID.
 #### Definition
 `GET /v3/service_plans/:guid`
 
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**fields** | [_fields parameter_](#fields-parameter) | [_Allowed values_](#service-plan-fields)
+
+##### Service Plan Fields
+
+Resource            | Allowed Keys
+------------------- | ----
+service_offering.service_broker| `guid`, `name`
+
+
 #### Permitted roles
  |
 --- | ---
