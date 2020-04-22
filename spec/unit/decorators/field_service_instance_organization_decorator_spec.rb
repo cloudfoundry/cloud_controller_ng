@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'decorators/field_service_instance_organization_decorator'
+require 'field_decorator_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOrganizationDecorator do
@@ -70,29 +71,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it 'matches hashes containing key symbol `space.organization` and value `name`' do
-        expect(described_class.match?({ 'space.organization': ['name'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `space.organization` and value `guid`' do
-        expect(described_class.match?({ 'space.organization': ['guid'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `space.organization` and value `name,guid`' do
-        expect(described_class.match?({ 'space.organization': ['name', 'guid', 'something'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'does not match other values for a valid key' do
-        expect(described_class.match?({ 'space.organization': ['foo'] })).to be_falsey
-      end
-
-      it 'does not match other key values' do
-        expect(described_class.match?({ other: ['bar'] })).to be_falsey
-      end
-
-      it 'does not match non-hashes' do
-        expect(described_class.match?('foo')).to be_falsey
-      end
+      it_behaves_like 'field decorator match?', 'space.organization', ['name', 'guid']
     end
   end
 end

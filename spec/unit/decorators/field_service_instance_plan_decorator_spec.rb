@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'decorators/field_service_instance_plan_decorator'
+require 'field_decorator_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe FieldServiceInstancePlanDecorator do
@@ -92,33 +93,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it 'matches hashes containing key symbol `service_plan` and value `guid`' do
-        expect(described_class.match?({ 'service_plan': ['guid'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `service_plan` and value `name`' do
-        expect(described_class.match?({ 'service_plan': ['name'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `service_plan` and value `relationships.service_offering`' do
-        expect(described_class.match?({ 'service_plan': ['relationships.service_offering'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `service_plan` and value `guid,relationships.service_offering`' do
-        expect(described_class.match?({ 'service_plan': ['guid', 'relationships.service_offering', 'something'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'does not match other values for a valid key' do
-        expect(described_class.match?({ 'service_plan': ['foo'] })).to be_falsey
-      end
-
-      it 'does not match other key values' do
-        expect(described_class.match?({ other: ['bar'] })).to be_falsey
-      end
-
-      it 'does not match non-hashes' do
-        expect(described_class.match?('foo')).to be_falsey
-      end
+      it_behaves_like 'field decorator match?', 'service_plan', ['name', 'guid', 'relationships.service_offering']
     end
   end
 end

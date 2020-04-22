@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'decorators/field_service_instance_space_decorator'
+require 'field_decorator_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceSpaceDecorator do
@@ -146,25 +147,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it 'matches hashes containing key symbol `space` and value `guid`' do
-        expect(described_class.match?({ 'space': ['guid'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `space` and value `name`' do
-        expect(described_class.match?({ 'space': ['name'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `space` and value `relationships.organization`' do
-        expect(described_class.match?({ 'space': ['relationships.organization'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'does not match other values' do
-        expect(described_class.match?({ other: ['bar'] })).to be_falsey
-      end
-
-      it 'does not match non-hashes' do
-        expect(described_class.match?('foo')).to be_falsey
-      end
+      it_behaves_like 'field decorator match?', 'space', ['name', 'guid', 'relationships.organization']
     end
   end
 end
