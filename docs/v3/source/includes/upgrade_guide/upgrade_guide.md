@@ -30,9 +30,9 @@ Here are some examples of implications for clients:
 2. An application can have multiple processes, each with their own start command, scale, and stats
 3. An application might not be running with its most recent package or droplet
 
-#### Starting Apps
+### Starting Apps
 
-In the V2 API, the start endpoint (`PUT /v2/apps/:GUID` with `state`: `STARTED` in the request) was responsible for converting source code into a running executable in the cloud. In V3, [starting an app](#start-an-app) will only start the app processes with the current droplet.
+In the V2 API, starting an app (`PUT /v2/apps/:GUID` with `state`: `STARTED`) will automatically stage new packages into droplets. In V3, [starting an app](#start-an-app) will only run the app's current droplet. This change gives clients more control over what package to stage and when to stage it.
 
 To reproduce the V2 start behavior in V3:
 
