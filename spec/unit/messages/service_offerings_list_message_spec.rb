@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'messages/service_offerings_list_message'
+require 'field_message_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe ServiceOfferingsListMessage do
@@ -70,6 +71,10 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors[:available]).to include("only accepts values 'true' or 'false'")
         end
+      end
+
+      context 'fields' do
+        it_behaves_like 'field query parameter', 'service_broker', 'guid,name'
       end
     end
   end

@@ -8,6 +8,7 @@ require 'messages/purge_message'
 require 'actions/service_offering_delete'
 require 'actions/transactional_metadata_update'
 require 'controllers/v3/mixins/service_permissions'
+require 'decorators/field_service_offering_service_broker_decorator'
 
 class ServiceOfferingsController < ApplicationController
   include ServicePermissions
@@ -30,11 +31,15 @@ class ServiceOfferingsController < ApplicationController
                 )
               end
 
+    decorators = []
+    decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
+
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceOfferingPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       message: message,
       path: '/v3/service_offerings',
+      decorators: decorators
     )
 
     render status: :ok, json: presenter.to_json
