@@ -292,11 +292,25 @@ App features support enabling/disabling behaviors for an individual app.
 Read more about the [app feature resource](#app-features).
 
 <!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="builds-v3">Builds</h3>
+
+Builds increase the flexibility and granularity of control available
+to clients crafting stagings workflows. For example:
+
+- Staging older packages instead of always staging the most recent package
+- Staging packages without having to stop an application
+- Staging packages to produce droplets without setting them as the current
+  droplet for an app
+- Staging packages into droplets for use in tasks and/or rolling deployments
+
+Read more about the [builds resource](#builds).
+
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
 <h3 id="deployments-v3">Deployments</h3>
 
 Deployments are objects that manage updates to applications with zero downtime.
 
-Read more about the [deployment resource](#deployments).
+Read more about the [deployments resource](#deployments).
 
 <!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
 <h3 id="isolation-segments-v3">Isolation Segments</h3>
@@ -446,100 +460,66 @@ Read more about [users](#users) and [roles](#roles).
 
 ## Deprecated Endpoints
 
+Some endpoints on V2 API do not have direct analogs on the V3 API. This section will cover how to replace these endpoints when migrating to the V3 API.
+
 ### Restage
 
-Due to changes to the app resource, the `/v2/apps/:guid/restage` endpoint no longer exists.
-The introduction of the [package, droplet, and build resources](#app-sub-resources) allows finer grain
-control over the lifecycle of an app. The increased flexibility enabled by these
-changes renders a restage endpoint ambiguous. The V3 API avoids making assumptions about which package/droplet to use when running an app and thus leaves it up to clients.
+The specialized `/v2/apps/:guid/restage` endpoint is replaced by the [builds](#builds) resource. Builds allow finer-grained
+control and increased flexibility when staging packages into droplets. The V3 API avoids making assumptions about which 
+package/droplet to use when staging or running an app and thus leaves it up to clients.
 
-#### Restage features introduced by new resource model
-
-The changes made to the app resource increase the flexibility and granularity of control available
-to clients in crafting a restage workflow. Examples of new capabilities include:
-
-- Staging packages to produce droplets without setting them as the current
-  droplet for an app
-- Changing the current droplet for an app more easily (e.g. rolling back to a
-  previous droplet)
-- Using the deployment resource when changing the droplet for a running app to minimize downtime
-
-#### Replicating behavior of the deprecated endpoint
+#### Replicating Restage
 
 1. Get newest READY package for an app:
 
-    `GET /v3/packages?app_guids=:guid&order_by=-created_at&states=READY`
+	`
+	GET /v3/packages?app_guids=:app-guid&order_by=-created_at&states=READY
+	`
 
-1. Stage the package:
+2. Stage the package:
 
-    `POST /v3/builds`
+	`
+	POST /v3/build
+	`
 
-1. Poll staging process until the state becomes `STAGED`:
+1. Poll build until the state is `STAGED`:
 
-    `GET /v3/builds/build-guid`
+	`
+	GET /v3/builds/build-guid
+	`
 
-1. Access the droplet guid from the finished build
+1. Stop the app:
 
-1. Choose one of the options below for pointing the app to the new droplet:
-    - Match the behavior of the deprecated endpoint. This option will cause app
-      downtime.
-        1. Stop app:
+	`
+	POST /v3/apps/:guid/actions/stop
+	`
 
-            `POST /v3/apps/:guid/actions/stop`
-        1. Set current droplet:
+1. Set the app's current droplet to the build's resulting droplet:
 
-            `PATCH /v3/apps/:guid/relationships/current_droplet`
-        1. Start app:
+	`
+	PATCH /v3/apps/:guid/relationships/current_droplet
+	`
 
-            `POST /v3/apps/:guid/actions/start`
-    - Use a rolling deployment, which will roll instances from the old web
-      process to the new one. This will minimize app downtime.
-      1. `POST /v3/deployments` with strategy rolling
+1. Start app:
 
-#### Event tracking
+	`
+	POST /v3/apps/:guid/actions/start
+	`
 
-As the API no longer has a concept of a "restage", the "audit.app.restage" audit
+For a zero-downtime restage, you may wish to use [deployments](#deployments) instead of stopping and starting the app.
+
+
+#### Restage Event
+
+Since the V3 API has no concept of a "restage", the `audit.app.restage` audit
 event is no longer reported. Instead, the following events can be tracked:
 
-<table>
-<thead>
-<tr>
-<th>API Call</th>
-<th>Audit Event</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td rowspan="2"><code>POST /v3/builds</code></td>
-<td>audit.build.create</td>
-<td>A build is created (staging is initiated)</td>
-</tr>
-<tr>
-<td>audit.droplet.create</td>
-<td>A droplet is created (staging finishes successfully)</td>
-</tr>
-<tr>
-<td><code>POST /v3/apps/:guid/actions/stop<code></td>
-<td> audit.app.stop </td>
-<td>Stopping an app is initiated</td>
-</tr>
-<tr>
-<td><code>PATCH /v3/apps/:guid/relationships/current_droplet<code></td>
-<td> audit.app.droplet.mapped </td>
-<td>A droplet is set as the current droplet for an app</td>
-</tr>
-<tr>
-<td><code>POST /v3/apps/:guid/actions/start<code></td>
-<td> audit.app.start </td>
-<td>Starting an app is initiated</td>
-</tr>
-
-<tr>
-<td><code>POST /v3/deployments<code></td>
-<td> audit.app.deployment.create </td>
-<td>A deployment is initialized</td>
-</tr>
-</tbody>
-</table>
+Audit Event|Description
+---|---
+audit.build.create | A build is created (staging is initiated)
+audit.droplet.create | A droplet is created (staging finishes successfully)
+audit.app.stop | Stopping an app is initiated
+audit.app.droplet.mapped | A droplet is set as the current droplet for an app
+audit.app.start | Starting an app is initiated
+audit.app.deployment.create | A deployment is initialized
 
