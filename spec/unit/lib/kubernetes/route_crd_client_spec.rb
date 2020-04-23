@@ -5,6 +5,7 @@ RSpec.describe Kubernetes::RouteCrdClient do
   describe '#create_route' do
     let(:kube_client) { double(Kubeclient) }
     let(:route) { VCAP::CloudController::Route.make }
+    let(:internal_domain?) { route.internal? }
     let(:route_crd_hash) do
       {
         metadata: {
@@ -28,7 +29,7 @@ RSpec.describe Kubernetes::RouteCrdClient do
           url: route.fqdn,
           domain: {
             name: route.domain.name,
-            internal: route.internal?
+            internal: internal_domain?
           },
           destinations: []
         }
@@ -43,6 +44,22 @@ RSpec.describe Kubernetes::RouteCrdClient do
       subject.create_route(route)
 
       expect(kube_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
+    end
+
+    context 'when the domain is internal' do
+      let(:internal_domain?) { true }
+
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(internal: true, owning_organization: space.organization) }
+      let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+
+      it 'sets internal to true' do
+        allow(kube_client).to receive(:create_route).with(any_args)
+
+        subject.create_route(route)
+
+        expect(kube_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
+      end
     end
 
     context 'when there are k8s errors' do
