@@ -1806,6 +1806,69 @@ RSpec.describe 'Apps' do
         }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
       end
     end
+
+    context 'when app lifecycle is kpack' do
+      let(:app_model) { VCAP::CloudController::AppModel.make(:kpack, name: 'app-name', droplet: VCAP::CloudController::DropletModel.make(:kpack), space: space) }
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+      end
+
+      it 'starts the app' do
+        post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like({
+          'name' => 'app-name',
+          'guid' => app_model.guid,
+          'state' => 'STARTED',
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'lifecycle' => {
+            'type' => 'kpack',
+            'data' => {}
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+          }
+        })
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type: 'audit.app.start',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: 'app-name',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        })
+      end
+    end
   end
 
   describe 'POST /v3/apps/:guid/actions/stop' do
@@ -1921,28 +1984,111 @@ RSpec.describe 'Apps' do
         desired_state: 'STARTED',
       )
     }
-    let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        :buildpack,
-        app: app_model,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
-      )
-    end
-    before do
-      app_model.lifecycle_data.buildpacks = ['http://example.com/git']
-      app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
-      app_model.droplet = droplet
-      app_model.save
+
+    context 'app lifecycle is buildpack' do
+      let!(:droplet) do
+        VCAP::CloudController::DropletModel.make(
+          :buildpack,
+          app: app_model,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
+        )
+      end
+
+      before do
+        app_model.lifecycle_data.buildpacks = ['http://example.com/git']
+        app_model.lifecycle_data.stack = stack.name
+        app_model.lifecycle_data.save
+        app_model.droplet = droplet
+        app_model.save
+      end
+
+      it 'restarts the app' do
+        post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+              'name' => 'app-name',
+              'guid' => app_model.guid,
+              'state' => 'STARTED',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                      'buildpacks' => ['http://example.com/git'],
+                      'stack' => 'stack-name',
+                  }
+              },
+              'relationships' => {
+                  'space' => {
+                      'data' => {
+                          'guid' => space.guid
+                      }
+                  }
+              },
+              'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+              }
+          }
+        )
+      end
+      context 'telemetry' do
+        it 'should log the required fields when the app is restarted' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'restart-app' => {
+                'api-version' => 'v3',
+                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+
+            expect(last_response.status).to eq(200), last_response.body
+          end
+        end
+      end
     end
 
-    it 'restarts the app' do
-      post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
-      expect(last_response.status).to eq(200)
+    context 'app lifecycle is kpack' do
+      let(:app_model) {
+        VCAP::CloudController::AppModel.make(:kpack,
+          name: 'app-name',
+          droplet: VCAP::CloudController::DropletModel.make(:kpack),
+          space: space,
+          desired_state: 'STARTED')
+      }
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+      end
+
+      it 'restarts the app' do
+        post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
             'name' => 'app-name',
             'guid' => app_model.guid,
             'state' => 'STARTED',
@@ -1950,55 +2096,33 @@ RSpec.describe 'Apps' do
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => ['http://example.com/git'],
-                    'stack' => 'stack-name',
-                }
+              'type' => 'kpack',
+              'data' => {}
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-            }
-        }
-      )
-    end
-    context 'telemetry' do
-      it 'should log the required fields when the app is restarted' do
-        Timecop.freeze do
-          expected_json = {
-            'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time' => Time.now.to_datetime.rfc3339,
-            'restart-app' => {
-              'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
-
-          post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
-
-          expect(last_response.status).to eq(200), last_response.body
-        end
+        )
       end
     end
   end
