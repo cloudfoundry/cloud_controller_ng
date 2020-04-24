@@ -77,11 +77,7 @@ module VCAP::CloudController
       end
 
       context 'fields' do
-        it 'validates `fields` is a hash' do
-          message = described_class.from_params({ 'fields' => 'foo' }.with_indifferent_access)
-          expect(message).not_to be_valid
-          expect(message.errors[:fields][0]).to include('must be an object')
-        end
+        it_behaves_like 'fields query hash'
 
         it_behaves_like 'field query parameter', 'space', 'guid,name,relationships.organization'
 
@@ -92,14 +88,6 @@ module VCAP::CloudController
         it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,relationships.service_broker'
 
         it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
-
-        it 'does not accept fields resources that are not allowed' do
-          message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
-          expect(message).not_to be_valid
-          expect(message.errors[:fields]).to include(
-            "[space.foo] valid resources are: 'space', 'space.organization', " \
-            "'service_plan', 'service_plan.service_offering', 'service_plan.service_offering.service_broker'")
-        end
       end
 
       context 'type' do

@@ -3,6 +3,7 @@ require 'fetchers/service_offering_list_fetcher'
 require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
 require 'messages/service_offerings_list_message'
+require 'messages/service_offerings_show_message'
 require 'messages/metadata_update_message'
 require 'messages/purge_message'
 require 'actions/service_offering_delete'
@@ -52,7 +53,13 @@ class ServiceOfferingsController < ApplicationController
     service_offering_not_found! if service_offering.nil?
     service_offering_not_found! unless visible_to_current_user?(service: service_offering)
 
-    presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering)
+    message = ServiceOfferingsShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
+
+    presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering, decorators: decorators)
     render status: :ok, json: presenter.to_json
   end
 

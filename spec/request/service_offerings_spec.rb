@@ -183,6 +183,19 @@ RSpec.describe 'V3 service offerings' do
         })
       end
     end
+
+    describe 'fields' do
+      let!(:service_offering) { VCAP::CloudController::Service.make }
+
+      it 'can include service broker name and guid' do
+        get "/v3/service_offerings/#{service_offering.guid}?fields[service_broker]=name,guid", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_brokers']).to have(1).elements
+        expect(parsed_response['included']['service_brokers'][0]['guid']).to eq(service_offering.service_broker.guid)
+        expect(parsed_response['included']['service_brokers'][0]['name']).to eq(service_offering.service_broker.name)
+      end
+    end
   end
 
   describe 'GET /v3/service_offerings' do

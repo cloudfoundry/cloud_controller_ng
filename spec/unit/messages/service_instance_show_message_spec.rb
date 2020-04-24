@@ -14,19 +14,6 @@ module VCAP::CloudController
 
     it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
 
-    it 'does not accept fields resources that are not allowed' do
-      message = described_class.from_params({ 'fields' => { 'space.foo': 'name' } })
-      expect(message).not_to be_valid
-      expect(message.errors[:fields]).to include(
-        '[space.foo] valid resources are: ' \
-        "'space', 'space.organization', 'service_plan', 'service_plan.service_offering', 'service_plan.service_offering.service_broker'"
-      )
-    end
-
-    it 'does not accept other parameters' do
-      message = described_class.from_params({ 'foobar' => 'pants' })
-      expect(message).not_to be_valid
-      expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
-    end
+    it_behaves_like 'fields query hash'
   end
 end

@@ -74,6 +74,8 @@ module VCAP::CloudController
       end
 
       context 'fields' do
+        it_behaves_like 'fields query hash'
+
         it_behaves_like 'field query parameter', 'service_broker', 'guid,name'
       end
     end
