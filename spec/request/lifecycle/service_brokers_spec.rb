@@ -256,7 +256,6 @@ RSpec.describe 'V3 service brokers' do
         expect(parsed_response).to include({
             'name' => 'new-name',
             'url' => 'http://example.org/new-broker-url',
-            'available' => true,
             'status' => 'available',
         })
       end
@@ -298,7 +297,6 @@ RSpec.describe 'V3 service brokers' do
       expect(parsed_response).to include({
           'name' => 'old-name',
           'url' => 'http://example.org/old-broker-url',
-          'available' => true,
           'status' => 'available',
           'metadata' => {
               'annotations' => {

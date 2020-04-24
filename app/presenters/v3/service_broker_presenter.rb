@@ -23,7 +23,6 @@ module VCAP::CloudController
             guid: broker.guid,
             name: broker.name,
             url: broker.broker_url,
-            available: status == 'available',
             status: status,
             created_at: broker.created_at,
             updated_at: broker.updated_at,

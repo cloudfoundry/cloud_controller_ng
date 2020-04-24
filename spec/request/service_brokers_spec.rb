@@ -153,7 +153,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
-            available: true,
             relationships: {},
             links: {
               self: {
@@ -174,7 +173,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
-            available: true,
             relationships: {},
             links: {
               self: {
@@ -214,7 +212,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
-            available: true,
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -358,7 +355,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
-            available: true,
             metadata: { labels: {}, annotations: {} },
             relationships: {},
             links: {
@@ -406,7 +402,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
-            available: true,
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -716,7 +711,6 @@ RSpec.describe 'V3 service brokers' do
           created_at: iso8601,
           updated_at: iso8601,
           status: 'synchronization in progress',
-          available: false,
           metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } },
           relationships: {},
           links: {
@@ -855,7 +849,6 @@ RSpec.describe 'V3 service brokers' do
             created_at: iso8601,
             updated_at: iso8601,
             status: 'synchronization in progress',
-            available: false,
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -1023,7 +1016,6 @@ RSpec.describe 'V3 service brokers' do
 
       it 'leaves broker in a non-available failed state' do
         expect_broker_status(
-          available: false,
           status: 'synchronization failed',
           with: admin_headers
         )
@@ -1184,14 +1176,13 @@ RSpec.describe 'V3 service brokers' do
       expect(service_broker.auth_password).to eq(expected_broker[:authentication][:credentials][:password])
     end
 
-    def expect_broker_status(available:, status:, with:)
+    def expect_broker_status(status:, with:)
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation + 1)
       service_broker = VCAP::CloudController::ServiceBroker.last
 
       get("/v3/service_brokers/#{service_broker.guid}", {}, with)
       expect(last_response.status).to eq(200)
       expect(parsed_response).to include(
-        'available' => available,
         'status' => status
       )
     end
@@ -1217,7 +1208,6 @@ RSpec.describe 'V3 service brokers' do
 
       updated_service_broker_json = broker_json.tap do |broker|
         broker[:status] = 'available'
-        broker[:available] = true
       end
 
       expect(parsed_response).to match_json_response(updated_service_broker_json)
@@ -1311,7 +1301,6 @@ RSpec.describe 'V3 service brokers' do
           it 'marks the broker as deleting' do
             get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
             expect(parsed_response).to include({
-                'available' => false,
                 'status' => 'delete in progress'
             })
           end
@@ -1403,7 +1392,6 @@ RSpec.describe 'V3 service brokers' do
         it 'updates the broker state' do
           get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(parsed_response).to include({
-              'available' => false,
               'status' => 'delete failed'
           })
         end

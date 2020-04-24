@@ -5,11 +5,11 @@ module VCAP::CloudController
     end
 
     def self.match?(fields)
-      fields.is_a?(Hash) && fields[:'service_broker']&.to_set&.intersect?(self.allowed)
+      fields.is_a?(Hash) && fields[:service_broker]&.to_set&.intersect?(self.allowed)
     end
 
     def initialize(fields)
-      @fields = fields[:'service_broker'].to_set.intersection(self.class.allowed)
+      @fields = fields[:service_broker].to_set.intersection(self.class.allowed)
     end
 
     def decorate(hash, service_offerings)
