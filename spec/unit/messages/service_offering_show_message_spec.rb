@@ -1,22 +1,22 @@
 require 'spec_helper'
-require 'messages/service_plans_show_message'
+require 'messages/service_offerings_show_message'
 require 'field_message_spec_shared_examples'
 
 module VCAP::CloudController
-  RSpec.describe ServicePlansShowMessage do
+  RSpec.describe ServiceOfferingsShowMessage do
     describe '.from_params' do
       let(:params) do
         {
-          'fields' => { 'service_offering.service_broker' => 'guid,name' },
+          'fields' => { 'service_broker' => 'guid,name' },
         }.with_indifferent_access
       end
 
-      it 'returns the correct ServicePlansShowMessage' do
+      it 'returns the correct message' do
         message = described_class.from_params(params)
 
         expect(message).to be_valid
         expect(message).to be_a(described_class)
-        expect(message.fields).to match({ 'service_offering.service_broker': ['guid', 'name'] })
+        expect(message.fields).to match({ 'service_broker': ['guid', 'name'] })
       end
 
       it 'converts requested keys to symbols' do
@@ -39,7 +39,7 @@ module VCAP::CloudController
       context 'fields' do
         it_behaves_like 'fields query hash'
 
-        it_behaves_like 'field query parameter', 'service_offering.service_broker', 'guid,name'
+        it_behaves_like 'field query parameter', 'service_broker', 'guid,name'
       end
     end
   end

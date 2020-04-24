@@ -12,7 +12,7 @@ module VCAP::CloudController
         def to_hash
           metadata = broker_metadata
 
-          {
+          hash = {
             guid: service_offering.guid,
             name: service_offering.label,
             description: service_offering.description,
@@ -41,6 +41,10 @@ module VCAP::CloudController
             },
             links: build_links,
           }
+
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [service_offering]) }
+
+          hash
         end
 
         private
