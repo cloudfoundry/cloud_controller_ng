@@ -1355,13 +1355,11 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when requesting docker lifecycle and diego_docker feature flag is disabled' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, droplet_guid: droplet.guid) }
       let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
-        # if app has no buildpack lifecyle data, default lifecycle type is "docker"
-        app_model.buildpack_lifecycle_data = nil
       end
 
       context 'admin' do
@@ -1573,14 +1571,13 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'when requesting docker lifecycle' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker, droplet_guid: droplet.guid) }
         let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
         context 'and diego_docker feature flag is enabled' do
           before do
             VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
-            # if app has no buildpack lifecyle data, default lifecycle type is "docker"
-            app_model.buildpack_lifecycle_data = nil
+
           end
 
           it 'returns 200' do
@@ -1592,9 +1589,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'and diego_docker feature flag is disabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
-            # if app has no buildpack lifecyle data, default lifecycle type is "docker"
             app_model.buildpack_lifecycle_data = nil
+            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
           end
 
           context 'admin' do
