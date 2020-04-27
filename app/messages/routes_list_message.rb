@@ -4,6 +4,7 @@ module VCAP::CloudController
   class RoutesListMessage < ListMessage
     register_allowed_keys [
       :hosts,
+      :app_guids,
       :space_guids,
       :organization_guids,
       :domain_guids,
@@ -17,19 +18,13 @@ module VCAP::CloudController
 
     validates :hosts, allow_nil: true, array: true
     validates :paths, allow_nil: true, array: true
+    validates :app_guids, allow_nil: true, array: true
     validates :space_guids, allow_nil: true, array: true
     validates :organization_guids, allow_nil: true, array: true
     validates :domain_guids, allow_nil: true, array: true
 
-    attr_reader :app_guid
-
     def self.from_params(params)
-      super(params, %w(hosts space_guids organization_guids domain_guids paths include))
-    end
-
-    def for_app_guid(app_guid)
-      @app_guid = app_guid
-      self
+      super(params, %w(hosts app_guids space_guids organization_guids domain_guids paths include))
     end
   end
 end

@@ -118,6 +118,7 @@ RSpec.describe 'Routes Request' do
             page:   '2',
             per_page:   '10',
             order_by:   'updated_at',
+            app_guids: ['foo', 'bar'],
             space_guids: ['foo', 'bar'],
             organization_guids: ['foo', 'bar'],
             domain_guids: ['foo', 'bar'],
