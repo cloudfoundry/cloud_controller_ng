@@ -1182,6 +1182,70 @@ RSpec.describe 'V3 service instances' do
             end
           end
         end
+
+        describe 'volume mount and route service checks' do
+          context 'when volume mount required' do
+            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(volume_mount)) }
+            let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+
+            context 'volume mount disabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+
+              it 'warns' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                job = VCAP::CloudController::PollableJobModel.last
+                expect(job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::VOLUME_SERVICE_WARNING)
+              end
+            end
+
+            context 'volume mount enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = true
+              end
+
+              it 'does not warn' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                job = VCAP::CloudController::PollableJobModel.last
+                expect(job.warnings).to be_empty
+              end
+            end
+          end
+
+          context 'when route forwarding required' do
+            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+            let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+
+            context 'route forwarding disabled' do
+              before do
+                TestConfig.config[:route_services_enabled] = false
+              end
+
+              it 'warns' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                job = VCAP::CloudController::PollableJobModel.last
+                expect(job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::ROUTE_SERVICE_WARNING)
+              end
+            end
+
+            context 'route forwarding enabled' do
+              before do
+                TestConfig.config[:route_services_enabled] = true
+              end
+
+              it 'does not warn' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                job = VCAP::CloudController::PollableJobModel.last
+                expect(job.warnings).to be_empty
+              end
+            end
+          end
+        end
       end
     end
   end

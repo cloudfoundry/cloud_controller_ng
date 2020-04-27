@@ -16,6 +16,7 @@ module VCAP::CloudController
 
       def success(job)
         if @handler.respond_to?(:success)
+          persist_warnings(job)
           @handler.success(job)
         else
           change_state(job, PollableJobModel::COMPLETE_STATE)

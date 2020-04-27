@@ -10,7 +10,8 @@ module VCAP
 
         let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
         let(:space) { Space.make }
-        let(:service_plan) { ServicePlan.make }
+        let(:service_offering) { Service.make }
+        let(:service_plan) { ServicePlan.make(service: service_offering) }
         let(:new_service_plan) { ServicePlan.make }
         let(:service_instance_attr) {
           {
@@ -179,6 +180,80 @@ module VCAP
             pollable_job = run_job(job, jobs_succeeded: 0, jobs_failed: 1)
             pollable_job.reload
             expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
+          end
+        end
+
+        describe 'volume mount and route service checks' do
+          let(:broker_provision_response) {
+            {
+              instance: { dashboard_url: 'example.foo' },
+              last_operation: { type: 'create',
+                state: 'succeeded',
+                description: '' }
+            }
+          }
+          before do
+            allow(client).to receive(:provision).and_return(broker_provision_response)
+          end
+
+          context 'when volume mount required' do
+            let(:service_offering) { Service.make(requires: %w(volume_mount)) }
+
+            context 'volume mount disabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+
+              it 'warns' do
+                pollable_job = run_job(job, jobs_succeeded: 1)
+                pollable_job.reload
+
+                expect(pollable_job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::VOLUME_SERVICE_WARNING)
+              end
+            end
+
+            context 'volume mount enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = true
+              end
+
+              it 'does not warn' do
+                pollable_job = run_job(job, jobs_succeeded: 1)
+                pollable_job.reload
+
+                expect(pollable_job.warnings).to be_empty
+              end
+            end
+          end
+
+          context 'when route forwarding required' do
+            let(:service_offering) { Service.make(requires: %w(route_forwarding)) }
+
+            context 'route forwarding disabled' do
+              before do
+                TestConfig.config[:route_services_enabled] = false
+              end
+
+              it 'warns' do
+                pollable_job = run_job(job, jobs_succeeded: 1)
+                pollable_job.reload
+
+                expect(pollable_job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::ROUTE_SERVICE_WARNING)
+              end
+            end
+
+            context 'route forwarding enabled' do
+              before do
+                TestConfig.config[:route_services_enabled] = true
+              end
+
+              it 'does not warn' do
+                pollable_job = run_job(job, jobs_succeeded: 1)
+                pollable_job.reload
+
+                expect(pollable_job.warnings).to be_empty
+              end
+            end
           end
         end
       end

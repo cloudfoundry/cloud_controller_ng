@@ -3,10 +3,13 @@ require 'jobs/v3/services/fetch_last_operation_job'
 module VCAP::CloudController
   module V3
     class CreateServiceInstanceJob < VCAP::CloudController::Jobs::CCJob
+      attr_reader :warnings
+
       def initialize(service_instance_guid, arbitrary_parameters: {}, user_audit_info:)
         @service_instance_guid = service_instance_guid
         @arbitrary_parameters = arbitrary_parameters
         @user_audit_info = user_audit_info
+        @warnings = []
       end
 
       def perform
@@ -29,6 +32,8 @@ module VCAP::CloudController
         end
 
         service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
+
+        compatibility_checks
       end
 
       def success(job)
@@ -75,6 +80,8 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :service_instance_guid, :arbitrary_parameters
+
       def repository
         Repositories::ServiceEventRepository.new(@user_audit_info)
       end
@@ -87,7 +94,23 @@ module VCAP::CloudController
         @service_instance ||= ManagedServiceInstance.first(guid: service_instance_guid)
       end
 
-      attr_reader :service_instance_guid, :arbitrary_parameters
+      def compatibility_checks
+        if service_instance.service_plan.service.volume_service? && volume_services_disabled?
+          @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING })
+        end
+
+        if service_instance.service_plan.service.route_service? && route_services_disabled?
+          @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
+        end
+      end
+
+      def volume_services_disabled?
+        !VCAP::CloudController::Config.config.get(:volume_services_enabled)
+      end
+
+      def route_services_disabled?
+        !VCAP::CloudController::Config.config.get(:route_services_enabled)
+      end
     end
   end
 end
