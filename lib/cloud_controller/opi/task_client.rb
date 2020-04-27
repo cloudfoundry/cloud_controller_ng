@@ -38,6 +38,7 @@ module OPI
     def to_request(task)
       task_completion_callback_generator = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(@config)
       {
+        name: task.name,
         app_guid: task.app.guid,
         app_name: task.app.name,
         org_guid: task.space.organization.guid,

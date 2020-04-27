@@ -15,6 +15,7 @@ RSpec.describe(OPI::TaskClient) do
     instance_double(
       VCAP::CloudController::TaskModel,
       guid: 'GUID',
+      name: 'NAME',
       command: 'COMMAND',
       droplet: double(droplet_hash: 'DROPLET_HASH', guid: 'DROPLET_GUID'),
       app: double(guid: 'APP_GUID', name: 'APP_NAME'),
@@ -43,6 +44,7 @@ RSpec.describe(OPI::TaskClient) do
       client.desire_task(task, 'some-domain')
 
       expect(WebMock).to have_requested(:post, "#{opi_url}/tasks/GUID").with(body: {
+        name: 'NAME',
         app_guid: 'APP_GUID',
         app_name: 'APP_NAME',
         org_guid: 'ORG_GUID',
