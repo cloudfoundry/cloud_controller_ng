@@ -1577,7 +1577,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'and diego_docker feature flag is enabled' do
           before do
             VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
-
           end
 
           it 'returns 200' do
