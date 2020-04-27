@@ -678,29 +678,16 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'permissions' do
-      let(:response) do
-        create_user_provided_json({
-          guid: UUID_REGEX,
-          name: name,
-          space: {
-            guid: UUID_REGEX
-          }
-        })
-      end
-
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = {
-            code: 201,
-            response_object: response
-          }
-          h['admin'] = {
-            code: 201,
-            response_object: response
-          }
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['space_developer'] = { code: 201 }
+            h['admin'] = { code: 201 }
+            h['no_role'] = { code: 422 }
+            h['org_billing_manager'] = { code: 422 }
+            h['org_auditor'] = { code: 422 }
+          end
         end
-
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
