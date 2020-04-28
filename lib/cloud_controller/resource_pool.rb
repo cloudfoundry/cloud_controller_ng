@@ -74,7 +74,7 @@ class VCAP::CloudController::ResourcePool
   def copy(descriptor, destination)
     if !resource_known?(descriptor)
       logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
-      raise ArgumentError.new("Can not copy bits we do not have #{descriptor}")
+      raise ArgumentError.new("Cannot copy bits we do not have #{descriptor}")
     end
 
     logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination

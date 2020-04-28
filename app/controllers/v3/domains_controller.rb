@@ -122,7 +122,7 @@ class DomainsController < ApplicationController
 
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
 
-    unprocessable!('Domains can not be shared with other organizations unless they are scoped to an organization.') unless domain.private?
+    unprocessable!('Domains cannot be shared with other organizations unless they are scoped to an organization.') unless domain.private?
 
     DomainUpdateSharedOrgs.update(domain: domain, shared_organizations: shared_orgs)
     render status: :ok, json: Presenters::V3::DomainSharedOrgsPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)

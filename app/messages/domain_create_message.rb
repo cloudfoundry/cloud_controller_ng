@@ -74,7 +74,7 @@ module VCAP::CloudController
 
     def mutually_exclusive_organization_and_internal
       if requested?(:internal) && internal == true && requested?(:relationships)
-        errors.add(:base, 'Can not associate an internal domain with an organization')
+        errors.add(:base, 'Cannot associate an internal domain with an organization')
       end
     end
 

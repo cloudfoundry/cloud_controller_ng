@@ -28,7 +28,7 @@ module VCAP::CloudController
         error!(%{Stack '#{message.stack}' does not exist})
       end
       if error.errors.on(:stack)&.include?(:buildpack_cant_change_stacks)
-        error!(%{Buildpack stack can not be changed})
+        error!(%{Buildpack stack cannot be changed})
       end
       if error.errors.on(:stack)&.include?(:unique)
         error!(%{Buildpack with name '#{error.model.name}' and an unassigned stack already exists})

@@ -1239,7 +1239,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 422' do
         post "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations", params.to_json, user_header
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to eq('Domains can not be shared with other organizations unless they are scoped to an organization.')
+        expect(parsed_response['errors'][0]['detail']).to eq('Domains cannot be shared with other organizations unless they are scoped to an organization.')
       end
     end
 

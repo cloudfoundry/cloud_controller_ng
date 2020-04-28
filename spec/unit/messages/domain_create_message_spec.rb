@@ -274,7 +274,7 @@ module VCAP::CloudController
 
         it 'should be invalid' do
           expect(subject).to_not be_valid
-          expect(subject.errors[:base]).to include('Can not associate an internal domain with an organization')
+          expect(subject.errors[:base]).to include('Cannot associate an internal domain with an organization')
         end
       end
 

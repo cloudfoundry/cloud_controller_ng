@@ -116,7 +116,7 @@ module VCAP::CloudController
             message = BuildpackUpdateMessage.new(stack: nil)
             expect {
               BuildpackUpdate.new.update(buildpack1, message)
-            }.to raise_error(BuildpackUpdate::Error, 'Buildpack stack can not be changed')
+            }.to raise_error(BuildpackUpdate::Error, 'Buildpack stack cannot be changed')
           end
         end
 
