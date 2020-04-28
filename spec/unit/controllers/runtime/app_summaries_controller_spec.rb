@@ -9,9 +9,10 @@ module VCAP::CloudController
       @shared_domain = SharedDomain.make
       @shared_domain.save
 
-      @space    = Space.make
-      @route1   = Route.make(space: @space)
-      @route2   = Route.make(space: @space)
+      @space = Space.make
+      @environment_json = { 'HELLO' => 'WORLD' }
+      @route1 = Route.make(space: @space)
+      @route2 = Route.make(space: @space)
       @services = []
 
       @process = ProcessModelFactory.make(
@@ -20,6 +21,7 @@ module VCAP::CloudController
         instances:  1,
         memory:     @free_mem_size,
         state:      'STARTED',
+        environment_json: @environment_json
       )
 
       @num_services.times do
@@ -56,6 +58,8 @@ module VCAP::CloudController
         it 'should contain the basic app attributes' do
           expect(last_response.status).to eq(200)
           expect(decoded_response['guid']).to eq(@process.app.guid)
+          expect(decoded_response['environment_json']).to eq({ 'HELLO' => 'WORLD' })
+
           parse(MultiJson.dump(@process.to_hash)).each do |k, v|
             expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
           end

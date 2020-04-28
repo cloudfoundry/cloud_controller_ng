@@ -25,6 +25,8 @@ module VCAP::CloudController
         'available_domains' => (process.space.organization.private_domains + SharedDomain.all).map(&:as_summary_json)
       }.merge(process.to_hash)
 
+      app_info['environment_json'] = process.app.environment_variables
+
       MultiJson.dump(app_info)
     end
 
