@@ -110,6 +110,8 @@ module VCAP::CloudController
           space_name:                         "#{Space.table_name}__name".to_sym,
           org_guid:                           "#{Organization.table_name}__guid".to_sym,
           created_at:                         Sequel.datetime_class.now,
+          parent_app_name:                    :parent_app__name,
+          parent_app_guid:                    :parent_app__guid,
         }
 
         latest_package_query = PackageModel.select(:app_guid).select_append { max(id).as(:id) }.group(:app_guid)
