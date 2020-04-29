@@ -1,14 +1,14 @@
 require 'spec_helper'
 require 'jobs/v3/services/fetch_last_operation_job'
 require_relative '../../services/shared/when_broker_returns_retry_after_header'
+require_relative 'async_operation_end_timestamp'
 
 module VCAP::CloudController
   module V3
     RSpec.describe FetchLastOperationJob, job_context: :worker do
       let(:proposed_service_plan) { ServicePlan.make }
       let(:proposed_maintenance_info) { { 'version' => '2.0' } }
-      let(:maximum_polling_duration_for_plan) {}
-      let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
+      let(:service_plan) { ServicePlan.make }
       let(:service_instance) do
         operation = ServiceInstanceOperation.make(proposed_changes: {
           name: 'new-fake-name',
@@ -39,7 +39,6 @@ module VCAP::CloudController
           description: description
         }
       end
-      let(:max_duration) { 10080 }
       let(:request_attrs) do
         {
           dummy_data: 'dummy_data'
@@ -77,61 +76,21 @@ module VCAP::CloudController
       end
 
       describe '#initialize' do
-        let(:default_polling_interval) { 120 }
-        let(:max_duration) { 10080 }
-
-        before do
-          config_override = {
-            broker_client_default_async_poll_interval_seconds: default_polling_interval,
-            broker_client_max_async_poll_duration_minutes: max_duration,
-          }
-          TestConfig.override(config_override)
-        end
-
-        context 'when the caller does not provide the maximum number of attempts' do
-          it 'should the default configuration value' do
-            Timecop.freeze(Time.now)
-            expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
-          end
-        end
-
         context 'when the default poll interval is greater than the max value (24 hours)' do
           let(:default_polling_interval) { 24.hours + 1.minute }
+          before do
+            config_override = {
+            broker_client_default_async_poll_interval_seconds: default_polling_interval,
+            }
+            TestConfig.override(config_override)
+          end
 
           it 'enqueues the job using the maximum polling interval' do
             expect(job.poll_interval).to eq 24.hours
           end
         end
 
-        context 'when the service plan has maximum_polling_duration' do
-          let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
-
-          context "when the config value is smaller than plan's maximum_polling_duration" do
-            let(:max_duration) { 10 } # in minutes
-            it 'should set end_timestamp to config value' do
-              Timecop.freeze(Time.now)
-              expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
-            end
-          end
-
-          context "when the config value is greater than plan's maximum_polling_duration" do
-            let(:max_duration) { 1068367346 } # in minutes
-            it "should set end_timestamp to the plan's maximum_polling_duration value" do
-              Timecop.freeze(Time.now)
-              expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
-            end
-          end
-        end
-
-        context 'when there is a database error in fetching the plan' do
-          it 'should set end_timestamp to config value' do
-            allow(ManagedServiceInstance).to receive(:first) do |e|
-              raise Sequel::Error.new(e)
-            end
-            Timecop.freeze(Time.now)
-            expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
-          end
-        end
+        include_context 'end_timestamp'
       end
 
       describe '#perform' do
@@ -320,6 +279,7 @@ module VCAP::CloudController
 
         context 'when the job has fetched for more than the max poll duration' do
           let(:state) { 'in progress' }
+          let(:max_duration) { 10080 }
 
           before do
             run_job(job)
@@ -470,38 +430,6 @@ module VCAP::CloudController
 
           expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
           expect(pollable_job.cf_api_error).to include("The service instance could not be found: #{service_instance.guid}")
-        end
-      end
-
-      describe '#end_timestamp' do
-        let(:max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
-
-        context 'when the job is new' do
-          it 'adds the broker_client_max_async_poll_duration_minutes to the current time' do
-            now = Time.now
-            expected_end_timestamp = now + max_poll_duration.minutes
-            Timecop.freeze now do
-              expect(job.end_timestamp).to be_within(0.01).of(expected_end_timestamp)
-            end
-          end
-        end
-
-        context 'when the job is fetched from the database' do
-          it 'returns the previously computed and persisted end_timestamp' do
-            now = Time.now
-            expected_end_timestamp = now + max_poll_duration.minutes
-
-            job_id = nil
-            Timecop.freeze now do
-              enqueued_job = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic, run_at: Time.now).enqueue
-              job_id = enqueued_job.id
-            end
-
-            Timecop.freeze(now + 1.day) do
-              rehydrated_job = Delayed::Job.first(id: job_id).payload_object.handler.handler
-              expect(rehydrated_job.end_timestamp).to be_within(0.01).of(expected_end_timestamp)
-            end
-          end
         end
       end
 
