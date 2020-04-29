@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     before do
       allow(UaaClient).to receive(:new).and_return(uaa_client)
+      TestConfig.override(kubernetes: {})
     end
 
     describe 'Query Parameters' do

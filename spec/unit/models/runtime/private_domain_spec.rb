@@ -183,6 +183,9 @@ module VCAP::CloudController
 
     describe '#destroy' do
       let(:space) { Space.make(organization: private_domain.owning_organization) }
+      before do
+        TestConfig.override(kubernetes: {})
+      end
 
       it 'destroys the routes' do
         route = Route.make(domain: private_domain, space: space)

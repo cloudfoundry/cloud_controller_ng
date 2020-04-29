@@ -58,6 +58,7 @@ module VCAP::CloudController
         let(:recursive) { true }
 
         before do
+          TestConfig.override(kubernetes: {})
           route.destroy
         end
 

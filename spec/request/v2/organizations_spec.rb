@@ -4,6 +4,10 @@ RSpec.describe 'Organizations' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
 
+  before do
+    TestConfig.override(kubernetes: {})
+  end
+
   describe 'GET /v2/organizations/:guid/services' do
     let!(:space) { VCAP::CloudController::Space.make(organization: org) }
     let!(:service_1) { VCAP::CloudController::Service.make }

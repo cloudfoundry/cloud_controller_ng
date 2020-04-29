@@ -94,6 +94,7 @@ module VCAP::CloudController
           and_return(routing_api_client)
         allow(routing_api_client).to receive(:router_group).with(router_group_guid).and_return(router_group)
         allow_any_instance_of(RouteValidator).to receive(:validate)
+        TestConfig.override(kubernetes: {})
       end
 
       it 'destroys the routes' do

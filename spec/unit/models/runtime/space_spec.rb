@@ -564,6 +564,10 @@ module VCAP::CloudController
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
+      before do
+        TestConfig.override(kubernetes: {})
+      end
+
       context 'when there are service instances' do
         before do
           ManagedServiceInstance.make(space: space)

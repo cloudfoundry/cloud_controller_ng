@@ -16,6 +16,7 @@ module VCAP::CloudController
       organization2.add_user(user)
       organization3.add_user(user)
       Domain.dataset.destroy # this will clean up the seeded test domains
+      TestConfig.override(kubernetes: {})
     end
 
     describe 'POST /v3/organizations' do
