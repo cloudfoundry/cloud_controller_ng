@@ -80,6 +80,10 @@ module VCAP::CloudController
     describe 'destroying' do
       let(:org) { Organization.make }
 
+      before do
+        TestConfig.override(kubernetes: {})
+      end
+
       context 'when there are isolation segments in the allowed list' do
         let(:isolation_segment_model) { IsolationSegmentModel.make }
         let(:isolation_segment_model2) { IsolationSegmentModel.make }
@@ -231,6 +235,7 @@ module VCAP::CloudController
           org = space.organization
           org.add_private_domain(private_domain)
           route = Route.make(space: space, domain: private_domain)
+          TestConfig.override(kubernetes: {})
 
           expect {
             org.remove_private_domain(private_domain)

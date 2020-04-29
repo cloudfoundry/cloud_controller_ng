@@ -296,6 +296,11 @@ module VCAP::CloudController
       end
 
       context 'deleting with route mappings' do
+        before do
+          TestConfig.override(
+            kubernetes: {}
+          )
+        end
         it 'removes the associated route mappings' do
           route = Route.make
           app = AppModel.make(space: route.space)
@@ -1145,6 +1150,14 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
+      let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+      let(:route) { Route.make }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+        allow(route_crd_client).to receive(:delete_route)
+      end
+
       it 'marks the apps routes as changed and sends an update to diego' do
         fake_route_handler_app1 = instance_double(ProcessRouteHandler)
         fake_route_handler_app2 = instance_double(ProcessRouteHandler)
@@ -1168,6 +1181,26 @@ module VCAP::CloudController
         expect(fake_route_handler_app2).to receive(:notify_backend_of_route_update)
 
         route.destroy
+      end
+
+      context 'when targeting a Kubernetes API' do
+        it 'deletes the route resource in Kubernetes' do
+          route.destroy
+          expect(route_crd_client).to have_received(:delete_route)
+        end
+      end
+
+      context 'when not targeting a Kubernetes API' do
+        before do
+          TestConfig.override(
+            kubernetes: {}
+          )
+        end
+
+        it 'does not delete the route resource in Kubernetes' do
+          route.destroy
+          expect(route_crd_client).not_to have_received(:delete_route)
+        end
       end
 
       context 'with route bindings' do
@@ -1304,7 +1337,10 @@ module VCAP::CloudController
 
     describe 'vip_offset' do
       before do
-        TestConfig.override(internal_route_vip_range: '127.128.99.0/29') # 8 theoretical available ips, 6 actual
+        TestConfig.override( # 8 theoretical available ips, 6 actual
+          internal_route_vip_range: '127.128.99.0/29',
+          kubernetes: {}
+        )
       end
 
       context 'auto-assign vip_offset' do
@@ -1336,6 +1372,11 @@ module VCAP::CloudController
         end
 
         context 'when the taken offset is not the first' do
+          before do
+            TestConfig.override(
+              kubernetes: {}
+            )
+          end
           it 'finds the first offset' do
             internal_route_1.destroy
             expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(1)

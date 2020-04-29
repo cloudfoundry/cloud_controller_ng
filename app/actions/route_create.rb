@@ -28,7 +28,7 @@ module VCAP::CloudController
         manifest_triggered: false,
       )
 
-      if kubernetes_api_configured?
+      if VCAP::CloudController::Config.kubernetes_api_configured?
         route_crd_client.create_route(route)
       end
 
@@ -41,10 +41,6 @@ module VCAP::CloudController
 
     def route_crd_client
       @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
-    end
-
-    def kubernetes_api_configured?
-      !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
     end
 
     def validation_error!(error, host, path, space, domain)

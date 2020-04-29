@@ -10,6 +10,10 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
+    before do
+      TestConfig.override(kubernetes: {})
+    end
+
     describe '#delete' do
       let!(:domain) { Domain.make(owning_organization: org) }
 

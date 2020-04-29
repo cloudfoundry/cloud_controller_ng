@@ -55,6 +55,17 @@ module Kubernetes
       raise error
     end
 
+    def delete_route(route)
+      @client.delete_route(route.guid, VCAP::CloudController::Config.config.get(:kubernetes, :workloads_namespace))
+    rescue Kubeclient::ResourceNotFoundError
+      nil
+    rescue Kubeclient::HttpError => e
+      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', route.guid)
+      Steno.logger('cc.action.route_create').info("Failed to Delete Route CRD: #{e}")
+      error.set_backtrace(e.backtrace)
+      raise error
+    end
+
     private
 
     def get_destinations(route)

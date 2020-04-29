@@ -881,7 +881,10 @@ module VCAP::CloudController
       context 'when recursive is false' do
         let(:space) { Space.make }
 
-        before { set_current_user_as_admin }
+        before do
+          set_current_user_as_admin
+          TestConfig.override(kubernetes: {})
+        end
 
         it 'successfully deletes spaces with no associations' do
           delete "/v2/spaces/#{space.guid}"
@@ -954,6 +957,7 @@ module VCAP::CloudController
           allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
           stub_deprovision(service_instance, accepts_incomplete: true)
           set_current_user(user, admin: true)
+          TestConfig.override(kubernetes: {})
         end
 
         it 'successfully deletes spaces with v3 app associations' do

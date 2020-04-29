@@ -15,6 +15,7 @@ RSpec.describe 'Spaces' do
     space1.add_developer(user)
     space2.add_developer(user)
     space3.add_developer(user)
+    TestConfig.override(kubernetes: {})
   end
 
   describe 'POST /v3/spaces' do

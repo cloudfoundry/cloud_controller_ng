@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
     let(:space) { Space.make }
+    let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
 
     subject(:route_delete) { RouteDeleteAction.new(user_audit_info) }
 
@@ -15,6 +16,8 @@ module VCAP::CloudController
       before do
         allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
         allow(route_event_repo).to receive(:record_route_delete_request)
+        allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+        allow(route_crd_client).to receive(:delete_route)
       end
 
       it 'deletes the route record' do
@@ -88,6 +91,28 @@ module VCAP::CloudController
           }.to change { RouteAnnotationModel.count }.by(-1)
           expect(RouteAnnotationModel.count).to eq 0
           expect(route.exists?).to be_falsey
+        end
+      end
+
+      context 'when targeting a Kubernetes API' do
+        it 'deletes the route resource in Kubernetes' do
+          expect {
+            route_delete.delete([route])
+            expect(route_crd_client).to have_received(:delete_route)
+          }.to change { Route.count }.by(-1)
+        end
+      end
+
+      context 'when not targeting a Kubernetes API' do
+        before do
+          TestConfig.override(
+            kubernetes: {}
+          )
+        end
+
+        it 'does not delete the route resource in Kubernetes' do
+          route_delete.delete([route])
+          expect(route_crd_client).not_to have_received(:delete_route)
         end
       end
     end

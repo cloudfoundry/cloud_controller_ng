@@ -2,8 +2,10 @@ require 'spec_helper'
 require 'kubernetes/kpack_client'
 
 RSpec.describe Kubernetes::RouteCrdClient do
+  let(:kube_client) { double(Kubeclient) }
+  subject(:route_crd_client) { Kubernetes::RouteCrdClient.new(kube_client) }
+
   describe '#create_route' do
-    let(:kube_client) { double(Kubeclient) }
     let(:route) { VCAP::CloudController::Route.make }
     let(:internal_domain?) { route.internal? }
     let(:route_crd_hash) do
@@ -35,8 +37,6 @@ RSpec.describe Kubernetes::RouteCrdClient do
         }
       }
     end
-
-    subject(:route_crd_client) { Kubernetes::RouteCrdClient.new(kube_client) }
 
     it 'create a route resource in Kubernetes' do
       allow(kube_client).to receive(:create_route).with(any_args)
@@ -75,8 +75,19 @@ RSpec.describe Kubernetes::RouteCrdClient do
     end
   end
 
+  describe '#delete_route' do
+    let(:route) { VCAP::CloudController::Route.make(guid: 'theguid') }
+
+    it 'deletes a route resource in Kubernetes' do
+      allow(kube_client).to receive(:delete_route).with(any_args)
+
+      subject.delete_route(route)
+
+      expect(kube_client).to have_received(:delete_route).with('theguid', 'cf-workloads')
+    end
+  end
+
   describe '#update_destinations' do
-    let(:kube_client) { double(Kubeclient) }
     let(:route) { VCAP::CloudController::Route.make(path: '/some/path') }
     let(:route_cr) do
       Kubeclient::Resource.new({
@@ -109,8 +120,6 @@ RSpec.describe Kubernetes::RouteCrdClient do
         }
       })
     end
-
-    subject(:route_crd_client) { Kubernetes::RouteCrdClient.new(kube_client) }
 
     before do
       allow(kube_client).to receive(:get_route).with(route.guid, 'cf-workloads').and_return(route_cr)
