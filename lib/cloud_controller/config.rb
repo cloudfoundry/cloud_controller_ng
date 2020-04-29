@@ -34,6 +34,10 @@ module VCAP::CloudController
         const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
       end
 
+      def kubernetes_api_configured?
+        !!config.get(:kubernetes, :host_url)
+      end
+
       private
 
       def merge_defaults(config)

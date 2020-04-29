@@ -16,6 +16,8 @@ module VCAP::CloudController
       before do
         allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
         allow(route_event_repo).to receive(:record_route_delete_request)
+        allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+        allow(route_crd_client).to receive(:delete_route)
       end
 
       it 'deletes the route record' do
@@ -93,11 +95,6 @@ module VCAP::CloudController
       end
 
       context 'when targeting a Kubernetes API' do
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-          allow(route_crd_client).to receive(:delete_route)
-        end
-
         it 'deletes the route resource in Kubernetes' do
           expect {
             route_delete.delete([route])
