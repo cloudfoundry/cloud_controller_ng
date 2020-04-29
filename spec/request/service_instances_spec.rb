@@ -402,7 +402,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: msi_1.service_plan.service.service_broker.name,
                     guid: msi_1.service_plan.service.service_broker.guid
                   }
                 }
@@ -414,7 +413,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: msi_2.service_plan.service.service_broker.name,
                     guid: msi_2.service_plan.service.service_broker.guid
                   }
                 }
@@ -426,7 +424,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: ssi.service_plan.service.service_broker.name,
                     guid: ssi.service_plan.service.service_broker.guid
                   }
                 }

@@ -110,7 +110,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
         'relationships': {
           'service_broker': {
             'data': {
-              'name': service_broker.name,
               'guid': service_broker.guid
             }
           }
