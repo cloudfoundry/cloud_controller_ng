@@ -78,7 +78,6 @@ module Kpack
           },
           build: { 
             env: staging_details.environment_variables.to_a.
-                  select{ | key, value | key =~ /^BP[A-Z]{0,1}_/ }.
                   map{ | key , value |  {name: key, value: value.to_s() }  }
           }
         }
