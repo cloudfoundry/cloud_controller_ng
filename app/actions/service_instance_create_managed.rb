@@ -1,5 +1,5 @@
 require 'repositories/service_instance_share_event_repository'
-require 'jobs/v3/services/create_service_instance_job'
+require 'jobs/v3/create_service_instance_job'
 require 'actions/mixins/service_instance_create'
 
 module VCAP::CloudController

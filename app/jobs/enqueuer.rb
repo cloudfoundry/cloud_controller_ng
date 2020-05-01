@@ -15,8 +15,8 @@ module VCAP::CloudController
         enqueue_job(@job)
       end
 
-      def enqueue_pollable
-        wrapped_job = PollableJobWrapper.new(@job)
+      def enqueue_pollable(existing_guid: nil)
+        wrapped_job = PollableJobWrapper.new(@job, existing_guid: existing_guid)
 
         if block_given?
           wrapped_job = yield wrapped_job
