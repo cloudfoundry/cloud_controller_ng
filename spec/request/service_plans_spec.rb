@@ -758,6 +758,7 @@ RSpec.describe 'V3 service plans' do
       available: match(boolean),
       name: service_plan.name,
       free: match(boolean),
+      costs: [],
       description: service_plan.description,
       broker_catalog: {
         id: service_plan.unique_id,
