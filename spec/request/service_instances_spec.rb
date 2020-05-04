@@ -933,6 +933,30 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      context 'when there is an operation in progress for the service broker' do
+        let(:service_broker) { service_plan.service_broker }
+
+        before do
+          service_broker.update(state: broker_state)
+        end
+
+        context 'when the service broker is being deleted' do
+          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+          it 'fails to create a service instance' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+          end
+        end
+
+        context 'when the service broker is synchronising the catalog' do
+          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+          it 'fails to create a service instance' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+          end
+        end
+      end
+
       describe 'service plan checks' do
         context 'does not exist' do
           let(:service_plan_guid) { 'does-not-exist' }
