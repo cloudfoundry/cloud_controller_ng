@@ -24566,47 +24566,12 @@ They are only visible to members of that Space.</p>
 <tr>
 <td><strong>documentation_url</strong></td>
 <td><em>string</em></td>
-<td>Url that points to a documentation page for the Service Offering, if provided by the Service Broker as part of the metadata field as specified by <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#service-metadata">OSBAPI</a></td>
+<td>Url that points to a documentation page for the Service Offering, if provided by the Service Broker as part of the metadata field</td>
 </tr>
 <tr>
 <td><strong>broker_catalog</strong></td>
-<td><em>object</em></td>
+<td><em><a href="#the-service-offering-broker-catalog">broker catalog object</a></em></td>
 <td>This object contains information obtained from the Service Broker Catalog.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.id</strong></td>
-<td><em>string</em></td>
-<td>The identifier that the Service Broker provided for this Service Offering.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.metadata</strong></td>
-<td><em>object</em></td>
-<td>Additional information provided by the Service Broker.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.plan_updateable</strong></td>
-<td><em>boolean</em></td>
-<td>Whether the Service Offering supports upgrade/downgrade for Service Plans by default</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.bindable</strong></td>
-<td><em>boolean</em></td>
-<td>Specifies whether Service Instances of the service can be bound to applications.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.instances_retrievable</strong></td>
-<td><em>boolean</em></td>
-<td>Specifies whether the Fetching a Service Instance endpoint is supported for all Service Plans.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.bindings_retrievable</strong></td>
-<td><em>boolean</em></td>
-<td>Specifies whether the Fetching a Service Binding endpoint is supported for all Service Plans.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.allow_context_updates</strong></td>
-<td><em>boolean</em></td>
-<td>Specifies whether Service Instance updates relating only to context are propagated to the Service Broker.</td>
 </tr>
 <tr>
 <td><strong>relationships.service_broker</strong></td>
@@ -24627,6 +24592,52 @@ They are only visible to members of that Space.</p>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+<h4 id="the-service-offering-broker-catalog">The service offering broker catalog</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>id</strong></td>
+<td><em>string</em></td>
+<td>The identifier that the Service Broker provided for this Service Offering.</td>
+</tr>
+<tr>
+<td><strong>metadata</strong></td>
+<td><em>object</em></td>
+<td>Additional information provided by the Service Broker as specified by <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#service-metadata-fields">OSBAPI</a>.</td>
+</tr>
+<tr>
+<td><strong>features.plan_updateable</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the Service Offering supports upgrade/downgrade for Service Plans by default</td>
+</tr>
+<tr>
+<td><strong>features.bindable</strong></td>
+<td><em>boolean</em></td>
+<td>Specifies whether Service Instances of the service can be bound to applications.</td>
+</tr>
+<tr>
+<td><strong>features.instances_retrievable</strong></td>
+<td><em>boolean</em></td>
+<td>Specifies whether the Fetching a Service Instance endpoint is supported for all Service Plans.</td>
+</tr>
+<tr>
+<td><strong>features.bindings_retrievable</strong></td>
+<td><em>boolean</em></td>
+<td>Specifies whether the Fetching a Service Binding endpoint is supported for all Service Plans.</td>
+</tr>
+<tr>
+<td><strong>features.allow_context_updates</strong></td>
+<td><em>boolean</em></td>
+<td>Specifies whether Service Instance updates relating only to context are propagated to the Service Broker.</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-offering">Get a Service Offering</h3>
@@ -25133,6 +25144,13 @@ Service Offerings and Service Plans are created and updated when a Service Broke
   </span><span class="nt">"visibility_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"public"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
   </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"costs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="mf">199.99</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Monthly"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -25235,6 +25253,11 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td>Whether or not the Service Plan is free of charge.</td>
 </tr>
 <tr>
+<td><strong>costs</strong></td>
+<td><em>array of <a href="#the-service-plan-cost">cost objects</a></em></td>
+<td>The cost of the Service Plan as obtained from the Service Broker Catalog.</td>
+</tr>
+<tr>
 <td><strong>created_at</strong></td>
 <td><em>datetime</em></td>
 <td>The time with zone when the object was created.</td>
@@ -25251,68 +25274,13 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 </tr>
 <tr>
 <td><strong>broker_catalog</strong></td>
-<td><em>object</em></td>
+<td><em><a href="#the-service-plan-broker-catalog">broker catalog object</a></em></td>
 <td>This object contains information obtained from the Service Broker Catalog.</td>
 </tr>
 <tr>
-<td><strong>broker_catalog.id</strong></td>
-<td><em>string</em></td>
-<td>The identifier that the Service Broker provided for this Service Plan.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.metadata</strong></td>
-<td><em>object</em></td>
-<td>Additional information provided by the Service Broker.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.maximum_polling_duration</strong></td>
-<td><em>integer</em></td>
-<td>The maximum number of seconds that Cloud Foundry will wait for an asynchronous Service Broker operation.</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.plan_updateable</strong></td>
-<td><em>boolean</em></td>
-<td>Whether the Service Plan supports upgrade/downgrade for Service Plans by default</td>
-</tr>
-<tr>
-<td><strong>broker_catalog.features.bindable</strong></td>
-<td><em>boolean</em></td>
-<td>Specifies whether Service Instances of the service can be bound to applications.</td>
-</tr>
-<tr>
 <td><strong>schemas</strong></td>
-<td><em>object</em></td>
+<td><em><a href="#the-service-plan-schemas">schemas object</a></em></td>
 <td>Schema definitions for Service Instances and Service Bindings for the Service Plan.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_instance.create</strong></td>
-<td><em>object</em></td>
-<td>Schema definition for Service Instance creation.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_instance.create.parameters</strong></td>
-<td><em>JSON Schema object</em></td>
-<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_instance.update</strong></td>
-<td><em>object</em></td>
-<td>Schema definition for Service Instance update.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_instance.update.parameters</strong></td>
-<td><em>JSON Schema object</em></td>
-<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_binding.create</strong></td>
-<td><em>object</em></td>
-<td>Schema definition for Service Binding creation.</td>
-</tr>
-<tr>
-<td><strong>schemas.service_binding.create.parameters</strong></td>
-<td><em>JSON Schema object</em></td>
-<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
 </tr>
 <tr>
 <td><strong>relationships.service_offering</strong></td>
@@ -25341,6 +25309,32 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 </tr>
 </tbody></table>
 
+<h4 id="the-service-plan-cost">The service plan cost</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>amount</strong></td>
+<td><em>float</em></td>
+<td>Pricing amount.</td>
+</tr>
+<tr>
+<td><strong>currency</strong></td>
+<td><em>string</em></td>
+<td>Currency code for the pricing amount, e.g. USD, GBP.</td>
+</tr>
+<tr>
+<td><strong>unit</strong></td>
+<td><em>string</em></td>
+<td>Display name for type of cost, e.g. Monthly, Hourly, Request, GB.</td>
+</tr>
+</tbody></table>
+
 <h4 id="the-maintenance-info-object-for-service-plans">The maintenance info object for service plans</h4>
 
 <table><thead>
@@ -25359,6 +25353,83 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><strong>description</strong></td>
 <td><em>string</em></td>
 <td>A textual explanation associated with this version.</td>
+</tr>
+</tbody></table>
+
+<h4 id="the-service-plan-broker-catalog">The service plan broker catalog</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>id</strong></td>
+<td><em>string</em></td>
+<td>The identifier that the Service Broker provided for this Service Plan.</td>
+</tr>
+<tr>
+<td><strong>metadata</strong></td>
+<td><em>object</em></td>
+<td>Additional information provided by the Service Broker as specified by <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#plan-metadata-fields">OSBAPI</a></td>
+</tr>
+<tr>
+<td><strong>maximum_polling_duration</strong></td>
+<td><em>integer</em></td>
+<td>The maximum number of seconds that Cloud Foundry will wait for an asynchronous Service Broker operation.</td>
+</tr>
+<tr>
+<td><strong>features.plan_updateable</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the Service Plan supports upgrade/downgrade for Service Plans by default</td>
+</tr>
+<tr>
+<td><strong>features.bindable</strong></td>
+<td><em>boolean</em></td>
+<td>Specifies whether Service Instances of the service can be bound to applications.</td>
+</tr>
+</tbody></table>
+
+<h4 id="the-service-plan-schemas">The service plan schemas</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>service_instance.create</strong></td>
+<td><em>object</em></td>
+<td>Schema definition for Service Instance creation.</td>
+</tr>
+<tr>
+<td><strong>service_instance.create.parameters</strong></td>
+<td><em>JSON Schema object</em></td>
+<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
+</tr>
+<tr>
+<td><strong>service_instance.update</strong></td>
+<td><em>object</em></td>
+<td>Schema definition for Service Instance update.</td>
+</tr>
+<tr>
+<td><strong>service_instance.update.parameters</strong></td>
+<td><em>JSON Schema object</em></td>
+<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
+</tr>
+<tr>
+<td><strong>service_binding.create</strong></td>
+<td><em>object</em></td>
+<td>Schema definition for Service Binding creation.</td>
+</tr>
+<tr>
+<td><strong>service_binding.create.parameters</strong></td>
+<td><em>JSON Schema object</em></td>
+<td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-plan">Get a Service Plan</h3>
@@ -25380,6 +25451,13 @@ Service Offerings and Service Plans are created and updated when a Service Broke
   </span><span class="nt">"visibility_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"public"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
   </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"costs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="mf">199.99</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Monthly"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -25529,6 +25607,13 @@ Service Offerings and Service Plans are created and updated when a Service Broke
       </span><span class="nt">"visibility_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"organization"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"costs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="mf">199.99</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Monthly"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -25595,7 +25680,7 @@ Service Offerings and Service Plans are created and updated when a Service Broke
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Provides another service plan"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"visibility_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"admin"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-29T16:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-29T16:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -25787,6 +25872,13 @@ Service Brokers.</p>
   </span><span class="nt">"visibility_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"public"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
   </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"costs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="mf">199.99</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Monthly"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
