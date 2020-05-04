@@ -184,6 +184,7 @@ module VCAP::CloudController
           allow_app_ssh_access: bool,
 
           perform_blob_cleanup: bool,
+          disable_partial_blob_cleanup: bool,
 
           default_app_memory: Integer,
           default_app_disk_in_mb: Integer,

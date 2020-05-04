@@ -19,7 +19,7 @@ module VCAP::CloudController
             return
           end
 
-          day_of_week = Time.now.wday
+          day_of_week = config.get(:disable_partial_blob_cleanup) ? -1 : Time.now.wday
           cleanup(day_of_week)
         end
 
@@ -126,8 +126,9 @@ module VCAP::CloudController
         def daily_directory_subset(day_of_week)
           # Our blobstore directories are namespaced using hex-values (e.g. 00/6c, ff/56, etc.)
           directory_subsets = [0x00..0x24, 0x25..0x48, 0x49..0x6c, 0x6d..0x90, 0x91..0xb4, 0xb5..0xd8, 0xd9..0xff].freeze
+          all_directories = [0x00..0xff].freeze
 
-          directories_to_iterate = directory_subsets[day_of_week]
+          directories_to_iterate = (day_of_week < 0) ? all_directories : directory_subsets[day_of_week]
           directories_to_iterate.map { |decimal| decimal.to_s(16).rjust(2, '0') }
         end
 
