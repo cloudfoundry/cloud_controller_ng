@@ -11,7 +11,7 @@ module Kpack
     )
     }
     let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:environment_variables) { { 'BP_JAVA_VERSION' => '8.*', 'BPL_HEAD_ROOM' => 0}  }
+    let(:environment_variables) { { 'BP_JAVA_VERSION' => '8.*', 'BPL_HEAD_ROOM' => 0, 'VCAP_SERVICES' => { postgres: [] } } }
     let(:staging_memory_in_mb) { 1024 }
     let(:staging_disk_in_mb) { 1024 }
     let(:blobstore_url_generator) do
@@ -79,7 +79,7 @@ module Kpack
               }
             },
             build: {
-              env: [ {name: "BP_JAVA_VERSION", value: "8.*"} , {name: "BPL_HEAD_ROOM", value: "0"}]
+              env: [{ name: 'BP_JAVA_VERSION', value: '8.*' }, { name: 'BPL_HEAD_ROOM', value: '0' }]
             }
           }
         }))
