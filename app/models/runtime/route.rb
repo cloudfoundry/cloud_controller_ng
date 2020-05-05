@@ -247,6 +247,9 @@ module VCAP::CloudController
       loaded_apps.each do |app|
         ProcessRouteHandler.new(app).notify_backend_of_route_update
       end
+      if VCAP::CloudController::Config.kubernetes_api_configured?
+        CloudController::DependencyLocator.instance.route_crd_client.delete_route(self)
+      end
     end
 
     def validate_host_and_domain_in_different_space
