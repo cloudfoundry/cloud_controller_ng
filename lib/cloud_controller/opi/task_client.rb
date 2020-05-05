@@ -35,6 +35,36 @@ module OPI
 
     private
 
+    def add_command(task)
+      if task.command.presence
+        ['/bin/sh', '-c', task.command]
+      else
+        []
+      end
+    end
+
+    def add_lifecycle(task)
+      case task.droplet.lifecycle_type
+      when VCAP::CloudController::Lifecycles::BUILDPACK
+        {
+          buildpack_lifecycle: {
+            droplet_hash: task.droplet.droplet_hash,
+            droplet_guid: task.droplet.guid,
+            start_command: task.command
+          }
+        }
+      when VCAP::CloudController::Lifecycles::DOCKER
+        {
+          docker_lifecycle: {
+            image: task.droplet.docker_receipt_image,
+            command: add_command(task),
+            registry_username: task.droplet.docker_receipt_username,
+            registry_password: task.droplet.docker_receipt_password
+          }
+        }
+      end
+    end
+
     def to_request(task)
       task_completion_callback_generator = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(@config)
       {
@@ -47,13 +77,7 @@ module OPI
         space_name: task.space.name,
         environment: @environment_collector.for_task(task),
         completion_callback: task_completion_callback_generator.generate(task),
-        lifecycle: {
-          buildpack_lifecycle: {
-            droplet_hash: task.droplet.droplet_hash,
-            droplet_guid: task.droplet.guid,
-            start_command: task.command
-          }
-        }
+        lifecycle: add_lifecycle(task)
       }
     end
 

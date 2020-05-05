@@ -11,28 +11,33 @@ RSpec.describe(OPI::TaskClient) do
       },
     )
   end
-  let(:task) {
-    instance_double(
-      VCAP::CloudController::TaskModel,
-      guid: 'GUID',
-      name: 'NAME',
-      command: 'COMMAND',
-      droplet: double(droplet_hash: 'DROPLET_HASH', guid: 'DROPLET_GUID'),
-      app: double(guid: 'APP_GUID', name: 'APP_NAME'),
-      space: double(
-        guid: 'SPACE_GUID',
-        name: 'SPACE_NAME',
-        organization: double(guid: 'ORG_GUID', name: 'ORG_NAME')
-      )
-    )
-  }
   let(:task_completion_callback_generator) { instance_double(VCAP::CloudController::Diego::TaskCompletionCallbackGenerator) }
   let(:environment_collector) { class_double(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector) }
   let(:environment) { [{ name: 'FOO', value: 'BAR' }] }
 
   subject(:client) { described_class.new(config, environment_collector) }
 
-  describe 'can desire a task' do
+  describe 'can desire a buildpack task' do
+    let(:task) {
+      instance_double(
+        VCAP::CloudController::TaskModel,
+        guid: 'GUID',
+        name: 'NAME',
+        command: 'COMMAND',
+        app: double(guid: 'APP_GUID', name: 'APP_NAME'),
+        droplet: double(
+          lifecycle_type: VCAP::CloudController::Lifecycles::BUILDPACK,
+          droplet_hash: 'DROPLET_HASH',
+          guid: 'DROPLET_GUID'
+        ),
+        space: double(
+          guid: 'SPACE_GUID',
+          name: 'SPACE_NAME',
+          organization: double(guid: 'ORG_GUID', name: 'ORG_NAME')
+        )
+      )
+    }
+
     before(:each) do
       allow(VCAP::CloudController::Diego::TaskCompletionCallbackGenerator).to receive(:new).and_return(task_completion_callback_generator)
       allow(environment_collector).to receive(:for_task).with(task).and_return(environment)
@@ -75,6 +80,60 @@ RSpec.describe(OPI::TaskClient) do
           expect(e.name).to eq('RunnerError')
         end
       end
+    end
+  end
+
+  describe 'can desire a docker task' do
+    let(:task) {
+      instance_double(
+        VCAP::CloudController::TaskModel,
+        guid: 'GUID',
+        name: 'NAME',
+        command: 'COMMAND',
+        app: double(guid: 'APP_GUID', name: 'APP_NAME'),
+        droplet: double(
+          lifecycle_type: VCAP::CloudController::Lifecycles::DOCKER,
+          docker_receipt_image: 'ORG/IMAGE',
+          docker_receipt_username: 'USERNAME',
+          docker_receipt_password: 'PASSWORD'
+        ),
+        space: double(
+          guid: 'SPACE_GUID',
+          name: 'SPACE_NAME',
+          organization: double(guid: 'ORG_GUID', name: 'ORG_NAME')
+        )
+      )
+    }
+
+    before(:each) do
+      allow(VCAP::CloudController::Diego::TaskCompletionCallbackGenerator).to receive(:new).and_return(task_completion_callback_generator)
+      allow(environment_collector).to receive(:for_task).with(task).and_return(environment)
+      allow(task_completion_callback_generator).to receive(:generate).with(task).and_return('CALLBACK')
+      stub_request(:post, "#{opi_url}/tasks/GUID").to_return(status: 202)
+    end
+
+    it 'posts the task to the http client' do
+      client.desire_task(task, 'some-domain')
+
+      expect(WebMock).to have_requested(:post, "#{opi_url}/tasks/GUID").with(body: {
+        name: 'NAME',
+        app_guid: 'APP_GUID',
+        app_name: 'APP_NAME',
+        org_guid: 'ORG_GUID',
+        org_name: 'ORG_NAME',
+        space_guid: 'SPACE_GUID',
+        space_name: 'SPACE_NAME',
+        environment: [{ name: 'FOO', value: 'BAR' }],
+        completion_callback: 'CALLBACK',
+        lifecycle: {
+          docker_lifecycle: {
+            image: 'ORG/IMAGE',
+            command: ['/bin/sh', '-c', 'COMMAND'],
+            registry_username: 'USERNAME',
+            registry_password: 'PASSWORD'
+          }
+        }
+      }.to_json)
     end
   end
 
