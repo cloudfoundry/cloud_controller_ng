@@ -52,7 +52,7 @@ module VCAP::CloudController
         end
         logger.info("Deleted app: #{app.guid}")
 
-        if kubernetes_api_configured?
+        if VCAP::CloudController::Config.kubernetes_api_configured?
           logger.info('Deleting associated kpack image')
           kpack_client.delete_image(
             app.guid,
@@ -70,10 +70,6 @@ module VCAP::CloudController
 
     def kpack_client
       CloudController::DependencyLocator.instance.kpack_client
-    end
-
-    def kubernetes_api_configured?
-      !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
     end
 
     def record_audit_event(app)

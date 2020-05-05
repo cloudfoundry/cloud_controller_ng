@@ -48,7 +48,7 @@ module VCAP::CloudController
           )
         end
 
-        if kubernetes_api_configured?
+        if VCAP::CloudController::Config.kubernetes_api_configured?
           route_crd_client.update_destinations(route_mapping.route)
         end
 
@@ -128,10 +128,6 @@ module VCAP::CloudController
         if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
           raise RoutingApiDisabledError.new('Routing API is disabled')
         end
-      end
-
-      def kubernetes_api_configured?
-        !!VCAP::CloudController::Config.config.get(:kubernetes, :host_url)
       end
     end
   end
