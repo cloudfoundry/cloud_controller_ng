@@ -72,7 +72,6 @@ module VCAP::CloudController
                 relationships: {
                   service_broker: {
                     data: {
-                      name: offering1.service_broker.name,
                       guid: offering1.service_broker.guid
                     }
                   }
@@ -82,7 +81,6 @@ module VCAP::CloudController
                 relationships: {
                   service_broker: {
                     data: {
-                      name: offering2.service_broker.name,
                       guid: offering2.service_broker.guid
                     }
                   }

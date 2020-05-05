@@ -28,7 +28,6 @@ module VCAP::CloudController
           offering_view[:relationships] = {
             service_broker: {
               data: {
-                name: offering.service_broker.name,
                 guid: offering.service_broker.guid
               }
             }

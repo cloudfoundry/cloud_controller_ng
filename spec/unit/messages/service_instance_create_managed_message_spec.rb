@@ -43,14 +43,14 @@ module VCAP::CloudController
       expect(message.name).to eq('my-service-instance')
       expect(message.space_guid).to eq('space-guid')
       expect(message.service_plan_guid).to eq('service-plan-guid')
-      expect(message.metadata[:labels]).to eq({ potato: 'mashed' })
-      expect(message.metadata[:annotations]).to eq({ cheese: 'bono' })
+      expect(message.metadata[:labels]).to eq(potato: 'mashed')
+      expect(message.metadata[:annotations]).to eq(cheese: 'bono')
       expect(message.tags).to contain_exactly('foo', 'bar', 'baz')
-      expect(message.parameters).to match({ foo: 'bar' })
+      expect(message.parameters).to match(foo: 'bar')
     end
 
     it 'accepts the minimal request' do
-      message = described_class.new({
+      message = described_class.new(
         type: 'managed',
         name: 'my-service-instance',
         relationships: {
@@ -61,7 +61,7 @@ module VCAP::CloudController
             data: { guid: 'service-plan-guid' }
           }
         }
-      })
+      )
       expect(message).to be_valid
     end
 
@@ -85,6 +85,31 @@ module VCAP::CloudController
           body[:parameters] = 42
           expect(message).to_not be_valid
           expect(message.errors[:parameters]).to include('must be an object')
+        end
+      end
+
+      describe 'service plan relationship' do
+        it 'fails when not present' do
+          body[:relationships][:service_plan] = nil
+          message.valid?
+          expect(message).to_not be_valid
+          expect(message.errors[:relationships]).to include(
+            "Service plan can't be blank",
+            /Service plan must be structured like this.*/
+          )
+          expect(message.errors[:relationships].count).to eq(2)
+        end
+      end
+
+      describe 'space relationship' do
+        it 'fails when not present' do
+          body[:relationships][:space] = nil
+          expect(message).to_not be_valid
+          expect(message.errors[:relationships]).to include(
+            "Space can't be blank",
+            /Space must be structured like this.*/,
+          )
+          expect(message.errors[:relationships].count).to eq(2)
         end
       end
     end

@@ -8,7 +8,6 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalKeysValidator
-    validates_with RelationshipValidator
 
     validates :parameters, hash: true, allow_nil: true
     validates :type, allow_blank: false, inclusion: {

@@ -3,15 +3,32 @@ require 'presenters/error_presenter'
 module VCAP::CloudController
   module Jobs
     class PollableJobWrapper < WrappingJob
+      attr_reader :existing_guid
+
+      def initialize(handler, existing_guid: nil)
+        @existing_guid = existing_guid
+        super(handler)
+      end
+
       # use custom hook as Job does not have the guid field populated during the normal `enqueue` hook
       def after_enqueue(job)
-        PollableJobModel.create(
-          delayed_job_guid: job.guid,
-          state: PollableJobModel::PROCESSING_STATE,
-          operation: @handler.display_name,
-          resource_guid: @handler.resource_guid,
-          resource_type: @handler.resource_type
-        )
+        if existing_guid && (existing = PollableJobModel.find(guid: existing_guid))
+          existing.update(
+            delayed_job_guid: job.guid,
+            state: PollableJobModel::POLLING_STATE,
+            operation: @handler.display_name,
+            resource_guid: @handler.resource_guid,
+            resource_type: @handler.resource_type
+          )
+        else
+          PollableJobModel.create(
+            delayed_job_guid: job.guid,
+            state: PollableJobModel::PROCESSING_STATE,
+            operation: @handler.display_name,
+            resource_guid: @handler.resource_guid,
+            resource_type: @handler.resource_type
+          )
+        end
       end
 
       def success(job)

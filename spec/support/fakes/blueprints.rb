@@ -460,6 +460,7 @@ module VCAP::CloudController
   ServiceBroker.blueprint do
     name              { Sham.name }
     broker_url        { Sham.url }
+    state             { ServiceBrokerStateEnum::AVAILABLE }
     auth_username     { Sham.auth_username }
     auth_password     { Sham.auth_password }
   end

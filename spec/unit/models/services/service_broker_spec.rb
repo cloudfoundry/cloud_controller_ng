@@ -93,6 +93,31 @@ module VCAP::CloudController
       end
     end
 
+    describe '#available?' do
+      let(:broker) { ServiceBroker.make }
+
+      it 'returns false when state is SYNCHRONIZING' do
+        broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
+        expect(broker.available?).to eq false
+      end
+      it 'returns false when state is SYNCHRONIZATION_FAILED' do
+        broker.state = ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
+        expect(broker.available?).to eq false
+      end
+      it 'returns true when state is AVAILABLE' do
+        broker.state = ServiceBrokerStateEnum::AVAILABLE
+        expect(broker.available?).to eq true
+      end
+      it 'returns false when state is DELETE_IN_PROGRESS' do
+        broker.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
+        expect(broker.available?).to eq false
+      end
+      it 'returns false when state is DELETE_FAILED' do
+        broker.state = ServiceBrokerStateEnum::DELETE_FAILED
+        expect(broker.available?).to eq false
+      end
+    end
+
     describe '#destroy' do
       let(:service_broker) { ServiceBroker.make }
 

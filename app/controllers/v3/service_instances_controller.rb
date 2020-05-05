@@ -189,6 +189,8 @@ class ServiceInstancesV3Controller < ApplicationController
       visible_to_current_user?(plan: service_plan) &&
       service_plan.visible_in_space?(space)
 
+    broker_unavailable! unless service_plan.service_broker.available?
+
     job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
@@ -276,5 +278,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def unprocessable_service_plan!
     unprocessable!('Invalid service plan. Ensure that the service plan exists and you have access to it.')
+  end
+
+  def broker_unavailable!
+    unprocessable!('The service instance cannot be created because there is an operation in progress for the service broker')
   end
 end

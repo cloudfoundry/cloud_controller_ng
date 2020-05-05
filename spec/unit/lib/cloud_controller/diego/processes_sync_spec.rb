@@ -9,9 +9,6 @@ module VCAP::CloudController
 
       let(:bbs_apps_client) { instance_double(BbsAppsClient) }
 
-      let!(:missing_process_unstarted) { ProcessModel.make(:diego_runnable, state: 'STOPPED') }
-      let!(:missing_process_no_droplet) { ProcessModel.make(:process) }
-
       let(:scheduling_infos) { [] }
       let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater, update_synced_invalid_lrps: nil) }
 
@@ -437,6 +434,7 @@ module VCAP::CloudController
           end
 
           it 'does nothing to the task' do
+            puts "diego_docker flag value: #{VCAP::CloudController::FeatureFlag.enabled?(:diego_docker)}"
             allow(bbs_apps_client).to receive(:desire_app)
             allow(bbs_apps_client).to receive(:update_app)
             allow(bbs_apps_client).to receive(:stop_app)

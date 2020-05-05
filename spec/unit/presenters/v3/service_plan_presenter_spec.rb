@@ -42,6 +42,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         available: true,
         name: service_plan.name,
         free: false,
+        costs: [],
         description: service_plan.description,
         maintenance_info: {
           version: '1.0.0',
@@ -151,6 +152,134 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       it 'presents the service plan with metadata' do
         expect(result[:broker_catalog][:metadata][:some_key]).to eq('some-value')
+      end
+    end
+
+    context 'when plan has costs' do
+      it 'flattens different currencies in the same unit' do
+        service_plan =
+          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
+          {
+            "amount": {
+              "usd": 649.0,
+              "gbp": 600.015454
+            },
+            "unit": "MONTHLY"
+          }
+        ]}')
+
+        result = described_class.new(service_plan).to_hash.deep_symbolize_keys
+
+        expect(result[:costs][0][:amount]).to eq(649.0)
+        expect(result[:costs][0][:currency]).to eq('USD')
+        expect(result[:costs][0][:unit]).to eq('MONTHLY')
+
+        expect(result[:costs][1][:amount]).to eq(600.015454)
+        expect(result[:costs][1][:currency]).to eq('GBP')
+        expect(result[:costs][1][:unit]).to eq('MONTHLY')
+      end
+
+      it 'handles currency symbols' do
+        service_plan =
+          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
+          {
+            "amount": {
+              "$": 0.06
+            },
+            "unit": "Daily"
+          }
+        ]}')
+
+        result = described_class.new(service_plan).to_hash.deep_symbolize_keys
+
+        expect(result[:costs][0][:amount]).to eq(0.06)
+        expect(result[:costs][0][:currency]).to eq('$')
+        expect(result[:costs][0][:unit]).to eq('Daily')
+      end
+    end
+
+    context 'when plan has no cost' do
+      let(:service_plan) do
+        VCAP::CloudController::ServicePlan.make
+      end
+
+      it 'presents the service plan with cost' do
+        expect(result[:costs]).to eq([])
+      end
+    end
+
+    context 'when plan cost is not valid array' do
+      [
+        ['cost is not an array',
+         '{
+            "costs":
+              {
+                "amount": {
+                  "usd": 649.0,
+                  "gbp": 600.015454
+                },
+                "unit": "MONTHLY"
+              }
+           }'
+        ],
+        ['amount missing',
+         '{
+            "costs": [
+              {
+                "unit": "Weekly"
+              },
+              {
+                "amount": {
+                  "usd": 649.0,
+                  "gbp": 600.015454
+                },
+                "unit": "Weekly"
+              }
+            ]
+           }'
+        ],
+        ['unit is missing',
+         '{
+            "costs": [
+              {
+                "amount": {
+                  "usd": 649.0,
+                  "gbp": 600.015454
+                }
+              }
+            ]
+           }'
+        ],
+        ['amount is empty object',
+         '{
+            "costs": [
+              {
+                "amount": {},
+                "unit": "Daily"
+              }
+            ]
+           }'
+        ],
+        ['amount is not a valid string:float key value pair',
+         '{
+            "costs": [
+              {
+                "amount": {
+                  "usd": "649.0"
+                },
+                "unit": "Weekly"
+              }
+            ]
+           }'
+        ]
+      ].each do |scenario, extra|
+        it "returns empty cost array when #{scenario}" do
+          service_plan = VCAP::CloudController::ServicePlan.make(extra: extra)
+
+          result = described_class.new(service_plan).to_hash.deep_symbolize_keys
+
+          expect(result[:costs]).to eq([])
+        end
       end
     end
 

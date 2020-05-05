@@ -38,6 +38,29 @@ module VCAP::CloudController::Jobs
         expect(job_record.reload.state).to eq('COMPLETE')
       end
 
+      context 'reusing a pollable job' do
+        let!(:existing) { VCAP::CloudController::PollableJobModel.make }
+        let(:pollable_job) { PollableJobWrapper.new(job, existing_guid: existing.guid) }
+
+        it 'updates the existing database record with the new delayed job guid' do
+          jobs_before_enqueue = VCAP::CloudController::PollableJobModel.all.length
+          expect(jobs_before_enqueue).to eq(1)
+
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+
+          jobs_after_enqueue = VCAP::CloudController::PollableJobModel.all.length
+          expect(jobs_after_enqueue).to eq(1)
+
+          job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
+          expect(job_record).to_not be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
+          expect(job_record.state).to eq('POLLING')
+          expect(job_record.operation).to eq('droplet.delete')
+          expect(job_record.resource_guid).to eq('fake')
+          expect(job_record.resource_type).to eq('droplet')
+          expect(job_record.cf_api_error).to be_nil
+        end
+      end
+
       context 'when the job fails' do
         before do
           allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).

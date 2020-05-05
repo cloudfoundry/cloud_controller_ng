@@ -9,12 +9,6 @@ CLEAR_LINE='\r\033[K'
 
 REPO_BASE_DIR="$(git rev-parse --show-toplevel)"
 
-if ! command -v rubocop > /dev/null; then
-  printf "${CLEAR_LINE}💀${RED} Install Rubocop and be sure it is available on your PATH.${NO_COLOR}\n"
-  printf "ℹ️  Try 'gem install rubocop'\n"
-  exit 1
-fi
-
 pushd "${REPO_BASE_DIR}"
   INNOCENTS="$(git diff --name-only --diff-filter=AMC | grep -i '.*\.rb' | sort)"
   SUSPECTS="$(git diff --cached --name-only --diff-filter=AMC | grep -i '.*\.rb' | sort)"
@@ -24,14 +18,14 @@ pushd "${REPO_BASE_DIR}"
 
   printf "\n🚔 Linting with Rubocop...\n"
 
-  if rubocop --parallel --cache=true --format autogenconf ${SUSPECTS}; then
+  if bundle exec rubocop --parallel --cache=true --format autogenconf ${SUSPECTS}; then
     printf "${CLEAR_LINE}🎉${GREEN} Rubocop is appeased.${NO_COLOR}\n"
     exit 0
   fi
 
   printf "\n${CLEAR_LINE}${RED}💀 Rubocop found some issues. Let's see if it can autocorrect the files you're trying to commit...${NO_COLOR}\n"
 
-  if ! rubocop --auto-correct --cache=true ${SUSPECTS}; then
+  if ! bundle exec rubocop --auto-correct --cache=true ${SUSPECTS}; then
     printf "\n${CLEAR_LINE}${RED}💀 Rubocop couldn't autocorrect everything! 😭 ${NO_COLOR}\n"
     exit 1
   fi

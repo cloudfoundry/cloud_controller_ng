@@ -402,7 +402,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: msi_1.service_plan.service.service_broker.name,
                     guid: msi_1.service_plan.service.service_broker.guid
                   }
                 }
@@ -414,7 +413,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: msi_2.service_plan.service.service_broker.name,
                     guid: msi_2.service_plan.service.service_broker.guid
                   }
                 }
@@ -426,7 +424,6 @@ RSpec.describe 'V3 service instances' do
               relationships: {
                 service_broker: {
                   data: {
-                    name: ssi.service_plan.service.service_broker.name,
                     guid: ssi.service_plan.service.service_broker.guid
                   }
                 }
@@ -936,6 +933,30 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      context 'when there is an operation in progress for the service broker' do
+        let(:service_broker) { service_plan.service_broker }
+
+        before do
+          service_broker.update(state: broker_state)
+        end
+
+        context 'when the service broker is being deleted' do
+          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+          it 'fails to create a service instance' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+          end
+        end
+
+        context 'when the service broker is synchronising the catalog' do
+          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+          it 'fails to create a service instance' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+          end
+        end
+      end
+
       describe 'service plan checks' do
         context 'does not exist' do
           let(:service_plan_guid) { 'does-not-exist' }
@@ -1091,12 +1112,12 @@ RSpec.describe 'V3 service instances' do
           let(:broker_response) { { operation: 'task12' } }
 
           it 'marks the job state as polling' do
-            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
           end
 
           it 'calls last operation immediately' do
-            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(
               a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
                 with(
@@ -1109,9 +1130,8 @@ RSpec.describe 'V3 service instances' do
           end
 
           it 'enqueues the next fetch last operation job' do
-            execute_all_jobs(expected_successes: 2, expected_failures: 0)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(Delayed::Job.count).to eq(1)
-            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::V3::FetchLastOperationJob)
           end
 
           context 'when last operation eventually returns `create succeeded`' do
@@ -1126,7 +1146,7 @@ RSpec.describe 'V3 service instances' do
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
 
-              execute_all_jobs(expected_successes: 2, expected_failures: 0)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
               Timecop.freeze(Time.now + 1.hour) do
@@ -1157,7 +1177,7 @@ RSpec.describe 'V3 service instances' do
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
 
-              execute_all_jobs(expected_successes: 2, expected_failures: 0)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
               Timecop.freeze(Time.now + 1.hour) do

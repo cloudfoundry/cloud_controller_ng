@@ -87,7 +87,6 @@ module VCAP::CloudController
           {
             service_broker: {
               data: {
-                name: service_offering.service_broker.name,
                 guid: service_offering.service_broker.guid
               }
             }

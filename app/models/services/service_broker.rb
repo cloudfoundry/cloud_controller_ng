@@ -38,6 +38,10 @@ module VCAP::CloudController
       [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(self.state)
     end
 
+    def available?
+      self.state == ServiceBrokerStateEnum::AVAILABLE
+    end
+
     def space_scoped?
       !!space_id
     end
