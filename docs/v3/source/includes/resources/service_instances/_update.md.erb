@@ -1,7 +1,7 @@
 ### Update a service instance
 
 ```
-Example Request
+Example Request for Managed Service Instance
 ```
 
 ```shell
@@ -14,7 +14,7 @@ curl "https://api.example.org/v3/service_instances/[guid]" \
 ```
 
 ```
-Example Response
+Example Response for Managed Service Instance
 ```
 
 ```http
@@ -24,15 +24,67 @@ Content-Type: application/json
 <%= yield_content :single_service_instance, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
 ```
 
+```
+(Experimental) Example Request for User-Provided Service Instance
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]"" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "my_service_instance",
+    "credentials": {
+      "foo": "bar",
+      "baz": "qux"
+    },
+    "tags": ["foo", "bar", "baz"],
+    "syslog_drain_url": "https://syslog.com/drain",
+    "route_service_url": "https://route.com/service",
+    "metadata": {
+      "annotations": {
+        "foo": "bar"
+      },
+      "labels": {
+        "baz": "qux"
+      }
+    }
+  }'
+```
+
+```
+(Experimental) Example Response for User-Provided Service Instance
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_user_provided_service_instance, labels: { "baz" => "qux" }, annotations: {"foo" => "bar"} %>
+```
+
 #### Definition
 `PATCH /v3/service_instances/:guid`
 
-#### Optional parameters
+#### Optional parameters for managed service instances
 
 Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service_instance.
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service_instance.
+
+#### Optional parameters for user-provided service instances
+
+Name | Type | Description |
+---- | ---- | ----------- |
+**name** | _string_ | **Experimental** - Name of the service instance.
+**tags** | _array of strings_ | **Experimental** - Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
+**credentials** | _object_ | **Experimental** - A JSON object that is made available to apps bound to this service instance.
+**syslog_drain_url** | _string_ | **Experimental** - URL to which logs for bound applications will be streamed.
+**route_service_url** | _string_ | **Experimental** - URL to which requests for bound routes will be forwarded. Must use the `https` protocol.
+**metadata.labels** | [_label object_](#labels) | **Experimental** - Labels applied to the service_instance.
+**metadata.annotations**  | [_annotation object_](#annotations) | **Experimental** - Annotations applied to the service_instance.
 
 #### Permitted roles
  |

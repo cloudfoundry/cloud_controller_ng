@@ -17,7 +17,7 @@ module VCAP::CloudController
         }
       end
       let(:service_instance) { ServiceInstance.make }
-      let(:message) { ServiceInstanceUpdateMessage.new(body) }
+      let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
 
       context 'When there are no keys in metadata already' do
         it 'adds the new keys' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
           }
         end
 
-        let(:message) { ServiceInstanceUpdateMessage.new(body) }
+        let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
 
         before do
           annotation = VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')

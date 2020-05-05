@@ -674,16 +674,14 @@ RSpec.describe 'V3 service instances' do
       headers_for(user)
     end
 
-    describe 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 201 }
-            h['admin'] = { code: 201 }
-            h['no_role'] = { code: 422 }
-            h['org_billing_manager'] = { code: 422 }
-            h['org_auditor'] = { code: 422 }
-          end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['space_developer'] = { code: 201 }
+          h['admin'] = { code: 201 }
+          h['no_role'] = { code: 422 }
+          h['org_billing_manager'] = { code: 422 }
+          h['org_auditor'] = { code: 422 }
         end
       end
     end
@@ -941,7 +939,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when the service broker is being deleted' do
-          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
           it 'fails to create a service instance' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
@@ -949,7 +947,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when the service broker is synchronising the catalog' do
-          let(:broker_state) {  VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
           it 'fails to create a service instance' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
@@ -1270,6 +1268,171 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'PATCH /v3/service_instances/:guid' do
+    let(:api_call) { lambda { |user_headers| patch "/v3/service_instances/#{guid}", request_body.to_json, user_headers } }
+    let(:space_guid) { space.guid }
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let(:request_body) do
+      {}
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['space_developer'] = { code: 200 }
+          h['admin'] = { code: 200 }
+          h['no_role'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+        end
+      end
+    end
+
+    context 'service instance does not exist' do
+      let(:guid) { 'no-such-instance' }
+
+      it 'fails saying the service instance is not found (404)' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'managed service instance' do
+      context 'updating metadata' do
+        let!(:service_instance) do
+          si = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+          si.annotation_ids = [VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id]
+          si
+        end
+
+        let(:guid) { service_instance.guid }
+
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                potato: 'yam',
+                style: 'baked'
+              },
+              annotations: {
+                potato: 'idaho',
+                style: 'mashed',
+                "pre.fix/to_delete": nil
+              }
+            }
+          }
+        end
+
+        it 'updates the metadata' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to match_json_response(
+            create_managed_json(
+              service_instance,
+              labels: {
+                potato: 'yam',
+                style: 'baked'
+              },
+              annotations: {
+                potato: 'idaho',
+                style: 'mashed',
+              }
+            )
+          )
+        end
+      end
+    end
+
+    context 'user-provided service instance' do
+      let!(:service_instance) do
+        si = VCAP::CloudController::UserProvidedServiceInstance.make(
+          space: space,
+          name: 'foo',
+          credentials: {
+            foo: 'bar',
+            baz: 'qux'
+          },
+          syslog_drain_url: 'https://foo.com',
+          route_service_url: 'https://bar.com',
+          tags: %w(accounting mongodb)
+        )
+        si.annotation_ids = [
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
+        ]
+        si.label_ids = [
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+        ]
+        si
+      end
+
+      let(:guid) { service_instance.guid }
+
+      let(:request_body) do
+        {
+          name: 'my_service_instance',
+          credentials: {
+            used_in: 'bindings',
+            foo: 'bar',
+          },
+          syslog_drain_url: 'https://foo2.com',
+          route_service_url: 'https://bar2.com',
+          tags: %w(accounting couchbase nosql),
+          metadata: {
+            labels: {
+              foo: 'bar',
+              'pre.fix/to_delete': nil,
+            },
+            annotations: {
+              alpha: 'beta',
+              'pre.fix/to_delete': nil,
+            }
+          }
+        }
+      end
+
+      it 'allows updates' do
+        api_call.call(space_dev_headers)
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to match_json_response(
+          create_user_provided_json(
+            service_instance.reload,
+            labels: {
+              foo: 'bar',
+              'pre.fix/tail': 'fluffy'
+            },
+            annotations: {
+              alpha: 'beta',
+              'pre.fix/fox': 'bushy'
+            },
+          )
+        )
+      end
+
+      context 'when the request is invalid' do
+        let(:request_body) do
+          {
+            guid: Sham.guid
+          }
+        end
+
+        it 'is rejected' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({ 'detail' => include("Unknown field(s): 'guid'") })
+          )
+        end
+      end
+    end
+  end
+
   def create_managed_json(instance, labels: {}, annotations: {})
     {
       guid: instance.guid,
@@ -1442,85 +1605,6 @@ RSpec.describe 'V3 service instances' do
           organization_guid: space.organization.guid
         })
         expect(event.metadata['target_space_guids']).to eq([target_space.guid])
-      end
-    end
-
-    describe 'PATCH /v3/service_instances/:guid' do
-      before do
-        service_instance1.annotation_ids = [annotations.id]
-      end
-      let(:metadata_request) do
-        {
-          "metadata": {
-            "labels": {
-              "potato": 'yam',
-              "style": 'baked'
-            },
-            "annotations": {
-              "potato": 'idaho',
-              "style": 'mashed',
-              "pre.fix/to_delete": nil
-            }
-          }
-        }
-      end
-
-      it 'updates metadata on a service instance' do
-        patch "/v3/service_instances/#{service_instance1.guid}", metadata_request.to_json, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-
-        expect(parsed_response).to be_a_response_like(
-          {
-            'guid' => service_instance1.guid,
-            'name' => service_instance1.name,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'dashboard_url' => nil,
-            'last_operation' => {},
-            'maintenance_info' => {},
-            'tags' => [],
-            'type' => 'managed',
-            'upgrade_available' => false,
-            'relationships' => {
-              'space' => {
-                'data' => {
-                  'guid' => service_instance1.space.guid
-                }
-              },
-              'service_plan' => {
-                'data' => {
-                  'guid' => service_instance1.service_plan.guid
-                }
-              }
-            },
-            'links' => {
-              'space' => {
-                'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
-              },
-              'service_plan' => {
-                'href' => "#{link_prefix}/v3/service_plans/#{service_instance1.service_plan.guid}"
-              },
-              'self' => {
-                'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}"
-              },
-              'parameters' => {
-                'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/parameters"
-              }
-            },
-            'metadata' => {
-              'labels' => {
-                'potato' => 'yam',
-                'style' => 'baked'
-              },
-              'annotations' => {
-                'potato' => 'idaho',
-                'style' => 'mashed'
-              }
-            }
-          }
-        )
       end
     end
 
