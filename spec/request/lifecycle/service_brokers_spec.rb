@@ -51,6 +51,14 @@ RSpec.describe 'V3 service brokers' do
         get job_url_for_create, {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['state']).to eq('COMPLETE')
+
+        # Check it's correct
+        get broker, {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to include(
+          'name' => 'my-service-broker',
+          'url' => 'http://example.org/my-service-broker-url'
+        )
       end
     end
 
