@@ -181,7 +181,7 @@ module CloudFoundry
             end
           end
 
-          context 'when the user is hitting a root path /v2/info"' do
+          context 'when the user is hitting a root path /v2/info' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
 
             it 'exempts them from rate limiting' do
@@ -193,8 +193,20 @@ module CloudFoundry
             end
           end
 
-          context 'when the user is hitting a root path /v3"' do
+          context 'when the user is hitting a root path /v3' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3') }
+
+            it 'exempts them from rate limiting' do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(unauthenticated_env)
+              expect(response_headers['X-RateLimit-Limit']).to be_nil
+              expect(response_headers['X-RateLimit-Remaining']).to be_nil
+              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            end
+          end
+
+          context 'when the user is hitting a root path /healthz' do
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/healthz') }
 
             it 'exempts them from rate limiting' do
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
