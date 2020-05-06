@@ -546,6 +546,13 @@ module VCAP::CloudController
             expect(AppUsageEvent.last).to match_app(process)
           end
 
+          it 'sets the parent_app_name and parent_app_guid' do
+            repository.purge_and_reseed_started_apps!
+
+            expect(AppUsageEvent.last.parent_app_name).to eq(process.app.name)
+            expect(AppUsageEvent.last.parent_app_guid).to eq(process.app.guid)
+          end
+
           context 'with associated buildpack information' do
             before do
               process.desired_droplet.update(
