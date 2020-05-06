@@ -143,7 +143,46 @@ RSpec.describe 'Security_Groups Request' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
-      context 'when a security group with that name already exists' do
+      if ENV['DB'] == 'mysql'
+        context 'when the security group name is invalid' do
+          let(:params) do
+            {
+              name: '🐸🐞'
+            }
+          end
+
+          it 'returns a 422 with a helpful message' do
+            post '/v3/security_groups', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              'Security group name contains invalid characters.'
+            )
+          end
+        end
+
+        context 'when the security group rules are invalid' do
+          let(:params) do
+            {
+              name: 'bad-rules',
+              rules: [
+                { "protocol": 'all', "destination": '0.0.0.0', "description": 'asd🐞f' }
+              ]
+            }
+          end
+
+          it 'returns a 422 with a helpful message' do
+            post '/v3/security_groups', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              'Security group rules contain invalid characters.'
+            )
+          end
+        end
+      end
+
+      context 'when a security group with name that already exists' do
         before do
           post '/v3/security_groups', params.to_json, admin_header
         end
@@ -1105,6 +1144,44 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Security group with name 'already-taken' already exists")
+      end
+    end
+
+    if ENV['DB'] == 'mysql'
+      context 'when the security group name is invalid' do
+        let(:params) do
+          {
+            name: '🐸🐞'
+          }
+        end
+
+        it 'returns a 422 with a helpful message' do
+          patch "/v3/security_groups/#{security_group.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message(
+            'Security group name contains invalid characters.'
+          )
+        end
+      end
+
+      context 'when the security group rules are invalid' do
+        let(:params) do
+          {
+            rules: [
+              { "protocol": 'all', "destination": '0.0.0.0', "description": 'asd🐞f' }
+            ]
+          }
+        end
+
+        it 'returns a 422 with a helpful message' do
+          patch "/v3/security_groups/#{security_group.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message(
+            'Security group rules contain invalid characters.'
+          )
+        end
       end
     end
   end

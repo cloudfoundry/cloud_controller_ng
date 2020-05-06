@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class SecurityGroupCreate
+    MYSQL_INVALID_VALUE_ERROR = 1366
+
     class Error < ::StandardError
     end
 
@@ -24,6 +26,8 @@ module VCAP::CloudController
         security_group
       rescue Sequel::ValidationFailed => e
         validation_error!(e, message)
+      rescue Sequel::DatabaseError => e
+        invalid_value_error!(e)
       end
 
       private
@@ -36,16 +40,28 @@ module VCAP::CloudController
         error!(error.message)
       end
 
+      def invalid_value_error!(error)
+        if error.wrapped_exception.is_a?(Mysql2::Error) && error.wrapped_exception.error_number == MYSQL_INVALID_VALUE_ERROR
+          if /column 'name'/ =~ error.message
+            error!('Security group name contains invalid characters.')
+          elsif /column 'rules'/ =~ error.message
+            error!('Security group rules contain invalid characters.')
+          end
+        end
+
+        raise error
+      end
+
+      def error!(message)
+        raise Error.new(message)
+      end
+
       def valid_spaces(space_guids)
         spaces = Space.where(guid: space_guids).all
         return spaces if spaces.length == space_guids.length
 
         invalid_space_guids = space_guids - spaces.map(&:guid)
         error!("Spaces with guids #{invalid_space_guids} do not exist.")
-      end
-
-      def error!(message)
-        raise Error.new(message)
       end
     end
   end
