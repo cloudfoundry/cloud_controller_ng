@@ -38,8 +38,12 @@ module VCAP::CloudController
       []
     end
 
+    def buildpacks=(new_buildpacks) end
+
     def stack
       nil
     end
+
+    def stack=(new_value) end
   end
 end
