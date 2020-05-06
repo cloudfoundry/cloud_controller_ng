@@ -46,29 +46,11 @@ RSpec.describe 'V3 service brokers' do
         expect(parsed_response['state']).to eq('PROCESSING')
         broker = parsed_response.dig('links', 'service_brokers', 'href')
 
-        # Check it's in progress
-        get broker, {}, admin_headers
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response).to include(
-          'name' => 'my-service-broker',
-          'url' => 'http://example.org/my-service-broker-url',
-          'status' => 'synchronization in progress',
-        )
-
         # Check it finishes
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get job_url_for_create, {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['state']).to eq('COMPLETE')
-
-        # Check it's correct
-        get broker, {}, admin_headers
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response).to include(
-          'name' => 'my-service-broker',
-          'url' => 'http://example.org/my-service-broker-url',
-          'status' => 'available',
-        )
       end
     end
 
@@ -90,15 +72,6 @@ RSpec.describe 'V3 service brokers' do
         get job_url_for_create, {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['state']).to eq('FAILED')
-
-        # Check it's in failed state
-        get parsed_response.dig('links', 'service_brokers', 'href'), {}, admin_headers
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response).to include(
-          'name' => 'my-service-broker',
-          'url' => 'http://example.org/my-service-broker-url',
-          'status' => 'synchronization failed',
-        )
       end
     end
 
@@ -189,7 +162,7 @@ RSpec.describe 'V3 service brokers' do
               type: 'basic',
               credentials: {
                   username: 'old-admin',
-                  password: 'not-welcome',
+                  password: 'not-welcome'
               }
           },
           metadata: {
@@ -207,7 +180,7 @@ RSpec.describe 'V3 service brokers' do
               type: 'basic',
               credentials: {
                   username: 'admin',
-                  password: 'welcome',
+                  password: 'welcome'
               }
           },
           metadata: {
@@ -235,7 +208,7 @@ RSpec.describe 'V3 service brokers' do
             'state' => 'PROCESSING',
             'operation' => 'service_broker.update',
             'errors' => [],
-            'warnings' => [],
+            'warnings' => []
         })
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -255,8 +228,7 @@ RSpec.describe 'V3 service brokers' do
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include({
             'name' => 'new-name',
-            'url' => 'http://example.org/new-broker-url',
-            'status' => 'available',
+            'url' => 'http://example.org/new-broker-url'
         })
       end
 
@@ -297,7 +269,6 @@ RSpec.describe 'V3 service brokers' do
       expect(parsed_response).to include({
           'name' => 'old-name',
           'url' => 'http://example.org/old-broker-url',
-          'status' => 'available',
           'metadata' => {
               'annotations' => {
                   'to_delete' => 'value',

@@ -18,7 +18,6 @@ module VCAP::CloudController
       end
 
       let(:service_broker_guid) { 'some-broker-guid' }
-      let(:service_broker_state) { nil }
       let(:space_guid) { nil }
       let(:service_broker) do
         double(
@@ -28,7 +27,6 @@ module VCAP::CloudController
           auth_username: 'username',
           auth_password: 'welcome',
           space_guid: space_guid,
-          state: service_broker_state,
           created_at: Time.now,
           updated_at: Time.now,
           labels: [label],
@@ -95,54 +93,6 @@ module VCAP::CloudController
 
           it 'includes a space link in the JSON' do
             expect(result[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{space_guid}")
-          end
-        end
-
-        describe 'broker status' do
-          context 'when there is no state (e.g. legacy V2 created broker)' do
-            it 'is available' do
-              expect(result[:status]).to eq('available')
-            end
-          end
-
-          context 'when state is available' do
-            let(:service_broker_state) { ServiceBrokerStateEnum::AVAILABLE }
-
-            it 'is available' do
-              expect(result[:status]).to eq('available')
-            end
-          end
-
-          context 'when state is synchronizing' do
-            let(:service_broker_state) { ServiceBrokerStateEnum::SYNCHRONIZING }
-
-            it 'has synchronization in progress' do
-              expect(result[:status]).to eq('synchronization in progress')
-            end
-          end
-
-          context 'when state is synchronization failed' do
-            let(:service_broker_state) { ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED }
-
-            it 'has synchronization failed' do
-              expect(result[:status]).to eq('synchronization failed')
-            end
-          end
-
-          context 'when state is delete in progress' do
-            let(:service_broker_state) { ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
-
-            it 'has delete in progress' do
-              expect(result[:status]).to eq('delete in progress')
-            end
-          end
-
-          context 'when state is delete failed' do
-            let(:service_broker_state) { ServiceBrokerStateEnum::DELETE_FAILED }
-
-            it 'has delete failed' do
-              expect(result[:status]).to eq('delete failed')
-            end
           end
         end
       end

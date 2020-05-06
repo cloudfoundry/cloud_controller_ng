@@ -10,20 +10,11 @@ module VCAP::CloudController
       class ServiceBrokerPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
-        STATES = {
-          VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING => 'synchronization in progress',
-          VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED => 'synchronization failed',
-          VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE => 'available',
-          VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS => 'delete in progress',
-          VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED => 'delete failed'
-        }.tap { |s| s.default = 'available' }.freeze
-
         def to_hash
           {
             guid: broker.guid,
             name: broker.name,
             url: broker.broker_url,
-            status: status,
             created_at: broker.created_at,
             updated_at: broker.updated_at,
             relationships: build_relationships,
@@ -39,10 +30,6 @@ module VCAP::CloudController
 
         def broker
           @resource
-        end
-
-        def status
-          STATES[broker.state]
         end
 
         def build_relationships

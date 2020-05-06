@@ -39,7 +39,9 @@ Content-Type: application/json
 Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
 ```
 
-This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker's catalog.  The `Location` header refers to the created job which syncs the broker with the catalog.
+This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker's catalog.
+The `Location` header refers to the created job which syncs the broker with the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+
 
 #### Definition
 `POST /v3/service_brokers`

@@ -312,6 +312,7 @@ includes:
   - experimental_resources/service_brokers/list
   - experimental_resources/service_brokers/update
   - experimental_resources/service_brokers/delete
+  - experimental_resources/service_brokers/jobs
   - experimental_resources/service_offerings/header
   - experimental_resources/service_offerings/visibility
   - experimental_resources/service_offerings/object

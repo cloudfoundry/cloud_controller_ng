@@ -152,7 +152,6 @@ RSpec.describe 'V3 service brokers' do
             url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'available',
             relationships: {},
             links: {
               self: {
@@ -172,7 +171,6 @@ RSpec.describe 'V3 service brokers' do
             url: global_service_broker_v2.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'available',
             relationships: {},
             links: {
               self: {
@@ -211,7 +209,6 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'available',
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -354,7 +351,6 @@ RSpec.describe 'V3 service brokers' do
             url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'available',
             metadata: { labels: {}, annotations: {} },
             relationships: {},
             links: {
@@ -401,7 +397,6 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'available',
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -710,7 +705,6 @@ RSpec.describe 'V3 service brokers' do
           url: 'http://example.org/broker-url',
           created_at: iso8601,
           updated_at: iso8601,
-          status: 'synchronization in progress',
           metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } },
           relationships: {},
           links: {
@@ -760,7 +754,7 @@ RSpec.describe 'V3 service brokers' do
       expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
     end
 
-    it 'creates the services and the plans in the database' do
+    it 'creates the services and the plans in the database and updates broker state' do
       create_broker_successfully(global_broker_request_body, with: admin_headers)
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -848,7 +842,6 @@ RSpec.describe 'V3 service brokers' do
             url: 'http://example.org/space-broker-url',
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'synchronization in progress',
             metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
@@ -1015,10 +1008,8 @@ RSpec.describe 'V3 service brokers' do
       let(:job) { VCAP::CloudController::PollableJobModel.last }
 
       it 'leaves broker in a non-available failed state' do
-        expect_broker_status(
-          status: 'synchronization failed',
-          with: admin_headers
-        )
+        broker = VCAP::CloudController::ServiceBroker.last
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
 
       it 'has failed the job with an appropriate error' do
@@ -1164,7 +1155,6 @@ RSpec.describe 'V3 service brokers' do
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation + 1)
 
       service_broker = VCAP::CloudController::ServiceBroker.last
-
       expect(service_broker).to include(
         'name' => expected_broker[:name],
         'broker_url' => expected_broker[:url],
@@ -1174,17 +1164,6 @@ RSpec.describe 'V3 service brokers' do
 
       # asserting password separately because it is not exported in to_hash
       expect(service_broker.auth_password).to eq(expected_broker[:authentication][:credentials][:password])
-    end
-
-    def expect_broker_status(status:, with:)
-      expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation + 1)
-      service_broker = VCAP::CloudController::ServiceBroker.last
-
-      get("/v3/service_brokers/#{service_broker.guid}", {}, with)
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to include(
-        'status' => status
-      )
     end
 
     def expect_no_broker_created
@@ -1206,11 +1185,10 @@ RSpec.describe 'V3 service brokers' do
       get broker_url, {}, admin_headers
       expect(last_response.status).to eq(200)
 
-      updated_service_broker_json = broker_json.tap do |broker|
-        broker[:status] = 'available'
-      end
+      expect(parsed_response).to match_json_response(broker_json)
 
-      expect(parsed_response).to match_json_response(updated_service_broker_json)
+      service_broker = VCAP::CloudController::ServiceBroker.last
+      expect(service_broker.state).to eq('AVAILABLE')
     end
   end
 
@@ -1299,10 +1277,8 @@ RSpec.describe 'V3 service brokers' do
           end
 
           it 'marks the broker as deleting' do
-            get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
-            expect(parsed_response).to include({
-                'status' => 'delete in progress'
-            })
+            broker = VCAP::CloudController::ServiceBroker.last
+            expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
           end
         end
 
@@ -1390,10 +1366,8 @@ RSpec.describe 'V3 service brokers' do
         end
 
         it 'updates the broker state' do
-          get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
-          expect(parsed_response).to include({
-              'status' => 'delete failed'
-          })
+          broker = VCAP::CloudController::ServiceBroker.last
+          expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
         end
       end
     end
