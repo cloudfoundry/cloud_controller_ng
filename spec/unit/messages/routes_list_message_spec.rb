@@ -16,13 +16,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#for_app_guid' do
-      it 'sets app_guid on message' do
-        message = RoutesListMessage.from_params({}).for_app_guid('some-app-guid')
-        expect(message.app_guid).to eq('some-app-guid')
-      end
-    end
-
     describe 'fields' do
       it 'accepts an empty set' do
         message = RoutesListMessage.from_params({})
@@ -104,6 +97,14 @@ module VCAP::CloudController
         expect(message).to be_invalid
         expect(message.errors[:base].length).to eq 1
         expect(message.errors[:base][0]).to match(/Duplicate included resource: 'domain'/)
+      end
+
+      context 'when app guids param is provided' do
+        it 'accepts it' do
+          message = RoutesListMessage.from_params({ 'app_guids' => 'guid1,guid2' })
+          expect(message).to be_valid
+          expect(message.app_guids).to eq(['guid1', 'guid2'])
+        end
       end
     end
   end

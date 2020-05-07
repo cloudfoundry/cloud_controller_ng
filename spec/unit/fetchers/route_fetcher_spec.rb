@@ -177,11 +177,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'when fetching routes for several apps' do
+        let(:app_model) { AppModel.make(space: space1) }
+        let(:app_model2) { AppModel.make(space: space1) }
+        let!(:destination1) { RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
+        let!(:destination2) { RouteMappingModel.make(app: app_model2, route: route2, process_type: 'worker') }
+        let(:routes_filter) { { app_guids: [app_model.guid, app_model2.guid] } }
+
+        it 'only returns routes that are mapped to the app' do
+          results = RouteFetcher.fetch(message, Route.all.map(&:guid)).all
+          expect(results).to contain_exactly(route1, route2)
+        end
+      end
+
       context 'when fetching routes for an app' do
         let(:app_model) { AppModel.make(space: space1) }
         let!(:destination1) { RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
         let!(:destination2) { RouteMappingModel.make(app: app_model, route: route2, process_type: 'worker') }
-        let(:message) { RoutesListMessage.from_params({}).for_app_guid(app_model.guid) }
+        let(:routes_filter) { { app_guids: [app_model.guid] } }
 
         it 'only returns routes that are mapped to the app' do
           results = RouteFetcher.fetch(message, Route.all.map(&:guid)).all

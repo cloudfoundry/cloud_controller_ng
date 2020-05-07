@@ -181,7 +181,7 @@ class RoutesController < ApplicationController
   end
 
   def index_by_app
-    message = RoutesListMessage.from_params(query_params).for_app_guid(hashed_params['guid'])
+    message = RoutesListMessage.from_params(query_params.merge({ app_guids: hashed_params['guid'] }))
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(hashed_params['guid'])

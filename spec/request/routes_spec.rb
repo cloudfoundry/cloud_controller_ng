@@ -121,6 +121,7 @@ RSpec.describe 'Routes Request' do
             space_guids: ['foo', 'bar'],
             organization_guids: ['foo', 'bar'],
             domain_guids: ['foo', 'bar'],
+            app_guids: ['foo', 'bar'],
             paths: ['foo', 'bar'],
             hosts: 'foo',
             include: 'domain',
@@ -462,6 +463,18 @@ RSpec.describe 'Routes Request' do
           }).to match_json_response({
             resources: [route_in_other_org_json]
           })
+        end
+      end
+
+      context 'app_guids filter' do
+        it 'returns routes filtered by app_guid' do
+          get "/v3/routes?app_guids=#{app_model.guid}", nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].size).to eq(1)
+          expect(parsed_response['resources'].first['destinations'].size).to eq(2)
+          expect(
+            parsed_response['resources'].first['destinations'].map { |destination| destination['app']['guid'] }.uniq
+          ).to eq([app_model.guid])
         end
       end
     end
