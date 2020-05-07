@@ -187,13 +187,14 @@ module VCAP::CloudController
 
       describe '#create_app_exit_event' do
         let(:exiting_process) { ProcessModelFactory.make }
+        let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
         let(:droplet_exited_payload) {
           {
             'instance' => 'abc',
             'index' => '2',
             'cell_id' => 'some-cell',
             'exit_status' => '1',
-            'exit_description' => 'shut down',
+            'exit_description' => exit_description,
             'reason' => 'evacuation',
             'unknown_key' => 'something'
           }
@@ -213,7 +214,8 @@ module VCAP::CloudController
           expect(event.metadata['cell_id']).to eq('some-cell')
           expect(event.metadata['index']).to eq('2')
           expect(event.metadata['exit_status']).to eq('1')
-          expect(event.metadata['exit_description']).to eq('shut down')
+          expect(event.metadata['exit_description'].length).to eq(AppEventRepository::TRUNCATE_THRESHOLD)
+          expect(event.metadata['exit_description']).to eq(exit_description.truncate(AppEventRepository::TRUNCATE_THRESHOLD, omission: ' (truncated)'))
           expect(event.metadata['reason']).to eq('evacuation')
         end
 
