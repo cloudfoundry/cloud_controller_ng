@@ -434,7 +434,6 @@ module VCAP::CloudController
           end
 
           it 'does nothing to the task' do
-            puts "diego_docker flag value: #{VCAP::CloudController::FeatureFlag.enabled?(:diego_docker)}"
             allow(bbs_apps_client).to receive(:desire_app)
             allow(bbs_apps_client).to receive(:update_app)
             allow(bbs_apps_client).to receive(:stop_app)
