@@ -14,7 +14,8 @@ module VCAP::CloudController
     register_allowed_keys [
       :name,
       :internal,
-      :relationships
+      :relationships,
+      :router_group
     ]
 
     def self.relationships_requested?
@@ -50,7 +51,9 @@ module VCAP::CloudController
 
     validate :alpha_numeric
 
-    validate :mutually_exclusive_organization_and_internal
+    validate :router_group_validation
+
+    validate :mutually_exclusive_fields
 
     validates :internal,
       allow_nil: true,
@@ -64,6 +67,10 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
+    def router_group_guid
+      HashUtils.dig(router_group, :guid)
+    end
+
     private
 
     def alpha_numeric
@@ -72,10 +79,28 @@ module VCAP::CloudController
       end
     end
 
-    def mutually_exclusive_organization_and_internal
+    def mutually_exclusive_fields
       if requested?(:internal) && internal == true && requested?(:relationships)
         errors.add(:base, 'Cannot associate an internal domain with an organization')
       end
+      if requested?(:internal) && internal == true && requested?(:router_group)
+        errors.add(:base, 'Internal domains cannot be associated to a router group.')
+      end
+      if requested?(:relationships) && requested?(:router_group)
+        errors.add(:base, 'Domains scoped to an organization cannot be associated to a router group.')
+      end
+    end
+
+    def router_group_validation
+      return if router_group.nil?
+      return errors.add(:router_group, 'must be an object') unless router_group.is_a?(Hash)
+
+      extra_keys = router_group.keys - [:guid]
+      if extra_keys.any?
+        errors.add(:router_group, "Unknown field(s): '#{extra_keys.join("', '")}'")
+      end
+
+      errors.add(:router_group, 'guid must be a string') unless router_group_guid.is_a?(String)
     end
 
     class Relationships < BaseMessage

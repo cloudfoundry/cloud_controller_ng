@@ -7,9 +7,14 @@ RSpec.describe 'Domains Request' do
   let(:org) { space.organization }
   let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
   let(:user_header) { headers_for(user, scopes: []) }
+  let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+  let(:router_group) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup) }
 
   before do
     VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
+    allow(VCAP::CloudController::RoutingApi::Client).to receive(:new).and_return(routing_api_client)
+    allow(routing_api_client).to receive(:router_group).with('some-router-guid').and_return router_group
+    allow(routing_api_client).to receive(:router_group).with('some-other-router-guid').and_return nil
   end
 
   describe 'GET /v3/domains' do
@@ -66,6 +71,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: visible_owned_private_domain.name,
           internal: false,
+          router_group: nil,
           metadata: {
             labels: {},
             annotations: {}
@@ -94,6 +100,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: visible_shared_private_domain.name,
           internal: false,
+          router_group: nil,
           metadata: {
             labels: {},
             annotations: {}
@@ -122,6 +129,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: not_visible_private_domain.name,
           internal: false,
+          router_group: nil,
           metadata: {
             labels: {},
             annotations: {}
@@ -150,6 +158,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: shared_domain.name,
           internal: false,
+          router_group: nil,
           metadata: {
             labels: {},
             annotations: {}
@@ -732,30 +741,37 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when creating a shared domain' do
-      let(:api_call) { lambda { |user_headers| post '/v3/domains', params.to_json, user_headers } }
+      let(:api_call) { lambda { |user_headers| post '/v3/domains', domain_params.to_json, user_headers } }
+
+      let(:domain_params) do
+        {
+          router_group: { guid: 'some-router-guid' },
+        }.merge(params)
+      end
 
       let(:domain_json) do
         {
-          guid: UUID_REGEX,
-          created_at: iso8601,
-          updated_at: iso8601,
-          name: params[:name],
-          internal: false,
-          metadata: {
-            labels: { key: 'value' },
-            annotations: { key2: 'value2' }
+        guid: UUID_REGEX,
+        created_at: iso8601,
+        updated_at: iso8601,
+        name: params[:name],
+        internal: false,
+        router_group: { guid: 'some-router-guid' },
+        metadata: {
+        labels: { key: 'value' },
+        annotations: { key2: 'value2' }
+        },
+        relationships: {
+        organization: {
+          data: nil
           },
-          relationships: {
-            organization: {
-              data: nil
-            },
-            shared_organizations: {
-              data: []
-            }
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
+        shared_organizations: {
+          data: []
+          }
+        },
+        links: {
+        self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
+        route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
           }
         }
       end
@@ -785,6 +801,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: params[:name],
           internal: false,
+          router_group: nil,
           metadata: {
             labels: { key: 'value' },
             annotations: { key2: 'value2' }
@@ -1070,6 +1087,30 @@ RSpec.describe 'Domains Request' do
             expect(parsed_response['errors'][0]['detail']).to eq 'Relationships cannot contain shared_organizations without an owning organization.'
           end
         end
+
+        context 'when a router group is provided' do
+          let(:params) do
+            {
+              name: 'my-domain.biz',
+              router_group: { guid: 'some-router-guid' },
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'returns a 422 and a helpful error message' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq 'Domains scoped to an organization cannot be associated to a router group.'
+          end
+        end
       end
     end
 
@@ -1223,6 +1264,43 @@ RSpec.describe 'Domains Request' do
       it 'succeeds' do
         post '/v3/domains', domain_params.to_json, user_header
         expect(last_response.status).to eq 201
+      end
+    end
+
+    describe 'when specifying a router group that does not exist' do
+      let(:user_header) { admin_headers_for(user) }
+      let(:domain_params) do
+        {
+          name: 'my-domain.com',
+          router_group: { guid: 'some-other-router-guid' },
+        }
+      end
+
+      it 'returns a 422 and a helpful error message' do
+        post '/v3/domains', domain_params.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+
+        expect(parsed_response['errors'][0]['detail']).to eq "Router group with guid 'some-other-router-guid' not found."
+      end
+    end
+
+    describe 'when specifying a router group with internal: true' do
+      let(:user_header) { admin_headers_for(user) }
+      let(:domain_params) do
+        {
+          name: 'my-domain.com',
+          internal: true,
+          router_group: { guid: 'some-router-guid' },
+        }
+      end
+
+      it 'returns a 422 and a helpful error message' do
+        post '/v3/domains', domain_params.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+
+        expect(parsed_response['errors'][0]['detail']).to eq 'Internal domains cannot be associated to a router group.'
       end
     end
   end
@@ -1667,6 +1745,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: shared_domain.name,
           internal: false,
+          router_group: nil,
           metadata: {
             labels: {},
             annotations: {}
@@ -1710,6 +1789,7 @@ RSpec.describe 'Domains Request' do
             updated_at: iso8601,
             name: private_domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -1769,6 +1849,7 @@ RSpec.describe 'Domains Request' do
             updated_at: iso8601,
             name: private_domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -1865,6 +1946,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: domain.name,
           internal: false,
+          router_group: nil,
           relationships: {
             organization: {
               data: nil
@@ -1916,6 +1998,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: domain.name,
           internal: false,
+          router_group: nil,
           relationships: {
             organization: {
               data: { guid: org.guid }
@@ -1972,6 +2055,7 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: domain.name,
           internal: false,
+          router_group: nil,
           relationships: {
             organization: {
               data: { guid: domain.owning_organization_guid }

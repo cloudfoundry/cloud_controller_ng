@@ -131,6 +131,50 @@ module VCAP::CloudController::Presenters::V3
           end
         end
       end
+
+      context 'when the domain has a router group' do
+        let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
+        let(:domain) do
+          VCAP::CloudController::PrivateDomain.make(
+            name: 'my.domain.com',
+            router_group_guid: 'some-router-guid'
+          )
+        end
+
+        let!(:domain_label) do
+          VCAP::CloudController::DomainLabelModel.make(
+            resource_guid: domain.guid,
+            key_prefix: 'maine.gov',
+            key_name: 'potato',
+            value: 'mashed'
+          )
+        end
+
+        let!(:domain_annotation) do
+          VCAP::CloudController::DomainAnnotationModel.make(
+            resource_guid: domain.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+          )
+        end
+
+        it 'presents the base domain properties as json' do
+          expect(subject[:guid]).to eq(domain.guid)
+          expect(subject[:created_at]).to be_a(Time)
+          expect(subject[:updated_at]).to be_a(Time)
+          expect(subject[:name]).to eq(domain.name)
+          expect(subject[:router_group][:guid]).to eq('some-router-guid')
+          expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
+          expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
+          expect(subject[:relationships][:organization]).to eq({
+            data: { guid: domain.owning_organization.guid }
+          })
+          expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
+          expect(subject[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{domain.owning_organization.guid}")
+          expect(subject[:links][:route_reservations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/route_reservations")
+          expect(subject[:links][:shared_organizations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations")
+        end
+      end
     end
   end
 end

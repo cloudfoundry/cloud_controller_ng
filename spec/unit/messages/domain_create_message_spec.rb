@@ -129,6 +129,114 @@ module VCAP::CloudController
         end
       end
 
+      context 'router_groups' do
+        context 'router group is not an object' do
+          let(:params) { { router_group: 'banana' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:router_group]).to include 'must be an object'
+          end
+        end
+
+        context 'when the guid is not provided' do
+          let(:params) do
+            {
+              name: 'name.com',
+              router_group: {},
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:router_group)).to include('guid must be a string')
+          end
+        end
+
+        context 'when the guid is invalid' do
+          let(:params) do
+            {
+              name: 'name.com',
+              router_group: { guid: 32 },
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:router_group)).to include('guid must be a string')
+          end
+        end
+
+        context 'when additional keys are present' do
+          let(:params) do
+            {
+              name: 'name.com',
+              router_group: {
+                guid: 'guid',
+                notguid: 'not-guid',
+              },
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:router_group]).to include("Unknown field(s): 'notguid'")
+          end
+        end
+
+        context 'when a router group is provided on a private domain' do
+          let(:params) do
+            {
+              name: 'name.com',
+              router_group: {
+                guid: 'guid'
+              },
+              relationships: {
+                organization: {
+                  data: { guid: 'org-guid' }
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:base]).to include('Domains scoped to an organization cannot be associated to a router group.')
+          end
+        end
+
+        context 'when a router group is provided on an internal domain' do
+          let(:params) do
+            {
+              name: 'name.com',
+              internal: true,
+              router_group: {
+                guid: 'guid'
+              },
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:base]).to include('Internal domains cannot be associated to a router group.')
+          end
+        end
+
+        context 'when passed a valid router_group' do
+          let(:params) do
+            {
+              name: 'name.com',
+              router_group: { guid: 'guid' }
+            }
+          end
+
+          it 'makes the guid accessible' do
+            expect(subject).to be_valid
+            expect(subject.router_group_guid).to eq('guid')
+          end
+        end
+      end
+
       context 'relationships' do
         context 'relationships is not an object' do
           let(:params) { { relationships: 'banana' } }
