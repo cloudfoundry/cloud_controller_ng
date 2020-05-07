@@ -94,7 +94,7 @@ class ServiceOfferingsController < ApplicationController
       service_event_repository.record_service_purge_event(service_offering)
     else
       ServiceOfferingDelete.new.delete(service_offering)
-      service_event_repository.record_service_event(:delete, service_offering)
+      service_event_repository.record_service_delete_event(service_offering)
     end
 
     head :no_content

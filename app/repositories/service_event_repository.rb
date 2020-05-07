@@ -20,7 +20,9 @@ module VCAP::CloudController
         :record_service_instance_event,
         :record_user_provided_service_instance_event,
         :record_service_key_event,
+        :record_service_delete_event,
         :record_service_purge_event,
+        :record_service_plan_delete_event,
         to: :with_user_actor,
       )
 
@@ -166,6 +168,26 @@ module VCAP::CloudController
             actee_name: service.label,
           }
           create_event('audit.service.delete', user_actor, actee, metadata)
+        end
+
+        def record_service_delete_event(service)
+          metadata = { request: {} }
+          actee = {
+            actee:      service.guid,
+            actee_type: 'service',
+            actee_name: service.label,
+          }
+          create_event('audit.service.delete', user_actor, actee, metadata)
+        end
+
+        def record_service_plan_delete_event(plan)
+          metadata = { request: {} }
+          actee = {
+            actee:      plan.guid,
+            actee_type: 'service_plan',
+            actee_name: plan.name,
+          }
+          create_event('audit.service_plan.delete', user_actor, actee, metadata)
         end
 
         private

@@ -833,13 +833,15 @@ RSpec.describe 'V3 service offerings' do
     end
 
     describe 'audit events' do
+      let(:email) { Sham.email }
+      let(:admin_headers) { admin_headers_for(user, email: email) }
       let(:service_offering) { VCAP::CloudController::Service.make }
 
       it 'emits an audit event' do
         delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers
 
         expect([
-          { type: 'audit.service.delete', actor: service_offering.service_broker.name },
+          { type: 'audit.service.delete', actor: email },
         ]).to be_reported_as_events
       end
     end

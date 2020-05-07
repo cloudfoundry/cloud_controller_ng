@@ -361,6 +361,28 @@ module VCAP::CloudController
         end
       end
 
+      describe '#record_service_plan_delete_event' do
+        let(:plan) { VCAP::CloudController::ServicePlan.make }
+
+        it 'creates an event with empty metadata' do
+          repository.record_service_plan_delete_event(plan)
+
+          event = Event.first
+          expect(event.type).to eq('audit.service_plan.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(plan.guid)
+          expect(event.actee_type).to eq('service_plan')
+          expect(event.actee_name).to eq(plan.name)
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata).to eq({ 'request' => {} })
+        end
+      end
+
       describe '#record_service_dashboard_client_event' do
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
         let(:client_attrs) do
@@ -563,6 +585,26 @@ module VCAP::CloudController
               'purge' => true
             }
           }
+
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq 'user'
+          expect(event.actor_name).to eq email
+          expect(event.actor_username).to eq user_name
+          expect(event.actee).to eq service.guid
+          expect(event.actee_type).to eq 'service'
+          expect(event.actee_name).to eq service.label
+          expect(event.space_guid).to eq ''
+          expect(event.organization_guid).to eq ''
+          expect(event.metadata).to eq(metadata)
+        end
+      end
+
+      describe '#record_service_delete_event' do
+        let(:service) { VCAP::CloudController::Service.make }
+        it 'records an event' do
+          repository.record_service_delete_event(service)
+          event = Event.first(type: 'audit.service.delete')
+          metadata = { 'request' => {} }
 
           expect(event.actor).to eq user.guid
           expect(event.actor_type).to eq 'user'

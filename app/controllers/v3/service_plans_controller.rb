@@ -87,7 +87,7 @@ class ServicePlansController < ApplicationController
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
 
     ServicePlanDelete.new.delete(service_plan)
-    service_event_repository.record_service_plan_event(:delete, service_plan)
+    service_event_repository.record_service_plan_delete_event(service_plan)
 
     head :no_content
   rescue ServicePlanDelete::AssociationNotEmptyError => e
