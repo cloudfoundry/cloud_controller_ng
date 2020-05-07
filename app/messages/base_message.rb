@@ -6,6 +6,8 @@ module VCAP::CloudController
     include ActiveModel::Model
     include Validators
 
+    MAX_DB_INT = 2**31 - 1
+
     attr_accessor :requested_keys, :extra_keys
 
     def self.allowed_keys

@@ -8,19 +8,19 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     validates :total_memory_in_mb,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
 
     validates :per_process_memory_in_mb,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
 
     validates :total_instances,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
 
     validates :per_app_tasks,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
   end
 end

@@ -50,7 +50,18 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the type is zero' do
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { total_memory_in_mb: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Total memory in mb must be less than or equal to 2147483647')
+          end
+        end
+
+        context 'when the value is zero' do
           let(:params) do
             { total_memory_in_mb: 0 }
           end
@@ -112,6 +123,17 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { per_process_memory_in_mb: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Per process memory in mb must be less than or equal to 2147483647')
+          end
+        end
       end
 
       describe 'total_instances' do
@@ -159,6 +181,17 @@ module VCAP::CloudController
           end
 
           it { is_expected.to be_valid }
+        end
+
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { total_instances: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Total instances must be less than or equal to 2147483647')
+          end
         end
       end
 
@@ -210,6 +243,17 @@ module VCAP::CloudController
           end
 
           it { is_expected.to be_valid }
+        end
+
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { per_app_tasks: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Per app tasks must be less than or equal to 2147483647')
+          end
         end
       end
     end

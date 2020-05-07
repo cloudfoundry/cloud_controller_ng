@@ -8,11 +8,11 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     validates :total_service_keys,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
 
     validates :total_service_instances,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
       allow_nil: true
 
     validates :paid_services_allowed,

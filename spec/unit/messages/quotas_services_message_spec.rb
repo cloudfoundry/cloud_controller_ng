@@ -62,6 +62,16 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { total_service_instances: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Total service instances must be less than or equal to 2147483647')
+          end
+        end
       end
 
       describe 'total_service_keys' do
@@ -109,6 +119,16 @@ module VCAP::CloudController
           end
 
           it { is_expected.to be_valid }
+        end
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { total_service_keys: 1000000000000000000000000 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Total service keys must be less than or equal to 2147483647')
+          end
         end
       end
 
