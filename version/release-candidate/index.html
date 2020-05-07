@@ -17810,7 +17810,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-instance">Update a service instance</h3>
-<pre class="highlight plaintext"><code>Example Request
+<pre class="highlight plaintext"><code>Example Request for Managed Service Instance
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
@@ -17819,19 +17819,80 @@ and unweighted destinations for a route is not allowed.</p>
   -d <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
 
 </code></pre>
-<pre class="highlight plaintext"><code>Example Response
+<pre class="highlight plaintext"><code>Example Response for Managed Service Instance
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
 <span class="w">
 </span></code></pre>
+<pre class="highlight plaintext"><code>(Experimental) Example Request for User-Provided Service Instance
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"" </span><span class="se">\</span><span class="s2">
+  -X PATCH </span><span class="se">\</span><span class="s2">
+  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">" </span><span class="se">\</span><span class="s2">
+  -H "</span>Content-type: application/json<span class="s2">" </span><span class="se">\</span><span class="s2">
+  -d '{
+    "</span>name<span class="s2">": "</span>my_service_instance<span class="s2">",
+    "</span>credentials<span class="s2">": {
+      "</span>foo<span class="s2">": "</span>bar<span class="s2">",
+      "</span>baz<span class="s2">": "</span>qux<span class="s2">"
+    },
+    "</span>tags<span class="s2">": ["</span>foo<span class="s2">", "</span>bar<span class="s2">", "</span>baz<span class="s2">"],
+    "</span>syslog_drain_url<span class="s2">": "</span>https://syslog.com/drain<span class="s2">",
+    "</span>route_service_url<span class="s2">": "</span>https://route.com/service<span class="s2">",
+    "</span>metadata<span class="s2">": {
+      "</span>annotations<span class="s2">": {
+        "</span>foo<span class="s2">": "</span>bar<span class="s2">"
+      },
+      "</span>labels<span class="s2">": {
+        "</span>baz<span class="s2">": "</span>qux<span class="s2">"
+      }
+    }
+  }'
+</span></code></pre>
+<pre class="highlight plaintext"><code>(Experimental) Example Response for User-Provided Service Instance
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"syslog_drain_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://logs.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"route_service_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://routes.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">PATCH /v3/service_instances/:guid</code></p>
 
-<h4 id="optional-parameters">Optional parameters</h4>
+<h4 id="optional-parameters-for-managed-service-instances">Optional parameters for managed service instances</h4>
 
 <table><thead>
 <tr>
@@ -17849,6 +17910,52 @@ and unweighted destinations for a route is not allowed.</p>
 <td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the service_instance.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters-for-user-provided-service-instances">Optional parameters for user-provided service instances</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Name of the service instance.</td>
+</tr>
+<tr>
+<td><strong>tags</strong></td>
+<td><em>array of strings</em></td>
+<td><strong>Experimental</strong> - Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.</td>
+</tr>
+<tr>
+<td><strong>credentials</strong></td>
+<td><em>object</em></td>
+<td><strong>Experimental</strong> - A JSON object that is made available to apps bound to this service instance.</td>
+</tr>
+<tr>
+<td><strong>syslog_drain_url</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - URL to which logs for bound applications will be streamed.</td>
+</tr>
+<tr>
+<td><strong>route_service_url</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - URL to which requests for bound routes will be forwarded. Must use the <code class="prettyprint">https</code> protocol.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td><strong>Experimental</strong> - Labels applied to the service_instance.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td><strong>Experimental</strong> - Annotations applied to the service_instance.</td>
 </tr>
 </tbody></table>
 
@@ -26514,12 +26621,12 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the service broker.</td>
+<td>Labels applied to the service instance.</td>
 </tr>
 <tr>
 <td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the service broker.</td>
+<td>Annotations applied to the service instance.</td>
 </tr>
 </tbody></table>
 
@@ -26581,12 +26688,12 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the service broker.</td>
+<td>Labels applied to the service instance.</td>
 </tr>
 <tr>
 <td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the service broker.</td>
+<td>Annotations applied to the service instance.</td>
 </tr>
 </tbody></table>
 
