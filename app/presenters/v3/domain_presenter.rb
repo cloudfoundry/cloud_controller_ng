@@ -23,6 +23,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: domain.updated_at,
         name: domain.name,
         internal: domain.internal,
+        router_group: hashified_router_group(domain.router_group_guid),
         metadata: {
           labels: hashified_labels(domain.labels),
           annotations: hashified_annotations(domain.annotations),
@@ -55,6 +56,10 @@ module VCAP::CloudController::Presenters::V3
 
     def domain
       @resource
+    end
+
+    def hashified_router_group(router_group_guid)
+      router_group_guid ? { guid: router_group_guid } : nil
     end
 
     def build_links

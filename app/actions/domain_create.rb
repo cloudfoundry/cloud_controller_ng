@@ -20,6 +20,8 @@ module VCAP::CloudController
                  )
                end
 
+      domain.router_group_guid = message.router_group_guid
+
       Domain.db.transaction do
         domain.save
 

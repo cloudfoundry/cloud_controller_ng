@@ -42,6 +42,9 @@ class DomainsController < ApplicationController
       unauthorized! unless permission_queryer.can_write_globally?
     end
 
+    if message.router_group_guid.present? && router_group_not_found?(message.router_group_guid)
+      unprocessable!("Router group with guid '#{message.router_group_guid}' not found.")
+    end
     domain = DomainCreate.new.create(message: message, shared_organizations: shared_org_objects)
 
     render status: :created, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
@@ -206,5 +209,9 @@ class DomainsController < ApplicationController
 
   def find_missing_guid(db_organizations, message_shared_org_guids)
     (message_shared_org_guids - db_organizations.map(&:guid)).first
+  end
+
+  def router_group_not_found?(router_group_guid)
+    !CloudController::DependencyLocator.instance.routing_api_client.router_group(router_group_guid)
   end
 end

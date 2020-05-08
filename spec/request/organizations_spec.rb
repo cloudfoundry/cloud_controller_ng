@@ -352,6 +352,7 @@ module VCAP::CloudController
             updated_at: iso8601,
             name: shared_domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -377,6 +378,7 @@ module VCAP::CloudController
             updated_at: iso8601,
             name: owned_private_domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -404,6 +406,7 @@ module VCAP::CloudController
             updated_at: iso8601,
             name: shared_private_domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -763,6 +766,7 @@ module VCAP::CloudController
               updated_at: iso8601,
               name: shared_private_domain.name,
               internal: false,
+              router_group: nil,
               metadata: {
                 labels: {},
                 annotations: {}
@@ -799,6 +803,7 @@ module VCAP::CloudController
               updated_at: iso8601,
               name: shared_domain.name,
               internal: false,
+              router_group: nil,
               metadata: {
                 labels: {},
                 annotations: {}

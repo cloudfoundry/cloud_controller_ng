@@ -128,6 +128,38 @@ module VCAP::CloudController
             to match_array([{ key: 'anno', value: 'tations' }])
         end
       end
+
+      context 'when creating a domain with a router group' do
+        context 'provided every valid field' do
+          let(:router_group_guid) { { guid: 'some-router-guid' } }
+
+          let(:message) do
+            DomainCreateMessage.new({
+              name: name,
+              router_group: router_group_guid,
+              metadata: metadata
+            })
+          end
+
+          it 'creates a domain with all the provided fields' do
+            domain = nil
+
+            expect {
+              domain = subject.create(message: message)
+            }.to change { SharedDomain.count }.by(1)
+
+            expect(domain.name).to eq(name)
+            expect(domain.router_group_guid).to eq(router_group_guid[:guid])
+            expect(domain.guid).to_not be_nil
+            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
+              to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+                              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+              ])
+            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
+              to match_array([{ key: 'anno', value: 'tations' }])
+          end
+        end
+      end
     end
   end
 end

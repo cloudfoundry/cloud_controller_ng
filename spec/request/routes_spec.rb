@@ -160,6 +160,7 @@ RSpec.describe 'Routes Request' do
             updated_at: iso8601,
             name: domain1.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -187,6 +188,7 @@ RSpec.describe 'Routes Request' do
             updated_at: iso8601,
             name: domain2.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
@@ -834,6 +836,7 @@ RSpec.describe 'Routes Request' do
             updated_at: iso8601,
             name: domain.name,
             internal: false,
+            router_group: nil,
             metadata: {
               labels: {},
               annotations: {}
