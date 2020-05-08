@@ -62,8 +62,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           upload_link   = nil
           download_link = nil
           if package.type == 'bits'

@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Presenters
     module V3
-      class ToOneRelationshipPresenter
+      class ToOneRelationshipPresenter < BasePresenter
         def initialize(resource_path:, related_instance:, relationship_name:, related_resource_name:)
           @resource_path = resource_path
           @related_instance = related_instance
@@ -19,10 +19,6 @@ module VCAP::CloudController
         private
 
         attr_reader :resource_path, :relationship_name, :related_instance, :related_resource_name
-
-        def url_builder
-          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
-        end
 
         def build_relation
           { guid: related_instance.guid } unless related_instance.nil?

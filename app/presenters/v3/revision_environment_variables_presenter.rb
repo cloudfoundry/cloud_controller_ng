@@ -4,7 +4,7 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController
   module Presenters
     module V3
-      class RevisionEnvironmentVariablesPresenter
+      class RevisionEnvironmentVariablesPresenter < BasePresenter
         attr_reader :revision
 
         def initialize(revision)
@@ -31,8 +31,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           {
             self: { href: url_builder.build_url(path: "/v3/revisions/#{revision.guid}/environment_variables") },
             revision: { href: url_builder.build_url(path: "/v3/revisions/#{revision.guid}") },

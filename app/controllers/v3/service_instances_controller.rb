@@ -204,7 +204,6 @@ class ServiceInstancesV3Controller < ApplicationController
 
     job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   rescue ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
     unprocessable!(e.message)

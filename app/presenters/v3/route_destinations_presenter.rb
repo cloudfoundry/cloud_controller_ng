@@ -35,8 +35,6 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_links
-      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
       links = {
         self: {
           href: url_builder.build_url(path: "/v3/routes/#{route.guid}/destinations")

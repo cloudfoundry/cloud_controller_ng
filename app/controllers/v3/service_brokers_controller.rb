@@ -55,7 +55,6 @@ class ServiceBrokersController < ApplicationController
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository)
     result = service_broker_create.create(message)
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
   rescue VCAP::CloudController::V3::ServiceBrokerCreate::InvalidServiceBroker => e
     unprocessable!(e.message)
@@ -80,7 +79,6 @@ class ServiceBrokersController < ApplicationController
     service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, service_event_repository)
     result = service_broker_update.update(message)
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
   rescue VCAP::CloudController::V3::ServiceBrokerUpdate::InvalidServiceBroker => e
     unprocessable!(e.message)
@@ -107,7 +105,6 @@ class ServiceBrokersController < ApplicationController
     service_broker.update(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 

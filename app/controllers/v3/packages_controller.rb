@@ -115,7 +115,6 @@ class PackagesController < ApplicationController
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
     job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 

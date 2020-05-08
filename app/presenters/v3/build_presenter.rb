@@ -66,10 +66,6 @@ module VCAP::CloudController
             app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") },
           }
         end
-
-        def url_builder
-          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
-        end
       end
     end
   end

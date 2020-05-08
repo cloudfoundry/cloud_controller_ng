@@ -4,7 +4,7 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController
   module Presenters
     module V3
-      class PaginatedListPresenter
+      class PaginatedListPresenter < BasePresenter
         def initialize(presenter:, paginated_result:, path:, message: nil, show_secrets: false, decorators: [], extra_presenter_args: {})
           @presenter = presenter
           @paginated_result = paginated_result
@@ -26,7 +26,6 @@ module VCAP::CloudController
 
         def present_pagination_hash(filters=nil)
           pagination_options = @paginated_result.pagination_options
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
           last_page     = (@paginated_result.total.to_f / pagination_options.per_page.to_f).ceil
           last_page     = 1 if last_page < 1

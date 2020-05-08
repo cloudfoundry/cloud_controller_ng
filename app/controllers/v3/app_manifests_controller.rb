@@ -32,7 +32,6 @@ class AppManifestsController < ApplicationController
       }
     )
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 

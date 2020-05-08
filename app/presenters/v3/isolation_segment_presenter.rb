@@ -28,7 +28,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
             self: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}") },
             organizations: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/organizations") },
