@@ -75,6 +75,11 @@ module Kpack
             blob: {
               url: blobstore_url_generator.package_download_url(staging_details.package),
             }
+          },
+          build: {
+            env: staging_details.environment_variables.to_a.
+                  delete_if { |key, value| key == 'VCAP_SERVICES' }.
+                  map { |key, value| { name: key, value: value.to_s } }
           }
         }
       })
