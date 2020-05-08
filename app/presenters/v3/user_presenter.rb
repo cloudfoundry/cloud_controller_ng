@@ -5,6 +5,7 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController::Presenters::V3
   class UserPresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def initialize(
       resource,
       show_secrets: false,
@@ -17,17 +18,17 @@ module VCAP::CloudController::Presenters::V3
 
     def to_hash
       {
-          guid: user.guid,
-          created_at: user.created_at,
-          updated_at: user.updated_at,
-          username: username,
-          presentation_name: username || user.guid,
-          origin: origin,
-          metadata: {
-            labels: hashified_labels(user.labels),
-            annotations: hashified_annotations(user.annotations),
-          },
-          links: build_links
+        guid: user.guid,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        username: username,
+        presentation_name: username || user.guid,
+        origin: origin,
+        metadata: {
+          labels: hashified_labels(user.labels),
+          annotations: hashified_annotations(user.annotations),
+        },
+        links: build_links
       }
     end
 
@@ -38,13 +39,11 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_links
-      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-      links = {
-          self: {
-              href: url_builder.build_url(path: "/v3/users/#{user.guid}")
-          }
+      {
+        self: {
+          href: url_builder.build_url(path: "/v3/users/#{user.guid}")
+        }
       }
-      links
     end
 
     def username

@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Presenters
     module V3
-      class ToManyRelationshipPresenter
+      class ToManyRelationshipPresenter < BasePresenter
         def initialize(relation_url, relationships, relationship_path, build_related: true)
           @relation_url = relation_url
           @relationships = relationships
@@ -17,10 +17,6 @@ module VCAP::CloudController
         end
 
         private
-
-        def url_builder
-          VCAP::CloudController::Presenters::ApiUrlBuilder.new
-        end
 
         def build_relations
           data = []

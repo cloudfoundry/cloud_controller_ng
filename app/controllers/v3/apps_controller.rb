@@ -148,7 +148,6 @@ class AppsV3Controller < ApplicationController
       DeleteAppErrorTranslatorJob.new(pollable_job)
     end
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 

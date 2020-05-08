@@ -29,7 +29,6 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_self
-      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
       url_builder.build_url(path: '/v3/info')
     end
   end

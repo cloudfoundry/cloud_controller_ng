@@ -20,6 +20,10 @@ module VCAP::CloudController
         def redact_hash(unredacted_value)
           @show_secrets ? unredacted_value : { 'redacted_message' => @censored_message }
         end
+
+        def url_builder
+          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
+        end
       end
     end
   end

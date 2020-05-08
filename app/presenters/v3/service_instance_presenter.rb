@@ -101,10 +101,6 @@ module VCAP::CloudController
                      })
         end
 
-        def url_builder
-          VCAP::CloudController::Presenters::ApiUrlBuilder.new
-        end
-
         def service_instance
           @resource
         end

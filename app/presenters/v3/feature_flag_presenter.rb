@@ -19,8 +19,6 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def feature_flag_links
-      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
       {
         self: {
           href: url_builder.build_url(path: "/v3/feature_flags/#{feature_flag.name}")

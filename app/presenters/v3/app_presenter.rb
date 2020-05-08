@@ -50,8 +50,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           links = {
             self: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") },
             environment_variables: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/environment_variables") },

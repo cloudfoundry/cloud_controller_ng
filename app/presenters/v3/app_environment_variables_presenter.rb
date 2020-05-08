@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Presenters
     module V3
-      class AppEnvironmentVariablesPresenter
+      class AppEnvironmentVariablesPresenter < BasePresenter
         attr_reader :app
 
         def initialize(app)
@@ -28,8 +28,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           {
             self: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/environment_variables") },
             app:  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") }

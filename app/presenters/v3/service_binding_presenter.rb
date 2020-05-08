@@ -28,8 +28,6 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           {
             self: { href: url_builder.build_url(path: "/v3/service_bindings/#{service_binding.guid}") },
             service_instance: { href: url_builder.build_url(path: "/v2/service_instances/#{service_binding.service_instance_guid}") },

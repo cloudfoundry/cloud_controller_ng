@@ -88,6 +88,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext)
   end
 
+  def url_builder
+    @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
+  end
+
   def request_id
     ::VCAP::Request.current_id
   end

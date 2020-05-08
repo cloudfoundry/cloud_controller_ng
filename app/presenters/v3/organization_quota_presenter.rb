@@ -63,8 +63,6 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_links
-      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
       {
         self: { href: url_builder.build_url(path: "/v3/organization_quotas/#{organization_quota.guid}") },
       }
