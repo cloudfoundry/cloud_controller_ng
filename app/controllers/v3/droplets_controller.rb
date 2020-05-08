@@ -25,6 +25,30 @@ class DropletsController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def put
+    droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
+    message = DropletCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    # unclear if there's any benefit here providing app guid... it makes some weird semantics about updating relationships
+    # in exchange for unclear gains to validatibility
+    app = AppModel.where(guid: message.relationships_message.app_guid).eager(:space, :organization).first
+    # unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    # unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
+
+    # getting associations would be strange in this model... we want to create a droplet associated w/ an app
+    # but don't necessarily want to send app guid as a parameter
+    # however, immediately loading the CRD from k8s is harder than doing it this way rn so ???
+
+    droplet = DropletCreate.new.create(app, message, user_audit_info, hashed_params[:guid]) if droplet.nil?
+
+    message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    droplet = VCAP::CloudController::DropletUpdate.new.update(droplet, message)
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
   def index
     message = DropletsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -74,8 +98,8 @@ class DropletsController < ApplicationController
 
   def update
     droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    droplet_not_found! unless droplet
+    # unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?

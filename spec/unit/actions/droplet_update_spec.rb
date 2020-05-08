@@ -40,6 +40,8 @@ module VCAP::CloudController
               reason: 'add some more annotations',
             },
           },
+          image: 'lul fake image',
+          cache_id: 'lul fake cache id',
         })
       end
 

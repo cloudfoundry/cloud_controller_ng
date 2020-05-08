@@ -5,11 +5,11 @@ module VCAP::CloudController
 
     DEFAULT_PROCESS_TYPES = { 'web' => '' }.freeze
 
-    def create(app, message, user_audit_info)
-      if !app.buildpack_lifecycle_data
-        error!('Droplet creation is not available for apps with docker lifecycles.')
-        return
-      end
+    def create(app, message, user_audit_info, guid=nil)
+      # if !app.buildpack_lifecycle_data
+      #   error!('Droplet creation is not available for apps with docker lifecycles.')
+      #   return
+      # end
 
       droplet = DropletModel.new(
         app_guid:                 app.guid,
@@ -17,6 +17,8 @@ module VCAP::CloudController
         process_types:            message.process_types || DEFAULT_PROCESS_TYPES,
         execution_metadata:       '',
       )
+
+      droplet.update(guid: guid) unless guid.nil?
 
       DropletModel.db.transaction do
         droplet.save

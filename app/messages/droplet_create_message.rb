@@ -4,7 +4,7 @@ require 'messages/empty_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
-    register_allowed_keys [:relationships, :process_types]
+    register_allowed_keys [:relationships, :process_types, :cache_id]
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validate :valid_process_types

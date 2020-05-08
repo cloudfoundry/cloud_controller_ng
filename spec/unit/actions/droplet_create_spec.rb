@@ -28,12 +28,13 @@ module VCAP::CloudController
         }
         it 'creates a droplet for app including the default process_types' do
           expect {
-            droplet_create.create(app, message, user_audit_info)
+            droplet_create.create(app, message, user_audit_info, guid = 'lol')
           }.to change { DropletModel.count }.by(1)
 
           droplet = DropletModel.last
 
           expect(droplet.state).to eq(DropletModel::AWAITING_UPLOAD_STATE)
+          expect(droplet.guid).to eq('lol')
           expect(droplet.app).to eq(app)
           expect(droplet.process_types).to eq({ 'web' => '' })
           expect(droplet.package_guid).to be_nil

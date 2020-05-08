@@ -21,6 +21,9 @@ module VCAP::CloudController
           droplet.mark_as_staged
           droplet.process_types = { web: '' }
           droplet.save_changes
+          # droplet.save_crd
+          # seems worse, but why?
+          # its better b/c the transaction insulates against partial failure
           build.mark_as_staged
           build.save_changes
 

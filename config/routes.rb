@@ -102,6 +102,7 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
   patch '/droplets/:guid', to: 'droplets#update'
+  put '/droplets/:guid', to: 'droplets#put'
   post '/droplets/:guid/upload', to: 'droplets#upload'
 
   # errors
