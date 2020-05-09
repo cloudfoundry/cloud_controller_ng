@@ -53,6 +53,7 @@ includes:
   - concepts/procfiles
   - concepts/relationships
   - concepts/status_codes
+  - concepts/warnings
   - resources/header
   - resources/apps/header
   - resources/apps/object

@@ -10,7 +10,8 @@
       "href": "https://api.example.org/v3/jobs/b19ae525-cbd3-4155-b156-dc0c2a431b4c"
     }
   },
-  "errors": []
+  "errors": [],
+  "warnings": []
 }
 <% end %>
 
@@ -34,6 +35,11 @@
       "code": 10008,
       "title": "CF-UnprocessableEntity",
       "detail": "something went wrong"
+    }
+  ],
+  "warnings": [
+    {
+      "detail": "warning! warning!"
     }
   ]
 }
