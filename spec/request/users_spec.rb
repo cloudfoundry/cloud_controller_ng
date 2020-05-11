@@ -455,6 +455,21 @@ RSpec.describe 'Users Request' do
         end
       end
     end
+
+    context 'when the user has a guid with strange characters' do
+      let(:weird_user) { VCAP::CloudController::User.make(guid: 'weird-/(%)') }
+
+      before do
+        allow(uaa_client).to receive(:users_for_ids).with([weird_user.guid]).and_return({})
+      end
+
+      it 'returns the user successfully' do
+        get "/v3/users/#{CGI.escape(weird_user.guid)}", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['guid']).to eq('weird-/(%)')
+        expect(parsed_response['links']['self']['href']).to eq(link_prefix + '/v3/users/' + CGI.escape(weird_user.guid))
+      end
+    end
   end
 
   describe 'POST /v3/users' do

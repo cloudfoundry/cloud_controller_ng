@@ -41,7 +41,7 @@ module VCAP::CloudController::Presenters::V3
     def build_links
       {
         self: {
-          href: url_builder.build_url(path: "/v3/users/#{user.guid}")
+          href: url_builder.build_url(path: "/v3/users/#{CGI.escape(user.guid)}")
         }
       }
     end
