@@ -20,6 +20,15 @@ RSpec.describe Database::OldRecordCleanup do
       expect { stale_event2.reload }.to raise_error(Sequel::NoExistingObject)
     end
 
+    context "when there are no records at all but you're trying to keep at least one" do
+      it "doesn't keep one because there aren't any to keep" do
+        record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, 1, keep_at_least_one_record: true)
+
+        expect { record_cleanup.delete }.not_to raise_error
+        expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(0)
+      end
+    end
+
     it 'only retrieves the current timestamp from the database once' do
       expect(VCAP::CloudController::Event.db).to receive(:fetch).with('SELECT CURRENT_TIMESTAMP as now').once.and_call_original
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)

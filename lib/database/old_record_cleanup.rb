@@ -16,8 +16,10 @@ module Database
 
       old_records = model.dataset.where(Sequel.lit('created_at < ?', cutoff_date))
       if keep_at_least_one_record
-        last_id = model.order(:id).last.id
-        old_records = old_records.where(Sequel.lit('id < ?', last_id))
+        last_record = model.order(:id).last
+        if last_record
+          old_records = old_records.where(Sequel.lit('id < ?', last_record.id))
+        end
       end
       logger.info("Cleaning up #{old_records.count} #{model.table_name} table rows")
 
