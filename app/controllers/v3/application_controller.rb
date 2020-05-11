@@ -89,7 +89,7 @@ class ApplicationController < ActionController::Base
   end
 
   def url_builder
-    @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder
   end
 
   def request_id
