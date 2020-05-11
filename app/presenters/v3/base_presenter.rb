@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         def url_builder
-          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
+          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder
         end
       end
     end

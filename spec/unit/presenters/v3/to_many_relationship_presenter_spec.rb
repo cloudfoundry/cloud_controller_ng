@@ -28,7 +28,7 @@ module VCAP::CloudController::Presenters::V3
     let(:relation_url) { 'cash/guid' }
     let(:relationship_path) { 'money' }
     subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related: build_related) }
-    let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder.new }
+    let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder }
 
     describe '#to_hash' do
       let(:result) { relationship_presenter.to_hash }

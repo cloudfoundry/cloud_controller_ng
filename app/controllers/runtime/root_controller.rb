@@ -7,7 +7,7 @@ module VCAP::CloudController
     get '/', :read
 
     def read
-      api_url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+      api_url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder
 
       response = {
         links: {

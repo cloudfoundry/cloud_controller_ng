@@ -37,7 +37,7 @@ class SpaceManifestsController < ApplicationController
     app_guid_message_hash.each { |app_guid, message| record_apply_manifest_audit_event(AppModel.find(guid: app_guid), message, space) }
     job = Jobs::Enqueuer.new(apply_manifest_job, queue: Jobs::Queues.generic).enqueue_pollable
 
-    url_builder = Presenters::ApiUrlBuilder.new
+    url_builder = Presenters::ApiUrlBuilder
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
