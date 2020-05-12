@@ -752,27 +752,28 @@ RSpec.describe 'Domains Request' do
 
       let(:domain_json) do
         {
-        guid: UUID_REGEX,
-        created_at: iso8601,
-        updated_at: iso8601,
-        name: params[:name],
-        internal: false,
-        router_group: { guid: 'some-router-guid' },
-        metadata: {
-        labels: { key: 'value' },
-        annotations: { key2: 'value2' }
-        },
-        relationships: {
-        organization: {
-          data: nil
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: params[:name],
+          internal: false,
+          router_group: { guid: 'some-router-guid' },
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
           },
-        shared_organizations: {
-          data: []
-          }
-        },
-        links: {
-        self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
-        route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
+          relationships: {
+            organization: {
+              data: nil
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
+            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations) },
+            router_group: { href: %r(#{Regexp.escape(link_prefix)}/routing/v1/router_groups/some-router-guid) },
           }
         }
       end

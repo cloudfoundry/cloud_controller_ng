@@ -172,7 +172,21 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
           expect(subject[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{domain.owning_organization.guid}")
           expect(subject[:links][:route_reservations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/route_reservations")
+          expect(subject[:links][:router_group][:href]).to eq("#{link_prefix}/routing/v1/router_groups/some-router-guid")
           expect(subject[:links][:shared_organizations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations")
+        end
+
+        context 'and the routing API is disabled' do
+          let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+          before do
+            allow(VCAP::CloudController::RoutingApi::Client).to receive(:new).and_return(routing_api_client)
+            allow(routing_api_client).to receive(:enabled?).and_return false
+          end
+
+          it 'does not include a link to the router group' do
+            expect(subject[:links][:router_group]).to eq(nil)
+          end
         end
       end
     end

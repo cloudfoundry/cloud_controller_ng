@@ -81,6 +81,13 @@ module VCAP::CloudController::Presenters::V3
         }
       end
 
+      routing_client = CloudController::DependencyLocator.instance.routing_api_client
+      if domain.router_group_guid && routing_client.enabled?
+        links[:router_group] = {
+          href: url_builder.build_url(path: "/routing/v1/router_groups/#{domain.router_group_guid}")
+        }
+      end
+
       links
     end
   end
