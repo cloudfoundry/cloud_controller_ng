@@ -1,3 +1,5 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController
   module Presenters
     module V3

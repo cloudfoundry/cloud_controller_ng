@@ -1,3 +1,4 @@
+require 'presenters/v3/base_presenter'
 require 'mappers/order_by_mapper'
 require 'presenters/helpers/censorship'
 
