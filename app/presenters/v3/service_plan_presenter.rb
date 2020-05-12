@@ -63,13 +63,13 @@ module VCAP::CloudController
             metadata[:costs].each do |cost|
               unit = cost[:unit].to_s
               cost[:amount].each do |currency, amount|
-                unless currency.empty?
-                  cost_result << {
-                    currency: currency.to_s.upcase,
-                    amount: amount.to_f,
-                    unit: unit
-                  }
-                end
+                return [] if currency.empty?
+
+                cost_result << {
+                  currency: currency.to_s.upcase,
+                  amount: amount.to_f,
+                  unit: unit
+                }
               end
             end
           end
@@ -142,6 +142,7 @@ module VCAP::CloudController
               'properties' => {
                 'amount' => {
                   'type' => 'object',
+                  'minProperties' => 1,
                   'additionalProperties' => {
                     'type' => 'number'
                   }

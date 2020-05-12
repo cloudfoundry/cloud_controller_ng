@@ -211,35 +211,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         expect(result[:costs][0][:currency]).to eq('$')
         expect(result[:costs][0][:unit]).to eq('Daily')
       end
-
-      it 'skips when currency is empty string' do
-        service_plan =
-          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
-          {
-            "amount": {
-              "gpb": 0.06
-            },
-            "unit": "Daily"
-          },
-          {
-            "amount": {
-              "": 0.06,
-              "usd": 0.10
-            },
-            "unit": "Daily"
-          }
-        ]}')
-
-        result = described_class.new(service_plan).to_hash.deep_symbolize_keys
-
-        expect(result[:costs][0][:amount]).to eq(0.06)
-        expect(result[:costs][0][:currency]).to eq('GPB')
-        expect(result[:costs][0][:unit]).to eq('Daily')
-
-        expect(result[:costs][1][:amount]).to eq(0.10)
-        expect(result[:costs][1][:currency]).to eq('USD')
-        expect(result[:costs][1][:unit]).to eq('Daily')
-      end
     end
 
     context 'when plan has no cost' do
@@ -287,6 +258,12 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
             "costs": [
               {
                 "amount": {
+                  "usd": 649.0
+                },
+                "unit": "Daily"
+              },
+              {
+                "amount": {
                   "usd": 649.0,
                   "gbp": 600.015454
                 }
@@ -299,6 +276,12 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
             "costs": [
               {
                 "amount": {},
+                "unit": "Daily"
+              },
+              {
+                "amount": {
+                  "usd": 649.0
+                },
                 "unit": "Daily"
               }
             ]
@@ -315,6 +298,25 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
               }
             ]
            }'
+        ],
+        ['currency is empty string',
+         '{
+             "costs": [
+                {
+                  "amount": {
+                    "gpb": 0.06
+                  },
+                  "unit": "Daily"
+                },
+                {
+                  "amount": {
+                    "": 0.06,
+                    "usd": 0.10
+                  },
+                  "unit": "Daily"
+                }
+            ]
+          }'
         ]
       ].each do |scenario, extra|
         it "returns empty cost array when #{scenario}" do
