@@ -11,9 +11,11 @@ module VCAP::CloudController
     let!(:app) { AppModel.make }
     let!(:app_dataset) { [app] }
     let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+    let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient, update_destinations: nil) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
     end
 
     describe '#delete' do

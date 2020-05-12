@@ -22,6 +22,10 @@ module VCAP::CloudController
       allow(ProcessRouteHandler).to receive(:new).with(process2).and_return(process2_route_handler)
       allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
       allow(event_repository).to receive(:record_unmap_route)
+      TestConfig.override(
+        kubernetes: {
+        },
+      )
     end
 
     describe '#delete' do
@@ -48,6 +52,26 @@ module VCAP::CloudController
           route_mapping_delete.delete(route_mapping)
           expect(process1_route_handler).to have_received(:update_route_information).with(perform_validation: false)
           expect(process2_route_handler).to have_received(:update_route_information).with(perform_validation: false)
+        end
+
+        describe 'when k8s is configured' do
+          let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+          before do
+            TestConfig.override(
+              kubernetes: {
+                host_url: 'some-kubernetes-host-url'
+              },
+            )
+            allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+            allow(route_crd_client).to receive(:update_destinations)
+          end
+
+          it 'removes the destination from the mapped route' do
+            expect(route_mapping).to receive(:destroy).ordered
+            expect(route_crd_client).to receive(:update_destinations).with(route).ordered
+
+            route_mapping_delete.delete(route_mapping)
+          end
         end
 
         describe 'audit events' do

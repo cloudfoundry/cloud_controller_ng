@@ -98,8 +98,7 @@ module VCAP::CloudController
         route.reload
 
         if VCAP::CloudController::Config.kubernetes_api_configured?
-          client = route_crd_client
-          client.update_destinations(route)
+          route_crd_client.update_destinations(route)
         end
 
         route
