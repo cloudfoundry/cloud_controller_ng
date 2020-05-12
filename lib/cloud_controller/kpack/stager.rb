@@ -46,6 +46,7 @@ module Kpack
     def update_image_resource(image, staging_details)
       image.metadata.labels[BUILD_GUID_LABEL_KEY.to_sym] = staging_details.staging_guid
       image.spec.source.blob.url = blobstore_url_generator.package_download_url(staging_details.package)
+      image.spec.build.env = get_environment_variables(staging_details)
 
       image
     end
@@ -77,12 +78,16 @@ module Kpack
             }
           },
           build: {
-            env: staging_details.environment_variables.to_a.
-                  delete_if { |key, value| key == 'VCAP_SERVICES' }.
-                  map { |key, value| { name: key, value: value.to_s } }
+            env: get_environment_variables(staging_details),
           }
         }
       })
+    end
+
+    def get_environment_variables(staging_details)
+      staging_details.environment_variables.
+        except('VCAP_SERVICES').
+        map { |key, value| { name: key, value: value.to_s } }
     end
 
     def logger

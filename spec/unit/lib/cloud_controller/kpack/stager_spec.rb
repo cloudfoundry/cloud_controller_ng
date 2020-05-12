@@ -79,7 +79,10 @@ module Kpack
               }
             },
             build: {
-              env: [{ name: 'BP_JAVA_VERSION', value: '8.*' }, { name: 'BPL_HEAD_ROOM', value: '0' }]
+              env: [
+                { name: 'BP_JAVA_VERSION', value: '8.*' },
+                { name: 'BPL_HEAD_ROOM', value: '0' },
+              ]
             }
           }
         }))
@@ -135,9 +138,16 @@ module Kpack
                 blob: {
                   url: 'old-package-url',
                 }
+              },
+              build: {
+                env: [],
               }
             }
           })
+        end
+
+        let(:environment_variables) do
+          { 'VCAP_SERVICES' => 'ignored', 'FOO' => 'BAR' }
         end
 
         before do
@@ -148,6 +158,9 @@ module Kpack
           updated_image = Kubeclient::Resource.new(existing_image.to_hash)
           updated_image.metadata.labels[Kpack::Stager::BUILD_GUID_LABEL_KEY.to_sym] = build.guid
           updated_image.spec.source.blob.url = 'package-download-url'
+          updated_image.spec.build.env = [
+            { name: 'FOO', value: 'BAR' }
+          ]
 
           expect(client).to_not receive(:create_image)
           expect(client).to receive(:update_image).with(updated_image)
