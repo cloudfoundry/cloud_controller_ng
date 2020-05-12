@@ -98,6 +98,11 @@
   http_code: 429
   message: "Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit. Please log in."
 
+10015:
+  name: ServiceUnavailable
+  http_code: 503
+  message: "%s"
+
 20001:
   name: UserInvalid
   http_code: 400

@@ -15,6 +15,7 @@ RSpec.describe 'Domains Request' do
     allow(VCAP::CloudController::RoutingApi::Client).to receive(:new).and_return(routing_api_client)
     allow(routing_api_client).to receive(:router_group).with('some-router-guid').and_return router_group
     allow(routing_api_client).to receive(:router_group).with('some-other-router-guid').and_return nil
+    allow(routing_api_client).to receive(:enabled?).and_return true
   end
 
   describe 'GET /v3/domains' do
@@ -788,6 +789,51 @@ RSpec.describe 'Domains Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the Routing API is unavailable' do
+        let(:user_header) { admin_headers_for(user) }
+
+        before do
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiUnavailable
+        end
+
+        it 'returns a 503 and helpful error message' do
+          post '/v3/domains', domain_params.to_json, user_header
+
+          expect(last_response.status).to eq(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is currently unavailable. Please try again later.'
+        end
+      end
+
+      context 'when the Routing API is disabled' do
+        let(:user_header) { admin_headers_for(user) }
+
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return false
+        end
+
+        it 'returns a 503 with a helpful message' do
+          post '/v3/domains', domain_params.to_json, user_header
+
+          expect(last_response.status).to eq(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is disabled.'
+        end
+      end
+
+      context 'when UAA is unavailable' do
+        let(:user_header) { admin_headers_for(user) }
+
+        before do
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::UaaUnavailable
+        end
+
+        it 'returns a 503 with a helpful message' do
+          post '/v3/domains', domain_params.to_json, user_header
+
+          expect(last_response.status).to eq(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.'
+        end
+      end
     end
 
     describe 'when creating a private domain' do
@@ -1088,7 +1134,7 @@ RSpec.describe 'Domains Request' do
           end
         end
 
-        context 'when a router group is provided' do
+        describe 'when a router group is provided' do
           let(:params) do
             {
               name: 'my-domain.biz',

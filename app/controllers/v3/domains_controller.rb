@@ -42,7 +42,7 @@ class DomainsController < ApplicationController
       unauthorized! unless permission_queryer.can_write_globally?
     end
 
-    if message.router_group_guid.present? && router_group_not_found?(message.router_group_guid)
+    if message.router_group_guid.present? && fetch_router_group(message.router_group_guid).nil?
       unprocessable!("Router group with guid '#{message.router_group_guid}' not found.")
     end
     domain = DomainCreate.new.create(message: message, shared_organizations: shared_org_objects)
@@ -211,7 +211,14 @@ class DomainsController < ApplicationController
     (message_shared_org_guids - db_organizations.map(&:guid)).first
   end
 
-  def router_group_not_found?(router_group_guid)
-    !CloudController::DependencyLocator.instance.routing_api_client.router_group(router_group_guid)
+  def fetch_router_group(router_group_guid)
+    routing_client = CloudController::DependencyLocator.instance.routing_api_client
+    service_unavailable!('The Routing API is disabled.') unless routing_client.enabled?
+
+    routing_client.router_group(router_group_guid)
+  rescue RoutingApi::RoutingApiUnavailable
+    service_unavailable!('The Routing API is currently unavailable. Please try again later.')
+  rescue RoutingApi::UaaUnavailable
+    service_unavailable!('Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.')
   end
 end
