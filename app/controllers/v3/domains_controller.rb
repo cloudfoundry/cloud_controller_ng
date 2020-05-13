@@ -218,7 +218,7 @@ class DomainsController < ApplicationController
     routing_client.router_group(router_group_guid)
   rescue RoutingApi::RoutingApiUnavailable
     service_unavailable!('The Routing API is currently unavailable. Please try again later.')
-  rescue RoutingApi::UaaUnavailable
+  rescue UaaUnavailable, RoutingApi::UaaUnavailable
     service_unavailable!('Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.')
   end
 end

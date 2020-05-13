@@ -830,7 +830,7 @@ RSpec.describe 'Domains Request' do
         let(:user_header) { admin_headers_for(user) }
 
         before do
-          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::UaaUnavailable
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::UaaUnavailable
         end
 
         it 'returns a 503 with a helpful message' do
