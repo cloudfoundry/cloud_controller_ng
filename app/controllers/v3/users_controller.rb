@@ -13,11 +13,13 @@ class UsersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     users = fetch_readable_users(message)
-    user_guids = users.map(&:guid)
+
+    paginated_result = SequelPaginator.new.get_page(users, message.try(:pagination_options))
+    user_guids = paginated_result.records.map(&:guid)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::UserPresenter,
-      paginated_result: SequelPaginator.new.get_page(users, message.try(:pagination_options)),
+      paginated_result: paginated_result,
       path: '/v3/users',
       message: message,
       extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },

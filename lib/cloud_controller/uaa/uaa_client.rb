@@ -118,7 +118,7 @@ module VCAP::CloudController
       return {} unless user_ids.present?
 
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-      results = query(:user_id, filter: filter_string)
+      results = query(:user_id, filter: filter_string, count: user_ids.length)
 
       results['resources'].each_with_object({}) do |resource, results_hash|
         results_hash[resource['id']] = resource

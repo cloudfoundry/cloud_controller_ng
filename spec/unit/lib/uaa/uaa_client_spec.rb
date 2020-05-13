@@ -168,7 +168,7 @@ module VCAP::CloudController
           'totalresults' => 2 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -229,14 +229,14 @@ module VCAP::CloudController
             'totalresults' => 2 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer STUFF' }).
+            with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer STUFF' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
               body: response_body.to_json)
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer invalid' }).
+            with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer invalid' }).
             to_return(
               status: 403,
               headers: { 'content-type' => 'application/json' },
@@ -277,7 +277,7 @@ module VCAP::CloudController
           'totalresults' => 2 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -338,14 +338,14 @@ module VCAP::CloudController
             'totalresults' => 2 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer STUFF' }).
+            with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer STUFF' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
               body: response_body.to_json)
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer invalid' }).
+            with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer invalid' }).
             to_return(
               status: 403,
               headers: { 'content-type' => 'application/json' },
