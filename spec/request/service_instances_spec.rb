@@ -1280,7 +1280,6 @@ RSpec.describe 'V3 service instances' do
 
   describe 'PATCH /v3/service_instances/:guid' do
     let(:api_call) { lambda { |user_headers| patch "/v3/service_instances/#{guid}", request_body.to_json, user_headers } }
-    let(:space_guid) { space.guid }
     let(:space_dev_headers) do
       org.add_user(user)
       space.add_developer(user)
@@ -1313,10 +1312,20 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'managed service instance' do
-      context 'updating metadata' do
+      describe 'updates that do not require broker communication' do
         let!(:service_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-          si.annotation_ids = [VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id]
+          si = VCAP::CloudController::ManagedServiceInstance.make(
+            tags: %w(foo bar),
+            space: space
+          )
+          si.annotation_ids = [
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
+          ]
+          si.label_ids = [
+            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
+            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          ]
           si
         end
 
@@ -1324,36 +1333,425 @@ RSpec.describe 'V3 service instances' do
 
         let(:request_body) do
           {
+            tags: %w(baz quz),
             metadata: {
               labels: {
                 potato: 'yam',
-                style: 'baked'
+                style: 'baked',
+                'pre.fix/to_delete': nil
               },
               annotations: {
                 potato: 'idaho',
                 style: 'mashed',
-                "pre.fix/to_delete": nil
+                'pre.fix/to_delete': nil
               }
             }
           }
         end
 
-        it 'updates the metadata' do
+        it 'responds synchronously' do
           api_call.call(space_dev_headers)
+
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to match_json_response(
             create_managed_json(
               service_instance,
               labels: {
                 potato: 'yam',
-                style: 'baked'
+                style: 'baked',
+                'pre.fix/tail': 'fluffy'
               },
               annotations: {
                 potato: 'idaho',
                 style: 'mashed',
-              }
+                'pre.fix/fox': 'bushy'
+              },
+              last_operation: {
+                created_at: iso8601,
+                updated_at: iso8601,
+                description: nil,
+                state: 'succeeded',
+                type: 'update'
+              },
+              tags: %w(baz quz)
             )
           )
+        end
+
+        it 'updates the service instance' do
+          api_call.call(space_dev_headers)
+
+          service_instance.reload
+          expect(service_instance.reload.tags).to eq(%w(baz quz))
+
+          expect(service_instance.annotations).to have(3).entries
+          expect(service_instance.annotations[0].key_prefix).to eq('pre.fix')
+          expect(service_instance.annotations[0].key_name).to eq('fox')
+          expect(service_instance.annotations[0].value).to eq('bushy')
+          expect(service_instance.annotations[1].key_prefix).to be_nil
+          expect(service_instance.annotations[1].key_name).to eq('potato')
+          expect(service_instance.annotations[1].value).to eq('idaho')
+          expect(service_instance.annotations[2].key_prefix).to be_nil
+          expect(service_instance.annotations[2].key_name).to eq('style')
+          expect(service_instance.annotations[2].value).to eq('mashed')
+
+          expect(service_instance.labels).to have(3).entries
+          expect(service_instance.labels[0].key_prefix).to eq('pre.fix')
+          expect(service_instance.labels[0].key_name).to eq('tail')
+          expect(service_instance.labels[0].value).to eq('fluffy')
+          expect(service_instance.labels[1].key_prefix).to be_nil
+          expect(service_instance.labels[1].key_name).to eq('potato')
+          expect(service_instance.labels[1].value).to eq('yam')
+          expect(service_instance.labels[2].key_prefix).to be_nil
+          expect(service_instance.labels[2].key_name).to eq('style')
+          expect(service_instance.labels[2].value).to eq('baked')
+
+          expect(service_instance.last_operation.type).to eq('update')
+          expect(service_instance.last_operation.state).to eq('succeeded')
+        end
+      end
+
+      describe 'updates that require broker communication' do
+        let(:service_offering) { VCAP::CloudController::Service.make }
+        let(:original_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let!(:service_instance) do
+          si = VCAP::CloudController::ManagedServiceInstance.make(
+            tags: %w(foo bar),
+            space: space,
+            service_plan: original_service_plan,
+          )
+          si.annotation_ids = [
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
+          ]
+          si.label_ids = [
+            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
+            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          ]
+          si
+        end
+        let(:guid) { service_instance.guid }
+        let(:request_body) do
+          {
+            name: 'new-name',
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: new_service_plan.guid
+                }
+              }
+            },
+            parameters: {
+              foo: 'bar',
+              baz: 'qux'
+            },
+            tags: %w(baz quz),
+            metadata: {
+              labels: {
+                potato: 'yam',
+                style: 'baked',
+                'pre.fix/to_delete': nil
+              },
+              annotations: {
+                potato: 'idaho',
+                style: 'mashed',
+                'pre.fix/to_delete': nil
+              }
+            }
+          }
+        end
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it 'responds with a pollable job' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response).to have_status_code(202)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          expect(job.operation).to eq('service_instance.update')
+          expect(job.resource_guid).to eq(service_instance.guid)
+          expect(job.resource_type).to eq('service_instances')
+        end
+
+        it 'updates the last operation' do
+          api_call.call(space_dev_headers)
+
+          expect(service_instance.last_operation.type).to eq('update')
+          expect(service_instance.last_operation.state).to eq('in progress')
+        end
+
+        it 'does not update the service instance' do
+          api_call.call(space_dev_headers)
+
+          service_instance.reload
+          expect(service_instance.reload.tags).to eq(%w(foo bar))
+
+          expect(service_instance.annotations).to have(2).entries
+          expect(service_instance.annotations[0].key_prefix).to eq('pre.fix')
+          expect(service_instance.annotations[0].key_name).to eq('to_delete')
+          expect(service_instance.annotations[0].value).to eq('value')
+          expect(service_instance.annotations[1].key_prefix).to eq('pre.fix')
+          expect(service_instance.annotations[1].key_name).to eq('fox')
+          expect(service_instance.annotations[1].value).to eq('bushy')
+
+          expect(service_instance.labels).to have(2).entries
+          expect(service_instance.labels[0].key_prefix).to eq('pre.fix')
+          expect(service_instance.labels[0].key_name).to eq('to_delete')
+          expect(service_instance.labels[0].value).to eq('value')
+          expect(service_instance.labels[1].key_prefix).to eq('pre.fix')
+          expect(service_instance.labels[1].key_name).to eq('tail')
+          expect(service_instance.labels[1].value).to eq('fluffy')
+        end
+
+        describe 'the pollable job' do
+          let(:broker_response) { { dashboard_url: 'http://new-dashboard.url' } }
+          let(:broker_status_code) { 200 }
+
+          before do
+            api_call.call(space_dev_headers)
+
+            instance = VCAP::CloudController::ServiceInstance.last
+            stub_request(:patch, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+
+            # TODO: add this when doing async responses:
+            # with(query: { 'accepts_incomplete' => true }).
+          end
+
+          it 'sends a UPDATE request with the right arguments to the service broker' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:patch, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
+                with(
+                  # TODO: add in when async part done:
+                  # query: { accepts_incomplete: true },
+                  body: {
+                    service_id: new_service_plan.service.unique_id,
+                    plan_id: new_service_plan.unique_id,
+                    previous_values: {
+                      plan_id: original_service_plan.unique_id,
+                      service_id: original_service_plan.service.unique_id,
+                      organization_id: org.guid,
+                      space_id: space.guid,
+                    },
+                    context: {
+                      platform: 'cloudfoundry',
+                      organization_guid: org.guid,
+                      organization_name: org.name,
+                      space_guid: space.guid,
+                      space_name: space.name,
+                      instance_name: 'new-name'
+                    },
+                    parameters: {
+                      foo: 'bar',
+                      baz: 'qux'
+                    },
+                  }
+                )
+            ).to have_been_made.once
+          end
+
+          context 'when the update completes synchronously' do
+            it 'marks the service instance as updated' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              service_instance.reload
+              expect(service_instance.dashboard_url).to eq('http://new-dashboard.url')
+              expect(service_instance.last_operation.type).to eq('update')
+              expect(service_instance.last_operation.state).to eq('succeeded')
+            end
+
+            it 'marks the job as complete' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            context 'when the broker responds with an error' do
+              let(:broker_status_code) { 400 }
+
+              it 'marks the service instance as failed' do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+                expect(service_instance.last_operation.type).to eq('update')
+                expect(service_instance.last_operation.state).to eq('failed')
+                expect(service_instance.last_operation.description).to include('Status Code: 400 Bad Request')
+              end
+
+              it 'marks the job as failed' do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              end
+            end
+          end
+        end
+      end
+
+      describe 'no changes requested' do
+        let!(:service_instance) do
+          si = VCAP::CloudController::ManagedServiceInstance.make(
+            tags: %w(foo bar),
+            space: space
+          )
+          si
+        end
+
+        let(:guid) { service_instance.guid }
+
+        it 'updates the instance synchronously' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to match_json_response(
+            create_managed_json(
+              service_instance,
+              last_operation: {
+                created_at: iso8601,
+                updated_at: iso8601,
+                description: nil,
+                state: 'succeeded',
+                type: 'update'
+              },
+              tags: %w(foo bar)
+            )
+          )
+        end
+      end
+
+      describe 'service plan checks' do
+        let!(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make(
+            tags: %w(foo bar),
+            space: space
+          )
+        end
+        let(:guid) { service_instance.guid }
+
+        let(:request_body) do
+          {
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: service_plan_guid
+                }
+              }
+            }
+          }
+        end
+
+        context 'does not exist' do
+          let(:service_plan_guid) { 'does-not-exist' }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'not readable by the user' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan_guid) { service_plan.guid }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'not active' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
+          let(:service_plan_guid) { service_plan.guid }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'space-scoped plan from a different space' do
+          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: another_space) }
+          let(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, active: true, public: false) }
+          let(:service_plan_guid) { service_plan.guid }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+      end
+
+      describe 'invalid request' do
+        let!(:service_instance) do
+          si = VCAP::CloudController::ManagedServiceInstance.make(
+            tags: %w(foo bar),
+            space: space
+          )
+          si
+        end
+
+        let(:guid) { service_instance.guid }
+        let(:request_body) do
+          {
+            relationships: {
+              space: {
+                data: {
+                  guid: 'some-space'
+                }
+              }
+            }
+          }
+        end
+
+        it 'should fail' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({ 'detail' => include("Relationships Unknown field(s): 'space'") })
+          )
+        end
+      end
+
+      describe 'error during update' do
+        context 'name is already used in this space' do
+          let(:guid) { service_instance.guid }
+          let!(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              tags: %w(foo bar),
+              space: space,
+            )
+          end
+
+          let!(:name) { 'test' }
+          let!(:other_si) { VCAP::CloudController::ServiceInstance.make(name: name, space: space) }
+          let(:request_body) { { name: name } }
+
+          it 'should fail' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => include("The service instance name is taken: #{name}") })
+            )
+          end
         end
       end
     end
@@ -1443,7 +1841,7 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
-  def create_managed_json(instance, labels: {}, annotations: {})
+  def create_managed_json(instance, labels: {}, annotations: {}, last_operation: {}, tags: [])
     {
       guid: instance.guid,
       name: instance.name,
@@ -1451,10 +1849,10 @@ RSpec.describe 'V3 service instances' do
       updated_at: iso8601,
       type: 'managed',
       dashboard_url: nil,
-      last_operation: {},
+      last_operation: last_operation,
       maintenance_info: {},
       upgrade_available: false,
-      tags: [],
+      tags: tags,
       metadata: {
         labels: labels,
         annotations: annotations,

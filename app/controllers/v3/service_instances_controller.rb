@@ -12,7 +12,7 @@ require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
-require 'actions/service_instance_update'
+require 'actions/service_instance_update_managed'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/service_instance_create_managed'
@@ -96,18 +96,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
     case service_instance
     when ManagedServiceInstance
-      message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
-      unprocessable!(message.errors.full_messages) unless message.valid?
-
-      service_instance = ServiceInstanceUpdate.update(service_instance, message)
-      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+      update_managed(service_instance)
     when UserProvidedServiceInstance
-      message = ServiceInstanceUpdateUserProvidedMessage.new(hashed_params[:body])
-      unprocessable!(message.errors.full_messages) unless message.valid?
-
-      service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-      service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
-      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+      update_user_provided(service_instance)
     end
   end
 
@@ -187,7 +178,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def create_user_provided(message)
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+
     instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
+
     render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
   rescue ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance => e
     unprocessable!(e.message)
@@ -196,9 +189,7 @@ class ServiceInstancesV3Controller < ApplicationController
   def create_managed(message, space:)
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan &&
-      visible_to_current_user?(plan: service_plan) &&
-      service_plan.visible_in_space?(space)
+    unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
     broker_unavailable! unless service_plan.service_broker.available?
 
@@ -207,6 +198,36 @@ class ServiceInstancesV3Controller < ApplicationController
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   rescue ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
+  end
+
+  def update_user_provided(service_instance)
+    message = ServiceInstanceUpdateUserProvidedMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
+    render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+  end
+
+  def update_managed(service_instance)
+    message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    if message.service_plan_guid
+      service_plan = ServicePlan.first(guid: message.service_plan_guid)
+      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+    end
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+    service_instance, job = ServiceInstanceUpdateManaged.new(service_event_repository).update(service_instance, message)
+
+    if job.nil?
+      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+    else
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+    end
+  rescue ServiceInstanceUpdateManaged::NameTakenForServiceInstance => api_err
+    unprocessable!(api_err.message)
   end
 
   def admin?
@@ -280,6 +301,12 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def service_instance_not_found!
     resource_not_found!(:service_instance)
+  end
+
+  def service_plan_valid?(service_plan, space)
+    service_plan &&
+      visible_to_current_user?(plan: service_plan) &&
+      service_plan.visible_in_space?(space)
   end
 
   def unprocessable_space!

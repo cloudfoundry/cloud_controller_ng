@@ -614,6 +614,23 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request with the correct context in the body' do
+        client.update(instance, new_plan, previous_values: { plan_id: '1234' }, name: 'fake_name')
+
+        expect(http_client).to have_received(:patch).with(anything,
+          hash_including({
+            context: {
+              platform:          'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid:        instance.space_guid,
+              instance_name:     'fake_name',
+              organization_name: instance.organization.name,
+              space_name:        instance.space.name
+            }
+          })
+        )
+      end
+
+      it 'makes a patch request with the correct context in the body (default name)' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
         expect(http_client).to have_received(:patch).with(anything,
