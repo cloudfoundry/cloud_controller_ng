@@ -5693,6 +5693,7 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"http"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
@@ -5764,6 +5765,11 @@ applications without incurring downtime. This is different from the traditional 
 <td>The guid of the desired router group to route TCP traffic through. If set, the domain will only be available for TCP traffic.</td>
 </tr>
 <tr>
+<td><strong>supported_protocols</strong></td>
+<td><em>list of strings</em></td>
+<td>The protocols that are supported by the domain.</td>
+</tr>
+<tr>
 <td><strong>organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The organization the domain is scoped to. If set, the domain will only be available in that organization. Otherwise, the domain will be globally available.</td>
@@ -5813,6 +5819,7 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"http"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
@@ -5889,6 +5896,12 @@ applications without incurring downtime. This is different from the traditional 
 <td>null</td>
 </tr>
 <tr>
+<td><strong>supported_protocols</strong></td>
+<td><em>list of strings</em></td>
+<td>The protocols that are supported by the domain.</td>
+<td></td>
+</tr>
+<tr>
 <td><strong>organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to the organization the domain will be scoped to. <br><em>Note: cannot be used when <code class="prettyprint">internal</code> is set to <code class="prettyprint">true</code> or domain is associated with a router group.</em></td>
@@ -5950,6 +5963,7 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"http"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
@@ -6067,6 +6081,7 @@ applications without incurring downtime. This is different from the traditional 
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5806148f-cce6-4d86-7fbd-aa269e3f6f3f"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"tcp"</span><span class="p">],</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
         </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
@@ -6188,6 +6203,7 @@ applications without incurring downtime. This is different from the traditional 
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5806148f-cce6-4d86-7fbd-aa269e3f6f3f"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"tcp"</span><span class="p">],</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
         </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
@@ -6298,6 +6314,7 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"http"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
@@ -10247,6 +10264,7 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"router_group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"supported_protocols"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"http"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
