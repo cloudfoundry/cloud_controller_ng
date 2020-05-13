@@ -6,6 +6,7 @@
   "name": "test-domain.com",
   "internal": false,
   "router_group": null,
+  "supported_protocols": ["http"],
   "metadata": {
     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
@@ -62,6 +63,7 @@
       "name": "test-domain.com",
       "internal": false,
       "router_group": { "guid": "5806148f-cce6-4d86-7fbd-aa269e3f6f3f" },
+      "supported_protocols": ["tcp"],
       "metadata": {
         "labels": {},
         "annotations": {}

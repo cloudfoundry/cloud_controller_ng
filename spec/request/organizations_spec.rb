@@ -354,6 +354,7 @@ module VCAP::CloudController
             name: shared_domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -380,6 +381,7 @@ module VCAP::CloudController
             name: owned_private_domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -408,6 +410,7 @@ module VCAP::CloudController
             name: shared_private_domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -768,6 +771,7 @@ module VCAP::CloudController
               name: shared_private_domain.name,
               internal: false,
               router_group: nil,
+              supported_protocols: ['http'],
               metadata: {
                 labels: {},
                 annotations: {}
@@ -805,6 +809,7 @@ module VCAP::CloudController
               name: shared_domain.name,
               internal: false,
               router_group: nil,
+              supported_protocols: ['http'],
               metadata: {
                 labels: {},
                 annotations: {}

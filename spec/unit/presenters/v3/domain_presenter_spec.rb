@@ -41,6 +41,7 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:name]).to eq(domain.name)
           expect(subject[:internal]).to eq(domain.internal)
+          expect(subject[:supported_protocols]).to eq(['http'])
           expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
           expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization][:data]).to be_nil
@@ -85,6 +86,7 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:name]).to eq(domain.name)
           expect(subject[:internal]).to eq(domain.internal)
+          expect(subject[:supported_protocols]).to eq(['http'])
           expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
           expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization]).to eq({
@@ -133,6 +135,12 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the domain has a router group' do
+        before do
+          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return(nil)
+          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:external_domain).and_return('api2.vcap.me')
+          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:external_protocol).and_return('https')
+        end
+
         let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
         let(:domain) do
           VCAP::CloudController::PrivateDomain.make(
@@ -164,16 +172,37 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:name]).to eq(domain.name)
           expect(subject[:router_group][:guid]).to eq('some-router-guid')
+          expect(subject[:supported_protocols]).to eq(['tcp'])
           expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
           expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization]).to eq({
             data: { guid: domain.owning_organization.guid }
           })
-          expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
-          expect(subject[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{domain.owning_organization.guid}")
-          expect(subject[:links][:route_reservations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/route_reservations")
-          expect(subject[:links][:router_group][:href]).to eq("#{link_prefix}/routing/v1/router_groups/some-router-guid")
-          expect(subject[:links][:shared_organizations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations")
+          expect(subject[:links][:self][:href]).to eq("https://api2.vcap.me/v3/domains/#{domain.guid}")
+          expect(subject[:links][:organization][:href]).to eq("https://api2.vcap.me/v3/organizations/#{domain.owning_organization.guid}")
+          expect(subject[:links][:route_reservations][:href]).to eq("https://api2.vcap.me/v3/domains/#{domain.guid}/route_reservations")
+          expect(subject[:links][:router_group][:href]).to eq('https://api2.vcap.me/routing/v1/router_groups/some-router-guid')
+          expect(subject[:links][:shared_organizations][:href]).to eq("https://api2.vcap.me/v3/domains/#{domain.guid}/relationships/shared_organizations")
+        end
+
+        context 'when the kubernetes host url is blank' do
+          before do
+            allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return('')
+          end
+
+          it 'shows the tcp protocol' do
+            expect(subject[:supported_protocols]).to eq(['tcp'])
+          end
+        end
+
+        context 'when the kubernetes section is not set in the config' do
+          before do
+            allow(VCAP::CloudController::Config).to receive_message_chain(:config).and_return(VCAP::CloudController::Config.new({}, context: :api))
+          end
+
+          it 'shows the tcp protocol' do
+            expect(subject[:supported_protocols]).to eq(['tcp'])
+          end
         end
 
         context 'and the routing API is disabled' do

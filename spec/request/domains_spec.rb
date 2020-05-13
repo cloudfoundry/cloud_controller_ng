@@ -73,6 +73,7 @@ RSpec.describe 'Domains Request' do
           name: visible_owned_private_domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: {},
             annotations: {}
@@ -102,6 +103,7 @@ RSpec.describe 'Domains Request' do
           name: visible_shared_private_domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: {},
             annotations: {}
@@ -131,6 +133,7 @@ RSpec.describe 'Domains Request' do
           name: not_visible_private_domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: {},
             annotations: {}
@@ -160,6 +163,7 @@ RSpec.describe 'Domains Request' do
           name: shared_domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: {},
             annotations: {}
@@ -758,20 +762,21 @@ RSpec.describe 'Domains Request' do
           name: params[:name],
           internal: false,
           router_group: { guid: 'some-router-guid' },
-          metadata: {
-            labels: { key: 'value' },
-            annotations: { key2: 'value2' }
+          supported_protocols: ['http'],
+        metadata: {
+        labels: { key: 'value' },
+        annotations: { key2: 'value2' }
+        },
+        relationships: {
+        organization: {
+          data: nil
           },
-          relationships: {
-            organization: {
-              data: nil
-            },
-            shared_organizations: {
-              data: []
-            }
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
+        shared_organizations: {
+          data: []
+          }
+        },
+        links: {
+        self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
             route_reservations: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations) },
             router_group: { href: %r(#{Regexp.escape(link_prefix)}/routing/v1/router_groups/some-router-guid) },
           }
@@ -849,6 +854,7 @@ RSpec.describe 'Domains Request' do
           name: params[:name],
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: { key: 'value' },
             annotations: { key2: 'value2' }
@@ -1793,6 +1799,7 @@ RSpec.describe 'Domains Request' do
           name: shared_domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           metadata: {
             labels: {},
             annotations: {}
@@ -1837,6 +1844,7 @@ RSpec.describe 'Domains Request' do
             name: private_domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -1897,6 +1905,7 @@ RSpec.describe 'Domains Request' do
             name: private_domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -1994,6 +2003,7 @@ RSpec.describe 'Domains Request' do
           name: domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           relationships: {
             organization: {
               data: nil
@@ -2046,6 +2056,7 @@ RSpec.describe 'Domains Request' do
           name: domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           relationships: {
             organization: {
               data: { guid: org.guid }
@@ -2103,6 +2114,7 @@ RSpec.describe 'Domains Request' do
           name: domain.name,
           internal: false,
           router_group: nil,
+          supported_protocols: ['http'],
           relationships: {
             organization: {
               data: { guid: domain.owning_organization_guid }

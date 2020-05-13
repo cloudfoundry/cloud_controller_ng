@@ -161,6 +161,7 @@ RSpec.describe 'Routes Request' do
             name: domain1.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -189,6 +190,36 @@ RSpec.describe 'Routes Request' do
             name: domain2.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            relationships: {
+              organization: {
+                data: nil
+              },
+              shared_organizations: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: "#{link_prefix}/v3/domains/#{domain1.guid}" },
+              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain1.guid}/route_reservations) }
+            }
+          }
+        end
+
+        let(:domain2) { VCAP::CloudController::SharedDomain.make(name: 'second-domain.example.com') }
+        let(:domain2_json) do
+          {
+            guid: domain2.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: domain2.name,
+            internal: false,
+            router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
@@ -837,6 +868,7 @@ RSpec.describe 'Routes Request' do
             name: domain.name,
             internal: false,
             router_group: nil,
+            supported_protocols: ['http'],
             metadata: {
               labels: {},
               annotations: {}
