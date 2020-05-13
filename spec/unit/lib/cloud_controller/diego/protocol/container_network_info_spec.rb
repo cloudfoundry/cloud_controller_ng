@@ -6,6 +6,7 @@ module VCAP::CloudController
       RSpec.describe ContainerNetworkInfo do
         let(:app) { AppModel.make }
         let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+        let!(:deploying_web_process) { ProcessModel.make(app: app, type: 'web') }
         let!(:other_process) { ProcessModel.make(app: app, ports: [8765], type: 'meow') }
         let!(:no_exposed_port_process) { ProcessModel.make(app: app, type: 'woof') }
         let!(:docker_process) { ProcessModelFactory.make(app: app, type: 'docker', ports: [1111, 2222]) }
