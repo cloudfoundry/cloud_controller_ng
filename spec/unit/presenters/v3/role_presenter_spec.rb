@@ -125,6 +125,16 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{role.organization.guid}")
         end
       end
+
+      describe 'when the user guid is weird' do
+        let(:user) { VCAP::CloudController::User.make(guid: ':---)') }
+        let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user) }
+        let(:result) { presenter.to_hash }
+
+        it 'presents the role' do
+          expect(result[:links][:user][:href]).to eq("#{link_prefix}/v3/users/#{CGI.escape(role.user_guid)}")
+        end
+      end
     end
   end
 end
