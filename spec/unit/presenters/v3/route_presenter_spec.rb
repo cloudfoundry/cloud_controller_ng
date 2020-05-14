@@ -63,6 +63,7 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the route as json' do
         expect(subject[:guid]).to eq(route.guid)
+        expect(subject[:protocol]).to eq('http')
         expect(subject[:created_at]).to be_a(Time)
         expect(subject[:updated_at]).to be_a(Time)
         expect(subject[:host]).to eq(route_host)

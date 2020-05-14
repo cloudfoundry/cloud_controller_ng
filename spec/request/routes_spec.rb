@@ -27,6 +27,7 @@ RSpec.describe 'Routes Request' do
     let(:route_in_org_json) do
       {
         guid: route_in_org.guid,
+        protocol: route_in_org.domain.protocols[0],
         host: route_in_org.host,
         path: route_in_org.path,
         url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
@@ -80,6 +81,7 @@ RSpec.describe 'Routes Request' do
     let(:route_in_other_org_json) do
       {
         guid: route_in_other_org.guid,
+        protocol: route_in_other_org.domain.protocols[0],
         host: route_in_other_org.host,
         path: route_in_other_org.path,
         url: "#{route_in_other_org.host}.#{route_in_other_org.domain.name}#{route_in_other_org.path}",
@@ -245,6 +247,7 @@ RSpec.describe 'Routes Request' do
         let(:route1_domain1_json) do
           {
             guid: route1_domain1.guid,
+            protocol: route1_domain1.domain.protocols[0],
             created_at: iso8601,
             updated_at: iso8601,
             host: route1_domain1.host,
@@ -307,6 +310,7 @@ RSpec.describe 'Routes Request' do
       let(:route_without_host_and_with_path_json) do
         {
           guid: 'route-without-host',
+          protocol: domain.protocols[0],
           created_at: iso8601,
           updated_at: iso8601,
           destinations: [],
@@ -340,6 +344,7 @@ RSpec.describe 'Routes Request' do
       let(:route_without_host_and_with_path2_json) do
         {
           guid: 'route-without-host2',
+          protocol: domain.protocols[0],
           created_at: iso8601,
           updated_at: iso8601,
           destinations: [],
@@ -376,6 +381,7 @@ RSpec.describe 'Routes Request' do
       let(:route_without_path_and_with_host_json) do
         {
           guid: 'route-without-path',
+          protocol: domain.protocols[0],
           created_at: iso8601,
           updated_at: iso8601,
           destinations: [],
@@ -809,6 +815,7 @@ RSpec.describe 'Routes Request' do
     let(:route_json) do
       {
         guid: route.guid,
+        protocol: route.domain.protocols[0],
         host: route.host,
         path: route.path,
         url: "#{route.host}.#{route.domain.name}#{route.path}",
@@ -892,6 +899,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: route.guid,
+            protocol: route.domain.protocols[0],
             host: route.host,
             path: route.path,
             url: "#{route.host}.#{route.domain.name}#{route.path}",
@@ -950,6 +958,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: '',
             path: '',
             url: domain.name,
@@ -1022,6 +1031,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: 'some-host',
             path: '/some-path',
             url: "some-host.#{domain.name}/some-path",
@@ -1101,6 +1111,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: '*',
             path: '',
             url: "*.#{domain.name}",
@@ -1193,6 +1204,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: 'some-host',
             path: '',
             url: "some-host.#{domain.name}",
@@ -1260,6 +1272,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: '*',
             path: '',
             url: "*.#{domain.name}",
@@ -1334,6 +1347,7 @@ RSpec.describe 'Routes Request' do
       let(:route_json) do
         {
           guid: UUID_REGEX,
+          protocol: domain.protocols[0],
           host: 'some-host',
           path: '',
           url: "some-host.#{domain.name}",
@@ -1450,6 +1464,7 @@ RSpec.describe 'Routes Request' do
         let(:route_json) do
           {
             guid: UUID_REGEX,
+            protocol: domain.protocols[0],
             host: 'some-host',
             path: '',
             url: "some-host.#{domain.name}",
@@ -1677,6 +1692,7 @@ RSpec.describe 'Routes Request' do
       let(:route_json) do
         {
           guid: UUID_REGEX,
+            protocol: domain.protocols[0],
           host: params[:host],
           path: '',
           url: "#{params[:host]}.#{domain.name}",
@@ -1902,6 +1918,7 @@ RSpec.describe 'Routes Request' do
     let(:route_json) do
       {
         guid: UUID_REGEX,
+        protocol: domain.protocols[0],
         host: '',
         path: '',
         url: domain.name,
@@ -1959,6 +1976,7 @@ RSpec.describe 'Routes Request' do
       let(:route_json) do
         {
           guid: UUID_REGEX,
+          protocol: domain.protocols[0],
           host: '',
           path: '',
           url: domain.name,
@@ -2130,6 +2148,7 @@ RSpec.describe 'Routes Request' do
     let(:route1_json) do
       {
         guid: route1.guid,
+        protocol: route1.domain.protocols[0],
         host: route1.host,
         path: route1.path,
         url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
@@ -2172,6 +2191,7 @@ RSpec.describe 'Routes Request' do
     let(:route2_json) do
       {
         guid: route2.guid,
+        protocol: route2.domain.protocols[0],
         host: route2.host,
         path: route2.path,
         url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
