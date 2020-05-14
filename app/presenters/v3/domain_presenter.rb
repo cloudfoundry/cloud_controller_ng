@@ -59,14 +59,6 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    # def protocols
-    #   # If Kubernetes is enabled that implies that we are using istio
-    #   k8s_enabled = !VCAP::CloudController::Config.config.get(:kubernetes, :host_url).blank?
-    #   return ['tcp'] if !k8s_enabled && domain.router_group_guid
-
-    #   return ['http']
-    # end
-
     def hashified_router_group(router_group_guid)
       router_group_guid ? { guid: router_group_guid } : nil
     end
