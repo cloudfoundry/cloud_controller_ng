@@ -148,7 +148,8 @@ module VCAP::CloudController
                   }
                 },
                 'unit' => {
-                  'type' => 'string'
+                  'type' => 'string',
+                  'minLength' => 1
                 }
               }
             }

@@ -317,6 +317,24 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 }
             ]
           }'
+        ],
+        ['unit is empty string',
+         '{
+             "costs": [
+                {
+                  "amount": {
+                    "gpb": 0.06
+                  },
+                  "unit": "Daily"
+                },
+                {
+                  "amount": {
+                    "usd": 0.10
+                  },
+                  "unit": ""
+                }
+            ]
+          }'
         ]
       ].each do |scenario, extra|
         it "returns empty cost array when #{scenario}" do
