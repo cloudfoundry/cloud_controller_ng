@@ -143,6 +143,16 @@ module VCAP::CloudController
       false
     end
 
+    def protocols
+      return ['http'] if self.private?
+
+      # If Kubernetes is enabled that implies that we are using istio, not the routing API
+      k8s_enabled = !!Config.config.get(:kubernetes, :host_url)
+      return ['tcp'] if !k8s_enabled && self.router_group_guid
+
+      ['http']
+    end
+
     private
 
     def validate_change_owning_organization(organization)

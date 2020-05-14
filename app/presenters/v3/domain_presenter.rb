@@ -24,7 +24,7 @@ module VCAP::CloudController::Presenters::V3
         name: domain.name,
         internal: domain.internal,
         router_group: hashified_router_group(domain.router_group_guid),
-        supported_protocols: protocols,
+        supported_protocols: domain.protocols,
         metadata: {
           labels: hashified_labels(domain.labels),
           annotations: hashified_annotations(domain.annotations),
@@ -59,13 +59,13 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    def protocols
-      # If Kubernetes is enabled that implies that we are using istio
-      k8s_enabled = !VCAP::CloudController::Config.config.get(:kubernetes, :host_url).blank?
-      return ['tcp'] if !k8s_enabled && domain.router_group_guid
+    # def protocols
+    #   # If Kubernetes is enabled that implies that we are using istio
+    #   k8s_enabled = !VCAP::CloudController::Config.config.get(:kubernetes, :host_url).blank?
+    #   return ['tcp'] if !k8s_enabled && domain.router_group_guid
 
-      return ['http']
-    end
+    #   return ['http']
+    # end
 
     def hashified_router_group(router_group_guid)
       router_group_guid ? { guid: router_group_guid } : nil
