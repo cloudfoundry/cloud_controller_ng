@@ -69,7 +69,8 @@ RSpec.describe 'Revisions' do
             'command' => 'run-sidecar',
             'process_types' => ['web'],
             'memory_in_mb' => 300,
-          }]
+          }],
+          'deployable' => true
         }
       )
     end
@@ -146,6 +147,7 @@ RSpec.describe 'Revisions' do
                 },
               },
               'sidecars' => [],
+              'deployable' => true
             },
             {
               'guid' => revision2.guid,
@@ -181,6 +183,7 @@ RSpec.describe 'Revisions' do
                 },
               },
               'sidecars' => [],
+              'deployable' => true
             }
           ]
         }
@@ -244,6 +247,7 @@ RSpec.describe 'Revisions' do
                   },
                 },
                 'sidecars' => [],
+                'deployable' => true
               },
               {
                 'guid' => revision3.guid,
@@ -279,6 +283,7 @@ RSpec.describe 'Revisions' do
                   },
                 },
                 'sidecars' => [],
+                'deployable' => true
               }
             ]
           }
@@ -367,6 +372,7 @@ RSpec.describe 'Revisions' do
             },
           },
           'sidecars' => [],
+          'deployable' => true
         }
       )
     end
@@ -461,6 +467,7 @@ RSpec.describe 'Revisions' do
                 },
               },
               'sidecars' => [],
+              'deployable' => true
             },
             {
               'guid' => revision2.guid,
@@ -496,6 +503,7 @@ RSpec.describe 'Revisions' do
                 },
               },
               'sidecars' => [],
+              'deployable' => true
             }
           ]
         }

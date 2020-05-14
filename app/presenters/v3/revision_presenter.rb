@@ -30,7 +30,9 @@ module VCAP::CloudController
             metadata: {
               labels: hashified_labels(revision.labels),
               annotations: hashified_annotations(revision.annotations),
-            }
+            },
+            deployable: deployable
+
           }
         end
 
@@ -67,6 +69,10 @@ module VCAP::CloudController
               process_types: sidecar.revision_sidecar_process_types.map(&:type),
             }
           end
+        end
+
+        def deployable
+          revision.droplet.staged?
         end
       end
     end

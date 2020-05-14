@@ -5,8 +5,12 @@ module VCAP::CloudController
   RSpec.describe AppRevisionsFetcher do
     let(:fetcher) { AppRevisionsFetcher }
     let!(:app) { AppModel.make }
-    let!(:revision1) { RevisionModel.make(version: 21, app: app) }
-    let!(:revision2) { RevisionModel.make(version: 34, app: app) }
+
+    let(:expired_droplet) { DropletModel.make(:droplet, app: app, state: DropletModel::EXPIRED_STATE) }
+    let(:staged_droplet) { DropletModel.make(:droplet, app: app, state: DropletModel::STAGED_STATE) }
+
+    let!(:revision1) { RevisionModel.make(version: 21, droplet_guid: staged_droplet.guid, app: app) }
+    let!(:revision2) { RevisionModel.make(version: 34, droplet_guid: expired_droplet.guid, app: app) }
 
     describe '#fetch' do
       let(:message) { AppRevisionsListMessage.from_params(filters) }
@@ -20,8 +24,17 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the revisions are filtered' do
+      context 'when the revisions are filtered on version' do
         let(:filters) { { versions: [revision1.version] } }
+
+        it 'returns all of the desired revisions' do
+          expect(subject).to include(revision1)
+          expect(subject).to_not include(revision2)
+        end
+      end
+
+      context 'when the revisions are filtered on deployable' do
+        let(:filters) { { deployable: true } }
 
         it 'returns all of the desired revisions' do
           expect(subject).to include(revision1)
