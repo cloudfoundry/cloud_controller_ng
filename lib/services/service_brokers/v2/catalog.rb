@@ -64,9 +64,37 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_all_service_names_are_unique
-      if has_duplicates?(services.map(&:name))
+      new_services_names = services.map(&:name)
+      if has_duplicates?(new_services_names)
         validation_errors.add('Service names must be unique within a broker')
       end
+
+      if service_broker.exists?
+        taken_names = taken_names(new_services_names)
+        if !taken_names.empty?
+          validation_errors.add("Service names must be unique within a broker. Services with names #{taken_names} already exist")
+        end
+      end
+    end
+
+    def taken_names(new_services_names)
+      clashing_names = []
+      clashing_services = service_broker.services_dataset.where(label: new_services_names)
+      clashing_services.each do |old_service|
+        new_service = services.detect { |ns| ns.name == old_service.name }
+        next if updating_service?(new_service, old_service)
+
+        clashing_names << new_service.name if !can_delete_service?(old_service)
+      end
+      clashing_names
+    end
+
+    def can_delete_service?(service)
+      service.service_plans_dataset.map(&:service_instances_dataset).map(&:count).all?(0)
+    end
+
+    def updating_service?(new_service, old_service)
+      new_service.broker_provided_id == old_service.unique_id
     end
 
     def has_duplicates?(array)

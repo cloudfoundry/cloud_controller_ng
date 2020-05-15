@@ -80,38 +80,132 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when two services in the catalog have the same name' do
-        let(:catalog_hash) do
-          {
+      context 'unique service names' do
+        context 'when two services in the catalog have the same name' do
+          let(:catalog_hash) do
+            {
               'services' => [
                 build_service('id' => '1', 'name' => 'my-service'),
                 build_service('id' => '2', 'name' => 'my-service')
               ]
+            }
+          end
+
+          it 'gives an error' do
+            catalog = Catalog.new(broker, catalog_hash)
+            expect(catalog.valid?).to eq false
+            expect(catalog.errors.messages).to include('Service names must be unique within a broker')
+          end
+        end
+
+        context 'when the broker is being created and has not yet been persisted' do
+          let(:broker) {
+            VCAP::CloudController::ServiceBroker.new(name: 'not-persisted')
           }
+          let(:catalog_hash) do
+            {
+              'services' => [build_service('id' => '1')]
+            }
+          end
+
+          it 'is does not check for preexistent services' do
+            catalog = Catalog.new(broker, catalog_hash)
+
+            expect(catalog.valid?).to eq true
+          end
         end
 
-        it 'gives an error' do
-          catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
-          expect(catalog.errors.messages).to include('Service names must be unique within a broker')
-        end
-      end
+        context 'when a service in the catalog has the same name as a preexistent one for same broker' do
+          context 'when ids provided by the broker are different' do
+            context 'when there are service instances for a plan of that offering' do
+              let(:new_catalog_hash) do
+                {
+                  'services' => [
+                    build_service('id' => '1', 'name' => 'clashing-service-name'),
+                    build_service('id' => '2', 'name' => 'clashing-service-name2')
+                  ]
+                }
+              end
+              let(:broker) {
+                broker = VCAP::CloudController::ServiceBroker.make
+                old_service = VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker)
+                old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
+                VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
 
-      context 'when a service in the catalog has the same id as a service from a different broker' do
-        let(:catalog_hash) do
-          {
-              'services' => [build_service('id' => '1'), build_service('id' => '2')]
+                old_service = VCAP::CloudController::Service.make(label: 'clashing-service-name2', service_broker: broker)
+                old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
+                VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
+
+                broker
+              }
+
+              it 'is invalid' do
+                catalog = Catalog.new(broker, new_catalog_hash)
+
+                expect(catalog.valid?).to be false
+                expect(catalog.errors.messages).to include(include('Services with names ["clashing-service-name", "clashing-service-name2"] already exist'))
+              end
+            end
+
+            context 'when there are no service instances for a plan of that offering' do
+              let(:new_catalog_hash) do
+                {
+                  'services' => [build_service('id' => '1', 'name' => 'clashing-service-name')]
+                }
+              end
+              let(:broker) { VCAP::CloudController::ServiceBroker.make }
+              let(:old_service) { VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker) }
+              let!(:old_plan) { VCAP::CloudController::ServicePlan.make(service: old_service) }
+
+              it 'is valid' do
+                catalog = Catalog.new(broker, new_catalog_hash)
+
+                expect(catalog.valid?).to be true
+              end
+            end
+          end
+
+          context 'when ids provided by the broker are the same' do
+            let(:broker) { VCAP::CloudController::ServiceBroker.make }
+            let(:old_service) { VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker) }
+            let(:new_catalog_hash) do
+              {
+                'services' => [build_service('id' => old_service.unique_id, 'name' => old_service.label)]
+              }
+            end
+            let(:old_plan) { VCAP::CloudController::ServicePlan.make(service: old_service) }
+            let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
+
+            it 'is valid' do
+              catalog = Catalog.new(broker, new_catalog_hash)
+
+              expect(catalog.valid?).to be true
+            end
+          end
+        end
+
+        context 'when a service in the catalog has the same name as a service from a different broker' do
+          let(:catalog_hash) do
+            {
+                'services' => [build_service('id' => '1'), build_service('id' => '2')]
+            }
+          end
+          let(:broker) { VCAP::CloudController::ServiceBroker.make }
+
+          let(:another_broker) {
+            broker = VCAP::CloudController::ServiceBroker.make
+            old_service = VCAP::CloudController::Service.make(name: '1', service_broker: broker)
+            old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
+            VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
+
+            broker
           }
-        end
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:another_broker) { VCAP::CloudController::ServiceBroker.make }
 
-        it 'is valid' do
-          existing_catalog = Catalog.new(another_broker, catalog_hash)
-          catalog = Catalog.new(broker, catalog_hash)
+          it 'is valid' do
+            catalog = Catalog.new(broker, catalog_hash)
 
-          expect(catalog.valid?).to eq true
-          expect(existing_catalog.valid?).to eq true
+            expect(catalog.valid?).to eq true
+          end
         end
       end
 
