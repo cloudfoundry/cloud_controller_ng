@@ -11,6 +11,8 @@ Example Route object
 | Name                                      | Type                                           | Description                                                                                                                     |
 | --------------                            | ------------------------                       | ------------------------------------------------------                                                                          |
 | **guid**                                  | _uuid_                                         | Unique identifier for the route.
+| **protocol** _(experimental)_             | _string_                                       | The protocol supported by the route, based on the route's domain configuration.
+| **port** _(experimental)_                 | _integer or `null`_                            | The port that the route listens on. Only compatible with routes leveraging the `tcp` protocol.
 | **created_at**                            | _datetime_                                     | The time with zone when the object was created.                                                                                 |
 | **updated_at**                            | _datetime_                                     | The time with zone when the object was last updated.                                                                         |
 | **host**                                  | _string_                                       | The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_). |

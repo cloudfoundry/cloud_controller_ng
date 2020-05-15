@@ -12,6 +12,7 @@ curl "https://api.example.org/v3/routes" \
   -d '{
     "host": "a-hostname",
     "path": "/some_path",
+    "port": 6666,
     "relationships": {
       "domain": {
         "data": { "guid": "domain-guid" }
@@ -54,6 +55,7 @@ Content-Type: application/json
 | ----------------------------------------- | ----------------------------------- | --------------------------------- |
 | **host**                                  | _string_                            | The host component for the route. |
 | **path**                                  | _string_                            | The path component for the route. Should begin with a `/`.
+| **port** _(experimental)_                 | _integer_                           | The port the route will listen on. Only compatible with routes leveraging a domain that supports the `tcp` protocol.
 | **metadata.annotations**                  | [_annotation object_](#annotations) | Annotations applied to the route. |
 | **metadata.labels**                       | [_label object_](#labels) | Labels applied to the route.      |
 
