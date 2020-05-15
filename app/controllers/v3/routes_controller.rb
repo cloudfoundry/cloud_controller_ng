@@ -67,7 +67,10 @@ class RoutesController < ApplicationController
     unprocessable_space! unless space
     unprocessable_domain! unless domain
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
+    if domain.shared?
+      unprocessable_wildcard! if message.wildcard? && !permission_queryer.can_write_globally?
+      unprocessable_non_http_protocols(message, domain)
+    end
 
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
@@ -222,6 +225,14 @@ class RoutesController < ApplicationController
     unprocessable!('Invalid domain. Ensure that the domain exists and you have access to it.')
   end
 
+  def unprocessable_protocol_host!
+    unprocessable!('Hosts are not supported for TCP routes.')
+  end
+
+  def unprocessable_protocol_path!
+    unprocessable!('Paths are not supported for TCP routes.')
+  end
+
   def validate_app_guids!(apps_hash, desired_app_guids)
     existing_app_guids = apps_hash.keys
 
@@ -238,5 +249,16 @@ class RoutesController < ApplicationController
 
   def app_not_found!
     resource_not_found!(:app)
+  end
+
+  def non_http_protocols_present?(domain)
+    !(domain.protocols - ['http']).empty?
+  end
+
+  def unprocessable_non_http_protocols(message, domain)
+    if non_http_protocols_present?(domain)
+      unprocessable_protocol_host! if message.host
+      unprocessable_protocol_path! if message.path
+    end
   end
 end

@@ -938,6 +938,61 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'POST /v3/routes' do
+    context 'when creating a route in a tcp domain' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', router_group_type: 'tcp') }
+      before do
+        token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
+        stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
+          to_return(status: 200, body: token.to_json, headers: { 'Content-Type' => 'application/json' })
+        stub_request(:get, 'http://localhost:3000/routing/v1/router_groups').
+          to_return(status: 200, body: '[{"guid":"some-router-group","name":"Robby Router","type":"tcp","reservable_ports":"25555"}]', headers: {})
+      end
+
+      context 'and the route has a host' do
+        let(:params) do
+          {
+            host: 'my-host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        it 'returns a 422 and a helpful error message' do
+          post '/v3/routes', params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Hosts are not supported for TCP routes.')
+        end
+      end
+
+      context 'and the route has a path' do
+        let(:params) do
+          {
+            path: '/cgi-bin',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        it 'returns a 422 and a helpful error message' do
+          post '/v3/routes', params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Paths are not supported for TCP routes.')
+        end
+      end
+    end
+
     context 'when creating a route in a scoped domain' do
       let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
 
