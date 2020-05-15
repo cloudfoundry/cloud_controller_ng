@@ -5760,14 +5760,14 @@ applications without incurring downtime. This is different from the traditional 
 <td>Whether the domain is used for internal (container-to-container) traffic.</td>
 </tr>
 <tr>
-<td><strong>router_group.guid</strong></td>
+<td><strong>router_group.guid</strong> (<em>experimental</em>)</td>
 <td><em>uuid</em></td>
 <td>The guid of the desired router group to route TCP traffic through. If set, the domain will only be available for TCP traffic.</td>
 </tr>
 <tr>
-<td><strong>supported_protocols</strong></td>
+<td><strong>supported_protocols</strong> (<em>experimental</em>)</td>
 <td><em>list of strings</em></td>
-<td>The protocols that are supported by the domain.</td>
+<td>Available protocols for routes using the domain.</td>
 </tr>
 <tr>
 <td><strong>organization</strong></td>
@@ -5894,12 +5894,6 @@ applications without incurring downtime. This is different from the traditional 
 <td><em>uuid</em></td>
 <td><strong>Experimental</strong> - The desired router group guid. <br><em>Note: cannot be used when <code class="prettyprint">internal</code> is set to <code class="prettyprint">true</code> or domain is scoped to an org.</em></td>
 <td>null</td>
-</tr>
-<tr>
-<td><strong>supported_protocols</strong></td>
-<td><em>list of strings</em></td>
-<td>The protocols that are supported by the domain.</td>
-<td></td>
 </tr>
 <tr>
 <td><strong>organization</strong></td>
