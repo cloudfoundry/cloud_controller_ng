@@ -261,7 +261,7 @@ module VCAP::CloudController
           it 'raises an error' do
             expect {
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.to raise_error(Route::InvalidOrganizationRelation)
+            }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Domain .* is not available/)
           end
         end
       end
@@ -287,7 +287,7 @@ module VCAP::CloudController
         it('raises an error indicating that a host must be provided') do
           expect {
             ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /host is required for shared-domains/)
+          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Routes in shared domains must have a host defined/)
         end
       end
 
@@ -304,7 +304,7 @@ module VCAP::CloudController
         it('raises an error indicating that the host format is invalid') do
           expect {
             ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /host format/)
+          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Host format is invalid/)
         end
       end
     end

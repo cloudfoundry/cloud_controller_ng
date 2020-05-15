@@ -7,21 +7,22 @@ module VCAP::CloudController
     describe '#tcp?' do
       let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
       let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
-      let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 
       before do
         allow_any_instance_of(RouteValidator).to receive(:validate)
-        allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
       end
 
       context 'when the route belongs to a shared domain' do
         context 'and that domain is a TCP domain' do
           let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
 
-          context 'and the route has a port' do
+          context 'and the route has a port and it aint kubes' do
             let(:route) { Route.new(domain: tcp_domain, port: 6000) }
 
             it 'returns true' do
+              # turn off kubernetes mode to surface actual tcp checking
+              TestConfig.override(kubernetes: nil)
               expect(route.tcp?).to equal(true)
             end
           end
@@ -30,6 +31,7 @@ module VCAP::CloudController
             let(:route) { Route.new(domain: tcp_domain) }
 
             it 'returns false' do
+              TestConfig.override(kubernetes: nil)
               expect(route.tcp?).to equal(false)
             end
           end
@@ -41,6 +43,7 @@ module VCAP::CloudController
               let(:route) { Route.new(domain: domain, port: 6000) }
 
               it 'returns false' do
+                TestConfig.override(kubernetes: nil)
                 expect(route.tcp?).to equal(false)
               end
             end
@@ -469,10 +472,10 @@ module VCAP::CloudController
           let(:space) { Space.make(space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
-          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 
           before do
-            allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
+            TestConfig.override(kubernetes: nil)
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
             validator = double
             allow(RouteValidator).to receive(:new).and_return(validator)
             allow(validator).to receive(:validate)
@@ -853,12 +856,16 @@ module VCAP::CloudController
         before do
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000])
           routing_api_client = double('routing_api_client', router_group: router_group, enabled?: true)
-          allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client: routing_api_client))
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
         end
 
         context 'on create' do
           context 'when the space does not have a space quota' do
             let(:space) { Space.make }
+
+            before do
+              TestConfig.override(kubernetes: nil)
+            end
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -867,6 +874,7 @@ module VCAP::CloudController
 
           context 'when not exceeding total allowed routes' do
             before do
+              TestConfig.override(kubernetes: nil)
               org_quota.total_routes = 2
               org_quota.total_reserved_route_ports = 1
               org_quota.save
@@ -890,6 +898,10 @@ module VCAP::CloudController
 
             context 'when creating another tcp route' do
               subject(:another_route) { Route.new(space: space, domain: tcp_domain, host: '', port: 4444) }
+
+              before do
+                TestConfig.override(kubernetes: nil)
+              end
 
               context 'when exceeding total_reserved_route_ports in org quota' do
                 before do
@@ -963,6 +975,7 @@ module VCAP::CloudController
 
         context 'on update' do
           before do
+            TestConfig.override(kubernetes: nil)
             org_quota.total_reserved_route_ports = 1
             org_quota.save
           end

@@ -30,6 +30,7 @@ RSpec.describe 'Routes Request' do
         protocol: route_in_org.domain.protocols[0],
         host: route_in_org.host,
         path: route_in_org.path,
+        port: nil,
         url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
@@ -84,6 +85,7 @@ RSpec.describe 'Routes Request' do
         protocol: route_in_other_org.domain.protocols[0],
         host: route_in_other_org.host,
         path: route_in_other_org.path,
+        port: nil,
         url: "#{route_in_other_org.host}.#{route_in_other_org.domain.name}#{route_in_other_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
@@ -252,6 +254,7 @@ RSpec.describe 'Routes Request' do
             updated_at: iso8601,
             host: route1_domain1.host,
             path: route1_domain1.path,
+            port: nil,
             url: "#{route1_domain1.host}.#{domain1.name}#{route1_domain1.path}",
             destinations: [],
             metadata: {
@@ -288,7 +291,7 @@ RSpec.describe 'Routes Request' do
 
         it 'includes the unique domains for the routes' do
           get '/v3/routes?include=domain', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources'],
             included: parsed_response['included']
@@ -316,6 +319,7 @@ RSpec.describe 'Routes Request' do
           destinations: [],
           host: '',
           path: '/path1',
+          port: nil,
           url: "#{domain.name}/path1",
           metadata: {
             labels: {},
@@ -350,6 +354,7 @@ RSpec.describe 'Routes Request' do
           destinations: [],
           host: '',
           path: '/path2',
+          port: nil,
           url: "#{domain.name}/path2",
           metadata: {
             labels: {},
@@ -387,6 +392,7 @@ RSpec.describe 'Routes Request' do
           destinations: [],
           host: 'host-1',
           path: '',
+          port: nil,
           url: "host-1.#{domain.name}",
           metadata: {
             labels: {},
@@ -416,7 +422,7 @@ RSpec.describe 'Routes Request' do
       context 'hosts filter' do
         it 'returns routes filtered by host' do
           get '/v3/routes?hosts=host-1', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -426,7 +432,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns route with no host if one exists when filtering by empty host' do
           get '/v3/routes?hosts=', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -438,7 +444,7 @@ RSpec.describe 'Routes Request' do
       context 'paths filter' do
         it 'returns routes filtered by path' do
           get '/v3/routes?paths=%2Fpath1', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -448,7 +454,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns route with no path when filtering by empty path' do
           get '/v3/routes?paths=', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -460,7 +466,7 @@ RSpec.describe 'Routes Request' do
       context 'hosts and paths filter' do
         it 'returns routes with no host and the provided path when host is empty' do
           get '/v3/routes?paths=%2Fpath1&hosts=', nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -472,7 +478,7 @@ RSpec.describe 'Routes Request' do
       context 'organization_guids filter' do
         it 'returns routes filtered by organization_guid' do
           get "/v3/routes?organization_guids=#{other_space.organization.guid}", nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -484,7 +490,7 @@ RSpec.describe 'Routes Request' do
       context 'space_guids filter' do
         it 'returns routes filtered by space_guid' do
           get "/v3/routes?space_guids=#{other_space.guid}", nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -496,7 +502,7 @@ RSpec.describe 'Routes Request' do
       context 'domain_guids filter' do
         it 'returns routes filtered by domain_guid' do
           get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect({
             resources: parsed_response['resources']
           }).to match_json_response({
@@ -508,7 +514,7 @@ RSpec.describe 'Routes Request' do
       context 'app_guids filter' do
         it 'returns routes filtered by app_guid' do
           get "/v3/routes?app_guids=#{app_model.guid}", nil, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].size).to eq(1)
           expect(parsed_response['resources'].first['destinations'].size).to eq(2)
           expect(
@@ -532,7 +538,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector' do
           get '/v3/routes?label_selector=animal in (dog)', nil, admin_header
 
-          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response).to have_status_code(200), last_response.body
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -551,7 +557,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector with space guids' do
           get "/v3/routes?label_selector=animal in (dog)&space_guids=#{space.guid}", nil, admin_header
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -570,7 +576,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector with org filters' do
           get "/v3/routes?label_selector=animal in (dog)&organization_guids=#{org.guid}", nil, admin_header
 
-          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response).to have_status_code(200), last_response.body
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -589,7 +595,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector with domain filters' do
           get "/v3/routes?label_selector=animal in (dog)&domain_guids=#{domain1.guid}", nil, admin_header
 
-          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response).to have_status_code(200), last_response.body
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -608,7 +614,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector with host filters' do
           get '/v3/routes?label_selector=animal in (dog)&hosts=hall', nil, admin_header
 
-          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response).to have_status_code(200), last_response.body
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -627,7 +633,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 200 and the filtered routes for "in" label selector with path filters' do
           get '/v3/routes?label_selector=animal in (dog)&paths=/oates', nil, admin_header
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           parsed_response = MultiJson.load(last_response.body)
 
           expected_pagination = {
@@ -639,7 +645,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -659,7 +665,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -678,7 +684,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -697,7 +703,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -716,7 +722,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -735,7 +741,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -754,7 +760,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -773,7 +779,7 @@ RSpec.describe 'Routes Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -788,14 +794,14 @@ RSpec.describe 'Routes Request' do
         ).and_call_original
 
         get '/v3/routes', nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
     end
 
     context 'when the request is invalid' do
       it 'returns 400 with a meaningful error' do
         get '/v3/routes?page=potato', nil, admin_header
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_status_code(400)
         expect(last_response).to have_error_message('The query parameter is invalid: Page must be a positive integer')
       end
     end
@@ -803,7 +809,7 @@ RSpec.describe 'Routes Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/routes', nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
   end
@@ -818,6 +824,7 @@ RSpec.describe 'Routes Request' do
         protocol: route.domain.protocols[0],
         host: route.host,
         path: route.path,
+        port: nil,
         url: "#{route.host}.#{route.domain.name}#{route.path}",
         created_at: iso8601,
         updated_at: iso8601,
@@ -861,7 +868,7 @@ RSpec.describe 'Routes Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/routes/#{route.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -902,6 +909,7 @@ RSpec.describe 'Routes Request' do
             protocol: route.domain.protocols[0],
             host: route.host,
             path: route.path,
+            port: nil,
             url: "#{route.host}.#{route.domain.name}#{route.path}",
             created_at: iso8601,
             updated_at: iso8601,
@@ -930,7 +938,7 @@ RSpec.describe 'Routes Request' do
 
         it 'includes the domain for the route' do
           get "/v3/routes/#{route.guid}?include=domain", nil, admin_header
-          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response).to have_status_code(200), last_response.body
           expect(parsed_response).to match_json_response(route_json)
         end
       end
@@ -1016,6 +1024,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: '',
             path: '',
+            port: nil,
             url: domain.name,
             created_at: iso8601,
             updated_at: iso8601,
@@ -1089,6 +1098,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: 'some-host',
             path: '/some-path',
+            port: nil,
             url: "some-host.#{domain.name}/some-path",
             created_at: iso8601,
             updated_at: iso8601,
@@ -1169,6 +1179,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: '*',
             path: '',
+            port: nil,
             url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
@@ -1236,7 +1247,7 @@ RSpec.describe 'Routes Request' do
 
         it 'fails with a helpful message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Missing host. Routes in shared domains must have a host defined.')
         end
       end
@@ -1262,6 +1273,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: 'some-host',
             path: '',
+            port: nil,
             url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
@@ -1330,6 +1342,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: '*',
             path: '',
+            port: nil,
             url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
@@ -1376,6 +1389,132 @@ RSpec.describe 'Routes Request' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
+
+      describe 'the domain supports tcp routes' do
+        let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '123' }) }
+        let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', name: 'my.domain') }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          TestConfig.override(
+            kubernetes: { host_url: nil },
+            external_domain: 'api2.vcap.me',
+            external_protocol: 'https',
+          )
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        end
+
+        context 'when the user provides a valid port' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:params) do
+            {
+              port: 123,
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: domain.guid }
+                },
+              }
+            }
+          end
+
+          let(:route_json) do
+            {
+              guid: UUID_REGEX,
+              port: 123,
+              host: '',
+              path: '',
+              protocol: 'tcp',
+              url: "#{domain.name}:123",
+              created_at: iso8601,
+              updated_at: iso8601,
+              destinations: [],
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: domain.guid }
+                },
+              },
+              links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+                space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+                destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+                domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              },
+              metadata: {
+                labels: {},
+                annotations: {}
+              },
+            }
+          end
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h['space_developer'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          context 'and a route with the domain and port already exist' do
+            let!(:duplicate_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
+
+            it 'fails with a helpful error message' do
+              post '/v3/routes', params.to_json, admin_headers
+              expect(last_response).to have_status_code(422)
+              expect(last_response).to have_error_message("Route already exists with port '123' for domain 'my.domain'.")
+            end
+          end
+
+          context 'and the port is already in use for the router group' do
+            let!(:other_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', name: 'my.domain2') }
+            let!(:route_with_port) { VCAP::CloudController::Route.make(host: '', space: space, domain: other_domain, port: 123) }
+
+            it 'fails with a helpful error message' do
+              post '/v3/routes', params.to_json, admin_headers
+              expect(last_response).to have_status_code(422)
+              expect(last_response).to have_error_message("Port '123' is not available. Try a different port or use a different domain.")
+            end
+          end
+        end
+
+        context 'when the user does not provide a port' do
+          let(:params) do
+            {
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: domain.guid }
+                },
+              }
+            }
+          end
+
+          it 'fails with a helpful error message' do
+            post '/v3/routes', params.to_json, admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message("Routes with protocol 'tcp' must specify a port.")
+          end
+        end
+      end
     end
 
     context 'when creating a route in an suspended org' do
@@ -1405,6 +1544,7 @@ RSpec.describe 'Routes Request' do
           protocol: domain.protocols[0],
           host: 'some-host',
           path: '',
+          port: nil,
           url: "some-host.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
@@ -1473,7 +1613,7 @@ RSpec.describe 'Routes Request' do
 
         it 'fails with a helpful message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Wildcard hosts are not supported for internal domains.')
         end
       end
@@ -1496,7 +1636,7 @@ RSpec.describe 'Routes Request' do
 
         it 'fails with a helpful message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Paths are not supported for internal domains.')
         end
       end
@@ -1522,6 +1662,7 @@ RSpec.describe 'Routes Request' do
             protocol: domain.protocols[0],
             host: 'some-host',
             path: '',
+            port: nil,
             url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
@@ -1589,7 +1730,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params_with_inaccessible_domain.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Invalid domain. Domain '#{inaccessible_domain.name}' is not available in organization '#{org.name}'.")
       end
     end
@@ -1613,7 +1754,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params_for_duplicate_route.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Route already exists for domain '#{domain.name}'.")
       end
     end
@@ -1640,7 +1781,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 with a helpful error message' do
           post '/v3/routes', params_for_duplicate_route.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("Route already exists with host '#{existing_route.host}' and path '#{existing_route.path}' for domain '#{domain.name}'.")
         end
       end
@@ -1666,7 +1807,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 with a helpful error message' do
           post '/v3/routes', params_for_duplicate_route.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("Route already exists with host '#{existing_route.host}' for domain '#{domain.name}'.")
         end
       end
@@ -1692,7 +1833,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Route conflicts with domain '#{existing_domain.name}'.")
       end
     end
@@ -1721,7 +1862,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message('Route conflicts with a reserved system route.')
       end
     end
@@ -1747,9 +1888,10 @@ RSpec.describe 'Routes Request' do
       let(:route_json) do
         {
           guid: UUID_REGEX,
-            protocol: domain.protocols[0],
+          protocol: domain.protocols[0],
           host: params[:host],
           path: '',
+          port: nil,
           url: "#{params[:host]}.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
@@ -1818,7 +1960,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 with a helpful error message' do
           post '/v3/routes', params_for_space_with_quota.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("Routes quota exceeded for space '#{space_with_quota.name}'.")
         end
       end
@@ -1846,7 +1988,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 with a helpful error message' do
           post '/v3/routes', params_for_org_with_quota.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("Routes quota exceeded for organization '#{org_with_quota.name}'.")
         end
       end
@@ -1874,7 +2016,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 403' do
           post '/v3/routes', params.to_json, headers
 
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_status_code(403)
           expect(parsed_response['errors'][0]['detail']).to eq('Feature Disabled: my name is bob')
         end
       end
@@ -1885,7 +2027,7 @@ RSpec.describe 'Routes Request' do
         it 'allows creation' do
           post '/v3/routes', params.to_json, headers
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_status_code(201)
         end
       end
     end
@@ -1893,7 +2035,7 @@ RSpec.describe 'Routes Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post '/v3/routes', {}.to_json, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -1902,7 +2044,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 403' do
         post '/v3/routes', {}.to_json, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_status_code(403)
       end
     end
 
@@ -1924,7 +2066,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params_with_invalid_space.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message('Invalid space. Ensure that the space exists and you have access to it.')
       end
     end
@@ -1945,7 +2087,7 @@ RSpec.describe 'Routes Request' do
 
       it 'returns a 422 with a helpful error message' do
         post '/v3/routes', params_with_invalid_domain.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message('Invalid domain. Ensure that the domain exists and you have access to it.')
       end
     end
@@ -1976,6 +2118,7 @@ RSpec.describe 'Routes Request' do
         protocol: domain.protocols[0],
         host: '',
         path: '',
+        port: nil,
         url: domain.name,
         created_at: iso8601,
         updated_at: iso8601,
@@ -2034,6 +2177,7 @@ RSpec.describe 'Routes Request' do
           protocol: domain.protocols[0],
           host: '',
           path: '',
+          port: nil,
           url: domain.name,
           created_at: iso8601,
           updated_at: iso8601,
@@ -2086,7 +2230,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 404 with a helpful error message' do
         patch "/v3/routes/#{user.guid}", params.to_json, admin_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_status_code(404)
         expect(last_response).to have_error_message('Route not found')
       end
     end
@@ -2101,7 +2245,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 422' do
         patch "/v3/routes/#{route.guid}", params_with_invalid_input.to_json, admin_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
       end
     end
 
@@ -2120,7 +2264,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 422' do
         patch "/v3/routes/#{route.guid}", params_with_invalid_metadata_format.to_json, admin_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_status_code(422)
         expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
       end
     end
@@ -2128,7 +2272,7 @@ RSpec.describe 'Routes Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         patch "/v3/routes/#{route.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
   end
@@ -2143,7 +2287,7 @@ RSpec.describe 'Routes Request' do
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get "/v3/routes/#{route.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_status_code(404)
       end
     end
 
@@ -2186,7 +2330,7 @@ RSpec.describe 'Routes Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/routes/#{route.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
   end
@@ -2206,6 +2350,7 @@ RSpec.describe 'Routes Request' do
         protocol: route1.domain.protocols[0],
         host: route1.host,
         path: route1.path,
+        port: nil,
         url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
         created_at: iso8601,
         updated_at: iso8601,
@@ -2249,6 +2394,7 @@ RSpec.describe 'Routes Request' do
         protocol: route2.domain.protocols[0],
         host: route2.host,
         path: route2.path,
+        port: nil,
         url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
         created_at: iso8601,
         updated_at: iso8601,
@@ -2311,7 +2457,7 @@ RSpec.describe 'Routes Request' do
         ).and_call_original
 
         get "/v3/apps/#{app_model.guid}/routes", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
     end
   end

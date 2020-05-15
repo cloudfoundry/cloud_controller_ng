@@ -7,10 +7,11 @@ module VCAP::CloudController
       @user_audit_info = user_audit_info
     end
 
-    def create(message:, space:, domain:)
+    def create(message:, space:, domain:, manifest_triggered: false)
       route = Route.new(
         host: message.host || '',
         path: message.path || '',
+        port: message.port || 0,
         space: space,
         domain: domain,
       )
@@ -25,7 +26,7 @@ module VCAP::CloudController
         route,
         @user_audit_info,
         message.audit_hash,
-        manifest_triggered: false,
+        manifest_triggered: manifest_triggered,
       )
 
       if VCAP::CloudController::Config.kubernetes_api_configured?
@@ -34,7 +35,7 @@ module VCAP::CloudController
 
       route
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, route.host, route.path, space, domain)
+      validation_error!(e, route.host, route.path, route.port, space, domain)
     end
 
     private
@@ -43,7 +44,7 @@ module VCAP::CloudController
       @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
     end
 
-    def validation_error!(error, host, path, space, domain)
+    def validation_error!(error, host, path, port, space, domain)
       if error.errors.on(:domain)&.include?(:invalid_relation)
         error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.")
       end
@@ -52,12 +53,21 @@ module VCAP::CloudController
         error!("Routes quota exceeded for space '#{space.name}'.")
       end
 
+      if error.errors.on(:space)&.include?(:total_reserved_route_ports_exceeded)
+        error!("Reserved route ports quota exceeded for space '#{space.name}'.")
+      end
+
       if error.errors.on(:organization)&.include?(:total_routes_exceeded)
         error!("Routes quota exceeded for organization '#{space.organization.name}'.")
       end
 
+      if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
+        error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.")
+      end
+
       validation_error_host!(error, host, domain)
       validation_error_path!(error, host, path, domain)
+      validation_error_port!(error, host, port, domain)
 
       error!(error.message)
     end
@@ -69,6 +79,10 @@ module VCAP::CloudController
 
       if error.errors.on(:host)&.include?(:system_hostname_conflict)
         error!('Route conflicts with a reserved system route.')
+      end
+
+      if error.errors.on(:host)&.include?(:format)
+        error!('Host format is invalid.')
       end
 
       if error.errors.on(:host)&.include?(:wildcard_host_not_supported_for_internal_domain)
@@ -89,6 +103,10 @@ module VCAP::CloudController
         else
           error!("Route already exists with host '#{host}' for domain '#{domain.name}'.")
         end
+      end
+
+      if error.errors.on(:host)&.include?(:host_and_path_domain_tcp)
+        error!("Routes with protocol 'tcp' do not support paths or hosts.")
       end
     end
 
@@ -122,6 +140,28 @@ module VCAP::CloudController
         else
           error!("Route already exists with host '#{host}' and path '#{path}' for domain '#{domain.name}'.")
         end
+      end
+    end
+
+    def validation_error_port!(error, host, port, domain)
+      if error.errors.on(:port)&.include?(:port_required)
+        error!("Routes with protocol 'tcp' must specify a port.")
+      end
+
+      if error.errors.on(:port)&.include?(:port_unavailable)
+        error!("Port '#{port}' is not available. Try a different port or use a different domain.")
+      end
+
+      if error.errors.on([:host, :domain_id, :port])&.include?(:unique)
+        error!("Route already exists with port '#{port}' for domain '#{domain.name}'.")
+      end
+
+      if error.errors.on(:port)&.include?(:port_taken)
+        error!("Port '#{port}' is not available. Try a different port or use a different domain.")
+      end
+
+      if error.errors.on(:port)&.include?(:port_unsupported)
+        error!("Routes with protocol 'http' do not support ports.")
       end
     end
 

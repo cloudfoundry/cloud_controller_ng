@@ -114,6 +114,18 @@ module VCAP::CloudController
 
       before do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(ra_client)
+        TestConfig.override(kubernetes: nil)
+      end
+
+      context 'when kubernetes is enabled' do
+        before do
+          TestConfig.override(kubernetes: { host_url: 'kube.com' })
+        end
+
+        it 'returns false' do
+          expect(shared_domain.tcp?).to be_falsy
+          expect_any_instance_of(CloudController::DependencyLocator).not_to receive(:routing_api_client)
+        end
       end
 
       context 'when shared domain is a tcp domain' do

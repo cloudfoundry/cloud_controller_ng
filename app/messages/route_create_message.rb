@@ -8,6 +8,7 @@ module VCAP::CloudController
     register_allowed_keys [
       :host,
       :path,
+      :port,
       :relationships
     ]
 
@@ -46,6 +47,10 @@ module VCAP::CloudController
         without: %r{\A/\z},
         message: 'cannot be exactly /',
       }
+
+    validates :port,
+      allow_nil: true,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 65535 }
 
     validates :relationships, presence: true
 

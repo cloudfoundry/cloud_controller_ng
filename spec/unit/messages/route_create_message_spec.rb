@@ -10,6 +10,7 @@ module VCAP::CloudController
         let(:params) do
           {
             host: 'some-host',
+            port: 123,
             path: '/some-path',
             relationships: {
               space: { data: { guid: 'space-guid' } },
@@ -127,6 +128,57 @@ module VCAP::CloudController
 
           it 'is valid' do
             expect(subject).to be_valid
+          end
+        end
+      end
+
+      context 'port' do
+        context 'when not provided' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when not an integer' do
+          let(:params) do
+            { port: 'some-string' }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:port]).to include('is not a number')
+          end
+        end
+
+        context 'when it is too large' do
+          let(:params) do
+            { port: 65536 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:port]).to include 'must be less than or equal to 65535'
+          end
+        end
+
+        context 'when it is negative' do
+          let(:params) do
+            { port: -5 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:port]).to include 'must be greater than or equal to 0'
           end
         end
       end

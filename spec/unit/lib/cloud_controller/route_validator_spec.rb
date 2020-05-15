@@ -16,9 +16,8 @@ module VCAP::CloudController
     let(:path) { '' }
 
     before do
-      allow(CloudController::DependencyLocator).to receive(:instance).
-        and_return(double('routing_api_double',
-                          routing_api_client: routing_api_client))
+      allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).
+        and_return(routing_api_client)
     end
 
     context 'when creating a route with a null port value' do
@@ -127,6 +126,7 @@ module VCAP::CloudController
             let(:another_route) { Route.new(domain: domain, port: port, space: space) }
 
             before do
+              TestConfig.override(kubernetes: nil)
               route.save
             end
 
@@ -141,6 +141,7 @@ module VCAP::CloudController
             let(:another_route) { Route.new(domain: another_domain, port: port, space: Space.make) }
 
             before do
+              TestConfig.override(kubernetes: nil)
               route.save
             end
 
@@ -156,6 +157,7 @@ module VCAP::CloudController
           let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: Space.make) }
 
           before do
+            TestConfig.override(kubernetes: nil)
             route.save
           end
 

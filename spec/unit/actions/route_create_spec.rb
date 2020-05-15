@@ -13,9 +13,9 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:org) { space.organization }
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
 
       context 'when successful' do
         let(:message) do
@@ -200,6 +200,29 @@ module VCAP::CloudController
           expect {
             subject.create(message: message, space: space, domain: domain)
           }.to raise_error(RouteCreate::Error, "Route already exists for domain '#{domain.name}'.")
+        end
+      end
+
+      context 'when a port is provided' do
+        let(:message) do
+          RouteCreateMessage.new({
+            host: 'wow',
+            port: 1234,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+        end
+
+        it 'raises an error with a helpful message' do
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Routes with protocol 'http' do not support ports.")
         end
       end
 
@@ -532,6 +555,139 @@ module VCAP::CloudController
           expect {
             subject.create(message: message, space: space, domain: system_domain)
           }.to raise_error(RouteCreate::Error, 'Route conflicts with a reserved system route.')
+        end
+      end
+
+      describe 'ports' do
+        context 'when the domain supports ports (tcp)' do
+          let(:domain) { SharedDomain.make(router_group_guid: 'some-router-group') }
+          let(:message) do
+            RouteCreateMessage.new({
+              port: 1234,
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: domain.guid }
+                },
+              },
+            })
+          end
+          let(:routing_api_client) { instance_double(RoutingApi::Client) }
+          let(:router_group) { instance_double(RoutingApi::RouterGroup) }
+
+          before do
+            allow(CloudController::DependencyLocator).to receive_message_chain(:instance, :routing_api_client).
+              and_return(routing_api_client)
+            allow(routing_api_client).to receive(:router_group).and_return(router_group)
+            allow(routing_api_client).to receive(:enabled?).and_return(true)
+            allow(router_group).to receive(:type).and_return('tcp')
+            allow(router_group).to receive(:reservable_ports).and_return([1234])
+          end
+
+          context 'when the port is available' do
+            it 'creates a route with the port' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to change { Route.count }.by(1)
+
+              route = Route.last
+              expect(route.port).to eq(1234)
+            end
+          end
+
+          context 'when a route with the same domain and port exist' do
+            let!(:duplicate_route) { Route.make(domain: domain, host: '', port: 1234, space: space) }
+
+            it 'errors to prevent creating a duplicate route' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Route already exists with port '1234' for domain '#{domain.name}'.")
+            end
+          end
+
+          context 'when the port is not reservable for the router group' do
+            before do
+              allow(router_group).to receive(:reservable_ports).and_return([])
+            end
+
+            it 'errors and respects the reserved port' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Port '1234' is not available. Try a different port or use a different domain.")
+            end
+          end
+
+          context 'when the space quota limit on reserved ports has been maxed out' do
+            let!(:space_quota_definition) { SpaceQuotaDefinition.make(total_reserved_route_ports: 0, organization: org) }
+            let!(:space) do
+              Space.make(space_quota_definition: space_quota_definition, organization: org)
+            end
+
+            it 'raises an error with a helpful message' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Reserved route ports quota exceeded for space '#{space.name}'.")
+            end
+          end
+
+          context 'when the org quota limit on reserved ports has been maxed out' do
+            let!(:org_quota_definition) { QuotaDefinition.make(total_reserved_route_ports: 0) }
+            let!(:org_with_quota) { Organization.make(quota_definition: org_quota_definition) }
+            let!(:space) { Space.make(organization: org_with_quota) }
+            let(:domain) { Domain.make(owning_organization: org_with_quota) }
+
+            it 'raises an error with a helpful message' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Reserved route ports quota exceeded for organization '#{org_with_quota.name}'.")
+            end
+          end
+
+          context 'no port is provided' do
+            let(:message) do
+              RouteCreateMessage.new({
+                relationships: {
+                  space: {
+                    data: { guid: space.guid }
+                  },
+                  domain: {
+                    data: { guid: domain.guid }
+                  },
+                },
+              })
+            end
+
+            it 'errors with a helpful error message' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' must specify a port.")
+            end
+          end
+
+          context 'when path is provided' do
+            let(:message) do
+              RouteCreateMessage.new({
+                port: 1234,
+                path: '/monkeys',
+                relationships: {
+                  space: {
+                    data: { guid: space.guid }
+                  },
+                  domain: {
+                    data: { guid: domain.guid }
+                  },
+                },
+              })
+            end
+
+            it 'errors with a helpful error message' do
+              expect {
+                subject.create(message: message, space: space, domain: domain)
+              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' do not support paths or hosts.")
+            end
+          end
         end
       end
     end

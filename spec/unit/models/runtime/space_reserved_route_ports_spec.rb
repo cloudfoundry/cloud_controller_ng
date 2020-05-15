@@ -8,6 +8,10 @@ module VCAP::CloudController
 
     subject(:space_routes) { SpaceReservedRoutePorts.new(space) }
 
+    before do
+      TestConfig.override(kubernetes: nil)
+    end
+
     describe '#count' do
       it 'has no reserved ports' do
         expect(subject.count).to eq 0

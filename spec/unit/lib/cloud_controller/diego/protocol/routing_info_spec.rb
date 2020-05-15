@@ -32,6 +32,7 @@ module VCAP::CloudController
           }
 
           before do
+            TestConfig.override(kubernetes: nil)
             allow_any_instance_of(RouteValidator).to receive(:validate)
             allow_any_instance_of(SharedDomain).to receive(:routing_api_client).and_return(routing_api_client)
             allow(routing_api_client).to receive(:router_groups).and_return([router_group])

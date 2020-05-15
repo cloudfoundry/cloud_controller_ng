@@ -1,5 +1,5 @@
 require 'cloud_controller/app_manifest/manifest_route'
-require 'actions/v3/route_create'
+require 'actions/route_create'
 
 module VCAP::CloudController
   class ManifestRouteUpdate
@@ -40,15 +40,13 @@ module VCAP::CloudController
             manifest_triggered: true
           )
         end
-      rescue Sequel::ValidationFailed => e
+      rescue Sequel::ValidationFailed, RouteCreate::Error => e
         raise InvalidRoute.new(e.message)
       end
 
       private
 
       def find_or_create_valid_route(app, manifest_route, user_audit_info)
-        logger = Steno.logger('cc.action.route_update')
-
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
           potential_domain = candidate[:domain]
           existing_domain = Domain.find(name: potential_domain)
@@ -71,14 +69,18 @@ module VCAP::CloudController
               raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
             end
 
-            route_hash = {
-              host: host,
-              domain_guid: existing_domain.guid,
-              path: manifest_route[:path],
-              port: manifest_route[:port] || 0,
-              space_guid: app.space.guid
-            }
-            route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger, manifest_triggered: true)
+            message = RouteCreateMessage.new({
+              'host' => host,
+              'path' => manifest_route[:path],
+              'port' => manifest_route[:port],
+            })
+
+            route = RouteCreate.new(user_audit_info).create(
+              message: message,
+              space: app.space,
+              domain: existing_domain,
+              manifest_triggered: true,
+            )
           elsif route.space.guid != app.space.guid
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           end

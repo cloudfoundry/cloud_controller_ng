@@ -60,7 +60,16 @@ module VCAP::CloudController
       true
     end
 
+    def protocols
+      return ['tcp'] if self.tcp?
+
+      ['http']
+    end
+
     def tcp?
+      # If Kubernetes is enabled that implies that we are using istio, not the routing API
+      return false if k8s_enabled?
+
       if router_group_guid.present?
         if @router_group_type.nil?
           router_group = routing_api_client.router_group(router_group_guid)

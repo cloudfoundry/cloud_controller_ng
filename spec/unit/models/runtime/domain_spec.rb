@@ -115,40 +115,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'protocols' do
-      let(:domain_with_router_group) { Domain.make(router_group_guid: 'some-guid') }
-      before do
-        allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return k8s_enabled
-      end
-
-      context 'kubernetes is enabled (which implies istio)' do
-        let(:k8s_enabled) { 'k8s' }
-        context "there's a router group (this should never happen)" do
-          it 'will return http' do
-            expect(domain_with_router_group.protocols).to eq(['http'])
-          end
-        end
-        context "there's no router group" do
-          it 'will still return http' do
-            expect(subject.protocols).to eq(['http'])
-          end
-        end
-      end
-      context "kubernetes isn't enabled; it's the canonical routing back-end" do
-        let(:k8s_enabled) { '' }
-        context "there's a router group" do
-          it 'will return tcp' do
-            expect(domain_with_router_group.protocols).to eq(['tcp'])
-          end
-        end
-        context "there's no router group" do
-          it 'will return http' do
-            expect(subject.protocols).to eq(['http'])
-          end
-        end
-      end
-    end
-
     describe '#spaces_sti_eager_load (eager loading)' do
       before { SharedDomain.dataset.destroy }
 

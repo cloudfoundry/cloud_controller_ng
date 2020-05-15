@@ -31,6 +31,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: route.updated_at,
         host: route.host,
         path: route.path,
+        port: route.port,
         url: build_url,
         destinations: route.route_mappings.map { |rm| RouteDestinationPresenter.new(rm).to_hash },
         metadata: {
@@ -80,6 +81,10 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_url
+      if route.port && route.port > 0
+        return "#{route.domain.name}:#{route.port}"
+      end
+
       if route.host.empty?
         return "#{route.domain.name}#{route.path}"
       end

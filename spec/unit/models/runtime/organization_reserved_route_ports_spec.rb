@@ -6,6 +6,10 @@ module VCAP::CloudController
 
     subject(:organization_routes) { OrganizationReservedRoutePorts.new(organization) }
 
+    before do
+      TestConfig.override(kubernetes: nil)
+    end
+
     describe '#count' do
       context 'when the org has no spaces' do
         it 'has no reserved ports' do

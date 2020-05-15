@@ -135,12 +135,17 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the domain has a router group' do
+        let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp' }) }
+
         before do
-          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return(nil)
-          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:external_domain).and_return('api2.vcap.me')
-          allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:external_protocol).and_return('https')
-          allow(CloudController::DependencyLocator).to receive_message_chain(:instance, :routing_api_client).and_return(routing_api_client)
+          TestConfig.override(
+            kubernetes: { host_url: nil },
+            external_domain: 'api2.vcap.me',
+            external_protocol: 'https',
+          )
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group)
         end
 
         let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
@@ -185,7 +190,7 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when the kubernetes host url is blank' do
           before do
-            allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return('')
+            TestConfig.override(kubernetes: { host_url: '' })
           end
 
           it 'shows the tcp protocol' do
@@ -195,7 +200,7 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when the kubernetes section is not set in the config' do
           before do
-            allow(VCAP::CloudController::Config).to receive_message_chain(:config).and_return(VCAP::CloudController::Config.new({}, context: :api))
+            TestConfig.override(kubernetes: nil)
           end
 
           it 'shows the tcp protocol' do
@@ -205,7 +210,7 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when kubernetes is enabled (not using routing API)' do
           before do
-            allow(VCAP::CloudController::Config).to receive_message_chain(:config, :get).with(:kubernetes, :host_url).and_return('kube.com')
+            TestConfig.override(kubernetes: { host_url: 'kube.com' })
           end
 
           it 'shows the http protocol' do
