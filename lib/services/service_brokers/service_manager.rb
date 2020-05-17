@@ -203,7 +203,7 @@ module VCAP::Services::ServiceBrokers
           service, plans = pair
           warning_msg += "\n"
           warning_msg += "Service Offering: #{service}\n"
-          warning_msg += "Plans deactivated: #{plans.join(', ')}\n"
+          warning_msg += "Plans deactivated: #{plans.sort.join(', ')}\n"
         end
 
         warning_msg.chop
