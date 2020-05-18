@@ -11,6 +11,7 @@ module VCAP::CloudController
       :app_guids,
       :include,
       :label_selector,
+      :ports,
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -22,9 +23,10 @@ module VCAP::CloudController
     validates :space_guids, allow_nil: true, array: true
     validates :organization_guids, allow_nil: true, array: true
     validates :domain_guids, allow_nil: true, array: true
+    validates :ports, allow_nil: true, array: true
 
     def self.from_params(params)
-      super(params, %w(hosts space_guids organization_guids domain_guids app_guids paths include))
+      super(params, %w(hosts space_guids organization_guids domain_guids app_guids paths ports include))
     end
   end
 end

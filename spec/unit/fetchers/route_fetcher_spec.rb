@@ -138,6 +138,41 @@ module VCAP::CloudController
         end
       end
 
+      context 'when fetching routes by ports' do
+        let!(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '8888,9999', 'guid' => 'some-guid' }) }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          TestConfig.override(kubernetes: {})
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        end
+
+        context 'when there is a matching route' do
+          let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+          let!(:route_with_ports) do
+            VCAP::CloudController::Route.make(host: '', space: space1, domain: domain_tcp, guid: 'route-with-port', port: 8888)
+          end
+          let(:routes_filter) { { ports: '8888' } }
+
+          it 'only returns the matching route' do
+            results = RouteFetcher.fetch(message, [route2.guid, route3.guid, route_with_ports.guid]).all
+            expect(results.length).to eq(1)
+            expect(results[0].guid).to eq(route_with_ports.guid)
+          end
+        end
+
+        context 'when there is no matching route' do
+          let(:routes_filter) { { ports: '123' } }
+
+          it 'returns no routes' do
+            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            expect(results.length).to eq(0)
+          end
+        end
+      end
+
       context 'when fetching routes by label selector' do
         let!(:route_label) do
           VCAP::CloudController::RouteLabelModel.make(resource_guid: route1.guid, key_name: 'dog', value: 'scooby-doo')

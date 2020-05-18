@@ -76,6 +76,12 @@ module VCAP::CloudController
         expect(message.domain_guids).to eq(['guid1', 'guid2'])
       end
 
+      it 'accepts a ports param' do
+        message = RoutesListMessage.from_params({ 'ports' => '5900,6000,7000' })
+        expect(message).to be_valid
+        expect(message.ports).to eq(['5900', '6000', '7000'])
+      end
+
       it 'does not accept any other params' do
         message = RoutesListMessage.from_params({ 'app_guid' => 'pants' })
 

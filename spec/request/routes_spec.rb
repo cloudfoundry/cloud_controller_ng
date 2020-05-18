@@ -119,17 +119,18 @@ RSpec.describe 'Routes Request' do
 
         let(:params) do
           {
-            page:   '2',
-            per_page:   '10',
-            order_by:   'updated_at',
+            page: '2',
+            per_page: '10',
+            order_by: 'updated_at',
             space_guids: ['foo', 'bar'],
             organization_guids: ['foo', 'bar'],
             domain_guids: ['foo', 'bar'],
             app_guids: ['foo', 'bar'],
             paths: ['foo', 'bar'],
             hosts: 'foo',
+            ports: 636,
             include: 'domain',
-            label_selector:   'foo,bar',
+            label_selector: 'foo,bar',
           }
         end
       end
@@ -520,6 +521,39 @@ RSpec.describe 'Routes Request' do
           expect(
             parsed_response['resources'].first['destinations'].map { |destination| destination['app']['guid'] }.uniq
           ).to eq([app_model.guid])
+        end
+      end
+
+      context 'ports filter' do
+        # Don't even think of converting the following hash to symbols ('type' => 'tcp' NOT type: 'tcp'), and you need to set the GUID
+        let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '7777,8888,9999', 'guid' => 'some-guid' }) }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        end
+
+        context 'when there are multiple TCP routes with different ports' do
+          # The following `let`s depend on the above `before do`
+          let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+          let!(:route_with_ports_0) do
+            VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-0', port: 7777)
+          end
+          let!(:route_with_ports_1) do
+            VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-1', port: 8888)
+          end
+          let!(:route_with_ports_2) do
+            VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-2', port: 9999)
+          end
+
+          it 'returns routes filtered by ports' do
+            get '/v3/routes?ports=7777,8888', nil, admin_header
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources'].size).to eq(2)
+            expect(parsed_response['resources'].map { |resource| resource['port'] }).to contain_exactly(route_with_ports_0.port, route_with_ports_1.port)
+          end
         end
       end
     end
@@ -2446,6 +2480,41 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    context 'ports filter' do
+      # Don't even think of converting the following hash to symbols ('type' => 'tcp' NOT type: 'tcp'), and you need to set the GUID
+      let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '7777,8888,9999', 'guid' => 'some-guid' }) }
+      let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+        allow(routing_api_client).to receive(:enabled?).and_return(true)
+        allow(routing_api_client).to receive(:router_group).and_return(router_group)
+      end
+
+      context 'when there are multiple TCP routes with different ports' do
+        # The following `let`s depend on the above `before do`
+        let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+        let!(:route_with_ports_0) do
+          VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-0', port: 7777)
+        end
+        let!(:route_with_ports_1) do
+          VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-1', port: 8888)
+        end
+        let!(:route_with_ports_2) do
+          VCAP::CloudController::Route.make(host: '', space: space, domain: domain_tcp, guid: 'route-with-port-2', port: 9999)
+        end
+        let!(:route_mapping_1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_with_ports_1, process_type: 'web') }
+        let!(:route_mapping_2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_with_ports_2, process_type: 'web') }
+
+        it 'returns routes filtered by ports' do
+          get "/v3/apps/#{app_model.guid}/routes?ports=7777,8888", nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].size).to eq(1)
+          expect(parsed_response['resources'].first['port']).to eq(route_with_ports_1.port)
+        end
+      end
     end
 
     describe 'eager loading' do
