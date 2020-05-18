@@ -14500,6 +14500,8 @@ spaces, and assign &amp; unassign roles to users.</p>
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">6666</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
@@ -14574,6 +14576,16 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
 <td>Unique identifier for the route.</td>
+</tr>
+<tr>
+<td><strong>protocol</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>The protocol supported by the route, based on the route&rsquo;s domain configuration.</td>
+</tr>
+<tr>
+<td><strong>port</strong> <em>(experimental)</em></td>
+<td><em>integer or <code class="prettyprint">null</code></em></td>
+<td>The port that the route listens on. Only compatible with routes leveraging the <code class="prettyprint">tcp</code> protocol.</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -14701,6 +14713,7 @@ spaces, and assign &amp; unassign roles to users.</p>
   -d <span class="s1">'{
     "host": "a-hostname",
     "path": "/some_path",
+    "port": 6666,
     "relationships": {
       "domain": {
         "data": { "guid": "domain-guid" }
@@ -14722,6 +14735,8 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">6666</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
@@ -14830,6 +14845,11 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>The path component for the route. Should begin with a <code class="prettyprint">/</code>.</td>
 </tr>
 <tr>
+<td><strong>port</strong> <em>(experimental)</em></td>
+<td><em>integer</em></td>
+<td>The port the route will listen on. Only compatible with routes leveraging a domain that supports the <code class="prettyprint">tcp</code> protocol.</td>
+</tr>
+<tr>
 <td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the route.</td>
@@ -14872,6 +14892,8 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">6666</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
@@ -15026,6 +15048,7 @@ spaces, and assign &amp; unassign roles to users.</p>
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
@@ -15204,6 +15227,7 @@ spaces, and assign &amp; unassign roles to users.</p>
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
@@ -15381,6 +15405,8 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">6666</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
