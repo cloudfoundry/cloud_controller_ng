@@ -475,6 +475,10 @@ query param can be used with a single resource or a list of resources.</p>
 <td><code class="prettyprint">space.organization</code>, <code class="prettyprint">service_offering</code></td>
 </tr>
 <tr>
+<td><strong>service_plans/[:guid]</strong></td>
+<td><code class="prettyprint">space.organization</code>, <code class="prettyprint">service_offering</code></td>
+</tr>
+<tr>
 <td><strong>spaces</strong></td>
 <td><code class="prettyprint">organization</code></td>
 </tr>
@@ -25772,6 +25776,11 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><strong>fields</strong></td>
 <td><a href="#fields-parameter"><em>fields parameter</em></a></td>
 <td><a href="#service-plan-fields"><em>Allowed values</em></a></td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
+<td>Optionally include a list of related resources in the response. <br>Valid values are <code class="prettyprint">space.organization</code> and <code class="prettyprint">service_offering</code>.</td>
 </tr>
 </tbody></table>
 
