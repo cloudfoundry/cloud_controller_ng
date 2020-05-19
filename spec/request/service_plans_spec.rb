@@ -141,6 +141,34 @@ RSpec.describe 'V3 service plans' do
         expect(parsed_response['included']['service_brokers'][0]['name']).to eq(service_plan.service.service_broker.name)
       end
     end
+
+    describe 'includes' do
+      it 'can include `space.organization`' do
+        plan = generate_space_scoped_plan(space)
+        guid = plan.guid
+
+        get "/v3/service_plans/#{guid}?include=space.organization", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['spaces']).to have(1).element
+        expect(parsed_response['included']['spaces'][0]['guid']).to eq(space.guid)
+
+        expect(parsed_response['included']['organizations']).to have(1).element
+        expect(parsed_response['included']['organizations'][0]['guid']).to eq(space.organization.guid)
+      end
+
+      it 'can include `service_offering`' do
+        offering = VCAP::CloudController::Service.make
+        plan = VCAP::CloudController::ServicePlan.make(service: offering)
+        guid = plan.guid
+
+        get "/v3/service_plans/#{guid}?include=service_offering", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_offerings']).to have(1).element
+        expect(parsed_response['included']['service_offerings'][0]['guid']).to eq(offering.guid)
+      end
+    end
   end
 
   describe 'GET /v3/service_plans' do

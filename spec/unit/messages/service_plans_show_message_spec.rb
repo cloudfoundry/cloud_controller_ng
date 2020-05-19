@@ -8,6 +8,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'fields' => { 'service_offering.service_broker' => 'guid,name' },
+          'include' => 'space.organization,service_offering',
         }.with_indifferent_access
       end
 
@@ -17,11 +18,13 @@ module VCAP::CloudController
         expect(message).to be_valid
         expect(message).to be_a(described_class)
         expect(message.fields).to match({ 'service_offering.service_broker': ['guid', 'name'] })
+        expect(message.include).to contain_exactly('space.organization', 'service_offering')
       end
 
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
         expect(message.requested?(:fields)).to be_truthy
+        expect(message.requested?(:include)).to be_truthy
       end
 
       it 'accepts an empty set' do
@@ -40,6 +43,14 @@ module VCAP::CloudController
         it_behaves_like 'fields query hash'
 
         it_behaves_like 'field query parameter', 'service_offering.service_broker', 'guid,name'
+      end
+
+      context 'include' do
+        it 'does not accept other values' do
+          message = described_class.from_params({ include: 'space' }.with_indifferent_access)
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include(include("Invalid included resource: 'space'"))
+        end
       end
     end
   end
