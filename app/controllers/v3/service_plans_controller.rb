@@ -25,6 +25,8 @@ class ServicePlansController < ApplicationController
     service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
 
     decorators = []
+    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
+    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
     decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
 
     presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators: decorators)
