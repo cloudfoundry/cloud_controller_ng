@@ -246,6 +246,13 @@ includes:
   - resources/service_instances/update
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
+  - resources/service_offerings/header
+  - resources/service_offerings/visibility
+  - resources/service_offerings/object
+  - resources/service_offerings/get
+  - resources/service_offerings/list
+  - resources/service_offerings/update
+  - resources/service_offerings/delete  
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -314,13 +321,6 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/list
   - experimental_resources/service_bindings/delete
-  - experimental_resources/service_offerings/header
-  - experimental_resources/service_offerings/visibility
-  - experimental_resources/service_offerings/object
-  - experimental_resources/service_offerings/get
-  - experimental_resources/service_offerings/list
-  - experimental_resources/service_offerings/update
-  - experimental_resources/service_offerings/delete
   - experimental_resources/service_plans/header
   - experimental_resources/service_plans/object
   - experimental_resources/service_plans/get
