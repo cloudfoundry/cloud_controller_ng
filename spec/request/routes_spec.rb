@@ -1440,70 +1440,70 @@ RSpec.describe 'Routes Request' do
           allow(routing_api_client).to receive(:router_group).and_return(router_group)
         end
 
-        context 'when the user provides a valid port' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
-
-          let(:params) do
-            {
-              port: 123,
-              relationships: {
-                space: {
-                  data: { guid: space.guid }
-                },
-                domain: {
-                  data: { guid: domain.guid }
-                },
-              }
-            }
-          end
-
-          let(:route_json) do
-            {
-              guid: UUID_REGEX,
-              port: 123,
-              host: '',
-              path: '',
-              protocol: 'tcp',
-              url: "#{domain.name}:123",
-              created_at: iso8601,
-              updated_at: iso8601,
-              destinations: [],
-              relationships: {
-                space: {
-                  data: { guid: space.guid }
-                },
-                domain: {
-                  data: { guid: domain.guid }
-                },
+        let(:params) do
+          {
+            port: 123,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
               },
-              links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-                space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-                destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-                domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
-              },
-              metadata: {
-                labels: {},
-                annotations: {}
+              domain: {
+                data: { guid: domain.guid }
               },
             }
-          end
+          }
+        end
 
-          let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403,
-            )
-            h['admin'] = {
-              code: 201,
-              response_object: route_json
-            }
-            h['space_developer'] = {
-              code: 201,
-              response_object: route_json
-            }
-            h.freeze
-          end
+        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
 
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            port: 123,
+            host: '',
+            path: '',
+            protocol: 'tcp',
+            url: "#{domain.name}:123",
+            created_at: iso8601,
+            updated_at: iso8601,
+            destinations: [],
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h['space_developer'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h.freeze
+        end
+
+        context 'and the user provides a valid port' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
           context 'and a route with the domain and port already exist' do
@@ -1528,7 +1528,7 @@ RSpec.describe 'Routes Request' do
           end
         end
 
-        context 'when the user does not provide a port' do
+        context 'and the user does not provide a port' do
           let(:params) do
             {
               relationships: {
@@ -1542,10 +1542,30 @@ RSpec.describe 'Routes Request' do
             }
           end
 
-          it 'fails with a helpful error message' do
-            post '/v3/routes', params.to_json, admin_headers
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message("Routes with protocol 'tcp' must specify a port.")
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          context 'and randomly selected port is already in use' do
+            let(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
+
+            let(:params) do
+              {
+                port: existing_route.port,
+                relationships: {
+                  space: {
+                    data: { guid: space.guid }
+                  },
+                  domain: {
+                    data: { guid: domain.guid }
+                  },
+                }
+              }
+            end
+
+            it 'fails with a helpful error message' do
+              post '/v3/routes', params.to_json, admin_headers
+              expect(last_response).to have_status_code(422)
+              expect(last_response).to have_error_message("Route already exists with port '123' for domain 'my.domain'.")
+            end
           end
         end
       end

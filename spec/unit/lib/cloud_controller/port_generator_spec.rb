@@ -35,6 +35,22 @@ module VCAP::CloudController
         expect(port).to eq(-1)
       end
 
+      context 'when possible ports are not provided' do
+        let(:router_group1) { double('router_group1', type: router_group_type, guid: router_group_guid1, reservable_ports: Array(1024..65535)) }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group1)
+        end
+        it 'generates a port' do
+          port = PortGenerator.generate_port(domain_guid1)
+
+          expect((1024..65535).cover?(port)).to eq(true)
+        end
+      end
+
       context 'when there are multi router groups' do
         let(:router_group_guid2) { 'router-group-guid2' }
         let(:router_group2) { double('router_group2', type: router_group_type, guid: router_group_guid2) }

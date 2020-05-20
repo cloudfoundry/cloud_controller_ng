@@ -11,7 +11,7 @@ module VCAP::CloudController
       route = Route.new(
         host: message.host || '',
         path: message.path || '',
-        port: message.port || 0,
+        port: port(message, domain),
         space: space,
         domain: domain,
       )
@@ -36,9 +36,23 @@ module VCAP::CloudController
       route
     rescue Sequel::ValidationFailed => e
       validation_error!(e, route.host, route.path, route.port, space, domain)
+    rescue Sequel::UniqueConstraintViolation => e
+      logger.warn("error creating route #{e}, retrying once")
+      RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain, manifest_triggered: manifest_triggered)
     end
 
     private
+
+    def port(message, domain)
+      generated_port = if !message.requested?(:port) && domain.protocols.include?('tcp')
+                         PortGenerator.generate_port(domain.guid)
+                       else
+                         message.port || 0
+                       end
+      error!('There are no more ports available for this domain.') if generated_port < 0
+
+      generated_port
+    end
 
     def route_crd_client
       @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
@@ -182,6 +196,10 @@ module VCAP::CloudController
 
     def error!(message)
       raise Error.new(message)
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.action.route_create')
     end
   end
 end

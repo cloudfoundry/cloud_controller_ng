@@ -1,4 +1,5 @@
 require 'models/runtime/domain'
+require 'cloud_controller/routing_api/routing_api_client'
 
 module VCAP::CloudController
   class SharedDomain < Domain
@@ -80,6 +81,12 @@ module VCAP::CloudController
       end
 
       false
+    end
+
+    def router_group
+      raise RoutingApi::RoutingApiDisabled unless routing_api_client.enabled?
+
+      @router_group ||= routing_api_client.router_group(router_group_guid)
     end
 
     def addable_to_organization!(organization); end

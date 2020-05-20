@@ -659,10 +659,22 @@ module VCAP::CloudController
               })
             end
 
-            it 'errors with a helpful error message' do
+            let(:router_group) { double('router_group1', type: 'tcp', guid: 'router_group_guid', reservable_ports: [1024]) }
+            let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+            before do
+              allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+              allow(routing_api_client).to receive(:enabled?).and_return(true)
+              allow(routing_api_client).to receive(:router_group).and_return(router_group)
+            end
+
+            it 'randomly assigns an available port' do
               expect {
                 subject.create(message: message, space: space, domain: domain)
-              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' must specify a port.")
+              }.to change { Route.count }.by(1)
+
+              route = Route.last
+              expect(route.port).to eq(1234)
             end
           end
 

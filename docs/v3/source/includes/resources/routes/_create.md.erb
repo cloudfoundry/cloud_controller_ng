@@ -55,9 +55,9 @@ Content-Type: application/json
 | ----------------------------------------- | ----------------------------------- | --------------------------------- |
 | **host**                                  | _string_                            | The host component for the route. Not compatible with routes specifying the `tcp` protocol. |
 | **path**                                  | _string_                            | The path component for the route. Should begin with a `/`. Not compatible with routes specifying the `tcp` protocol. |
-| **port** _(experimental)_                 | _integer_                           | The port the route will listen on. Only compatible with routes leveraging a domain that supports the `tcp` protocol.
+| **port** _(experimental)_                 | _integer_                           | The port the route will listen on. Only compatible with routes leveraging a domain that supports the `tcp` protocol. For TCP domains, a port will be randomly generated if it is not provided.
 | **metadata.annotations**                  | [_annotation object_](#annotations) | Annotations applied to the route. |
-| **metadata.labels**                       | [_label object_](#labels) | Labels applied to the route.      |
+| **metadata.labels**                       | [_label object_](#labels)           | Labels applied to the route.      |
 
 #### Permitted roles
 
