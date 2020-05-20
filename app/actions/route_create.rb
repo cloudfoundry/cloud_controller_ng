@@ -65,11 +65,26 @@ module VCAP::CloudController
         error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.")
       end
 
+      validation_error_routing_api!(error)
       validation_error_host!(error, host, domain)
       validation_error_path!(error, host, path, domain)
       validation_error_port!(error, host, port, domain)
 
       error!(error.message)
+    end
+
+    def validation_error_routing_api!(error)
+      if error.errors.on(:routing_api)&.include?(:uaa_unavailable)
+        raise RoutingApi::UaaUnavailable
+      end
+
+      if error.errors.on(:routing_api)&.include?(:routing_api_unavailable)
+        raise RoutingApi::RoutingApiUnavailable
+      end
+
+      if error.errors.on(:routing_api)&.include?(:routing_api_disabled)
+        raise RoutingApi::RoutingApiDisabled
+      end
     end
 
     def validation_error_host!(error, host, domain)

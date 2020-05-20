@@ -1007,7 +1007,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 and a helpful error message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Hosts are not supported for TCP routes.')
         end
       end
@@ -1029,7 +1029,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 and a helpful error message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Paths are not supported for TCP routes.')
         end
       end
@@ -2123,6 +2123,68 @@ RSpec.describe 'Routes Request' do
         post '/v3/routes', params_with_invalid_domain.to_json, admin_header
         expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message('Invalid domain. Ensure that the domain exists and you have access to it.')
+      end
+    end
+
+    context 'when communicating with the routing API' do
+      let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+      let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'guid' => 'some-guid' }) }
+      let(:headers) { set_user_with_header_as_role(role: 'admin') }
+      let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+      let(:params) do
+        {
+            relationships: {
+                space: {
+                    data: { guid: space.guid }
+                },
+                domain: {
+                    data: { guid: domain_tcp.guid }
+                },
+            }
+        }
+      end
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+      end
+      context 'when UAA is unavailable' do
+        before do
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::UaaUnavailable
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.'
+        end
+      end
+
+      context 'when the routing API is unavailable' do
+        before do
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiUnavailable
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is currently unavailable. Please try again later.'
+        end
+      end
+
+      context 'when the routing API is disabled' do
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return false
+          allow(routing_api_client).to receive(:router_group).and_return router_group
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is disabled.'
+        end
       end
     end
   end
