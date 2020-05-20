@@ -72,6 +72,10 @@ class RoutesController < ApplicationController
       unprocessable_non_http_protocols(message, domain)
     end
 
+    if domain.router_group_guid && routing_api_client.router_group(domain.router_group_guid).nil?
+      unprocessable!('Route could not be created because the specified domain does not have a valid router group.')
+    end
+
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
@@ -266,5 +270,9 @@ class RoutesController < ApplicationController
       unprocessable_protocol_host! if message.host
       unprocessable_protocol_path! if message.path
     end
+  end
+
+  def routing_api_client
+    @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
   end
 end

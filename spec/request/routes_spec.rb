@@ -2186,6 +2186,21 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is disabled.'
         end
       end
+
+      context 'when the router group is unavailable' do
+        let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'not a guid', name: 'my.domain') }
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return true
+          allow(routing_api_client).to receive(:router_group).and_return nil
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq 'Route could not be created because the specified domain does not have a valid router group.'
+        end
+      end
     end
   end
 
