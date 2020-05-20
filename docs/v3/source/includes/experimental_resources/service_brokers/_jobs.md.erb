@@ -7,5 +7,5 @@ There is no mechanism to link a service broker with its jobs, apart from the `Lo
 
 When a failure occurs during a create job, the service broker won't be usable. It will still be included in the `GET` endpoints responses, hence the importance of querying the job to find out the end status.
 
-When updating a service broker, the changes will be rolled-back in the event of the job failing. The service broker will remain unchanged with no indication that the update operation failed. Querying the job will provide such information.
+When updating a service broker, catalog changes will be rolled-back in the event of the job failing. The service broker catalog will remain unchanged with no indication that the update operation failed. Querying the job will provide such information.
 
