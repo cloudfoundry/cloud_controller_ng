@@ -67,12 +67,7 @@ class RoutesController < ApplicationController
     unprocessable_space! unless space
     unprocessable_domain! unless domain
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
-    tcp_validation(message) if domain.protocols.include?('tcp')
-
-    if domain.router_group_guid && routing_api_client.router_group(domain.router_group_guid).nil?
-      unprocessable!('Route could not be created because the specified domain does not have a valid router group.')
-    end
+    validate_domain_for_route_create!(domain, message)
 
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
@@ -241,6 +236,19 @@ class RoutesController < ApplicationController
     unprocessable!('Paths are not supported for TCP routes.')
   end
 
+  def validate_domain_for_route_create!(domain, message)
+    unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
+
+    if domain.protocols.include?('tcp')
+      unprocessable_protocol_host! if message.host
+      unprocessable_protocol_path! if message.path
+    end
+
+    if domain.router_group_guid && routing_api_client.router_group(domain.router_group_guid).nil?
+      unprocessable!('Route could not be created because the specified domain does not have a valid router group.')
+    end
+  end
+
   def validate_app_guids!(apps_hash, desired_app_guids)
     existing_app_guids = apps_hash.keys
 
@@ -257,11 +265,6 @@ class RoutesController < ApplicationController
 
   def app_not_found!
     resource_not_found!(:app)
-  end
-
-  def tcp_validation(message)
-    unprocessable_protocol_host! if message.host
-    unprocessable_protocol_path! if message.path
   end
 
   def routing_api_client
