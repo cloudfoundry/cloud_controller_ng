@@ -448,9 +448,10 @@ Some services related endpoints nested in other resources have been translated t
 
 `GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_ids=guid`
 
-Service `label` attribute has been renamed to `name` and `names` is a valid filter key.
+`GET /v2/services/:guid/service_plans` is now a filter on the `Service Plan` resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
 
-In V2, `service_broker_name and service_broker_guid` where top level attributes in the response. V3 returns this values only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information.  
+
+In V2, `service_broker_name and service_broker_guid` where top level attributes in the response. V3 returns this values only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `relationships` section.  
 
 The structure of the Service Offering object as well as some attribute names have changed from V2 to V3:
 
