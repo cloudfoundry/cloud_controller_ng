@@ -14604,12 +14604,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 <tr>
 <td><strong>host</strong></td>
 <td><em>string</em></td>
-<td>The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_).</td>
+<td>The hostname for the route. Not compatible with routes specifying the <code class="prettyprint">tcp</code> protocol.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_).</td>
 </tr>
 <tr>
 <td><strong>path</strong></td>
 <td><em>string</em></td>
-<td>The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
+<td>The path for the route. Not compatible with routes specifying the <code class="prettyprint">tcp</code> protocol.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
 </tr>
 <tr>
 <td><strong>url</strong></td>
@@ -14841,12 +14841,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 <tr>
 <td><strong>host</strong></td>
 <td><em>string</em></td>
-<td>The host component for the route.</td>
+<td>The host component for the route. Not compatible with routes specifying the <code class="prettyprint">tcp</code> protocol.</td>
 </tr>
 <tr>
 <td><strong>path</strong></td>
 <td><em>string</em></td>
-<td>The path component for the route. Should begin with a <code class="prettyprint">/</code>.</td>
+<td>The path component for the route. Should begin with a <code class="prettyprint">/</code>. Not compatible with routes specifying the <code class="prettyprint">tcp</code> protocol.</td>
 </tr>
 <tr>
 <td><strong>port</strong> <em>(experimental)</em></td>
