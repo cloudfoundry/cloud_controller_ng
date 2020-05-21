@@ -557,6 +557,127 @@ module VCAP::CloudController
       end
     end
 
+    describe 'read app' do
+      let(:process) { ProcessModelFactory.make(instances: 1) }
+      let(:app_model) { process.app }
+      let(:developer) { make_developer_for_space(process.space) }
+      let(:app_guid) { process.app_guid }
+
+      before do
+        set_current_user(developer)
+        allow_any_instance_of(V2::AppStage).to receive(:stage).and_return(nil)
+      end
+
+      it 'returns the app in question' do
+        get "/v2/apps/#{app_guid}"
+        expect(decoded_response['metadata']).to include({
+          'guid' => app_guid.to_s,
+          'url' => "/v2/apps/#{app_guid}",
+          'created_at' => anything,
+          'updated_at' => anything
+        })
+        expect(decoded_response['entity']).to include({
+          'name' => 'name-1',
+          'production' => false,
+          'space_guid' => process.space.guid.to_s,
+          'stack_guid' => process.stack.guid.to_s,
+          'buildpack' => nil,
+          'detected_buildpack' => nil,
+          'detected_buildpack_guid' => nil,
+          'environment_json' => nil,
+          'memory' => 1024,
+          'instances' => 1,
+          'disk_quota' => 1024,
+          'state' => 'STOPPED',
+          'version' => anything,
+          'command' => nil,
+          'console' => false,
+          'debug' => nil,
+          'staging_task_id' => anything,
+          'package_state' => 'STAGED',
+          'health_check_type' => 'port',
+          'health_check_timeout' => nil,
+          'health_check_http_endpoint' => nil,
+          'staging_failed_reason' => nil,
+          'staging_failed_description' => nil,
+          'diego' => true,
+          'docker_image' => nil,
+          'docker_credentials' => {
+            'username' => nil,
+            'password' => nil
+          },
+          'package_updated_at' => anything,
+          'detected_start_command' => '$HOME/boot.sh',
+          'enable_ssh' => true,
+          'ports' => [8080],
+          'space_url' => "/v2/spaces/#{process.space.guid}",
+          'stack_url' => "/v2/stacks/#{process.stack.guid}",
+          'routes_url' => "/v2/apps/#{app_guid}/routes",
+          'events_url' => "/v2/apps/#{app_guid}/events",
+          'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
+          'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
+        })
+      end
+
+      context 'when the app has rolled to a new web process' do
+        before do
+          process.destroy
+          ProcessModelFactory.make(instances: 1, app: app_model)
+        end
+
+        it 'returns the app with the appropriate app guid' do
+          get "/v2/apps/#{app_guid}"
+          expect(decoded_response['metadata']).to include({
+            'guid' => app_guid.to_s,
+            'url' => "/v2/apps/#{app_guid}",
+            'created_at' => anything,
+            'updated_at' => anything
+          })
+          expect(decoded_response['entity']).to include({
+            'name' => 'name-1',
+            'production' => false,
+            'space_guid' => process.space.guid.to_s,
+            'stack_guid' => process.stack.guid.to_s,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => nil,
+            'memory' => 1024,
+            'instances' => 1,
+            'disk_quota' => 1024,
+            'state' => 'STOPPED',
+            'version' => anything,
+            'command' => nil,
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => anything,
+            'package_state' => 'STAGED',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
+            'health_check_http_endpoint' => nil,
+            'staging_failed_reason' => nil,
+            'staging_failed_description' => nil,
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
+              'username' => nil,
+              'password' => nil
+            },
+            'package_updated_at' => anything,
+            'detected_start_command' => '$HOME/boot.sh',
+            'enable_ssh' => true,
+            'ports' => [8080],
+            'space_url' => "/v2/spaces/#{process.space.guid}",
+            'stack_url' => "/v2/stacks/#{process.stack.guid}",
+            'routes_url' => "/v2/apps/#{app_guid}/routes",
+            'events_url' => "/v2/apps/#{app_guid}/events",
+            'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
+            'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
+          })
+        end
+      end
+    end
+
     describe 'update app' do
       let(:update_hash) { {} }
 
