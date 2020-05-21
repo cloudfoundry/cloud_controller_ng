@@ -1,0 +1,36 @@
+### Download droplet bits
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/droplets/[guid]/download" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 302 FOUND
+Content-Type: application/json
+```
+
+Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet. When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+
+#### Definition
+`POST /v3/droplets/:guid/download`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

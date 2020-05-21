@@ -123,6 +123,7 @@ includes:
   - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/copy
+  - resources/droplets/download_bits
   - resources/droplets/upload_bits
   - resources/environment_variable_groups/header
   - resources/environment_variable_groups/object

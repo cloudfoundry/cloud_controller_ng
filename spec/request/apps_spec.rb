@@ -2223,6 +2223,7 @@ RSpec.describe 'Apps' do
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download", 'experimental' => true },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
                                           'method' => 'PATCH' },
         },

@@ -37,6 +37,7 @@ module VCAP::CloudController::Presenters::V3
             self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
             package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
             app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            download: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}/download", experimental: true },
             assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
           }
 
@@ -169,6 +170,7 @@ module VCAP::CloudController::Presenters::V3
             self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
             package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
             app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            download: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}/download", experimental: true },
             assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
           }
 
@@ -277,6 +279,28 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:guid]).to eq(droplet.guid)
           expect(result[:state]).to eq('AWAITING_UPLOAD')
+          expect(result[:created_at]).to be_a(Time)
+          expect(result[:updated_at]).to be_a(Time)
+          expect(result[:links]).to eq(links)
+        end
+      end
+      context 'when the droplet is STAGED' do
+        before do
+          droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
+          droplet.save
+        end
+
+        it 'adds the upload link' do
+          links = {
+            self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' },
+            download: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}/download", experimental: true }
+          }
+
+          expect(result[:guid]).to eq(droplet.guid)
+          expect(result[:state]).to eq('STAGED')
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
           expect(result[:links]).to eq(links)

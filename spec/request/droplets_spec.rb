@@ -11,6 +11,10 @@ RSpec.describe 'Droplets' do
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'sundance kid' }
 
+  let(:guid) { droplet_model.guid }
+  let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+  let(:app_guid) { droplet_model.app_guid }
+
   let(:parsed_response) { MultiJson.load(last_response.body) }
 
   describe 'POST /v3/droplets' do
@@ -189,10 +193,6 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'GET /v3/droplets/:guid' do
-    let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:app_guid) { droplet_model.app_guid }
-
     context 'when the droplet has a buildpack lifecycle' do
       let!(:droplet_model) do
         VCAP::CloudController::DropletModel.make(
@@ -239,6 +239,7 @@ RSpec.describe 'Droplets' do
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download", 'experimental' => true },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
           },
           'metadata' => {
@@ -304,6 +305,7 @@ RSpec.describe 'Droplets' do
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download", 'experimental' => true },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
           },
           'metadata' => {
@@ -311,6 +313,98 @@ RSpec.describe 'Droplets' do
             'annotations' => {}
           },
         })
+      end
+    end
+  end
+
+  describe 'GET /v3/droplets/:guid/download' do
+    let(:worlds_smallest_tgz_file) { "\x1f\x8b\x08\x00\x5e\xc2\xc6\x5e\x00\x03\x63\x60\x18\x05\xa3\x60\x14\x8c\x54\x00\x00\x2e\xaf\xb5\xef\x00\x04\x00\x00" }
+    let!(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE,
+        app_guid: app_model.guid,
+        package_guid: package_model.guid,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        error_description: 'example error',
+        execution_metadata: 'some-data',
+        droplet_hash: Digest::SHA1.hexdigest(worlds_smallest_tgz_file),
+        sha256_checksum: 'some-sha-256',
+        process_types: { 'web' => 'start-command' },
+      )
+    end
+
+    let(:droplet_file) do
+      File.join(Dir.mktmpdir(nil, '/tmp'), 'droplet.tgz')
+    end
+    let(:upload_body) do
+      {
+        bits_name: 'droplet.tgz',
+        bits_path: droplet_file,
+      }
+    end
+    let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.droplet_download_url(droplet_model) }
+
+    context 'when the droplet is uploaded' do
+      let(:api_call) { lambda { |user_headers| get "/v3/droplets/#{guid}/download", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 302
+        )
+        h['org_auditor'] = {
+          code: 404
+        }
+        h['org_billing_manager'] = {
+          code: 404
+        }
+        h['no_role'] = {
+          code: 404
+        }
+        h.freeze
+      end
+
+      before do
+        File.write(droplet_file, worlds_smallest_tgz_file)
+        post "/v3/droplets/#{guid}/upload", upload_body.to_json, developer_headers
+        expect(last_response).to have_status_code(202)
+        successes, failures = Delayed::Worker.new.work_off
+        expect(successes).to eq(1)
+        expect(failures).to eq(0)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      it 'downloads the bit(s) for a droplet' do
+        get "/v3/droplets/#{guid}/download", nil, developer_headers
+
+        expect(last_response.status).to eq(302)
+        expect(last_response.headers['Location']).to eq(bits_download_url)
+
+        expected_metadata = { droplet_guid: droplet_model.guid }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type: 'audit.app.droplet.download',
+          actor_username: user_name,
+          metadata: expected_metadata,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid
+        })
+      end
+    end
+
+    context 'when the droplet cannot be found' do
+      it 'returns 404 for the droplet' do
+        get '/v3/droplets/some-bogus-guid/download', nil, developer_headers
+        expect(last_response.status).to eq(404)
+        expect(last_response.body).to include('Droplet not found')
+      end
+    end
+
+    context "when the droplet hasn't finished uploading/processing" do
+      it 'returns a 422 with a helpful error message' do
+        get "/v3/droplets/#{guid}/download", nil, developer_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response.body).to include('Only staged droplets can be downloaded.')
       end
     end
   end
@@ -449,6 +543,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -845,6 +940,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -1032,6 +1128,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
