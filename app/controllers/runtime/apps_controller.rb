@@ -196,6 +196,10 @@ module VCAP::CloudController
       [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
     end
 
+    def url_for_guid(_, process)
+      super(process.app_guid, process)
+    end
+
     def read(guid)
       process = find_guid(guid)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) unless process.web?
