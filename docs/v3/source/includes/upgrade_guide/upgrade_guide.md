@@ -165,7 +165,16 @@ For example, to include an app's space in the response:
 cf curl /v3/apps/:guid?include=space
 ```
 
-Read more about [the `include` parameter](#include).
+In addition, some resources provide the possibility of including specified fields of a related resource.
+
+For example, to include the service broker name and guid in the service offering's response:
+
+```
+cf curl /v3/service_offerings/:guid?fields[service_broker]=name,guid
+```
+
+Read more about [the `include` parameter](#include) and [the `fields` parameter](#fields).
+
 
 ## New Concepts
 
@@ -366,8 +375,9 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Resource Matches|Resource Matches|
 |Routes, Route Mappings|Routes|[Routes in V3](#routes-in-v3)|
 |Security Groups|Security Groups|[Security Groups in V3](#security-groups-in-v3)|
+|Services|Service Offerings|[Service Offerings in V3](#service-offerings-in-v3)
 |Service Bindings, Service Keys|Service Keys|
-|Service Brokers|Service Brokers|
+|Service Brokers|Service Brokers|[Service Brokers in V3](#service-brokers-in-v3)
 |Service Instances, User-Provided Service Instances|Service Instances|
 |Spaces|Spaces|
 |Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
@@ -428,6 +438,36 @@ In V2, the endpoint to apply a security group to a space only includes the lifec
 
 In V3, the endpoint to apply a security group to a space includes the lifecycle. For example to unbind a security group from the running lifecycle, one would `DELETE /v3/security_groups/:guid/relationships/running_spaces/:space_guid`.
 
+### Service Offerings in V3
+
+Services endpoints are now replaced by [Service Offerings endpoints](#service-offerings) at `/v3/service_offerings`
+
+Some services related endpoints nested in other resources have been translated to filters on `service_offerings`, with the advantage that filters accept multiple values and can be combined.
+
+`GET /v2/organizations/:guid/services` is now `GET /v3/service_offerings?organization_ids=guid`.
+
+`GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_ids=guid`
+
+Service `label` attribute has been renamed to `name` and `names` is a valid filter key.
+
+In V2, `service_broker_name and service_broker_guid` where top level attributes in the response. V3 returns this values only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information.  
+
+The structure of the Service Offering object as well as some attribute names have changed from V2 to V3:
+
+|**V2**|**V3**|
+|---|---|
+label | name
+active | available
+bindable | services.total_service_keys
+extra | shareable, broker_catalog.metadata
+unique_id | broker_catalog.id
+plan_updateable | broker_catalog.features.plan_updateable
+instances_retrievable | broker_catalog.features.instances_retrievable
+bindings_retrievable | broker_catalog.features.bindings_retrievable
+
+
+Read more about the [service offering resource](#service-offerings).
+
 ### Service Brokers in V3
 
 #### Create, Update and Delete
@@ -435,6 +475,7 @@ In V3, the endpoint to apply a security group to a space includes the lifecycle.
 
 In V3 these endpoints are now asynchronous. See [Asynchronous operations](#asynchronous-operations) and [Service Broker Jobs](#service-broker-jobs) for more information.
 
+Read more about the [service broker resource](#service-brokers).
 
 ### Space Quotas in V3
 
