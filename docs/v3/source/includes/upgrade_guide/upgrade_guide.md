@@ -438,6 +438,15 @@ In V2, the endpoint to apply a security group to a space only includes the lifec
 
 In V3, the endpoint to apply a security group to a space includes the lifecycle. For example to unbind a security group from the running lifecycle, one would `DELETE /v3/security_groups/:guid/relationships/running_spaces/:space_guid`.
 
+### Service Brokers in V3
+
+#### Create, Update and Delete
+
+
+In V3 these endpoints are now asynchronous. See [Asynchronous operations](#asynchronous-operations) and [Service Broker Jobs](#service-broker-jobs) for more information.
+
+Read more about the [service broker resource](#service-brokers).
+
 ### Service Offerings in V3
 
 Services endpoints are now replaced by [Service Offerings endpoints](#service-offerings) at `/v3/service_offerings`
@@ -451,7 +460,7 @@ Some services related endpoints nested in other resources have been translated t
 `GET /v2/services/:guid/service_plans` is now a filter on the `Service Plan` resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
 
 
-In V2, `service_broker_name and service_broker_guid` where top level attributes in the response. V3 returns this values only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `relationships` section.  
+In V2, `service_broker_name` was returned in the response. V3 returns this value only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `links` section.  
 
 The structure of the Service Offering object as well as some attribute names have changed from V2 to V3:
 
@@ -459,24 +468,50 @@ The structure of the Service Offering object as well as some attribute names hav
 |---|---|
 label | name
 active | available
-bindable | services.total_service_keys
+bindable | broker_catalog.features.bindable
 extra | shareable, broker_catalog.metadata
 unique_id | broker_catalog.id
 plan_updateable | broker_catalog.features.plan_updateable
 instances_retrievable | broker_catalog.features.instances_retrievable
 bindings_retrievable | broker_catalog.features.bindings_retrievable
+service_broker_guid | relationships.service_broker.data.guid
 
 
 Read more about the [service offering resource](#service-offerings).
 
-### Service Brokers in V3
+### Service Plans in V3
 
-#### Create, Update and Delete
+Some service plans related endpoints nested in other resources have been translated to filters on `service_plans`, with the advantage that filters accept multiple values and can be combined.
 
+`GET /v2/services/:guid/service_plans` -> `GET /v3/service_plans?service_offering_guids=guid`
 
-In V3 these endpoints are now asynchronous. See [Asynchronous operations](#asynchronous-operations) and [Service Broker Jobs](#service-broker-jobs) for more information.
+Changing plan visibility to `Public` is not a PUT operation anymore. To change visibility use the [Service Plan Visibility resource](#service-plan-visibility)
 
-Read more about the [service broker resource](#service-brokers).
+The structure of the Service Plan object as well as some attribute names have changed from V2 to V3:
+
+|**V2**|**V3**|
+|---|---|
+active | available
+bindable | broker_catalog.features.bindable
+extra | broker_catalog.metadata
+public | `visibility_type == 'public'` (see [Visibility types](#list-of-visibility-types))
+unique_id | broker_catalog.id
+plan_updateable | broker_catalog.features.plan_updateable
+service_instances_url |  use `service_plan_guids` or `service_plan_names` filter on [Service Instances resource](#service-instances)
+service_url | links.service_offering.href
+service_guid | relationships.service_offering.data.guid
+
+Some filters were renamed and changed to accept a list of values:
+
+|**V2**|**V3**|
+|---|---|
+service_guid | service_offering_guids
+service_instance_guid | service_instance_guids
+service_broker_guid | service_broker_guids
+unique_id | broker_catalog_ids
+
+Read more about the [service plan resource](#service-plans).
+
 
 ### Space Quotas in V3
 

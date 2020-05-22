@@ -253,6 +253,12 @@ includes:
   - resources/service_offerings/list
   - resources/service_offerings/update
   - resources/service_offerings/delete  
+  - resources/service_plans/header
+  - resources/service_plans/object
+  - resources/service_plans/get
+  - resources/service_plans/list
+  - resources/service_plans/update
+  - resources/service_plans/delete
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -321,12 +327,6 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/list
   - experimental_resources/service_bindings/delete
-  - experimental_resources/service_plans/header
-  - experimental_resources/service_plans/object
-  - experimental_resources/service_plans/get
-  - experimental_resources/service_plans/list
-  - experimental_resources/service_plans/update
-  - experimental_resources/service_plans/delete
   - experimental_resources/service_plan_visibility/header
   - experimental_resources/service_plan_visibility/object
   - experimental_resources/service_plan_visibility/visibility_types
