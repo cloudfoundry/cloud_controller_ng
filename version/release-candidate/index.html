@@ -1576,7 +1576,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>relationships.space</strong> <em>(experimental)</em></td>
+<td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The space the app is contained in.</td>
 </tr>
@@ -3121,7 +3121,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"revisions"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Enable versioning of an application (experimental)"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Enable versioning of an application"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -3682,7 +3682,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>The user that created the build.</td>
 </tr>
 <tr>
-<td><strong>relationships.app</strong> <em>(experimental)</em></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the build belongs to.</td>
 </tr>
@@ -6648,7 +6648,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>relationships.app</strong> <em>(experimental)</em></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the droplet belongs to.</td>
 </tr>
@@ -9592,7 +9592,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>suspended</strong> <em>(experimental)</em></td>
+<td><strong>suspended</strong></td>
 <td><em>boolean</em></td>
 <td>Whether an organization is suspended or not.</td>
 </tr>
@@ -10070,7 +10070,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Organization name</td>
 </tr>
 <tr>
-<td><strong>suspended</strong> <em>(experimental)</em></td>
+<td><strong>suspended</strong></td>
 <td><em>boolean</em></td>
 <td>Whether an organization is suspended or not.</td>
 </tr>
@@ -11399,7 +11399,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>relationships.app</strong> <em>(experimental)</em></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the package belongs to.</td>
 </tr>
@@ -12679,7 +12679,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The health check to perform on the process.</td>
 </tr>
 <tr>
-<td><strong>relationships.app</strong> <em>(experimental)</em></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the process belongs to.</td>
 </tr>
@@ -22578,7 +22578,7 @@ An application will automatically use buildpacks associated with the application
 <td>the app&rsquo;s current droplet</td>
 </tr>
 <tr>
-<td><strong>template.process.guid</strong> <em>(experimental)</em></td>
+<td><strong>template.process.guid</strong></td>
 <td><em>uuid</em></td>
 <td>The guid of the process that will be used as a template.</td>
 <td><code class="prettyprint">null</code></td>
