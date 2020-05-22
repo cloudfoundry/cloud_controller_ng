@@ -167,8 +167,7 @@ cf curl /v3/apps/:guid?include=space
 
 In addition, some resources provide the possibility of including specified fields of a related resource.
 
-For example, to include the service broker name and guid in the service offering's response:
-
+For example, to include the service broker `name` and `guid` in the service offering's response:
 ```
 cf curl /v3/service_offerings/:guid?fields[service_broker]=name,guid
 ```
@@ -379,6 +378,8 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Service Bindings, Service Keys|Service Keys|
 |Service Brokers|Service Brokers|[Service Brokers in V3](#service-brokers-in-v3)
 |Service Instances, User-Provided Service Instances|Service Instances|
+|Service Plans|Service Plans|[Service Plans in V3](#service-plans-in-v3)
+|Service Plan Visibilities|Service Plan Visibility|[Service Plan Visibility in V3](#service-plan-visibility-in-v3)
 |Spaces|Spaces|
 |Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
 |Stacks|Stacks|
@@ -512,6 +513,13 @@ unique_id | broker_catalog_ids
 
 Read more about the [service plan resource](#service-plans).
 
+### Service Plan Visibility in V3
+
+`v2/service_plan_visibilities` has been replaced in v3 with a nested resource `v3/service_plans/:guid/visibility`
+
+This new resource has a `type`, and can have a list of `organizations` a `space` or be of type `public`
+
+Read more about the [service plan visibility resource](#service-plan-visibility).
 
 ### Space Quotas in V3
 
