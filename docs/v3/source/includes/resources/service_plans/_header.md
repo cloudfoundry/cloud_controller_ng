@@ -1,5 +1,5 @@
 ## Service Plans
 
-Service Plans represent the service plans offered by a Service Offering.
-A Service Offering will have one or more Service Plans.
-Service Offerings and Service Plans are created and updated when a Service Broker is registered or updated.
+Service plans represent the service plans offered by a service offering.
+A service offering will have one or more service plans.
+Service offerings and service plans are created and updated when a service broker is registered or updated.

@@ -18,12 +18,12 @@ Example Response
 HTTP/1.1 204 No Content
 ```
 
-This endpoint deletes a Service Offering. This is typically used to remove orphan Service Offerings from the Cloud
-Foundry database when they have been removed from the Service Broker catalog, or when the Service Broker has been
+This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud
+Foundry database when they have been removed from the service broker catalog, or when the service broker has been
 removed.
 
-Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the Service
-Broker.
+Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service
+broker.
 
 #### Definition
 `DELETE /v3/service_offerings/:guid`

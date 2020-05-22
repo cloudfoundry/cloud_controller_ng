@@ -25,7 +25,7 @@ Name | Type | Description
 **syslog_drain_url** _(experimental)_| _string_ | URL to which logs for bound applications will be streamed. Only shown when type is `user-provided`.
 **route_service_url** _(experimental)_| _string_ | URL to which requests for bound routes will be forwarded. Only shown when type is `user-provided`.
 **maintenance_info** _(experimental)_| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance. Only shown when type is `managed`.
-**upgrade_available** _(experimental)_| _bool_ | Whether or not an upgrade of this Service Instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is `managed`.
+**upgrade_available** _(experimental)_| _bool_ | Whether or not an upgrade of this service instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is `managed`.
 **dashboard_url** _(experimental)_| _string_ | The URL to the service instance dashboard (or null if there is none). Only shown when type is `managed`.
 **last_operation** _(experimental)_| _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance. Only shown when type is `managed`.
 **relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan the service instance relates to. Only shown when type is `managed`.
@@ -39,7 +39,7 @@ Name | Type | Description
 
 Name | Type | Description
 ---- | ---- | -----------
-**version** | _string_ | The current semantic version of this Service Instance. Comparing this version with the version of the Service Plan can be used to determine whether or not this Service Instance is up to date with the Service Plan.
+**version** | _string_ | The current semantic version of this service instance. Comparing this version with the version of the Service Plan can be used to determine whether or not this service instance is up to date with the Service Plan.
 **description** | _string_ | A textual explanation associated with this version.
 
 

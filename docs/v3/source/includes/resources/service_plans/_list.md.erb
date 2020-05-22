@@ -32,27 +32,27 @@ Name | Type | Description
 ---- | ---- | ------------
 **names** | _list of strings_ | Comma-delimited list of names to filter by.
 **available** | _boolean_ | Filter by the `available` property. Valid values are `true` or `false`.
-**broker_catalog_ids** | _list of strings_ | Comma-delimited list of IDs provided by the Service Broker for the Service Plan to filter by.
-**space_guids** | _list of strings_ | Comma-delimited list of Space GUIDs to filter by.
-**organization_guids** | _list of strings_ | Comma-delimited list of Organization GUIDs to filter by.
-**service_broker_guids** | _list of strings_ | Comma-delimited list of Service Broker GUIDs to filter by.
-**service_broker_names** | _list of strings_ | Comma-delimited list of Service Broker names to filter by.
-**service_offering_guids** | _list of strings_ | Comma-delimited list of Service Offering GUIDs to filter by.
-**service_offering_names** | _list of strings_ | Comma-delimited list of Service Offering names to filter by.
-**service_instance_guids** | _list of strings_ | Comma-delimited list of Service Instance GUIDs to filter by.
+**broker_catalog_ids** | _list of strings_ | Comma-delimited list of IDs provided by the service broker for the service plan to filter by.
+**space_guids** | _list of strings_ | Comma-delimited list of space GUIDs to filter by.
+**organization_guids** | _list of strings_ | Comma-delimited list of organization GUIDs to filter by.
+**service_broker_guids** | _list of strings_ | Comma-delimited list of service broker GUIDs to filter by.
+**service_broker_names** | _list of strings_ | Comma-delimited list of service broker names to filter by.
+**service_offering_guids** | _list of strings_ | Comma-delimited list of service Offering GUIDs to filter by.
+**service_offering_names** | _list of strings_ | Comma-delimited list of service Offering names to filter by.
+**service_instance_guids** | _list of strings_ | Comma-delimited list of service Instance GUIDs to filter by.
 **label_selector** | _string_ | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements.
 **include** | _list of strings_ | Optionally include a list of unique related resources in the response. <br>Valid values are `space.organization` and `service_offering`.
 **fields** | [_fields parameter_](#fields-parameter) | **Experimental** [_Allowed values_](#service-plans-list-fields)
 
 
 The **organization_guids** and **space_guids** filters do not filter plans that are public.
-They both act on plans that are restricted to certain Organizations, and to plans from Space-Scoped
-Service Brokers.
+They both act on plans that are restricted to certain organizations, and to plans from space-scoped
+service brokers.
 
 
-##### Service Plans List Fields
+##### Service plans list fields
 
-Resource            | Allowed Keys
+Resource            | Allowed keys
 ------------------- | ----
 service_offering.service_broker| `guid`, `name`
 

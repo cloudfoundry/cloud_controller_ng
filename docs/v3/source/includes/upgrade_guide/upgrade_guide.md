@@ -444,13 +444,13 @@ In V3, the endpoint to apply a security group to a space includes the lifecycle.
 #### Create, Update and Delete
 
 
-In V3 these endpoints are now asynchronous. See [Asynchronous operations](#asynchronous-operations) and [Service Broker Jobs](#service-broker-jobs) for more information.
+In V3 these endpoints are now asynchronous. See [asynchronous operations](#asynchronous-operations) and [service broker jobs](#service-broker-jobs) for more information.
 
 Read more about the [service broker resource](#service-brokers).
 
 ### Service Offerings in V3
 
-Services endpoints are now replaced by [Service Offerings endpoints](#service-offerings) at `/v3/service_offerings`
+Services resource is now replaced by [service offerings resource](#service-offerings) at `/v3/service_offerings`
 
 Some services related endpoints nested in other resources have been translated to filters on `service_offerings`, with the advantage that filters accept multiple values and can be combined.
 
@@ -458,12 +458,12 @@ Some services related endpoints nested in other resources have been translated t
 
 `GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_ids=guid`
 
-`GET /v2/services/:guid/service_plans` is now a filter on the `Service Plan` resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
+`GET /v2/services/:guid/service_plans` is now a filter on the service plan resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
 
 
-In V2, `service_broker_name` was returned in the response. V3 returns this value only if requested using the [`fields` syntax](#fields). Refer to [Service Offerings endpoints](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `links` section.  
+In V2, `service_broker_name` was returned in the response. V3 returns this value only if requested using the [`fields` syntax](#fields). Refer to [service offerings resource](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `links` section.  
 
-The structure of the Service Offering object as well as some attribute names have changed from V2 to V3:
+The structure of the service offering object as well as some attribute names have changed from V2 to V3:
 
 |**V2**|**V3**|
 |---|---|
@@ -482,23 +482,23 @@ Read more about the [service offering resource](#service-offerings).
 
 ### Service Plans in V3
 
-Some service plans related endpoints nested in other resources have been translated to filters on `service_plans`, with the advantage that filters accept multiple values and can be combined.
+Some service plans related endpoints nested in other resources have been translated to filters on service plans, with the advantage that filters accept multiple values and can be combined.
 
 `GET /v2/services/:guid/service_plans` -> `GET /v3/service_plans?service_offering_guids=guid`
 
-Changing plan visibility to `Public` is not a PUT operation anymore. To change visibility use the [Service Plan Visibility resource](#service-plan-visibility)
+Changing plan visibility to `Public` is not a PUT operation anymore. To change visibility use the [service plan visibility resource](#service-plan-visibility)
 
-The structure of the Service Plan object as well as some attribute names have changed from V2 to V3:
+The structure of the service plan object as well as some attribute names have changed from V2 to V3:
 
 |**V2**|**V3**|
 |---|---|
 active | available
 bindable | broker_catalog.features.bindable
 extra | broker_catalog.metadata
-public | `visibility_type == 'public'` (see [Visibility types](#list-of-visibility-types))
+public | `visibility_type == 'public'` (see [visibility types](#list-of-visibility-types))
 unique_id | broker_catalog.id
 plan_updateable | broker_catalog.features.plan_updateable
-service_instances_url |  use `service_plan_guids` or `service_plan_names` filter on [Service Instances resource](#service-instances)
+service_instances_url |  use `service_plan_guids` or `service_plan_names` filter on [service instances resource](#service-instances)
 service_url | links.service_offering.href
 service_guid | relationships.service_offering.data.guid
 
