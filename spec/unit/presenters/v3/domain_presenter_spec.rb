@@ -35,6 +35,14 @@ module VCAP::CloudController::Presenters::V3
           )
         end
 
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(nil)
+        end
+
         it 'presents the domain as json' do
           expect(subject[:guid]).to eq(domain.guid)
           expect(subject[:created_at]).to be_a(Time)
@@ -136,6 +144,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the domain has a router group' do
         let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp' }) }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
 
         before do
           TestConfig.override(
@@ -144,11 +153,11 @@ module VCAP::CloudController::Presenters::V3
             external_protocol: 'https',
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          # allow(routing_api_client).to receive(:router_group).with(router_group_guid).and_return router_group
           allow(routing_api_client).to receive(:enabled?).and_return(true)
           allow(routing_api_client).to receive(:router_group).and_return(router_group)
         end
 
-        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
         let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
         let(:domain) do
           VCAP::CloudController::SharedDomain.make(

@@ -8,6 +8,8 @@ module VCAP::CloudController
     end
 
     def create(message:, space:, domain:, manifest_triggered: false)
+      validate_tcp_route!(domain, message)
+
       route = Route.new(
         host: message.host || '',
         path: message.path || '',
@@ -43,15 +45,25 @@ module VCAP::CloudController
 
     private
 
+    def validate_tcp_route!(domain, message)
+      if domain.router_group_guid.present? && router_group(domain).nil?
+        error!('Route could not be created because the specified domain does not have a valid router group.')
+      end
+    end
+
     def port(message, domain)
       generated_port = if !message.requested?(:port) && domain.protocols.include?('tcp')
-                         PortGenerator.generate_port(domain.guid)
+                         PortGenerator.generate_port(domain.guid, router_group(domain).reservable_ports)
                        else
                          message.port || 0
                        end
       error!('There are no more ports available for this domain.') if generated_port < 0
 
       generated_port
+    end
+
+    def router_group(domain)
+      @router_group ||= domain.router_group
     end
 
     def route_crd_client
@@ -135,7 +147,11 @@ module VCAP::CloudController
       end
 
       if error.errors.on(:host)&.include?(:host_and_path_domain_tcp)
-        error!("Routes with protocol 'tcp' do not support paths or hosts.")
+        error!('Hosts are not supported for TCP routes.')
+      end
+
+      if error.errors.on(:path)&.include?(:host_and_path_domain_tcp)
+        error!('Paths are not supported for TCP routes.')
       end
     end
 

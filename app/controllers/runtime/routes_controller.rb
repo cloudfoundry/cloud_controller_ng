@@ -68,7 +68,7 @@ module VCAP::CloudController
           'Try a different port or request a random one be generated for you.'
         )
       end
-      if e.errors.on(:host) == [:host_and_path_domain_tcp]
+      if e.errors.on(:host) == [:host_and_path_domain_tcp] || e.errors.on(:path) == [:host_and_path_domain_tcp]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Host and path are not supported, as domain belongs to a TCP router group.')
       end
 

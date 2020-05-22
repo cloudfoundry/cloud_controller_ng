@@ -697,7 +697,7 @@ module VCAP::CloudController
             it 'errors with a helpful error message' do
               expect {
                 subject.create(message: message, space: space, domain: domain)
-              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' do not support paths or hosts.")
+              }.to raise_error(RouteCreate::Error, 'Paths are not supported for TCP routes.')
             end
           end
         end

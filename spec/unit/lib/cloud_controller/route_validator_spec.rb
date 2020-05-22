@@ -114,7 +114,7 @@ module VCAP::CloudController
 
           it 'adds host_and_path_domain_tcp to route model errors' do
             validator.validate
-            expect(route.errors.on(:host)).to include(:host_and_path_domain_tcp)
+            expect(route.errors.on(:path)).to include(:host_and_path_domain_tcp)
           end
         end
 

@@ -52,7 +52,7 @@ module VCAP::CloudController
 
     def validate_path_not_included
       unless route.path.blank?
-        route.errors.add(:host, :host_and_path_domain_tcp)
+        route.errors.add(:path, :host_and_path_domain_tcp)
       end
     end
 

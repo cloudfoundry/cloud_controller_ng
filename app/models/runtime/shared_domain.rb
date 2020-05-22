@@ -73,7 +73,6 @@ module VCAP::CloudController
 
       if router_group_guid.present?
         if @router_group_type.nil?
-          router_group = routing_api_client.router_group(router_group_guid)
           @router_group_type = router_group.nil? ? '' : router_group.type
         end
 
@@ -84,8 +83,6 @@ module VCAP::CloudController
     end
 
     def router_group
-      raise RoutingApi::RoutingApiDisabled unless routing_api_client.enabled?
-
       @router_group ||= routing_api_client.router_group(router_group_guid)
     end
 
@@ -99,11 +96,11 @@ module VCAP::CloudController
       !!internal
     end
 
-    private
-
     def routing_api_client
       @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
     end
+
+    private
 
     def validate_internal_domain
       if router_group_guid.present?

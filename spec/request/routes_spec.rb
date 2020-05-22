@@ -2182,6 +2182,7 @@ RSpec.describe 'Routes Request' do
 
       context 'when the routing API is unavailable' do
         before do
+          allow(routing_api_client).to receive(:enabled?).and_return true
           allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiUnavailable
         end
 
@@ -2196,7 +2197,7 @@ RSpec.describe 'Routes Request' do
       context 'when the routing API is disabled' do
         before do
           allow(routing_api_client).to receive(:enabled?).and_return false
-          allow(routing_api_client).to receive(:router_group).and_return router_group
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiDisabled
         end
 
         it 'returns a 503 with a helpful error message' do
