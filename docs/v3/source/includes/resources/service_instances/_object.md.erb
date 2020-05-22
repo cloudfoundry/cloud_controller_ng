@@ -20,18 +20,18 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the service instance.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
-**type** _(experimental)_| _string_ | Either `managed` or `user-provided`.
-**tags** _(experimental)_| _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
-**syslog_drain_url** _(experimental)_| _string_ | URL to which logs for bound applications will be streamed. Only shown when type is `user-provided`.
-**route_service_url** _(experimental)_| _string_ | URL to which requests for bound routes will be forwarded. Only shown when type is `user-provided`.
-**maintenance_info** _(experimental)_| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance. Only shown when type is `managed`.
-**upgrade_available** _(experimental)_| _bool_ | Whether or not an upgrade of this service instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is `managed`.
-**dashboard_url** _(experimental)_| _string_ | The URL to the service instance dashboard (or null if there is none). Only shown when type is `managed`.
-**last_operation** _(experimental)_| _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance. Only shown when type is `managed`.
+**type** (*experimental*)| _string_ | Either `managed` or `user-provided`.
+**tags** (*experimental*)| _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
+**syslog_drain_url** (*experimental*)| _string_ | URL to which logs for bound applications will be streamed. Only shown when type is `user-provided`.
+**route_service_url** (*experimental*)| _string_ | URL to which requests for bound routes will be forwarded. Only shown when type is `user-provided`.
+**maintenance_info** (*experimental*)| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance. Only shown when type is `managed`.
+**upgrade_available** (*experimental*)| _bool_ | Whether or not an upgrade of this service instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is `managed`.
+**dashboard_url** (*experimental*)| _string_ | The URL to the service instance dashboard (or null if there is none). Only shown when type is `managed`.
+**last_operation** (*experimental*)| _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance. Only shown when type is `managed`.
 **relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan the service instance relates to. Only shown when type is `managed`.
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the service instance is contained in.
-**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the service instance.
-**metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the service instance.
+**metadata.labels** (*experimental*)| [_label object_](#labels) | Labels applied to the service instance.
+**metadata.annotations** (*experimental*) | [_annotation object_](#annotations) | Annotations applied to the service instance.
 **links** | [_links object_](#links) | Links to related resources.
 
 
