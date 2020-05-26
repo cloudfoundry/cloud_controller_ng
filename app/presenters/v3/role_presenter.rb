@@ -2,6 +2,12 @@ require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class RolePresenter < BasePresenter
+    class << self
+      def associated_resources
+        [:user, :space, :organization]
+      end
+    end
+
     def to_hash
       hash = {
         guid: role.guid,

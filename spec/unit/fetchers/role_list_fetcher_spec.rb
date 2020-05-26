@@ -20,6 +20,18 @@ module VCAP::CloudController
 
       let(:message) { RolesListMessage.from_params(filters) }
 
+      context 'eager loading associated resources' do
+        let(:filters) { {} }
+
+        it 'eager loads the specified resources for the routes' do
+          results = RoleListFetcher.fetch(message, Role.dataset, eager_loaded_associations: [:user, :space]).all
+
+          expect(results.first.associations.key?(:user)).to be true
+          expect(results.first.associations.key?(:space)).to be true
+          expect(results.first.associations.key?(:organization)).to be false
+        end
+      end
+
       context 'when no filters are specified' do
         let(:filters) { {} }
 

@@ -29,7 +29,7 @@ class RolesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     RoleGuidPopulate.populate
-    roles = RoleListFetcher.fetch(message, readable_roles)
+    roles = RoleListFetcher.fetch(message, readable_roles, eager_loaded_associations: Presenters::V3::RolePresenter.associated_resources)
 
     decorators = []
     decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)

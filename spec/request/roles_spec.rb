@@ -948,6 +948,19 @@ RSpec.describe 'Roles Request' do
       end
     end
 
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::RoleListFetcher).to receive(:fetch).with(
+          anything,
+          anything,
+          hash_including(eager_loaded_associations: [:user, :space, :organization])
+        ).and_call_original
+
+        get '/v3/roles', nil, admin_header
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     context 'listing all roles' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: [space_auditor_response_object, org_auditor_response_object])
