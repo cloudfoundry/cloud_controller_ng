@@ -577,7 +577,7 @@ module VCAP::CloudController
           'updated_at' => anything
         })
         expect(decoded_response['entity']).to include({
-          'name' => 'name-1',
+          'name' => process.app.name,
           'production' => false,
           'space_guid' => process.space.guid.to_s,
           'stack_guid' => process.stack.guid.to_s,
@@ -634,7 +634,7 @@ module VCAP::CloudController
             'updated_at' => anything
           })
           expect(decoded_response['entity']).to include({
-            'name' => 'name-1',
+            'name' => process.app.name,
             'production' => false,
             'space_guid' => process.space.guid.to_s,
             'stack_guid' => process.stack.guid.to_s,
