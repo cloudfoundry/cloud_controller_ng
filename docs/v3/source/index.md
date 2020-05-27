@@ -55,6 +55,8 @@ includes:
   - concepts/status_codes
   - concepts/warnings
   - resources/header
+  - resources/admin/header
+  - resources/admin/clear_buildpack_cache
   - resources/apps/header
   - resources/apps/object
   - resources/apps/create

@@ -1,0 +1,34 @@
+### Clear buildpack cache
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/admin/actions/clear_buildpack_cache" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Location: https://api.example.org/v3/jobs/[guid]
+```
+
+This endpoint will delete all of the existing buildpack caches in the
+blobstore. The buildpack cache is used during staging by buildpacks as a way to
+cache certain resources, e.g. downloaded Ruby gems. An admin who wants to
+decrease the size of their blobstore could use this endpoint to delete
+unnecessary blobs.
+
+#### Definition
+`POST /v3/admin/actions/clear_buildpack_cache`
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
