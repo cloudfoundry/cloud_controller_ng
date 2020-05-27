@@ -222,6 +222,11 @@ module VCAP::CloudController
             internal_url: String,
           },
 
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
+          },
+
           doppler: {
             url: String
           },

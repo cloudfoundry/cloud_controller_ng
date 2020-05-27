@@ -69,7 +69,7 @@ module VCAP::CloudController
           )
         end
 
-        VCAP::Loggregator.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
+        VCAP::AppLogEmitter.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
       # with_start is true when v2 staging causes apps to start

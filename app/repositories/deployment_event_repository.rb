@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Repositories
     class DeploymentEventRepository
       def self.record_create(deployment, droplet, user_audit_info, v3_app_name, space_guid, org_guid, params, type)
-        VCAP::Loggregator.emit(deployment.app_guid, "Creating deployment for app with guid #{deployment.app_guid}")
+        VCAP::AppLogEmitter.emit(deployment.app_guid, "Creating deployment for app with guid #{deployment.app_guid}")
 
         metadata = {
           deployment_guid: deployment.guid,
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def self.record_cancel(deployment, droplet, user_audit_info, v3_app_name, space_guid, org_guid)
-        VCAP::Loggregator.emit(deployment.app_guid, "Cancelling deployment for app with guid #{deployment.app_guid}")
+        VCAP::AppLogEmitter.emit(deployment.app_guid, "Cancelling deployment for app with guid #{deployment.app_guid}")
 
         metadata = {
           deployment_guid: deployment.guid,

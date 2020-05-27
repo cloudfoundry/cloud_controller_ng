@@ -1,18 +1,21 @@
+require 'fluent_emitter'
+
 module VCAP
-  class Loggregator
+  class AppLogEmitter
     class << self
-      attr_accessor :emitter, :logger
+      attr_accessor :emitter, :logger, :fluent_emitter
 
       def emit(app_id, message)
+        fluent_emitter.emit(app_id, message) if fluent_emitter
         emitter.emit(app_id, message, generate_tags(app_id)) if emitter
       rescue => e
-        logger.error('loggregator_emitter.emit.failed', app_id: app_id, message: message, error: e)
+        logger.error('app_event_emitter.emit.failed', app_id: app_id, message: message, error: e)
       end
 
       def emit_error(app_id, message)
         emitter.emit_error(app_id, message, generate_tags(app_id)) if emitter
       rescue => e
-        logger.error('loggregator_emitter.emit_error.failed', app_id: app_id, message: message, error: e)
+        logger.error('app_event_emitter.emit_error.failed', app_id: app_id, message: message, error: e)
       end
 
       private

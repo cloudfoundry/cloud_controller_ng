@@ -84,7 +84,7 @@ module VCAP::CloudController
           before do
             allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
             allow(Steno).to receive(:logger).with('cc.action.sidecar_create').and_return(logger)
-            allow(VCAP::Loggregator).to receive(:emit_error)
+            allow(VCAP::AppLogEmitter).to receive(:emit_error)
           end
 
           describe 'success case' do
@@ -533,7 +533,7 @@ module VCAP::CloudController
               end
 
               it 'should emit a loggregator error' do
-                expect(VCAP::Loggregator).to receive(:emit_error).with(build.app_guid, /Found no compatible cell/)
+                expect(VCAP::AppLogEmitter).to receive(:emit_error).with(build.app_guid, /Found no compatible cell/)
                 subject.staging_complete(fail_response)
               end
             end
@@ -570,7 +570,7 @@ module VCAP::CloudController
               end
 
               it 'logs an error for the CF user' do
-                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
+                expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'should mark the build as failed' do
@@ -594,7 +594,7 @@ module VCAP::CloudController
                   subject.staging_complete(malformed_fail_response)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
+                expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do

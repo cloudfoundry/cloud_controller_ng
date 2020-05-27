@@ -1,9 +1,9 @@
 require 'new_relic/agent/method_tracer'
-require 'loggregator'
+require 'app_log_emitter'
 
 module CCInitializers
   def self.new_relic_loggregator_instrumentation(_)
-    VCAP::Loggregator.class_eval do
+    VCAP::AppLogEmitter.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       class << self
