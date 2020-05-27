@@ -96,6 +96,24 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:sidecars][0][:memory_in_mb]).to eq(300)
         expect(result[:sidecars][0][:process_types]).to eq(['web'])
         expect(result[:description]).to eq('Initial revision')
+        expect(result[:deployable]).to eq(true)
+      end
+
+      context 'when the droplet is not staged' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(
+            app: app_model,
+            state: VCAP::CloudController::DropletModel::EXPIRED_STATE,
+            process_types: {
+              'web' => 'droplet_web_command',
+              'worker' => 'droplet_worker_command',
+            })
+        end
+
+        it 'returns deployable is false' do
+          result = RevisionPresenter.new(revision).to_hash
+          expect(result[:deployable]).to eq(false)
+        end
       end
     end
   end

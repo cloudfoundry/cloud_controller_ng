@@ -10,6 +10,7 @@ module VCAP::CloudController
           'page'     => 1,
           'per_page' => 5,
           'label_selector' => 'key=value',
+          'deployable' => true
         }
       end
 
@@ -20,6 +21,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.versions).to eq(['1', '3'])
+        expect(message.deployable).to eq(true)
         expect(message.label_selector).to eq('key=value')
       end
 
@@ -29,6 +31,7 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:versions)).to be_truthy
+        expect(message.requested?(:deployable)).to be_truthy
         expect(message.requested?(:label_selector)).to be_truthy
       end
     end
@@ -55,7 +58,8 @@ module VCAP::CloudController
           AppRevisionsListMessage.from_params({
             page:               1,
             per_page:           5,
-            versions:          ['1'],
+            versions:           ['1'],
+            deployable:         true,
             label_selector:     'key=value',
           })
         }.not_to raise_error
@@ -84,6 +88,19 @@ module VCAP::CloudController
 
         it 'allows versions to be nil' do
           message = AppRevisionsListMessage.from_params(versions: nil)
+          expect(message).to be_valid
+        end
+      end
+
+      context 'deployable' do
+        it 'validates deployable to be a boolean' do
+          message = AppRevisionsListMessage.from_params(deployable: 'not a boolean')
+          expect(message).to be_invalid
+          expect(message.errors[:deployable]).to include('must be a boolean')
+        end
+
+        it 'allows deployable to be nil' do
+          message = AppRevisionsListMessage.from_params(deployable: nil)
           expect(message).to be_valid
         end
       end
