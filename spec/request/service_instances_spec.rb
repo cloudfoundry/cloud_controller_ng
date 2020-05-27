@@ -931,6 +931,16 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      context 'when the service broker does not have state (v2 brokers)' do
+        let(:service_broker) { service_plan.service_broker }
+
+        it 'creates a service instance' do
+          service_broker.update(state: '')
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(202)
+        end
+      end
+
       context 'when there is an operation in progress for the service broker' do
         let(:service_broker) { service_plan.service_broker }
 
