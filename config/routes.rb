@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   get '/', to: 'root#v3_root'
 
+  # admin actions
+  post '/admin/actions/clear_buildpack_cache', to: 'admin_actions#clear_buildpack_cache'
+
   # apps
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'

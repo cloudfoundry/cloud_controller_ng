@@ -56,6 +56,11 @@ module VCAP::CloudController
         expect(job.resource_exists?).to be(false)
       end
 
+      it 'returns false if the resource type is empty' do
+        job = PollableJobModel.make(resource_type: '', resource_guid: '')
+        expect(job.resource_exists?).to be(false)
+      end
+
       context 'when the resource is a special case' do
         it 'returns true if the resource exists' do
           organization_quota = QuotaDefinition.make
