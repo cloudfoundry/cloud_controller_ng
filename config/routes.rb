@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
   post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
+  get '/apps/:guid/permissions', to: 'apps_v3#show_permissions'
   get '/apps/:guid/builds', to: 'apps_v3#builds'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'

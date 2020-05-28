@@ -322,6 +322,17 @@ class AppsV3Controller < ApplicationController
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   end
 
+  def show_permissions
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
+    render status: :ok, json: {
+      read_basic_data: true,
+      read_sensitive_data: permission_queryer.can_read_secrets_globally?,
+    }
+  end
+
   class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob
     include V3ErrorsHelper
 
