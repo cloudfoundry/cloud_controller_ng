@@ -2554,7 +2554,7 @@ RSpec.describe 'Apps' do
       h['org_manager'] = { code: 200, response_object: read_basic_response }
       h['space_manager'] = { code: 200, response_object: read_basic_response }
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
-      h['space_developer'] = { code: 200, response_object: read_basic_response }
+      h['space_developer'] = { code: 200, response_object: read_all_response }
       h.freeze
     end
 

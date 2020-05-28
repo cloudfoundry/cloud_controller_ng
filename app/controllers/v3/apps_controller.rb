@@ -329,7 +329,7 @@ class AppsV3Controller < ApplicationController
 
     render status: :ok, json: {
       read_basic_data: true,
-      read_sensitive_data: permission_queryer.can_read_secrets_globally?,
+      read_sensitive_data: permission_queryer.can_read_secrets_in_space?(space.guid, org.guid),
     }
   end
 
