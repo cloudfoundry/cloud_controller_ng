@@ -68,6 +68,7 @@ includes:
   - resources/apps/get_current_droplet_relationship
   - resources/apps/env
   - resources/apps/environment_variables
+  - resources/apps/permissions
   - resources/apps/current_droplet
   - resources/apps/ssh_enabled
   - resources/apps/start
