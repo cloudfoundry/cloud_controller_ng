@@ -94,6 +94,10 @@ RSpec.describe 'v3 root' do
           'tasks' => {
             'href' => "#{link_prefix}/v3/tasks"
           },
+          'usage_events' => {
+            'href' => "#{link_prefix}/v3/usage_events",
+            'experimental' => true
+          },
           'users' => {
             'href' => "#{link_prefix}/v3/users"
           }

@@ -33,6 +33,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:space_quotas))
     links.merge!(create_link(:stacks))
     links.merge!(create_link(:tasks))
+    links.merge!(create_link(:usage_events, experimental: true))
     links.merge!(create_link(:users))
 
     render :ok, json: MultiJson.dump({ links: links }, pretty: true)
