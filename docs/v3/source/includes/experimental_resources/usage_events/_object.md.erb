@@ -1,0 +1,15 @@
+### The usage event object
+
+```
+Example Usage Event object
+```
+```json
+<%= yield_content :single_usage_event %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the event.
+**type** | _string_ | The type of the event, either "app" (application event) or "service" (service event)
+**created_at** | _datetime_ | The time with zone when the event occurred
+**updated_at** | _datetime_ | Identical to `created_at` (events are created, never updated)

@@ -291,6 +291,9 @@ Rails.application.routes.draw do
   get '/audit_events', to: 'events#index'
   get '/audit_events/:guid', to: 'events#show'
 
+  # usage events
+  get '/usage_events/:guid', to: 'usage_events#show'
+
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
   patch '/environment_variable_groups/:name', to: 'environment_variable_groups#update'

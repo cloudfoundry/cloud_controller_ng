@@ -37,6 +37,7 @@ includes:
   - api_resources/space_quotas
   - api_resources/stacks
   - api_resources/tasks
+  - api_resources/usage_events
   - api_resources/users
   - introduction/introduction
   - concepts/concepts
@@ -351,6 +352,9 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
+  - experimental_resources/usage_events/header
+  - experimental_resources/usage_events/object
+  - experimental_resources/usage_events/get
   - upgrade_guide/upgrade_guide
 
 ---
