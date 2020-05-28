@@ -83,4 +83,4 @@ such as `name` or `labels` or `namespace`.
   and make following the code paths for these interactions easier
 
 #### Risks:
-- idk
+- without introducing a third class that wraps the two described, this will make callers more difficult to test -- tests will either need to mock the adapter or have knowledge about what it will send to the client.
