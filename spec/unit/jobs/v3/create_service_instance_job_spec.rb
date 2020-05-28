@@ -339,7 +339,7 @@ module VCAP
             context 'due to an HttpResponseError' do
               before do
                 response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
-                err = HttpResponseError.new('oops', 'uri', 'GET', response)
+                err = HttpResponseError.new('oops', 'GET', response)
                 allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
               end
 

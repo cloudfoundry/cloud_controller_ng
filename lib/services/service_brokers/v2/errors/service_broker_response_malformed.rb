@@ -4,10 +4,8 @@ module VCAP::Services
       module Errors
         class ServiceBrokerResponseMalformed < HttpResponseError
           def initialize(uri, method, response, description)
-            @uri = uri
             super(
               description_from_response(description),
-              uri,
               method,
               response
             )
@@ -20,7 +18,7 @@ module VCAP::Services
           private
 
           def description_from_response(description)
-            "The service broker returned an invalid response for the request to #{@uri}: #{description}"
+            "The service broker returned an invalid response: #{description}"
           end
         end
       end

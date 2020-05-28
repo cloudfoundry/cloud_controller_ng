@@ -5,8 +5,7 @@ module VCAP::Services
         class ServiceBrokerInvalidVolumeMounts < HttpResponseError
           def initialize(uri, method, response, description)
             super(
-              description_from_response(uri, description),
-              uri,
+              description_from_response(description),
               method,
               response
             )
@@ -18,8 +17,8 @@ module VCAP::Services
 
           private
 
-          def description_from_response(uri, description)
-            "The service broker returned an invalid response for the request to #{uri}: #{description}"
+          def description_from_response(description)
+            "The service broker returned an invalid response: #{description}"
           end
         end
       end

@@ -139,14 +139,14 @@ module VCAP::CloudController
               expect(results_messages).
                 to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response for the request to #{instance_1_url}")
+                to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request to #{instance_2_url}")
+                to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response.")
 
               expect(results_messages).
                 to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response for the request to #{instance_4_url}")
+                to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response.")
             end
           end
 
