@@ -963,7 +963,7 @@ RSpec.describe 'V3 service brokers' do
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
         expect(error['errors'].first['detail']).
-          to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
+          to eq("The service broker rejected the request. Status Code: 418 I'm a Teapot, Body: {}")
       end
     end
 

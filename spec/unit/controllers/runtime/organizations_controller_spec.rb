@@ -1561,8 +1561,7 @@ module VCAP::CloudController
             end
 
             it 'fails the job with a OrganizationDeleteTimeout error' do
-              service_instance_error_string = ["#{service_instance.name}: The service broker returned an invalid",
-                                               "response for the request to #{service_instance.dashboard_url}"].join(' ')
+              service_instance_error_string = "#{service_instance.name}: The service broker returned an invalid response."
 
               delete "/v2/organizations/#{org.guid}?recursive=true&async=true"
               expect(last_response).to have_status_code(202)
@@ -1576,7 +1575,7 @@ module VCAP::CloudController
               expect(decoded_response['entity']['error_details']['description']).to include "Deletion of organization #{org.name}"
               expect(decoded_response['entity']['error_details']['description']).to include "Deletion of space #{space.name}"
               expect(decoded_response['entity']['error_details']['description']).to include service_instance_error_string
-              expect(decoded_response['entity']['error_details']['description']).to include 'The service broker returned an invalid response for the request'
+              expect(decoded_response['entity']['error_details']['description']).to include 'The service broker returned an invalid response'
             end
           end
         end

@@ -7,11 +7,6 @@ module VCAP::Services
         describe 'UnvalidatedResponse' do
           let(:fake_response) { VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 200, body: {}) }
 
-          it 'should serialize the uri as a string' do
-            unvalidated_response = ResponseParser::UnvalidatedResponse.new(:get, 'http://example.com', '/path', fake_response)
-            expect(unvalidated_response.uri).to eql('http://example.com/path')
-          end
-
           it 'should raise an error if the uri is invalid' do
             expect { ResponseParser::UnvalidatedResponse.new(:get, 'http://examp', 'bad path', fake_response) }.to raise_error(URI::InvalidURIError)
           end
@@ -70,7 +65,7 @@ module VCAP::Services
                 it 'raises' do
                   expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                     expect(e.to_h['description']).to eq(
-                      "The service broker returned an invalid response for the request to https://example.com/path: expected valid JSON object in body, broker returned '#{body}'")
+                      "The service broker returned an invalid response: expected valid JSON object in body, broker returned '#{body}'")
                     expect(e.response_code).to eq(502)
                     expect(e.to_h['http']['method']).to eq('GET')
                     expect(e.to_h['http']['status']).to eq(200)
@@ -121,7 +116,7 @@ module VCAP::Services
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                   description_lines = e.to_h['description'].split("\n")
-                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response: ')
                   expect(description_lines.drop(1)).to contain_exactly("The property '#/' did not contain a required property of 'prop2'")
                   expect(e.response_code).to eq(502)
                   expect(e.to_h['http']['method']).to eq('GET')
@@ -139,7 +134,7 @@ module VCAP::Services
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                   description_lines = e.to_h['description'].split("\n")
-                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response: ')
                   expect(description_lines.drop(1)).to contain_exactly(
                     "The property '#/' did not contain a required property of 'prop2'",
                     "The property '#/' did not contain a required property of 'prop1'")
@@ -441,57 +436,57 @@ module VCAP::Services
 
         def self.response_not_understood(expected_state, actual_state, uri)
           actual_state = actual_state ? "'#{actual_state}'" : 'null'
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "expected state was '#{expected_state}', broker returned #{actual_state}."
         end
 
         def self.invalid_json_error(body, uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "expected valid JSON object in body, broker returned '#{body}'"
         end
 
         def self.broker_returned_an_error(status, body, uri)
-          "The service broker returned an invalid response for the request to #{uri}. " \
+          'The service broker returned an invalid response. ' \
           "Status Code: #{status} message, Body: #{body}"
         end
 
         def self.invalid_volume_mounts_error(body, uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
         end
 
         def self.invalid_volume_mounts_missing_field_error(field, uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "missing required field '#{field}'"
         end
 
         def self.invalid_volume_mounts_missing_volume_id_error(uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "required field 'device.volume_id' must be a non-empty string"
         end
 
         def self.invalid_volume_mounts_bad_mount_config_error(uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "field 'device.mount_config' must be an object if it is defined"
         end
 
         def self.invalid_volume_mounts_device_type_error(uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           "required field 'device' must be an object but is String"
         end
 
         def self.volume_mounts_not_required_error(uri)
-          "The service broker returned an invalid response for the request to #{uri}: " \
+          'The service broker returned an invalid response: ' \
           'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
           'Please contact the service provider.'
         end
 
         def self.malformed_response_error(uri, message)
-          "The service broker returned an invalid response for the request to #{uri}: #{message}"
+          "The service broker returned an invalid response: #{message}"
         end
 
         def self.broker_bad_response_error(uri, message)
-          "The service broker returned an invalid response for the request to #{uri}. #{message}"
+          "The service broker returned an invalid response. #{message}"
         end
 
         def self.broker_timeout_error(uri)

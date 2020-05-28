@@ -1,8 +1,7 @@
 class HttpResponseError < StructuredError
   attr_reader :uri, :method, :status
 
-  def initialize(message, uri, method, response)
-    @uri = uri
+  def initialize(message, method, response)
     @method = method.to_s.upcase
     @status = response.code.to_i
 
@@ -18,7 +17,6 @@ class HttpResponseError < StructuredError
   def to_h
     hash = super
     hash['http'] = {
-      'uri' => uri,
       'method' => method,
       'status' => status,
     }

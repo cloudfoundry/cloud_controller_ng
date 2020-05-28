@@ -25,7 +25,6 @@ module VCAP::Services
                 'backtrace' => ['/foo:1', '/bar:2'],
                 'http' => {
                   'status' => 500,
-                  'uri' => uri,
                   'method' => 'PUT'
                 },
                 'source' => {
@@ -50,12 +49,11 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'The service broker returned an invalid response for the request to http://www.example.com/. ' \
+                'description' => 'The service broker returned an invalid response. ' \
                                  "Status Code: 500 Internal Server Error, Body: #{response_body}",
                 'backtrace' => ['/foo:1', '/bar:2'],
                 'http' => {
                   'status' => 500,
-                  'uri' => uri,
                   'method' => 'PUT'
                 },
                 'source' => { 'foo' => 'bar' }
