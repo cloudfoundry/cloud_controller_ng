@@ -95,7 +95,33 @@ RSpec.describe 'Events' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'type' => 'service',
-          'data' => nil
+          'data' => {
+            'state' => usage_event.state,
+            'space' => {
+              'guid' => usage_event.space_guid,
+              'name' => usage_event.space_name,
+            },
+            'organization' => {
+              'guid' => usage_event.org_guid,
+            },
+            'service_instance' => {
+              'guid' => usage_event.service_instance_guid,
+              'name' => usage_event.service_instance_name,
+              'type' => usage_event.service_instance_type,
+            },
+            'service_plan' => {
+              'guid' => usage_event.service_plan_guid,
+              'name' => usage_event.service_plan_name,
+            },
+            'service_offering' => {
+              'guid' => usage_event.service_guid,
+              'name' => usage_event.service_label,
+            },
+            'service_broker' => {
+              'guid' => usage_event.service_broker_guid,
+              'name' => usage_event.service_broker_name,
+            }
+          }
         }
       end
 

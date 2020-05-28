@@ -21,6 +21,8 @@ module VCAP::CloudController::Presenters::V3
     def build_data
       if usage_event.type == 'app'
         build_app_data
+      else
+        build_service_data
       end
     end
 
@@ -60,6 +62,36 @@ module VCAP::CloudController::Presenters::V3
         instance_count: {
           current: usage_event.instance_count,
           previous: usage_event.previous_instance_count,
+        }
+      }
+    end
+
+    def build_service_data
+      {
+        state: usage_event.state,
+        space: {
+          guid: usage_event.space_guid,
+          name: usage_event.space_name,
+        },
+        organization: {
+          guid: usage_event.org_guid,
+        },
+        service_instance: {
+          guid: usage_event.service_instance_guid,
+          name: usage_event.service_instance_name,
+          type: usage_event.service_instance_type,
+        },
+        service_plan: {
+          guid: usage_event.service_plan_guid,
+          name: usage_event.service_plan_name,
+        },
+        service_offering: {
+          guid: usage_event.service_guid,
+          name: usage_event.service_label,
+        },
+        service_broker: {
+          guid: usage_event.service_broker_guid,
+          name: usage_event.service_broker_name,
         }
       }
     end
