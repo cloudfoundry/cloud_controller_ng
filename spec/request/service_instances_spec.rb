@@ -802,10 +802,12 @@ RSpec.describe 'V3 service instances' do
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.credentials).to match({ 'foo' => 'bar', 'baz' => 'qux' })
         expect(instance.space).to eq(space)
-        expect(instance.annotations[0].key_name).to eq('foo')
-        expect(instance.annotations[0].value).to eq('bar')
-        expect(instance.labels[0].key_name).to eq('baz')
-        expect(instance.labels[0].value).to eq('qux')
+
+        expect_metadata(
+          instance,
+          annotations: [{ prefix: nil, key: 'foo', value: 'bar' }],
+          labels: [{ prefix: nil, key: 'baz', value: 'qux' }]
+        )
       end
 
       context 'when the name has already been taken' do
@@ -879,10 +881,13 @@ RSpec.describe 'V3 service instances' do
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.space).to eq(space)
         expect(instance.service_plan).to eq(service_plan)
-        expect(instance.annotations[0].key_name).to eq('foo')
-        expect(instance.annotations[0].value).to eq('bar')
-        expect(instance.labels[0].key_name).to eq('baz')
-        expect(instance.labels[0].value).to eq('qux')
+
+        expect_metadata(
+          instance,
+          annotations: [{ prefix: nil, key: 'foo', value: 'bar' }],
+          labels: [{ prefix: nil, key: 'baz', value: 'qux' }]
+        )
+
         expect(instance.last_operation.type).to eq('create')
         expect(instance.last_operation.state).to eq('in progress')
       end
@@ -1384,27 +1389,19 @@ RSpec.describe 'V3 service instances' do
           service_instance.reload
           expect(service_instance.reload.tags).to eq(%w(baz quz))
 
-          expect(service_instance.annotations).to have(3).entries
-          expect(service_instance.annotations[0].key_prefix).to eq('pre.fix')
-          expect(service_instance.annotations[0].key_name).to eq('fox')
-          expect(service_instance.annotations[0].value).to eq('bushy')
-          expect(service_instance.annotations[1].key_prefix).to be_nil
-          expect(service_instance.annotations[1].key_name).to eq('potato')
-          expect(service_instance.annotations[1].value).to eq('idaho')
-          expect(service_instance.annotations[2].key_prefix).to be_nil
-          expect(service_instance.annotations[2].key_name).to eq('style')
-          expect(service_instance.annotations[2].value).to eq('mashed')
-
-          expect(service_instance.labels).to have(3).entries
-          expect(service_instance.labels[0].key_prefix).to eq('pre.fix')
-          expect(service_instance.labels[0].key_name).to eq('tail')
-          expect(service_instance.labels[0].value).to eq('fluffy')
-          expect(service_instance.labels[1].key_prefix).to be_nil
-          expect(service_instance.labels[1].key_name).to eq('potato')
-          expect(service_instance.labels[1].value).to eq('yam')
-          expect(service_instance.labels[2].key_prefix).to be_nil
-          expect(service_instance.labels[2].key_name).to eq('style')
-          expect(service_instance.labels[2].value).to eq('baked')
+          expect_metadata(
+            service_instance,
+            annotations: [
+              { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+              { prefix: nil, key: 'potato', value: 'idaho' },
+              { prefix: nil, key: 'style', value: 'mashed' },
+            ],
+            labels: [
+              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+              { prefix: nil, key: 'potato', value: 'yam' },
+              { prefix: nil, key: 'style', value: 'baked' }
+            ]
+          )
 
           expect(service_instance.last_operation.type).to eq('update')
           expect(service_instance.last_operation.state).to eq('succeeded')
@@ -1488,21 +1485,17 @@ RSpec.describe 'V3 service instances' do
           service_instance.reload
           expect(service_instance.reload.tags).to eq(%w(foo bar))
 
-          expect(service_instance.annotations).to have(2).entries
-          expect(service_instance.annotations[0].key_prefix).to eq('pre.fix')
-          expect(service_instance.annotations[0].key_name).to eq('to_delete')
-          expect(service_instance.annotations[0].value).to eq('value')
-          expect(service_instance.annotations[1].key_prefix).to eq('pre.fix')
-          expect(service_instance.annotations[1].key_name).to eq('fox')
-          expect(service_instance.annotations[1].value).to eq('bushy')
-
-          expect(service_instance.labels).to have(2).entries
-          expect(service_instance.labels[0].key_prefix).to eq('pre.fix')
-          expect(service_instance.labels[0].key_name).to eq('to_delete')
-          expect(service_instance.labels[0].value).to eq('value')
-          expect(service_instance.labels[1].key_prefix).to eq('pre.fix')
-          expect(service_instance.labels[1].key_name).to eq('tail')
-          expect(service_instance.labels[1].value).to eq('fluffy')
+          expect_metadata(
+            service_instance,
+            annotations: [
+              { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+              { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+            ],
+            labels: [
+              { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
+            ]
+          )
         end
 
         describe 'the pollable job' do
@@ -1919,6 +1912,27 @@ RSpec.describe 'V3 service instances' do
         }
       },
     }
+  end
+
+  def expect_metadata(instance, annotations: [], labels: [])
+    a = instance.annotations.map do |e|
+      {
+        prefix: e.key_prefix,
+        key: e.key_name,
+        value: e.value,
+      }
+    end
+
+    l = instance.labels.map do |e|
+      {
+        prefix: e.key_prefix,
+        key: e.key_name,
+        value: e.value,
+      }
+    end
+
+    expect(a).to match_array(annotations)
+    expect(l).to match_array(labels)
   end
 
   describe 'unrefactored' do
