@@ -121,8 +121,13 @@ module VCAP::CloudController
             interpolate_service_bindings: bool
           },
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
+          },
+
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
           },
 
           skip_cert_verify: bool,

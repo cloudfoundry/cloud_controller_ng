@@ -217,7 +217,7 @@ module VCAP::CloudController
             subject_name: String
           },
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
             internal_url: String,
           },

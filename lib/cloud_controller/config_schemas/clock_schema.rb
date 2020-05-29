@@ -117,8 +117,13 @@ module VCAP::CloudController
           optional(:uaa_client_secret) => String,
           optional(:uaa_client_scope) => String,
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
+          },
+
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
           },
 
           skip_cert_verify: bool,
