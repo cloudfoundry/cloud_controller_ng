@@ -1746,6 +1746,37 @@ RSpec.describe 'V3 service instances' do
             )
           end
         end
+
+        context 'service plan is relates to a different service offering' do
+          let!(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              tags: %w(foo bar),
+              space: space
+            )
+          end
+          let(:guid) { service_instance.guid }
+          let(:plan) { VCAP::CloudController::ServicePlan.make }
+          let(:request_body) do
+            {
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'should fail' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(400)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => include('service plan relates to a different service offering') })
+            )
+          end
+        end
       end
     end
 

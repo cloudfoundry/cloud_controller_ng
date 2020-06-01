@@ -216,6 +216,7 @@ class ServiceInstancesV3Controller < ApplicationController
     if message.service_plan_guid
       service_plan = ServicePlan.first(guid: message.service_plan_guid)
       unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+      invalid_service_plan_relation! unless service_plan.service == service_instance.service
     end
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
@@ -319,5 +320,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def broker_unavailable!
     unprocessable!('The service instance cannot be created because there is an operation in progress for the service broker')
+  end
+
+  def invalid_service_plan_relation!
+    raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', 'service plan relates to a different service offering')
   end
 end
