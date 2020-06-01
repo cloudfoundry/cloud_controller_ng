@@ -390,6 +390,20 @@ RSpec.describe 'Droplets' do
           organization_guid: space.organization.guid
         })
       end
+
+      context 'when the blob cannot be found' do
+        let(:fake_blobstore) { instance_double(VCAP::CloudController::BlobDispatcher) }
+
+        before do
+          allow_any_instance_of(VCAP::CloudController::BlobDispatcher).to receive(:send_or_redirect).and_raise(CloudController::Errors::BlobNotFound)
+        end
+
+        it 'returns 502 for the blob' do
+          get "/v3/droplets/#{guid}/download", nil, developer_headers
+          expect(last_response).to have_status_code(502)
+          expect(last_response.body).to include('Failed to perform operation due to blobstore unavailability.')
+        end
+      end
     end
 
     context 'when the droplet cannot be found' do
