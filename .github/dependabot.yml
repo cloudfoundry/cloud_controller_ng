@@ -12,7 +12,7 @@ updates:
     interval: daily
     time: '11:00'
   open-pull-requests-limit: 10
-- package-ecosystem: javascript
+- package-ecosystem: npm
   directory: "/docs/v3"
   schedule:
     interval: daily
