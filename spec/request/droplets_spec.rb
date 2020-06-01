@@ -428,7 +428,7 @@ RSpec.describe 'Droplets' do
       end
 
       it 'returns a 422 with a helpful error message' do
-        get "/v3/droplets/#{guid}/download", nil, developer_headers
+        get "/v3/droplets/#{guid}/download", nil, admin_headers
         expect(last_response.status).to eq(422)
         expect(last_response.body).to include("Cannot download droplets with 'docker' lifecycle.")
       end
