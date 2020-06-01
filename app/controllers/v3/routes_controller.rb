@@ -72,7 +72,7 @@ class RoutesController < ApplicationController
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
-  rescue RoutingApi::UaaUnavailable
+  rescue RoutingApi::UaaUnavailable, UaaUnavailable
     service_unavailable!('Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.')
   rescue RoutingApi::RoutingApiUnavailable
     service_unavailable!('The Routing API is currently unavailable. Please try again later.')
