@@ -21,7 +21,7 @@
   "devDependencies": {
     "check-pages": "^0.10.0",
     "cheerio": "^1.0.0-rc.3",
-    "express": "^4.16.4",
+    "express": "^4.17.1",
     "glob": "^7.1.3",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1"
