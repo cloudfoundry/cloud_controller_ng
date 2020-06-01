@@ -5,4 +5,16 @@ updates:
   schedule:
     interval: daily
     time: '11:00'
+  open-pull-requests-limit: 100
+- package-ecosystem: bundler
+  directory: "/docs/v3"
+  schedule:
+    interval: daily
+    time: '11:00'
+  open-pull-requests-limit: 10
+- package-ecosystem: javascript
+  directory: "/docs/v3"
+  schedule:
+    interval: daily
+    time: '11:00'
   open-pull-requests-limit: 10
