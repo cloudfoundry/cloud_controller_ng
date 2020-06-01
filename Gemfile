@@ -39,7 +39,7 @@ gem 'steno'
 gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
 gem 'unf'
-gem 'vmstat', '~> 2.0'
+gem 'vmstat', '~> 2.3'
 gem 'yajl-ruby'
 
 # Rails Components
