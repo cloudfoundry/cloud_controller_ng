@@ -293,6 +293,7 @@ Rails.application.routes.draw do
 
   # usage events
   get '/usage_events/:guid', to: 'usage_events#show'
+  get '/usage_events', to: 'usage_events#index'
 
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
