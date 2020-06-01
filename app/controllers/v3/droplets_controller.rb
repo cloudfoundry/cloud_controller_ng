@@ -139,7 +139,11 @@ class DropletsController < ApplicationController
 
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
-    unless droplet.state == DropletModel::STAGED_STATE
+    unless droplet.buildpack?
+      unprocessable!("Cannot download droplets with 'docker' lifecycle.")
+    end
+
+    unless droplet.staged?
       unprocessable!('Only staged droplets can be downloaded.')
     end
 
@@ -149,7 +153,8 @@ class DropletsController < ApplicationController
       droplet.app.name,
       droplet.space.guid,
       droplet.space.organization.guid,
-      )
+    )
+
     send_droplet_blob(droplet)
   end
 

@@ -19,7 +19,16 @@ HTTP/1.1 302 FOUND
 Content-Type: application/json
 ```
 
-Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet. When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+Download a gzip compressed tarball file containing a Cloud Foundry compatible
+droplet. When using a remote blobstore, such as AWS, the response is a redirect
+to the actual location of the bits. If the client is automatically following
+redirects, then the OAuth token that was used to communicate with Cloud
+Controller will be relayed on the new redirect request. Some blobstores may
+reject the request in that case. Clients may need to follow the redirect
+without including the OAuth token.
+
+Only droplets that are in the `STAGED` state and have lifecycle type
+`buildpack` can be downloaded.
 
 #### Definition
 `POST /v3/droplets/:guid/download`

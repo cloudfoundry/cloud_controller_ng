@@ -421,6 +421,18 @@ RSpec.describe 'Droplets' do
         expect(last_response.body).to include('Only staged droplets can be downloaded.')
       end
     end
+
+    context "when the droplet has type 'docker'" do
+      let!(:droplet_model) do
+        VCAP::CloudController::DropletModel.make(:docker)
+      end
+
+      it 'returns a 422 with a helpful error message' do
+        get "/v3/droplets/#{guid}/download", nil, developer_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response.body).to include("Cannot download droplets with 'docker' lifecycle.")
+      end
+    end
   end
 
   describe 'GET /v3/droplets' do
