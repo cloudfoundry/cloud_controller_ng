@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
           name: usage_event.parent_app_name,
         },
         process: {
-          guid: usage_event.app_guid,
+          guid: usage_event.app_guid == '' ? nil : usage_event.app_guid,
           type: usage_event.process_type,
         },
         space: {

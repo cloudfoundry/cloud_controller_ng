@@ -35,6 +35,25 @@ RSpec.describe VCAP::CloudController::Presenters::V3::UsageEventPresenter do
         expect(result[:data][:instance_count][:current]).to eq usage_event.instance_count
         expect(result[:data][:instance_count][:previous]).to eq nil
       end
+
+      context 'when the usage event is for a task' do
+        let(:app_usage_event) do
+          VCAP::CloudController::AppUsageEvent.make(
+            app_guid: '',
+            process_type: nil,
+            task_guid: 'task-guid',
+            task_name: 'some-task',
+          )
+        end
+
+        it 'it displays null for the process.guid' do
+          expect(result[:guid]).to eq usage_event.guid
+          expect(result[:data][:process][:guid]).to eq nil
+          expect(result[:data][:process][:type]).to eq nil
+          expect(result[:data][:task][:guid]).to eq 'task-guid'
+          expect(result[:data][:task][:name]).to eq 'some-task'
+        end
+      end
     end
 
     context "when it's a service usage event" do
