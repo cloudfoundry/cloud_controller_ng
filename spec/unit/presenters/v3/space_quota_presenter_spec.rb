@@ -48,7 +48,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:routes][:total_reserved_ports]).to eq(space_quota.total_reserved_route_ports)
 
         expect(result[:relationships][:organization][:data][:guid]).to eq(org.guid)
-        expect(result[:relationships][:spaces][:data]).to eq([
+        expect(result[:relationships][:spaces][:data]).to match_array([
           { guid: space_1.guid },
           { guid: space_2.guid }
         ])
