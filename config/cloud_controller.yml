@@ -90,6 +90,8 @@ logging:
   level: debug2
   syslog: vcap.example
   anonymize_ips: false
+  format:
+    timestamp: 'rfc3339'
 
 telemetry_log_path: spec/artifacts/cloud_controller_telemetry.log
 

@@ -1,8 +1,11 @@
 require 'spec_helper'
+require 'steno/codec_rfc3339'
 
 module VCAP::CloudController
   RSpec.describe StenoConfigurer do
-    let(:config_hash) { { level: 'debug2' } }
+    let(:config_hash) do
+      { level: 'debug2' }
+    end
     subject(:configurer) { StenoConfigurer.new(config_hash) }
 
     before do
@@ -36,14 +39,58 @@ module VCAP::CloudController
 
       it 'yields the properly configured Steno config hash to a block if provided' do
         block_called = false
-
         configurer.configure do |steno_config_hash|
           block_called = true
           expect(steno_config_hash.fetch(:context)).to be_a Steno::Context::ThreadLocal
           expect(steno_config_hash.fetch(:default_log_level)).to eq :debug2
+          expect(steno_config_hash.fetch(:codec)).to be_a Steno::Codec::JsonRFC3339
         end
 
         expect(block_called).to be true
+      end
+
+      context 'timestamp format' do
+        context 'not set' do
+          let(:config_hash) { {} }
+
+          it 'sets the codec to rfc3339' do
+            configurer.configure do |steno_config_hash|
+              expect(steno_config_hash.fetch(:codec)).to be_a Steno::Codec::JsonRFC3339
+            end
+          end
+        end
+
+        context 'set to "rfc3339"' do
+          let(:config_hash) do
+            {
+              format: {
+                timestamp: 'rfc3339'
+              }
+            }
+          end
+
+          it 'sets the codec to rfc3339' do
+            configurer.configure do |steno_config_hash|
+              expect(steno_config_hash.fetch(:codec)).to be_a Steno::Codec::JsonRFC3339
+            end
+          end
+        end
+
+        context 'set to "deprecated"' do
+          let(:config_hash) do
+            {
+              format: {
+                timestamp: 'deprecated'
+              }
+            }
+          end
+
+          it 'does not set the codec' do
+            configurer.configure do |steno_config_hash|
+              expect(steno_config_hash).not_to include(:codec)
+            end
+          end
+        end
       end
     end
   end

@@ -59,6 +59,9 @@ module VCAP::CloudController
             file: String, # Log file to use
             syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
             optional(:anonymize_ips) => bool,
+            optional(:format) => {
+              optional(:timestamp) => String,
+            },
           },
 
           telemetry_log_path: String, # path to log telemetry to, /dev/null to disable
