@@ -160,13 +160,39 @@ RSpec.describe(OPI::TaskClient) do
   end
 
   describe 'can cancel a task' do
-    it 'should return nothing' do
-      response = client.cancel_task(nil)
-      expect(response).to be_nil
+    before(:each) do
+      stub_request(:delete, "#{opi_url}/tasks/the-task-guid").to_return(status: 200, body: '{}')
+    end
+    it 'requests task deletion from opi ' do
+      client.cancel_task('the-task-guid')
+
+      expect(WebMock).to have_requested(:delete, "#{opi_url}/tasks/the-task-guid")
     end
 
-    it 'should not send any request to opi' do
-      expect(a_request(:any, opi_url)).not_to have_been_made
+    context 'when the task does not exist' do
+      before(:each) do
+        stub_request(:delete, "#{opi_url}/tasks/the-task-guid").to_return(status: 404, body: '{}')
+      end
+
+      it 'ignores the error' do
+        expect {
+          client.cancel_task('the-task-guid')
+        }.not_to raise_error
+      end
+    end
+
+    context 'when the task deletion fails' do
+      before(:each) do
+        stub_request(:delete, "#{opi_url}/tasks/the-task-guid").to_return(status: 500, body: '{"message": "i-failed"}')
+      end
+
+      it 'raises an ApiError' do
+        expect {
+          client.cancel_task('the-task-guid')
+        }.to raise_error(CloudController::Errors::ApiError) do |e|
+          expect(e.name).to eq('TaskError')
+        end
+      end
     end
   end
 

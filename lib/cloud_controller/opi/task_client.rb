@@ -29,7 +29,17 @@ module OPI
       []
     end
 
-    def cancel_task(_); end
+    def cancel_task(guid)
+      response = client.delete("/tasks/#{guid}")
+      if response.status_code > 400
+        logger.info('tasks.delete.response_code', task_guid: guid, status_code: response.status_code)
+
+        if response.status_code != 404
+          response_json = OPI.recursive_ostruct(JSON.parse(response.body))
+          raise CloudController::Errors::ApiError.new_from_details('TaskError', response_json.message)
+        end
+      end
+    end
 
     def bump_freshness; end
 
