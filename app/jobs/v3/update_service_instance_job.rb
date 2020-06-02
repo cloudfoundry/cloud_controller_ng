@@ -3,11 +3,14 @@
 module VCAP::CloudController
   module V3
     class UpdateServiceInstanceJob < VCAP::CloudController::Jobs::CCJob
+      attr_reader :warnings
+
       def initialize(service_instance_guid, message:, user_audit_info:)
         super()
         @service_instance_guid = service_instance_guid
         @message = message
         @user_audit_info = user_audit_info
+        @warnings = []
       end
 
       def perform
@@ -19,33 +22,41 @@ module VCAP::CloudController
         operation_in_progress = service_instance.last_operation.type
         aborted! if operation_in_progress != 'update'
 
-        client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
-        broker_response, err = client.update(
-          service_instance,
-          service_plan,
-          accepts_incomplete: false,
-          arbitrary_parameters: message.parameters || {},
-          previous_values: previous_values,
-          name: message.requested?(:name) ? message.name : service_instance.name,
-        )
+        begin
+          compatibility_checks
 
-        if err
-          service_instance.save_with_new_operation({}, broker_response[:last_operation])
+          client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+          broker_response, err = client.update(
+            service_instance,
+            service_plan,
+            accepts_incomplete: false,
+            arbitrary_parameters: message.parameters || {},
+            previous_values: previous_values,
+            name: message.requested?(:name) ? message.name : service_instance.name,
+          )
+          raise err if err
+
+          updates = { service_plan: service_plan }
+          updates['name'] = message.name if message.requested?(:name)
+          updates['tags'] = message.tags if message.requested?(:tags)
+          updates['dashboard_url'] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+
+          ServiceInstance.db.transaction do
+            service_instance.save_with_new_operation(updates, broker_response[:last_operation])
+            MetadataUpdate.update(service_instance, message)
+            record_event(service_instance, message.audit_hash)
+          end
+
+          logger.info("Service instance update complete #{service_instance_guid}")
+        rescue => err
+          logger.info("Service instance update failed: #{err.message}")
+          service_instance.save_with_new_operation({}, {
+            state: 'failed',
+            type: 'update',
+            description: err.message
+          })
           raise err
         end
-
-        updates = { service_plan: service_plan }
-        updates['name'] = message.name if message.requested?(:name)
-        updates['tags'] = message.tags if message.requested?(:tags)
-        updates['dashboard_url'] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
-
-        ServiceInstance.db.transaction do
-          service_instance.save_with_new_operation(updates, broker_response[:last_operation])
-          MetadataUpdate.update(service_instance, message)
-          record_event(service_instance, message.audit_hash)
-        end
-
-        logger.info("Service instance update complete #{service_instance_guid}")
       end
 
       def job_name_in_configuration
@@ -99,6 +110,24 @@ module VCAP::CloudController
       def record_event(service_instance, request_attrs)
         Repositories::ServiceEventRepository.new(@user_audit_info).
           record_service_instance_event(:update, service_instance, request_attrs)
+      end
+
+      def compatibility_checks
+        if service_instance.service_plan.service.volume_service? && volume_services_disabled?
+          @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING })
+        end
+
+        if service_instance.service_plan.service.route_service? && route_services_disabled?
+          @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
+        end
+      end
+
+      def volume_services_disabled?
+        !VCAP::CloudController::Config.config.get(:volume_services_enabled)
+      end
+
+      def route_services_disabled?
+        !VCAP::CloudController::Config.config.get(:route_services_enabled)
       end
 
       def service_plan_gone!

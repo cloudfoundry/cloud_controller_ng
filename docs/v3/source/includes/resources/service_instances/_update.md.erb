@@ -9,19 +9,50 @@ curl "https://api.example.org/v3/service_instances/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-Type: application/json" \
-  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'
-
+  -d '{
+    "name": "my_service_instance",
+    "parameters": {
+      "foo": "bar",
+      "baz": "qux"
+    },
+    "tags": ["foo", "bar", "baz"],
+    "relationships": {
+      "service_plan": {
+        "data": {
+          "guid": "f2b6ba9c-a4d2-11ea-8ae6-48bf6bec2d78"
+        }
+      }
+    },
+    "metadata": {
+      "annotations": {
+        "note": "detailed information"
+      },
+      "labels": {
+        "key": "value"
+      }
+    }
+  }'
 ```
 
 ```
-Example Response for Managed Service Instance
+Example Synchronous Response for Managed Service Instance:
 ```
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :single_service_instance, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+<%= yield_content :single_managed_service_instance, operation: "update", labels: { "key" => "value" }, annotations: {"note" => "detailed information"} %>
+```
+
+```
+Example Asynchronous Response for Managed Service Instance:
+```
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
 ```
 
 ```
@@ -29,7 +60,7 @@ Content-Type: application/json
 ```
 
 ```shell
-curl "https://api.example.org/v3/service_instances/[guid]"" \
+curl "https://api.example.org/v3/service_instances/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
@@ -71,8 +102,22 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
+**name** (*experimental*)| _string_ | Name of the service instance.
+**tags** (*experimental*)| _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
+**parameters** (*experimental*)| _object_ | A JSON object that is passed to the service broker.
+**relationships.service_plan** (*experimental*)| [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance.
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service_instance.
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service_instance.
+
+Some updates can be performed entirely within the Cloud Controller in which case the response is synchronous.
+Some updates require communication with the service broker, in which case the response will be asynchronous.
+The response will be asynchronous if:
+
+* `parameters` are specified
+* `service_plan` is specified
+* `name` is specified and the service offering has the `allow_context_updates` feature enabled
+
+Otherwise the response will be synchronous.
 
 #### Optional parameters for user-provided service instances
 
