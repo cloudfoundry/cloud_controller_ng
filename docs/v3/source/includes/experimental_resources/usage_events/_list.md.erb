@@ -1,0 +1,33 @@
+### List usage events
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/usage_events" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_usage_events %>
+```
+
+Retrieve all usage events the user has access to.
+
+#### Definition
+
+`GET /v3/usage_events/`
+
+#### Permitted Roles
+ |
+--- | ---
+All Roles |

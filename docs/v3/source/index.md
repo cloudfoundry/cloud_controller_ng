@@ -355,6 +355,7 @@ includes:
   - experimental_resources/usage_events/header
   - experimental_resources/usage_events/object
   - experimental_resources/usage_events/get
+  - experimental_resources/usage_events/list
   - upgrade_guide/upgrade_guide
 
 ---
