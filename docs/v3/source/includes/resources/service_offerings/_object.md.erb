@@ -31,7 +31,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **id** | _string_ | The identifier that the service broker provided for this service offering.
 **metadata** | _object_ | Additional information provided by the service broker as specified by [OSBAPI](https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#service-metadata-fields).
-**features.plan_updateable** | _boolean_ | Whether the service offering supports upgrade/downgrade for service plans by default
+**features.plan_updateable** | _boolean_ | Whether the service offering supports upgrade/downgrade for service plans by default. Service plans can override this field.
 **features.bindable** | _boolean_ | Specifies whether service Instances of the service can be bound to applications.
 **features.instances_retrievable** | _boolean_ | Specifies whether the Fetching a service instance endpoint is supported for all service plans.
 **features.bindings_retrievable** | _boolean_ | Specifies whether the Fetching a service binding endpoint is supported for all service plans.
