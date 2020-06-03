@@ -1410,7 +1410,12 @@ RSpec.describe 'V3 service instances' do
 
       describe 'updates that require broker communication' do
         let(:service_offering) { VCAP::CloudController::Service.make }
-        let(:original_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:original_service_plan) do
+          VCAP::CloudController::ServicePlan.make(
+            service: service_offering,
+            plan_updateable: true,
+          )
+        end
         let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(

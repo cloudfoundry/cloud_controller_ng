@@ -6,10 +6,7 @@ module VCAP::CloudController
     class InvalidServiceInstance < StandardError
     end
 
-    class NameTakenForServiceInstance < CloudController::Errors::ApiError
-    end
-
-    class SharedServiceInstanceCannotBeRenamed < CloudController::Errors::ApiError
+    class UnprocessableUpdate < CloudController::Errors::ApiError
     end
 
     def initialize(service_event_repository)
@@ -19,6 +16,7 @@ module VCAP::CloudController
     def update(service_instance, message)
       raise_if_name_already_taken!(service_instance, message)
       raise_if_renaming_shared_service_instance!(service_instance, message)
+      raise_if_invalid_plan_change!(service_instance, message)
 
       begin
         lock = UpdaterLock.new(service_instance)
@@ -91,14 +89,21 @@ module VCAP::CloudController
       return unless service_instance.name != message.name
       return unless ServiceInstance.first(name: message.name, space: service_instance.space)
 
-      raise NameTakenForServiceInstance.new_from_details('ServiceInstanceNameTaken', message.name)
+      raise UnprocessableUpdate.new_from_details('ServiceInstanceNameTaken', message.name)
     end
 
     def raise_if_renaming_shared_service_instance!(service_instance, message)
       return unless message.requested?(:name)
       return unless service_instance.shared?
 
-      raise SharedServiceInstanceCannotBeRenamed.new_from_details('SharedServiceInstanceCannotBeRenamed')
+      raise UnprocessableUpdate.new_from_details('SharedServiceInstanceCannotBeRenamed')
+    end
+
+    def raise_if_invalid_plan_change!(service_instance, message)
+      return unless message.service_plan_guid
+      return if service_instance.service_plan.plan_updateable?
+
+      raise UnprocessableUpdate.new_from_details('ServicePlanNotUpdateable')
     end
   end
 end

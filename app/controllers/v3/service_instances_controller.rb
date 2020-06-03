@@ -227,7 +227,7 @@ class ServiceInstancesV3Controller < ApplicationController
     else
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
     end
-  rescue ServiceInstanceUpdateManaged::NameTakenForServiceInstance => api_err
+  rescue ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
     unprocessable!(api_err.message)
   end
 

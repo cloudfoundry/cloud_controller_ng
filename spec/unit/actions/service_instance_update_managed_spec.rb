@@ -13,8 +13,10 @@ module VCAP::CloudController
         dbl
       end
       let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
+      let(:service_plan) { ServicePlan.make(plan_updateable: true) }
       let!(:service_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
+          service_plan: service_plan,
           name: 'foo',
           tags: %w(accounting mongodb)
         )
@@ -69,6 +71,31 @@ module VCAP::CloudController
             action.update(service_instance, message)
           }.to raise_error CloudController::Errors::ApiError do |err|
             expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
+          end
+        end
+      end
+
+      context 'when changing the plan and `plan_updateable`=false' do
+        let(:service_plan) { ServicePlan.make(plan_updateable: false) }
+        let(:new_service_plan) { ServicePlan.make(plan_updateable: true) }
+
+        let(:body) do
+          {
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: new_service_plan.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'raises' do
+          expect {
+            action.update(service_instance, message)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('ServicePlanNotUpdateable')
           end
         end
       end
