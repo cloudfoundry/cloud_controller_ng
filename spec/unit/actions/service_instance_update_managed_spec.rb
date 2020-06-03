@@ -58,6 +58,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'when changing the name of a shared service instance' do
+        let(:shared_space) { Space.make }
+        let(:body) { { name: 'funky-new-name' } }
+
+        it 'raises' do
+          service_instance.add_shared_space(shared_space)
+
+          expect {
+            action.update(service_instance, message)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
+          end
+        end
+      end
+
       context 'when the update does not require communication with the broker' do
         let(:body) do
           {

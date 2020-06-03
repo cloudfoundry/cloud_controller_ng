@@ -9,12 +9,16 @@ module VCAP::CloudController
     class NameTakenForServiceInstance < CloudController::Errors::ApiError
     end
 
+    class SharedServiceInstanceCannotBeRenamed < CloudController::Errors::ApiError
+    end
+
     def initialize(service_event_repository)
       @service_event_repository = service_event_repository
     end
 
     def update(service_instance, message)
       raise_if_name_already_taken!(service_instance, message)
+      raise_if_renaming_shared_service_instance!(service_instance, message)
 
       begin
         lock = UpdaterLock.new(service_instance)
@@ -88,6 +92,13 @@ module VCAP::CloudController
       return unless ServiceInstance.first(name: message.name, space: service_instance.space)
 
       raise NameTakenForServiceInstance.new_from_details('ServiceInstanceNameTaken', message.name)
+    end
+
+    def raise_if_renaming_shared_service_instance!(service_instance, message)
+      return unless message.requested?(:name)
+      return unless service_instance.shared?
+
+      raise SharedServiceInstanceCannotBeRenamed.new_from_details('SharedServiceInstanceCannotBeRenamed')
     end
   end
 end
