@@ -1,5 +1,6 @@
 require 'presenters/v3/usage_event_presenter'
 require 'messages/usage_events_list_message'
+require 'fetchers/usage_event_list_fetcher'
 
 class UsageEventsController < ApplicationController
   def show
@@ -12,11 +13,12 @@ class UsageEventsController < ApplicationController
 
   def index
     message = UsageEventsListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
-    # create an empty dataset
     usage_events = UsageEvent.where(guid: [])
+
     if permission_queryer.can_read_globally?
-      usage_events = UsageEvent.dataset
+      usage_events = UsageEventListFetcher.fetch_all(message, UsageEvent.dataset)
     end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
