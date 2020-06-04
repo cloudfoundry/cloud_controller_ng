@@ -329,7 +329,7 @@ RSpec.describe 'Roles Request' do
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
-            "User with username 'uuu' exists in the following origins: uaa, ldap, okta. Specify an origin to disambiguate."
+            "User with username 'uuu' exists in the following origins: ldap, okta, uaa. Specify an origin to disambiguate."
           )
         end
       end

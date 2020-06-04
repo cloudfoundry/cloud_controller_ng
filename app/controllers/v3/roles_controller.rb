@@ -203,7 +203,7 @@ class RolesController < ApplicationController
 
     origin = given_origin
     if given_origin.nil?
-      origins = uaa_client.origins_for_username(username)
+      origins = uaa_client.origins_for_username(username).sort
 
       if origins.length > 1
         unprocessable!(
