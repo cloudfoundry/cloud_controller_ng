@@ -1112,8 +1112,6 @@ module VCAP::CloudController
             before do
               stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
 
-              instance_url = remove_basic_auth(deprovision_url(service_instance_2))
-
               @expected_description = "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 
 \tService instance #{service_instance_2.name}: The service broker returned an invalid response. Status Code: 500 Internal Server Error, Body: {}"

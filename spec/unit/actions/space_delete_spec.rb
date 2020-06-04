@@ -131,10 +131,6 @@ module VCAP::CloudController
               expect(results.first).to be_instance_of(CloudController::Errors::ApiError)
               expect(results.second).to be_instance_of(CloudController::Errors::ApiError)
 
-              instance_1_url = remove_basic_auth(deprovision_url(service_instance_1))
-              instance_2_url = remove_basic_auth(deprovision_url(service_instance_2))
-              instance_4_url = remove_basic_auth(deprovision_url(service_instance_4))
-
               results_messages = results.map(&:message).join(' ')
               expect(results_messages).
                 to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
