@@ -28,6 +28,14 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
+    def updates
+      updates = {}
+      updates[:name] = name if requested?(:name)
+      updates[:tags] = tags if requested?(:tags)
+      updates[:service_plan_guid] = service_plan_guid if service_plan_guid
+      updates
+    end
+
     delegate :service_plan_guid, to: :relationships_message
 
     private

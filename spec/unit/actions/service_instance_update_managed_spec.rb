@@ -13,12 +13,16 @@ module VCAP::CloudController
         dbl
       end
       let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
-      let(:service_plan) { ServicePlan.make(plan_updateable: true) }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:service_offering) { Service.make(plan_updateable: true) }
+      let(:service_plan) { ServicePlan.make(service: service_offering) }
       let!(:service_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: service_plan,
           name: 'foo',
-          tags: %w(accounting mongodb)
+          tags: %w(accounting mongodb),
+          space: space,
         )
         si.label_ids = [
           VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
@@ -29,75 +33,6 @@ module VCAP::CloudController
           VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
         ]
         si
-      end
-
-      context 'when the new name is already taken' do
-        let(:instance_in_same_space) { ServiceInstance.make(space: service_instance.space) }
-        let(:body) { { name: instance_in_same_space.name } }
-
-        it 'raises' do
-          expect {
-            action.update(service_instance, message)
-          }.to raise_error CloudController::Errors::ApiError do |err|
-            expect(err.name).to eq('ServiceInstanceNameTaken')
-          end
-        end
-      end
-
-      context 'when an operation is in progress' do
-        let(:body) { {} }
-
-        before do
-          service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
-        end
-
-        it 'raises' do
-          expect {
-            action.update(service_instance, message)
-          }.to raise_error CloudController::Errors::ApiError do |err|
-            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
-          end
-        end
-      end
-
-      context 'when changing the name of a shared service instance' do
-        let(:shared_space) { Space.make }
-        let(:body) { { name: 'funky-new-name' } }
-
-        it 'raises' do
-          service_instance.add_shared_space(shared_space)
-
-          expect {
-            action.update(service_instance, message)
-          }.to raise_error CloudController::Errors::ApiError do |err|
-            expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
-          end
-        end
-      end
-
-      context 'when changing the plan and `plan_updateable`=false' do
-        let(:service_plan) { ServicePlan.make(plan_updateable: false) }
-        let(:new_service_plan) { ServicePlan.make(plan_updateable: true) }
-
-        let(:body) do
-          {
-            relationships: {
-              service_plan: {
-                data: {
-                  guid: new_service_plan.guid
-                }
-              }
-            }
-          }
-        end
-
-        it 'raises' do
-          expect {
-            action.update(service_instance, message)
-          }.to raise_error CloudController::Errors::ApiError do |err|
-            expect(err.name).to eq('ServicePlanNotUpdateable')
-          end
-        end
       end
 
       context 'when the update does not require communication with the broker' do
@@ -187,7 +122,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the update requires the broker' do
+      context 'when the update requires communication with the broker' do
         let(:new_plan) { ServicePlan.make }
         let(:body) do
           {
@@ -344,6 +279,140 @@ module VCAP::CloudController
               instance_of(ManagedServiceInstance),
               body.with_indifferent_access
             )
+        end
+      end
+
+      describe 'invalid updates' do
+        context 'when the new name is already taken' do
+          let(:instance_in_same_space) { ServiceInstance.make(space: service_instance.space) }
+          let(:body) { { name: instance_in_same_space.name } }
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceNameTaken')
+            end
+          end
+        end
+
+        context 'when an operation is in progress' do
+          let(:body) { {} }
+
+          before do
+            service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+          end
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+            end
+          end
+        end
+
+        context 'when changing the name of a shared service instance' do
+          let(:shared_space) { Space.make }
+          let(:body) { { name: 'funky-new-name' } }
+
+          it 'raises' do
+            service_instance.add_shared_space(shared_space)
+
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
+            end
+          end
+        end
+
+        context 'when changing the plan and plan_updateable=false' do
+          let(:service_plan) { ServicePlan.make(service: service_offering, plan_updateable: false) }
+          let(:new_service_plan) { ServicePlan.make(service: service_offering) }
+
+          let(:body) do
+            {
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_service_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServicePlanNotUpdateable')
+            end
+          end
+        end
+
+        context 'when the space does not allow paid services' do
+          before do
+            quota = SpaceQuotaDefinition.make(
+              non_basic_services_allowed: false,
+              organization: org,
+            )
+            quota.add_space(space)
+          end
+
+          let(:service_plan) { ServicePlan.make(service: service_offering, free: true) }
+          let(:new_service_plan) { ServicePlan.make(service: service_offering, free: false) }
+
+          let(:body) do
+            {
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_service_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+            end
+          end
+        end
+
+        context 'when the org does not allow paid services' do
+          before do
+            quota = QuotaDefinition.make(non_basic_services_allowed: false)
+            quota.add_organization(org)
+          end
+
+          let(:service_plan) { ServicePlan.make(service: service_offering, free: true) }
+          let(:new_service_plan) { ServicePlan.make(service: service_offering, free: false) }
+
+          let(:body) do
+            {
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_service_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
+            end
+          end
         end
       end
     end

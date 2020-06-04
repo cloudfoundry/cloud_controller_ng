@@ -36,10 +36,10 @@ module VCAP::CloudController
           )
           raise err if err
 
-          updates = { service_plan: service_plan }
-          updates['name'] = message.name if message.requested?(:name)
-          updates['tags'] = message.tags if message.requested?(:tags)
-          updates['dashboard_url'] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+          updates = message.updates.tap do |u|
+            u[:service_plan_guid] = service_plan.guid
+            u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+          end
 
           ServiceInstance.db.transaction do
             service_instance.save_with_new_operation(updates, broker_response[:last_operation])

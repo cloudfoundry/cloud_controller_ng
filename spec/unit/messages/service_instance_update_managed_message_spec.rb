@@ -48,6 +48,16 @@ module VCAP::CloudController
       expect(message).to be_valid
     end
 
+    it 'can build an updates hash' do
+      expect(message.updates).to eq({
+        name: 'my-service-instance',
+        service_plan_guid: 'service-plan-guid',
+        tags: %w(foo bar baz),
+      })
+
+      expect(described_class.new({}).updates).to eq({})
+    end
+
     describe 'validations' do
       it 'is invalid when there are unknown keys' do
         body[:type] = 'user-provided'

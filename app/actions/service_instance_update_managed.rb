@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def update(service_instance, message)
-      raise_if_name_already_taken!(service_instance, message)
+      raise_if_invalid_update!(service_instance, message)
       raise_if_renaming_shared_service_instance!(service_instance, message)
       raise_if_invalid_plan_change!(service_instance, message)
 
@@ -52,12 +52,8 @@ module VCAP::CloudController
     def update_sync(service_instance, message)
       logger = Steno.logger('cc.action.service_instance_update')
 
-      updates = {}
-      updates[:name] = message.name if message.requested?(:name)
-      updates[:tags] = message.tags if message.requested?(:tags)
-
       service_instance.db.transaction do
-        service_instance.update(updates) if updates.any?
+        service_instance.update(message.updates) if message.updates.any?
         MetadataUpdate.update(service_instance, message)
         service_event_repository.record_service_instance_event(:update, service_instance, message.audit_hash)
       end
@@ -84,12 +80,24 @@ module VCAP::CloudController
       return pollable_job
     end
 
-    def raise_if_name_already_taken!(service_instance, message)
-      return unless message.requested?(:name)
-      return unless service_instance.name != message.name
-      return unless ServiceInstance.first(name: message.name, space: service_instance.space)
+    def raise_if_invalid_update!(service_instance, message)
+      return unless message.updates.any?
 
-      raise UnprocessableUpdate.new_from_details('ServiceInstanceNameTaken', message.name)
+      service_instance.set(message.updates)
+      return service_instance.reload if service_instance.valid?
+
+      service_instance_name_errors = service_instance.errors.on(:name).to_a
+      service_plan_errors = service_instance.errors.on(:service_plan).to_a
+
+      if service_instance_name_errors.include?(:unique)
+        raise UnprocessableUpdate.new_from_details('ServiceInstanceNameTaken', message.name)
+      elsif service_plan_errors.include?(:paid_services_not_allowed_by_space_quota)
+        raise UnprocessableUpdate.new_from_details('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+      elsif service_plan_errors.include?(:paid_services_not_allowed_by_quota)
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceServicePlanNotAllowed')
+      end
+
+      raise Sequel::ValidationFailed.new(service_instance)
     end
 
     def raise_if_renaming_shared_service_instance!(service_instance, message)
