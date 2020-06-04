@@ -27,7 +27,6 @@ module Steno
           'lineno'     => record.lineno,
           'method'     => record.method,
         }
-        puts h
 
         Yajl::Encoder.encode(h) + "\n"
       end
