@@ -1667,7 +1667,7 @@ RSpec.describe 'V3 service instances' do
           end
         end
 
-        context 'not active' do
+        context 'not available' do
           let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
           let(:service_plan_guid) { service_plan.guid }
 
@@ -1691,6 +1691,44 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+            )
+          end
+        end
+
+        context 'relates to a different service offering' do
+          let(:service_plan_guid) { VCAP::CloudController::ServicePlan.make.guid }
+
+          it 'fails saying the plan relates to a different service offering' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(400)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => include('service plan relates to a different service offering') })
+            )
+          end
+        end
+      end
+
+      describe 'name checks' do
+        context 'name is already used in this space' do
+          let(:guid) { service_instance.guid }
+          let!(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              tags: %w(foo bar),
+              space: space,
+            )
+          end
+
+          let!(:name) { 'test' }
+          let!(:other_si) { VCAP::CloudController::ServiceInstance.make(name: name, space: space) }
+          let(:request_body) { { name: name } }
+
+          it 'should fail' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => include("The service instance name is taken: #{name}") })
             )
           end
         end
@@ -1725,62 +1763,6 @@ RSpec.describe 'V3 service instances' do
           expect(parsed_response['errors']).to include(
             include({ 'detail' => include("Relationships Unknown field(s): 'space'") })
           )
-        end
-      end
-
-      describe 'error during update' do
-        context 'name is already used in this space' do
-          let(:guid) { service_instance.guid }
-          let!(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              tags: %w(foo bar),
-              space: space,
-            )
-          end
-
-          let!(:name) { 'test' }
-          let!(:other_si) { VCAP::CloudController::ServiceInstance.make(name: name, space: space) }
-          let(:request_body) { { name: name } }
-
-          it 'should fail' do
-            api_call.call(admin_headers)
-
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(
-              include({ 'detail' => include("The service instance name is taken: #{name}") })
-            )
-          end
-        end
-
-        context 'service plan is relates to a different service offering' do
-          let!(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              tags: %w(foo bar),
-              space: space
-            )
-          end
-          let(:guid) { service_instance.guid }
-          let(:plan) { VCAP::CloudController::ServicePlan.make }
-          let(:request_body) do
-            {
-              relationships: {
-                service_plan: {
-                  data: {
-                    guid: plan.guid
-                  }
-                }
-              }
-            }
-          end
-
-          it 'should fail' do
-            api_call.call(admin_headers)
-
-            expect(last_response).to have_status_code(400)
-            expect(parsed_response['errors']).to include(
-              include({ 'detail' => include('service plan relates to a different service offering') })
-            )
-          end
         end
       end
     end

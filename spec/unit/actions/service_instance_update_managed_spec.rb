@@ -282,7 +282,23 @@ module VCAP::CloudController
         end
       end
 
-      describe 'invalid updates' do
+      context 'when an operation is in progress' do
+        let(:body) { {} }
+
+        before do
+          service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'raises' do
+          expect {
+            action.update(service_instance, message)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+          end
+        end
+      end
+
+      describe 'invalid name updates' do
         context 'when the new name is already taken' do
           let(:instance_in_same_space) { ServiceInstance.make(space: service_instance.space) }
           let(:body) { { name: instance_in_same_space.name } }
@@ -292,22 +308,6 @@ module VCAP::CloudController
               action.update(service_instance, message)
             }.to raise_error CloudController::Errors::ApiError do |err|
               expect(err.name).to eq('ServiceInstanceNameTaken')
-            end
-          end
-        end
-
-        context 'when an operation is in progress' do
-          let(:body) { {} }
-
-          before do
-            service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
-          end
-
-          it 'raises' do
-            expect {
-              action.update(service_instance, message)
-            }.to raise_error CloudController::Errors::ApiError do |err|
-              expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
             end
           end
         end
@@ -326,22 +326,24 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      describe 'invalid plan updates' do
+        let(:body) do
+          {
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: new_service_plan.guid
+                }
+              }
+            }
+          }
+        end
 
         context 'when changing the plan and plan_updateable=false' do
           let(:service_plan) { ServicePlan.make(service: service_offering, plan_updateable: false) }
           let(:new_service_plan) { ServicePlan.make(service: service_offering) }
-
-          let(:body) do
-            {
-              relationships: {
-                service_plan: {
-                  data: {
-                    guid: new_service_plan.guid
-                  }
-                }
-              }
-            }
-          end
 
           it 'raises' do
             expect {
@@ -364,18 +366,6 @@ module VCAP::CloudController
           let(:service_plan) { ServicePlan.make(service: service_offering, free: true) }
           let(:new_service_plan) { ServicePlan.make(service: service_offering, free: false) }
 
-          let(:body) do
-            {
-              relationships: {
-                service_plan: {
-                  data: {
-                    guid: new_service_plan.guid
-                  }
-                }
-              }
-            }
-          end
-
           it 'raises' do
             expect {
               action.update(service_instance, message)
@@ -394,23 +384,31 @@ module VCAP::CloudController
           let(:service_plan) { ServicePlan.make(service: service_offering, free: true) }
           let(:new_service_plan) { ServicePlan.make(service: service_offering, free: false) }
 
-          let(:body) do
-            {
-              relationships: {
-                service_plan: {
-                  data: {
-                    guid: new_service_plan.guid
-                  }
-                }
-              }
-            }
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
+            end
+          end
+        end
+
+        context 'when changing to a non-bindable plan' do
+          let(:new_service_plan) { ServicePlan.make(service: service_offering, bindable: false) }
+
+          before do
+            ServiceBinding.make(
+              app: AppModel.make(space: space),
+              service_instance: service_instance
+            )
           end
 
           it 'raises' do
             expect {
               action.update(service_instance, message)
             }.to raise_error CloudController::Errors::ApiError do |err|
-              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
+              expect(err.name).to eq('ServicePlanInvalid')
+              expect(err.message).to eq('The service plan is invalid: cannot switch to non-bindable plan when service bindings exist')
             end
           end
         end

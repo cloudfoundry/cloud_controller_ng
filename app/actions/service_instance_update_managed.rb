@@ -108,10 +108,26 @@ module VCAP::CloudController
     end
 
     def raise_if_invalid_plan_change!(service_instance, message)
+      raise_if_plan_not_updateable!(service_instance, message)
+      raise_if_bind_inconsistency!(service_instance, message)
+    end
+
+    def raise_if_plan_not_updateable!(service_instance, message)
       return unless message.service_plan_guid
       return if service_instance.service_plan.plan_updateable?
 
       raise UnprocessableUpdate.new_from_details('ServicePlanNotUpdateable')
+    end
+
+    def raise_if_bind_inconsistency!(service_instance, message)
+      return unless message.service_plan_guid
+      return unless service_instance.service_bindings.any?
+      return if ServicePlan.first(guid: message.service_plan_guid).bindable?
+
+      raise UnprocessableUpdate.new_from_details(
+        'ServicePlanInvalid',
+        'cannot switch to non-bindable plan when service bindings exist'
+      )
     end
   end
 end
