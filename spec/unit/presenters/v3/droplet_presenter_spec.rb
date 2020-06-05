@@ -215,8 +215,11 @@ module VCAP::CloudController::Presenters::V3
           droplet.save
         end
 
-        it 'presents the docker image' do
+        it 'presents the docker image and lifecycle data' do
           expect(result[:image]).to eq('test-image')
+          expect(result[:lifecycle][:type]).to eq('docker')
+          expect(result[:lifecycle][:data]).to eq({})
+          expect(result[:links][:download]).to be_nil
         end
 
         context 'when show_secrets is false' do
