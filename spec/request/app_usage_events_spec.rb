@@ -113,42 +113,40 @@ RSpec.describe 'App Usage Events' do
       'guid' => app_usage_event.guid,
       'created_at' => iso8601,
       'updated_at' => iso8601,
-      'data' => {
-        'state' => {
-          'current' => app_usage_event.state,
-          'previous' => nil
-        },
-        'app' => {
-          'guid' => app_usage_event.parent_app_guid,
-          'name' => app_usage_event.parent_app_name
-        },
-        'process' => {
-          'guid' => app_usage_event.app_guid,
-          'type' => app_usage_event.process_type,
-        },
-        'space' => {
-          'guid' => app_usage_event.space_guid,
-          'name' => app_usage_event.space_name
-        },
-        'organization' => {
-          'guid' => app_usage_event.org_guid
-        },
-        'buildpack' => {
-          'guid' => app_usage_event.buildpack_guid,
-          'name' => app_usage_event.buildpack_name
-        },
-        'task' => {
-          'guid' => nil,
-          'name' => nil
-        },
-        'memory_in_mb_per_instance' => {
-          'current' => app_usage_event.memory_in_mb_per_instance,
-          'previous' => nil
-        },
-        'instance_count' => {
-          'current' => app_usage_event.instance_count,
-          'previous' => nil
-        }
+      'state' => {
+        'current' => app_usage_event.state,
+        'previous' => nil
+      },
+      'app' => {
+        'guid' => app_usage_event.parent_app_guid,
+        'name' => app_usage_event.parent_app_name
+      },
+      'process' => {
+        'guid' => app_usage_event.app_guid,
+        'type' => app_usage_event.process_type,
+      },
+      'space' => {
+        'guid' => app_usage_event.space_guid,
+        'name' => app_usage_event.space_name
+      },
+      'organization' => {
+        'guid' => app_usage_event.org_guid
+      },
+      'buildpack' => {
+        'guid' => app_usage_event.buildpack_guid,
+        'name' => app_usage_event.buildpack_name
+      },
+      'task' => {
+        'guid' => nil,
+        'name' => nil
+      },
+      'memory_in_mb_per_instance' => {
+        'current' => app_usage_event.memory_in_mb_per_instance,
+        'previous' => nil
+      },
+      'instance_count' => {
+        'current' => app_usage_event.instance_count,
+        'previous' => nil
       }
     }
   end

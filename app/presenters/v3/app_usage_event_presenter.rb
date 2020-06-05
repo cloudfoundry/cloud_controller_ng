@@ -7,18 +7,6 @@ module VCAP::CloudController::Presenters::V3
         guid: usage_event.guid,
         created_at: usage_event.created_at,
         updated_at: usage_event.created_at,
-        data: build_data
-      }
-    end
-
-    private
-
-    def usage_event
-      @resource
-    end
-
-    def build_data
-      {
         state: {
           current: usage_event.state,
           previous: usage_event.previous_state,
@@ -55,6 +43,12 @@ module VCAP::CloudController::Presenters::V3
           previous: usage_event.previous_instance_count,
         }
       }
+    end
+
+    private
+
+    def usage_event
+      @resource
     end
   end
 end

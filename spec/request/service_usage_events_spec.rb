@@ -144,32 +144,30 @@ RSpec.describe 'Service Usage Events' do
       'guid' => service_usage_event.guid,
       'created_at' => iso8601,
       'updated_at' => iso8601,
-      'data' => {
-        'state' => service_usage_event.state,
-        'space' => {
-          'guid' => service_usage_event.space_guid,
-          'name' => service_usage_event.space_name,
-        },
-        'organization' => {
-          'guid' => service_usage_event.org_guid,
-        },
-        'service_instance' => {
-          'guid' => service_usage_event.service_instance_guid,
-          'name' => service_usage_event.service_instance_name,
-          'type' => service_usage_event.service_instance_type,
-        },
-        'service_plan' => {
-          'guid' => service_usage_event.service_plan_guid,
-          'name' => service_usage_event.service_plan_name,
-        },
-        'service_offering' => {
-          'guid' => service_usage_event.service_guid,
-          'name' => service_usage_event.service_label,
-        },
-        'service_broker' => {
-          'guid' => service_usage_event.service_broker_guid,
-          'name' => service_usage_event.service_broker_name,
-        }
+      'state' => service_usage_event.state,
+      'space' => {
+        'guid' => service_usage_event.space_guid,
+        'name' => service_usage_event.space_name,
+      },
+      'organization' => {
+        'guid' => service_usage_event.org_guid,
+      },
+      'service_instance' => {
+        'guid' => service_usage_event.service_instance_guid,
+        'name' => service_usage_event.service_instance_name,
+        'type' => service_usage_event.service_instance_type,
+      },
+      'service_plan' => {
+        'guid' => service_usage_event.service_plan_guid,
+        'name' => service_usage_event.service_plan_name,
+      },
+      'service_offering' => {
+        'guid' => service_usage_event.service_guid,
+        'name' => service_usage_event.service_label,
+      },
+      'service_broker' => {
+        'guid' => service_usage_event.service_broker_guid,
+        'name' => service_usage_event.service_broker_name,
       }
     }
   end

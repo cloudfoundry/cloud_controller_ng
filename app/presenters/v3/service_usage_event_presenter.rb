@@ -7,18 +7,6 @@ module VCAP::CloudController::Presenters::V3
         guid: usage_event.guid,
         created_at: usage_event.created_at,
         updated_at: usage_event.created_at,
-        data: build_data
-      }
-    end
-
-    private
-
-    def usage_event
-      @resource
-    end
-
-    def build_data
-      {
         state: usage_event.state,
         space: {
           guid: usage_event.space_guid,
@@ -45,6 +33,12 @@ module VCAP::CloudController::Presenters::V3
           name: usage_event.service_broker_name,
         }
       }
+    end
+
+    private
+
+    def usage_event
+      @resource
     end
   end
 end
