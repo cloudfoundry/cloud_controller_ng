@@ -90,6 +90,15 @@ RSpec.describe 'App Usage Events' do
       end
     end
 
+    context 'when using the after_guid filter' do
+      it 'returns the usage event matching the requested guid' do
+        get "/v3/app_usage_events?after_guid=#{app_usage_event.guid}", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].length).to eq(1)
+        expect(parsed_response['resources'][0]).to match_json_response(app_usage_event_2_json)
+      end
+    end
+
     context 'when using the guids filter' do
       it 'returns the usage event matching the requested guid' do
         get "/v3/app_usage_events?guids=#{app_usage_event.guid}", nil, admin_headers
