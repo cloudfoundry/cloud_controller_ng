@@ -25,6 +25,7 @@ class UsageEventsController < ApplicationController
       presenter: Presenters::V3::UsageEventPresenter,
       paginated_result: SequelPaginator.new.get_page(usage_events, message.try(:pagination_options)),
       path: '/v3/usage_events',
+      message: message
     )
   end
 
