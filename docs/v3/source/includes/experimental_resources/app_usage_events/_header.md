@@ -1,6 +1,6 @@
-## Usage Events
+## App Usage Events
 
-Usage events are a record of changes in the usage of apps, services, and tasks.
+App usage events are a record of changes in the usage of apps and tasks.
 Examples include starting an application, scaling an application (from, say, one
 to three instances), and stopping an application.
 

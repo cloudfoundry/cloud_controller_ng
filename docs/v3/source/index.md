@@ -4,6 +4,7 @@ title: Cloud Controller API Reference
 includes:
   - api_resources/app_features
   - api_resources/app_ssh_enabled
+  - api_resources/app_usage_events
   - api_resources/apps
   - api_resources/audit_events
   - api_resources/builds
@@ -31,13 +32,13 @@ includes:
   - api_resources/service_plans
   - api_resources/service_plan_visibility
   - api_resources/service_instances
+  - api_resources/service_usage_events
   - api_resources/sidecars
   - api_resources/spaces
   - api_resources/space_features
   - api_resources/space_quotas
   - api_resources/stacks
   - api_resources/tasks
-  - api_resources/usage_events
   - api_resources/users
   - introduction/introduction
   - concepts/concepts
@@ -326,6 +327,10 @@ includes:
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
+  - experimental_resources/app_usage_events/header
+  - experimental_resources/app_usage_events/object
+  - experimental_resources/app_usage_events/get
+  - experimental_resources/app_usage_events/list
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
@@ -344,6 +349,10 @@ includes:
   - experimental_resources/service_instances/get
   - experimental_resources/service_instances/credentials
   - experimental_resources/service_instances/parameters
+  - experimental_resources/service_usage_events/header
+  - experimental_resources/service_usage_events/object
+  - experimental_resources/service_usage_events/get
+  - experimental_resources/service_usage_events/list
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
@@ -352,10 +361,6 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - experimental_resources/usage_events/header
-  - experimental_resources/usage_events/object
-  - experimental_resources/usage_events/get
-  - experimental_resources/usage_events/list
   - upgrade_guide/upgrade_guide
 
 ---

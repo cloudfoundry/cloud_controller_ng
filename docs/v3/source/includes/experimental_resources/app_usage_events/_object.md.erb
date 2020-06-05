@@ -1,21 +1,11 @@
-### The usage event object
+### The app usage event object
 
 ```
-Example of an App Usage Event object
+Example App Usage Event object
 ```
 ```json
 <%= yield_content :single_app_usage_event %>
 ```
-```
-Example of a Service Usage Event object
-```
-```json
-<%= yield_content :single_service_usage_event %>
-```
-
-There two types of usage events: app usage events and service usage events. They are distinguished by their `type` field and by the fields displayed in their `data`.
-
-#### App usage events
 
 Name | Type | Description
 ---- | ---- | -----------
@@ -40,25 +30,3 @@ Name | Type | Description
 **data.memory_in_mb_per_instance.previous** | _integer_ or `null` | Previous memory in MB of the app that this event pertains to, if applicable.
 **data.instance_count.current** | _integer_ or `null` | Current instance count of the app that this event pertains to, if applicable.
 **data.instance_count.previous** | _integer_ or `null` | Previous instance count of the app that this event pertains to, if applicable.
-
-#### Service usage events
-
-Name | Type | Description
----- | ---- | -----------
-**guid** | _uuid_ | Unique identifier for the event.
-**type** | _string_ | The type of the event, always "service" for service usage events
-**created_at** | _datetime_ | The time with zone when the event occurred
-**updated_at** | _datetime_ | Identical to `created_at` (events are created, never updated)
-**data.state** | _string_ or `null` | Current state of the service that this event pertains to, if applicable.
-**data.space.guid** | _string_ or `null` | Unique identifier of the space that this event pertains to, if applicable.
-**data.space.name** | _string_ or `null` | Name of the space that this event pertains to, if applicable.
-**data.organization.guid** | _string_ or `null` | Unique identifier of the org that this event pertains to, if applicable.
-**data.service_instance.guid** | _string_ or `null` | Unique identifier of the service instance that this event pertains to, if applicable.
-**data.service_instance.name** | _string_ or `null` | Name of the service instance that this event pertains to, if applicable.
-**data.service_instance.type** | _string_ or `null` | Type of the service instance that this event pertains to, if applicable.
-**data.service_plan.guid** | _string_ or `null` | Unique identifier of the service plan that this event pertains to, if applicable.
-**data.service_plan.name** | _string_ or `null` | Name of the service plan that this event pertains to, if applicable.
-**data.service_offering.guid** | _string_ or `null` | Unique identifier of the service offering that this event pertains to, if applicable.
-**data.service_offering.name** | _string_ or `null` | Name of the service offering that this event pertains to, if applicable.
-**data.service_broker.guid** | _string_ or `null` | Unique identifier of the service broker that this event pertains to, if applicable.
-**data.service_broker.name** | _string_ or `null` | Name of the service broker that this event pertains to, if applicable.

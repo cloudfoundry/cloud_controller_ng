@@ -1,11 +1,7 @@
 module VCAP::CloudController
-  class UsageEventListFetcher
+  class ServiceUsageEventListFetcher
     class << self
       def fetch_all(message, dataset)
-        if message.requested?(:types)
-          dataset = dataset.where(type: message.types)
-        end
-
         if message.requested?(:guids)
           dataset = dataset.where(guid: message.guids)
         end

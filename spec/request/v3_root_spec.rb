@@ -10,6 +10,10 @@ RSpec.describe 'v3 root' do
           'self' => {
             'href' => "#{link_prefix}/v3"
           },
+          'app_usage_events' => {
+            'href' => "#{link_prefix}/v3/app_usage_events",
+            'experimental' => true
+          },
           'apps' => {
             'href' => "#{link_prefix}/v3/apps"
           },
@@ -80,6 +84,10 @@ RSpec.describe 'v3 root' do
           'service_plans' => {
             'href' => "#{link_prefix}/v3/service_plans"
           },
+          'service_usage_events' => {
+            'href' => "#{link_prefix}/v3/service_usage_events",
+            'experimental' => true
+          },
           'spaces' => {
             'href' => "#{link_prefix}/v3/spaces"
           },
@@ -91,10 +99,6 @@ RSpec.describe 'v3 root' do
           },
           'tasks' => {
             'href' => "#{link_prefix}/v3/tasks"
-          },
-          'usage_events' => {
-            'href' => "#{link_prefix}/v3/usage_events",
-            'experimental' => true
           },
           'users' => {
             'href' => "#{link_prefix}/v3/users"
