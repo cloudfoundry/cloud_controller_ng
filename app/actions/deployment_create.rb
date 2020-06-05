@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         deployment
-      rescue RevisionResolver::NoUpdateRollback => e
+      rescue RevisionResolver::NoUpdateRollback, Sequel::ValidationFailed => e
         error = DeploymentCreate::Error.new(e.message)
         error.set_backtrace(e.backtrace)
         raise error
