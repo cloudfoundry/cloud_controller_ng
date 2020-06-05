@@ -70,8 +70,8 @@ module Kpack
             tag: "gcr.io/capi-images/#{package.app.guid}",
             serviceAccount: 'gcr-service-account',
             builder: {
-              name: 'cf-autodetect-builder',
-              kind: 'Builder'
+              name: 'cf-default-builder',
+              kind: 'CustomBuilder'
             },
             source: {
               blob: {
@@ -131,8 +131,8 @@ module Kpack
               tag: "gcr.io/capi-images/#{package.app.guid}",
               serviceAccount: 'gcr-service-account',
               builder: {
-                name: 'cf-autodetect-builder',
-                kind: 'Builder'
+                name: 'cf-default-builder',
+                kind: 'CustomBuilder'
               },
               source: {
                 blob: {

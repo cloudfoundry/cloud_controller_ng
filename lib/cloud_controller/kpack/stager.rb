@@ -68,8 +68,8 @@ module Kpack
         spec: {
           serviceAccount: registry_service_account_name,
           builder: {
-            name: 'cf-autodetect-builder',
-            kind: 'Builder'
+            name: 'cf-default-builder',
+            kind: 'CustomBuilder'
           },
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
           source: {
