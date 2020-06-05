@@ -34,6 +34,33 @@ module VCAP::CloudController
     end
 
     context 'validations' do
+      context 'when the after_guid filter is provided' do
+        let(:params) { { 'after_guid' => 'some-guid' } }
+
+        context 'and the values are invalid' do
+          let(:params) { { after_guid: 3 } }
+
+          it 'validates and returns an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:after_guid]).to include('must be an array')
+          end
+        end
+
+        context 'and more than one guid is given' do
+          let(:params) { { after_guid: 'guid1,guid2' } }
+
+          it 'validates and returns an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:after_guid]).to include('filter accepts only one guid')
+          end
+        end
+
+        it 'sets the message types to the provided values' do
+          expect(subject).to be_valid
+          expect(subject.after_guid).to eq(['some-guid'])
+        end
+      end
+
       context 'when the guids filter is provided' do
         let(:params) { { 'guids' => 'some-guid' } }
 

@@ -103,6 +103,15 @@ RSpec.describe 'Service Usage Events' do
       end
     end
 
+    context 'when using the after_guid filter' do
+      it 'returns the usage event matching the requested guid' do
+        get "/v3/service_usage_events?after_guid=#{service_usage_event.guid}", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].length).to eq(1)
+        expect(parsed_response['resources'][0]).to match_json_response(service_usage_event_2_json)
+      end
+    end
+
     context 'when using the guids filter' do
       it 'returns the usage event matching the requested guid' do
         get "/v3/service_usage_events?guids=#{service_usage_event_2.guid}", nil, admin_headers

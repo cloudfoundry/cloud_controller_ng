@@ -11,14 +11,35 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let!(:service_usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
       let!(:service_usage_event_2) { VCAP::CloudController::ServiceUsageEvent.make }
+      let!(:service_usage_event_3) { VCAP::CloudController::ServiceUsageEvent.make }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the events' do
-        expect(subject.count).to eq(2)
-        expect(subject).to match_array([service_usage_event, service_usage_event_2])
+        expect(subject.count).to eq(3)
+        expect(subject).to match_array([service_usage_event, service_usage_event_2, service_usage_event_3])
+      end
+
+      context 'filtering by after_guid' do
+        let(:filters) do
+          { after_guid: [service_usage_event_2.guid] }
+        end
+
+        it 'returns filtered events' do
+          expect(subject).to match_array([service_usage_event_3])
+        end
+
+        context 'when the given guid is invalid' do
+          let(:filters) do
+            { after_guid: 'something-invalid' }
+          end
+
+          it 'returns filtered events' do
+            expect { subject }.to raise_error /After guid filter must be a valid service usage event guid./
+          end
+        end
       end
 
       context 'filtering by guid' do
