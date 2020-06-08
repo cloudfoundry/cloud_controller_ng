@@ -29,6 +29,13 @@ class AppUsageEventsController < ApplicationController
     )
   end
 
+  def destructively_purge_all_and_reseed
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    Repositories::AppUsageEventRepository.new.purge_and_reseed_started_apps!
+    render status: :ok, json: {}
+  end
+
   private
 
   def app_usage_event_not_found!

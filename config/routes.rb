@@ -294,6 +294,7 @@ Rails.application.routes.draw do
   # app usage events
   get '/app_usage_events/:guid', to: 'app_usage_events#show'
   get '/app_usage_events', to: 'app_usage_events#index'
+  post '/app_usage_events/actions/destructively_purge_all_and_reseed', to: 'app_usage_events#destructively_purge_all_and_reseed'
 
   # service usage events
   get '/service_usage_events/:guid', to: 'service_usage_events#show'
