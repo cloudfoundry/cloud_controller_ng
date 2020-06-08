@@ -31,9 +31,9 @@ belongs to a space the user does not belong to.
 
 Name | Type | Description
 ---- | ---- | ------------
-**host** | _string_ | Hostname to filter by. Defaults to empty string if not provided.
-**path** | _string_ | Path to filter by. Defaults to empty string if not provided.
-**port** | _integer_ | Port to filter by. Defaults to 0 if not provided.
+**host** | _string_ | Hostname to filter by. Defaults to empty string if not provided. Only applicable to HTTP routes.
+**path** | _string_ | Path to filter by. Defaults to empty string if not provided. Only applicable to HTTP routes.
+**port** | _integer_ | Port to filter by. Only applicable to TCP routes. Always use for TCP routes.
 
 #### Permitted roles
 

@@ -732,6 +732,14 @@ RSpec.describe 'Domains Request' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when querying a TCP route without filtering the port' do
+          it 'returns no matching routes' do
+            get "/v3/domains/#{domain.guid}/route_reservations", nil, admin_headers
+
+            expect(parsed_response).to eq({ 'matching_route' => false })
+          end
+        end
       end
     end
 
