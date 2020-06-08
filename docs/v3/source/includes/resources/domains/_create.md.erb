@@ -37,14 +37,14 @@ Name     | Type     | Description
 
 #### Optional parameters
 
-| Name                                      | Type                                             | Description                                                                                                                                                                          | Default |
-| -----------                               | --------                                         | ------------------------------------------------------------------------                                                                                                             | ------- |
-| **internal**                              | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic.                                                                                                            | false   |
-| **router_group.guid**  (*experimental*)   | _uuid_                                           | The desired router group guid. <br>_Note: cannot be used when `internal` is set to `true` or domain is scoped to an org._                                         | null    |
-| **organization**                          | [_to-one relationship_](#to-one-relationships)   | A relationship to the organization the domain will be scoped to. <br>_Note: cannot be used when `internal` is set to `true` or domain is associated with a router group._            |         |
-| **shared_organizations**                  | [_to-many relationship_](#to-many-relationships) | A relationship to organizations the domain will be shared with. <br>_Note: cannot be used without an organization relationship_                                                      |         |
-| **metadata.labels**                       | [_label object_](#labels)                        | Labels applied to the domain.                                                                                                                                                        |         |
-| **metadata.annotations**                  | [_annotation object_](#annotations)              | Annotations applied to the domain.                                                                                                                                                   |         |
+| Name                     | Type                                             | Description                                                                                                                                                               | Default |
+| -----------              | --------                                         | ------------------------------------------------------------------------                                                                                                  | ------- |
+| **internal**             | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic, or external (user-to-container) traffic.                                                        | false   |
+| **router_group.guid**    | _uuid_                                           | The desired router group guid. <br>_Note: creates a `tcp` domain. Cannot be used when `internal` is set to `true` or domain is scoped to an org._                         | null    |
+| **organization**         | [_to-one relationship_](#to-one-relationships)   | A relationship to the organization the domain will be scoped to. <br>_Note: cannot be used when `internal` is set to `true` or domain is associated with a router group._ |         |
+| **shared_organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to organizations the domain will be shared with. <br>_Note: cannot be used without an organization relationship_                                           |         |
+| **metadata.labels**      | [_label object_](#labels)                        | Labels applied to the domain.                                                                                                                                             |         |
+| **metadata.annotations** | [_annotation object_](#annotations)              | Annotations applied to the domain.                                                                                                                                        |         |
 
 #### Permitted roles
 
