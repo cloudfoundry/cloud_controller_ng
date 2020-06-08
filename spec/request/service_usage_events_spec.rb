@@ -148,6 +148,34 @@ RSpec.describe 'Service Usage Events' do
     end
   end
 
+  describe 'POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed' do
+    let(:api_call) { lambda { |user_headers| post '/v3/service_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
+
+    let!(:service_instance) do
+      VCAP::CloudController::ServiceInstance.make
+    end
+
+    let!(:usage_event) do
+      VCAP::CloudController::ServiceUsageEvent.make(guid: 'some-guid')
+    end
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403)
+      h['admin'] = { code: 200 }
+      h.freeze
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:after_request_check) do
+        lambda do
+          expect(VCAP::CloudController::ServiceUsageEvent.all.count).to eq(1)
+          expect(VCAP::CloudController::ServiceUsageEvent.find(guid: 'some-guid')).to be_nil
+          expect(VCAP::CloudController::ServiceUsageEvent.where(service_instance_guid: service_instance.guid).count).to eq(1)
+        end
+      end
+    end
+  end
+
   def build_usage_event_json(service_usage_event)
     {
       'guid' => service_usage_event.guid,
