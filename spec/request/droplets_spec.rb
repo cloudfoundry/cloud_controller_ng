@@ -239,7 +239,7 @@ RSpec.describe 'Droplets' do
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download", 'experimental' => true },
+            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
           },
           'metadata' => {
@@ -568,7 +568,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -965,7 +965,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -1153,7 +1153,7 @@ RSpec.describe 'Droplets' do
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download", 'experimental' => true },
+              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
