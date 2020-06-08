@@ -543,6 +543,18 @@ app_task_limit | apps.per_app_tasks
 
 Read more about the [space quota resource](#space-quotas).
 
+### Usage Events in V3
+
+This section covers changes in both [app usage events](#app-usage-events) and [service usage events](#service-usage-events).
+
+The V2 `service_guid` field for service usage events is now renamed to `service_offering.guid`.
+
+The V2 `service_label` field for service usage events is now renamed to `service_offering.label`.
+
+The V2 `app_guid` field for app usage events is now renamed to `process.guid`.
+
+The V2 experimental field `parent_app_guid` for app usage events was used to identify a backing V3 app if present. In V3, this field has been renamed to `app.guid` and is no longer experimental.
+
 ### Users and Roles in V3
 
 The user resource remains largely unchanged from the v2 API. On v2, `GET /v2/users` was restricted to admins, and other users needed to use nested endpoints (`GET /v2/organizations/:guid/user` and `GET /v2/spaces/:guid/user`) to view user resources. On v3, `GET /v3/users` is now available for all users, similar to other resources. Note that this does not change what user resources are visible.
