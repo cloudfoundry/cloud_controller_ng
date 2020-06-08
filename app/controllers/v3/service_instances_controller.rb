@@ -202,7 +202,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def update_user_provided(service_instance)
     message = ServiceInstanceUpdateUserProvidedMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
@@ -211,7 +211,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def update_managed(service_instance)
     message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
     if message.service_plan_guid
       service_plan = ServicePlan.first(guid: message.service_plan_guid)

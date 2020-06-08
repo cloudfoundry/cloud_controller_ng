@@ -1759,7 +1759,7 @@ RSpec.describe 'V3 service instances' do
         it 'should fail' do
           api_call.call(space_dev_headers)
 
-          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(
             include({ 'detail' => include("Relationships Unknown field(s): 'space'") })
           )
@@ -1843,7 +1843,7 @@ RSpec.describe 'V3 service instances' do
 
         it 'is rejected' do
           api_call.call(space_dev_headers)
-          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(
             include({ 'detail' => include("Unknown field(s): 'guid'") })
           )
