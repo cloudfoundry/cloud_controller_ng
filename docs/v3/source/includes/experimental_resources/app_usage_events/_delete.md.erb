@@ -1,0 +1,31 @@
+### Purge and seed app usage events
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/app_usage_events/actions/destructively_purge_all_and_reseed" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+```
+
+Destroys all existing events. Populates new usage events, one for each started app. All populated events will have a `created_at` value of current time. There is the potential race condition if apps are currently being started, stopped, or scaled. The seeded usage events will have the same guid as the app.
+
+#### Definition
+
+`POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed`
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |

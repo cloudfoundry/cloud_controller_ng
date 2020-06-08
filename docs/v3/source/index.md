@@ -330,6 +330,7 @@ includes:
   - experimental_resources/app_usage_events/header
   - experimental_resources/app_usage_events/object
   - experimental_resources/app_usage_events/get
+  - experimental_resources/app_usage_events/delete
   - experimental_resources/app_usage_events/list
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
