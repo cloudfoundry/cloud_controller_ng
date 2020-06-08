@@ -330,8 +330,8 @@ includes:
   - experimental_resources/app_usage_events/header
   - experimental_resources/app_usage_events/object
   - experimental_resources/app_usage_events/get
-  - experimental_resources/app_usage_events/delete
   - experimental_resources/app_usage_events/list
+  - experimental_resources/app_usage_events/delete
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
@@ -354,6 +354,7 @@ includes:
   - experimental_resources/service_usage_events/object
   - experimental_resources/service_usage_events/get
   - experimental_resources/service_usage_events/list
+  - experimental_resources/service_usage_events/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
