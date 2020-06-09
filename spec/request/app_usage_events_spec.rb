@@ -135,6 +135,10 @@ RSpec.describe 'App Usage Events' do
       h.freeze
     end
 
+    after 'clean-up to avoid test pollution' do
+      VCAP::CloudController::AppUsageEvent.all.first.delete
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:after_request_check) do
         lambda do
