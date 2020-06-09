@@ -139,6 +139,24 @@ namespace :db do
     puts 'Successfully applied latest migrations to CF deployment'
   end
 
+  desc 'Connect to the database set in spec/support/bootstrap/db_config'
+  task :connect do
+    RakeConfig.context = :migrate
+
+    require_relative '../../spec/support/bootstrap/db_config'
+    db_config = DbConfig.new
+    host, port, user, pass, passenv = parse_db_connection_string
+
+    case ENV['DB']
+    when 'postgres'
+      sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name}"
+    when 'mysql'
+      sh "mysql #{host} #{port} #{user} #{pass}"
+    else
+      puts 'rake db:connect requires DB to be set to connect to a database'
+    end
+  end
+
   desc 'Validate Deployments are not missing encryption keys'
   task :validate_encryption_keys do
     RakeConfig.context = :api
