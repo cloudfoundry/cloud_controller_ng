@@ -142,6 +142,7 @@ includes:
   - resources/feature_flags/update
   - resources/info/header
   - resources/info/get
+  - resources/info/get_usage_summary
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create

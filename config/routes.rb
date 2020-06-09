@@ -312,7 +312,8 @@ Rails.application.routes.draw do
   delete '/roles/:guid', to: 'roles#destroy'
 
   # info
-  get '/info', to: 'info#show'
+  get '/info', to: 'info#v3_info'
+  get '/info/usage_summary', to: 'info#show_usage_summary'
 
   namespace :internal do
     patch '/builds/:guid', to: 'builds#update'
