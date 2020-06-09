@@ -31,7 +31,8 @@ module VCAP::CloudController::Presenters::V3
         service_broker: {
           guid: usage_event.service_broker_guid,
           name: usage_event.service_broker_name,
-        }
+        },
+        links: build_links
       }
     end
 
@@ -39,6 +40,12 @@ module VCAP::CloudController::Presenters::V3
 
     def usage_event
       @resource
+    end
+
+    def build_links
+      {
+        self: { href: url_builder.build_url(path: "/v3/service_usage_events/#{usage_event.guid}") }
+      }
     end
   end
 end

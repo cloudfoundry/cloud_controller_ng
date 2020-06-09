@@ -189,6 +189,9 @@ RSpec.describe 'App Usage Events' do
       'instance_count' => {
         'current' => app_usage_event.instance_count,
         'previous' => nil
+      },
+      'links' => {
+        'self' => { 'href' => "#{link_prefix}/v3/app_usage_events/#{app_usage_event.guid}" },
       }
     }
   end

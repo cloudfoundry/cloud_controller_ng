@@ -41,7 +41,8 @@ module VCAP::CloudController::Presenters::V3
         instance_count: {
           current: usage_event.instance_count,
           previous: usage_event.previous_instance_count,
-        }
+        },
+        links: build_links
       }
     end
 
@@ -49,6 +50,12 @@ module VCAP::CloudController::Presenters::V3
 
     def usage_event
       @resource
+    end
+
+    def build_links
+      {
+        self: { href: url_builder.build_url(path: "/v3/app_usage_events/#{usage_event.guid}") }
+      }
     end
   end
 end

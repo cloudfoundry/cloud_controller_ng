@@ -24,6 +24,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceUsageEventPresenter
       expect(result[:service_offering][:name]).to eq usage_event.service_label
       expect(result[:service_broker][:guid]).to eq usage_event.service_broker_guid
       expect(result[:service_broker][:name]).to eq usage_event.service_broker_name
+      expect(result[:links][:self][:href]).to eq "#{link_prefix}/v3/service_usage_events/#{usage_event.guid}"
     end
   end
 end

@@ -209,6 +209,9 @@ RSpec.describe 'Service Usage Events' do
       'service_broker' => {
         'guid' => service_usage_event.service_broker_guid,
         'name' => service_usage_event.service_broker_name,
+      },
+      'links' => {
+        'self' => { 'href' => "#{link_prefix}/v3/service_usage_events/#{service_usage_event.guid}" },
       }
     }
   end

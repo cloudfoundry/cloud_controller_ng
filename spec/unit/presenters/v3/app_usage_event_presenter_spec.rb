@@ -29,6 +29,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
       expect(result[:memory_in_mb_per_instance][:previous]).to eq nil
       expect(result[:instance_count][:current]).to eq usage_event.instance_count
       expect(result[:instance_count][:previous]).to eq nil
+      expect(result[:links][:self][:href]).to eq "#{link_prefix}/v3/app_usage_events/#{usage_event.guid}"
     end
 
     context 'when the usage event is for a task' do
