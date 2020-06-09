@@ -77,6 +77,26 @@ module VCAP::CloudController
           expect(subject.guids).to eq(['some-guid'])
         end
       end
+
+      context 'when the order_by filter is provided' do
+        context 'and the value is invalid' do
+          let(:params) { { order_by: 'updated_at' } }
+
+          it 'validates and returns an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:order_by]).to include("can only be: 'created_at'")
+          end
+        end
+
+        context 'and the value is valid' do
+          let(:params) { { order_by: 'created_at' } }
+
+          it 'sets the message order_by to the provided value' do
+            expect(subject).to be_valid
+            expect(subject.order_by).to eq('created_at')
+          end
+        end
+      end
     end
   end
 end
