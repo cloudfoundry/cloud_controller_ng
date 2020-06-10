@@ -25,5 +25,5 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Spaces|Spaces|
 |Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
 |Stacks|Stacks|
-|Usage Events|Usage Events|
+|Usage Events|Usage Events|[Usage Events in V3](#usage-events-in-v3)|
 |Users|Roles, Users|[Users and Roles in V3](#users-and-roles-in-v3)|
