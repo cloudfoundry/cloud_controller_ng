@@ -72,6 +72,7 @@ module VCAP::CloudController
       super
       validates_presence :name
       validates_format APP_NAME_REGEX, :name
+      validate_buildpacks_are_ready
       validate_environment_variables
       validate_droplet_is_staged
 
@@ -158,6 +159,20 @@ module VCAP::CloudController
 
       VCAP::CloudController::Validators::EnvironmentVariablesValidator.
         validate_each(self, :environment_variables, environment_variables)
+    end
+
+    def validate_buildpacks_are_ready
+      return unless self.buildpack_lifecycle_data
+
+      self.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.each do |blb|
+        unless blb.custom?
+          buildpack = Buildpack.find(name: blb.admin_buildpack_name)
+
+          if buildpack && buildpack.state != Buildpack::READY_STATE
+            errors.add(:buildpack, 'must be in ready state')
+          end
+        end
+      end
     end
 
     def validate_droplet_is_staged

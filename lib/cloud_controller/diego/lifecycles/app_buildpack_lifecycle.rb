@@ -17,7 +17,7 @@ module VCAP::CloudController
     delegate :valid?, :errors, to: :validator
 
     def create_lifecycle_data_model(app)
-      BuildpackLifecycleDataModel.create(
+      app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.create(
         buildpacks: buildpacks,
         stack:     stack,
         app:       app
