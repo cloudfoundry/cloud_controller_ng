@@ -62,24 +62,24 @@ module VCAP::CloudController
 
     describe '#to_param_hash' do
       class ParamsClass < BaseMessage
-        register_allowed_keys [:array_field, :num_field, :string_field, :nil_field]
+        register_allowed_keys [:array_field, :num_field, :string_field, :nil_field, :fields_field]
       end
 
       let(:opts) do
         {
-            array_field:  ['st ate1', 'sta,te2'],
-            num_field:    1.2,
-            string_field: 'stringval&',
-            nil_field:    nil
+          array_field: ['st ate1', 'sta,te2'],
+          num_field: 1.2,
+          string_field: 'stringval&',
+          nil_field: nil
         }
       end
 
       it 'returns query param hash with escaped commas in array members' do
         expected_params = {
-          array_field:  'st ate1,sta%2Cte2',
-          num_field:    1.2,
+          array_field: 'st ate1,sta%2Cte2',
+          num_field: 1.2,
           string_field: 'stringval&',
-          nil_field:    nil,
+          nil_field: nil,
         }
         expect(ParamsClass.new(opts).to_param_hash).to eq(expected_params)
       end
@@ -87,8 +87,8 @@ module VCAP::CloudController
       it 'does not return params that are not requested during initialization' do
         opts.delete(:nil_field)
         expected_params = {
-          array_field:  'st ate1,sta%2Cte2',
-          num_field:    1.2,
+          array_field: 'st ate1,sta%2Cte2',
+          num_field: 1.2,
           string_field: 'stringval&',
         }
         expect(ParamsClass.new(opts).to_param_hash).to eq(expected_params)
@@ -96,11 +96,27 @@ module VCAP::CloudController
 
       it 'can exclude params' do
         expected_params = {
-          array_field:  'st ate1,sta%2Cte2',
+          array_field: 'st ate1,sta%2Cte2',
           string_field: 'stringval&',
-          nil_field:    nil,
+          nil_field: nil,
         }
-        expect(ParamsClass.new(opts).to_param_hash({ exclude: [:num_field] })).to eq(expected_params)
+        expect(ParamsClass.new(opts).to_param_hash(exclude: [:num_field])).to eq(expected_params)
+      end
+
+      context 'when using fields' do
+        let(:opts) do
+          {
+            fields_field: { foo: %w(bar baz), quz: %w(lala gaga) },
+          }
+        end
+
+        it 'correctly formats the specified field' do
+          expected_params = {
+            'fields_field[foo]': 'bar,baz',
+            'fields_field[quz]': 'lala,gaga',
+          }
+          expect(ParamsClass.new(opts).to_param_hash(fields: [:fields_field])).to eq(expected_params)
+        end
       end
     end
 

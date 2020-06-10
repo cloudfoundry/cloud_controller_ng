@@ -241,6 +241,10 @@ RSpec.describe 'V3 service instances' do
     describe 'pagination' do
       let(:resources) { [msi_1, msi_2, upsi_1, upsi_2, ssi] }
       it_behaves_like 'paginated response', '/v3/service_instances'
+
+      it_behaves_like 'paginated fields response', '/v3/service_instances', 'space', 'guid,name,relationships.organization'
+
+      it_behaves_like 'paginated fields response', '/v3/service_instances', 'space.organization', 'name,guid'
     end
 
     describe 'filters' do
