@@ -82,6 +82,11 @@ includes:
   - resources/app_features/get
   - resources/app_features/list
   - resources/app_features/update
+  - resources/app_usage_events/header
+  - resources/app_usage_events/object
+  - resources/app_usage_events/get
+  - resources/app_usage_events/list
+  - resources/app_usage_events/delete
   - resources/audit_events/header
   - resources/audit_events/object
   - resources/audit_events/get
@@ -273,6 +278,11 @@ includes:
   - resources/service_plan_visibility/update
   - resources/service_plan_visibility/apply
   - resources/service_plan_visibility/delete  
+  - resources/service_usage_events/header
+  - resources/service_usage_events/object
+  - resources/service_usage_events/get
+  - resources/service_usage_events/list
+  - resources/service_usage_events/delete
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -328,11 +338,6 @@ includes:
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
-  - experimental_resources/app_usage_events/header
-  - experimental_resources/app_usage_events/object
-  - experimental_resources/app_usage_events/get
-  - experimental_resources/app_usage_events/list
-  - experimental_resources/app_usage_events/delete
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
@@ -351,11 +356,6 @@ includes:
   - experimental_resources/service_instances/get
   - experimental_resources/service_instances/credentials
   - experimental_resources/service_instances/parameters
-  - experimental_resources/service_usage_events/header
-  - experimental_resources/service_usage_events/object
-  - experimental_resources/service_usage_events/get
-  - experimental_resources/service_usage_events/list
-  - experimental_resources/service_usage_events/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

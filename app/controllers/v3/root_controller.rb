@@ -6,7 +6,7 @@ class RootController < ActionController::Base
       }
     }
 
-    links.merge!(create_link(:app_usage_events, experimental: true))
+    links.merge!(create_link(:app_usage_events))
     links.merge!(create_link(:apps))
     links.merge!(create_link(:audit_events))
     links.merge!(create_link(:buildpacks))
@@ -30,7 +30,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:service_instances, experimental: true))
     links.merge!(create_link(:service_offerings))
     links.merge!(create_link(:service_plans))
-    links.merge!(create_link(:service_usage_events, experimental: true))
+    links.merge!(create_link(:service_usage_events))
     links.merge!(create_link(:spaces))
     links.merge!(create_link(:space_quotas))
     links.merge!(create_link(:stacks))
