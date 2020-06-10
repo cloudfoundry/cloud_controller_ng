@@ -364,6 +364,42 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - upgrade_guide/upgrade_guide
+  - upgrade_guide/header
+  - upgrade_guide/conceptual_changes/header
+  - upgrade_guide/conceptual_changes/app_sub_resources
+  - upgrade_guide/conceptual_changes/starting_apps
+  - upgrade_guide/conceptual_changes/asynchronous_operations
+  - upgrade_guide/conceptual_changes/errors
+  - upgrade_guide/conceptual_changes/filtering
+  - upgrade_guide/conceptual_changes/including_associated_resources
+  - upgrade_guide/new_concepts/header
+  - upgrade_guide/new_concepts/actions
+  - upgrade_guide/new_concepts/links
+  - upgrade_guide/new_concepts/metadata
+  - upgrade_guide/new_concepts/relationships
+  - upgrade_guide/new_resources/header
+  - upgrade_guide/new_resources/app_features
+  - upgrade_guide/new_resources/builds
+  - upgrade_guide/new_resources/deployments
+  - upgrade_guide/new_resources/isolation_segments
+  - upgrade_guide/new_resources/manifests
+  - upgrade_guide/new_resources/revisions
+  - upgrade_guide/new_resources/sidecars
+  - upgrade_guide/new_resources/tasks
+  - upgrade_guide/changed_resources/header
+  - upgrade_guide/changed_resources/audit_events_in_v3
+  - upgrade_guide/changed_resources/domains_in_v3
+  - upgrade_guide/changed_resources/organization_quotas_in_v3
+  - upgrade_guide/changed_resources/routes_in_v3
+  - upgrade_guide/changed_resources/security_groups_in_v3
+  - upgrade_guide/changed_resources/service_brokers_in_v3
+  - upgrade_guide/changed_resources/service_offerings_in_v3
+  - upgrade_guide/changed_resources/service_plans_in_v3
+  - upgrade_guide/changed_resources/service_plan_visibility_in_v3
+  - upgrade_guide/changed_resources/space_quotas_in_v3
+  - upgrade_guide/changed_resources/usage_events_in_v3
+  - upgrade_guide/changed_resources/users_and_roles_in_v3
+  - upgrade_guide/deprecated_endpoints/header
+  - upgrade_guide/deprecated_endpoints/restage
 
 ---
