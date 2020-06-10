@@ -148,7 +148,7 @@ RSpec.describe 'Service Usage Events' do
     end
   end
 
-  describe 'POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed' do
+  describe 'POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed', isolation: :truncation do
     let(:api_call) { lambda { |user_headers| post '/v3/service_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
 
     let!(:service_instance) do

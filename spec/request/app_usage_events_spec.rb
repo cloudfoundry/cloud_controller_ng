@@ -117,7 +117,7 @@ RSpec.describe 'App Usage Events' do
     end
   end
 
-  describe 'POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed' do
+  describe 'POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed', isolation: :truncation do
     let(:api_call) { lambda { |user_headers| post '/v3/app_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
