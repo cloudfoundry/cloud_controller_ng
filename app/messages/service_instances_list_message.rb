@@ -37,6 +37,10 @@ module VCAP::CloudController
       super(params, @array_keys.map(&:to_s), fields: %w(fields))
     end
 
+    def to_param_hash
+      super(fields: [:fields])
+    end
+
     def valid_order_by_values
       super << :name
     end

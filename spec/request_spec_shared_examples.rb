@@ -41,6 +41,20 @@ def expect_filtered_resources(endpoint, filter, list)
   end
 end
 
+RSpec.shared_examples 'paginated fields response' do |endpoint, resource, keys|
+  it 'presents the fields correctly in first, last and next' do
+    filter = "fields[#{resource}]=#{keys}&per_page=1"
+    get "#{endpoint}?#{filter}", nil, admin_headers
+    expect(last_response).to have_status_code(200)
+
+    keys = keys.split(/,/).join('%2C')
+    last_page = resources.length
+    expect(parsed_response['pagination']['first']['href']).to include("#{endpoint}?fields%5B#{resource}%5D=#{keys}&page=1&per_page=1")
+    expect(parsed_response['pagination']['next']['href']).to include("#{endpoint}?fields%5B#{resource}%5D=#{keys}&page=2&per_page=1")
+    expect(parsed_response['pagination']['last']['href']).to include("#{endpoint}?fields%5B#{resource}%5D=#{keys}&page=#{last_page}&per_page=1")
+  end
+end
+
 RSpec.shared_examples 'permissions for list endpoint' do |roles|
   roles.each do |role|
     describe "as an #{role}" do

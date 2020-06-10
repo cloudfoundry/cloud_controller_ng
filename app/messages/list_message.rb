@@ -25,8 +25,8 @@ module VCAP::CloudController
       super(params)
     end
 
-    def to_param_hash(exclude: [])
-      super(exclude: ALLOWED_PAGINATION_KEYS + exclude)
+    def to_param_hash(exclude: [], fields: [])
+      super(exclude: ALLOWED_PAGINATION_KEYS + exclude, fields: fields)
     end
 
     class PaginationOrderValidator < ActiveModel::Validator
