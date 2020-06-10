@@ -1624,6 +1624,45 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      describe 'maintenance_info checks' do
+        let!(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make(
+            space: space,
+            service_plan: service_plan
+          )
+        end
+        let(:guid) { service_instance.guid }
+
+        context 'changing maintenance_info when the plan does not have one' do
+          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service_offering) }
+          let(:service_plan_guid) { service_plan.guid }
+
+          let(:request_body) do
+            {
+              maintenance_info: {
+                version: "3.1.0",
+              }
+            }
+          end
+
+          it 'fails with a descriptive message' do
+            api_call.call(space_dev_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include(
+                {
+                  'title' => 'CF-UnprocessableEntity',
+                  'detail' => 'The service broker does not support upgrades for service instances created from this plan.'
+                }
+              )
+            )
+          end
+        end
+
+      end
+
       describe 'service plan checks' do
         let!(:service_instance) do
           VCAP::CloudController::ManagedServiceInstance.make(

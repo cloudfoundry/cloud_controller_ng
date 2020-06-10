@@ -282,4 +282,15 @@ module VCAP::CloudController::Validators
       (hsh.keys.map(&:to_s) == ['guid'])
     end
   end
+
+  class SemverValidator < StringValidator
+    def validate_each(record, attr_name, value)
+      super
+      record.errors.add(attr_name, 'must be a Semantic Version string') unless is_semver?(value)
+    end
+
+    def is_semver?(value)
+      VCAP::SemverValidator.valid?(value)
+    end
+  end
 end

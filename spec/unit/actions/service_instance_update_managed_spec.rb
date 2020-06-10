@@ -413,6 +413,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'invalid maintenance_info updates' do
+        let(:body) do
+          {
+            maintenance_info: {
+              version: '3.1.1'
+            }
+          }
+        end
+
+        context 'when current plan does not support maintenance_info' do
+          let(:service_plan) { ServicePlan.make(service: service_offering) }
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('MaintenanceInfoNotSupported')
+            end
+          end
+        end
+      end
     end
   end
 end
