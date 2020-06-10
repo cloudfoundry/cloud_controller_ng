@@ -1,5 +1,6 @@
 require 'messages/metadata_base_message'
 require 'messages/validators'
+require 'messages/validators/maintenance_info_validator'
 
 module VCAP::CloudController
   class ServiceInstanceUpdateManagedMessage < MetadataBaseMessage
@@ -12,6 +13,7 @@ module VCAP::CloudController
       :tags,
       :parameters,
       :relationships,
+      :maintenance_info
     ]
 
     validates_with NoAdditionalKeysValidator
@@ -23,9 +25,17 @@ module VCAP::CloudController
 
     validates :parameters, hash: true, allow_nil: true
     validates :relationships, hash: true, allow_nil: true
+    validates :maintenance_info, hash: true, allow_nil: true
+
+    validates_with MaintenanceInfoValidator, if: -> (record) {record.maintenance_info.is_a? Hash}
+
 
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
+    end
+
+    def maintenance_info_message
+      @maintenance_info_message ||= MaintenanceInfo.new(maintenance_info&.deep_symbolize_keys)
     end
 
     def updates
@@ -37,6 +47,7 @@ module VCAP::CloudController
     end
 
     delegate :service_plan_guid, to: :relationships_message
+    delegate :maintenance_info_version, to: :maintenance_info_message
 
     private
 
@@ -55,6 +66,18 @@ module VCAP::CloudController
 
       def service_plan_guid
         HashUtils.dig(service_plan, :data, :guid)
+      end
+    end
+
+    class MaintenanceInfo < BaseMessage
+      register_allowed_keys [:version]
+
+      validates_with NoAdditionalKeysValidator
+
+      validates :version, string: true, allow_nil: true, semver: true
+
+      def maintenance_info_version
+        version
       end
     end
   end

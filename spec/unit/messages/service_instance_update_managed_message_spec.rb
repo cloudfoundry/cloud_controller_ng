@@ -8,6 +8,9 @@ module VCAP::CloudController
         name: 'my-service-instance',
         parameters: { foo: 'bar' },
         tags: %w(foo bar baz),
+        maintenance_info: {
+          version: '1.3.3'
+        },
         relationships: {
           service_plan: {
             data: { guid: 'service-plan-guid' }
@@ -32,6 +35,7 @@ module VCAP::CloudController
       expect(message.requested?(:relationships)).to be_truthy
       expect(message.requested?(:tags)).to be_truthy
       expect(message.requested?(:parameters)).to be_truthy
+      expect(message.requested?(:maintenance_info)).to be_truthy
     end
 
     it 'builds the right message' do
@@ -41,6 +45,7 @@ module VCAP::CloudController
       expect(message.metadata[:annotations]).to eq(cheese: 'bono')
       expect(message.tags).to contain_exactly('foo', 'bar', 'baz')
       expect(message.parameters).to match(foo: 'bar')
+      expect(message.maintenance_info[:version]).to eq('1.3.3')
     end
 
     it 'accepts the empty request' do
@@ -52,7 +57,7 @@ module VCAP::CloudController
       expect(message.updates).to eq({
         name: 'my-service-instance',
         service_plan_guid: 'service-plan-guid',
-        tags: %w(foo bar baz),
+        tags: %w(foo bar baz)
       })
 
       expect(described_class.new({}).updates).to eq({})
@@ -90,6 +95,46 @@ module VCAP::CloudController
           message = described_class.new(body)
           expect(message).not_to be_valid
           expect(message.errors[:tags]).to include('must be a list of strings')
+        end
+      end
+
+      context 'maintenance_info' do
+        it 'must be an object' do
+          body[:maintenance_info] = 42
+          expect(message).to_not be_valid
+          expect(message.errors[:maintenance_info]).to include('must be an object')
+        end
+
+        it 'is invalid when there are unknown fields' do
+          body[:maintenance_info] = { something: 'other_info' }
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include("Maintenance info Unknown field(s): 'something'")
+        end
+
+        it 'is invalid when version is not semver' do
+          body[:maintenance_info] = { version: 'other_info' }
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include(include("must be a Semantic Version string"))
+        end
+
+        it 'it can be empty' do
+          body[:maintenance_info] = {}
+
+          expect(message).to be_valid
+        end
+
+        it 'it can be nil' do
+          body[:maintenance_info] = nil
+
+          expect(message).to be_valid
+        end
+
+        it 'version can be nil' do
+          body[:maintenance_info] = { version: nil }
+
+          expect(message).to be_valid
         end
       end
 

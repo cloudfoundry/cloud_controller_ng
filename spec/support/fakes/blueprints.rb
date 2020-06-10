@@ -308,6 +308,7 @@ module VCAP::CloudController
     extra                 { '{"shareable": true, "documentation_url": "https://some.url.for.docs/"}' }
     instances_retrievable { false }
     bindings_retrievable  { false }
+    plan_updateable       { false }
   end
 
   Service.blueprint(:routing) do

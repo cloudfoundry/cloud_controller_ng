@@ -17,6 +17,7 @@ module VCAP::CloudController
       raise_if_invalid_update!(service_instance, message)
       raise_if_renaming_shared_service_instance!(service_instance, message)
       raise_if_invalid_plan_change!(service_instance, message)
+      raise_if_invalid_maintenance_info_change!(service_instance, message)
 
       begin
         lock = UpdaterLock.new(service_instance)
@@ -128,6 +129,17 @@ module VCAP::CloudController
         'ServicePlanInvalid',
         'cannot switch to non-bindable plan when service bindings exist'
       )
+    end
+
+    def raise_if_invalid_maintenance_info_change!(service_instance, message)
+      raise_if_unsupported_by_current_plan!(service_instance, message)
+    end
+
+    def raise_if_unsupported_by_current_plan!(service_instance, message)
+      return unless message.maintenance_info_version
+      return if service_instance.service_plan.maintenance_info
+
+      raise UnprocessableUpdate.new_from_details('MaintenanceInfoNotSupported')
     end
   end
 end
