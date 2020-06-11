@@ -262,7 +262,7 @@ GEM
     loofah (2.5.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    machinist (1.0.6)
+    machinist (2.0)
     maruku (0.7.3)
     membrane (1.1.0)
     memoist (0.16.0)
@@ -524,7 +524,7 @@ DEPENDENCIES
   kubeclient
   listen
   loggregator_emitter (~> 5.0)
-  machinist (~> 1.0.6)
+  machinist (~> 2.0)
   membrane (~> 1.0)
   mime-types (~> 3.0)
   multi_json

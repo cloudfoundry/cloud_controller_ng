@@ -77,7 +77,7 @@ end
 group :test do
   gem 'cf-perm-test-helpers', '~> 0.0.6'
   gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
-  gem 'machinist', '~> 1.0.6'
+  gem 'machinist', '~> 2.0'
   gem 'parallel_tests'
   gem 'rack-test'
   gem 'rspec', '~> 3.8.0'
