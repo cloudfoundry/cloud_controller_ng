@@ -25,12 +25,6 @@ future.
 
 V3 endpoints attempt to report audit events in the same way as V2 endpoints did.
 A notable case where this was not possible is for the `audit.app.restage` event.
-In V2, there was a restage-app endpoint, and this event was reported when that
-endpoint was used. In V3, the concept of "staging" has been broken down into
-composable pieces (creating packages, creating builds to produce droplets,
-assigning droplets, etc.). There is no longer a clear concept of "restaging" on
-the V3 API. Instead, it is suggested to rely on events corresponding to these
-individual steps (e.g. `audit.app.package.create`, `audit.app.build.create`,
-`audit.app.droplet.create`).
+Read more about [restaging](#restage) in V3.
 
 Read more about the [audit event resource](#audit-events).
