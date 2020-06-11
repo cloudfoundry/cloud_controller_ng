@@ -239,7 +239,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.8.2)
+    i18n (1.8.3)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -304,7 +304,7 @@ GEM
       ast (~> 2.4.0)
     pg (1.0.0)
     posix-spawn (0.3.13)
-    protobuf (3.6.12)
+    protobuf (3.10.3)
       activesupport (>= 3.2)
       middleware
       thor
@@ -538,7 +538,7 @@ DEPENDENCIES
   parallel_tests
   pg
   posix-spawn (~> 0.3.6)
-  protobuf (= 3.6.12)
+  protobuf (= 3.10.3)
   pry-byebug
   public_suffix
   rack-test
