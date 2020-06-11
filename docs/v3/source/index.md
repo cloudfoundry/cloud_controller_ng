@@ -372,6 +372,7 @@ includes:
   - upgrade_guide/conceptual_changes/errors
   - upgrade_guide/conceptual_changes/filtering
   - upgrade_guide/conceptual_changes/including_associated_resources
+  - upgrade_guide/conceptual_changes/resource_summaries
   - upgrade_guide/new_concepts/header
   - upgrade_guide/new_concepts/actions
   - upgrade_guide/new_concepts/links
