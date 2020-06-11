@@ -332,6 +332,7 @@ module VCAP::CloudController
     space                      { Space.make }
     service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
+    maintenance_info           {}
   end
 
   ManagedServiceInstance.blueprint(:routing) do
@@ -478,6 +479,7 @@ module VCAP::CloudController
     service           { Service.make }
     unique_id         { SecureRandom.uuid }
     active            { true }
+    maintenance_info  {}
   end
 
   ServicePlan.blueprint(:routing) do

@@ -1244,6 +1244,11 @@
   http_code: 422
   message: "maintenance_info should not be changed when switching to different plan."
 
+390009:
+  name: MaintenanceInfoConflict
+  http_code: 422
+  message: "maintenance_info.version requested is invalid. Please ensure the catalog is up to date and you are providing a version supported by this service plan."
+
 390011:
   name: BuildpackStacksDontMatch
   http_code: 422

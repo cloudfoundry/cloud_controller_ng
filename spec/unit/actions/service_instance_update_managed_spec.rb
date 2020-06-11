@@ -16,13 +16,15 @@ module VCAP::CloudController
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:service_offering) { Service.make(plan_updateable: true) }
-      let(:service_plan) { ServicePlan.make(service: service_offering) }
+      let(:original_maintenance_info) { { version: '2.1.0', description: 'original version' } }
+      let(:service_plan) { ServicePlan.make(service: service_offering, maintenance_info: original_maintenance_info) }
       let!(:service_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: service_plan,
           name: 'foo',
           tags: %w(accounting mongodb),
           space: space,
+          maintenance_info: original_maintenance_info
         )
         si.label_ids = [
           VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
@@ -40,6 +42,9 @@ module VCAP::CloudController
           {
             name: 'different-name',
             tags: %w(accounting couchbase nosql),
+            maintenance_info: {
+              version: '2.1.0'
+            },
             metadata: {
               labels: {
                 foo: 'bar',
@@ -68,6 +73,13 @@ module VCAP::CloudController
             { prefix: nil, key: 'alpha', value: 'beta' },
             { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
           ])
+        end
+
+        it 'does not update the maintenance_info' do
+          action.update(service_instance, message)
+
+          service_instance.reload
+          expect(service_instance.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
         end
 
         it 'returns the updated service instance and a nil job' do
@@ -216,6 +228,29 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'maintenance_info requested' do
+            let(:service_plan) { ServicePlan.make(
+              service: service_offering,
+              maintenance_info: { version: '2.2.0', description: 'new version of plan' }
+              )
+            }
+
+            let!(:service_instance) {
+              VCAP::CloudController::ManagedServiceInstance.make(
+                name: 'foo',
+                service_plan: service_plan,
+                maintenance_info: original_maintenance_info
+              )
+            }
+
+            it 'should create a job' do
+              _, job = action.update(service_instance, message)
+
+              expect(job).to be_a(PollableJobModel)
+              expect(job.operation).to eq('service_instance.update')
+            end
+          end
         end
 
         it 'locks the service instance' do
@@ -235,9 +270,9 @@ module VCAP::CloudController
           expect(service_instance.tags).to eq(%w(accounting mongodb))
         end
 
-        let!(:user_audit_info) { UserAuditInfo.new(user_email: 'test@example.com', user_guid: 'some-user') }
-
         context 'new UpdateServiceInstanceJob' do
+          let!(:user_audit_info) { UserAuditInfo.new(user_email: 'test@example.com', user_guid: 'some-user') }
+
           before do
             update_job = instance_double(V3::UpdateServiceInstanceJob)
             allow(V3::UpdateServiceInstanceJob).to receive(:new).and_return(update_job)
@@ -433,6 +468,33 @@ module VCAP::CloudController
               expect(err.name).to eq('MaintenanceInfoNotSupported')
             end
           end
+        end
+
+        context 'when does not match the version in the plan' do
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('MaintenanceInfoConflict')
+            end
+          end
+        end
+      end
+
+      describe 'no-op maintenance_info updates' do
+        let(:body) do
+          {
+            maintenance_info: {
+              version: service_plan.maintenance_info[:version]
+            }
+          }
+        end
+
+        it 'returns the current instance unchanged instance and a nil job' do
+          si, job = action.update(service_instance, message)
+
+          expect(si).to eq(service_instance)
+          expect(job).to be_nil
         end
       end
     end

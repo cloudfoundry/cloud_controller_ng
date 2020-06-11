@@ -1633,7 +1633,7 @@ RSpec.describe 'V3 service instances' do
         end
         let(:guid) { service_instance.guid }
 
-        context 'changing maintenance_info when the plan does not have one' do
+        context 'changing maintenance_info when the plan does not support it' do
           let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
           let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service_offering) }
           let(:service_plan_guid) { service_plan.guid }
@@ -1641,7 +1641,7 @@ RSpec.describe 'V3 service instances' do
           let(:request_body) do
             {
               maintenance_info: {
-                version: "3.1.0",
+                version: '3.1.0',
               }
             }
           end
@@ -1661,6 +1661,40 @@ RSpec.describe 'V3 service instances' do
           end
         end
 
+        context 'maintenance_info conflict' do
+          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
+          let(:service_plan) {
+            VCAP::CloudController::ServicePlan.make(
+              public: true,
+              active: true,
+              service: service_offering,
+              maintenance_info: { version: '2.1.0' }
+            )
+          }
+          let(:service_plan_guid) { service_plan.guid }
+
+          let(:request_body) do
+            {
+              maintenance_info: {
+                version: '2.2.0',
+              }
+            }
+          end
+
+          it 'fails with a descriptive message' do
+            api_call.call(space_dev_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include(
+                {
+                  'title' => 'CF-UnprocessableEntity',
+                  'detail' => include('maintenance_info.version requested is invalid')
+                }
+              )
+            )
+          end
+        end
       end
 
       describe 'service plan checks' do

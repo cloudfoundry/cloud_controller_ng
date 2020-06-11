@@ -116,7 +116,7 @@ module VCAP::CloudController
           body[:maintenance_info] = { version: 'other_info' }
 
           expect(message).to_not be_valid
-          expect(message.errors.full_messages).to include(include("must be a Semantic Version string"))
+          expect(message.errors.full_messages).to include(include('must be a Semantic Version string'))
         end
 
         it 'it can be empty' do

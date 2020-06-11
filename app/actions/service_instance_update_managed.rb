@@ -46,8 +46,10 @@ module VCAP::CloudController
       parameters_changed = message.requested?(:parameters)
       service_plan_changed = message.service_plan_guid &&
         message.service_plan_guid != service_instance.service_plan.guid
+      maintenance_info_changed = message.maintenance_info_version &&
+        message.maintenance_info_version != service_instance.maintenance_info&.symbolize_keys[:version]
 
-      service_name_changed || parameters_changed || service_plan_changed
+      service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
     end
 
     def update_sync(service_instance, message)
@@ -132,14 +134,22 @@ module VCAP::CloudController
     end
 
     def raise_if_invalid_maintenance_info_change!(service_instance, message)
+      return unless message.maintenance_info_version
+
       raise_if_unsupported_by_current_plan!(service_instance, message)
+      raise_if_version_mismatch!(service_instance, message)
     end
 
     def raise_if_unsupported_by_current_plan!(service_instance, message)
-      return unless message.maintenance_info_version
       return if service_instance.service_plan.maintenance_info
 
       raise UnprocessableUpdate.new_from_details('MaintenanceInfoNotSupported')
+    end
+
+    def raise_if_version_mismatch!(service_instance, message)
+      return if service_instance.service_plan.maintenance_info['version'] == message.maintenance_info_version
+
+      raise UnprocessableUpdate.new_from_details('MaintenanceInfoConflict')
     end
   end
 end

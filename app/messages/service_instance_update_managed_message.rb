@@ -27,8 +27,7 @@ module VCAP::CloudController
     validates :relationships, hash: true, allow_nil: true
     validates :maintenance_info, hash: true, allow_nil: true
 
-    validates_with MaintenanceInfoValidator, if: -> (record) {record.maintenance_info.is_a? Hash}
-
+    validates_with MaintenanceInfoValidator, if: ->(record) { record.maintenance_info.is_a? Hash }
 
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
