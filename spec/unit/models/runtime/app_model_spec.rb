@@ -267,14 +267,14 @@ module VCAP::CloudController
 
       describe 'buildpacks' do
         let(:ready_buildpack) { Buildpack.make(filename: 'some-file') }
-        let(:unready_buildpack) { Buildpack.make(filename: nil) }
+        let(:unready_buildpack) { Buildpack.make(name: 'unready', filename: nil) }
         let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model, buildpacks: [ready_buildpack.name, unready_buildpack.name]) }
 
         it 'does not allow buildpacks that are not READY' do
           expect {
             app_model.buildpack_lifecycle_data = buildpack_lifecycle_data
             app_model.save
-          }.to raise_error(Sequel::ValidationFailed, /must be in ready state/)
+          }.to raise_error(Sequel::ValidationFailed, /"unready" must be in ready state/)
         end
 
         it 'is valid with buildpacks that are READY' do

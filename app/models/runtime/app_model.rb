@@ -169,7 +169,7 @@ module VCAP::CloudController
           buildpack = Buildpack.find(name: blb.admin_buildpack_name)
 
           if buildpack && buildpack.state != Buildpack::READY_STATE
-            errors.add(:buildpack, 'must be in ready state')
+            errors.add(:buildpack, "#{buildpack.name.inspect} must be in ready state")
           end
         end
       end
