@@ -94,7 +94,7 @@ module VCAP::CloudController
       elsif service_plan_errors.include?(:paid_services_not_allowed_by_space_quota)
         raise UnprocessableUpdate.new_from_details('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
       elsif service_plan_errors.include?(:paid_services_not_allowed_by_quota)
-        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceServicePlanNotAllowed')
+        raise UnprocessableUpdate.new_from_details('ServiceInstanceServicePlanNotAllowed')
       end
 
       raise Sequel::ValidationFailed.new(service_instance)
