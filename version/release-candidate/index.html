@@ -29448,13 +29448,7 @@ future.</p>
 
 <p>V3 endpoints attempt to report audit events in the same way as V2 endpoints did.
 A notable case where this was not possible is for the <code class="prettyprint">audit.app.restage</code> event.
-In V2, there was a restage-app endpoint, and this event was reported when that
-endpoint was used. In V3, the concept of &ldquo;staging&rdquo; has been broken down into
-composable pieces (creating packages, creating builds to produce droplets,
-assigning droplets, etc.). There is no longer a clear concept of &ldquo;restaging&rdquo; on
-the V3 API. Instead, it is suggested to rely on events corresponding to these
-individual steps (e.g. <code class="prettyprint">audit.app.package.create</code>, <code class="prettyprint">audit.app.build.create</code>,
-<code class="prettyprint">audit.app.droplet.create</code>).</p>
+Read more about <a href="#restage">restaging</a> in V3.</p>
 
 <p>Read more about the <a href="#audit-events">audit event resource</a>.</p>
 <h3 id="domains-in-v3">Domains in V3</h3>
