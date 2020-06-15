@@ -263,7 +263,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
       }
 
-      if result[:last_operation][:state] == 'failed'
+      if result[:last_operation][:state] == 'failed' && instance.last_operation.type == 'create'
         @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       end
 
