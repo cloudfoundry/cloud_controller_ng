@@ -26,12 +26,14 @@ module VCAP::CloudController
           compatibility_checks
 
           client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+
           broker_response, err = client.update(
             service_instance,
             service_plan,
             accepts_incomplete: false,
             arbitrary_parameters: message.parameters || {},
             previous_values: previous_values,
+            maintenance_info: message.maintenance_info,
             name: message.requested?(:name) ? message.name : service_instance.name,
           )
           raise err if err
@@ -39,6 +41,7 @@ module VCAP::CloudController
           updates = message.updates.tap do |u|
             u[:service_plan_guid] = service_plan.guid
             u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+            u[:maintenance_info] = message.maintenance_info if message.maintenance_info
           end
 
           ServiceInstance.db.transaction do
@@ -104,6 +107,7 @@ module VCAP::CloudController
           service_id: service_instance.service.broker_provided_id,
           organization_id: service_instance.organization.guid,
           space_id: service_instance.space.guid,
+          maintenance_info: service_instance.maintenance_info
         }
       end
 

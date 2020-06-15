@@ -1538,6 +1538,7 @@ RSpec.describe 'V3 service instances' do
                       service_id: original_service_plan.service.unique_id,
                       organization_id: org.guid,
                       space_id: space.guid,
+                      maintenance_info: nil
                     },
                     context: {
                       platform: 'cloudfoundry',

@@ -25,7 +25,9 @@ module VCAP
             }
           }
         end
-        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
+        let(:original_maintenance_info) { { version: '1.1.0' } }
+        let(:new_maintenance_info) { { version: '1.1.1' } }
+        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: new_maintenance_info) }
         let(:new_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
         let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
         let(:request_attr) { { dummy_data: 'dummy_data' } }
@@ -40,6 +42,7 @@ module VCAP
               tags: tags,
               space_guid: space.guid,
               service_plan: original_service_plan,
+              maintenance_info: original_maintenance_info,
             },
             {
               type: 'update',
@@ -148,11 +151,13 @@ module VCAP
               new_service_plan,
               accepts_incomplete: false,
               arbitrary_parameters: request_attr,
+              maintenance_info: nil,
               previous_values: {
                 plan_id: original_service_plan.broker_provided_id,
                 service_id: service_offering.broker_provided_id,
                 organization_id: org.guid,
                 space_id: space.guid,
+                maintenance_info: original_maintenance_info.stringify_keys,
               },
               name: 'new-name',
             )
@@ -357,6 +362,54 @@ module VCAP
                 expect(pollable_job.warnings).to be_empty
               end
             end
+          end
+        end
+
+        describe 'maintenance_info update' do
+          let(:broker_update_response) {
+            {
+              instance: { dashboard_url: 'example.foo' },
+              last_operation: {
+                type: 'update',
+                state: 'succeeded',
+                description: 'abc',
+              }
+            }
+          }
+
+          let(:message) do
+            ServiceInstanceUpdateManagedMessage.new({
+              maintenance_info: {
+                version: '1.1.1',
+              }
+            })
+          end
+          before do
+            allow(client).to receive(:update).and_return(broker_update_response)
+            run_job(job, jobs_succeeded: 1)
+          end
+
+          it 'sends a request to the broker' do
+            expect(client).to have_received(:update).with(
+              service_instance,
+              original_service_plan,
+              maintenance_info: new_maintenance_info,
+              accepts_incomplete: false,
+              arbitrary_parameters: {},
+              previous_values: {
+                plan_id: original_service_plan.broker_provided_id,
+                service_id: service_offering.broker_provided_id,
+                organization_id: org.guid,
+                space_id: space.guid,
+                maintenance_info: original_maintenance_info.stringify_keys,
+              },
+              name: name,
+            )
+          end
+
+          it 'updates the service instance' do
+            service_instance.reload
+            expect(service_instance.maintenance_info.symbolize_keys).to eq(new_maintenance_info)
           end
         end
       end
