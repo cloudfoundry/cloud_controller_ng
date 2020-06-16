@@ -13,6 +13,7 @@ module VCAP
       end
 
       def emit_error(app_id, message)
+        fluent_emitter.emit(app_id, message) if fluent_emitter
         emitter.emit_error(app_id, message, generate_tags(app_id)) if emitter
       rescue => e
         logger.error('app_event_emitter.emit_error.failed', app_id: app_id, message: message, error: e)

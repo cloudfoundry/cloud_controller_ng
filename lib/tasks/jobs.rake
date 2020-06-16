@@ -63,12 +63,11 @@ namespace :jobs do
     def start_working
       config = RakeConfig.config
       BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
+
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
-      if config.get(:loggregator) && config.get(:loggregator, :router)
-        VCAP::AppLogEmitter.emitter = LoggregatorEmitter::Emitter.new(config.get(:loggregator, :router), 'cloud_controller', 'API', config.get(:index))
-        VCAP::AppLogEmitter.logger = logger
-      end
+
+      setup_app_log_emitter(config, logger)
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3
       Delayed::Worker.logger = logger
@@ -78,6 +77,22 @@ namespace :jobs do
     end
 
     private
+
+    def setup_app_log_emitter(config, logger)
+      VCAP::AppLogEmitter.fluent_emitter = fluent_emitter(config) if config.get(:fluent)
+      if config.get(:loggregator) && config.get(:loggregator, :router)
+        VCAP::AppLogEmitter.emitter = LoggregatorEmitter::Emitter.new(config.get(:loggregator, :router), 'cloud_controller', 'API', config.get(:index))
+      end
+
+      VCAP::AppLogEmitter.logger = logger
+    end
+
+    def fluent_emitter(config)
+      VCAP::FluentEmitter.new(Fluent::Logger::FluentLogger.new(nil,
+        host: config.get(:fluent, :host) || 'localhost',
+        port: config.get(:fluent, :port) || 24224,
+      ))
+    end
 
     def readiness_port
       if is_first_generic_worker_on_machine?

@@ -115,7 +115,7 @@ module VCAP::CloudController
       setup_blobstore
       @config.configure_components
 
-      setup_loggregator_emitter
+      setup_app_log_emitter
       @config.set(:external_host, VCAP::HostSystem.new.local_ip(@config.get(:local_route)))
     end
 
@@ -156,13 +156,14 @@ module VCAP::CloudController
       CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
     end
 
-    def setup_loggregator_emitter
+    def setup_app_log_emitter
       VCAP::AppLogEmitter.fluent_emitter = fluent_emitter if @config.get(:fluent)
 
       if @config.get(:loggregator) && @config.get(:loggregator, :router)
         VCAP::AppLogEmitter.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API', @config.get(:index))
-        VCAP::AppLogEmitter.logger = logger
       end
+
+      VCAP::AppLogEmitter.logger = logger
     end
 
     def fluent_emitter

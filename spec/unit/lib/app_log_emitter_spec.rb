@@ -40,6 +40,12 @@ module VCAP
         AppLogEmitter.emit(app.guid, 'log message')
       end
 
+      it 'emits app event logs to the fluent emitter' do
+        expect(fluent_emitter).to receive(:emit).with(app.guid, 'error')
+
+        AppLogEmitter.emit_error(app.guid, 'error')
+      end
+
       it 'logs errors on failure' do
         expect(fluent_emitter).to receive(:emit).with(app.guid, 'log message').and_raise(StandardError.new('rekt'))
         expect(logger).to receive(:error)
