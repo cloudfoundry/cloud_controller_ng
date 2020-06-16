@@ -19287,6 +19287,18 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
     }
   }'</span>
 </code></pre>
+<pre class="highlight plaintext"><code>(Experimental) Example Request for Managed Service Instance Upgrade (maintenance_info update)
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "maintenance_info": {
+      "version": "2.1.1"
+    }
+  }'</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Synchronous Response for Managed Service Instance:
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -19441,6 +19453,11 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 <td><strong>relationships.service_plan</strong> (<em>experimental</em>)</td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The service plan from which to create the service instance.</td>
+</tr>
+<tr>
+<td><strong>maintenance_info</strong> (<em>experimental</em>)</td>
+<td><em><a href="#the-maintenance-info-object-for-service-instances">maintenance_info object</a></em></td>
+<td>if provided it must have the <code class="prettyprint">version</code> field. <code class="prettyprint">version</code> must be a semantic version value and it must match the <code class="prettyprint">version</code> in the <code class="prettyprint">maintenance_info</code> for the service instance plan in the updated broker catalog. Any other value for <code class="prettyprint">version</code> will cause a <code class="prettyprint">MaintenanceInfoConflict</code> error</td>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong></td>
