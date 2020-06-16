@@ -17,5 +17,5 @@ The V3 API exposes these resources on the API to provide more visibility and ena
 Here are some examples of implications for clients:
 
 1. The app resource contains much less information about the application as a whole
-2. An application can have multiple processes, each with their own start command, scale, and stats
+2. An application can have multiple processes, each with their own start command. The processes can be scaled independently, and stats be retrieved independently.
 3. An application might not be running with its most recent package or droplet

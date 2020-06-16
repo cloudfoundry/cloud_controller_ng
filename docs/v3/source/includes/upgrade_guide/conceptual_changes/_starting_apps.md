@@ -18,5 +18,3 @@ diagram shows many different flows for starting an app.
 ![Start Flow](start_flows.png)
 
  Apps can upload multiple packages, stage multiple droplets, roll back to older droplets, and other complicated workflows.
-
-
