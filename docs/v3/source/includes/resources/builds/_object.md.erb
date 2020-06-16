@@ -9,16 +9,16 @@ Example Build object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | State of the build. Valid states are `STAGING`, `STAGED`, or `FAILED`.
-**error** | _string_ | A string describing errors during the build process.
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging. This will override the build's application's default lifecycle for this build.
-**package** | _object_ | The package that is the input to the staging process.
-**droplet** | _object_ | A resulting droplet from the staging process.
-**guid** | _uuid_ | Unique identifier for the build.
-**created_at** | _datetime_ | The time with zone when the build was created.
-**updated_at** | _datetime_ | The time with zone when the build was last updated.
-**created_by** | _object_ | The user that created the build.
-**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the build belongs to.
-**links** | [_links object_](#links) | Links to related resources.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the build.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the build.
+**state** | _string_ | State of the build; valid states are `STAGING`, `STAGED`, or `FAILED`
+**error** | _string_ | A string describing errors during the build process
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging; this will override the build's application's default lifecycle for this build
+**package** | _object_ | The package that is the input to the staging process
+**droplet** | _object_ | A resulting droplet from the staging process
+**guid** | _uuid_ | Unique identifier for the build
+**created_at** | _datetime_ | The time with zone when the build was created
+**updated_at** | _datetime_ | The time with zone when the build was last updated
+**created_by** | _object_ | The user that created the build
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the build belongs to
+**links** | [_links object_](#links) | Links to related resources
+**metadata.labels** | [_label object_](#labels) | Labels applied to the build
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the build

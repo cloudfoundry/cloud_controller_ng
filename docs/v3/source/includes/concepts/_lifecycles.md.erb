@@ -1,15 +1,14 @@
 ## Lifecycles
 
-Lifecycles inform the platform of how to build droplets and run apps. For example the
-`buildpack` lifecycle will use a droplet and a rootfs to run the app, while a `docker` lifecycle will
+Lifecycles inform the platform of how to build droplets and run apps. For example, a `docker` lifecycle will
 pull a Docker image from a registry to run an app.
 
 #### The lifecycle object
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Type of the lifecycle. Valid values are `buildpack`, `docker`.
-**data** | _object_ | Data that is used during staging and running for a lifecycle.
+**type** | _string_ | Type of the lifecycle; valid values are `buildpack`, `docker`
+**data** | _object_ | Data that is used during staging and running for a lifecycle
 
 ### Buildpack lifecycle
 
@@ -36,7 +35,7 @@ will be created and the droplet will be expanded inside that container to be exe
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
-**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack.
+**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
 
 ### Docker lifecycle
@@ -61,5 +60,5 @@ and the Docker image is executed inside of it.
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `docker`
-**data** | _object_ | Data is not used by the Docker lifecycle. Valid value is `{}`.
+**data** | _object_ | Data is not used by the Docker lifecycle; valid value is `{}`
 

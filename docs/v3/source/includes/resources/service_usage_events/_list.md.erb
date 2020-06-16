@@ -31,13 +31,13 @@ Retrieve all service usage events the user has access to.
 
 Name | Type | Description
 ---- | ---- | ------------
-**page** | _integer_ | Page to display. Valid values are integers >= 1.
-**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
-**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid value is `created_at`.
-**after_guid** | _string_ | Filters out events before and including the event with the given guid.
-**guids** | _list of strings_ | Comma-delimited list of usage event guids to filter by.
-**service_instance_types** | _list of strings_ | Comma-delimited list of service instance types to filter by. Valid values are `managed_service_instance` and `user_provided_service_instance`.
-**service_offering_guids** | _list of strings_ | Comma-delimited list of service offering guids to filter by.
+**page** | _integer_ | Page to display; valid values are integers >= 1
+**per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
+**order_by** | _string_ | Value to sort by. Defaults to ascending; prepend with `-` to sort descending; <br>valid value is `created_at`
+**after_guid** | _string_ | Filters out events before and including the event with the given guid
+**guids** | _list of strings_ | Comma-delimited list of usage event guids to filter by
+**service_instance_types** | _list of strings_ | Comma-delimited list of service instance types to filter by; valid values are `managed_service_instance` and `user_provided_service_instance`
+**service_offering_guids** | _list of strings_ | Comma-delimited list of service offering guids to filter by
 
 #### Permitted Roles
  |

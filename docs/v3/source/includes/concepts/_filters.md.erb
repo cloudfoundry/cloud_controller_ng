@@ -15,7 +15,9 @@ This will return all apps with name `the_name`.
 
 This will return all apps with name `the_name` OR `second_name`.
 
-##### **Multiple value request** #2
+###### **Exception**
+The `label_selector` query parameter will act as AND function, not an OR.
+
 `GET /v3/spaces?label_selector=production,east_coast`
 
 This will return all spaces whose metadata has labels with keys `production` AND `east_coast`.
@@ -33,6 +35,6 @@ An empty filter (`/v3/resources?fields=`) can mean either empty string (`""`) or
 
 This will return all buildpacks with stack `NULL`.
 
-`GET /v3/routes?paths=pepper,,tabi`
+`GET /v3/routes?hosts=hostname1,,hostname2`
 
-This will return all routes with path `"pepper"`, `""` OR `"tabi"`.
+This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.

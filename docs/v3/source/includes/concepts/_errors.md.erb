@@ -15,13 +15,13 @@ Example Error
 }
 ```
 
-An error response will always return a list of error objects in the `errors` field.
+An error response will always return a list of error objects. Errors appear on the [job resource](#jobs) for asynchronous operations.
 
 #### The error object
 
 Name | Type | Description
 ---- | ---- | -----------
-**code** | _integer_ | A numeric code for this error.
-**title** | _string_ | Short description of the error.
-**detail** | _string_ | Detailed description of the error.
+**code** | _integer_ | A numeric code for this error
+**title** | _string_ | Name of the error
+**detail** | _string_ | Detailed description of the error
 

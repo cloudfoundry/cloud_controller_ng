@@ -5,11 +5,11 @@ Sidecars are additional operating system processes that are run in the same cont
 #### Use cases for sidecars
 
 Sidecars are useful for any app processes that need to communicate with another within the same container or are otherwise dependent on each other. Some use cases are:
-  
+
 - Two or more processes that require access to a shared file
 - An Application Performance Monitoring (APM) tool that attaches to a dependent app's processes
 - Two or more processes that communicate via a local socket
-  
+
 
 #### Steps to create a sidecar
 The recommended way to create sidecars for your app is with an [app manifest](#app-manifest).

@@ -39,17 +39,17 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the app.
-**relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space.
+**name** | _string_ | Name of the app
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space
 
 #### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
-**environment_variables** | _object_ | Environment variables to be used for the App when running. | `{}`
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object for the application. | [buildpack lifecycle](#buildpack-lifecycle-object)
-**metadata.labels** | [_label object_](#labels) | Labels applied to the app.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the app.
+**environment_variables** | _object_ | Environment variables to be used for the App when running | `{}`
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object for the application | [buildpack lifecycle](#buildpack-lifecycle-object)
+**metadata.labels** | [_label object_](#labels) | Labels applied to the app
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the app
 
 #### Permitted roles
  |

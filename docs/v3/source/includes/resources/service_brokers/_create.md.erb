@@ -50,17 +50,17 @@ The `Location` header refers to the created job which syncs the broker with the 
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the service broker.
-**url** | _string_ | URL of the service broker.
-**authentication** | [_authentication_](#the-authentication-object) | Credentials used to authenticate against the service broker.
+**name** | _string_ | Name of the service broker
+**url** | _string_ | URL of the service broker
+**authentication** | [_authentication_](#the-authentication-object) | Credentials used to authenticate against the service broker
 
 #### Optional parameters
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**relationships.space** | [_to-one relationship_](#to-one-relationships) | If set, restricts the service broker to the specified space.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the service broker.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service broker.
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | If set, restricts the service broker to the specified space
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service broker
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service broker
 
 <%= yield_content :service_broker_credentials_object %>
 

@@ -36,18 +36,18 @@ Content-Type: application/json
 
 Name     | Type     | Description
 -------  | -------  | -----------
-**name** | _string_ | Name of the buildpack.
+**name** | _string_ | Name of the buildpack
 
 #### Optional parameters
 
 Name         | Type      | Description                                                                    | Default
 -----------  | --------  | -----------------------------------------------------------------------------  | -------
-**stack**    | _string_  | The name of the stack that the buildpack will use.                             | null
-**position** | _integer_ | The order in which the buildpacks are checked during buildpack auto-detection. | 1
+**stack**    | _string_  | The name of the stack that the buildpack will use                             | null
+**position** | _integer_ | The order in which the buildpacks are checked during buildpack auto-detection | 1
 **enabled**  | _boolean_ | Whether or not the buildpack will be used for staging                          | true
 **locked**   | _boolean_ | Whether or not the buildpack is locked to prevent updating the bits            | false
-**metadata.labels** | [_label object_](#labels) | Labels applied to the buildpack.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the buildpack. |
+**metadata.labels** | [_label object_](#labels) | Labels applied to the buildpack
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the buildpack |
 
 #### Permitted roles
 

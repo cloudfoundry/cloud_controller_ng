@@ -68,17 +68,17 @@ When you create a new deployment you can either provide a specific droplet or re
 
 Name | Type | Description
 ---- | ---- | -----------
-**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app to deploy a droplet for.
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app to deploy a droplet for
 
 #### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
-**droplet**<sup>[1]</sup> | _object_ | The droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
-**revision**<sup>[1]</sup> | _object_ | The [revision](#revisions) whose droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet |
+**droplet**<sup>[1]</sup> | _object_ | The droplet to deploy for the app; this will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
+**revision**<sup>[1]</sup> | _object_ | The [revision](#revisions) whose droplet to deploy for the app; this will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet |
 **strategy** | _string_ | The strategy to use for the deployment | `rolling`
-**metadata.labels** | [_label object_](#labels) | Labels applied to the deployment.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment.
+**metadata.labels** | [_label object_](#labels) | Labels applied to the deployment
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment
 
 
 <sup>1 Only a droplet _or_ a revision may be provided, not both.</sup>

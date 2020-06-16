@@ -9,19 +9,19 @@ Example Deployment object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | **(deprecated)** The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, `CANCELING`, or `CANCELED`. This field will be removed in the future; use the `status` fields to determine deployment state instead.
-**status.value** | _string_ | The current status of the deployment. Valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not).
-**status.reason** | _string_ | The reason for the status of the deployment.<br>Following list represents valid values.<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>- `DEGENERATE` (the deployment was created incorrectly by the system)
-**status.details** | _object_ | The details for the status of the deployment shows a timestamp of the last successful healthcheck.
-**strategy** | _string_ | Strategy used for the deployment.  Supported strategies are `rolling` only.
-**guid** | _uuid_ | Unique identifier for the deployment.
-**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.
-**droplet** | _object_ | The droplet the deployment is transitioning the app to.
-**previous_droplet** | _object_ | The app's [current droplet](#get-current-droplet-association-for-an-app) before the deployment was created.
+**state** | _string_ | **(deprecated)** This field will be removed in the future; use the `status` fields to determine deployment state instead
+**status.value** | _string_ | The current status of the deployment; valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not)
+**status.reason** | _string_ | The reason for the status of the deployment;<br>following list represents valid values:<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>- `DEGENERATE` (the deployment was created incorrectly by the system)
+**status.details** | _object_ | The details for the status of the deployment shows a timestamp of the last successful healthcheck
+**strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling` only
+**guid** | _uuid_ | Unique identifier for the deployment
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating
+**droplet** | _object_ | The droplet the deployment is transitioning the app to
+**previous_droplet** | _object_ | The app's [current droplet](#get-current-droplet-association-for-an-app) before the deployment was created
 **new_processes** | _array_ | List of processes created as part of the deployment
-**revision** | _object_ | The [revision](#revisions) the deployment is transitioning the app to.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the deployment.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment.
-**created_at** | _datetime_ | The time with zone when the object was created.
-**updated_at** | _datetime_ | The time with zone when the object was last updated.
-**links** | [_links object_](#links) | Links to related resources.
+**revision** | _object_ | The [revision](#revisions) the deployment is transitioning the app to
+**metadata.labels** | [_label object_](#labels) | Labels applied to the deployment
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment
+**created_at** | _datetime_ | The time with zone when the object was created
+**updated_at** | _datetime_ | The time with zone when the object was last updated
+**links** | [_links object_](#links) | Links to related resources

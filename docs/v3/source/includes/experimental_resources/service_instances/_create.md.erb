@@ -112,38 +112,38 @@ accordingly to cases outlined in the [OSBAPI specification](https://github.com/o
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Must be `managed`.
-**name** | _string_ | Name of the service instance.
-**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance.
-**relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance.
+**type** | _string_ | Must be `managed`
+**name** | _string_ | Name of the service instance
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance
+**relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance
 
 #### Optional parameters for managed service instance
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**tags** | _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
-**parameters** | _object_ | A JSON object that is passed to the service broker.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the service instance.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance.
+**tags** | _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**parameters** | _object_ | A JSON object that is passed to the service broker
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service instance
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance
 
 #### Required parameters for user-provided service instance
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Must be `user-provided`.
-**name** | _string_ | Name of the service instance.
-**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance.
+**type** | _string_ | Must be `user-provided`
+**name** | _string_ | Name of the service instance
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance
 
 #### Optional parameters for user-provided service instance
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**tags** | _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
-**credentials** | _object_ | A JSON object that is made available to apps bound to this service instance.
-**syslog_drain_url** | _string_ | URL to which logs for bound applications will be streamed.
-**route_service_url** | _string_ | URL to which requests for bound routes will be forwarded. Must use the `https` protocol.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the service instance.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance.
+**tags** | _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**credentials** | _object_ | A JSON object that is made available to apps bound to this service instance
+**syslog_drain_url** | _string_ | URL to which logs for bound applications will be streamed
+**route_service_url** | _string_ | URL to which requests for bound routes will be forwarded; must use the `https` protocol
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service instance
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance
 
 #### Permitted roles
  |

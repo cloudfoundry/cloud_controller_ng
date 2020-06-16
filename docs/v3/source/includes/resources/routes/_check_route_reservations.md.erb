@@ -31,9 +31,9 @@ belongs to a space the user does not belong to.
 
 Name | Type | Description
 ---- | ---- | ------------
-**host** | _string_ | Hostname to filter by. Defaults to empty string if not provided. Only applicable to `http` routes.
-**path** | _string_ | Path to filter by. Defaults to empty string if not provided. Only applicable to `http` routes.
-**port** | _integer_ | Port to filter by. Only applicable to `tcp` routes. Always use for `tcp` routes.
+**host** | _string_ | Hostname to filter by; defaults to empty string if not provided and only applicable to `http` routes
+**path** | _string_ | Path to filter by; defaults to empty string if not provided and only applicable to `http` routes
+**port** | _integer_ | Port to filter by; only applicable to `tcp` routes and required for `tcp` routes
 
 #### Permitted roles
 
@@ -43,7 +43,7 @@ Admin |
 Admin Read-Only |
 Global Auditor |
 Org Auditor |
-Org Billing Manager | Can only check if routes exist for a domain without an organization relationship.
+Org Billing Manager | Can only check if routes exist for a domain without an organization relationship
 Org Manager |
 Space Auditor |
 Space Developer |
