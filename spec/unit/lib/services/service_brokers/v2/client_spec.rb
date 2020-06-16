@@ -383,9 +383,10 @@ module VCAP::Services::ServiceBrokers::V2
       let(:code) { 200 }
       let(:message) { 'OK' }
       let(:broker_provided_operation) { nil }
+      let(:operation_type) { 'create' }
 
       before do
-        instance.save_with_new_operation({}, { type: 'create', broker_provided_operation: broker_provided_operation })
+        instance.save_with_new_operation({}, { type: operation_type, broker_provided_operation: broker_provided_operation })
         allow(http_client).to receive(:get).and_return(response)
       end
 
@@ -440,16 +441,45 @@ module VCAP::Services::ServiceBrokers::V2
         let(:code) { 200 }
         let(:message) { 'OK' }
 
-        context 'when the state is `failed`' do
+        context 'when the state is `failed` and the type is `create`' do
           let(:response_data) do
             {
               state: 'failed'
             }
           end
+          let(:operation_type) { 'create' }
 
           it 'performs orphan mitigation' do
             client.fetch_service_instance_last_operation(instance)
             expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+          end
+        end
+
+        context 'when the state is `failed` and the type is `update`' do
+          let(:response_data) do
+            {
+              state: 'failed'
+            }
+          end
+          let(:operation_type) { 'update' }
+
+          it 'does not perform orphan mitigation' do
+            client.fetch_service_instance_last_operation(instance)
+            expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision)
+          end
+        end
+
+        context 'when the state is `failed` and the type is `delete`' do
+          let(:response_data) do
+            {
+              state: 'failed'
+            }
+          end
+          let(:operation_type) { 'delete' }
+
+          it 'does not perform orphan mitigation' do
+            client.fetch_service_instance_last_operation(instance)
+            expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision)
           end
         end
 
@@ -459,6 +489,7 @@ module VCAP::Services::ServiceBrokers::V2
               state: 'succeeded'
             }
           end
+          let(:operation_type) {'create'}
 
           it 'does not perform orphan mitigation' do
             client.fetch_service_instance_last_operation(instance)
