@@ -46,8 +46,9 @@ module VCAP::CloudController
       parameters_changed = message.requested?(:parameters)
       service_plan_changed = message.service_plan_guid &&
         message.service_plan_guid != service_instance.service_plan.guid
+
       maintenance_info_changed = message.maintenance_info_version &&
-        message.maintenance_info_version != service_instance.maintenance_info&.symbolize_keys[:version]
+        message.maintenance_info_version != service_instance.maintenance_info&.fetch('version', nil)
 
       service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
     end
