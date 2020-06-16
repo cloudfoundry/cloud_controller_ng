@@ -489,7 +489,7 @@ module VCAP::Services::ServiceBrokers::V2
               state: 'succeeded'
             }
           end
-          let(:operation_type) {'create'}
+          let(:operation_type) { 'create' }
 
           it 'does not perform orphan mitigation' do
             client.fetch_service_instance_last_operation(instance)
