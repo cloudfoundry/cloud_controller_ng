@@ -28949,7 +28949,7 @@ diagram shows many different flows for starting an app.</p>
 
 <p>Unlike V2, clients cannot opt-in for asynchronous responses from endpoints. Instead, endpoints that require asynchronous processing will return <code class="prettyprint">202 Accepted</code> with a Location header pointing to the job resource to poll. Endpoints that do not require asynchronous processing will respond synchronously.</p>
 
-<p>For clients that want to report the outcome of an asynchronous operation, the expected pattern is to poll the job in the Location header until its <code class="prettyprint">state</code> is no longer <code class="prettyprint">PROCESSING</code>. If the job&rsquo;s <code class="prettyprint">state</code> is <code class="prettyprint">FAILED</code>, the <code class="prettyprint">errors</code> field will contain any errors that occurred during the operation.</p>
+<p>For clients that want to report the outcome of an asynchronous operation, poll the job in the Location header until its <code class="prettyprint">state</code> is no longer <code class="prettyprint">PROCESSING</code>. If the job&rsquo;s <code class="prettyprint">state</code> is <code class="prettyprint">FAILED</code>, the <code class="prettyprint">errors</code> field will contain any errors that occurred during the operation.</p>
 
 <p>An example of an asynchronous endpoint is the <a href="#delete-an-app">delete app endpoint</a>.</p>
 
@@ -29063,15 +29063,14 @@ cf curl /v3/service_offerings/:guid?fields[service_broker]=name,guid
 
 <p>V2 provided several endpoints that returned rolled-up summaries (e.g.
 <code class="prettyprint">/v2/spaces/:guid/summary</code> for a space summary, or
-<code class="prettyprint">/v2/organizations/:guid/summary</code> for an organization summary). These endpoints
-have been largely removed from V3 because they were expensive for Cloud
-Controller to compute and because they often returned more information than
-clients actually needed. They were convenient, so it was easy for clients to
-rely on them even when they only needed a few pieces of information.</p>
+<code class="prettyprint">/v2/organizations/:guid/summary</code> for an organization summary). Although
+convenient, these endpoints have been largely removed from V3, for they were
+computationally expensive and often returned much more information than
+needed.</p>
 
-<p>In V3, to enable better API performance overall, these usage patterns are
+<p>In V3, to enable better API performance, these usage patterns are
 deliberately disallowed. Instead, clients are encouraged to think more carefully
-about which information they really need and to fetch that information with
+about which information they need and to fetch that information with
 multiple API calls and/or by making use of the <a href="#including-associated-resources"><code class="prettyprint">include</code>
 parameter</a> on certain endpoints.</p>
 
@@ -29085,7 +29084,7 @@ filter by the parent resource. See below for examples of summaries in V3.</p>
 <li>To fetch all apps in a space, use <code class="prettyprint">GET /v3/apps?space_guids=&lt;space-guid&gt;</code>.
 Passing <code class="prettyprint">include=space</code> will include the space resource in the response body.</li>
 <li>To fetch all service instances in a space use <code class="prettyprint">GET
-/v3/service_instances?space_guids=&lt;space-guid&gt;</code>. You may be able to pass the
+/v3/service_instances?space_guids=&lt;space-guid&gt;</code>. Use the
 experimental <code class="prettyprint">fields</code> parameter to include related information in the response
 body.</li>
 </ul>
