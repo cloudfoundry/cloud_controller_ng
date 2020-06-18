@@ -13,10 +13,10 @@ module VCAP::CloudController
             operation:  job.operation,
             state:      job.state,
 
-            links:      build_links,
-
             errors:     build_errors,
             warnings:   build_warnings,
+
+            links:      build_links,
           }
         end
 

@@ -10,14 +10,14 @@ Example Service Plan object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the service plan
-**name** | _string_ | Name of the service plan
-**description** | _string_ | Description of the service plan
-**available** | _boolean_ | Whether or not the service plan is available
-**visibility_type** | _string_ | Denotes the visibility of the plan; can be `public`, `admin`, `organization`, `space`, see [_list of visibility types_](#list-of-visibility-types)
-**free** | _boolean_ | Whether or not the service plan is free of charge
-**costs** | _array of [cost objects](#the-service-plan-cost)_ | The cost of the service plan as obtained from the service broker catalog
 **created_at** | _datetime_ | The time with zone when the object was created
 **updated_at** | _datetime_ | The time with zone when the object was last updated
+**name** | _string_ | Name of the service plan
+**visibility_type** | _string_ | Denotes the visibility of the plan; can be `public`, `admin`, `organization`, `space`, see [_list of visibility types_](#list-of-visibility-types)
+**available** | _boolean_ | Whether or not the service plan is available
+**free** | _boolean_ | Whether or not the service plan is free of charge
+**costs** | _array of [cost objects](#the-service-plan-cost)_ | The cost of the service plan as obtained from the service broker catalog
+**description** | _string_ | Description of the service plan
 **maintenance_info** | _[maintenance_info object](#the-maintenance-info-object-for-service-plans)_ | Information about the version of this service plan
 **broker_catalog** | _[broker catalog object](#the-service-plan-broker-catalog)_ | This object contains information obtained from the service broker catalog
 **schemas** | _[schemas object](#the-service-plan-schemas)_ | Schema definitions for service instances and service bindings for the service plan

@@ -26,9 +26,9 @@ module VCAP::CloudController::Presenters::V3
     def to_hash
       hash = {
         guid: route.guid,
-        protocol: route.domain.protocols[0],
         created_at: route.created_at,
         updated_at: route.updated_at,
+        protocol: route.domain.protocols[0],
         host: route.host,
         path: route.path,
         port: route.port,

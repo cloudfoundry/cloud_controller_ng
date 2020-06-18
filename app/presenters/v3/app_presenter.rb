@@ -18,10 +18,10 @@ module VCAP::CloudController
         def to_hash
           hash = {
             guid: app.guid,
-            name: app.name,
-            state: app.desired_state,
             created_at: app.created_at,
             updated_at: app.updated_at,
+            name: app.name,
+            state: app.desired_state,
             lifecycle: {
               type: app.lifecycle_type,
               data: app.lifecycle_data.to_hash
@@ -33,11 +33,11 @@ module VCAP::CloudController
                 }
               }
             },
-            links: build_links,
             metadata: {
               labels: hashified_labels(app.labels),
               annotations: hashified_annotations(app.annotations)
-            }
+            },
+            links: build_links
           }
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }

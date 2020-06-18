@@ -1416,14 +1416,14 @@ RSpec.describe 'Apps' do
                                                               },
                                                               'package' => { 'guid' => package.guid, },
                                                               'droplet' => {
-                                                                  'guid' => droplet.guid,
-                                                                  'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
+                                                                  'guid' => droplet.guid
                                                               },
                                                               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
                                                               },
                                                               'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
                                                           },
@@ -1443,13 +1443,13 @@ RSpec.describe 'Apps' do
                                                               'package' => { 'guid' => package.guid, },
                                                               'droplet' => {
                                                                   'guid' => second_droplet.guid,
-                                                                  'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
                                                               },
                                                               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
                                                               },
                                                               'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
                                                           },

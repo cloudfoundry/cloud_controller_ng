@@ -9,18 +9,18 @@ Example Droplet object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | State of the droplet; valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`
-**error** | _string_ | A string describing the last error during the droplet lifecycle
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was used when staging the droplet; **lifecycle.data** will always be an empty hash for lifecycles of type `docker`
 **guid** | _uuid_ | Unique identifier for the droplet
 **created_at** | _datetime_ | The time with zone when the object was created
 **updated_at** | _datetime_ | The time with zone when the object was last updated
-**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the droplet belongs to
-**links** | [_links object_](#links) | Links to related resources
+**state** | _string_ | State of the droplet; valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`
+**error** | _string_ | A string describing the last error during the droplet lifecycle
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was used when staging the droplet; **lifecycle.data** will always be an empty hash for lifecycles of type `docker`
 **execution_metadata** | _string_ | Serialized JSON data resulting from staging for use when executing a droplet
 **process_types** | _object_ | The process types (keys) and associated start commands (values) that will be created when the droplet is executed
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the droplet belongs to
 **metadata.labels** | [_labels object_](#labels) | Labels on the droplet
 **metadata.annotations** | [_annotations object_](#annotations) | Annotations on the droplet
+**links** | [_links object_](#links) | Links to related resources
 
 In addition to these fields, a droplet object will contain the following fields from both lifecycles.
 Their values will be `null` by default and will contain values when the droplet is of a specific **lifecycle.type**.

@@ -1,4 +1,3 @@
-
 ### The app object
 
 ```
@@ -10,13 +9,13 @@ Example App object
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the app
-**state** | _string_ | Current desired state of the app; valid values are `STOPPED` or `STARTED`
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the default lifecycle object for the application. This lifecycle will be used when staging and running the application. The staging lifecycle can be overridden on [builds](#builds)
 **guid** | _uuid_ | Unique identifier for the app
 **created_at** | _datetime_ | The time with zone when the object was created
 **updated_at** | _datetime_ | The time with zone when the object was last updated
+**name** | _string_ | Name of the app
+**state** | _string_ | Current desired state of the app; valid values are `STOPPED` or `STARTED`
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the default lifecycle object for the application. This lifecycle will be used when staging and running the application. The staging lifecycle can be overridden on [builds](#builds)
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the app is contained in
-**links** | [_links object_](#links) | Links to related resources
 **metadata.labels** | [_label object_](#labels) | Labels applied to the app
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations added to the app
+**links** | [_links object_](#links) | Links to related resources

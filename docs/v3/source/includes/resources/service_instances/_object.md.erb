@@ -16,10 +16,10 @@ Example User-Provided Service Instance object
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the service instance
 **guid** | _uuid_ | Unique identifier for the service instance
 **created_at** | _datetime_ | The time with zone when the object was created
 **updated_at** | _datetime_ | The time with zone when the object was last updated
+**name** | _string_ | Name of the service instance
 **type** (*experimental*)| _string_ | Either `managed` or `user-provided`
 **tags** (*experimental*)| _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
 **syslog_drain_url** (*experimental*)| _string_ | URL to which logs for bound applications will be streamed; only shown when type is `user-provided`

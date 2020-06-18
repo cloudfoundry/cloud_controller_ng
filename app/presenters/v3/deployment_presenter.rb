@@ -8,6 +8,8 @@ module VCAP::CloudController::Presenters::V3
     def to_hash
       {
         guid: deployment.guid,
+        created_at: deployment.created_at,
+        updated_at: deployment.updated_at,
         state: deployment.state,
         status: {
           value: deployment.status_value,
@@ -24,8 +26,7 @@ module VCAP::CloudController::Presenters::V3
           guid: deployment.previous_droplet_guid
         },
         new_processes: new_processes,
-        created_at: deployment.created_at,
-        updated_at: deployment.updated_at,
+        revision: revision,
         relationships: {
           app: {
             data: {
@@ -38,7 +39,6 @@ module VCAP::CloudController::Presenters::V3
           annotations: hashified_annotations(deployment.annotations),
         },
         links: build_links,
-        revision: revision,
       }
     end
 

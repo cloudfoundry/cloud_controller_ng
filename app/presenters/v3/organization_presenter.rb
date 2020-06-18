@@ -26,11 +26,11 @@ module VCAP::CloudController::Presenters::V3
             }
           }
         },
-        links: build_links,
         metadata: {
           labels: hashified_labels(organization.labels),
           annotations: hashified_annotations(organization.annotations)
         },
+        links: build_links,
       }
     end
 

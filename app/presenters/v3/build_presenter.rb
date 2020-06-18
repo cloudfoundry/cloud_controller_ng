@@ -27,17 +27,17 @@ module VCAP::CloudController
             },
             package: { guid: build.package_guid },
             droplet: droplet,
+            created_by: {
+              guid: build.created_by_user_guid,
+              name: build.created_by_user_name,
+              email: build.created_by_user_email,
+            },
             relationships: { app: { data: { guid: build.app_guid } } },
             metadata: {
               labels: hashified_labels(build.labels),
               annotations: hashified_annotations(build.annotations),
             },
             links: build_links,
-            created_by: {
-              guid: build.created_by_user_guid,
-              name: build.created_by_user_name,
-              email: build.created_by_user_email,
-            }
           }
         end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         def droplet
           if build.droplet&.in_final_state?
-            return { guid: build.droplet.guid, href: url_builder.build_url(path: "/v3/droplets/#{build.droplet.guid}") }
+            return { guid: build.droplet.guid }
           end
 
           nil
@@ -63,8 +63,10 @@ module VCAP::CloudController
         def build_links
           {
             self: { href: url_builder.build_url(path: "/v3/builds/#{build.guid}") },
-            app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") },
-          }
+            app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") }
+          }.tap do |links|
+            links[:droplet] = { href: url_builder.build_url(path: "/v3/droplets/#{build.droplet.guid}") } if droplet
+          end
         end
       end
     end

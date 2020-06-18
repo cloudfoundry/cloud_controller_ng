@@ -14,13 +14,13 @@ module VCAP::CloudController
 
           hash = {
             guid: service_offering.guid,
+            created_at: service_offering.created_at,
+            updated_at: service_offering.updated_at,
             name: service_offering.label,
             description: service_offering.description,
             available: service_offering.active,
             tags: service_offering.tags,
             requires: service_offering.requires,
-            created_at: service_offering.created_at,
-            updated_at: service_offering.updated_at,
             shareable: shareable(metadata),
             documentation_url: documentation_url(metadata),
             broker_catalog: {

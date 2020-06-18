@@ -9,13 +9,17 @@ Example Security Group object
 
 Name | Type | Description
 ---- | ---- | -----------
+**guid**                  | _uuid_                                                    | Unique identifier for the security group
+**created_at**            | _datetime_                                                | The time with zone when the object was created
+**updated_at**            | _datetime_                                                | The time with zone when the object was last updated
 **name** | _string_ | Name of the security group
+**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group
 **globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of all applications
 **globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications
 **globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications
-**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group
-**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during staging
 **relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during runtime
+**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during staging
+**links**                 | [_links object_](#links)                                  | Links to related resources
 
 #### The rule object
 

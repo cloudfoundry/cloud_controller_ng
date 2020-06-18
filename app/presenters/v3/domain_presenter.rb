@@ -25,10 +25,6 @@ module VCAP::CloudController::Presenters::V3
         internal: domain.internal,
         router_group: hashified_router_group(domain.router_group_guid),
         supported_protocols: domain.protocols,
-        metadata: {
-          labels: hashified_labels(domain.labels),
-          annotations: hashified_annotations(domain.annotations),
-        },
         relationships: {
           organization: {
             data: owning_org_guid
@@ -36,6 +32,10 @@ module VCAP::CloudController::Presenters::V3
           shared_organizations: {
             data: shared_org_guids
           }
+        },
+        metadata: {
+          labels: hashified_labels(domain.labels),
+          annotations: hashified_annotations(domain.annotations),
         },
         links: build_links
       }

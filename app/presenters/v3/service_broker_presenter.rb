@@ -13,10 +13,10 @@ module VCAP::CloudController
         def to_hash
           {
             guid: broker.guid,
-            name: broker.name,
-            url: broker.broker_url,
             created_at: broker.created_at,
             updated_at: broker.updated_at,
+            name: broker.name,
+            url: broker.broker_url,
             relationships: build_relationships,
             metadata: {
               labels: hashified_labels(broker.labels),

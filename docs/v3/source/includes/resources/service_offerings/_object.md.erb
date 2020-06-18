@@ -10,13 +10,13 @@ Example Service Offering object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the service offering
+**created_at** | _datetime_ | The time with zone when the object was created
+**updated_at** | _datetime_ | The time with zone when the object was last updated
 **name** | _string_ | Name of the service offering
 **description** | _string_ | Description of the service offering
 **available** | _boolean_ | Whether or not the service offering is available
 **tags** | _list of strings_ | Descriptive tags for the service offering
 **requires** | _list of strings_ | A list of permissions that the user would have to give the service, if they provision it; the only permissions currently supported are syslog_drain, route_forwarding and volume_mount
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
 **shareable** | _boolean_ | Whether or not service Instances of this service offering can be shared across organizations and spaces
 **documentation_url** | _string_ | Url that points to a documentation page for the service offering, if provided by the service broker as part of the metadata field
 **broker_catalog** | _[broker catalog object](#the-service-offering-broker-catalog)_ | This object contains information obtained from the service broker Catalog

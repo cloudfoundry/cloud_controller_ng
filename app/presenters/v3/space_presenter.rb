@@ -28,11 +28,11 @@ module VCAP::CloudController::Presenters::V3
             data: space.space_quota_definition ? { guid: space.space_quota_definition_guid } : nil
           }
         },
-        links: build_links,
         metadata: {
           labels: hashified_labels(space.labels),
           annotations: hashified_annotations(space.annotations),
-        }
+        },
+        links: build_links,
       }
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [space]) }

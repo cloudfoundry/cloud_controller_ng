@@ -10,14 +10,14 @@ module VCAP::CloudController
         def to_hash
           {
             guid: isolation_segment.guid,
-            name: isolation_segment.name,
             created_at: isolation_segment.created_at,
             updated_at: isolation_segment.updated_at,
-            links: build_links,
+            name: isolation_segment.name,
             metadata: {
               labels: hashified_labels(isolation_segment.labels),
               annotations: hashified_annotations(isolation_segment.annotations)
-            }
+            },
+            links: build_links,
           }
         end
 
