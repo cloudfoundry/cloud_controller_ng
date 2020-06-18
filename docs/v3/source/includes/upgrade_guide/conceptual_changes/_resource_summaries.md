@@ -2,15 +2,14 @@
 
 V2 provided several endpoints that returned rolled-up summaries (e.g.
 `/v2/spaces/:guid/summary` for a space summary, or
-`/v2/organizations/:guid/summary` for an organization summary). These endpoints
-have been largely removed from V3 because they were expensive for Cloud
-Controller to compute and because they often returned more information than
-clients actually needed. They were convenient, so it was easy for clients to
-rely on them even when they only needed a few pieces of information.
+`/v2/organizations/:guid/summary` for an organization summary). Although
+convenient, these endpoints have been largely removed from V3, for they were
+computationally expensive and often returned much more information than
+needed.
 
-In V3, to enable better API performance overall, these usage patterns are
+In V3, to enable better API performance, these usage patterns are
 deliberately disallowed. Instead, clients are encouraged to think more carefully
-about which information they really need and to fetch that information with
+about which information they need and to fetch that information with
 multiple API calls and/or by making use of the [`include`
 parameter](#including-associated-resources) on certain endpoints.
 
@@ -23,7 +22,7 @@ filter by the parent resource. See below for examples of summaries in V3.
 - To fetch all apps in a space, use `GET /v3/apps?space_guids=<space-guid>`.
   Passing `include=space` will include the space resource in the response body.
 - To fetch all service instances in a space use `GET
-  /v3/service_instances?space_guids=<space-guid>`. You may be able to pass the
+  /v3/service_instances?space_guids=<space-guid>`. Use the
   experimental `fields` parameter to include related information in the response
   body.
 
