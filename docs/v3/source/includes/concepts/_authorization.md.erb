@@ -11,8 +11,13 @@ Scope | Description
 `cloud_controller.global_auditor` | This scope provides read only access to all resources except secrets (such as environment variables)
 `cloud_controller.read` | This scope provides read access to resources based on user roles
 `cloud_controller.write` | This scope provides write access to resources based on user roles
+`cloud_controller.update_build_state` | This scope allows its bearer to update the state of a build; currently only used when [updating builds](#update-a-build)
 
 #### Cloud Foundry user roles
+
+Users that interact with the API should have one or more of these roles. Some of them (e.g. admin)
+are controlled via scopes on the user's token. Others (e.g. space developer) are controlled via the
+[roles resource](#roles).
 
 Role | Description
 ---------------------------------------------------- | -------
@@ -27,3 +32,11 @@ Space Developer     | Allows developers to create and manage apps and services i
 Space Manager       | Provides space management access
 Space Auditor       | Provides read-only access to a space for auditing purposes
 
+#### Component roles
+
+Components that interact with the Cloud Controller in the back-end can be given these roles to allow
+limited access to API resources. These roles are controlled via scopes on the component's token.
+
+Role | Description
+---- | -----------
+Build State Updater | Allows a component to update the state of build resources; OAuth token must contain `cloud_controller.update_build_state` scope
