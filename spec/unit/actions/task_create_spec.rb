@@ -74,18 +74,10 @@ module VCAP::CloudController
 
       describe 'desiring the task from Diego' do
         context 'when talking directly to BBS' do
-          let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
-          let(:recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
-
-          before do
-            allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
-            allow(Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
-          end
-
           it 'builds a recipe for the task and desires the task from BBS' do
             task = task_create_action.create(app, message, user_audit_info)
 
-            expect(bbs_client).to have_received(:desire_task).with(task.guid, task_definition, Diego::TASKS_DOMAIN)
+            expect(bbs_client).to have_received(:desire_task).with(task, Diego::TASKS_DOMAIN)
           end
 
           it 'updates the task to be running' do
@@ -96,7 +88,7 @@ module VCAP::CloudController
 
           describe 'task errors' do
             it 'catches InvalidDownloadUri and wraps it in an API error' do
-              allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri.new('error message'))
+              allow(bbs_client).to receive(:desire_task).and_raise(Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri.new('error message'))
               expect {
                 task_create_action.create(app, message, user_audit_info)
               }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
@@ -104,14 +96,14 @@ module VCAP::CloudController
 
             describe 'lifecycle bundle errors from recipe builder' do
               it 'catches InvalidStack and wraps it in an API error' do
-                allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidStack.new('error message'))
+                allow(bbs_client).to receive(:desire_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidStack.new('error message'))
                 expect {
                   task_create_action.create(app, message, user_audit_info)
                 }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/
               end
 
               it 'catches InvalidCompiler and wraps it in an API error' do
-                allow(recipe_builder).to receive(:build_app_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidCompiler.new('error message'))
+                allow(bbs_client).to receive(:desire_task).and_raise(Diego::LifecycleBundleUriGenerator::InvalidCompiler.new('error message'))
                 expect {
                   task_create_action.create(app, message, user_audit_info)
                 }.to raise_error CloudController::Errors::ApiError, /Task failed: error message/

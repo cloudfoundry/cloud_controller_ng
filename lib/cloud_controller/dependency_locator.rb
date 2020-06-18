@@ -445,11 +445,11 @@ module CloudController
     end
 
     def build_opi_task_client
-      ::OPI::TaskClient.new(config)
+      ::OPI::TaskClient.new(config, VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
     end
 
     def build_bbs_task_client
-      VCAP::CloudController::Diego::BbsTaskClient.new(build_bbs_client)
+      VCAP::CloudController::Diego::BbsTaskClient.new(config, build_bbs_client)
     end
 
     def build_instances_client
