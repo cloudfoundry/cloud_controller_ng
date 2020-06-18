@@ -43,7 +43,7 @@ module VCAP::CloudController
             name: 'different-name',
             tags: %w(accounting couchbase nosql),
             maintenance_info: {
-              version: '2.1.0'
+              version: original_maintenance_info[:version]
             },
             metadata: {
               labels: {
@@ -75,7 +75,7 @@ module VCAP::CloudController
           ])
         end
 
-        it 'does not update the maintenance_info' do
+        it 'does not update the maintenance_info when it is unchanged' do
           action.update(service_instance, message)
 
           service_instance.reload
@@ -244,11 +244,60 @@ module VCAP::CloudController
               )
             }
 
+            let(:body) do
+              {
+                maintenance_info: { version: '2.2.0' },
+              }
+            end
+
             it 'should create a job' do
               _, job = action.update(service_instance, message)
 
               expect(job).to be_a(PollableJobModel)
               expect(job.operation).to eq('service_instance.update')
+            end
+
+            context 'maintenance_info and other fields' do
+              let(:body) do
+                {
+                  maintenance_info: { version: '2.2.0' },
+                  name: 'something-different',
+                  tags: ['a-new-tag'],
+                  parameters: { new_param: 'bartender' },
+                  relationships: {
+                    service_plan: {
+                      data: {
+                        guid: service_instance.service_plan.guid
+                      }
+                    }
+                  }
+                }
+              end
+
+              it 'should create a job' do
+                _, job = action.update(service_instance, message)
+
+                expect(job).to be_a(PollableJobModel)
+                expect(job.operation).to eq('service_instance.update')
+              end
+            end
+
+            context 'changing parameters without maintenance_info when the plan was updated' do
+              let(:body) do
+                {
+                  name: 'something-different',
+                  tags: ['a-new-tag'],
+                  parameters: { new_param: 'bartender' }
+
+                }
+              end
+
+              it 'should create a job' do
+                _, job = action.update(service_instance, message)
+
+                expect(job).to be_a(PollableJobModel)
+                expect(job.operation).to eq('service_instance.update')
+              end
             end
           end
         end
@@ -476,6 +525,33 @@ module VCAP::CloudController
               action.update(service_instance, message)
             }.to raise_error CloudController::Errors::ApiError do |err|
               expect(err.name).to eq('MaintenanceInfoConflict')
+            end
+          end
+        end
+
+        context 'when changing plan and maintenance_info at the same time' do
+          let(:body) do
+            {
+              maintenance_info: {
+                version: '4.2.1'
+              },
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          let(:new_plan) { ServicePlan.make(service: service_offering, maintenance_info: { version: '4.2.1' }) }
+
+          it 'raises' do
+            expect {
+              action.update(service_instance, message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('MaintenanceInfoNotUpdatableWhenChangingPlan')
             end
           end
         end

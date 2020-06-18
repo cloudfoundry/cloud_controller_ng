@@ -26,9 +26,10 @@ module VCAP
           }
         end
         let(:original_maintenance_info) { { version: '1.1.0' } }
-        let(:new_maintenance_info) { { version: '1.1.1' } }
-        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: new_maintenance_info) }
-        let(:new_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
+        let(:updated_maintenance_info) { { version: '1.1.1' } }
+        let(:new_maintenance_info) { { version: '2.1.1' } }
+        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: updated_maintenance_info) }
+        let(:new_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: new_maintenance_info) }
         let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
         let(:request_attr) { { dummy_data: 'dummy_data' } }
         let(:name) { Sham.name }
@@ -174,6 +175,7 @@ module VCAP
             expect(service_instance.name).to eq('new-name')
             expect(service_instance.tags).to eq(%w(foo bar))
             expect(service_instance.service_plan).to eq(new_service_plan)
+            expect(service_instance.maintenance_info).to eq(new_maintenance_info.stringify_keys)
 
             expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
               { prefix: nil, key: 'foo', value: 'bar' },
@@ -393,7 +395,7 @@ module VCAP
             expect(client).to have_received(:update).with(
               service_instance,
               original_service_plan,
-              maintenance_info: new_maintenance_info,
+              maintenance_info: updated_maintenance_info,
               accepts_incomplete: false,
               arbitrary_parameters: {},
               previous_values: {
@@ -409,7 +411,7 @@ module VCAP
 
           it 'updates the service instance' do
             service_instance.reload
-            expect(service_instance.maintenance_info.symbolize_keys).to eq(new_maintenance_info)
+            expect(service_instance.maintenance_info.symbolize_keys).to eq(updated_maintenance_info)
           end
         end
       end

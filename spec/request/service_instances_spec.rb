@@ -1418,6 +1418,7 @@ RSpec.describe 'V3 service instances' do
           VCAP::CloudController::ServicePlan.make(
             service: service_offering,
             plan_updateable: true,
+            maintenance_info: { version: '1.1.1' }
           )
         end
         let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
@@ -1426,6 +1427,7 @@ RSpec.describe 'V3 service instances' do
             tags: %w(foo bar),
             space: space,
             service_plan: original_service_plan,
+            maintenance_info: { version: '1.1.0' }
           )
           si.annotation_ids = [
             VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
@@ -1538,7 +1540,7 @@ RSpec.describe 'V3 service instances' do
                       service_id: original_service_plan.service.unique_id,
                       organization_id: org.guid,
                       space_id: space.guid,
-                      maintenance_info: nil
+                      maintenance_info: { version: '1.1.0' }
                     },
                     context: {
                       platform: 'cloudfoundry',
@@ -1565,6 +1567,7 @@ RSpec.describe 'V3 service instances' do
               expect(service_instance.dashboard_url).to eq('http://new-dashboard.url')
               expect(service_instance.last_operation.type).to eq('update')
               expect(service_instance.last_operation.state).to eq('succeeded')
+              expect(service_instance.maintenance_info).to eq(new_service_plan.maintenance_info)
             end
 
             it 'marks the job as complete' do
@@ -1589,6 +1592,28 @@ RSpec.describe 'V3 service instances' do
 
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
               end
+            end
+          end
+
+          context 'changing maintenance_info alongside other parameters' do
+            let(:new_maintenance_info) { { version: '1.1.1' } }
+            let(:request_body) do
+              {
+                name: 'new-name',
+                maintenance_info: new_maintenance_info,
+                tags: %w(baz quz),
+              }
+            end
+
+            it 'modifies the instance' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              service_instance.reload
+              expect(service_instance.maintenance_info.symbolize_keys).to eq(new_maintenance_info)
+              expect(service_instance.last_operation.type).to eq('update')
+              expect(service_instance.last_operation.state).to eq('succeeded')
+              expect(service_instance.name).to eq('new-name')
+              expect(service_instance.tags).to include('baz', 'quz')
             end
           end
         end
@@ -1691,6 +1716,58 @@ RSpec.describe 'V3 service instances' do
                 {
                   'title' => 'CF-UnprocessableEntity',
                   'detail' => include('maintenance_info.version requested is invalid')
+                }
+              )
+            )
+          end
+        end
+
+        context 'changing maintenance_info alongside plan' do
+          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
+          let(:service_plan) {
+            VCAP::CloudController::ServicePlan.make(
+              public: true,
+              active: true,
+              service: service_offering,
+              maintenance_info: { version: '2.2.0' }
+            )
+          }
+
+          let(:new_service_plan) {
+            VCAP::CloudController::ServicePlan.make(
+              public: true,
+              active: true,
+              service: service_offering,
+              maintenance_info: { version: '2.1.0' }
+            )
+          }
+
+          let(:new_service_plan_guid) { new_service_plan.guid }
+
+          let(:request_body) do
+            {
+              maintenance_info: {
+                version: '2.2.0',
+              },
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_service_plan_guid
+                  }
+                }
+              },
+            }
+          end
+
+          it 'fails with a descriptive message' do
+            api_call.call(space_dev_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include(
+                {
+                  'title' => 'CF-UnprocessableEntity',
+                  'detail' => include('maintenance_info should not be changed when switching to different plan.')
                 }
               )
             )
