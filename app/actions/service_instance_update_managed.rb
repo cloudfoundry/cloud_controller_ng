@@ -137,8 +137,16 @@ module VCAP::CloudController
     def raise_if_invalid_maintenance_info_change!(service_instance, message)
       return unless message.maintenance_info_version
 
+      raise_if_concurrent_plan_update!(service_instance, message)
       raise_if_unsupported_by_current_plan!(service_instance, message)
       raise_if_version_mismatch!(service_instance, message)
+    end
+
+    def raise_if_concurrent_plan_update!(service_instance, message)
+      return unless message.service_plan_guid
+      return if message.service_plan_guid == service_instance.service_plan.guid
+
+      raise UnprocessableUpdate.new_from_details('MaintenanceInfoNotUpdatableWhenChangingPlan')
     end
 
     def raise_if_unsupported_by_current_plan!(service_instance, message)
