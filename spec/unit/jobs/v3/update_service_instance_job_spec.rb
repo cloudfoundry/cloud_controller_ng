@@ -152,7 +152,7 @@ module VCAP
               new_service_plan,
               accepts_incomplete: false,
               arbitrary_parameters: request_attr,
-              maintenance_info: new_service_plan.maintenance_info,
+              maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
               previous_values: {
                 plan_id: original_service_plan.broker_provided_id,
                 service_id: service_offering.broker_provided_id,
@@ -432,7 +432,7 @@ module VCAP
               expect(client).to have_received(:update).with(
                 service_instance,
                 new_service_plan,
-                maintenance_info: new_service_plan.maintenance_info,
+                maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
                 accepts_incomplete: false,
                 arbitrary_parameters: {},
                 previous_values: {
