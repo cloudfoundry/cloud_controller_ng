@@ -68,7 +68,6 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:upload][:method]).to eq('POST')
 
           expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
-          expect(result[:links][:download][:method]).to eq('GET')
           expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
           expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         end
@@ -93,7 +92,6 @@ module VCAP::CloudController::Presenters::V3
               expect(result[:links][:upload][:method]).to eq('PUT')
 
               expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
-              expect(result[:links][:download][:method]).to eq('GET')
             end
           end
 
@@ -104,7 +102,6 @@ module VCAP::CloudController::Presenters::V3
               expect(result[:links]).not_to include(:upload)
 
               expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
-              expect(result[:links][:download][:method]).to eq('GET')
             end
           end
         end

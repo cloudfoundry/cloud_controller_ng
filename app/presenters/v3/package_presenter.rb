@@ -71,7 +71,7 @@ module VCAP::CloudController
                             { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
                           end
 
-            download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download"), method: 'GET' }
+            download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download") }
           end
 
           links = {
