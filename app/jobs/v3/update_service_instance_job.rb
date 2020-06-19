@@ -43,7 +43,7 @@ module VCAP::CloudController
           updates = message.updates.tap do |u|
             u[:service_plan_guid] = service_plan.guid
             u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
-            u[:maintenance_info] = maintenance_info if maintenance_info
+            u[:maintenance_info] = maintenance_info if maintenance_info_updated?(message, service_instance, service_plan)
           end
 
           ServiceInstance.db.transaction do
@@ -111,6 +111,11 @@ module VCAP::CloudController
           space_id: service_instance.space.guid,
           maintenance_info: service_instance.maintenance_info
         }
+      end
+
+      def maintenance_info_updated?(message, service_instance, updated_service_plan)
+        plan_change_requested = updated_service_plan.guid != service_instance.service_plan.guid
+        plan_change_requested || message.maintenance_info
       end
 
       def updated_maintenance_info(message, service_instance, updated_service_plan)
