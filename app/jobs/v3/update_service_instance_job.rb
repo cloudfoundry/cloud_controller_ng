@@ -27,13 +27,15 @@ module VCAP::CloudController
 
           client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
 
+          maintenance_info = updated_maintenance_info(message, service_instance, service_plan)
+
           broker_response, err = client.update(
             service_instance,
             service_plan,
             accepts_incomplete: false,
             arbitrary_parameters: message.parameters || {},
             previous_values: previous_values,
-            maintenance_info: message.maintenance_info,
+            maintenance_info: maintenance_info,
             name: message.requested?(:name) ? message.name : service_instance.name,
           )
           raise err if err
@@ -41,7 +43,7 @@ module VCAP::CloudController
           updates = message.updates.tap do |u|
             u[:service_plan_guid] = service_plan.guid
             u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
-            u[:maintenance_info] = message.maintenance_info || service_plan.maintenance_info
+            u[:maintenance_info] = maintenance_info if maintenance_info
           end
 
           ServiceInstance.db.transaction do
@@ -109,6 +111,17 @@ module VCAP::CloudController
           space_id: service_instance.space.guid,
           maintenance_info: service_instance.maintenance_info
         }
+      end
+
+      def updated_maintenance_info(message, service_instance, updated_service_plan)
+        plan_change_requested = updated_service_plan.guid != service_instance.service_plan.guid
+
+        maintenance_info = if plan_change_requested
+                              updated_service_plan.maintenance_info
+                           else
+                              message.maintenance_info
+        end
+        maintenance_info
       end
 
       def record_event(service_instance, request_attrs)
