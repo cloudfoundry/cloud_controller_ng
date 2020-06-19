@@ -26,9 +26,9 @@ module VCAP
           }
         end
         let(:original_maintenance_info) { { version: '1.1.0' } }
-        let(:updated_maintenance_info) { { version: '1.1.1' } }
+        let(:plan_maintenance_info) { { version: '1.1.1' } }
         let(:new_maintenance_info) { { version: '2.1.1' } }
-        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: updated_maintenance_info) }
+        let(:original_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: plan_maintenance_info) }
         let(:new_service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration, maintenance_info: new_maintenance_info) }
         let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
         let(:request_attr) { { dummy_data: 'dummy_data' } }
@@ -152,7 +152,7 @@ module VCAP
               new_service_plan,
               accepts_incomplete: false,
               arbitrary_parameters: request_attr,
-              maintenance_info: nil,
+              maintenance_info: new_service_plan.maintenance_info,
               previous_values: {
                 plan_id: original_service_plan.broker_provided_id,
                 service_id: service_offering.broker_provided_id,
@@ -391,27 +391,98 @@ module VCAP
             run_job(job, jobs_succeeded: 1)
           end
 
-          it 'sends a request to the broker' do
-            expect(client).to have_received(:update).with(
-              service_instance,
-              original_service_plan,
-              maintenance_info: updated_maintenance_info,
-              accepts_incomplete: false,
-              arbitrary_parameters: {},
-              previous_values: {
-                plan_id: original_service_plan.broker_provided_id,
-                service_id: service_offering.broker_provided_id,
-                organization_id: org.guid,
-                space_id: space.guid,
-                maintenance_info: original_maintenance_info.stringify_keys,
-              },
-              name: name,
-            )
+          context 'when maintenance_info change requested' do
+            it 'sends a request to the broker' do
+              expect(client).to have_received(:update).with(
+                service_instance,
+                original_service_plan,
+                maintenance_info: plan_maintenance_info,
+                accepts_incomplete: false,
+                arbitrary_parameters: {},
+                previous_values: {
+                  plan_id: original_service_plan.broker_provided_id,
+                  service_id: service_offering.broker_provided_id,
+                  organization_id: org.guid,
+                  space_id: space.guid,
+                  maintenance_info: original_maintenance_info.stringify_keys,
+                },
+                name: name,
+              )
+            end
+
+            it 'updates the service instance' do
+              service_instance.reload
+              expect(service_instance.maintenance_info.symbolize_keys).to eq(plan_maintenance_info)
+            end
           end
 
-          it 'updates the service instance' do
-            service_instance.reload
-            expect(service_instance.maintenance_info.symbolize_keys).to eq(updated_maintenance_info)
+          context 'when plan change requested' do
+            let(:message) do
+              ServiceInstanceUpdateManagedMessage.new({
+                relationships: {
+                  service_plan: {
+                    data: {
+                      guid: new_service_plan.guid
+                    }
+                  }
+                }
+              })
+            end
+            it 'sends a request to the broker' do
+              expect(client).to have_received(:update).with(
+                service_instance,
+                new_service_plan,
+                maintenance_info: new_service_plan.maintenance_info,
+                accepts_incomplete: false,
+                arbitrary_parameters: {},
+                previous_values: {
+                  plan_id: original_service_plan.broker_provided_id,
+                  service_id: service_offering.broker_provided_id,
+                  organization_id: org.guid,
+                  space_id: space.guid,
+                  maintenance_info: original_maintenance_info.stringify_keys,
+                },
+                name: name,
+              )
+            end
+
+            it 'updates the service instance' do
+              service_instance.reload
+              expect(service_instance.service_plan).to eq(new_service_plan)
+              expect(service_instance.maintenance_info).to eq(new_service_plan.maintenance_info)
+            end
+          end
+
+          context 'when plan maintenance_info has changed in the ccdb but no plan or maintenance_info change requested' do
+            let(:message) do
+              ServiceInstanceUpdateManagedMessage.new({
+                parameters: { foo: 'bar' }
+              })
+            end
+
+            it 'does not send maintenance_info request to the broker' do
+              expect(client).to have_received(:update).with(
+                service_instance,
+                original_service_plan,
+                accepts_incomplete: false,
+                maintenance_info: nil,
+                arbitrary_parameters: { foo: 'bar' },
+                previous_values: {
+                  plan_id: original_service_plan.broker_provided_id,
+                  service_id: service_offering.broker_provided_id,
+                  organization_id: org.guid,
+                  space_id: space.guid,
+                  maintenance_info: original_maintenance_info.stringify_keys,
+                },
+                name: name,
+              )
+            end
+
+            it 'does not update the maintenance info' do
+              service_instance.reload
+              expect(service_instance.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
+              expect(service_instance.service_plan.maintenance_info.symbolize_keys).to eq(plan_maintenance_info)
+            end
           end
         end
       end
