@@ -117,11 +117,12 @@ module VCAP::CloudController
         plan_change_requested = updated_service_plan.guid != service_instance.service_plan.guid
 
         maintenance_info = if plan_change_requested
-                              updated_service_plan.maintenance_info
+                             updated_service_plan.maintenance_info&.symbolize_keys
                            else
-                              message.maintenance_info
-        end
-        maintenance_info
+                             message.maintenance_info
+                           end
+
+        maintenance_info&.slice(:version)
       end
 
       def record_event(service_instance, request_attrs)
