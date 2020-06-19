@@ -4823,14 +4823,14 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Annotations applied to the build</td>
 </tr>
 <tr>
-<td><strong>state</strong> (<em>experimental</em>)</td>
+<td><strong>state</strong> <em>(experimental)</em></td>
 <td><em>string</em></td>
-<td>Build status (FAILED, STAGED) **</td>
+<td>Build status; valid values are <code class="prettyprint">FAILED</code> or <code class="prettyprint">STAGED</code> (field can only be passed by Build State Updaters)</td>
 </tr>
 <tr>
-<td><strong>lifecycle.data.image</strong> (<em>experimental</em>)</td>
+<td><strong>lifecycle.data.image</strong> <em>(experimental)</em></td>
 <td><em>string</em></td>
-<td>Image reference tag where the built complete image was stored **</td>
+<td>Image reference tag where the built complete image was stored (field can only be passed by Build State Updaters)</td>
 </tr>
 </tbody></table>
 
@@ -4838,32 +4838,21 @@ resource can be created to initiate the staging process. A successful build resu
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-</tr>
-</tbody></table>
-
-<h4 id="special-permitted-roles">Special Permitted roles **</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
+<td></td>
 </tr>
 <tr>
 <td>Build State Updater</td>
+<td>This is a special component role; <a href="#component-roles">read more about component roles</a></td>
 </tr>
 </tbody></table>
 <h2 id="buildpacks">Buildpacks</h2>
@@ -6696,6 +6685,11 @@ applications without incurring downtime. This is different from the traditional 
 <td>Number of results per page; <br>valid values are 1 through 5000</td>
 </tr>
 <tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
+</tr>
+<tr>
 <td><strong>label_selector</strong> (<em>experimental</em>)</td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
@@ -6780,7 +6774,9 @@ applications without incurring downtime. This is different from the traditional 
 
 </span></code></pre>
 
-<p>Retrieve all domains available in an organization for the current user. This will return user-visible domains without an organization relationship AND domains scoped or shared with the organization.</p>
+<p>Retrieve all domains available in an organization for the current user. This will return unscoped domains
+(those without an owning organization), domains that are scoped to the given organization (owned by the given
+organization), and domains that have been shared with the organization.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -6819,6 +6815,11 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>per_page</strong></td>
 <td><em>integer</em></td>
 <td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong> (<em>experimental</em>)</td>
@@ -18567,7 +18568,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/service_brokers/[guid]</code></p>
+<p><code class="prettyprint">PATCH /v3/service_brokers/:guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
@@ -19112,6 +19113,11 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 <td><strong>per_page</strong></td>
 <td><em>integer</em></td>
 <td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong> (<em>experimental</em>)</td>
@@ -20192,6 +20198,21 @@ They are only visible to members of that space.</p>
 <td><a href="#fields-parameter"><em>fields parameter</em></a></td>
 <td><a href="#service-offerings-list-fields"><em>Allowed values</em></a></td>
 </tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display; valid values are integers &gt;= 1</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
+</tr>
 </tbody></table>
 
 <h5 id="service-offerings-list-fields">Service Offerings List Fields</h5>
@@ -20296,7 +20317,7 @@ They are only visible to members of that space.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/service_offerings/[guid]</code></p>
+<p><code class="prettyprint">PATCH /v3/service_offerings/:guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
@@ -20630,7 +20651,7 @@ Service offerings and service plans are created and updated when a service broke
 <tr>
 <td><strong>metadata</strong></td>
 <td><em>object</em></td>
-<td>Additional information provided by the service broker as specified by <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/profilemd#plan-metadata-fields">OSBAPI</a></td>
+<td>Additional information provided by the service broker as specified by <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#plan-metadata-fields">OSBAPI</a></td>
 </tr>
 <tr>
 <td><strong>maximum_polling_duration</strong></td>
@@ -21060,14 +21081,29 @@ Service offerings and service plans are created and updated when a service broke
 <td>Comma-delimited list of service Instance GUIDs to filter by</td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
-<td><em>string</em></td>
-<td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
-</tr>
-<tr>
 <td><strong>include</strong></td>
 <td><em>list of strings</em></td>
 <td>Optionally include a list of unique related resources in the response; <br>valid values are <code class="prettyprint">space.organization</code> and <code class="prettyprint">service_offering</code></td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display; valid values are integers &gt;= 1</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
+</tr>
+<tr>
+<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><em>string</em></td>
+<td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
 <td><strong>fields</strong> (<em>experimental</em>)</td>
@@ -21209,7 +21245,7 @@ service brokers.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/service_plans/[guid]</code></p>
+<p><code class="prettyprint">PATCH /v3/service_plans/:guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
@@ -21258,8 +21294,8 @@ service brokers.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>This endpoint deletes a Service Plan. This is used to remove Service Plans from the Cloud Foundry database when they
-are no longer provided by the Service Broker.</p>
+<p>This endpoint deletes a service plan. This is used to remove service plans from the Cloud Foundry database when they
+are no longer provided by the service broker.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -21452,7 +21488,7 @@ are no longer provided by the Service Broker.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/service_plans/[guid]/visibility</code></p>
+<p><code class="prettyprint">PATCH /v3/service_plans/:guid/visibility</code></p>
 
 <h4 id="parameters">Parameters</h4>
 
@@ -21525,7 +21561,7 @@ are no longer provided by the Service Broker.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/service_plans/[guid]/visibility</code></p>
+<p><code class="prettyprint">POST /v3/service_plans/:guid/visibility</code></p>
 
 <h4 id="parameters">Parameters</h4>
 
@@ -21571,11 +21607,11 @@ are no longer provided by the Service Broker.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>This endpoint removes an Organization from a Service Plan Visibility list of Organizations. It is only defined for Service Plans which are org-restricted. It will fail with a HTTP Status Code of 422 for any other visibility type (e.g. Public).</p>
+<p>This endpoint removes an organization from a service plan visibility list of organizations. It is only defined for service plans which are org-restricted. It will fail with a HTTP status code of 422 for any other visibility type (e.g. Public).</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">DELETE /v3/service_plans/[guid]/visibility/[organization_guid]</code></p>
+<p><code class="prettyprint">DELETE /v3/service_plans/:guid/visibility/:organization_guid</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -22854,7 +22890,7 @@ applications in the space may be accessed via SSH.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/spaces/:guid/features</code> <br></p>
+<p><code class="prettyprint">GET /v3/spaces/:guid/features</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -24520,6 +24556,11 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </thead><tbody>
 <tr>
+<td><strong>names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of app names to filter by</td>
+</tr>
+<tr>
 <td><strong>page</strong></td>
 <td><em>integer</em></td>
 <td>Page to display; valid values are integers &gt;= 1</td>
@@ -24530,9 +24571,9 @@ An application will automatically use buildpacks associated with the application
 <td>Number of results per page; <br>valid values are 1 through 5000</td>
 </tr>
 <tr>
-<td><strong>names</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of app names to filter by</td>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong> (<em>experimental</em>)</td>
@@ -25971,6 +26012,11 @@ UAA database, though this is not required.</p>
 <td><strong>per_page</strong></td>
 <td><em>integer</em></td>
 <td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong> (<em>experimental</em>)</td>
