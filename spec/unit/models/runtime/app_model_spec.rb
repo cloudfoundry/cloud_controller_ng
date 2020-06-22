@@ -264,6 +264,25 @@ module VCAP::CloudController
           expect(app_model).to be_valid
         end
       end
+
+      describe 'buildpacks' do
+        let(:ready_buildpack) { Buildpack.make(filename: 'some-file') }
+        let(:unready_buildpack) { Buildpack.make(name: 'unready', filename: nil) }
+        let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model, buildpacks: [ready_buildpack.name, unready_buildpack.name]) }
+
+        it 'does not allow buildpacks that are not READY' do
+          expect {
+            app_model.buildpack_lifecycle_data = buildpack_lifecycle_data
+            app_model.save
+          }.to raise_error(Sequel::ValidationFailed, /"unready" must be in ready state/)
+        end
+
+        it 'is valid with buildpacks that are READY' do
+          buildpack_lifecycle_data.buildpacks = [ready_buildpack.name]
+          app_model.buildpack_lifecycle_data = buildpack_lifecycle_data
+          expect(app_model).to be_valid
+        end
+      end
     end
 
     describe '#lifecycle_type' do
@@ -271,6 +290,7 @@ module VCAP::CloudController
         before { BuildpackLifecycleDataModel.make(app: app_model) }
 
         it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
+          app_model.reload
           expect(app_model.lifecycle_type).to eq('buildpack')
         end
       end
@@ -301,7 +321,7 @@ module VCAP::CloudController
         let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
 
         it 'returns buildpack_lifecycle_data if it is on the model' do
-          expect(app_model.lifecycle_data).to eq(buildpack_lifecycle_data)
+          expect(app_model.reload.lifecycle_data).to eq(buildpack_lifecycle_data)
         end
 
         it 'is a persistable hash' do
