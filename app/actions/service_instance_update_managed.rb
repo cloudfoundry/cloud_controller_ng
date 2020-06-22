@@ -156,7 +156,9 @@ module VCAP::CloudController
     end
 
     def raise_if_version_mismatch!(service_instance, message)
-      return if service_instance.service_plan.maintenance_info['version'] == message.maintenance_info_version
+      is_plan_version = service_instance.service_plan.maintenance_info['version'] == message.maintenance_info_version
+      is_current_version = service_instance.maintenance_info && message.maintenance_info_version == service_instance.maintenance_info['version']
+      return if is_plan_version || is_current_version
 
       raise UnprocessableUpdate.new_from_details('MaintenanceInfoConflict')
     end

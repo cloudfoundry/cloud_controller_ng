@@ -561,10 +561,16 @@ module VCAP::CloudController
         let(:body) do
           {
             maintenance_info: {
-              version: service_plan.maintenance_info[:version]
+              version: original_maintenance_info[:version]
             }
           }
         end
+
+        let(:service_plan) { ServicePlan.make(
+          service: service_offering,
+          maintenance_info: { version: '2.2.0', description: 'new version of plan' }
+          )
+        }
 
         it 'returns the current instance unchanged instance and a nil job' do
           si, job = action.update(service_instance, message)
