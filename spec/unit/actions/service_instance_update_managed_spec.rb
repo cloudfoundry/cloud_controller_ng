@@ -557,6 +557,69 @@ module VCAP::CloudController
         end
       end
 
+      describe 'when the plan is inactive' do
+        let(:service_plan) { ServicePlan.make(service: service_offering, maintenance_info: original_maintenance_info, active: false) }
+
+        it 'raises when updating parameters' do
+          message = ServiceInstanceUpdateManagedMessage.new({ parameters: { param1: 'value' } })
+          expect {
+            action.update(service_instance, message)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+            expect(err.message).to eq('Cannot update parameters of a service instance that belongs to inaccessible plan')
+          end
+        end
+
+        context 'when updating maintenance_info' do
+          context 'but it is not actually changing it' do
+            let(:body) { { maintenance_info: original_maintenance_info } }
+
+            it 'succeeds' do
+              expect { action.update(service_instance, message) }.not_to raise_error
+            end
+          end
+
+          context 'and the maintenance_info is changing' do
+            let(:body) { { maintenance_info: { version: '99.0.0' } } }
+
+            it 'raises an error' do
+              service_plan.update({ maintenance_info: { version: '99.0.0' } })
+              expect {
+                action.update(service_instance, message)
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+                expect(err.message).to eq('Cannot update maintenance_info of a service instance that belongs to inaccessible plan')
+              end
+            end
+          end
+        end
+
+        context 'when updating name' do
+          let(:body) { { name: 'new name' } }
+
+          context 'when the offering allows context updates' do
+            let(:service_offering) { Service.make(allow_context_updates: true) }
+
+            it 'raises an error' do
+              expect {
+                action.update(service_instance, message)
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+                expect(err.message).to eq('Cannot update name of a service instance that belongs to inaccessible plan')
+              end
+            end
+          end
+
+          context 'when the offering does not allow context updates' do
+            let(:service_offering) { Service.make(allow_context_updates: false) }
+
+            it 'succeeds' do
+              expect { action.update(service_instance, message) }.not_to raise_error
+            end
+          end
+        end
+      end
+
       describe 'no-op maintenance_info updates' do
         let(:body) do
           {

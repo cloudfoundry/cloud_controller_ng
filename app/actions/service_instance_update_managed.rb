@@ -18,6 +18,7 @@ module VCAP::CloudController
       raise_if_renaming_shared_service_instance!(service_instance, message)
       raise_if_invalid_plan_change!(service_instance, message)
       raise_if_invalid_maintenance_info_change!(service_instance, message)
+      raise_if_cannot_update!(service_instance, message)
 
       begin
         lock = UpdaterLock.new(service_instance)
@@ -156,11 +157,27 @@ module VCAP::CloudController
     end
 
     def raise_if_version_mismatch!(service_instance, message)
-      is_plan_version = service_instance.service_plan.maintenance_info['version'] == message.maintenance_info_version
-      is_current_version = service_instance.maintenance_info && message.maintenance_info_version == service_instance.maintenance_info['version']
+      is_plan_version = maintenance_info_match(message, service_instance.service_plan)
+      is_current_version = service_instance.maintenance_info && maintenance_info_match(message, service_instance)
       return if is_plan_version || is_current_version
 
       raise UnprocessableUpdate.new_from_details('MaintenanceInfoConflict')
+    end
+
+    def raise_if_cannot_update!(service_instance, message)
+      error_code = 'ServiceInstanceWithInaccessiblePlanNotUpdateable'.freeze
+      update_error = ->(x) { UnprocessableUpdate.new_from_details(error_code, x) }
+      unless service_instance.service_plan.active?
+        raise update_error.call('parameters') unless message.parameters.nil?
+        raise update_error.call('name') if service_instance.service_plan.service.allow_context_updates && !message.name.nil?
+        raise update_error.call('maintenance_info') unless message.maintenance_info.nil? || maintenance_info_match(message, service_instance)
+      end
+    end
+
+    def maintenance_info_match(message, object)
+      return false if object.maintenance_info.nil? && !message.maintenance_info.nil?
+
+      message.maintenance_info_version == object.maintenance_info['version']
     end
   end
 end
