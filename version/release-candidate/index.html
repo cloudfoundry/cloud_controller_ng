@@ -858,7 +858,7 @@ Prefixes are DNS names intended to enable namespacing of annotation keys.</p>
 
 <ul>
 <li>Length: 0-253 characters</li>
-<li>Allowed characters: a-z, A-Z, 0-9, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code> (for example, &ldquo;🤯&rdquo; cannot be used in keys)</li>
+<li>Allowed characters: a-z, A-Z, 0-9, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code>; emojis cannot be used in keys</li>
 <li>DNS subdomain format (series of subdomain annotations separated by <code class="prettyprint">.</code>)</li>
 </ul>
 
@@ -866,7 +866,7 @@ Prefixes are DNS names intended to enable namespacing of annotation keys.</p>
 
 <ul>
 <li>Length: 1-63 characters</li>
-<li>Allowed characters: a-z, A-Z, 0-9, <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code> (for example, &ldquo;🐊&rdquo; cannot be used in keys)</li>
+<li>Allowed characters: a-z, A-Z, 0-9, <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code>; emojis cannot be used in keys</li>
 <li>Must begin and end with an alphanumeric character</li>
 </ul>
 
@@ -19147,7 +19147,7 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </thead><tbody>
 <tr>
 <td>space</td>
-<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationshipsorganization</code></td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationships.organization</code></td>
 </tr>
 <tr>
 <td>space.organization</td>
@@ -19155,11 +19155,11 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </tr>
 <tr>
 <td>service_plan</td>
-<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationshipsservice_offering</code></td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationships.service_offering</code></td>
 </tr>
 <tr>
 <td>service_plan.service_offering</td>
-<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationshipsservice_broker</code></td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationships.service_broker</code></td>
 </tr>
 <tr>
 <td>service_plan.service_offering.service_broker</td>
@@ -24921,7 +24921,7 @@ An application will automatically use buildpacks associated with the application
 <tr>
 <td><strong>command</strong><sup>[1]</sup></td>
 <td><em>string</em></td>
-<td>Command that will be executed; <strong>NOTE:</strong> optional if a <code class="prettyprint">template.processguid</code> is provided</td>
+<td>Command that will be executed; <strong>NOTE:</strong> optional if a <code class="prettyprint">template.process.guid</code> is provided</td>
 </tr>
 </tbody></table>
 
