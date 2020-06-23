@@ -1920,6 +1920,71 @@ RSpec.describe 'V3 service instances' do
           )
         end
       end
+
+      describe 'when the SI plan is no longer active' do
+        let(:version) { { version: '2.0.0' } }
+        let(:service_offering) { VCAP::CloudController::Service.make }
+        let(:service_plan) {
+          VCAP::CloudController::ServicePlan.make(
+            public: true,
+            active: false,
+            maintenance_info: version,
+            service: service_offering)
+        }
+        let!(:service_instance) {
+          VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan)
+        }
+        let(:guid) { service_instance.guid }
+
+        context 'and the request is updating parameters' do
+          let(:request_body) { { parameters: { foo: 'bar', baz: 'qux' } } }
+
+          it 'fails with a plan inaccessible message' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan' })
+             )
+          end
+        end
+
+        context 'and the request is updating maintenance_info' do
+          let(:request_body) { { maintenance_info: { version: '2.0.0' } } }
+
+          it 'fails with a plan inaccessible message' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({ 'detail' => 'Cannot update maintenance_info of a service instance that belongs to inaccessible plan' })
+            )
+          end
+        end
+
+        context 'and the request is updating the SI name' do
+          let(:request_body) { { name: 'new-name' } }
+
+          context 'and the service offering allows contextual updates' do
+            let(:service_offering) { VCAP::CloudController::Service.make(allow_context_updates: true) }
+
+            it 'fails with a plan inaccessible message' do
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({ 'detail' => 'Cannot update name of a service instance that belongs to inaccessible plan' })
+              )
+            end
+          end
+
+          context 'but the service offering does not allow contextual updates' do
+            let(:service_offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
+
+            it 'succeeds' do
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(200)
+            end
+          end
+        end
+      end
     end
 
     context 'user-provided service instance' do
