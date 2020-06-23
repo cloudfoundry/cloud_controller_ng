@@ -28,6 +28,13 @@ module VCAP::CloudController
           dataset = dataset.where(organization_guid: message.organization_guids)
         end
 
+        if message.requested?(:created_at)
+          key = message.created_at.keys[0]
+          if key == Event::LESS_THAN_COMPARATOR
+            dataset = dataset.where(Sequel.lit("created_at < '#{Time.parse(message.created_at[key]).utc}'"))
+          end
+        end
+
         dataset
       end
     end

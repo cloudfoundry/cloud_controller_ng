@@ -177,6 +177,24 @@ RSpec.describe 'Events' do
       end
     end
 
+    context 'filtering by timestamp' do
+      let(:timestamp) { (Time.now + 1).utc.iso8601 }
+
+      context 'using less than' do
+        let!(:extra_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
+
+        it 'returns filtered events' do
+          get "/v3/audit_events?created_at[lt]=#{timestamp}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json]
+          )
+        end
+      end
+    end
+
     context 'filtering by organization_guid' do
       it 'returns filtered events' do
         get "/v3/audit_events?organization_guids=#{org.guid}", nil, admin_header

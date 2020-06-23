@@ -27,6 +27,7 @@ module VCAP::CloudController
           target_guids: ['guid1', 'guid2'],
           space_guids: ['guid3', 'guid4'],
           organization_guids: ['guid5', 'guid6'],
+          created_at: { lt: Time.now.iso8601 },
         })
         expect(message).to be_valid
       end
@@ -61,6 +62,26 @@ module VCAP::CloudController
           message = EventsListMessage.from_params({ organization_guids: 123 })
           expect(message).not_to be_valid
           expect(message.errors[:organization_guids]).to include('must be an array')
+        end
+
+        context 'validates the created_at lt filter' do
+          it 'requires a hash' do
+            message = EventsListMessage.from_params({ created_at: Time.now.iso8601 })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_at]).to include('comparison operator and timestamp must be specified')
+          end
+
+          it 'requires a valid comparison operator' do
+            message = EventsListMessage.from_params({ created_at: { l: Time.now.iso8601 } })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_at]).to include("Invalid comparison operator: 'l'")
+          end
+
+          it 'requires a valid timestamp' do
+            message = EventsListMessage.from_params({ created_at: { lt: 123 } })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_at]).to include("Invalid timestamp format: '123'")
+          end
         end
       end
     end

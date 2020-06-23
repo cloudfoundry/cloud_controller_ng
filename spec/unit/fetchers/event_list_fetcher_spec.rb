@@ -10,28 +10,13 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      let(:user) { User.make }
-      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com') }
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:app_model) { AppModel.make(space: space) }
 
-      let!(:unscoped_event) {
-        VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete('dir', 'key')
-      }
-      let!(:org_scoped_event) {
-        VCAP::CloudController::Repositories::OrganizationEventRepository.new.record_organization_create(
-          org,
-          user_audit_info,
-          { key: 'val' }
-        )
-      }
-      let!(:space_scoped_event) {
-        VCAP::CloudController::Repositories::AppEventRepository.new.record_app_restart(
-          app_model,
-          user_audit_info,
-        )
-      }
+      let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+      let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
+      let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space.guid, actee: app_model.guid, type: 'audit.app.restart') }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -78,6 +63,16 @@ module VCAP::CloudController
 
         it 'returns filtered events' do
           expect(subject).to match_array([org_scoped_event, space_scoped_event])
+        end
+      end
+
+      context 'requesting events less than a timestamp' do
+        let(:filters) do
+          { created_at: { lt: (Time.now + 1).iso8601 } }
+        end
+
+        it 'returns events with a created_at timestamp less than the given timestamp' do
+          expect(subject).to match_array([unscoped_event, space_scoped_event])
         end
       end
     end
