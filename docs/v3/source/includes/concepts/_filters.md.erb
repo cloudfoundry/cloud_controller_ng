@@ -38,3 +38,25 @@ This will return all buildpacks with stack `NULL`.
 `GET /v3/routes?hosts=hostname1,,hostname2`
 
 This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
+
+#### Filtering on Inequalities (Experimental)
+
+Certain parameters can be filtered using inequality when listing resources.
+
+For example, a response to `/v3/audit_events?created_at[lt]=iso8601-timestamp` will contain audit events with a `created_at` timestamp strictly earlier than `iso8601-timestamp`.
+
+`GET /v3/audit_events?created_at[lt]=2020-06-02T19:43:08+0000`
+
+Currently, this is only supported on the `created_at` parameter.
+
+##### Valid comparison operators
+
+**Operator** | **Description**
+-------------|-----------------
+**lt**       | Return resources strictly less than the given value for the filtered attribute
+
+##### Resources with inequalities
+
+The following resources can filter using comparison operators:
+
+- **[audit_events](#list-audit-events)**
