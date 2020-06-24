@@ -65,8 +65,8 @@ Since V3 roles are a first-class resource, they need to have their own `guid`, `
 `updated_at` fields (to fit with the V3 pattern). The `guid` is especially important, since it enables
 endpoints like `GET /v3/roles/:role_guid` and `DELETE /v3/roles/:role_guid`.
 
-This raised the question of how to add these three fields to the database. Since they are new, we knew 
-we would need a schema migration to add these.
+This raised the question of how to add these three fields to the database. Since they were new, we knew 
+we would need a schema migration to add them.
 
 All CCDB migrations are complicated by a few facts:
 - User environments may have several API instances talking to the same database.
@@ -82,16 +82,16 @@ We considered several different approaches, each with their own trade-offs.
 #### Create a new `roles` table in the database
 
 This would mean migrating all data from the 7 role-specific join tables into a single table. This table would
-have columns like `guid`, `type`, `user_id`, `space_id`, `organization_id`, etc.
+have columns including `guid`, `type`, `user_id`, `space_id`, `organization_id`, etc.
 
-This was appealing because it makes the data closely match the V3 model of roles. Accessing and listing roles would then
+This was appealing because the data would closely match the V3 model of roles. Accessing and listing roles would then
 be straightforward in V3; they would work like most other resources.
 
-However, this meant a potentially huge, long-running migration to fill the new table. This could mean API
+However, this meant a potentially huge, long-running migration to fill the new table, leading to API
 downtime while the migration completes. Plus, there was no clear solution for rolling upgrades: the old API 
 instances would continue talking to the old tables. What happens to data that is added/removed from those
-tables while the migration is occurring? When the migration finishes, can we ever drop the old tables? Or
-will we have to maintain the same data in two different places indefinitely? Even if this worked, we would 
+tables while the migration is occurring? When the migration finishes, could we ever drop the old tables? Or
+would we have to maintain the same data in two different places indefinitely? Even if this worked, we would 
 have to refactor all V2 role-related endpoints to fetch from this new table.
 
 The risks for this seemed too high, so we moved on.
@@ -101,27 +101,27 @@ The risks for this seemed too high, so we moved on.
 This would mean introducing a new SQL view that was backed by a large `UNION` query. The idea was to
 make a pseudo-table that combined the existing 7 tables into one, to make it easier to work with.
 
-We quickly realized that this could only work as a read-only view: inserts into views are only supported
-for a small subset of simple views, and ours did not qualify. Still, we continued to explore it, since
-we figured we could do inserts and deletes on the underlying tables and only use the view as a convenience
+We quickly realized this would only work as a read-only view; inserts into views are only supported
+for a small subset of simple views, and ours would not qualify. Still, we continued to explore it, figuring
+we could do inserts and deletes on the underlying tables and only use the view as a convenience
 when fetching/listing roles.
 
 We got as far as [pushing the migration](https://github.com/cloudfoundry/cloud_controller_ng/commit/30bec825d9cfb2e1780e2faa80afaf672b9cfaa8),
-but we had to quickly [revert it](https://github.com/cloudfoundry/cloud_controller_ng/commit/d697e9684ad9e52a7dcdbf5a414ded9d7dcfd64f) 
+but quickly had to [revert it](https://github.com/cloudfoundry/cloud_controller_ng/commit/d697e9684ad9e52a7dcdbf5a414ded9d7dcfd64f) 
 because it did not work on MySQL. We ran into errors like `Mysql2::Error: View's SELECT contains a subquery in the FROM clause`.
 
-It seems like later versions of MySQL may support this, but CC attempts to be compatible with old versions
+It seems like later versions of MySQL may support this, but CC attempts to be compatible with old versions of MySQL
 as well, so we abandoned this approach.
 
 #### Change V3 role usage patterns so we only hit one table at a time
 
-This would mean changing the proposed V3 role endpoints. Instead of `GET /v3/roles/:guid`, you would use
+This would mean changing the proposed V3 roles endpoints. Instead of `GET /v3/roles/:guid`, you would use
 requests like `GET /v3/roles?user_guids=<user-guid>&space_guids=<space-guid>&types=space_auditor`. The idea
 was to work around the fact that roles did not have their own unique `guid` field; instead, they would be
-uniquely identified by the combination of their `type`/`user_guid`/`space_guid` (for space roles).
+uniquely identified by a combination of their `type`/`user_guid`/`space_guid` (for space roles).
 
-This might have let us get away with not changing the underlying schema at all. We would structure the endpoints
-such that we usually only had to talk to one of the 7 underlying tables at a time, and for listing, we would
+This might have let us get away with not changing the underlying schema at all. We could structure the endpoints
+such that we usually only had to talk to one of the 7 underlying tables at a time, and for listing we would
 figure something else out.
 
 We decided against this because it introduced strange, non-standard UX patterns. We did not like the idea of
@@ -141,8 +141,8 @@ migrating any data to different tables. The basic gist:
   table.
 - Write a ["just-in-time migration"](https://github.com/cloudfoundry/cloud_controller_ng/commit/758ea3f877108f4eb1245511c1bbeb131a8db7c8#diff-ac970dd55811571623bb022e1337ca08R44) 
   to fill in `guid`s for any roles that don't have them. This handles the edge case where roles are added to
-  the underlying tables by other API instances while the migration is occurring. These roles won't have `guid`s,
-  so make sure we fill some in before we present them.
+  the underlying tables by other API instances while the migration is occurring. On creation, these roles would not
+  have been given `guid`s, so we needed to make sure we assigned one to them.
 
 ### Lessons learned while implementing
 
@@ -150,21 +150,21 @@ Our [first attempt](https://github.com/cloudfoundry/cloud_controller_ng/commit/7
 to write these migrations used two migrations: one to add the new columns to all 7 tables, and one to fill in 
 those columns in all 7 tables. This occasionally led to 
 [deadlocks](https://github.com/cloudfoundry/cloud_controller_ng/issues/1363) during the migration,
-so we later [split that migration into separate migrations](https://github.com/cloudfoundry/cloud_controller_ng/commit/acc3b6f295104ab92f345320e38ada5a7910af5d)
+so we later [further split those migrations into separate migrations](https://github.com/cloudfoundry/cloud_controller_ng/commit/acc3b6f295104ab92f345320e38ada5a7910af5d)
 for each table.
 
-Also, that first attempt added a column to each table called `guid`, like our tables usually have. Unfortunately, 
+Also, that first attempt added a column to each table called `guid`, following the usual pattern for our tables. Unfortunately, 
 this made some existing queries fail with errors like `PG::AmbiguousColumn: ERROR:  column reference "guid" is ambiguous
-LINE 1: SELECT "guid" FROM "users" INNER JOIN "spaces_developers" ON...`. These `JOIN` queries now could not
+LINE 1: SELECT "guid" FROM "users" INNER JOIN "spaces_developers" ON...`. These `JOIN` queries could not
 tell which `guid` we were referring to (since `users` had one, and so did `spaces_developers`). We noticed this
 in the unit tests locally and [tried to fix it by modifying the queries](https://github.com/cloudfoundry/cloud_controller_ng/commit/714dc93e7f058adfc2ec26dc9ad1915a540da710#diff-d3ad36b06a43420958a22dc15a34090bR57).
 
-However, we should have realized that this was a more serious problem: it meant that our migrations were not
+However, this was a more serious problem: it meant that our migrations were not
 backwards-compatible, since the "old" code running on non-upgraded API instances would still briefly have the 
 ambiguous queries once the migrations finished. This was caught by the pipeline job that tests specifically for 
 backwards compatibility. We reverted our changes and [re-attempted them](https://github.com/cloudfoundry/cloud_controller_ng/commit/a2f9a2f4d9328f98106d050522f2232702143a27#diff-4d5978c450820709830e77453d63f408), 
 this time calling the new column `role_guid` on each of the 7 tables. This resolved both problems, but it left
-us with this strange inconsistency in how these columns are named. If you are ever wondering why these columns are
+us with a strange inconsistency in how these columns are named. If you are ever wondering why these columns are
 called `role_guid` instead of `guid`, this is why!
 
 ## Consequences
@@ -174,16 +174,16 @@ called `role_guid` instead of `guid`, this is why!
 - We achieved the simpler usage patterns that the `/v3/roles` endpoints were designed to provide.
 - We did not need to move any existing data around in migrations. We only needed to do some (relatively small)
   schema migrations to add new columns, and then data migrations to fill in those columns. This has the benefit
-  of being faster for customers upgrading and less risky. There is still only one source of truth for roles data:
-  the 7 underlying tables that already existed.
+  of being faster for customers upgrading and of being less risky. There is still only one source of truth for 
+  roles data: the 7 underlying tables that already existed.
 - V2 code mostly works as-is with this approach, since the underlying data is the same.
 
 ### Risks
 
-- Long-term, it may end up confusing that we have these 7 tables representing the single concept of a role. This
-  may be especially true if V2 code is ever deprecated and removed, since then there would be no need to keep
+- Long-term, it may be confusing that we have these 7 tables representing the single concept of a role. This
+  may be especially true if V2 code is ever deprecated and removed, since at that point there would be no need to keep
   the data separate. However, we don't have a clear timeline for this, and the recent Kubernetes work has raised
-  more questions about the implementation of roles in CC, so we don't know enough today to solve this future problem.
+  more questions about the implementations of roles in CC, so we don't know enough today to solve this future problem.
 - Since there were a total of 14+ migrations added to achieve this, it may add some time to users' upgrades when
   they bump to the version of CC that has V3 roles. However, this is a one-time cost, and since this work was done
-  in October-December (several months before this writing), we believe many operators have already upgraded.
+  in October-December (several months before writing this), we believe many operators have already upgraded.
