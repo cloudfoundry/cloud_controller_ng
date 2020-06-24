@@ -21,6 +21,7 @@ module VCAP::CloudController
         )
 
         lifecycle.create_lifecycle_data_model(app)
+        validate_buildpacks_are_ready(app)
 
         MetadataUpdate.update(app, message)
 
@@ -52,6 +53,21 @@ module VCAP::CloudController
 
     def custom_buildpacks_disabled?
       VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
+    end
+
+    def validate_buildpacks_are_ready(app)
+      return unless app.buildpack_lifecycle_data
+
+      app.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.each do |blb|
+        unless blb.custom?
+          buildpack = Buildpack.find(name: blb.admin_buildpack_name)
+
+          if buildpack && buildpack.state != Buildpack::READY_STATE
+            raise InvalidApp.new("#{buildpack.name.inspect} must be in ready state")
+            # errors.add(:buildpack, "#{buildpack.name.inspect} must be in ready state")
+          end
+        end
+      end
     end
   end
 end

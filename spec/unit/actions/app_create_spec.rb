@@ -51,8 +51,6 @@ module VCAP::CloudController
           expect(app.environment_variables).to eq(environment_variables.stringify_keys)
           expect(app.labels.map(&:value)).to contain_exactly('stable', 'mashed')
           expect(app.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
-
-          expect(lifecycle).to have_received(:create_lifecycle_data_model).with(app)
         end
 
         describe 'created process' do
@@ -120,6 +118,17 @@ module VCAP::CloudController
             )
 
           app_create.create(message, lifecycle)
+        end
+      end
+
+      describe 'buildpacks' do
+        let(:unready_buildpack) { Buildpack.make(name: 'unready', filename: nil) }
+        let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [unready_buildpack.name], stack: 'cflinuxfs3' } } }
+
+        it 'does not allow buildpacks that are not READY' do
+          expect {
+            app_create.create(message, lifecycle)
+          }.to raise_error(AppCreate::InvalidApp)
         end
       end
 
