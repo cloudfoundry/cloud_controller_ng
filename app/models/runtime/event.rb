@@ -2,6 +2,7 @@ module VCAP::CloudController
   class Event < Sequel::Model
     class EventValidationError < StandardError; end
     LESS_THAN_COMPARATOR = 'lt'.to_sym
+    GREATER_THAN_COMPARATOR = 'gt'.to_sym
 
     plugin :serialization
 

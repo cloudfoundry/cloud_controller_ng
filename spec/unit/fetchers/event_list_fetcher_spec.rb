@@ -14,9 +14,9 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:app_model) { AppModel.make(space: space) }
 
-      let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
-      let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
-      let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space.guid, actee: app_model.guid, type: 'audit.app.restart') }
+      let!(:unscoped_event) { Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+      let!(:org_scoped_event) { Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
+      let!(:space_scoped_event) { Event.make(space_guid: space.guid, actee: app_model.guid, type: 'audit.app.restart') }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -73,6 +73,16 @@ module VCAP::CloudController
 
         it 'returns events with a created_at timestamp less than the given timestamp' do
           expect(subject).to match_array([unscoped_event, space_scoped_event])
+        end
+      end
+
+      context 'requesting events greater than a timestamp' do
+        let(:filters) do
+          { created_at: { gt: (Time.now + 1).iso8601 } }
+        end
+
+        it 'returns events with a created_at timestamp less than the given timestamp' do
+          expect(subject).to match_array([org_scoped_event])
         end
       end
     end

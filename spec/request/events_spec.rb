@@ -193,6 +193,51 @@ RSpec.describe 'Events' do
           )
         end
       end
+
+      context 'using greater than' do
+        let!(:later_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
+
+        let(:later_event_json) do
+          {
+            guid: later_event.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: later_event.type,
+            actor: {
+              guid: later_event.actor,
+              type: later_event.actor_type,
+              name: later_event.actor_name
+            },
+            target: {
+              guid: later_event.actee,
+              type: later_event.actee_type,
+              name: later_event.actee_name
+            },
+            data: {},
+            space: {
+              guid: later_event.space_guid
+            },
+            organization: {
+              guid: org.guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{later_event.guid}"
+              }
+            }
+          }
+        end
+
+        it 'returns filtered events' do
+          get "/v3/audit_events?created_at[gt]=#{timestamp}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [later_event_json]
+          )
+        end
+      end
     end
 
     context 'filtering by organization_guid' do

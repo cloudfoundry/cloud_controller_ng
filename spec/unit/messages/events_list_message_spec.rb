@@ -64,7 +64,7 @@ module VCAP::CloudController
           expect(message.errors[:organization_guids]).to include('must be an array')
         end
 
-        context 'validates the created_at lt filter' do
+        context 'validates the created_at filter' do
           it 'requires a hash' do
             message = EventsListMessage.from_params({ created_at: Time.now.iso8601 })
             expect(message).not_to be_valid
@@ -72,15 +72,25 @@ module VCAP::CloudController
           end
 
           it 'requires a valid comparison operator' do
-            message = EventsListMessage.from_params({ created_at: { l: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { garbage: Time.now.iso8601 } })
             expect(message).not_to be_valid
-            expect(message.errors[:created_at]).to include("Invalid comparison operator: 'l'")
+            expect(message.errors[:created_at]).to include("Invalid comparison operator: 'garbage'")
           end
 
           it 'requires a valid timestamp' do
-            message = EventsListMessage.from_params({ created_at: { lt: 123 } })
+            message = EventsListMessage.from_params({ created_at: { gt: 123 } })
             expect(message).not_to be_valid
             expect(message.errors[:created_at]).to include("Invalid timestamp format: '123'")
+          end
+
+          it 'allows the lt operator' do
+            message = EventsListMessage.from_params({ created_at: { lt: Time.now.iso8601 } })
+            expect(message).to be_valid
+          end
+
+          it 'allows the gt operator' do
+            message = EventsListMessage.from_params({ created_at: { gt: Time.now.iso8601 } })
+            expect(message).to be_valid
           end
         end
       end
