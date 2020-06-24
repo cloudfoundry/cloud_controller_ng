@@ -5,6 +5,8 @@ module VCAP
     let(:logger) { instance_double(::Steno::Logger) }
     before do
       AppLogEmitter.logger = logger
+      AppLogEmitter.fluent_emitter = nil
+      AppLogEmitter.emitter = nil
     end
 
     after do
@@ -30,9 +32,9 @@ module VCAP
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-      before {
+      before do
         AppLogEmitter.fluent_emitter = fluent_emitter
-      }
+      end
 
       it 'emits app event logs to the fluent emitter' do
         expect(fluent_emitter).to receive(:emit).with(app.guid, 'log message')
