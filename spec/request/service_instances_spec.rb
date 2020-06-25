@@ -982,7 +982,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -994,7 +994,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1006,7 +1006,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1018,7 +1018,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1032,7 +1032,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1804,7 +1804,7 @@ RSpec.describe 'V3 service instances' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1817,7 +1817,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1830,7 +1830,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end
@@ -1845,7 +1845,7 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists and you have access to it.' })
+              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
             )
           end
         end

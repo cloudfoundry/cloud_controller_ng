@@ -315,7 +315,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unprocessable_service_plan!
-    unprocessable!('Invalid service plan. Ensure that the service plan exists and you have access to it.')
+    unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
   end
 
   def broker_unavailable!
