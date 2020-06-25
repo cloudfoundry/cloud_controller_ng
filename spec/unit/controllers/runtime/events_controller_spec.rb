@@ -28,8 +28,8 @@ module VCAP::CloudController
         @org_a.add_user(@user_a)
         @org_b.add_user(@user_b)
 
-        @event_a = Event.make space: @space_a
-        @event_b = Event.make space: @space_b
+        @event_a = Event.make(space_guid: @space_a.guid, organization_guid: @org_a.guid)
+        @event_b = Event.make(space_guid: @space_b.guid, organization_guid: @org_b.guid)
 
         @service_event = Event.make(space_guid: '', organization_guid: '', type: 'audit.service_broker.create')
       end

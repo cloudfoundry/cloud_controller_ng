@@ -12,22 +12,9 @@ RSpec.describe 'Events' do
     let(:org) { space.organization }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
-    let!(:unscoped_event) {
-      VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete('dir', 'key')
-    }
-    let!(:org_scoped_event) {
-      VCAP::CloudController::Repositories::OrganizationEventRepository.new.record_organization_create(
-        org,
-        user_audit_info,
-        { key: 'val' }
-      )
-    }
-    let!(:space_scoped_event) {
-      VCAP::CloudController::Repositories::AppEventRepository.new.record_app_restart(
-        app_model,
-        user_audit_info,
-      )
-    }
+    let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+    let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', organization_guid: org.guid) }
+    let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space.guid, organization_guid: org.guid, actee: app_model.guid, type: 'audit.app.restart') }
 
     let(:unscoped_event_json) do
       {
@@ -36,14 +23,14 @@ RSpec.describe 'Events' do
         updated_at: iso8601,
         type: 'blob.remove_orphan',
         actor: {
-          guid: 'system',
-          type: 'system',
-          name: 'system'
+          guid: unscoped_event.actor,
+          type: unscoped_event.actor_type,
+          name: unscoped_event.actor_name
         },
         target: {
-          guid: 'dir/key',
-          type: 'blob',
-          name: ''
+          guid: unscoped_event.actee,
+          type: unscoped_event.actee_type,
+          name: unscoped_event.actee_name
         },
         data: {},
         space: nil,
@@ -63,20 +50,16 @@ RSpec.describe 'Events' do
         updated_at: iso8601,
         type: 'audit.organization.create',
         actor: {
-          guid: user_audit_info.user_guid,
-          type: 'user',
-          name: user_audit_info.user_email
+          guid: org_scoped_event.actor,
+          type: org_scoped_event.actor_type,
+          name: org_scoped_event.actor_name
         },
         target: {
-          guid: org.guid,
-          type: 'organization',
-          name: org.name
+          guid: org_scoped_event.actee,
+          type: org_scoped_event.actee_type,
+          name: org_scoped_event.actee_name
         },
-        data: {
-          request: {
-            key: 'val'
-          }
-        },
+        data: {},
         space: nil,
         organization: {
           guid: org.guid
@@ -96,14 +79,14 @@ RSpec.describe 'Events' do
         updated_at: iso8601,
         type: 'audit.app.restart',
         actor: {
-          guid: user_audit_info.user_guid,
-          type: 'user',
-          name: user_audit_info.user_email
+          guid: space_scoped_event.actor,
+          type: space_scoped_event.actor_type,
+          name: space_scoped_event.actor_name
         },
         target: {
-          guid: app_model.guid,
-          type: 'app',
-          name: app_model.name
+          guid: space_scoped_event.actee,
+          type: space_scoped_event.actee_type,
+          name: space_scoped_event.actee_name
         },
         data: {},
         space: {
@@ -183,58 +166,25 @@ RSpec.describe 'Events' do
       context 'using less than' do
         let!(:extra_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
 
-        it 'returns filtered events' do
+        it 'returns events earlier than the given timestamp' do
           get "/v3/audit_events?created_at[lt]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
           ).to match_json_response(
-            resources: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json]
+            resources: [unscoped_event_json, space_scoped_event_json]
           )
         end
       end
 
       context 'using greater than' do
-        let!(:later_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
-
-        let(:later_event_json) do
-          {
-            guid: later_event.guid,
-            created_at: iso8601,
-            updated_at: iso8601,
-            type: later_event.type,
-            actor: {
-              guid: later_event.actor,
-              type: later_event.actor_type,
-              name: later_event.actor_name
-            },
-            target: {
-              guid: later_event.actee,
-              type: later_event.actee_type,
-              name: later_event.actee_name
-            },
-            data: {},
-            space: {
-              guid: later_event.space_guid
-            },
-            organization: {
-              guid: org.guid
-            },
-            links: {
-              self: {
-                href: "#{link_prefix}/v3/audit_events/#{later_event.guid}"
-              }
-            }
-          }
-        end
-
-        it 'returns filtered events' do
+        it 'returns events after the given timestamp' do
           get "/v3/audit_events?created_at[gt]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
           ).to match_json_response(
-            resources: [later_event_json]
+            resources: [org_scoped_event_json]
           )
         end
       end
@@ -275,6 +225,7 @@ RSpec.describe 'Events' do
             timestamp:         Sequel::CURRENT_TIMESTAMP,
             metadata:          {},
             space_guid:        space.guid,
+            organization_guid: org.guid,
           )
         }
 

@@ -505,7 +505,7 @@ module VCAP::CloudController
     actee      { Sham.guid }
     actee_type { Sham.name }
     actee_name { Sham.name }
-    space      { Space.make }
+    organization_guid { Sham.guid }
     metadata { {} }
   end
 
