@@ -1284,6 +1284,77 @@ RSpec.describe 'V3 service instances' do
           end
         end
       end
+
+      context 'quotas' do
+        describe 'space quotas' do
+          context 'when the total services quota has been reached' do
+            before do
+              quota = VCAP::CloudController::SpaceQuotaDefinition.make(total_services: 1, organization: org)
+              quota.add_space(space)
+
+              VCAP::CloudController::ManagedServiceInstance.make(space: space)
+            end
+
+            it 'returns an error' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({ 'detail' => "You have exceeded your space's services limit." })
+              )
+            end
+          end
+
+          context 'when the paid services quota has been reached' do
+            let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+            before do
+              quota = VCAP::CloudController::SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: org)
+              quota.add_space(space)
+            end
+
+            it 'returns an error' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({ 'detail' => 'The service instance cannot be created because paid service plans are not allowed for your space.' })
+              )
+            end
+          end
+        end
+
+        describe 'organization quotas' do
+          context 'when the total services quota has been reached' do
+            before do
+              quota = VCAP::CloudController::QuotaDefinition.make(total_services: 1)
+              quota.add_organization(org)
+              VCAP::CloudController::ManagedServiceInstance.make(space: space)
+            end
+
+            it 'returns an error' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({ 'detail' => "You have exceeded your organization's services limit." })
+              )
+            end
+          end
+
+          context 'when the paid services quota has been reached' do
+            let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+            before do
+              quota = VCAP::CloudController::QuotaDefinition.make(non_basic_services_allowed: false)
+              quota.add_organization(org)
+            end
+
+            it 'returns an error' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({ 'detail' => 'The service instance cannot be created because paid service plans are not allowed.' })
+              )
+            end
+          end
+        end
+      end
     end
   end
 

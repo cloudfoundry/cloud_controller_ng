@@ -6,6 +6,9 @@ module VCAP::CloudController
   class ServiceInstanceCreateManaged
     include ServiceInstanceCreateMixin
 
+    class UnprocessableCreate < CloudController::Errors::ApiError
+    end
+
     class InvalidManagedServiceInstance < ::StandardError
     end
 
