@@ -88,6 +88,11 @@ module VCAP::CloudController
             expect(message).to be_valid
           end
 
+          it 'allows the lte operator' do
+            message = EventsListMessage.from_params({ created_at: { lte: Time.now.iso8601 } })
+            expect(message).to be_valid
+          end
+
           it 'allows the gt operator' do
             message = EventsListMessage.from_params({ created_at: { gt: Time.now.iso8601 } })
             expect(message).to be_valid

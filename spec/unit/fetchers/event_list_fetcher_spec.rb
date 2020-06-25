@@ -76,6 +76,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'requesting events less than or equal to a timestamp' do
+        let(:timestamp) { (Time.now + 1).iso8601 }
+        let!(:extra_event) { Event.make(created_at: (Time.now + 1).iso8601) }
+        let(:filters) do
+          { created_at: { lte: timestamp } }
+        end
+
+        it 'returns events with a created_at timestamp less than the given timestamp' do
+          expect(subject).to match_array([unscoped_event, space_scoped_event, extra_event])
+        end
+      end
+
       context 'requesting events greater than a timestamp' do
         let(:filters) do
           { created_at: { gt: (Time.now + 1).iso8601 } }
