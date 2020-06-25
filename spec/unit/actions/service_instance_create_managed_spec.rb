@@ -14,7 +14,8 @@ module VCAP
         }
       end
       let(:service_plan) { ServicePlan.make(maintenance_info: maintenance_info) }
-      let(:space) { Space.make }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
       let(:name) { 'my-service-instance' }
       let(:message) { ServiceInstanceCreateManagedMessage.new(request) }
       let(:instance) { ServiceInstance.last }
@@ -156,6 +157,74 @@ module VCAP
 
           expect { action.create(message) }.
             to raise_error(ServiceInstanceCreateManaged::InvalidManagedServiceInstance, 'blork is busted')
+        end
+      end
+
+      context 'quotas' do
+        context 'when service instance limit has been reached for the space' do
+          before do
+            quota = SpaceQuotaDefinition.make(total_services: 1, organization: org)
+            quota.add_space(space)
+            ManagedServiceInstance.make(space: space)
+          end
+
+          it 'raises' do
+            expect {
+              action.create(message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceSpaceQuotaExceeded')
+            end
+          end
+        end
+
+        context 'when service instance limit has been reached for the org' do
+          before do
+            quotas = QuotaDefinition.make(total_services: 1)
+            quotas.add_organization(org)
+            ManagedServiceInstance.make(space: space)
+          end
+
+          it 'raises' do
+            expect {
+              action.create(message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceQuotaExceeded')
+            end
+          end
+        end
+
+        context 'when the space does not allow paid services' do
+          let(:service_plan) { ServicePlan.make(public: true, free: false, active: true) }
+
+          before do
+            quota = SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: org)
+            quota.add_space(space)
+          end
+
+          it 'raises' do
+            expect {
+              action.create(message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+            end
+          end
+        end
+
+        context 'when the org does not allow paid services' do
+          let(:service_plan) { ServicePlan.make(free: false, public: true, active: true) }
+
+          before do
+            quota = QuotaDefinition.make(non_basic_services_allowed: false)
+            quota.add_organization(org)
+          end
+
+          it 'raises' do
+            expect {
+              action.create(message)
+            }.to raise_error CloudController::Errors::ApiError do |err|
+              expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
+            end
+          end
         end
       end
     end

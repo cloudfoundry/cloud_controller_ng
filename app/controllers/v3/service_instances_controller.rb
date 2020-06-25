@@ -196,6 +196,8 @@ class ServiceInstancesV3Controller < ApplicationController
     job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  rescue ServiceInstanceCreateManaged::UnprocessableCreate => e
+    unprocessable!(e.message)
   rescue ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
   end
