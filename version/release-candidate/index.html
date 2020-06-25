@@ -598,6 +598,10 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 <td><strong>lt</strong></td>
 <td>Return resources strictly less than the given value for the filtered attribute</td>
 </tr>
+<tr>
+<td><strong>gt</strong></td>
+<td>Return resources strictly greater than the given value for the filtered attribute</td>
+</tr>
 </tbody></table>
 
 <h5 id="resources-with-inequalities">Resources with inequalities</h5>
@@ -4060,7 +4064,7 @@ to three instances), and stopping an application.</p>
 <tr>
 <td><strong>created_at</strong></td>
 <td><em>iso8601 timestamp</em></td>
-<td>Timestamp to filter by. Supports inequality operators, see <a href="#valid-comparison-operators">valid comparison operators</a></td>
+<td>Timestamp to filter by. Only supports inequality operators, see <a href="#valid-comparison-operators">valid comparison operators</a></td>
 </tr>
 <tr>
 <td><strong>types</strong></td>
