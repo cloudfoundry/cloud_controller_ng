@@ -162,6 +162,10 @@ includes:
   - resources/jobs/header
   - resources/jobs/object
   - resources/jobs/get
+  - resources/manifests/header
+  - resources/manifests/object
+  - resources/manifests/apply
+  - resources/manifests/get
   - resources/organizations/header
   - resources/organizations/object
   - resources/organizations/create
@@ -297,9 +301,6 @@ includes:
   - resources/space_features/get
   - resources/space_features/list
   - resources/space_features/update
-  - resources/space_manifest/header
-  - resources/space_manifest/object
-  - resources/space_manifest/apply
   - resources/space_quotas/header
   - resources/space_quotas/object
   - resources/space_quotas/create
@@ -334,7 +335,6 @@ includes:
   - experimental_resources/header
   - experimental_resources/app_manifest/header
   - experimental_resources/app_manifest/object
-  - experimental_resources/app_manifest/get
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create

@@ -1,5 +1,9 @@
 ### Apply an app manifest
 
+<aside class="notice">
+Recommendation: use <a href="#apply-a-manifest-to-a-space">apply a manifest</a>; it is a superset
+of this method and is not experimental.
+</aside>
 ```
 Example Request
 ```

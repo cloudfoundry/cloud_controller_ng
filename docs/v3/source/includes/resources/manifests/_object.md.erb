@@ -1,6 +1,6 @@
-The space manifest is a method for applying bulk configurations to apps and their underlying processes.
+A manifest is a method for applying bulk configurations to apps and their underlying processes.
 
-### The space manifest schema
+### The manifest schema
 
 ```
 Example Manifest
@@ -81,8 +81,9 @@ This configuration is specified per application and applies to all of the applic
 
 Name | Type | Description
 ----- | ---- | -----------
+**name** | _string_ | Name of the app
 **buildpacks** | _array of strings_ | a) An empty array, which will automatically select the appropriate default buildpack according to the coding language <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy `buildpack` field
-**docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-an-app-manifest) will return the registry address of the image and username provided with this key
+**docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-a-manifest-for-an-app) will return the registry address of the image and username provided with this key
 **env** | _object_ | A key-value mapping of environment variables to be used for the app when running
 **no-route** | _boolean_ | When set to `true`, any routes specified with the `routes` attribute will be ignored and any existing routes will be removed
 **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types

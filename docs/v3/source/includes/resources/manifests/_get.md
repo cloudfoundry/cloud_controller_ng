@@ -1,4 +1,4 @@
-### Generate an app manifest
+### Generate a manifest for an app
 
 ```
 Example Request
