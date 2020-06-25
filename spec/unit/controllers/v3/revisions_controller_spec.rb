@@ -36,6 +36,7 @@ RSpec.describe RevisionsController, type: :controller do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'deployable' => true,
           'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
@@ -81,6 +82,7 @@ RSpec.describe RevisionsController, type: :controller do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'deployable' => false,
           'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
@@ -202,6 +204,7 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'deployable' => true,
             'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
@@ -259,6 +262,7 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'deployable' => true,
             'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"

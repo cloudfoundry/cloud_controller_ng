@@ -1,10 +1,17 @@
 module VCAP::CloudController
   class AppRevisionsFetcher
     def self.fetch(app, message)
-      dataset = RevisionModel.where(app_guid: app.guid)
+      dataset = RevisionModel.where(Sequel[:revisions][:app_guid] => app.guid)
 
       if message.requested?(:versions)
-        dataset = dataset.where(app_guid: app.guid, version: message.versions)
+        dataset = dataset.where(Sequel[:revisions][:app_guid] => app.guid, version: message.versions)
+      end
+
+      if message.requested?(:deployable)
+        dataset = dataset.
+                  join(:droplets, guid: :droplet_guid).
+                  where(Sequel[:droplets][:state] => DropletModel::STAGED_STATE).
+                  qualify(:revisions)
       end
 
       if message.requested?(:label_selector)
