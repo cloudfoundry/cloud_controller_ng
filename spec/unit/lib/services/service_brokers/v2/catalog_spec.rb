@@ -143,7 +143,12 @@ module VCAP::Services::ServiceBrokers::V2
                 catalog = Catalog.new(broker, new_catalog_hash)
 
                 expect(catalog.valid?).to be false
-                expect(catalog.errors.messages).to include(include('Services with names ["clashing-service-name", "clashing-service-name2"] already exist'))
+                expect(catalog.errors.messages).to include(
+                  include('Service names must be unique within a broker') &
+                  include('clashing-service-name2') &
+                  include('clashing-service-name') &
+                  end_with('already exist')
+                )
               end
             end
 
