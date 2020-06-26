@@ -162,9 +162,11 @@ RSpec.describe 'Events' do
 
     context 'filtering by timestamp' do
       let(:timestamp) { (Time.now + 1).utc.iso8601 }
+      let(:timestamp_half_second_later) { (Time.parse(timestamp) + 0.5).utc.iso8601 }
 
       context 'using less than' do
         let!(:extra_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, organization_guid: org.guid) }
+        let!(:half_second_event) { VCAP::CloudController::Event.make(created_at: timestamp_half_second_later, organization_guid: org.guid, type: 'audit.organization.create') }
 
         it 'returns events earlier than the given timestamp' do
           get "/v3/audit_events?created_at[lt]=#{timestamp}", nil, admin_header
@@ -209,13 +211,44 @@ RSpec.describe 'Events' do
           }
         end
 
+        let!(:half_second_event) { VCAP::CloudController::Event.make(created_at: timestamp_half_second_later, organization_guid: org.guid, type: 'audit.organization.create') }
+
+        let(:half_second_event_json) do
+          {
+            guid: half_second_event.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'audit.organization.create',
+            actor: {
+              guid: half_second_event.actor,
+              type: half_second_event.actor_type,
+              name: half_second_event.actor_name
+            },
+            target: {
+              guid: half_second_event.actee,
+              type: half_second_event.actee_type,
+              name: half_second_event.actee_name
+            },
+            data: {},
+            space: nil,
+            organization: {
+              guid: org.guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{half_second_event.guid}"
+              }
+            }
+          }
+        end
+
         it 'returns events earlier than the given timestamp' do
           get "/v3/audit_events?created_at[lte]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
           ).to match_json_response(
-            resources: [unscoped_event_json, space_scoped_event_json, extra_event_json]
+            resources: [unscoped_event_json, space_scoped_event_json, extra_event_json, half_second_event_json]
           )
         end
       end
