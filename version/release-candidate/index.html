@@ -578,15 +578,13 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 
 <h4 id="filtering-on-inequalities-experimental">Filtering on Inequalities (Experimental)</h4>
 
-<p>Certain parameters can be filtered using inequality when listing resources.</p>
+<p>Certain fields can be filtered using inequality when listing resources.</p>
 
 <p>For example, a response to <code class="prettyprint">/v3/audit_events?created_at[lt]=iso8601-timestamp</code> will contain audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">iso8601-timestamp</code>.</p>
 
-<p><code class="prettyprint">GET /v3/audit_events?created_at[lt]=2020-06-02T19:43:08+0000</code></p>
-
 <p>Currently, this is only supported on the <code class="prettyprint">created_at</code> parameter.</p>
 
-<h5 id="valid-comparison-operators">Valid comparison operators</h5>
+<h5 id="valid-inequality-operators">Valid inequality operators</h5>
 
 <table><thead>
 <tr>
@@ -606,11 +604,15 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 <td><strong>gt</strong></td>
 <td>Return resources strictly greater than the given value for the filtered attribute</td>
 </tr>
+<tr>
+<td><strong>gte</strong></td>
+<td>Return resources greater than or equal to the given value for the filtered attribute</td>
+</tr>
 </tbody></table>
 
 <h5 id="resources-with-inequalities">Resources with inequalities</h5>
 
-<p>The following resources can filter using comparison operators:</p>
+<p>The following resources can filter using inequality operators:</p>
 
 <ul>
 <li><strong><a href="#list-audit-events">audit_events</a></strong></li>
