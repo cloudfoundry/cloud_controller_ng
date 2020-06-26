@@ -307,6 +307,15 @@ RSpec.describe 'Events' do
           )
         end
       end
+
+      context 'using an invalid operator' do
+        it 'returns a useful error' do
+          get "/v3/audit_events?created_at[goat]=#{timestamp}", nil, admin_header
+
+          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_error_message("Invalid comparison operator: 'goat'")
+        end
+      end
     end
 
     context 'filtering by organization_guid' do
