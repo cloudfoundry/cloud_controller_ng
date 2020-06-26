@@ -29,15 +29,21 @@ module VCAP::CloudController
         end
 
         if message.requested?(:created_at)
-          key = message.created_at.keys[0]
-          if key == Event::LESS_THAN_COMPARATOR
-            dataset = dataset.where(Sequel.lit("created_at < '#{Time.parse(message.created_at[key]).utc}'"))
-          elsif key == Event::LESS_THAN_OR_EQUAL_COMPARATOR
-            dataset = dataset.where(Sequel.lit("created_at <= '#{Time.parse(message.created_at[key]).utc}'"))
-          elsif key == Event::GREATER_THAN_COMPARATOR
-            dataset = dataset.where(Sequel.lit("created_at > '#{Time.parse(message.created_at[key]).utc}'"))
-          elsif key == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
-            dataset = dataset.where(Sequel.lit("created_at >= '#{Time.parse(message.created_at[key]).utc}'"))
+          operator = message.created_at.keys[0]
+          given_timestamp = message.created_at.values[0]
+
+          if operator == Event::LESS_THAN_COMPARATOR
+            normalized_timestamp = Time.parse(given_timestamp).utc
+            dataset = dataset.where(Sequel.lit('created_at < ?', normalized_timestamp))
+          elsif operator == Event::LESS_THAN_OR_EQUAL_COMPARATOR
+            normalized_timestamp = (Time.parse(given_timestamp).utc + 0.99999).utc
+            dataset = dataset.where(Sequel.lit('created_at <= ?', normalized_timestamp))
+          elsif operator == Event::GREATER_THAN_COMPARATOR
+            normalized_timestamp = (Time.parse(given_timestamp).utc + 0.99999).utc
+            dataset = dataset.where(Sequel.lit('created_at > ?', normalized_timestamp))
+          elsif operator == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
+            normalized_timestamp = Time.parse(given_timestamp).utc
+            dataset = dataset.where(Sequel.lit('created_at >= ?', normalized_timestamp))
           end
         end
 
