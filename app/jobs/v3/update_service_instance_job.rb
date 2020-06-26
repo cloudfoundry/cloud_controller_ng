@@ -1,8 +1,8 @@
-# require 'messages/service_instance_update_managed_message'
+require 'jobs/reoccurring_job'
 
 module VCAP::CloudController
   module V3
-    class UpdateServiceInstanceJob < VCAP::CloudController::Jobs::CCJob
+    class UpdateServiceInstanceJob < VCAP::CloudController::Jobs::ReoccurringJob
       attr_reader :warnings
 
       def initialize(service_instance_guid, message:, user_audit_info:)
@@ -10,6 +10,8 @@ module VCAP::CloudController
         @service_instance_guid = service_instance_guid
         @message = message
         @user_audit_info = user_audit_info
+        @first_time = true
+        @broker_response = {}
         @warnings = []
       end
 
@@ -23,33 +25,36 @@ module VCAP::CloudController
         aborted! if operation_in_progress != 'update'
 
         begin
-          compatibility_checks
-
+          maintenance_info = updated_maintenance_info(message, service_instance, service_plan)
           client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
 
-          maintenance_info = updated_maintenance_info(message, service_instance, service_plan)
+          if first_time
+            compute_maximum_duration
+            compatibility_checks
+            @broker_response, err = client.update(
+              service_instance,
+              service_plan,
+              accepts_incomplete: true,
+              arbitrary_parameters: message.parameters || {},
+              previous_values: previous_values,
+              maintenance_info: maintenance_info,
+              name: message.requested?(:name) ? message.name : service_instance.name,
+            )
+            raise err if err # TODO: create rewrites this errors with an api error keeping the message
 
-          broker_response, err = client.update(
-            service_instance,
-            service_plan,
-            accepts_incomplete: false,
-            arbitrary_parameters: message.parameters || {},
-            previous_values: previous_values,
-            maintenance_info: maintenance_info,
-            name: message.requested?(:name) ? message.name : service_instance.name,
-          )
-          raise err if err
-
-          updates = message.updates.tap do |u|
-            u[:service_plan_guid] = service_plan.guid
-            u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
-            u[:maintenance_info] = maintenance_info if maintenance_info_updated?(message, service_instance, service_plan)
+            service_instance.save_with_new_operation({}, broker_response[:last_operation])
+            @first_time = false
           end
 
-          ServiceInstance.db.transaction do
-            service_instance.save_with_new_operation(updates, broker_response[:last_operation])
-            MetadataUpdate.update(service_instance, message)
-            record_event(service_instance, message.audit_hash)
+          if service_instance.operation_in_progress?
+            fetch_last_operation(client)
+          end
+
+          if service_instance.last_operation.state == 'succeeded'
+            update_service_instance(broker_response, maintenance_info)
+            finish
+          elsif service_instance.last_operation.state == 'failed'
+            operation_failed!(service_instance.last_operation.description) # TODO: sync did not do this before
           end
 
           logger.info("Service instance update complete #{service_instance_guid}")
@@ -58,10 +63,19 @@ module VCAP::CloudController
           service_instance.save_with_new_operation({}, {
             state: 'failed',
             type: 'update',
-            description: err.message
+            description: err.message # TODO: overrides the error in line 55.
           })
           raise err
         end
+      end
+
+      def handle_timeout
+        service_instance.save_and_update_operation(
+          last_operation: {
+            state: 'failed',
+            description: 'Service Broker failed to update within the required time.',
+          }
+        )
       end
 
       def job_name_in_configuration
@@ -86,7 +100,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :service_instance_guid, :message, :user_audit_info
+      attr_reader :service_instance_guid, :message, :user_audit_info, :first_time, :broker_response
 
       def service_instance
         ManagedServiceInstance.first(guid: service_instance_guid)
@@ -145,6 +159,37 @@ module VCAP::CloudController
         end
       end
 
+      def compute_maximum_duration
+        max_poll_duration_on_plan = service_instance.service_plan.try(:maximum_polling_duration)
+        self.maximum_duration_seconds = max_poll_duration_on_plan if max_poll_duration_on_plan
+      end
+
+      def update_service_instance(broker_response, maintenance_info)
+        updates = message.updates.tap do |u|
+          u[:service_plan_guid] = service_plan.guid
+          u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+          u[:maintenance_info] = maintenance_info if maintenance_info_updated?(message, service_instance, service_plan)
+        end
+
+        ServiceInstance.db.transaction do
+          service_instance.update_service_instance(updates)
+          MetadataUpdate.update(service_instance, message)
+          record_event(service_instance, message.audit_hash)
+        end
+      end
+
+      def fetch_last_operation(client)
+        last_operation_result = client.fetch_service_instance_last_operation(service_instance)
+        self.polling_interval_seconds = last_operation_result[:retry_after] if last_operation_result[:retry_after]
+
+        service_instance.save_and_update_operation(
+          last_operation: last_operation_result[:last_operation].slice(:state, :description)
+        )
+      rescue HttpRequestError, HttpResponseError, Sequel::Error => e
+        logger = Steno.logger('cc-background')
+        logger.error("There was an error while fetching the service instance operation state: #{e}")
+      end
+
       def volume_services_disabled?
         !VCAP::CloudController::Config.config.get(:volume_services_enabled)
       end
@@ -163,6 +208,10 @@ module VCAP::CloudController
 
       def aborted!
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'Update', 'delete in progress')
+      end
+
+      def operation_failed!(msg)
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceProvisionFailed', msg)
       end
     end
   end
