@@ -11,7 +11,7 @@ module VCAP::CloudController
           end
 
           comparison_operator = record.created_at.keys[0]
-          valid_comparision_operators = [Event::LESS_THAN_COMPARATOR, Event::GREATER_THAN_COMPARATOR, Event::LESS_THAN_OR_EQUAL_COMPARATOR]
+          valid_comparision_operators = [Event::LESS_THAN_COMPARATOR, Event::GREATER_THAN_COMPARATOR, Event::LESS_THAN_OR_EQUAL_COMPARATOR, Event::GREATER_THAN_OR_EQUAL_COMPARATOR]
           unless valid_comparision_operators.include?(comparison_operator)
             record.errors[:created_at] << "Invalid comparison operator: '#{comparison_operator}'"
           end

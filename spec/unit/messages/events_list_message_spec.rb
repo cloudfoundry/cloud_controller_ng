@@ -77,6 +77,12 @@ module VCAP::CloudController
             expect(message.errors[:created_at]).to include("Invalid comparison operator: 'garbage'")
           end
 
+          it 'requires a valid comparison operator' do
+            message = EventsListMessage.from_params({ created_at: { garbage: Time.now.iso8601 } })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_at]).to include("Invalid comparison operator: 'garbage'")
+          end
+
           it 'requires a valid timestamp' do
             message = EventsListMessage.from_params({ created_at: { gt: 123 } })
             expect(message).not_to be_valid
@@ -95,6 +101,11 @@ module VCAP::CloudController
 
           it 'allows the gt operator' do
             message = EventsListMessage.from_params({ created_at: { gt: Time.now.iso8601 } })
+            expect(message).to be_valid
+          end
+
+          it 'allows the gte operator' do
+            message = EventsListMessage.from_params({ created_at: { gte: Time.now.iso8601 } })
             expect(message).to be_valid
           end
         end

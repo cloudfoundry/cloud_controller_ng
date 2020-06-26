@@ -36,6 +36,8 @@ module VCAP::CloudController
             dataset = dataset.where(Sequel.lit("created_at <= '#{Time.parse(message.created_at[key]).utc}'"))
           elsif key == Event::GREATER_THAN_COMPARATOR
             dataset = dataset.where(Sequel.lit("created_at > '#{Time.parse(message.created_at[key]).utc}'"))
+          elsif key == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
+            dataset = dataset.where(Sequel.lit("created_at >= '#{Time.parse(message.created_at[key]).utc}'"))
           end
         end
 

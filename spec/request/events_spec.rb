@@ -220,6 +220,49 @@ RSpec.describe 'Events' do
         end
       end
 
+      context 'using greater than or equal to' do
+        let!(:extra_event) { VCAP::CloudController::Event.make(created_at: timestamp, organization_guid: org.guid, type: 'audit.organization.create') }
+
+        let(:extra_event_json) do
+          {
+            guid: extra_event.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'audit.organization.create',
+            actor: {
+              guid: extra_event.actor,
+              type: extra_event.actor_type,
+              name: extra_event.actor_name
+            },
+            target: {
+              guid: extra_event.actee,
+              type: extra_event.actee_type,
+              name: extra_event.actee_name
+            },
+            data: {},
+            space: nil,
+            organization: {
+              guid: org.guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{extra_event.guid}"
+              }
+            }
+          }
+        end
+
+        it 'returns events at or after the given timestamp' do
+          get "/v3/audit_events?created_at[gte]=#{timestamp}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [org_scoped_event_json, extra_event_json]
+          )
+        end
+      end
+
       context 'using greater than' do
         it 'returns events after the given timestamp' do
           get "/v3/audit_events?created_at[gt]=#{timestamp}", nil, admin_header
