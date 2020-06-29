@@ -2143,6 +2143,66 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'DELETE /v3/service_instances/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{instance.guid}", '{}', user_headers } }
+
+    context 'user provided service instance' do
+      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+
+      let(:db_check) {
+        lambda do
+          get "/v3/service_instances/#{instance.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+
+          expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
+          expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
+        end
+      }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['space_developer'] = { code: 204 }
+          h['admin'] = { code: 204 }
+          h['no_role'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'when associations are not empty' do
+        it 'returns a 422 Unprocessable Entity when there are service bindings' do
+          VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          response = parsed_response['errors'].first
+          expect(response).to include('title' => 'CF-AssociationNotEmpty')
+          expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
+        end
+
+        it 'returns a 422 Unprocessable Entity when there are service keys' do
+          VCAP::CloudController::ServiceKey.make(service_instance: instance)
+
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          response = parsed_response['errors'].first
+          expect(response).to include('title' => 'CF-AssociationNotEmpty')
+          expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
+        end
+      end
+    end
+
+    context 'when the service instance does not exist' do
+      let(:instance) { Struct.new(:guid).new('some-fake-guid') }
+      it 'returns a 404' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+      end
+    end
+  end
+
   def create_managed_json(instance, labels: {}, annotations: {}, last_operation: {}, tags: [])
     {
       guid: instance.guid,

@@ -209,6 +209,14 @@ module VCAP::CloudController
       shared_spaces.any?
     end
 
+    def has_bindings?
+      !service_bindings.empty?
+    end
+
+    def has_keys?
+      !service_keys.empty?
+    end
+
     def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
       VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end
