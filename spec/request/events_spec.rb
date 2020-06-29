@@ -308,6 +308,49 @@ RSpec.describe 'Events' do
         end
       end
 
+      context 'using equal' do
+        let!(:same_time_event) { VCAP::CloudController::Event.make(created_at: timestamp, organization_guid: org.guid, type: 'audit.organization.create') }
+
+        let(:same_time_event_json) do
+          {
+            guid: same_time_event.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'audit.organization.create',
+            actor: {
+              guid: same_time_event.actor,
+              type: same_time_event.actor_type,
+              name: same_time_event.actor_name
+            },
+            target: {
+              guid: same_time_event.actee,
+              type: same_time_event.actee_type,
+              name: same_time_event.actee_name
+            },
+            data: {},
+            space: nil,
+            organization: {
+              guid: org.guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{same_time_event.guid}"
+              }
+            }
+          }
+        end
+
+        it 'returns events at the given timestamp' do
+          get "/v3/audit_events?created_at=#{timestamp}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [same_time_event_json]
+               )
+        end
+      end
+
       context 'using an invalid operator' do
         it 'returns a useful error' do
           get "/v3/audit_events?created_at[goat]=#{timestamp}", nil, admin_header

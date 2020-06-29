@@ -5,18 +5,27 @@ module VCAP::CloudController
     class CreatedAtValidator < ActiveModel::Validator
       def validate(record)
         if record.requested?(:created_at)
-          unless record.created_at.is_a?(Hash)
-            record.errors[:created_at] << 'comparison operator and timestamp must be specified'
-            return
-          end
+          if record.created_at.is_a?(String)
+            timestamp = record.created_at
+          else
+            unless record.created_at.is_a?(Hash)
+              record.errors[:created_at] << 'comparison operator and timestamp must be specified'
+              return
+            end
 
-          comparison_operator = record.created_at.keys[0]
-          valid_comparision_operators = [Event::LESS_THAN_COMPARATOR, Event::GREATER_THAN_COMPARATOR, Event::LESS_THAN_OR_EQUAL_COMPARATOR, Event::GREATER_THAN_OR_EQUAL_COMPARATOR]
-          unless valid_comparision_operators.include?(comparison_operator)
-            record.errors[:created_at] << "Invalid comparison operator: '#{comparison_operator}'"
-          end
+            comparison_operator = record.created_at.keys[0]
+            valid_comparision_operators = [
+              Event::LESS_THAN_COMPARATOR,
+              Event::GREATER_THAN_COMPARATOR,
+              Event::LESS_THAN_OR_EQUAL_COMPARATOR,
+              Event::GREATER_THAN_OR_EQUAL_COMPARATOR,
+            ]
+            unless valid_comparision_operators.include?(comparison_operator)
+              record.errors[:created_at] << "Invalid comparison operator: '#{comparison_operator}'"
+            end
 
-          timestamp = record.created_at.values[0]
+            timestamp = record.created_at.values[0]
+          end
           begin
             Time.iso8601(timestamp)
           rescue

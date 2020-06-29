@@ -65,8 +65,8 @@ module VCAP::CloudController
         end
 
         context 'validates the created_at filter' do
-          it 'requires a hash' do
-            message = EventsListMessage.from_params({ created_at: Time.now.iso8601 })
+          it 'requires a hash or a timestamp' do
+            message = EventsListMessage.from_params({ created_at: [Time.now.iso8601] })
             expect(message).not_to be_valid
             expect(message.errors[:created_at]).to include('comparison operator and timestamp must be specified')
           end
@@ -107,6 +107,18 @@ module VCAP::CloudController
           it 'allows the gte operator' do
             message = EventsListMessage.from_params({ created_at: { gte: Time.now.iso8601 } })
             expect(message).to be_valid
+          end
+
+          context 'when the operator is an equals operator' do
+            it 'allows the equals operator' do
+              message = EventsListMessage.from_params({ created_at: Time.now.iso8601 })
+              expect(message).to be_valid
+            end
+
+            it 'errors on invalid (non-ISO 8601) timestamps' do
+              message = EventsListMessage.from_params({ created_at: 'yesterday' })
+              expect(message).to be_invalid
+            end
           end
         end
       end

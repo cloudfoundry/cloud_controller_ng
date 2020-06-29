@@ -39,13 +39,31 @@ This will return all buildpacks with stack `NULL`.
 
 This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
 
-#### Filtering on Inequalities (Experimental)
+#### Relational Operators (Experimental)
 
-Certain fields can be filtered using inequality when listing resources.
+##### Filtering on Equality
 
-For example, a response to `/v3/audit_events?created_at[lt]=iso8601-timestamp` will contain audit events with a `created_at` timestamp strictly earlier than `iso8601-timestamp`.
+Fields can be filtered using equality when listing resources. Currently, only the `created_at` field
+is supported.
 
-Currently, this is only supported on the `created_at` parameter.
+For example, a response to `/v3/audit_events?created_at=2020-06-29T12:34:56-07:00` will contain
+audit events with a `created_at` timestamp equal to `2020-06-29T13:56:40`, PDT.  Most databases
+store timestamps with sub-second accuracy. When filtering on equality, the response will include
+_all_ resources within the second specified. For example, in the above query, any audit event
+occurring as early as `12:34:56.00` will be returned as well as any audit event occurring as late as
+`12:34:56.999999`.
+
+Timestamps must be in ISO 8601 format.
+
+##### Filtering on Inequality
+
+Fields can be filtered using inequality when listing resources. Currently, only the `created_at`
+field is supported.
+
+For example, a response to `/v3/audit_events?created_at[lt]=2020-06-29T13:56:40-07:00` will contain
+audit events with a `created_at` timestamp strictly earlier than `2020-06-29T13:56:40`, PDT.
+
+Timestamps must be in ISO 8601 format.
 
 ##### Valid inequality operators
 
