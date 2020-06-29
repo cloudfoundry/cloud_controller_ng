@@ -116,7 +116,7 @@ case errorResponse.Code == x:
 		return ccerror.NotUniqueError{}
 ```
 
-Concerns:
+## Concerns:
 * There is a potential to create API Errors specialized to the places that they are thrown, rather than at the highest level. We will have to be careful not to be too liberal with this pattern and might end up with some inconsistency around how we throw errors (i.e throwing an API error directly in the action for the uniqueness validation constraint case, while rescuing a generic SpaceQuotaCreate::Error for all other cases in the example).
 * Error umbrellas might be ambiguous. It might be unclear which umbrella a future error would be placed under, and we would not have much flexibility to restructure after entering error types into our contracts with clients.
 * It is unclear if existing clients are dependent on the the `CF-UnprocessableEntity` error structure existing the way it does.
