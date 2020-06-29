@@ -32,7 +32,7 @@ For example, a common workflow in the CLI is swallowing CAPI uniqueness constrai
 ```
 *Figure 2: This error is a new error sub class of the 422 HTTP status error. The title and code would give a client high level information about what caused the error, while the detail would still be a custom string that is flexible to product needs, and could in many cases be returned directly to a user.*
 
-# Implementation
+## Implementation
 The majority of these errors are triggered by the Model-validation. A typical example is shown in figure 3.
 
 ```
