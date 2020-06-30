@@ -2146,17 +2146,12 @@ RSpec.describe 'V3 service instances' do
   describe 'DELETE /v3/service_instances/:guid' do
     let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{instance.guid}", '{}', user_headers } }
 
-    context 'user provided service instance' do
+    context 'permissions' do
       let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
-
       let(:db_check) {
-        lambda do
-          get "/v3/service_instances/#{instance.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
-
-          expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
-          expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
-        end
+        lambda {
+          expect(VCAP::CloudController::ServiceInstance.all).to be_empty
+        }
       }
 
       let(:expected_codes_and_responses) do
@@ -2170,27 +2165,60 @@ RSpec.describe 'V3 service instances' do
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
 
-      context 'when associations are not empty' do
-        it 'returns a 422 Unprocessable Entity when there are service bindings' do
-          VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+    context 'user provided service instances' do
+      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
 
+      before do
+        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'banana', service_instance: instance)
+        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'avocado', service_instance: instance)
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'contact', value: 'marie', service_instance: instance)
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'email', value: 'some@example.com', service_instance: instance)
+      end
+
+      it 'deletes the instance and removes any labels or annotations' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(204)
+
+        get "/v3/service_instances/#{instance.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+        expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
+        expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
+      end
+    end
+
+    context 'managed service instance' do
+      let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+      context 'when it is shared' do
+        let(:other_space) { VCAP::CloudController::Space.make }
+
+        before do
+          share_service_instance(instance, other_space)
+        end
+
+        it 'returns a 422 Unprocessable Entity' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
           response = parsed_response['errors'].first
-          expect(response).to include('title' => 'CF-AssociationNotEmpty')
-          expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
+          expect(response).to include('title' => 'CF-ServiceInstanceDeletionSharesExists')
+          expect(response).to include('detail' => include('Service instances must be unshared before they can be deleted.'))
         end
+      end
+    end
 
-        it 'returns a 422 Unprocessable Entity when there are service keys' do
-          VCAP::CloudController::ServiceKey.make(service_instance: instance)
+    context 'when associations are not empty' do
+      let(:instance) { VCAP::CloudController::ServiceInstance.make(space: space) }
 
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(422)
-          response = parsed_response['errors'].first
-          expect(response).to include('title' => 'CF-AssociationNotEmpty')
-          expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
-        end
+      it 'returns a 422 Unprocessable Entity' do
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(422)
+        response = parsed_response['errors'].first
+        expect(response).to include('title' => 'CF-AssociationNotEmpty')
+        expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
       end
     end
 
@@ -2302,6 +2330,25 @@ RSpec.describe 'V3 service instances' do
 
     expect(a).to match_array(annotations)
     expect(l).to match_array(labels)
+  end
+
+  def share_service_instance(instance, target_space)
+    enable_sharing!
+
+    share_request = {
+      'data' => [
+        { 'guid' => target_space.guid }
+      ]
+    }
+
+    post "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", share_request.to_json, admin_headers
+    expect(last_response.status).to eq(200)
+  end
+
+  def enable_sharing!
+    VCAP::CloudController::FeatureFlag.
+      find_or_create(name: 'service_instance_sharing') { |ff| ff.enabled = true }.
+      update(enabled: true)
   end
 
   describe 'unrefactored' do

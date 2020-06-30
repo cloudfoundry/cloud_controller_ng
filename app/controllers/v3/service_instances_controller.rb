@@ -15,7 +15,7 @@ require 'actions/service_instance_unshare'
 require 'actions/service_instance_update_managed'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
-require 'actions/service_instance_delete_user_provided'
+require 'actions/service_instance_delete'
 require 'actions/service_instance_create_managed'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
@@ -109,16 +109,16 @@ class ServiceInstancesV3Controller < ApplicationController
 
     unauthorized! unless can_write_space?(service_instance.space)
 
-    case service_instance
-    when UserProvidedServiceInstance
-      service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-      ServiceInstanceDeleteUserProvided.new(service_event_repository).delete(service_instance)
-      head :no_content
-    else
-      head :not_implemented
-    end
-  rescue ServiceInstanceDeleteUserProvided::AssociationNotEmptyError
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
+
+    head :no_content
+  rescue ServiceInstanceDelete::AssociationNotEmptyError
     associations_not_empty!
+  rescue ServiceInstanceDelete::InstanceSharedError
+    cannot_delete_shared_instances!(service_instance.name)
+  rescue ServiceInstanceDelete::NotImplementedError
+    head :not_implemented
   end
 
   def share_service_instance
@@ -352,5 +352,9 @@ class ServiceInstancesV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.
       new_from_details('AssociationNotEmpty', associations, :service_instances).
       with_response_code(422)
+  end
+
+  def cannot_delete_shared_instances!(name)
+    raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeletionSharesExists', name)
   end
 end

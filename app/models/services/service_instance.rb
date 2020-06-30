@@ -210,11 +210,15 @@ module VCAP::CloudController
     end
 
     def has_bindings?
-      !service_bindings.empty?
+      service_bindings.present?
     end
 
     def has_keys?
-      !service_keys.empty?
+      service_keys.present?
+    end
+
+    def has_routes?
+      routes.present?
     end
 
     def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
