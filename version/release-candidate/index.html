@@ -576,13 +576,31 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 
 <p>This will return all routes with hostname <code class="prettyprint">&quot;hostname1&quot;</code>, <code class="prettyprint">&quot;&quot;</code> OR <code class="prettyprint">&quot;hostname2&quot;</code>.</p>
 
-<h4 id="filtering-on-inequalities-experimental">Filtering on Inequalities (Experimental)</h4>
+<h4 id="relational-operators-experimental">Relational Operators (Experimental)</h4>
 
-<p>Certain fields can be filtered using inequality when listing resources.</p>
+<h5 id="filtering-on-equality">Filtering on Equality</h5>
 
-<p>For example, a response to <code class="prettyprint">/v3/audit_events?created_at[lt]=iso8601-timestamp</code> will contain audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">iso8601-timestamp</code>.</p>
+<p>Fields can be filtered using equality when listing resources. Currently, only the <code class="prettyprint">created_at</code> field
+is supported.</p>
 
-<p>Currently, this is only supported on the <code class="prettyprint">created_at</code> parameter.</p>
+<p>For example, a response to <code class="prettyprint">/v3/audit_events?created_at=2020-06-29T12:34:56-07:00</code> will contain
+audit events with a <code class="prettyprint">created_at</code> timestamp equal to <code class="prettyprint">2020-06-29T13:56:40</code>, PDT.  Most databases
+store timestamps with sub-second accuracy. When filtering on equality, the response will include
+<em>all</em> resources within the second specified. For example, in the above query, any audit event
+occurring as early as <code class="prettyprint">12:34:56.00</code> will be returned as well as any audit event occurring as late as
+<code class="prettyprint">12:34:56.999999</code>.</p>
+
+<p>Timestamps must be in ISO 8601 format.</p>
+
+<h5 id="filtering-on-inequality">Filtering on Inequality</h5>
+
+<p>Fields can be filtered using inequality when listing resources. Currently, only the <code class="prettyprint">created_at</code>
+field is supported.</p>
+
+<p>For example, a response to <code class="prettyprint">/v3/audit_events?created_at[lt]=2020-06-29T13:56:40-07:00</code> will contain
+audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">2020-06-29T13:56:40</code>, PDT.</p>
+
+<p>Timestamps must be in ISO 8601 format.</p>
 
 <h5 id="valid-inequality-operators">Valid inequality operators</h5>
 
@@ -4070,7 +4088,7 @@ to three instances), and stopping an application.</p>
 <tr>
 <td><strong>created_at</strong> (<em>experimental</em>)</td>
 <td><em>iso8601 timestamp</em></td>
-<td>Timestamp to filter by. Only supports inequality operators, see <a href="#valid-comparison-operators">valid comparison operators</a></td>
+<td>Timestamp to filter by. Only supports relational operators, see <a href="#relational-operators-experimental">relational operators</a></td>
 </tr>
 <tr>
 <td><strong>types</strong></td>
