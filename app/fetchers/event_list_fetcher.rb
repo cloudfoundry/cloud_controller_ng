@@ -48,8 +48,8 @@ module VCAP::CloudController
             end
           else
             # Gotcha: unlike the other relational operators, which are hashes such as
-            # { lt: '2020-06-29T12:34:56-07:00' }, the equals operator is simply a value, e.g.
-            # '2020-06-29T12:34:56-07:00'.
+            # { lt: '2020-06-30T12:34:56Z' }, the equals operator is simply a value, e.g.
+            # '2020-06-30T12:34:56Z'.
             # Gotcha: the equals operator returns all resources occurring within
             # the span of the second (e.g. "12:34:56.00-12:34:56.9999999"), for databases store
             # timestamps in sub-second accuracy (PostgreSQL stores in microseconds, for example)
