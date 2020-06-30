@@ -44,6 +44,7 @@ module VCAP::CloudController
       if (offending_domain = domains_exist_in_other_orgs?)
         errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain}))
       end
+      validate_system_domain_overlap
       validate_total_private_domains
     end
 
@@ -114,6 +115,17 @@ module VCAP::CloudController
     def reserved?
       rule = PublicSuffix::List.default.find(name)
       !rule.nil? && rule.decompose(name).last.nil?
+    end
+
+    def validate_system_domain_overlap
+      system_domain = VCAP::CloudController::Config.config.get(:system_domain)
+      reserved_system_domains = VCAP::CloudController::Config.config.get(:system_hostnames).map { |host| host + '.' + system_domain }
+      if reserved_system_domains.include?(name)
+        errors.add(
+          :name,
+          Sequel.lit(%{The domain name "#{name}" cannot be created because "#{name}" is already reserved by the system})
+        )
+      end
     end
   end
 end
