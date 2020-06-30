@@ -369,7 +369,7 @@ module CloudController
     end
 
     def kpack_client
-      kubernetes_config = VCAP::CloudController::Config.config.get(:kubernetes)
+      kubernetes_config = VCAP::CloudController::Config.config.kubernetes_config
       service_account_token = File.open(kubernetes_config[:service_account][:token_file]).read
       ca_crt = File.open(kubernetes_config[:ca_file]).read
       build_kube_client = Kubernetes::KubeClientBuilder.build({
@@ -390,7 +390,7 @@ module CloudController
     end
 
     def route_crd_client
-      kubernetes_config = VCAP::CloudController::Config.config.get(:kubernetes)
+      kubernetes_config = VCAP::CloudController::Config.config.kubernetes_config
       kube_client = Kubernetes::KubeClientBuilder.build({
         api_group_url: "#{kubernetes_config[:host_url]}/apis/networking.cloudfoundry.org",
         version: 'v1alpha1',

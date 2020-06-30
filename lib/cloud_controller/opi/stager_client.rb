@@ -117,7 +117,7 @@ module OPI
     end
 
     def staging_completion_callback(staging_details)
-      if !!config.get(:kubernetes, :host_url)
+      if config.kubernetes_api_configured?
         port   = 80
         scheme = 'http'
       else

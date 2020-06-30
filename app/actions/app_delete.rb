@@ -56,7 +56,7 @@ module VCAP::CloudController
           logger.info('Deleting associated kpack image')
           kpack_client.delete_image(
             app.guid,
-            VCAP::CloudController::Config.config.get(:kubernetes, :kpack, :builder_namespace)
+            VCAP::CloudController::Config.config.kpack_builder_namespace
           )
         end
       end

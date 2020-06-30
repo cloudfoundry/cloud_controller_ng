@@ -10,7 +10,7 @@ module Kubernetes
       route_crd_hash = {
         metadata: {
           name: route.guid,
-          namespace: VCAP::CloudController::Config.config.get(:kubernetes, :workloads_namespace),
+          namespace: VCAP::CloudController::Config.config.kubernetes_workloads_namespace,
           labels: {
             'app.kubernetes.io/name' => route.guid,
             'app.kubernetes.io/version' => '0.0.0',
@@ -56,7 +56,7 @@ module Kubernetes
     end
 
     def delete_route(route)
-      @client.delete_route(route.guid, VCAP::CloudController::Config.config.get(:kubernetes, :workloads_namespace))
+      @client.delete_route(route.guid, VCAP::CloudController::Config.config.kubernetes_workloads_namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
     rescue Kubeclient::HttpError => e
