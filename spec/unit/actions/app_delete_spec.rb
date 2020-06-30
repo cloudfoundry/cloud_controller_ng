@@ -49,7 +49,8 @@ module VCAP::CloudController
       end
 
       it 'deletes the associated kpack Image' do
-        expect(kpack_client).to receive(:delete_image).with(app.guid, 'cf-workloads')
+        build_namespace = VCAP::CloudController::Config.config.get(:kubernetes, :kpack, :builder_namespace)
+        expect(kpack_client).to receive(:delete_image).with(app.guid, build_namespace)
         app_delete.delete(app_dataset)
       end
 

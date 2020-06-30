@@ -7,6 +7,10 @@ RSpec.describe 'buildpacks' do
     let(:user) { make_user }
     let(:headers) { headers_for(user) }
 
+    before do
+      TestConfig.override(kubernetes: {})
+    end
+
     it 'returns 200 OK' do
       get '/v3/buildpacks', nil, headers
       expect(last_response.status).to eq(200)
@@ -19,12 +23,12 @@ RSpec.describe 'buildpacks' do
       let(:user_header) { headers }
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          names:   'foo',
-          stacks:   'cf',
-          label_selector:   'foo,bar',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          names: 'foo',
+          stacks: 'cf',
+          label_selector: 'foo,bar',
         }
       end
     end
@@ -262,15 +266,421 @@ RSpec.describe 'buildpacks' do
         )
       end
     end
+
+    context 'when targeting a Kubernetes API' do
+      let(:client) { instance_double(Kubernetes::KpackClient) }
+      let(:kubernetes_api_url) { 'https://kube.example.com' }
+
+      before do
+        stub_request(:get, "#{kubernetes_api_url}/apis/experimental.kpack.pivotal.io/v1alpha1").to_return(
+          status: 200,
+          body: '
+            {
+              "kind": "APIResourceList",
+              "apiVersion": "v1",
+              "groupVersion": "experimental.kpack.pivotal.io/v1alpha1",
+              "resources": [
+                {
+                  "name": "custombuilders",
+                  "singularName": "custombuilder",
+                  "namespaced": true,
+                  "kind": "CustomBuilder",
+                  "verbs": [
+                    "delete",
+                    "deletecollection",
+                    "get",
+                    "list",
+                    "patch",
+                    "create",
+                    "update",
+                    "watch"
+                  ],
+                  "shortNames": [
+                    "custmbldr"
+                  ],
+                  "categories": [
+                    "kpack"
+                  ],
+                  "storageVersionHash": "2afHeqawAfQ="
+                },
+                {
+                  "name": "custombuilders/status",
+                  "singularName": "",
+                  "namespaced": true,
+                  "kind": "CustomBuilder",
+                  "verbs": [
+                    "get",
+                    "patch",
+                    "update"
+                  ]
+                }
+              ]
+  }
+          '
+        )
+        stub_request(:get, "#{kubernetes_api_url}/apis/experimental.kpack.pivotal.io/v1alpha1/namespaces/cf-workloads-staging/custombuilders/cf-default-builder").
+          to_return(
+            status: 200,
+            # rubocop:disable Layout/LineLength
+            body: '
+              {
+                "apiVersion": "experimental.kpack.pivotal.io/v1alpha1",
+                "kind": "CustomBuilder",
+                "metadata": {
+                  "annotations": {
+                    "kapp.k14s.io/identity": "v1;cf-workloads-staging/experimental.kpack.pivotal.io/CustomBuilder/cf-default-builder;experimental.kpack.pivotal.io/v1alpha1",
+                    "kapp.k14s.io/original": "{\"apiVersion\":\"experimental.kpack.pivotal.io/v1alpha1\",\"kind\":\"CustomBuilder\",\"metadata\":{\"labels\":{\"kapp.k14s.io/app\":\"1593227539339407000\",\"kapp.k14s.io/association\":\"v1.b29251cc7bb0f9e1950aad9f9ea1d82a\"},\"name\":\"cf-default-builder\",\"namespace\":\"cf-workloads-staging\"},\"spec\":{\"order\":[{\"group\":[{\"id\":\"paketo-community/ruby\"}]},{\"group\":[{\"id\":\"paketo-community/python\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/java\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nodejs\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/go\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/dotnet-core\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/php\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/httpd\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nginx\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/procfile\"}]}],\"serviceAccount\":\"cc-kpack-registry-service-account\",\"stack\":\"cflinuxfs3-stack\",\"store\":\"cf-buildpack-store\",\"tag\":\"gcr.io/cf-capi-arya/cf-workloads/cf-default-builder\"}}",
+                    "kapp.k14s.io/original-diff-md5": "c6e94dc94aed3401b5d0f26ed6c0bff3"
+                  },
+                  "creationTimestamp": "2020-06-27T03:13:07Z",
+                  "generation": 1,
+                  "labels": {
+                    "kapp.k14s.io/app": "1593227539339407000",
+                    "kapp.k14s.io/association": "v1.b29251cc7bb0f9e1950aad9f9ea1d82a"
+                  },
+                  "name": "cf-default-builder",
+                  "namespace": "cf-workloads-staging",
+                  "resourceVersion": "5467789",
+                  "selfLink": "/apis/experimental.kpack.pivotal.io/v1alpha1/namespaces/cf-workloads-staging/custombuilders/cf-default-builder",
+                  "uid": "82ede34e-20ae-4d81-8813-ac57134d4062"
+                },
+                "spec": {
+                  "order": [
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-community/ruby"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-community/python"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/java"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/nodejs"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/go"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/dotnet-core"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/php"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/httpd"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/nginx"
+                        }
+                      ]
+                    },
+                    {
+                      "group": [
+                        {
+                          "id": "paketo-buildpacks/procfile"
+                        }
+                      ]
+                    }
+                  ],
+                  "serviceAccount": "cc-kpack-registry-service-account",
+                  "stack": "cflinuxfs3-stack",
+                  "store": "cf-buildpack-store",
+                  "tag": "gcr.io/cf-capi-arya/cf-workloads/cf-default-builder"
+                },
+                "status": {
+                  "builderMetadata": [
+                    {
+                      "id": "paketo-buildpacks/bellsoft-liberica",
+                      "version": "2.8.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/php-web",
+                      "version": "0.0.108"
+                    },
+                    {
+                      "id": "paketo-buildpacks/nginx",
+                      "version": "0.0.151"
+                    },
+                    {
+                      "id": "paketo-buildpacks/php-composer",
+                      "version": "0.0.90"
+                    },
+                    {
+                      "id": "paketo-buildpacks/node-engine",
+                      "version": "0.0.210"
+                    },
+                    {
+                      "id": "paketo-buildpacks/httpd",
+                      "version": "0.0.132"
+                    },
+                    {
+                      "id": "paketo-buildpacks/yarn-install",
+                      "version": "0.1.49"
+                    },
+                    {
+                      "id": "paketo-buildpacks/google-stackdriver",
+                      "version": "1.3.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/encrypt-at-rest",
+                      "version": "1.2.8"
+                    },
+                    {
+                      "id": "paketo-buildpacks/azure-application-insights",
+                      "version": "1.3.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dep",
+                      "version": "0.0.140"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core-aspnet",
+                      "version": "0.0.159"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core-sdk",
+                      "version": "0.0.161"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core-runtime",
+                      "version": "0.0.163"
+                    },
+                    {
+                      "id": "paketo-buildpacks/php-dist",
+                      "version": "0.0.164"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core-build",
+                      "version": "0.0.95"
+                    },
+                    {
+                      "id": "paketo-community/pipenv",
+                      "version": "0.0.97"
+                    },
+                    {
+                      "id": "paketo-buildpacks/icu",
+                      "version": "0.0.73"
+                    },
+                    {
+                      "id": "paketo-community/conda",
+                      "version": "0.0.90"
+                    },
+                    {
+                      "id": "paketo-buildpacks/go-mod",
+                      "version": "0.0.128"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core-conf",
+                      "version": "0.0.150"
+                    },
+                    {
+                      "id": "paketo-community/pip",
+                      "version": "0.0.115"
+                    },
+                    {
+                      "id": "paketo-buildpacks/spring-boot",
+                      "version": "1.6.0"
+                    },
+                    {
+                      "id": "paketo-community/mri",
+                      "version": "0.0.131"
+                    },
+                    {
+                      "id": "paketo-buildpacks/debug",
+                      "version": "1.2.8"
+                    },
+                    {
+                      "id": "paketo-community/python-runtime",
+                      "version": "0.0.128"
+                    },
+                    {
+                      "id": "paketo-buildpacks/go-compiler",
+                      "version": "0.0.160"
+                    },
+                    {
+                      "id": "paketo-community/bundler",
+                      "version": "0.0.117"
+                    },
+                    {
+                      "id": "paketo-buildpacks/apache-tomcat",
+                      "version": "1.3.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/maven",
+                      "version": "1.4.5"
+                    },
+                    {
+                      "id": "paketo-buildpacks/gradle",
+                      "version": "1.3.1"
+                    },
+                    {
+                      "id": "paketo-buildpacks/sbt",
+                      "version": "1.2.5"
+                    },
+                    {
+                      "id": "paketo-buildpacks/jmx",
+                      "version": "1.1.8"
+                    },
+                    {
+                      "id": "paketo-buildpacks/executable-jar",
+                      "version": "1.2.7"
+                    },
+                    {
+                      "id": "paketo-buildpacks/npm",
+                      "version": "0.1.39"
+                    },
+                    {
+                      "id": "paketo-buildpacks/procfile",
+                      "version": "1.3.8"
+                    },
+                    {
+                      "id": "paketo-buildpacks/image-labels",
+                      "version": "1.1.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dist-zip",
+                      "version": "1.3.5"
+                    },
+                    {
+                      "id": "paketo-community/bundle-install",
+                      "version": "0.0.22"
+                    },
+                    {
+                      "id": "paketo-community/rackup",
+                      "version": "0.0.13"
+                    },
+                    {
+                      "id": "paketo-community/unicorn",
+                      "version": "0.0.8"
+                    },
+                    {
+                      "id": "paketo-community/puma",
+                      "version": "0.0.14"
+                    },
+                    {
+                      "id": "paketo-community/thin",
+                      "version": "0.0.11"
+                    },
+                    {
+                      "id": "paketo-buildpacks/java",
+                      "version": "1.14.0"
+                    },
+                    {
+                      "id": "paketo-buildpacks/dotnet-core",
+                      "version": "0.0.5"
+                    },
+                    {
+                      "id": "paketo-community/ruby",
+                      "version": "0.0.11"
+                    },
+                    {
+                      "id": "paketo-buildpacks/php",
+                      "version": "0.0.7"
+                    },
+                    {
+                      "id": "paketo-community/python",
+                      "version": "0.0.2"
+                    },
+                    {
+                      "id": "paketo-buildpacks/go",
+                      "version": "0.0.8"
+                    },
+                    {
+                      "id": "paketo-buildpacks/nodejs",
+                      "version": "0.0.3"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "lastTransitionTime": "2020-06-27T03:15:46Z",
+                      "status": "True",
+                      "type": "Ready"
+                    }
+                  ],
+                  "latestImage": "gcr.io/cf-capi-arya/cf-workloads/cf-default-builder@sha256:6fe98d20624f29b89ec03b69b12f9b01a1826c0e14158b7dc66bc32bcadcb299",
+                  "observedGeneration": 1,
+                  "stack": {
+                    "id": "org.cloudfoundry.stacks.cflinuxfs3",
+                    "runImage": "gcr.io/paketo-buildpacks/run@sha256:84f7b60192e69036cb363b2fc7d9834cff69dcbcf7aaf8c058d986fdee6941c3"
+                  }
+                }
+              }
+              '
+            # rubocop:enable Layout/LineLength
+          )
+
+        TestConfig.override(
+          kubernetes: {
+            host_url: kubernetes_api_url,
+            service_account: { token_file: Rails.root + 'spec/fixtures/service_accounts/k8s.token' },
+            ca_file: Rails.root + 'spec/fixtures/certs/kubernetes_ca.crt',
+            kpack: { builder_namespace: 'cf-workloads-staging' },
+          },
+        )
+      end
+
+      it 'renders a list of paketo buildpacks' do
+        get '/v3/buildpacks', nil, headers
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['pagination']['total_results']).to(eq(10))
+        expect(parsed_response['resources'].map { |r| r['name'] }).to(eq(%w[
+          paketo-buildpacks/dotnet-core
+          paketo-buildpacks/go
+          paketo-buildpacks/httpd
+          paketo-buildpacks/java
+          paketo-buildpacks/nginx
+          paketo-buildpacks/nodejs
+          paketo-buildpacks/php
+          paketo-buildpacks/procfile
+          paketo-community/python
+          paketo-community/ruby
+        ]))
+      end
+    end
   end
 
   describe 'POST /v3/buildpacks' do
     context 'when not authenticated' do
-      it 'returns 401' do
-        params = {}
-        headers = {}
+      let(:headers) { {} }
 
-        post '/v3/buildpacks', params, headers
+      it 'returns 401' do
+        post '/v3/buildpacks', nil, headers
 
         expect(last_response.status).to eq(401)
       end

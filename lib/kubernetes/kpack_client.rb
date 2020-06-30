@@ -2,18 +2,19 @@ require 'kubernetes/kube_client_builder'
 
 module Kubernetes
   class KpackClient
-    def initialize(kube_client)
-      @client = kube_client
+    def initialize(build_kube_client:, kpack_kube_client:)
+      @build_kube_client = build_kube_client
+      @kpack_kube_client = kpack_kube_client
     end
 
     def create_image(*args)
-      @client.create_image(*args)
+      @build_kube_client.create_image(*args)
     rescue Kubeclient::HttpError => e
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'create', e.message)
     end
 
     def get_image(name, namespace)
-      @client.get_image(name, namespace)
+      @build_kube_client.get_image(name, namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
     rescue Kubeclient::HttpError => e
@@ -21,17 +22,25 @@ module Kubernetes
     end
 
     def update_image(*args)
-      @client.update_image(*args)
+      @build_kube_client.update_image(*args)
     rescue Kubeclient::HttpError => e
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'update', e.message)
     end
 
     def delete_image(name, namespace)
-      @client.delete_image(name, namespace)
+      @build_kube_client.delete_image(name, namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
     rescue Kubeclient::HttpError => e
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'delete', e.message)
+    end
+
+    def get_custom_builder(name, namespace)
+      @kpack_kube_client.get_custom_builder(name, namespace)
+    rescue Kubeclient::ResourceNotFoundError
+      nil
+    rescue Kubeclient::HttpError => e
+      raise CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'get', e.message)
     end
   end
 end
