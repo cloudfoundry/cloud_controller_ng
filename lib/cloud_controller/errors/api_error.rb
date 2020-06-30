@@ -33,8 +33,13 @@ module CloudController
         details.try(:name)
       end
 
+      def with_response_code(response_code)
+        @response_code = response_code
+        self
+      end
+
       def response_code
-        details.try(:response_code)
+        @response_code || details.try(:response_code)
       end
     end
   end
