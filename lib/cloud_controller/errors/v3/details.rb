@@ -5,7 +5,7 @@ module CloudController
     module V3
       class HardCodedDetails
         def self.yaml_file_path
-          File.join(File.expand_path('../../../../vendor/errors', __dir__), 'v3.yml')
+          File.join(File.expand_path('../../../../errors', __dir__), 'v3.yml')
         end
 
         HARD_CODED_DETAILS = DetailsLoader.load_by_name(yaml_file_path)

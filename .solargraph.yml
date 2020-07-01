@@ -3,7 +3,7 @@ include:
 - "**/*.rb"
 exclude:
 - test/**/*
-- vendor/**/*
+- errors/**/*
 - ".bundle/**/*"
 require: []
 domains: []

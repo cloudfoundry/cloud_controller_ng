@@ -43,4 +43,4 @@ ratings:
   - "**.sh"
 exclude_paths:
 - docs/v3/node_modules/
-- vendor/
+- errors/
