@@ -76,7 +76,7 @@ module VCAP::CloudController
 
         context 'requesting events less than a timestamp' do
           let(:filters) do
-            { created_at: { lt: event_3.created_at.iso8601 } }
+            { created_ats: { lt: event_3.created_at.iso8601 } }
           end
 
           it 'returns events with a created_at timestamp less than the given timestamp' do
@@ -94,7 +94,7 @@ module VCAP::CloudController
 
         context 'requesting events less than or equal to a timestamp' do
           let(:filters) do
-            { created_at: { lte: event_3.created_at.iso8601 } }
+            { created_ats: { lte: event_3.created_at.iso8601 } }
           end
 
           it 'returns events with a created_at timestamp before or at a given timestamp' do
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
         context 'requesting events greater than or equal to a timestamp' do
           let(:filters) do
-            { created_at: { gte: event_3.created_at.iso8601 } }
+            { created_ats: { gte: event_3.created_at.iso8601 } }
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
         context 'requesting events greater than a timestamp' do
           let(:filters) do
-            { created_at: { gt: event_3.created_at.iso8601 } }
+            { created_ats: { gt: event_3.created_at.iso8601 } }
           end
 
           it 'returns events with a created_at timestamp greater than the given timestamp' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
 
         context 'requesting events equal to a timestamp' do
           let(:filters) do
-            { created_at: event_3.created_at.iso8601 }
+            { created_ats: event_3.created_at.iso8601 }
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do

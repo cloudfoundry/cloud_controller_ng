@@ -41,21 +41,13 @@ This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
 
 #### Relational Operators (Experimental)
 
-##### Filtering on Equality
+Fields can be filtered using inequality when listing resources. Currently, this is supported only on
+the `created_at` field, using the `created_ats` filter.
 
-Fields can be filtered using equality when listing resources. Currently, only the `created_at` field
-is supported. The `created_at` field expects a timestamp filter, and timestamps must be in ISO 8601
-format, e.g. `2020-06-30T12:34:56Z`.
-
-##### Filtering on Inequality
-
-Fields can be filtered using inequality when listing resources. Currently, only the `created_at`
-field is supported.
-
-For example, a response to `/v3/audit_events?created_at[lt]=2020-06-30T12:34:56Z` will contain
+For example, a response to `/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
 audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
 
-Timestamps must be in ISO 8601 format.
+Timestamps must be in [standard timestamp format](#timestamps).
 
 ##### Valid inequality operators
 

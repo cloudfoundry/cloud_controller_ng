@@ -4,16 +4,16 @@ module VCAP::CloudController
   class EventsListMessage < ListMessage
     class CreatedAtValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:created_at)
-          if record.created_at.is_a?(String)
-            timestamp = record.created_at
+        if record.requested?(:created_ats)
+          if record.created_ats.is_a?(String)
+            timestamp = record.created_ats
           else
-            unless record.created_at.is_a?(Hash)
-              record.errors[:created_at] << 'comparison operator and timestamp must be specified'
+            unless record.created_ats.is_a?(Hash)
+              record.errors[:created_ats] << 'comparison operator and timestamp must be specified'
               return
             end
 
-            comparison_operator = record.created_at.keys[0]
+            comparison_operator = record.created_ats.keys[0]
             valid_comparision_operators = [
               Event::LESS_THAN_COMPARATOR,
               Event::GREATER_THAN_COMPARATOR,
@@ -21,17 +21,17 @@ module VCAP::CloudController
               Event::GREATER_THAN_OR_EQUAL_COMPARATOR,
             ]
             unless valid_comparision_operators.include?(comparison_operator)
-              record.errors[:created_at] << "Invalid comparison operator: '#{comparison_operator}'"
+              record.errors[:created_ats] << "Invalid comparison operator: '#{comparison_operator}'"
             end
 
-            timestamp = record.created_at.values[0]
+            timestamp = record.created_ats.values[0]
           end
           begin
             raise ArgumentError.new('invalid date') unless timestamp =~ /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/
 
             Time.iso8601(timestamp)
           rescue
-            record.errors[:created_at] << "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'"
+            record.errors[:created_ats] << "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'"
             return
           end
         end
@@ -43,7 +43,7 @@ module VCAP::CloudController
       :target_guids,
       :space_guids,
       :organization_guids,
-      :created_at
+      :created_ats
     ]
 
     validates_with NoAdditionalParamsValidator

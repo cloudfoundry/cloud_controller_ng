@@ -28,10 +28,10 @@ module VCAP::CloudController
           dataset = dataset.where(organization_guid: message.organization_guids)
         end
 
-        if message.requested?(:created_at)
-          if message.created_at.is_a?(Hash)
-            operator = message.created_at.keys[0]
-            given_timestamp = message.created_at.values[0]
+        if message.requested?(:created_ats)
+          if message.created_ats.is_a?(Hash)
+            operator = message.created_ats.keys[0]
+            given_timestamp = message.created_ats.values[0]
 
             if operator == Event::LESS_THAN_COMPARATOR
               normalized_timestamp = Time.parse(given_timestamp).utc
@@ -53,7 +53,7 @@ module VCAP::CloudController
             # Gotcha: the equals operator returns all resources occurring within
             # the span of the second (e.g. "12:34:56.00-12:34:56.9999999"), for databases store
             # timestamps in sub-second accuracy (PostgreSQL stores in microseconds, for example)
-            lower_bound = Time.parse(message.created_at).utc
+            lower_bound = Time.parse(message.created_ats).utc
             upper_bound = Time.at(lower_bound + 0.99999).utc
             dataset = dataset.where(Sequel.lit('created_at BETWEEN ? AND ?', lower_bound, upper_bound))
           end

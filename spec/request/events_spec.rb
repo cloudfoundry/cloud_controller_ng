@@ -169,7 +169,7 @@ RSpec.describe 'Events' do
         let!(:half_second_event) { VCAP::CloudController::Event.make(created_at: timestamp_half_second_later, organization_guid: org.guid, type: 'audit.organization.create') }
 
         it 'returns events earlier than the given timestamp' do
-          get "/v3/audit_events?created_at[lt]=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[lt]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
@@ -243,7 +243,7 @@ RSpec.describe 'Events' do
         end
 
         it 'returns events earlier than the given timestamp' do
-          get "/v3/audit_events?created_at[lte]=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[lte]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
@@ -286,7 +286,7 @@ RSpec.describe 'Events' do
         end
 
         it 'returns events at or after the given timestamp' do
-          get "/v3/audit_events?created_at[gte]=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[gte]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
@@ -298,7 +298,7 @@ RSpec.describe 'Events' do
 
       context 'using greater than' do
         it 'returns events after the given timestamp' do
-          get "/v3/audit_events?created_at[gt]=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[gt]=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
@@ -341,7 +341,7 @@ RSpec.describe 'Events' do
         end
 
         it 'returns events at the given timestamp' do
-          get "/v3/audit_events?created_at=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats=#{timestamp}", nil, admin_header
 
           expect(
             resources: parsed_response['resources']
@@ -353,7 +353,7 @@ RSpec.describe 'Events' do
 
       context 'using an invalid operator' do
         it 'returns a useful error' do
-          get "/v3/audit_events?created_at[goat]=#{timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[goat]=#{timestamp}", nil, admin_header
 
           expect(last_response).to have_status_code(400)
           expect(last_response).to have_error_message("Invalid comparison operator: 'goat'")
@@ -363,22 +363,22 @@ RSpec.describe 'Events' do
       context 'using an invalid timestamp (with fractional seconds)' do
         let(:fractional_second_timestamp) { '2020-06-30T23:45:67.890Z' }
         it 'returns a useful error' do
-          get "/v3/audit_events?created_at[lt]=#{fractional_second_timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[lt]=#{fractional_second_timestamp}", nil, admin_header
 
           expect(last_response).to have_status_code(400)
           expect(last_response).to have_error_message(
-            "The query parameter is invalid: Created at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            "The query parameter is invalid: Created ats has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
       end
 
       context 'using an invalid timestamp (local time zone)' do
         let(:local_timezone_timestamp) { '2020-06-30T23:45:67-0700' }
         it 'returns a useful error' do
-          get "/v3/audit_events?created_at[lt]=#{local_timezone_timestamp}", nil, admin_header
+          get "/v3/audit_events?created_ats[lt]=#{local_timezone_timestamp}", nil, admin_header
 
           expect(last_response).to have_status_code(400)
           expect(last_response).to have_error_message(
-            "The query parameter is invalid: Created at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            "The query parameter is invalid: Created ats has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
       end
     end
