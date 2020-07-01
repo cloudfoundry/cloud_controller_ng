@@ -27,9 +27,11 @@ module VCAP::CloudController
             timestamp = record.created_at.values[0]
           end
           begin
+            raise ArgumentError.new('invalid date') unless timestamp =~ /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/
+
             Time.iso8601(timestamp)
           rescue
-            record.errors[:created_at] << "Invalid timestamp format: '#{timestamp}'"
+            record.errors[:created_at] << "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'"
             return
           end
         end

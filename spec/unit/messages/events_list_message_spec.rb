@@ -27,7 +27,7 @@ module VCAP::CloudController
           target_guids: ['guid1', 'guid2'],
           space_guids: ['guid3', 'guid4'],
           organization_guids: ['guid5', 'guid6'],
-          created_at: { lt: Time.now.iso8601 },
+          created_at: { lt: Time.now.utc.iso8601 },
         })
         expect(message).to be_valid
       end
@@ -66,52 +66,58 @@ module VCAP::CloudController
 
         context 'validates the created_at filter' do
           it 'requires a hash or a timestamp' do
-            message = EventsListMessage.from_params({ created_at: [Time.now.iso8601] })
+            message = EventsListMessage.from_params({ created_at: [Time.now.utc.iso8601] })
             expect(message).not_to be_valid
             expect(message.errors[:created_at]).to include('comparison operator and timestamp must be specified')
           end
 
           it 'requires a valid comparison operator' do
-            message = EventsListMessage.from_params({ created_at: { garbage: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { garbage: Time.now.utc.iso8601 } })
             expect(message).not_to be_valid
             expect(message.errors[:created_at]).to include("Invalid comparison operator: 'garbage'")
           end
 
-          it 'requires a valid comparison operator' do
-            message = EventsListMessage.from_params({ created_at: { garbage: Time.now.iso8601 } })
-            expect(message).not_to be_valid
-            expect(message.errors[:created_at]).to include("Invalid comparison operator: 'garbage'")
-          end
-
-          it 'requires a valid timestamp' do
-            message = EventsListMessage.from_params({ created_at: { gt: 123 } })
-            expect(message).not_to be_valid
-            expect(message.errors[:created_at]).to include("Invalid timestamp format: '123'")
+          context 'requires a valid timestamp' do
+            it "won't accept garbage" do
+              message = EventsListMessage.from_params({ created_at: { gt: 123 } })
+              expect(message).not_to be_valid
+              expect(message.errors[:created_at]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            end
+            it "won't accept fractional seconds even though it's ISO 8601-compliant" do
+              message = EventsListMessage.from_params({ created_at: { gt: '2020-06-30T12:34:56.78Z' } })
+              expect(message).not_to be_valid
+              expect(message.errors[:created_at]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            end
+            it "won't accept local time zones even though it's ISO 8601-compliant" do
+              message = EventsListMessage.from_params({ created_at: { gt: '2020-06-30T12:34:56.78-0700' } })
+              expect(message).not_to be_valid
+              expect(message.errors[:created_at]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            end
           end
 
           it 'allows the lt operator' do
-            message = EventsListMessage.from_params({ created_at: { lt: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { lt: Time.now.utc.iso8601 } })
             expect(message).to be_valid
           end
 
           it 'allows the lte operator' do
-            message = EventsListMessage.from_params({ created_at: { lte: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { lte: Time.now.utc.iso8601 } })
             expect(message).to be_valid
           end
 
           it 'allows the gt operator' do
-            message = EventsListMessage.from_params({ created_at: { gt: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { gt: Time.now.utc.iso8601 } })
             expect(message).to be_valid
           end
 
           it 'allows the gte operator' do
-            message = EventsListMessage.from_params({ created_at: { gte: Time.now.iso8601 } })
+            message = EventsListMessage.from_params({ created_at: { gte: Time.now.utc.iso8601 } })
             expect(message).to be_valid
           end
 
           context 'when the operator is an equals operator' do
             it 'allows the equals operator' do
-              message = EventsListMessage.from_params({ created_at: Time.now.iso8601 })
+              message = EventsListMessage.from_params({ created_at: Time.now.utc.iso8601 })
               expect(message).to be_valid
             end
 

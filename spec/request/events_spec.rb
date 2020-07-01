@@ -359,6 +359,28 @@ RSpec.describe 'Events' do
           expect(last_response).to have_error_message("Invalid comparison operator: 'goat'")
         end
       end
+
+      context 'using an invalid timestamp (with fractional seconds)' do
+        let(:fractional_second_timestamp) { '2020-06-30T23:45:67.890Z' }
+        it 'returns a useful error' do
+          get "/v3/audit_events?created_at[lt]=#{fractional_second_timestamp}", nil, admin_header
+
+          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_error_message(
+            "The query parameter is invalid: Created at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+      end
+
+      context 'using an invalid timestamp (local time zone)' do
+        let(:local_timezone_timestamp) { '2020-06-30T23:45:67-0700' }
+        it 'returns a useful error' do
+          get "/v3/audit_events?created_at[lt]=#{local_timezone_timestamp}", nil, admin_header
+
+          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_error_message(
+            "The query parameter is invalid: Created at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+      end
     end
 
     context 'filtering by organization_guid' do
