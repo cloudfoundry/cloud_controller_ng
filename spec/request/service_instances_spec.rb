@@ -2190,6 +2190,99 @@ RSpec.describe 'V3 service instances' do
 
     context 'managed service instance' do
       let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:broker_status_code) { 200 }
+      let(:broker_response) { {} }
+
+      before do
+        stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+          with(query: {
+            # 'accepts_incomplete' => false,
+            'service_id' => instance.service.broker_provided_id,
+            'plan_id' => instance.service_plan.broker_provided_id
+          }).
+          to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+      end
+
+      it 'sets the service instance last operation to delete in progress' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+
+        instance.reload
+
+        expect(instance.last_operation).to_not be_nil
+        expect(instance.last_operation.type).to eq('delete')
+        expect(instance.last_operation.state).to eq('in progress')
+      end
+
+      it 'responds with job resource' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(202)
+
+        job = VCAP::CloudController::PollableJobModel.last
+        expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+        expect(job.operation).to eq('service_instance.delete')
+        expect(job.resource_guid).to eq(instance.guid)
+        expect(job.resource_type).to eq('service_instances')
+      end
+
+      describe 'the pollable job' do
+        it 'sends a delete request with the right arguments to the service broker' do
+          api_call.call(admin_headers)
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(
+            a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+              with(query: {
+                'service_id' => instance.service.broker_provided_id,
+                'plan_id' => instance.service_plan.broker_provided_id
+              })
+          ).to have_been_made.once
+        end
+
+        context 'when the service broker responds synchronously' do
+          context 'with success' do
+            it 'removes the service instance' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).to be_nil
+            end
+
+            it 'completes the job' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              job = VCAP::CloudController::PollableJobModel.last
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'with an error' do
+            let(:broker_status_code) { 500 }
+
+            it 'marks the service instance as delete failed' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              instance.reload
+
+              expect(instance.last_operation).to_not be_nil
+              expect(instance.last_operation.type).to eq('delete')
+              expect(instance.last_operation.state).to eq('failed')
+            end
+
+            it 'completes with failure' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              job = VCAP::CloudController::PollableJobModel.last
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+        end
+      end
 
       context 'when it is shared' do
         let(:other_space) { VCAP::CloudController::Space.make }

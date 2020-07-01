@@ -109,16 +109,18 @@ class ServiceInstancesV3Controller < ApplicationController
 
     unauthorized! unless can_write_space?(service_instance.space)
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-    V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+    job_guid = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
 
-    head :no_content
+    if job_guid.blank?
+      head :no_content
+    else
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
+    end
   rescue V3::ServiceInstanceDelete::AssociationNotEmptyError
     associations_not_empty!
   rescue V3::ServiceInstanceDelete::InstanceSharedError
     cannot_delete_shared_instances!(service_instance.name)
-  rescue V3::ServiceInstanceDelete::NotImplementedError
-    head :not_implemented
   end
 
   def share_service_instance

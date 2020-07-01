@@ -6,59 +6,84 @@ module VCAP
     RSpec.describe V3::ServiceInstanceDelete do
       describe '#delete' do
         subject(:action) { described_class.new(event_repository) }
+
         let(:event_repository) do
           dbl = double(Repositories::ServiceEventRepository::WithUserActor)
           allow(dbl).to receive(:record_user_provided_service_instance_event)
+          allow(dbl).to receive(:user_audit_info)
           dbl
         end
 
-        let!(:service_instance) do
-          si = VCAP::CloudController::UserProvidedServiceInstance.make(
-            name: 'foo',
-            credentials: {
-              foo: 'bar',
-              baz: 'qux'
-            },
-            syslog_drain_url: 'https://foo.com',
-            route_service_url: 'https://bar.com',
-            tags: %w(accounting mongodb)
-          )
-          si.label_ids = [
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ]
-          si.annotation_ids = [
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-          ]
-          si
+        context 'user-provided service instances' do
+          let!(:service_instance) do
+            si = VCAP::CloudController::UserProvidedServiceInstance.make(
+              name: 'foo',
+              credentials: {
+                  foo: 'bar',
+                  baz: 'qux'
+              },
+              syslog_drain_url: 'https://foo.com',
+              route_service_url: 'https://bar.com',
+              tags: %w(accounting mongodb)
+            )
+            si.label_ids = [
+              VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
+              VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+            ]
+            si.annotation_ids = [
+              VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
+              VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
+            ]
+            si
+          end
+
+          it 'deletes it from the database' do
+            subject.delete(service_instance)
+
+            expect {
+              service_instance.reload
+            }.to raise_error(Sequel::Error, 'Record not found')
+            expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: service_instance)).to be_empty
+            expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: service_instance)).to be_empty
+          end
+
+          it 'creates an audit event' do
+            subject.delete(service_instance)
+
+            expect(event_repository).
+              to have_received(:record_user_provided_service_instance_event).
+              with(:delete, instance_of(UserProvidedServiceInstance), {})
+          end
+
+          it 'returns nothing' do
+            expect(subject.delete(service_instance)).to be_nil
+          end
         end
 
-        it 'deletes an user provided service instance from the database' do
-          subject.delete(service_instance)
+        context 'managed service instances' do
+          let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-          expect {
-            service_instance.reload
-          }.to raise_error(Sequel::Error, 'Record not found')
-          expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: service_instance)).to be_empty
-          expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: service_instance)).to be_empty
-        end
+          it 'locks the service instance' do
+            action.delete(service_instance)
 
-        it 'fails to delete managed service instances' do
-          instance = VCAP::CloudController::ManagedServiceInstance.make
-          expect { subject.delete(instance) }.to raise_error(V3::ServiceInstanceDelete::NotImplementedError)
-          expect { instance.reload }.not_to raise_error
-        end
+            lo = service_instance.reload.last_operation
+            expect(lo).to be
+            expect(lo.type).to eq('delete')
+            expect(lo.state).to eq('in progress')
+          end
 
-        it 'creates an audit event' do
-          subject.delete(service_instance)
+          it 'enqueues a job and returns the job guid' do
+            job_guid = subject.delete(service_instance)
+            job = VCAP::CloudController::PollableJobModel.last
 
-          expect(event_repository).
-            to have_received(:record_user_provided_service_instance_event).
-            with(:delete, instance_of(UserProvidedServiceInstance), {})
+            expect(job.guid).to eq(job_guid)
+            expect(job.resource_guid).to eq(service_instance.guid)
+          end
         end
 
         describe 'invalid pre-conditions' do
+          let!(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https://bar.com') }
+
           context 'when there are associated service bindings' do
             before do
               VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
