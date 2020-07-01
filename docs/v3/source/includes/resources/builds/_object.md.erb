@@ -10,8 +10,8 @@ Example Build object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the build
-**created_at** | _datetime_ | The time with zone when the build was created
-**updated_at** | _datetime_ | The time with zone when the build was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the build was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the build was last updated
 **state** | _string_ | State of the build; valid states are `STAGING`, `STAGED`, or `FAILED`
 **error** | _string_ | A string describing errors during the build process
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging; this will override the build's application's default lifecycle for this build

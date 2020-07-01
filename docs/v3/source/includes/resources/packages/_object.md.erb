@@ -10,8 +10,8 @@ Example Package object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the package
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **type** | _string_ | Package type; valid values are `bits`, `docker`
 **data** | _object_ | Data for package type (see below)
 **state** | _string_ | State of the package; valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `READY`, `FAILED`, `COPYING`, `EXPIRED`

@@ -11,8 +11,8 @@ Example Buildpack object
 Name           | Type                     | Description
 -------------- | ------------------------ | ------------------------------------------------------
 **guid**       | _uuid_                   | Unique identifier for the buildpack
-**created_at** | _datetime_               | The time with zone when the object was created
-**updated_at** | _datetime_               | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_               | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_               | The time with zone when the object was last updated
 **name**       | _string_                 | The name of the buildpack; to be used by app buildpack field (only alphanumeric characters)
 **state**      | _string_                 | The state of the buildpack Valid value is: `AWAITING_UPLOAD`
 **stack**      | _string_                 | The name of the stack that the buildpack will use

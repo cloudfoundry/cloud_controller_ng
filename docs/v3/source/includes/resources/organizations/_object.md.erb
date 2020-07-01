@@ -10,8 +10,8 @@ Example Organization object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the organization
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **name** | _string_ | Name of the organization
 **suspended** | _boolean_ | Whether an organization is suspended or not; non-admins will be blocked from creating, updating, or deleting resources in a suspended organization
 **relationships.quota** | [_to-one relationship_](#to-one-relationships) | The quota applied to the organization

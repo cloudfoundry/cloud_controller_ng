@@ -10,8 +10,8 @@ Example Role object
 Name | Type | Description
 ---- | ---- | -----------
 | **guid** | _uuid_ | Unique identifier for the role |
-| **created_at** | _datetime_ | The time with zone when the role was created|
-| **updated_at**  | _datetime_ | The time with zone when the role was last updated |
+| **created_at** | _[timestamp](#timestamps)_ | The time with zone when the role was created|
+| **updated_at**  | _[timestamp](#timestamps)_ | The time with zone when the role was last updated |
 | **type** | _string_ | Role type; see [Valid role types](#valid-role-types)
 | **relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to the user; this is the user that has the role |
 | **relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to the space the role controls access to; when this is an organization role, `space.data` will be `null` |

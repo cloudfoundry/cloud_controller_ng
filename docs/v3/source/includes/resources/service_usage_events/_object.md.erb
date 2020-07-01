@@ -10,8 +10,8 @@ Example Service Usage Event object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the event
-**created_at** | _datetime_ | The time with zone when the event occurred
-**updated_at** | _datetime_ | Identical to `created_at` (events are created, never updated)
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the event occurred
+**updated_at** | _[timestamp](#timestamps)_ | Identical to `created_at` (events are created, never updated)
 **state** | _string_ or `null` | Current state of the service that this event pertains to, if applicable
 **space.guid** | _string_ or `null` | Unique identifier of the space that this event pertains to, if applicable
 **space.name** | _string_ or `null` | Name of the space that this event pertains to, if applicable

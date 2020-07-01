@@ -10,8 +10,8 @@ Example Process object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the process
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **type** | _string_ | Process type; a unique identifier for processes belonging to an app
 **command** | _string_ or _null_ | The command used to start the process; use _null_ to revert to the buildpack-detected or procfile-provided start command
 **instances** | _integer_ | The number of instances to run

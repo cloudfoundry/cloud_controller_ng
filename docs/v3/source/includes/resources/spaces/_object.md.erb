@@ -10,8 +10,8 @@ Example Space object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the space
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **name** | _string_ | Name of the space
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | The organization the space is contained in
 **relationships.quota** | [_to-one relationship_](#to-one-relationships) | The space quota applied to the space

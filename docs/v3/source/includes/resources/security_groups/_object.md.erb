@@ -10,8 +10,8 @@ Example Security Group object
 Name | Type | Description
 ---- | ---- | -----------
 **guid**                  | _uuid_                                                    | Unique identifier for the security group
-**created_at**            | _datetime_                                                | The time with zone when the object was created
-**updated_at**            | _datetime_                                                | The time with zone when the object was last updated
+**created_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was created
+**updated_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was last updated
 **name** | _string_ | Name of the security group
 **rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group
 **globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of all applications

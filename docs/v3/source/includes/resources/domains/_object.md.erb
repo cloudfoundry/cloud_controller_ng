@@ -11,8 +11,8 @@ Example Domain object
 | Name                      | Type                                             | Description
 | --------------            | ------------------------                         | ------------------------------------------------------
 | **guid**                  | _uuid_                                           | Unique identifier for the domain
-| **created_at**            | _datetime_                                       | The time with zone when the object was created
-| **updated_at**            | _datetime_                                       | The time with zone when the object was last updated
+| **created_at**            | _[timestamp](#timestamps)_                                       | The time with zone when the object was created
+| **updated_at**            | _[timestamp](#timestamps)_                                       | The time with zone when the object was last updated
 | **name**                  | _string_                                         | The name of the domain;<br>must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035)
 | **internal**              | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic
 | **router_group.guid**     | _uuid_                                           | The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic

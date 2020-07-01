@@ -11,8 +11,8 @@ Example Route object
 | Name                      | Type                                                      | Description
 | --------------            | ------------------------                                  | ------------------------------------------------------
 | **guid**                  | _uuid_                                                    | Unique identifier for the route
-| **created_at**            | _datetime_                                                | The time with zone when the object was created
-| **updated_at**            | _datetime_                                                | The time with zone when the object was last updated
+| **created_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was created
+| **updated_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was last updated
 | **protocol**              | _string_                                                  | The protocol supported by the route, based on the route's domain configuration. Valid protocols are `http` and `tcp`
 | **host**                  | _string_                                                  | The hostname for the route; not compatible with routes specifying the `tcp` protocol;<br>must be under 63 characters long and only contain letters, numbers, dashes (-) or underscores(_)
 | **path**                  | _string_                                                  | The path for the route; not compatible with routes specifying the `tcp` protocol;<br>must be under 128 characters long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from [RFC 2396](https://tools.ietf.org/html/rfc2396)

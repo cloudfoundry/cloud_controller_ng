@@ -10,8 +10,8 @@ Example Space Quota object
 Name | Type | Description|
 ---- | ---- | -----------
 | **guid** | _uuid_ | Unique identifier for the space quota |
-| **created_at** | _datetime_ | The time with zone when the space quota was created|
-| **updated_at**  | _datetime_ | The time with zone when the space quota was last updated |
+| **created_at** | _[timestamp](#timestamps)_ | The time with zone when the space quota was created|
+| **updated_at**  | _[timestamp](#timestamps)_ | The time with zone when the space quota was last updated |
 | **name**  | _string_ | Name of the quota |
 | **apps** | _object_ | Quotas that affect applications and application sub-resources |
 | **apps.per_process_memory_in_mb** | _integer_ or `null` | Maximum memory for a single process or task |

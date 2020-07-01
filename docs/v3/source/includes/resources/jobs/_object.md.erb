@@ -10,8 +10,8 @@ Example Job object
 Name           | Type | Description
 -------------- | ---- | -----------
 **guid**       | _uuid_ | Unique identifier for the job
-**created_at** | _datetime_ | The time with zone when the object was created
-**updated_at** | _datetime_ | The time with zone when the object was last updated
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **operation**  | _string_ | Current desired operation of the job on a model
 **state**      | _string_ | State of the job; valid values are `PROCESSING`, `POLLING`, `COMPLETE`, or` FAILED`
 **errors**     | [_errors list_](#errors) | Array of errors that occurred while processing the job
