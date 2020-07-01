@@ -1,7 +1,4 @@
-require 'spec_helper'
-require 'models/runtime/pollable_job_model'
-
-RSpec.shared_examples 'service instance last operation polling job' do |operation_type|
+RSpec.shared_examples 'service instance last operation polling job' do |operation_type, client_response, api_error_code|
   describe 'when the broker client response is asynchronous' do
     let(:broker_response) {
       {
@@ -19,7 +16,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
     let(:operation_type_client_method) { operation_type == 'update' ? :update : :provision }
 
     before do
-      allow(client).to receive(operation_type_client_method).and_return([broker_response, nil])
+      allow(client).to receive(operation_type_client_method).and_return(client_response.call(broker_response))
       allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation)
       run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
     end
@@ -76,7 +73,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
         end
 
         it 'calls the last operation endpoint only' do
-          expect(client).to have_received(:update).once
+          expect(client).to have_received(operation_type_client_method).once
           expect(client).to have_received(:fetch_service_instance_last_operation).twice
         end
 
@@ -179,7 +176,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
             Timecop.freeze(Time.now + 4242) do
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-              expect(service_instance.last_operation.type).to eq('update')
+              expect(service_instance.last_operation.type).to eq(operation_type)
               expect(service_instance.last_operation.state).to eq('failed')
               expect(service_instance.last_operation.description).to eq("Service Broker failed to #{operation_type_client_method} within the required time.")
             end
@@ -207,15 +204,11 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
         expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
       end
 
-      it 'creates an audit event' do # changed
-        event = VCAP::CloudController::Event.find(type: "audit.service_instance.#{operation_type_client_method}")
+      it 'creates an audit event' do
+        puts "audit.service_instance.#{operation_type}"
+        event = VCAP::CloudController::Event.find(type: "audit.service_instance.#{operation_type}")
         expect(event).to be
         expect(event.actee).to eq(service_instance.guid)
-        expect(event.metadata['request']).to have_key('name')
-        expect(event.metadata['request']).to have_key('parameters')
-        expect(event.metadata['request']).to have_key('tags')
-        expect(event.metadata['request']).to have_key('metadata')
-        expect(event.metadata['request']).to have_key('relationships')
       end
     end
 
@@ -231,7 +224,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
       it 'updates the service_instance with last operation' do
         expect(service_instance.last_operation.type).to eq(operation_type)
         expect(service_instance.last_operation.state).to eq('failed')
-        expect(service_instance.last_operation.description).to eq('The service broker reported an error during provisioning: oops')
+        expect(service_instance.last_operation.description).to eq('oops')
       end
 
       it 'updates the job with the api error' do
@@ -240,9 +233,9 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
         expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
         expect(pollable_job.cf_api_error).not_to be_nil
         error = YAML.safe_load(pollable_job.cf_api_error)
-        expect(error['errors'].first['code']).to eq(60030)
+        expect(error['errors'].first['code']).to eq(api_error_code)
         expect(error['errors'].first['detail']).
-          to include('The service broker reported an error during provisioning: oops')
+          to include('oops')
       end
 
       it 'does not create an audit event' do

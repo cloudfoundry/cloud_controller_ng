@@ -31,18 +31,7 @@ module VCAP::CloudController
           if first_time
             compute_maximum_duration
             compatibility_checks
-            @broker_response, err = client.update(
-              service_instance,
-              service_plan,
-              accepts_incomplete: true,
-              arbitrary_parameters: message.parameters || {},
-              previous_values: previous_values,
-              maintenance_info: maintenance_info,
-              name: message.requested?(:name) ? message.name : service_instance.name,
-            )
-            raise err if err # TODO: create rewrites this errors with an api error keeping the message
-
-            service_instance.save_with_new_operation({}, broker_response[:last_operation])
+            send_update_request(client, maintenance_info)
             @first_time = false
           end
 
@@ -53,20 +42,23 @@ module VCAP::CloudController
           if service_instance.last_operation.state == 'succeeded'
             update_service_instance(broker_response, maintenance_info)
             finish
-          elsif service_instance.last_operation.state == 'failed'
-            operation_failed!(service_instance.last_operation.description) # TODO: sync did not do this before
           end
-
-          logger.info("Service instance update complete #{service_instance_guid}")
         rescue => err
           logger.info("Service instance update failed: #{err.message}")
           service_instance.save_with_new_operation({}, {
             state: 'failed',
             type: 'update',
-            description: err.message # TODO: overrides the error in line 55.
+            description: err.message
           })
           raise err
         end
+
+        if service_instance.last_operation.state == 'failed'
+          logger.info("Service instance update failed: #{service_instance.last_operation.description}")
+          operation_failed!(service_instance.last_operation.description)
+        end
+
+        logger.info("Service instance update complete #{service_instance_guid}")
       end
 
       def handle_timeout
@@ -101,6 +93,21 @@ module VCAP::CloudController
       private
 
       attr_reader :service_instance_guid, :message, :user_audit_info, :first_time, :broker_response
+
+      def send_update_request(client, maintenance_info)
+        @broker_response, err = client.update(
+          service_instance,
+          service_plan,
+          accepts_incomplete: true,
+          arbitrary_parameters: message.parameters || {},
+          previous_values: previous_values,
+          maintenance_info: maintenance_info,
+          name: message.requested?(:name) ? message.name : service_instance.name,
+        )
+        raise err if err # TODO: create rewrites this errors with an api error keeping the message
+
+        service_instance.save_with_new_operation({}, broker_response[:last_operation])
+      end
 
       def service_instance
         ManagedServiceInstance.first(guid: service_instance_guid)
@@ -211,7 +218,7 @@ module VCAP::CloudController
       end
 
       def operation_failed!(msg)
-        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceProvisionFailed', msg)
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceUpdateFailed', msg)
       end
     end
   end

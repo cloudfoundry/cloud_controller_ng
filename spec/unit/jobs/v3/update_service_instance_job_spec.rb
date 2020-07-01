@@ -208,23 +208,26 @@ module VCAP
         context 'when the broker client response is asynchronous' do
           let(:broker_request_expect) { -> { expect(client).to have_received(:update).with(
             service_instance,
-            new_service_plan,
-            accepts_incomplete: true,
-            arbitrary_parameters: request_attr,
-            maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
-            previous_values: {
-              plan_id: original_service_plan.broker_provided_id,
-              service_id: service_offering.broker_provided_id,
-              organization_id: org.guid,
-              space_id: space.guid,
-              maintenance_info: original_maintenance_info.stringify_keys,
-            },
-            name: 'new-name',
-          )
+                new_service_plan,
+                accepts_incomplete: true,
+                arbitrary_parameters: request_attr,
+                maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
+                previous_values: {
+                  plan_id: original_service_plan.broker_provided_id,
+                  service_id: service_offering.broker_provided_id,
+                  organization_id: org.guid,
+                  space_id: space.guid,
+                  maintenance_info: original_maintenance_info.stringify_keys,
+                },
+                name: 'new-name',
+              )
                                         }
           }
 
-          it_behaves_like 'service instance last operation polling job', 'update'
+          client_response = ->(broker_response) { [broker_response, nil] }
+          api_error_code = 60031
+
+          it_behaves_like 'service instance last operation polling job', 'update', client_response, api_error_code
 
           context 'when operation is in progress' do
             let(:broker_response) {
@@ -248,7 +251,7 @@ module VCAP
             end
 
             it 'does not update the service instance' do
-              service_instance.reload # TODO: this is not for create
+              service_instance.reload
               expect(service_instance.name).to eq(name)
             end
           end
