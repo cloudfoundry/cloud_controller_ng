@@ -129,9 +129,9 @@ module VCAP::CloudController
       get(:kubernetes, :host_url).present?
     end
 
-    def kubernetes_config
+    def kubernetes_host_url
       ensure_k8s_api_configured!
-      get(:kubernetes)
+      get(:kubernetes, :host_url)
     end
 
     def kpack_config
@@ -147,6 +147,22 @@ module VCAP::CloudController
     def kubernetes_workloads_namespace
       ensure_k8s_api_configured!
       get(:kubernetes, :workloads_namespace)
+    end
+
+    def kubernetes_ca_cert
+      @kubernetes_ca_cert ||= begin
+                                ensure_k8s_api_configured!
+                                file = get(:kubernetes, :ca_file)
+                                File.read(file)
+                              end
+    end
+
+    def kubernetes_service_account_token
+      @kubernetes_service_account_token ||= begin
+                                              ensure_k8s_api_configured!
+                                              file = get(:kubernetes, :service_account, :token_file)
+                                              File.read(file)
+                                            end
     end
 
     private
