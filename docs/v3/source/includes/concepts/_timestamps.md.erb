@@ -1,0 +1,10 @@
+## Timestamps
+
+Timestamps generally appear in `created_at` and `updated_at` fields on resources.  Precision beyond
+seconds is not supported, even if the underlying database supports it (e.g. Postgres). As a result,
+filtering on sub-second timestamps is not allowed.
+
+All v3 timestamps have the following format `YYYY-MM-DDThh:mm:ssZ`.
+
+Example timestamp (June 30, 2020 at 11:49:04 PM UTC): `2020-06-30T23:49:04Z`
+
