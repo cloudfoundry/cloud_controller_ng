@@ -89,7 +89,7 @@ module CloudController
           if association.is_a?(VCAP::CloudController::RestController::ControllerDSL::ToOneAttribute)
             associated_model_instance = get_preloaded_association_contents!(obj, association)
             if associated_model_instance
-              associated_url = associated_controller.url_for_guid(associated_model_instance.guid)
+              associated_url = associated_controller.url_for_guid(associated_model_instance.guid, associated_model_instance)
             end
           else
             associated_url = "#{controller.url_for_guid(obj.guid, obj)}/#{relationship_name}"

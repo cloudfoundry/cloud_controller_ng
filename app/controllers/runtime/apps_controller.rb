@@ -122,6 +122,10 @@ module VCAP::CloudController
       end
     end
 
+    def self.url_for_guid(_, process)
+      super(process.app_guid, process)
+    end
+
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
@@ -194,10 +198,6 @@ module VCAP::CloudController
       end
 
       [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
-    end
-
-    def url_for_guid(_, process)
-      super(process.app_guid, process)
     end
 
     def read(guid)
