@@ -622,10 +622,13 @@ module VCAP::CloudController
       context 'when the app has rolled to a new web process' do
         before do
           process.destroy
-          ProcessModelFactory.make(instances: 1, app: app_model)
         end
 
+        let!(:new_process) { ProcessModel.make(type: ProcessTypes::WEB, app: app_model) }
+
         it 'returns the app with the appropriate app guid' do
+          expect(app_guid).not_to eq(new_process.guid)
+
           get "/v2/apps/#{app_guid}"
           expect(decoded_response['metadata']).to include({
             'guid' => app_guid.to_s,
