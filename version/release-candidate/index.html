@@ -209,12 +209,12 @@ issue on our API repo, <a href="https://github.com/cloudfoundry/cloud_controller
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The ISO8601 compatible date and time when resource was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The ISO8601 compatible date and time when resource was last updated</td>
 </tr>
 <tr>
@@ -578,21 +578,13 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 
 <h4 id="relational-operators-experimental">Relational Operators (Experimental)</h4>
 
-<h5 id="filtering-on-equality">Filtering on Equality</h5>
+<p>Fields can be filtered using inequality when listing resources. Currently, this is supported only on
+the <code class="prettyprint">created_at</code> field, using the <code class="prettyprint">created_ats</code> filter.</p>
 
-<p>Fields can be filtered using equality when listing resources. Currently, only the <code class="prettyprint">created_at</code> field
-is supported. The <code class="prettyprint">created_at</code> field expects a timestamp filter, and timestamps must be in ISO 8601
-format, e.g. <code class="prettyprint">2020-06-30T12:34:56Z</code>.</p>
-
-<h5 id="filtering-on-inequality">Filtering on Inequality</h5>
-
-<p>Fields can be filtered using inequality when listing resources. Currently, only the <code class="prettyprint">created_at</code>
-field is supported.</p>
-
-<p>For example, a response to <code class="prettyprint">/v3/audit_events?created_at[lt]=2020-06-30T12:34:56Z</code> will contain
+<p>For example, a response to <code class="prettyprint">/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z</code> will contain
 audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">2020-06-30T12:34:56Z</code>.</p>
 
-<p>Timestamps must be in ISO 8601 format.</p>
+<p>Timestamps must be in <a href="#timestamps">standard timestamp format</a>.</p>
 
 <h5 id="valid-inequality-operators">Valid inequality operators</h5>
 
@@ -1653,12 +1645,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -3459,12 +3451,12 @@ to three instances), and stopping an application.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the event occurred</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>Identical to <code class="prettyprint">created_at</code> (events are created, never updated)</td>
 </tr>
 <tr>
@@ -3860,12 +3852,12 @@ to three instances), and stopping an application.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -4087,7 +4079,7 @@ to three instances), and stopping an application.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>created_at</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong> (<em>experimental</em>)</td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
 <td>Timestamp to filter by. Only supports relational operators, see <a href="#relational-operators-experimental">relational operators</a></td>
 </tr>
@@ -4235,12 +4227,12 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the build was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the build was last updated</td>
 </tr>
 <tr>
@@ -4982,12 +4974,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -5634,12 +5626,12 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -6352,12 +6344,12 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -7244,12 +7236,12 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -8879,7 +8871,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated; this will be blank for feature flags that have not been configured</td>
 </tr>
 <tr>
@@ -9326,12 +9318,12 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -10045,12 +10037,12 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -10616,12 +10608,12 @@ applications:
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -11605,12 +11597,12 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the organization quota was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the organization quota was last updated</td>
 </tr>
 <tr>
@@ -12518,12 +12510,12 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -13718,12 +13710,12 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -13878,7 +13870,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td><strong>usage.time</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time when the usage was requested</td>
 </tr>
 <tr>
@@ -15000,12 +14992,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the role was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the role was last updated</td>
 </tr>
 <tr>
@@ -15648,12 +15640,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -17195,12 +17187,12 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -18567,12 +18559,12 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -19275,12 +19267,12 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -19402,12 +19394,12 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the operation started</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the operation was last updated</td>
 </tr>
 </tbody></table>
@@ -20244,12 +20236,12 @@ They are only visible to members of that space.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -20963,12 +20955,12 @@ Service offerings and service plans are created and updated when a service broke
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -22143,12 +22135,12 @@ question and the associated space, service broker, and service offering.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the event occurred</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>Identical to <code class="prettyprint">created_at</code> (events are created, never updated)</td>
 </tr>
 <tr>
@@ -22515,12 +22507,12 @@ question and the associated space, service broker, and service offering.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -23489,12 +23481,12 @@ applications in the space may be accessed via SSH.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the space quota was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the space quota was last updated</td>
 </tr>
 <tr>
@@ -24426,12 +24418,12 @@ An application will automatically use buildpacks associated with the application
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -24888,12 +24880,12 @@ An application will automatically use buildpacks associated with the application
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -24943,7 +24935,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 <tr>
 <td><strong>relationships.app</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The app the task belongs to</td>
 </tr>
 <tr>
@@ -25827,12 +25819,12 @@ apps, delete apps).</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -26779,12 +26771,12 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -27470,12 +27462,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 <tr>
@@ -28537,12 +28529,12 @@ This endpoint is not available for User-Provided Service Instances.</p>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was created</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
 </tr>
 </tbody></table>
