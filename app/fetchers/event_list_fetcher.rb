@@ -30,21 +30,20 @@ module VCAP::CloudController
 
         if message.requested?(:created_ats)
           if message.created_ats.is_a?(Hash)
-            operator = message.created_ats.keys[0]
-            given_timestamp = message.created_ats.values[0]
-
-            if operator == Event::LESS_THAN_COMPARATOR
-              normalized_timestamp = Time.parse(given_timestamp).utc
-              dataset = dataset.where(Sequel.lit('created_at < ?', normalized_timestamp))
-            elsif operator == Event::LESS_THAN_OR_EQUAL_COMPARATOR
-              normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-              dataset = dataset.where(Sequel.lit('created_at <= ?', normalized_timestamp))
-            elsif operator == Event::GREATER_THAN_COMPARATOR
-              normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-              dataset = dataset.where(Sequel.lit('created_at > ?', normalized_timestamp))
-            elsif operator == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
-              normalized_timestamp = Time.parse(given_timestamp).utc
-              dataset = dataset.where(Sequel.lit('created_at >= ?', normalized_timestamp))
+            message.created_ats.map do |operator, given_timestamp|
+              if operator == Event::LESS_THAN_COMPARATOR
+                normalized_timestamp = Time.parse(given_timestamp).utc
+                dataset = dataset.where(Sequel.lit('created_at < ?', normalized_timestamp))
+              elsif operator == Event::LESS_THAN_OR_EQUAL_COMPARATOR
+                normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
+                dataset = dataset.where(Sequel.lit('created_at <= ?', normalized_timestamp))
+              elsif operator == Event::GREATER_THAN_COMPARATOR
+                normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
+                dataset = dataset.where(Sequel.lit('created_at > ?', normalized_timestamp))
+              elsif operator == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
+                normalized_timestamp = Time.parse(given_timestamp).utc
+                dataset = dataset.where(Sequel.lit('created_at >= ?', normalized_timestamp))
+              end
             end
           else
             # Gotcha: unlike the other relational operators, which are hashes such as

@@ -307,6 +307,94 @@ RSpec.describe 'Events' do
           )
         end
       end
+      context 'using greater than or equal to' do
+        let!(:extra_event) { VCAP::CloudController::Event.make(created_at: timestamp, organization_guid: org.guid, type: 'audit.organization.create') }
+
+        let(:extra_event_json) do
+          {
+            guid: extra_event.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'audit.organization.create',
+            actor: {
+              guid: extra_event.actor,
+              type: extra_event.actor_type,
+              name: extra_event.actor_name
+            },
+            target: {
+              guid: extra_event.actee,
+              type: extra_event.actee_type,
+              name: extra_event.actee_name
+            },
+            data: {},
+            space: nil,
+            organization: {
+              guid: org.guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{extra_event.guid}"
+              }
+            }
+          }
+        end
+
+        it 'returns events at or after the given timestamp' do
+          get "/v3/audit_events?created_ats[gte]=#{timestamp}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [org_scoped_event_json, extra_event_json]
+          )
+        end
+      end
+
+      context 'using greater than and less than, together' do
+        let!(:event_1) { VCAP::CloudController::Event.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
+        let!(:event_2) { VCAP::CloudController::Event.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
+        let!(:event_3) { VCAP::CloudController::Event.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
+        let!(:event_4) { VCAP::CloudController::Event.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+
+        let(:event_3_json) do
+          {
+            guid: event_3.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: event_3.type,
+            actor: {
+              guid: event_3.actor,
+              type: event_3.actor_type,
+              name: event_3.actor_name
+            },
+            target: {
+              guid: event_3.actee,
+              type: event_3.actee_type,
+              name: event_3.actee_name
+            },
+            data: {},
+            space: nil,
+            organization: {
+              guid: event_3.organization_guid
+            },
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/audit_events/#{event_3.guid}"
+              }
+            }
+          }
+        end
+
+        it 'returns events after the greater-than timestamp but before the less-than timestamp' do
+          get "/v3/audit_events?created_ats[gt]=#{event_2.created_at.iso8601}&created_ats[lt]=#{event_4.created_at.iso8601}", nil, admin_header
+
+          expect(
+            resources: parsed_response['resources']
+          ).to match_json_response(
+            resources: [event_3_json]
+          )
+        end
+      end
 
       context 'using equal' do
         let!(:same_time_event) { VCAP::CloudController::Event.make(created_at: timestamp, organization_guid: org.guid, type: 'audit.organization.create') }

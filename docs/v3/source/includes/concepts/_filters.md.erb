@@ -53,6 +53,10 @@ the `created_at` field, using the `created_ats` filter.
 For example, a response to `/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
 audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
 
+Multiple relational operators can be combined to further refine the listed resources. For example, a
+response to `/v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&created_ats[gt]=2019-12-31T23:59:59Z`
+will return all audit events occurring on New Year's Day.
+
 Timestamps must be in [standard timestamp format](#timestamps).
 
 ##### Valid inequality operators
