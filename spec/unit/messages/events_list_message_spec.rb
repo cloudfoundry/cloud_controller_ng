@@ -65,8 +65,8 @@ module VCAP::CloudController
         end
 
         context 'validates the created_ats filter' do
-          it 'requires a hash or a timestamp' do
-            message = EventsListMessage.from_params({ created_ats: [Time.now.utc.iso8601] })
+          it 'requires a hash or an array of timestamps' do
+            message = EventsListMessage.from_params({ created_ats: 47 })
             expect(message).not_to be_valid
             expect(message.errors[:created_ats]).to include('comparison operator and timestamp must be specified')
           end
@@ -78,21 +78,34 @@ module VCAP::CloudController
           end
 
           context 'requires a valid timestamp' do
+            it "won't accept a malformed timestamp" do
+              message = EventsListMessage.from_params({ 'created_ats' => "#{Time.now.utc.iso8601},bogus" })
+              expect(message).not_to be_valid
+              expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+            end
+
             it "won't accept garbage" do
               message = EventsListMessage.from_params({ created_ats: { gt: 123 } })
               expect(message).not_to be_valid
               expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
             end
+
             it "won't accept fractional seconds even though it's ISO 8601-compliant" do
               message = EventsListMessage.from_params({ created_ats: { gt: '2020-06-30T12:34:56.78Z' } })
               expect(message).not_to be_valid
               expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
             end
+
             it "won't accept local time zones even though it's ISO 8601-compliant" do
               message = EventsListMessage.from_params({ created_ats: { gt: '2020-06-30T12:34:56.78-0700' } })
               expect(message).not_to be_valid
               expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
             end
+          end
+
+          it 'allows comma-separated timestamps' do
+            message = EventsListMessage.from_params({ 'created_ats' => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" })
+            expect(message).to be_valid
           end
 
           it 'allows the lt operator' do
@@ -117,13 +130,8 @@ module VCAP::CloudController
 
           context 'when the operator is an equals operator' do
             it 'allows the equals operator' do
-              message = EventsListMessage.from_params({ created_ats: Time.now.utc.iso8601 })
+              message = EventsListMessage.from_params({ 'created_ats' => Time.now.utc.iso8601 })
               expect(message).to be_valid
-            end
-
-            it 'errors on invalid (non-ISO 8601) timestamps' do
-              message = EventsListMessage.from_params({ created_ats: 'yesterday' })
-              expect(message).to be_invalid
             end
           end
         end

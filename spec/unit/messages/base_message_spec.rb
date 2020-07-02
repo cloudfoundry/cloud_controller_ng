@@ -132,6 +132,7 @@ module VCAP::CloudController
           string_field: 'stringval&',
           nil_field: nil,
           empty_field: '',
+          hash_not_array: { pi: 3.141592653589792 }
         }
       end
 
@@ -165,6 +166,10 @@ module VCAP::CloudController
 
       it 'handles empty values' do
         expect(BaseMessage.to_array!(params, :empty_field)).to eq([''])
+      end
+
+      it "doesn't try to convert a hash to an array" do
+        expect(BaseMessage.to_array!(params, :hash_not_array)).to eq(nil)
       end
     end
 

@@ -148,7 +148,7 @@ module VCAP::CloudController
 
         context 'requesting events equal to a timestamp' do
           let(:filters) do
-            { created_ats: event_3.created_at.iso8601 }
+            { created_ats: [event_3.created_at.iso8601] }
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
@@ -160,6 +160,25 @@ module VCAP::CloudController
 
             it 'returns events with a created_at timestamp at a given timestamp' do
               expect(subject).to match_array([event_3, event_between_3_and_4])
+            end
+          end
+        end
+
+        context 'requesting events equal to several timestamps' do
+          let!(:event_5) { Event.make(guid: '5', created_at: '2020-05-26T18:47:05Z') }
+          let(:filters) do
+            { created_ats: [event_2.created_at.iso8601, event_4.created_at.iso8601] }
+          end
+
+          it 'returns events with a created_at timestamp at or after a given timestamp' do
+            expect(subject).to match_array([event_2, event_4])
+          end
+
+          context 'when there are events with subsecond timestamps' do
+            let!(:event_between_2_and_3) { Event.make(guid: '2.5', created_at: '2020-05-26T18:47:02.5Z') }
+
+            it 'returns events with a created_at timestamp at a given timestamp' do
+              expect(subject).to match_array([event_2, event_between_2_and_3, event_4])
             end
           end
         end

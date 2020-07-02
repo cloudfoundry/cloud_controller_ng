@@ -79,6 +79,7 @@ module VCAP::CloudController
 
     def self.to_array!(params, key)
       return if params[key].nil?
+      return if params[key].is_a?(Hash)
 
       params[key] = if params[key] == ''
                       ['']

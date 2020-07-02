@@ -343,11 +343,12 @@ RSpec.describe 'Events' do
         it 'returns events at the given timestamp' do
           get "/v3/audit_events?created_ats=#{timestamp}", nil, admin_header
 
+          expect(last_response).to have_status_code(200)
           expect(
             resources: parsed_response['resources']
           ).to match_json_response(
             resources: [same_time_event_json]
-               )
+          )
         end
       end
 

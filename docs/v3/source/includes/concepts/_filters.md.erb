@@ -15,6 +15,12 @@ This will return all apps with name `the_name`.
 
 This will return all apps with name `the_name` OR `second_name`.
 
+In the case of audit events, multiple timestamps can be requested, which will return all audit
+events that occurred at those timestamps. In the following request, all audit events that occurred
+New Year's just before midnight and July 4th at noon will be returned:
+
+`GET /v3/audit_events?created_ats=2019-12-31T23:59:59Z,2020-07-04T12:00:00Z`
+
 ###### **Exception**
 The `label_selector` query parameter will act as AND function, not an OR.
 
