@@ -6,9 +6,9 @@ module VCAP::CloudController
   RSpec.describe ServiceInstancesListMessage do
     let(:params) do
       {
-        'page'      => 1,
-        'per_page'  => 5,
-        'order_by'  => 'name',
+        'page' => 1,
+        'per_page' => 5,
+        'order_by' => 'name',
         'names' => 'rabbitmq, redis,mysql',
         'space_guids' => 'space-1, space-2, space-3',
         'label_selector' => 'key=value',
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
         it_behaves_like 'field query parameter', 'service_plan', 'guid,name,relationships.service_offering'
 
-        it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,relationships.service_broker'
+        it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,description,documentation_url,relationships.service_broker'
 
         it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
       end

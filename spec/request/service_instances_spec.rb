@@ -133,15 +133,18 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
       end
 
-      it 'can include the offering and broker name and guid fields' do
-        get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid&fields[service_plan.service_offering.service_broker]=name,guid", nil, admin_headers
+      it 'can include service offering and broker fields' do
+        get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid,description,documentation_url&" \
+           'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
         included = {
           service_offerings: [
             {
               name: instance.service_plan.service.name,
-              guid: instance.service_plan.service.guid
+              guid: instance.service_plan.service.guid,
+              description: instance.service_plan.service.description,
+              documentation_url: instance.service_plan.service.documentation_url,
             }
           ],
           service_brokers: [
@@ -356,9 +359,9 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
       end
 
-      it 'can include the service plan, offering and broker name and guid fields' do
+      it 'can include the service plan, offering and broker fields' do
         get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
-                'fields[service_plan.service_offering]=name,guid,relationships.service_broker&' \
+                'fields[service_plan.service_offering]=name,guid,description,documentation_url,relationships.service_broker&' \
                 'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
 
         expect(last_response).to have_status_code(200)
@@ -403,6 +406,8 @@ RSpec.describe 'V3 service instances' do
             {
               name: msi_1.service_plan.service.name,
               guid: msi_1.service_plan.service.guid,
+              description: msi_1.service_plan.service.description,
+              documentation_url: msi_1.service_plan.service.documentation_url,
               relationships: {
                 service_broker: {
                   data: {
@@ -414,6 +419,8 @@ RSpec.describe 'V3 service instances' do
             {
               name: msi_2.service_plan.service.name,
               guid: msi_2.service_plan.service.guid,
+              description: msi_2.service_plan.service.description,
+              documentation_url: msi_2.service_plan.service.documentation_url,
               relationships: {
                 service_broker: {
                   data: {
@@ -425,6 +432,8 @@ RSpec.describe 'V3 service instances' do
             {
               name: ssi.service_plan.service.name,
               guid: ssi.service_plan.service.guid,
+              description: ssi.service_plan.service.description,
+              documentation_url: ssi.service_plan.service.documentation_url,
               relationships: {
                 service_broker: {
                   data: {
@@ -2015,7 +2024,7 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({ 'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan' })
-             )
+            )
           end
         end
 
