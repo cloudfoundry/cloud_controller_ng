@@ -5,11 +5,11 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
     validates :fields, allow_nil: true, fields: {
       allowed: {
-        'space' => ['name', 'guid'],
-        'space.organization' => ['name', 'guid'],
-        'service_plan' => ['name', 'guid'],
-        'service_plan.service_offering' => ['name', 'guid'],
-        'service_plan.service_offering.service_broker' => ['name', 'guid']
+        'space' => %w(name guid),
+        'space.organization' => %w(name guid),
+        'service_plan' => %w(name guid),
+        'service_plan.service_offering' => %w(name guid description documentation_url),
+        'service_plan.service_offering.service_broker' => %w(name guid)
       }
     }
 
