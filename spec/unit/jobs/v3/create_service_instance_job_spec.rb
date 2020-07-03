@@ -97,272 +97,80 @@ module VCAP
         end
 
         context 'when the broker response is asynchronous' do
-          let(:broker_provision_response) {
-            {
-              instance: { dashboard_url: 'example.foo' },
-              last_operation: {
-                type: 'create',
-                state: 'in progress',
-                description: '123',
-                broker_provided_operation: 'task1',
-              }
-            }
+          let(:broker_request_expect) { -> {
+                                          expect(client).to have_received(:provision).with(
+                                            service_instance,
+                                            accepts_incomplete: true,
+                                            arbitrary_parameters: request_attr,
+                                            maintenance_info: service_plan.maintenance_info
+                                          )
+                                        }
           }
 
-          let(:in_progress_last_operation) { { last_operation: { state: 'in progress' } } }
+          client_response = ->(broker_response) { broker_response }
+          api_error_code = 60030
 
-          before do
-            allow(client).to receive(:provision).and_return(broker_provision_response)
-            allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation)
-            run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
-          end
+          it_behaves_like 'service instance last operation polling job', 'create', client_response, api_error_code
 
-          it 'asks the client to provision the service instance' do
-            expect(client).to have_received(:provision).with(
-              service_instance,
-              accepts_incomplete: true,
-              arbitrary_parameters: request_attr,
-              maintenance_info: service_plan.maintenance_info,
-            )
-          end
-
-          it 'immediately asks for a progress update' do
-            expect(client).to have_received(:fetch_service_instance_last_operation).with(service_instance)
-          end
-
-          it 'updates the database' do
-            expect(service_instance.last_operation.type).to eq('create')
-            expect(service_instance.last_operation.state).to eq('in progress')
-            expect(service_instance.last_operation.description).to eq('123')
-
-            pollable_job = PollableJobModel.last
-            expect(pollable_job.resource_guid).to eq(service_instance.guid)
-            expect(pollable_job.state).to eq(PollableJobModel::POLLING_STATE)
-          end
-
-          context 'when a retry_after header is returned' do
-            let(:in_progress_last_operation) do
+          context 'when operation is in progress' do
+            let(:broker_provision_response) {
               {
-                last_operation: { state: 'in progress', description: '123' },
-                retry_after: 430,
+                instance: { dashboard_url: 'example.foo' },
+                last_operation: {
+                  type: 'create',
+                  state: 'in progress',
+                  description: '123',
+                  broker_provided_operation: 'task1',
+                }
               }
-            end
+            }
 
-            it 'updates the polling interval' do
-              Timecop.freeze(Time.now + 420.seconds) do
-                execute_all_jobs(expected_successes: 0, expected_failures: 0)
-              end
-
-              Timecop.freeze(Time.now + 440.seconds) do
-                execute_all_jobs(expected_successes: 1, expected_failures: 0)
-              end
-            end
-          end
-
-          context 'polling the last operation' do
-            let(:description) { 'doing stuff' }
-
-            let(:in_progress_last_operation_2) { { last_operation: { state: 'in progress', description: 'doing stuff' } } }
+            let(:in_progress_last_operation) { { last_operation: { state: 'in progress' } } }
 
             before do
-              allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation_2)
-
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              allow(client).to receive(:provision).and_return(broker_provision_response)
+              allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation)
+              run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
             end
 
-            it 'calls the last operation endpoint only' do
-              expect(client).to have_received(:provision).once
-              expect(client).to have_received(:fetch_service_instance_last_operation).twice
-            end
-
-            it 'updates the description' do
-              expect(service_instance.last_operation.description).to eq('doing stuff')
-            end
-
-            context 'when there is no description' do
-              let(:in_progress_last_operation_2) { { last_operation: { state: 'in progress' } } }
-
-              it 'leaves the original description' do
-                expect(service_instance.last_operation.description).to eq('123')
+            context 'when the service instance is removed while create is in progress' do
+              before do
+                service_instance.destroy
               end
-            end
 
-            context 'when the description is long (mysql)' do
-              let(:long_description) { '123' * 512 }
-              let(:in_progress_last_operation_2) { { last_operation: { state: 'in progress', description: long_description } } }
-
-              it 'updates the description' do
-                expect(service_instance.last_operation.description).to eq(long_description)
-              end
-            end
-          end
-
-          context 'when provisioning has succeeded' do
-            let(:succeeded_last_operation) { { last_operation: { state: 'succeeded', description: '789' } } }
-
-            before do
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              allow(client).to receive(:fetch_service_instance_last_operation).and_return(succeeded_last_operation)
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            end
-
-            it 'updates the database' do
-              expect(service_instance.last_operation.type).to eq('create')
-              expect(service_instance.last_operation.state).to eq('succeeded')
-              expect(service_instance.last_operation.description).to eq('789')
-
-              pollable_job = PollableJobModel.last
-              expect(pollable_job.resource_guid).to eq(service_instance.guid)
-              expect(pollable_job.state).to eq(PollableJobModel::COMPLETE_STATE)
-            end
-
-            it 'creates an audit event' do
-              event = Event.find(type: 'audit.service_instance.create')
-              expect(event).to be
-              expect(event.actee).to eq(service_instance.guid)
-              expect(event.metadata['request']).to have_key('dummy_data')
-            end
-          end
-
-          context 'when provisioning has failed' do
-            let(:succeeded_last_operation) { { last_operation: { state: 'failed', description: 'oops' } } }
-
-            before do
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              allow(client).to receive(:fetch_service_instance_last_operation).and_return(succeeded_last_operation)
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-            end
-
-            it 'updates the database' do
-              expect(service_instance.last_operation.type).to eq('create')
-              expect(service_instance.last_operation.state).to eq('failed')
-              expect(service_instance.last_operation.description).to eq('oops')
-
-              pollable_job = PollableJobModel.last
-              expect(pollable_job.resource_guid).to eq(service_instance.guid)
-              expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
-              expect(pollable_job.cf_api_error).not_to be_nil
-              error = YAML.safe_load(pollable_job.cf_api_error)
-              expect(error['errors'].first['code']).to eq(60030)
-              expect(error['errors'].first['detail']).
-                to include('The service broker reported an error during provisioning: oops')
-            end
-
-            it 'does not create an audit event' do
-              event = Event.find(type: 'audit.service_instance.create')
-              expect(event).to be_nil
-            end
-          end
-
-          context 'timing out' do
-            it 'marks the service instance creation as failed' do
-              Timecop.freeze(Time.now + job.maximum_duration_seconds) do
+              it 'fails the job' do
+                Timecop.travel(job.polling_interval_seconds + 1.second)
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-                expect(service_instance.last_operation.type).to eq('create')
-                expect(service_instance.last_operation.state).to eq('failed')
-                expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
+                pollable_job = PollableJobModel.last
+                expect(pollable_job.resource_guid).to eq(service_instance.guid)
+                expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
+                expect(pollable_job.cf_api_error).not_to be_nil
+                error = YAML.safe_load(pollable_job.cf_api_error)
+                expect(error['errors'].first['code']).to eq(60004)
+                expect(error['errors'].first['detail']).
+                  to include('The service instance could not be found')
               end
             end
 
-            context 'when the plan has a maximum duration' do
-              let(:maximum_polling_duration) { 4242 }
-
-              it 'uses it' do
-                Timecop.freeze(Time.now + 4242) do
-                  execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-                  expect(service_instance.last_operation.type).to eq('create')
-                  expect(service_instance.last_operation.state).to eq('failed')
-                  expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
-                end
-              end
-            end
-          end
-
-          context 'when the service instance is removed while create is in progress' do
-            before do
-              service_instance.destroy
-            end
-
-            it 'fails the job' do
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-              pollable_job = PollableJobModel.last
-              expect(pollable_job.resource_guid).to eq(service_instance.guid)
-              expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
-              expect(pollable_job.cf_api_error).not_to be_nil
-              error = YAML.safe_load(pollable_job.cf_api_error)
-              expect(error['errors'].first['code']).to eq(60004)
-              expect(error['errors'].first['detail']).
-                to include('The service instance could not be found')
-            end
-          end
-
-          context 'when the service instance deletion is started while create is in progress' do
-            before do
-              service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
-            end
-
-            it 'fails the job' do
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-              pollable_job = PollableJobModel.last
-              expect(pollable_job.resource_guid).to eq(service_instance.guid)
-              expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
-              expect(pollable_job.cf_api_error).not_to be_nil
-              error = YAML.safe_load(pollable_job.cf_api_error)
-              expect(error['errors'].first['code']).to eq(10009)
-              expect(error['errors'].first['detail']).
-                to eq('Create could not be completed: delete in progress')
-            end
-          end
-
-          context 'when fetching the last operation from the broker fails' do
-            context 'due to an HttpRequestError' do
+            context 'when the service instance deletion is started while create is in progress' do
               before do
-                err = HttpRequestError.new('oops', 'uri', 'GET', RuntimeError.new)
-                allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
+                service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
               end
 
-              it 'should continue' do
+              it 'fails the job' do
                 Timecop.travel(job.polling_interval_seconds + 1.second)
-                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-                expect(Delayed::Job.count).to eq 1
+                pollable_job = PollableJobModel.last
+                expect(pollable_job.resource_guid).to eq(service_instance.guid)
+                expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
+                expect(pollable_job.cf_api_error).not_to be_nil
+                error = YAML.safe_load(pollable_job.cf_api_error)
+                expect(error['errors'].first['code']).to eq(10009)
+                expect(error['errors'].first['detail']).
+                  to eq('Create could not be completed: delete in progress')
               end
-            end
-
-            context 'due to an HttpResponseError' do
-              before do
-                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
-                err = HttpResponseError.new('oops', 'GET', response)
-                allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
-              end
-
-              it 'should continue' do
-                Timecop.travel(job.polling_interval_seconds + 1.second)
-                execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-                expect(Delayed::Job.count).to eq 1
-              end
-            end
-          end
-
-          context 'when saving the last operation to the database fails' do
-            before do
-              allow_any_instance_of(VCAP::CloudController::ManagedServiceInstance).
-                to receive(:save_and_update_operation).and_raise(Sequel::Error.new('foo'))
-            end
-
-            it 'should continue' do
-              Timecop.travel(job.polling_interval_seconds + 1.second)
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(Delayed::Job.count).to eq 1
             end
           end
         end

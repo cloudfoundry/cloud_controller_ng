@@ -150,7 +150,7 @@ module VCAP
             expect(client).to have_received(:update).with(
               service_instance,
               new_service_plan,
-              accepts_incomplete: false,
+              accepts_incomplete: true,
               arbitrary_parameters: request_attr,
               maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
               previous_values: {
@@ -205,7 +205,59 @@ module VCAP
           end
         end
 
-        context 'when the broker client returns an error' do
+        context 'when the broker client response is asynchronous' do
+          let(:broker_request_expect) { -> { expect(client).to have_received(:update).with(
+            service_instance,
+                new_service_plan,
+                accepts_incomplete: true,
+                arbitrary_parameters: request_attr,
+                maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
+                previous_values: {
+                  plan_id: original_service_plan.broker_provided_id,
+                  service_id: service_offering.broker_provided_id,
+                  organization_id: org.guid,
+                  space_id: space.guid,
+                  maintenance_info: original_maintenance_info.stringify_keys,
+                },
+                name: 'new-name',
+              )
+                                        }
+          }
+
+          client_response = ->(broker_response) { [broker_response, nil] }
+          api_error_code = 10009
+
+          it_behaves_like 'service instance last operation polling job', 'update', client_response, api_error_code
+
+          context 'when operation is in progress' do
+            let(:broker_response) {
+              {
+                instance: { dashboard_url: 'example.foo' },
+                last_operation: {
+                  type: :update,
+                  state: 'in progress',
+                  description: 'abc',
+                  broker_provided_operation: 'task1',
+                }
+              }
+            }
+
+            let(:in_progress_last_operation) { { last_operation: { state: 'in progress' } } }
+
+            before do
+              allow(client).to receive(:update).and_return([broker_response, nil])
+              allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation)
+              run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
+            end
+
+            it 'does not update the service instance' do
+              service_instance.reload
+              expect(service_instance.name).to eq(name)
+            end
+          end
+        end
+
+        context 'when the broker client returns an error for update' do
           before do
             allow(client).to receive(:update).and_return([
               {
@@ -397,7 +449,7 @@ module VCAP
                 service_instance,
                 original_service_plan,
                 maintenance_info: plan_maintenance_info,
-                accepts_incomplete: false,
+                accepts_incomplete: true,
                 arbitrary_parameters: {},
                 previous_values: {
                   plan_id: original_service_plan.broker_provided_id,
@@ -428,12 +480,13 @@ module VCAP
                 }
               })
             end
+
             it 'sends a request to the broker' do
               expect(client).to have_received(:update).with(
                 service_instance,
                 new_service_plan,
                 maintenance_info: new_service_plan.maintenance_info.symbolize_keys,
-                accepts_incomplete: false,
+                accepts_incomplete: true,
                 arbitrary_parameters: {},
                 previous_values: {
                   plan_id: original_service_plan.broker_provided_id,
@@ -464,7 +517,7 @@ module VCAP
               expect(client).to have_received(:update).with(
                 service_instance,
                 original_service_plan,
-                accepts_incomplete: false,
+                accepts_incomplete: true,
                 maintenance_info: nil,
                 arbitrary_parameters: { foo: 'bar' },
                 previous_values: {

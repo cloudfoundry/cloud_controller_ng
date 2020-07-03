@@ -1502,12 +1502,13 @@ RSpec.describe 'V3 service instances' do
           )
         end
         let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:original_maintenance_info) { { version: '1.1.0' } }
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
             tags: %w(foo bar),
             space: space,
             service_plan: original_service_plan,
-            maintenance_info: { version: '1.1.0' }
+            maintenance_info: original_maintenance_info
           )
           si.annotation_ids = [
             VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
@@ -1597,11 +1598,10 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
 
             instance = VCAP::CloudController::ServiceInstance.last
-            stub_request(:patch, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
-              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
 
-            # TODO: add this when doing async responses:
-            # with(query: { 'accepts_incomplete' => true }).
+            stub_request(:patch, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+              with(query: { 'accepts_incomplete' => true }).
+              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
           end
 
           it 'sends a UPDATE request with the right arguments to the service broker' do
@@ -1610,8 +1610,7 @@ RSpec.describe 'V3 service instances' do
             expect(
               a_request(:patch, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
                 with(
-                  # TODO: add in when async part done:
-                  # query: { accepts_incomplete: true },
+                  query: { accepts_incomplete: true },
                   body: {
                     service_id: new_service_plan.service.unique_id,
                     plan_id: new_service_plan.unique_id,
@@ -1671,6 +1670,174 @@ RSpec.describe 'V3 service instances' do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              end
+            end
+          end
+
+          context 'when the update is asynchronous' do
+            let(:broker_status_code) { 202 }
+            let(:broker_response) { { operation: 'task12' } }
+            let(:last_operation_status_code) { 200 }
+            let(:last_operation_response) { { state: 'in progress' } }
+
+            before do
+              stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'task12',
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+            end
+
+            it 'marks the job state as polling' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'calls last operation immediately' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(
+                a_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
+                  with(
+                    query: {
+                      operation: 'task12',
+                      service_id: service_instance.service_plan.service.unique_id,
+                      plan_id: service_instance.service_plan.unique_id,
+                    })
+              ).to have_been_made.once
+            end
+
+            it 'enqueues the next fetch last operation job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+            end
+
+            context 'when last operation eventually returns `update succeeded`' do
+              let(:last_operation_status_code) { 200 }
+              let(:last_operation_response) { { state: 'in progress' } }
+
+              before do
+                stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
+                  with(
+                    query: {
+                      operation: 'task12',
+                      service_id: service_instance.service_plan.service.unique_id,
+                      plan_id: service_instance.service_plan.unique_id,
+                    }).
+                  to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                  to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
+
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+                Timecop.freeze(Time.now + 1.hour) do
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+              end
+
+              it 'completes the job' do
+                updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+                expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+
+              it 'sets the service instance last operation to create succeeded' do
+                expect(service_instance.last_operation.type).to eq('update')
+                expect(service_instance.last_operation.state).to eq('succeeded')
+              end
+            end
+
+            context 'when last operation eventually returns `update failed`' do
+              before do
+                stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
+                  with(
+                    query: {
+                      operation: 'task12',
+                      service_id: service_instance.service_plan.service.unique_id,
+                      plan_id: service_instance.service_plan.unique_id,
+                    }).
+                  to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                  to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
+
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+                Timecop.freeze(Time.now + 1.hour) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+                end
+              end
+
+              it 'completes the job' do
+                updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+                expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              end
+
+              it 'sets the service instance last operation to update failed' do
+                expect(service_instance.last_operation.type).to eq('update')
+                expect(service_instance.last_operation.state).to eq('failed')
+              end
+            end
+
+            context 'when last operation eventually returns error 400' do
+              before do
+                stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
+                  with(
+                    query: {
+                      operation: 'task12',
+                      service_id: service_instance.service_plan.service.unique_id,
+                      plan_id: service_instance.service_plan.unique_id,
+                    }).
+                  to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                  to_return(status: 400, body: {}.to_json, headers: {})
+
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+                Timecop.freeze(Time.now + 1.hour) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+                end
+              end
+
+              it 'completes the job' do
+                updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+                expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              end
+
+              it 'sets the service instance last operation to update failed' do
+                expect(service_instance.last_operation.type).to eq('update')
+                expect(service_instance.last_operation.state).to eq('failed')
+              end
+
+              it 'does not update the instance' do
+                #  TODO maybe look in the client to add this test and make sure what it returns? so we can test at a unit level in the job as well
+                service_instance.reload
+                expect(service_instance.reload.tags).to eq(%w(foo bar))
+                expect(service_instance.service_plan).to eq(original_service_plan)
+                expect_metadata(
+                  service_instance,
+                  annotations: [
+                    { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+                    { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                  ],
+                  labels: [
+                    { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+                    { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
+                  ]
+                )
+              end
+
+              context 'when changing maintenance_info' do
+                let(:request_body) do
+                  {
+                    maintenance_info: { version: '1.1.1' },
+                  }
+                end
+
+                it 'does not update the instance' do
+                  service_instance.reload
+                  expect(service_instance.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
+                end
               end
             end
           end
