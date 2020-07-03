@@ -225,7 +225,7 @@ module VCAP
           }
 
           client_response = ->(broker_response) { [broker_response, nil] }
-          api_error_code = 60031
+          api_error_code = 10009
 
           it_behaves_like 'service instance last operation polling job', 'update', client_response, api_error_code
 

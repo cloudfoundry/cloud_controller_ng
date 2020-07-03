@@ -348,11 +348,6 @@
   http_code: 400
   message: "The service broker reported an error during provisioning: %s"
 
-60031:
-  name: ServiceInstanceUpdateFailed
-  http_code: 400
-  message: "The service broker reported an error during update: %s"
-
 70001:
   name: RuntimeInvalid
   http_code: 400
