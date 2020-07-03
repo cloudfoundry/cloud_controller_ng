@@ -309,7 +309,7 @@ RSpec.describe 'Space Manifests' do
     end
 
     context 'when the app name is not a valid host name and the default-route flag is set to true' do
-      let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'a' * 64, space: space) }
+      let(:app1_model) { VCAP::CloudController::AppModel.make(name: '!' * 64, space: space) }
       let(:yml_manifest) do
         {
           'applications' => [
@@ -319,51 +319,16 @@ RSpec.describe 'Space Manifests' do
         }.to_yaml
       end
 
-      it 'returns a 202 but fails on the job' do
+      it 'returns a 422 with an informative message' do
         expect {
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
         }.to change { VCAP::CloudController::AppModel.count }.by(0)
 
-        expect(last_response).to have_status_code(202)
-        expect(last_response.status).to eq(202), last_response.body
-
-        job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-        Delayed::Worker.new.work_off
-        job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
-        errors = YAML.safe_load(job.cf_api_error)['errors']
-        expect(errors.length).to eq 1
-        expect(errors[0]['detail']).to include('Host cannot exceed 63 characters')
-      end
-
-      context 'and routes are provided in the manifest' do
-        let(:yml_manifest) do
-          {
-            'applications' => [
-              { 'name' => app1_model.name,
-                'default-route' => true,
-                'routes' => [{ 'route' => "http://#{route.host}.#{shared_domain.name}" }] },
-            ]
-          }.to_yaml
-        end
-
-        it 'returns a 202 and succeeds' do
-          expect {
-            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-          }.to change { VCAP::CloudController::AppModel.count }.by(0)
-
-          expect(last_response).to have_status_code(202)
-          expect(last_response.status).to eq(202), last_response.body
-
-          job_guid = VCAP::CloudController::PollableJobModel.last.guid
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-          Delayed::Worker.new.work_off
-          job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
-          expect(job.complete?).to be true
-          expect(job.cf_api_error).to be nil
-        end
+        expect(last_response).to have_status_code(422)
+        expect(last_response).to include_error_message(
+          /Failed to create default route from app name: Host cannot exceed 63 characters/)
+        expect(last_response).to include_error_message(
+          /Failed to create default route from app name: Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
       end
     end
 

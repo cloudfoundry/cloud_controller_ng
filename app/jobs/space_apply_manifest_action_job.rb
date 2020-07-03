@@ -22,7 +22,6 @@ module VCAP::CloudController
                ProcessUpdate::InvalidProcess,
                ManifestRouteUpdate::InvalidRoute,
                Route::InvalidOrganizationRelation,
-               AppApplyManifest::Error,
                AppApplyManifest::ServiceBindingError => e
 
           app_name = AppModel.find(guid: app_guid)&.name
