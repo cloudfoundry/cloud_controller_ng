@@ -550,6 +550,12 @@ The available filter parameters are described in a resource&rsquo;s &ldquo;list&
 
 <p>This will return all apps with name <code class="prettyprint">the_name</code> OR <code class="prettyprint">second_name</code>.</p>
 
+<p>In the case of audit events, multiple timestamps can be requested, which will return all audit
+events that occurred at those timestamps. In the following request, all audit events that occurred
+New Year&rsquo;s just before midnight and July 4th at noon will be returned:</p>
+
+<p><code class="prettyprint">GET /v3/audit_events?created_ats=2019-12-31T23:59:59Z,2020-07-04T12:00:00Z</code></p>
+
 <h6 id="exception"><strong>Exception</strong></h6>
 
 <p>The <code class="prettyprint">label_selector</code> query parameter will act as AND function, not an OR.</p>
@@ -583,6 +589,10 @@ the <code class="prettyprint">created_at</code> field, using the <code class="pr
 
 <p>For example, a response to <code class="prettyprint">/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z</code> will contain
 audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">2020-06-30T12:34:56Z</code>.</p>
+
+<p>Multiple relational operators can be combined to further refine the listed resources. For example, a
+response to <code class="prettyprint">/v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&amp;created_ats[gt]=2019-12-31T23:59:59Z</code>
+will return all audit events occurring on New Year&rsquo;s Day.</p>
 
 <p>Timestamps must be in <a href="#timestamps">standard timestamp format</a>.</p>
 
@@ -4081,7 +4091,7 @@ to three instances), and stopping an application.</p>
 <tr>
 <td><strong>created_ats</strong> (<em>experimental</em>)</td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. Only supports relational operators, see <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
 </tr>
 <tr>
 <td><strong>types</strong></td>
