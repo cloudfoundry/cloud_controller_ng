@@ -144,7 +144,7 @@ RSpec.describe 'V3 service instances' do
               name: instance.service_plan.service.name,
               guid: instance.service_plan.service.guid,
               description: instance.service_plan.service.description,
-              documentation_url: instance.service_plan.service.documentation_url,
+              documentation_url: 'https://some.url.for.docs/',
             }
           ],
           service_brokers: [
@@ -407,7 +407,7 @@ RSpec.describe 'V3 service instances' do
               name: msi_1.service_plan.service.name,
               guid: msi_1.service_plan.service.guid,
               description: msi_1.service_plan.service.description,
-              documentation_url: msi_1.service_plan.service.documentation_url,
+              documentation_url: 'https://some.url.for.docs/',
               relationships: {
                 service_broker: {
                   data: {
@@ -420,7 +420,7 @@ RSpec.describe 'V3 service instances' do
               name: msi_2.service_plan.service.name,
               guid: msi_2.service_plan.service.guid,
               description: msi_2.service_plan.service.description,
-              documentation_url: msi_2.service_plan.service.documentation_url,
+              documentation_url: 'https://some.url.for.docs/',
               relationships: {
                 service_broker: {
                   data: {
@@ -433,7 +433,7 @@ RSpec.describe 'V3 service instances' do
               name: ssi.service_plan.service.name,
               guid: ssi.service_plan.service.guid,
               description: ssi.service_plan.service.description,
-              documentation_url: ssi.service_plan.service.documentation_url,
+              documentation_url: 'https://some.url.for.docs/',
               relationships: {
                 service_broker: {
                   data: {

@@ -25,7 +25,7 @@ module VCAP::CloudController
         offering_view[:name] = offering.name if @fields.include?('name')
         offering_view[:guid] = offering.guid if @fields.include?('guid')
         offering_view[:description] = offering.description if @fields.include?('description')
-        offering_view[:documentation_url] = offering.documentation_url if @fields.include?('documentation_url')
+        offering_view[:documentation_url] = extract_documentation_url(offering.extra) if @fields.include?('documentation_url')
         if @fields.include?('relationships.service_broker')
           offering_view[:relationships] = {
             service_broker: {
@@ -40,6 +40,15 @@ module VCAP::CloudController
       end
 
       hash
+    end
+
+    private
+
+    def extract_documentation_url(extra)
+      metadata = JSON.parse(extra)
+      metadata['documentation_url']
+    rescue JSON::ParserError
+      nil
     end
   end
 end

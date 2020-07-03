@@ -4,8 +4,8 @@ require 'decorators/field_service_instance_offering_decorator'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOfferingDecorator do
     describe '.decorate' do
-      let(:offering1) { Service.make }
-      let(:offering2) { Service.make }
+      let(:offering1) { Service.make(extra: '{"documentation_url": "https://offering1.com"}') }
+      let(:offering2) { Service.make(extra: '{"documentation_url": "https://offering2.com"}') }
 
       let(:plan1) { ServicePlan.make(service: offering1) }
       let(:plan2) { ServicePlan.make(service: offering2) }
@@ -91,10 +91,10 @@ module VCAP::CloudController
             monkeys: %w(zach greg),
             service_offerings: [
               {
-                documentation_url: offering1.documentation_url,
+                documentation_url: 'https://offering1.com',
               },
               {
-                documentation_url: offering2.documentation_url,
+                documentation_url: 'https://offering2.com',
               }
             ]
           }
