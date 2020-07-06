@@ -1,5 +1,7 @@
+require 'fetchers/base_fetcher'
+
 module VCAP::CloudController
-  class DropletListFetcher
+  class DropletListFetcher < BaseFetcher
     def initialize(message:)
       @message = message
     end
@@ -32,6 +34,7 @@ module VCAP::CloudController
     private
 
     def filter(app, dataset)
+      dataset = super(@message, dataset)
       if @message.requested?(:current) && app
         dataset = dataset.extension(:null_dataset)
         return dataset.nullify unless app.droplet
