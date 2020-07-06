@@ -19917,6 +19917,7 @@ The response will be asynchronous if:</p>
 <ul>
 <li><code class="prettyprint">parameters</code> are specified</li>
 <li><code class="prettyprint">service_plan</code> is specified</li>
+<li><code class="prettyprint">maintenance_info</code> is specified</li>
 <li><code class="prettyprint">name</code> is specified and the service offering has the <code class="prettyprint">allow_context_updates</code> feature enabled</li>
 </ul>
 
@@ -29241,7 +29242,28 @@ diagram shows many different flows for starting an app.</p>
 
 <p><sup>1</sup> In V3, order is ascending by default. Prefix the <code class="prettyprint">order_by</code> value with <code class="prettyprint">-</code> to make it descending. For example, <code class="prettyprint">?order_by=-name</code> would order a list of resources by <code class="prettyprint">name</code> in descending order.</p>
 
-<p>Read more about <a href="#filtering">filtering in V3</a>.</p>
+<p>Filtering inequalities has changed in V3: V3 dispenses with the <code class="prettyprint">q=</code> preamble,
+uses <code class="prettyprint">created_ats</code> instead of <code class="prettyprint">timestamp</code> and uses bracket operators (<code class="prettyprint">[lt]</code>,
+<code class="prettyprint">[gt]</code>, <code class="prettyprint">[lte]</code>, <code class="prettyprint">[gte]</code>). For example, to request all audit events occurring on
+New Year&rsquo;s Day, one would use the following query: <code class="prettyprint">GET
+/v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&amp;created_ats[gt]=2019-12-31T23:59:59Z</code>.</p>
+
+<p>The corresponding V2 query would be <code class="prettyprint">GET
+/v2/events?q=timestamp&lt;2020-01-02T00:00:00Z&amp;q=timestamp&gt;2019-12-31T23:59:59Z</code>.</p>
+
+<p>Filtering on equality has also changed: V3 dispenses with the <code class="prettyprint">q=</code> preamble and
+uses the pluralized field (e.g. <code class="prettyprint">names</code>) on the left side of the equals sign.
+For filtering on inclusion in a set, V3 allows passing multiple values separated
+by commas.</p>
+
+<p>For example, to request the organizations by
+their name (&ldquo;finance&rdquo; and &ldquo;marketing&rdquo;), one would use the following query:
+<code class="prettyprint">/v3/organizations?names=finance,marketing</code></p>
+
+<p>The corresponding V2 query would be <code class="prettyprint">GET
+/v2/organizations?q=name%20IN%20finance,marketing</code></p>
+
+<p>Read more about <a href="#filters">filtering in V3</a>.</p>
 <h3 id="including-associated-resources">Including Associated Resources</h3>
 
 <p>The <code class="prettyprint">inline-relations-depth</code> parameter is no longer supported on V3. Instead, some resources support the <code class="prettyprint">include</code> parameter to selectively include associated resources in the response body.</p>
