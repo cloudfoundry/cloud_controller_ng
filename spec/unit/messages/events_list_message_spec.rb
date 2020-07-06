@@ -68,13 +68,13 @@ module VCAP::CloudController
           it 'requires a hash or an array of timestamps' do
             message = EventsListMessage.from_params({ created_ats: 47 })
             expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include('comparison operator and timestamp must be specified')
+            expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
           end
 
-          it 'requires a valid comparison operator' do
+          it 'requires a valid relational operator' do
             message = EventsListMessage.from_params({ created_ats: { garbage: Time.now.utc.iso8601 } })
             expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include("Invalid comparison operator: 'garbage'")
+            expect(message.errors[:created_ats]).to include("Invalid relational operator: 'garbage'")
           end
 
           context 'requires a valid timestamp' do
@@ -131,7 +131,7 @@ module VCAP::CloudController
           it 'does not allow multiple timestamps with an operator' do
             message = EventsListMessage.from_params({ created_ats: { gte: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" } })
             expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include('only accepts one value when using an inequality filter')
+            expect(message.errors[:created_ats]).to include('only accepts one value when using a relational operator')
           end
 
           context 'when the operator is an equals operator' do

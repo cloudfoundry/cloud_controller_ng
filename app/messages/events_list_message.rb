@@ -11,24 +11,24 @@ module VCAP::CloudController
             end
           else
             unless record.created_ats.is_a?(Hash)
-              record.errors[:created_ats] << 'comparison operator and timestamp must be specified'
+              record.errors[:created_ats] << 'relational operator and timestamp must be specified'
               return
             end
 
-            valid_comparision_operators = [
+            valid_relational_operators = [
               Event::LESS_THAN_COMPARATOR,
               Event::GREATER_THAN_COMPARATOR,
               Event::LESS_THAN_OR_EQUAL_COMPARATOR,
               Event::GREATER_THAN_OR_EQUAL_COMPARATOR,
             ]
 
-            record.created_ats.each do |comparison_operator, timestamp|
-              unless valid_comparision_operators.include?(comparison_operator)
-                record.errors[:created_ats] << "Invalid comparison operator: '#{comparison_operator}'"
+            record.created_ats.each do |relational_operator, timestamp|
+              unless valid_relational_operators.include?(relational_operator)
+                record.errors[:created_ats] << "Invalid relational operator: '#{relational_operator}'"
               end
 
               if timestamp.to_s.include?(',')
-                record.errors[:created_ats] << 'only accepts one value when using an inequality filter'
+                record.errors[:created_ats] << 'only accepts one value when using a relational operator'
                 next
               end
 

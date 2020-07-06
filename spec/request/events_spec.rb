@@ -445,7 +445,7 @@ RSpec.describe 'Events' do
           get "/v3/audit_events?created_ats[goat]=#{timestamp}", nil, admin_header
 
           expect(last_response).to have_status_code(400)
-          expect(last_response).to have_error_message("Invalid comparison operator: 'goat'")
+          expect(last_response).to have_error_message("Invalid relational operator: 'goat'")
         end
       end
 
