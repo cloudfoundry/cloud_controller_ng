@@ -27,6 +27,11 @@ module VCAP::CloudController
                 record.errors[:created_ats] << "Invalid comparison operator: '#{comparison_operator}'"
               end
 
+              if timestamp.to_s.include?(',')
+                record.errors[:created_ats] << 'only accepts one value when using an inequality filter'
+                next
+              end
+
               opinionated_iso_8601(timestamp, record)
             end
           end

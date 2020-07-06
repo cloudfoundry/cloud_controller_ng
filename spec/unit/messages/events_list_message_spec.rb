@@ -128,6 +128,12 @@ module VCAP::CloudController
             expect(message).to be_valid
           end
 
+          it 'does not allow multiple timestamps with an operator' do
+            message = EventsListMessage.from_params({ created_ats: { gte: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" } })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_ats]).to include('only accepts one value when using an inequality filter')
+          end
+
           context 'when the operator is an equals operator' do
             it 'allows the equals operator' do
               message = EventsListMessage.from_params({ 'created_ats' => Time.now.utc.iso8601 })
