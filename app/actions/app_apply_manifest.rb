@@ -9,6 +9,7 @@ require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
+    class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
     class ServiceBindingError < StandardError; end
 
@@ -105,6 +106,7 @@ module VCAP::CloudController
       end
 
       if update_message.default_route && existing_routes.empty?
+        validate_name_dns_compliant!(app.name)
         domain_name = get_default_domain_name(app)
 
         route = "#{app.name}.#{domain_name}"
@@ -119,6 +121,18 @@ module VCAP::CloudController
       raise NoDefaultDomain.new('No default domains available') unless domain_name
 
       domain_name
+    end
+
+    def validate_name_dns_compliant!(name)
+      prefix = 'Failed to create default route from app name:'
+
+      if name.present? && name.length > 63
+        error!(prefix + ' Host cannot exceed 63 characters')
+      end
+
+      unless name&.match(/\A[\w\-]+\z/)
+        error!(prefix + ' Host must be either "*" or contain only alphanumeric characters, "_", or "-"')
+      end
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
@@ -161,6 +175,10 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.action.app_apply_manifest')
+    end
+
+    def error!(message)
+      raise Error.new(message)
     end
   end
 end
