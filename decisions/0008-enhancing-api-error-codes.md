@@ -95,7 +95,7 @@ end
 In this example, the final message string is already set in the action, so we will not lose anything by also defining the type there as well. Our aim is not to define every possible type of error as its own class; doing so might encourage future developers to reuse errors or create errors that might not have the most detailed information. In some cases, it might be better to leave information a client needs in the detail string if it breaks patterns in a dangerous way. Maintaining the patterns and structure of the API is also a priority. Our aim is to find commonly used logical units of errors that are simple to separate. As a first iteration, we plan to extract errors to condense the error branching in the V7 CLI as much as possible. We can break out further cases as needed based on future requests and user feedback. 
 
 # Status
-Proposed
+Accepted
 
 # Consequences:
 
