@@ -46,7 +46,7 @@ module VCAP::CloudController
 
     def extract_documentation_url(extra)
       metadata = JSON.parse(extra)
-      metadata['documentation_url']
+      metadata['documentationUrl']
     rescue JSON::ParserError
       nil
     end

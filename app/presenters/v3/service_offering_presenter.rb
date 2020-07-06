@@ -58,7 +58,7 @@ module VCAP::CloudController
         end
 
         def documentation_url(metadata)
-          metadata['documentation_url'] || ''
+          metadata['documentationUrl'] || ''
         end
 
         def broker_metadata

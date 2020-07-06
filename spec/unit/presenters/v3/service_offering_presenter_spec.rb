@@ -191,7 +191,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       end
 
       context 'when `documentation_url` is set' do
-        let(:extra) { '{"documentation_url": "https://some.documentation.url/"}' }
+        let(:extra) { '{"documentationUrl": "https://some.documentation.url/"}' }
 
         it 'displays the value` as a top level field' do
           expect(result[:documentation_url]).to eq 'https://some.documentation.url/'

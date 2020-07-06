@@ -305,7 +305,7 @@ module VCAP::CloudController
     active                { true }
     service_broker        { ServiceBroker.make }
     description           { Sham.description } # remove hack
-    extra                 { '{"shareable": true, "documentation_url": "https://some.url.for.docs/"}' }
+    extra                 { '{"shareable": true, "documentationUrl": "https://some.url.for.docs/"}' }
     instances_retrievable { false }
     bindings_retrievable  { false }
     plan_updateable       { false }
