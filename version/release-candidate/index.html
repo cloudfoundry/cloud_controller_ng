@@ -584,8 +584,8 @@ New Year&rsquo;s just before midnight and July 4th at noon will be returned:</p>
 
 <h4 id="relational-operators-experimental">Relational Operators (Experimental)</h4>
 
-<p>Fields can be filtered using inequality when listing resources. Currently, this is supported only on
-the <code class="prettyprint">created_at</code> field, using the <code class="prettyprint">created_ats</code> filter.</p>
+<p>Fields can be filtered using relational operators when listing resources. Currently, this is
+supported only on the <code class="prettyprint">created_at</code> field, using the <code class="prettyprint">created_ats</code> filter.</p>
 
 <p>For example, a response to <code class="prettyprint">/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z</code> will contain
 audit events with a <code class="prettyprint">created_at</code> timestamp strictly earlier than <code class="prettyprint">2020-06-30T12:34:56Z</code>.</p>
@@ -596,7 +596,7 @@ will return all audit events occurring on New Year&rsquo;s Day.</p>
 
 <p>Timestamps must be in <a href="#timestamps">standard timestamp format</a>.</p>
 
-<h5 id="valid-inequality-operators">Valid inequality operators</h5>
+<h5 id="valid-relational-operators">Valid relational operators</h5>
 
 <table><thead>
 <tr>
@@ -622,9 +622,9 @@ will return all audit events occurring on New Year&rsquo;s Day.</p>
 </tr>
 </tbody></table>
 
-<h5 id="resources-with-inequalities">Resources with inequalities</h5>
+<h5 id="resources-with-relational-operators">Resources with relational operators</h5>
 
-<p>The following resources can filter using inequality operators:</p>
+<p>The following resources can filter using relational operators:</p>
 
 <ul>
 <li><strong><a href="#list-audit-events">audit_events</a></strong></li>
