@@ -213,7 +213,7 @@ module VCAP::CloudController
             temporary_ignore_server_unavailable_errors: bool,
           },
 
-          logcache_tls: {
+          optional(:logcache_tls) => {
             key_file: String,
             cert_file: String,
             ca_file: String,
