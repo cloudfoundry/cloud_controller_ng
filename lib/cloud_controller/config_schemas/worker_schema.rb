@@ -179,7 +179,7 @@ module VCAP::CloudController
             },
             ca_file: String,
             workloads_namespace: String,
-            optional(:kpack) => {
+            kpack: {
               builder_namespace: String,
               registry_service_account_name: String,
               registry_tag_base: String,
