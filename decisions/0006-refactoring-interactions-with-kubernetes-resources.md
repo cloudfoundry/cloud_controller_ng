@@ -4,7 +4,7 @@ Date: 2020-05-11
 
 ## Status
 
-Accepted
+Superceded by [9. Reorganize code for interacting with kubernetes](0009-reorganize-code-for-interacting-with-kubernetes.md)
 
 ## Context
 
