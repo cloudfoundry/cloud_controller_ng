@@ -155,10 +155,6 @@ module VCAP::CloudController
       CloudController::DependencyLocator.instance.stagers
     end
 
-    def kpack_client
-      CloudController::DependencyLocator.instance.kpack_client.client
-    end
-
     def staging_in_progress!
       raise StagingInProgress
     end

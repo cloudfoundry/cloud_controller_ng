@@ -362,6 +362,9 @@ module VCAP::CloudController
 
           internal_route_vip_range: String,
 
+          default_app_lifecycle: String,
+          custom_metric_tag_prefix_list: Array,
+
           optional(:kubernetes) => {
             host_url: String,
             service_account: {
@@ -369,14 +372,12 @@ module VCAP::CloudController
             },
             ca_file: String,
             workloads_namespace: String,
-            optional(:kpack) => {
+            optional(:kpack) => { # TODO: this isn't optional in practice
               builder_namespace: String,
               registry_service_account_name: String,
               registry_tag_base: String,
             }
           },
-          default_app_lifecycle: String,
-          custom_metric_tag_prefix_list: Array,
         }
       end
       # rubocop:enable Metrics/BlockLength

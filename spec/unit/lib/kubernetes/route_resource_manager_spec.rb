@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'kubernetes/kpack_client'
+require 'kubernetes/api_client'
 
-RSpec.describe Kubernetes::RouteCrdClient do
-  let(:kube_client) { double(Kubeclient) }
-  subject(:route_crd_client) { Kubernetes::RouteCrdClient.new(kube_client) }
+RSpec.describe Kubernetes::RouteResourceManager do
+  let(:k8s_client) { instance_double(Kubernetes::ApiClient) }
+  subject(:route_resource_manager) { Kubernetes::RouteResourceManager.new(k8s_client) }
 
   describe '#create_route' do
     let(:route) { VCAP::CloudController::Route.make }
@@ -39,11 +39,11 @@ RSpec.describe Kubernetes::RouteCrdClient do
     end
 
     it 'create a route resource in Kubernetes' do
-      allow(kube_client).to receive(:create_route).with(any_args)
+      allow(k8s_client).to receive(:create_route).with(any_args)
 
       subject.create_route(route)
 
-      expect(kube_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
+      expect(k8s_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
     end
 
     context 'when the domain is internal' do
@@ -54,23 +54,24 @@ RSpec.describe Kubernetes::RouteCrdClient do
       let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
 
       it 'sets internal to true' do
-        allow(kube_client).to receive(:create_route).with(any_args)
+        allow(k8s_client).to receive(:create_route).with(any_args)
 
         subject.create_route(route)
 
-        expect(kube_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
+        expect(k8s_client).to have_received(:create_route).with(Kubeclient::Resource.new(route_crd_hash)).once
       end
     end
 
     context 'when there are k8s errors' do
+      let(:error) { RuntimeError.new('boom') }
       before do
-        allow(kube_client).to receive(:create_route).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+        allow(k8s_client).to receive(:create_route).and_raise(error)
       end
 
       it 'bubbles up the error' do
         expect {
           subject.create_route(route)
-        }.to raise_error(CloudController::Errors::ApiError)
+        }.to raise_error(error)
       end
     end
   end
@@ -79,11 +80,11 @@ RSpec.describe Kubernetes::RouteCrdClient do
     let(:route) { VCAP::CloudController::Route.make(guid: 'theguid') }
 
     it 'deletes a route resource in Kubernetes' do
-      allow(kube_client).to receive(:delete_route).with(any_args)
+      allow(k8s_client).to receive(:delete_route).with(any_args)
 
       subject.delete_route(route)
 
-      expect(kube_client).to have_received(:delete_route).with('theguid', 'cf-workloads')
+      expect(k8s_client).to have_received(:delete_route).with('theguid', 'cf-workloads')
     end
   end
 
@@ -122,8 +123,8 @@ RSpec.describe Kubernetes::RouteCrdClient do
     end
 
     before do
-      allow(kube_client).to receive(:get_route).with(route.guid, 'cf-workloads').and_return(route_cr)
-      allow(kube_client).to receive(:update_route).with(any_args)
+      allow(k8s_client).to receive(:get_route).with(route.guid, 'cf-workloads').and_return(route_cr)
+      allow(k8s_client).to receive(:update_route).with(any_args)
     end
 
     context 'when there are route mappings' do
@@ -150,11 +151,11 @@ RSpec.describe Kubernetes::RouteCrdClient do
           },
         }]
 
-        expect(kube_client).to receive(:update_route) do |actual|
+        expect(k8s_client).to receive(:update_route) do |actual|
           expect(expected_hash.to_hash).to eq(actual.to_hash)
         end
 
-        route_crd_client.update_destinations(route)
+        route_resource_manager.update_destinations(route)
       end
 
       context 'when the route mappings have weights that should sum to 100' do
@@ -202,23 +203,25 @@ RSpec.describe Kubernetes::RouteCrdClient do
             }
           ]
 
-          expect(kube_client).to receive(:update_route) do |actual|
+          expect(k8s_client).to receive(:update_route) do |actual|
             expect(expected_hash.to_hash).to eq(actual.to_hash)
           end
 
-          route_crd_client.update_destinations(route)
+          route_resource_manager.update_destinations(route)
         end
       end
 
       context 'when there are k8s errors' do
+        let(:error) { RuntimeError.new('Boom') }
+
         before do
-          allow(kube_client).to receive(:update_route).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(k8s_client).to receive(:update_route).and_raise(error)
         end
 
         it 'bubbles up the error' do
           expect {
             subject.update_destinations(route)
-          }.to raise_error(CloudController::Errors::ApiError)
+          }.to raise_error(error)
         end
       end
     end

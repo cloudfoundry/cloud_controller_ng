@@ -6,7 +6,7 @@ module VCAP::CloudController
   class KpackBuildpackListFetcher
     def fetch_all(message)
       staging_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
-      default_builder = kpack_client.get_custom_builder('cf-default-builder', staging_namespace)
+      default_builder = k8s_api_client.get_custom_builder('cf-default-builder', staging_namespace)
 
       version_map = default_builder.status.builderMetadata.each.with_object({}) do |metadata, h|
         h[metadata.id] = metadata.version
@@ -40,8 +40,8 @@ module VCAP::CloudController
 
     private
 
-    def kpack_client
-      @kpack_client ||= CloudController::DependencyLocator.instance.kpack_client
+    def k8s_api_client
+      @k8s_api_client ||= CloudController::DependencyLocator.instance.k8s_api_client
     end
 
     class KpackBuildpack

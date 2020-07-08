@@ -268,7 +268,7 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when targeting a Kubernetes API' do
-      let(:client) { instance_double(Kubernetes::KpackClient) }
+      let(:client) { instance_double(Kubernetes::ApiClient) }
       let(:kubernetes_api_url) { 'https://kube.example.com' }
 
       before do

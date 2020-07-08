@@ -711,7 +711,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#kpack_client' do
+  describe '#k8s_api_client' do
     before do
       ca_file = Tempfile.new('k8s_node_ca.crt')
       ca_file.write('my crt')
@@ -732,15 +732,17 @@ RSpec.describe CloudController::DependencyLocator do
       })
     end
 
-    it 'creates a kpack client from config' do
+    it 'creates a k8s client from config' do
       build_kube_client_arg = nil
       kpack_kube_client_arg = nil
-      allow(Kubernetes::KpackClient).to receive(:new) { |build_kube_client:, kpack_kube_client:|
+      route_kube_client_arg = nil
+      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:|
         build_kube_client_arg = build_kube_client
         kpack_kube_client_arg = kpack_kube_client
+        route_kube_client_arg = route_kube_client
       }
 
-      locator.kpack_client
+      locator.k8s_api_client
 
       expect(build_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(build_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
@@ -749,43 +751,14 @@ RSpec.describe CloudController::DependencyLocator do
       expect(kpack_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(kpack_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
       expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/experimental.kpack.pivotal.io'
+
+      expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
+      expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
+      expect(route_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
     end
 
     it 'always creates a new kpack client object from config' do
-      expect(locator.kpack_client).not_to eq(locator.kpack_client)
-    end
-  end
-
-  describe '#route_crd_client' do
-    before do
-      ca_file = Tempfile.new('k8s_node_ca.crt')
-      ca_file.write('my crt')
-      ca_file.close
-
-      token_file = Tempfile.new('token.token')
-      token_file.write('token')
-      token_file.close
-
-      TestConfig.override({
-        kubernetes: {
-          host_url: 'https://my.kubernetes.io',
-          service_account: {
-            token_file: token_file.path,
-          },
-          ca_file: ca_file.path
-        }
-      })
-    end
-
-    it 'creates a route_crd client from config' do
-      kube_client = nil
-      allow(Kubernetes::RouteCrdClient).to receive(:new) { |arg| kube_client = arg }
-
-      locator.route_crd_client
-
-      expect(kube_client.ssl_options).to eq({ ca: 'my crt' })
-      expect(kube_client.auth_options).to eq({ bearer_token: 'token' })
-      expect(kube_client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
+      expect(locator.k8s_api_client).not_to eq(locator.k8s_api_client)
     end
   end
 end

@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         if VCAP::CloudController::Config.kubernetes_api_configured?
-          route_crd_client.create_route(route)
+          route_resource_manager.create_route(route)
         end
 
         route
@@ -25,8 +25,8 @@ module VCAP::CloudController
 
       attr_reader :access_validator
 
-      def route_crd_client
-        @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
+      def route_resource_manager
+        @route_resource_manager ||= CloudController::DependencyLocator.instance.route_resource_manager
       end
     end
   end

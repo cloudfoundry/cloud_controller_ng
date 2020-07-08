@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'when targeting a Kubernetes API' do
-          let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
           let!(:config) do
             TestConfig.override(
               kubernetes: {
@@ -63,21 +63,21 @@ module VCAP::CloudController
           end
 
           before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-            allow(route_crd_client).to receive(:create_route)
+            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+            allow(route_resource_manager).to receive(:create_route)
           end
 
           it 'creates a route resource in Kubernetes' do
             expect {
               route = subject.create(message: message, space: space, domain: domain)
 
-              expect(route_crd_client).to have_received(:create_route).with(route)
+              expect(route_resource_manager).to have_received(:create_route).with(route)
             }.to change { Route.count }.by(1)
           end
         end
 
         context 'when not targeting a Kubernetes API' do
-          let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
           let!(:config) do
             TestConfig.override(
               kubernetes: {
@@ -86,15 +86,15 @@ module VCAP::CloudController
           end
 
           before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-            allow(route_crd_client).to receive(:create_route)
+            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+            allow(route_resource_manager).to receive(:create_route)
           end
 
           it 'does not create a route resource in Kubernetes' do
             expect {
               subject.create(message: message, space: space, domain: domain)
 
-              expect(route_crd_client).to_not have_received(:create_route)
+              expect(route_resource_manager).to_not have_received(:create_route)
             }.to change { Route.count }.by(1)
           end
         end
