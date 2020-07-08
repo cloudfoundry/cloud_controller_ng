@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       def execute_request(client)
-        broker_response = client.send(
+        broker_response = client.public_send(
           @operation,
           service_instance,
           @client_arguments
