@@ -205,7 +205,6 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
       end
 
       it 'creates an audit event' do
-        puts "audit.service_instance.#{operation_type}"
         event = VCAP::CloudController::Event.find(type: "audit.service_instance.#{operation_type}")
         expect(event).to be
         expect(event.actee).to eq(service_instance.guid)
