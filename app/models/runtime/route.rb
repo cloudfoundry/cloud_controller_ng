@@ -248,7 +248,7 @@ module VCAP::CloudController
         ProcessRouteHandler.new(app).notify_backend_of_route_update
       end
       if VCAP::CloudController::Config.kubernetes_api_configured?
-        CloudController::DependencyLocator.instance.route_crd_client.delete_route(self)
+        CloudController::DependencyLocator.instance.route_resource_manager.delete_route(self)
       end
     end
 

@@ -95,7 +95,7 @@ module Kpack
     end
 
     def client
-      ::CloudController::DependencyLocator.instance.kpack_client
+      ::CloudController::DependencyLocator.instance.k8s_api_client
     end
 
     def blobstore_url_generator

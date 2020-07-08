@@ -10,12 +10,12 @@ module VCAP::CloudController
 
     let!(:app) { AppModel.make }
     let!(:app_dataset) { [app] }
-    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
-    let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient, update_destinations: nil) }
+    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil) }
+    let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager, update_destinations: nil) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
-      allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
     end
 
     describe '#delete' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       it 'deletes the associated kpack Image' do
         build_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
-        expect(kpack_client).to receive(:delete_image).with(app.guid, build_namespace)
+        expect(k8s_api_client).to receive(:delete_image).with(app.guid, build_namespace)
         app_delete.delete(app_dataset)
       end
 

@@ -4,7 +4,7 @@ require 'fetchers/kpack_buildpack_list_fetcher'
 module VCAP::CloudController
   RSpec.describe KpackBuildpackListFetcher do
     let(:fetcher) { KpackBuildpackListFetcher.new }
-    let(:client) { instance_double(Kubernetes::KpackClient) }
+    let(:client) { instance_double(Kubernetes::ApiClient) }
     let(:filters) { {} }
 
     let(:cflinuxfs3_stackname) { 'cflinuxfs3-stack' }
@@ -54,7 +54,7 @@ module VCAP::CloudController
           kpack: { builder_namespace: builder_namespace },
         },
       )
-      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(client)
+      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
       allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
     end
 

@@ -1,13 +1,13 @@
 require 'kubernetes/kube_client_builder'
 
 module Kubernetes
-  class RouteCrdClient
+  class RouteResourceManager
     def initialize(kube_client)
       @client = kube_client
     end
 
     def create_route(route)
-      route_crd_hash = {
+      route_resource_hash = {
         metadata: {
           name: route.guid,
           namespace: VCAP::CloudController::Config.config.kubernetes_workloads_namespace,
@@ -35,12 +35,10 @@ module Kubernetes
         }
       }
 
-      @client.create_route(Kubeclient::Resource.new(route_crd_hash))
-    rescue Kubeclient::HttpError => e
-      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', route.guid)
+      @client.create_route(Kubeclient::Resource.new(route_resource_hash))
+    rescue => e
       Steno.logger('cc.action.route_create').info("Failed to Create Route CRD: #{e}")
-      error.set_backtrace(e.backtrace)
-      raise error
+      raise
     end
 
     def update_destinations(route)
@@ -48,22 +46,16 @@ module Kubernetes
       route_resource.spec.destinations = get_destinations(route)
 
       @client.update_route(route_resource)
-    rescue Kubeclient::HttpError => e
-      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', route.guid)
+    rescue => e
       Steno.logger('cc.action.route_update').info("Failed to Update Route CRD: #{e}")
-      error.set_backtrace(e.backtrace)
-      raise error
+      raise
     end
 
     def delete_route(route)
       @client.delete_route(route.guid, VCAP::CloudController::Config.config.kubernetes_workloads_namespace)
-    rescue Kubeclient::ResourceNotFoundError
-      nil
-    rescue Kubeclient::HttpError => e
-      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', route.guid)
+    rescue => e
       Steno.logger('cc.action.route_create').info("Failed to Delete Route CRD: #{e}")
-      error.set_backtrace(e.backtrace)
-      raise error
+      raise
     end
 
     private

@@ -11,13 +11,13 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
-  let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
+  let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
   let(:rails_logger) { double('rails_logger', info: nil) }
 
   before do
-    allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
-    allow(kpack_client).to receive(:create_image)
-    allow(kpack_client).to receive(:get_image)
+    allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+    allow(k8s_api_client).to receive(:create_image)
+    allow(k8s_api_client).to receive(:get_image)
   end
 
   describe 'POST /v3/builds' do
