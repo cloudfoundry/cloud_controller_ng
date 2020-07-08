@@ -131,8 +131,8 @@ module Kpack
               tag: "gcr.io/capi-images/#{package.app.guid}",
               serviceAccount: 'gcr-service-account',
               builder: {
-                name: 'cf-default-builder',
-                kind: 'CustomBuilder'
+                name: 'cf-autodetect-builder', # legacy Builder to verify that image update includes new CustomBuilder
+                kind: 'Builder'
               },
               source: {
                 blob: {
@@ -161,6 +161,8 @@ module Kpack
           updated_image.spec.build.env = [
             { name: 'FOO', value: 'BAR' }
           ]
+          updated_image.spec.builder.kind = 'CustomBuilder'
+          updated_image.spec.builder.name = 'cf-default-builder'
 
           expect(client).to_not receive(:create_image)
           expect(client).to receive(:update_image).with(updated_image)

@@ -1,5 +1,9 @@
 module Kpack
   class Stager
+    CF_DEFAULT_BUILDER = {
+      name: 'cf-default-builder',
+      kind: 'CustomBuilder'
+    }.freeze
     APP_GUID_LABEL_KEY = 'cloudfoundry.org/app_guid'.freeze
     BUILD_GUID_LABEL_KEY = 'cloudfoundry.org/build_guid'.freeze
     STAGING_SOURCE_LABEL_KEY = 'cloudfoundry.org/source_type'.freeze
@@ -47,6 +51,7 @@ module Kpack
       image.metadata.labels[BUILD_GUID_LABEL_KEY.to_sym] = staging_details.staging_guid
       image.spec.source.blob.url = blobstore_url_generator.package_download_url(staging_details.package)
       image.spec.build.env = get_environment_variables(staging_details)
+      image.spec.builder = CF_DEFAULT_BUILDER
 
       image
     end
@@ -67,10 +72,7 @@ module Kpack
         },
         spec: {
           serviceAccount: registry_service_account_name,
-          builder: {
-            name: 'cf-default-builder',
-            kind: 'CustomBuilder'
-          },
+          builder: CF_DEFAULT_BUILDER,
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
           source: {
             blob: {
