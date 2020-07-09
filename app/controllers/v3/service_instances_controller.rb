@@ -35,14 +35,11 @@ class ServiceInstancesV3Controller < ApplicationController
     message = ServiceInstanceShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    decorators = []
-    decorators << FieldServiceInstanceSpaceDecorator.new(message.fields) if FieldServiceInstanceSpaceDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
-    decorators << FieldServiceInstancePlanDecorator.new(message.fields) if FieldServiceInstancePlanDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
+    presenter = Presenters::V3::ServiceInstancePresenter.new(
+      service_instance,
+      decorators: decorators_for_fields(message.fields)
+    )
 
-    presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance, decorators: decorators)
     render status: :ok, json: presenter.to_json
   end
 
@@ -56,19 +53,12 @@ class ServiceInstancesV3Controller < ApplicationController
                 ServiceInstanceListFetcher.new.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
               end
 
-    decorators = []
-    decorators << FieldServiceInstanceSpaceDecorator.new(message.fields) if FieldServiceInstanceSpaceDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceOrganizationDecorator.new(message.fields) if FieldServiceInstanceOrganizationDecorator.match?(message.fields)
-    decorators << FieldServiceInstancePlanDecorator.new(message.fields) if FieldServiceInstancePlanDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceOfferingDecorator.new(message.fields) if FieldServiceInstanceOfferingDecorator.match?(message.fields)
-    decorators << FieldServiceInstanceBrokerDecorator.new(message.fields) if FieldServiceInstanceBrokerDecorator.match?(message.fields)
-
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
       message: message,
-      decorators: decorators
+      decorators: decorators_for_fields(message.fields)
     )
   end
 
@@ -196,6 +186,20 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   private
+
+  DECORATORS = [
+    FieldServiceInstanceSpaceDecorator,
+    FieldServiceInstanceOrganizationDecorator,
+    FieldServiceInstancePlanDecorator,
+    FieldServiceInstanceOfferingDecorator,
+    FieldServiceInstanceBrokerDecorator
+  ].freeze
+
+  def decorators_for_fields(fields)
+    DECORATORS.
+      select { |decorator| decorator.match?(fields) }.
+      map { |decorator| decorator.new(fields) }
+  end
 
   def create_user_provided(message)
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
