@@ -2372,7 +2372,7 @@ RSpec.describe 'V3 service instances' do
       before do
         stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
           with(query: {
-            # 'accepts_incomplete' => false,
+            'accepts_incomplete' => true,
             'service_id' => instance.service.broker_provided_id,
             'plan_id' => instance.service_plan.broker_provided_id
           }).
@@ -2412,8 +2412,9 @@ RSpec.describe 'V3 service instances' do
           expect(
             a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
               with(query: {
-                'service_id' => instance.service.broker_provided_id,
-                'plan_id' => instance.service_plan.broker_provided_id
+                accepts_incomplete: true,
+                service_id: instance.service.broker_provided_id,
+                plan_id: instance.service_plan.broker_provided_id
               })
           ).to have_been_made.once
         end
@@ -2455,6 +2456,217 @@ RSpec.describe 'V3 service instances' do
 
               job = VCAP::CloudController::PollableJobModel.last
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+        end
+
+        context 'when the service broker responds asynchronously' do
+          let(:broker_status_code) { 202 }
+          let(:broker_response) { { operation: 'some delete operation' } }
+          let(:last_operation_response) { { state: 'in progress', description: 'deleting si' } }
+          let(:last_operation_status_code) { 200 }
+          let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+          before do
+            stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+              with(
+                query: {
+                  operation: 'some delete operation',
+                  service_id: instance.service.broker_provided_id,
+                  plan_id: instance.service_plan.broker_provided_id
+                }).
+              to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+          end
+
+          it 'marks the job state as polling' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+          end
+
+          it 'calls last operation immediately' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            expect(
+              a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  })
+            ).to have_been_made.once
+          end
+
+          it 'enqueues the next fetch last operation job' do
+            api_call.call(admin_headers)
+
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            expect(Delayed::Job.count).to eq(1)
+          end
+
+          context 'when last operation eventually returns `delete succeeded`' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
+
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            it 'completes the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'removes the service instance last from the db' do
+              expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).to be_nil
+            end
+          end
+
+          context 'when last operation eventually returns `delete failed`' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
+
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              end
+            end
+
+            it 'completes the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+
+            it 'sets the service instance last operation to delete failed' do
+              expect(instance.last_operation.type).to eq('delete')
+              expect(instance.last_operation.state).to eq('failed')
+            end
+
+            # it 'fires an orphan mitigation job' do
+            #   jobs = Delayed::Job.where(failed_at: nil).all
+            #   expect(jobs).to have(1).jobs
+            #   expect(jobs.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance)
+            # end
+          end
+
+          context 'when last operation eventually returns 410 Gone' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 410, headers: {})
+
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            it 'completes the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'removes the service instance last from the db' do
+              expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).to be_nil
+            end
+          end
+
+          context 'when last operation eventually returns 400 Bad Request' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 400, headers: {})
+
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+            end
+
+            it 'fails the job' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+
+            it 'sets the service instance last operation to delete failed' do
+              expect(instance.last_operation.type).to eq('delete')
+              expect(instance.last_operation.state).to eq('failed')
+            end
+          end
+
+          context 'when last operation returns with an unknown status code' do
+            before do
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
+                to_return(status: 404, headers: {})
+
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            it 'continues to poll' do
+              updated_job = VCAP::CloudController::PollableJobModel.find(guid: job.guid)
+              expect(updated_job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
             end
           end
         end

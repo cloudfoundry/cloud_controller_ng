@@ -108,9 +108,9 @@ module VCAP
           }
 
           client_response = ->(broker_response) { broker_response }
-          api_error_code = 60030
+          api_error_code = 10009
 
-          it_behaves_like 'service instance last operation polling job', 'create', client_response, api_error_code
+          it_behaves_like 'service instance reocurring job', 'create', client_response, api_error_code
 
           context 'when operation is in progress' do
             let(:broker_provision_response) {
@@ -169,7 +169,7 @@ module VCAP
                 error = YAML.safe_load(pollable_job.cf_api_error)
                 expect(error['errors'].first['code']).to eq(10009)
                 expect(error['errors'].first['detail']).
-                  to eq('Create could not be completed: delete in progress')
+                  to eq('create could not be completed: delete in progress')
               end
             end
           end

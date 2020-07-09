@@ -1,4 +1,4 @@
-RSpec.shared_examples 'service instance last operation polling job' do |operation_type, client_response, api_error_code|
+RSpec.shared_examples 'service instance reocurring job' do |operation_type, client_response, api_error_code|
   describe 'when the broker client response is asynchronous' do
     let(:broker_response) {
       {
@@ -13,7 +13,16 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
     }
 
     let(:in_progress_last_operation) { { last_operation: { state: 'in progress' } } }
-    let(:operation_type_client_method) { operation_type == 'update' ? :update : :provision }
+    let(:operation_type_client_method) {
+      case operation_type
+      when 'update'
+        :update
+      when 'delete'
+        :deprovision
+      else
+        :provision
+      end
+    }
 
     before do
       allow(client).to receive(operation_type_client_method).and_return(client_response.call(broker_response))
@@ -78,14 +87,14 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
         end
 
         it 'updates the description' do
-          expect(service_instance.last_operation.description).to eq('doing stuff')
+          expect(service_instance.reload.last_operation.description).to eq('doing stuff')
         end
 
         context 'when there is no description' do
           let(:in_progress_last_operation_2) { { last_operation: { state: 'in progress' } } }
 
           it 'leaves the original description' do
-            expect(service_instance.last_operation.description).to eq('abc')
+            expect(service_instance.reload.last_operation.description).to eq('abc')
           end
         end
 
@@ -94,7 +103,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
           let(:in_progress_last_operation_2) { { last_operation: { state: 'in progress', description: long_description } } }
 
           it 'updates the description' do
-            expect(service_instance.last_operation.description).to eq(long_description)
+            expect(service_instance.reload.last_operation.description).to eq(long_description)
           end
         end
 
@@ -160,8 +169,10 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
 
       context 'timing out' do
         it 'marks the service instance update as failed' do
-          Timecop.freeze(Time.now + job.maximum_duration_seconds) do
+          Timecop.freeze(Time.now + job.maximum_duration_seconds + 1) do
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            service_instance.reload
 
             expect(service_instance.last_operation.type).to eq(operation_type)
             expect(service_instance.last_operation.state).to eq('failed')
@@ -173,8 +184,10 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
           let(:maximum_polling_duration) { 4242 }
 
           it 'uses it' do
-            Timecop.freeze(Time.now + 4242) do
+            Timecop.freeze(Time.now + 4243) do
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              service_instance.reload
 
               expect(service_instance.last_operation.type).to eq(operation_type)
               expect(service_instance.last_operation.state).to eq('failed')
@@ -195,10 +208,16 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
       end
 
       it 'updates the database' do
-        expect(service_instance.last_operation.type).to eq(operation_type)
-        expect(service_instance.last_operation.state).to eq('succeeded')
-        expect(service_instance.last_operation.description).to eq('789')
+        if operation_type == 'delete'
+          expect(VCAP::CloudController::ServiceInstance.first(guid: service_instance.guid)).to be_nil
+        else
+          expect(service_instance.last_operation.type).to eq(operation_type)
+          expect(service_instance.last_operation.state).to eq('succeeded')
+          expect(service_instance.last_operation.description).to eq('789')
+        end
+      end
 
+      it 'completes the job' do
         pollable_job = VCAP::CloudController::PollableJobModel.last
         expect(pollable_job.resource_guid).to eq(service_instance.guid)
         expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
@@ -221,6 +240,7 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
       end
 
       it 'updates the service_instance with last operation' do
+        service_instance.reload
         expect(service_instance.last_operation.type).to eq(operation_type)
         expect(service_instance.last_operation.state).to eq('failed')
         expect(service_instance.last_operation.description).to eq('oops')
@@ -241,6 +261,65 @@ RSpec.shared_examples 'service instance last operation polling job' do |operatio
         event = VCAP::CloudController::Event.find(type: "audit.service_instance.#{operation_type}")
         expect(event).to be_nil
       end
+    end
+  end
+end
+
+RSpec.shared_examples 'a one-off service instance job' do
+  let(:broker_client_response) {
+    { last_operation: { type: 'delete', state: 'succeeded' } }
+  }
+
+  context 'when the broker responds with success' do
+    before do
+      allow(client).to receive(operation).and_return(broker_client_response)
+      run_job(job, jobs_succeeded: 1)
+    end
+
+    it 'asks the client to execute the operation on the service instance' do
+      expect(client).to have_received(operation).with(
+        service_instance,
+        accepts_incomplete: true,
+      )
+    end
+
+    it 'completes the job' do
+      pollable_job = VCAP::CloudController::PollableJobModel.last
+      expect(pollable_job.resource_guid).to eq(service_instance.guid)
+      expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+    end
+
+    it 'creates an audit event' do
+      event = VCAP::CloudController::Event.find(type: "audit.service_instance.#{operation_type}")
+      expect(event).to be
+      expect(event.actee).to eq(service_instance.guid)
+    end
+
+    it 'updates the database accordingly' do
+      db_checks.call
+    end
+  end
+
+  context 'when the broker client raises' do
+    before do
+      allow(client).to receive(operation).and_raise('Oh no')
+    end
+
+    it 'updates the instance status to delete failed' do
+      run_job(job, jobs_succeeded: 0, jobs_failed: 1)
+
+      service_instance.reload
+
+      expect(service_instance.operation_in_progress?).to eq(false)
+      expect(service_instance.terminal_state?).to eq(true)
+      expect(service_instance.last_operation.type).to eq(operation_type)
+      expect(service_instance.last_operation.state).to eq('failed')
+    end
+
+    it 'fails the pollable job' do
+      pollable_job = run_job(job, jobs_succeeded: 0, jobs_failed: 1)
+      pollable_job.reload
+      expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
     end
   end
 end
