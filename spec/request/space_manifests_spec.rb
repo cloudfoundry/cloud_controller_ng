@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Space Manifests' do
   let(:user) { VCAP::CloudController::User.make }
@@ -9,12 +10,6 @@ RSpec.describe 'Space Manifests' do
   let(:second_route) {
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
   }
-
-  before do
-    space.organization.add_user(user)
-    space.add_developer(user)
-    TestConfig.override(kubernetes: {})
-  end
 
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
@@ -100,9 +95,13 @@ RSpec.describe 'Space Manifests' do
     end
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      TestConfig.override(kubernetes: {})
+
       stub_bind(service_instance)
       VCAP::CloudController::LabelsUpdate.update(app1_model, { 'potato' => 'french',
-        'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
+                                                               'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(app1_model, { 'potato' => 'baked',
         'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
     end
@@ -458,6 +457,161 @@ RSpec.describe 'Space Manifests' do
 
         other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+      end
+    end
+  end
+
+  describe 'POST /v3/spaces/:guid/manifest_diff' do
+    let(:org) { space.organization }
+    let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
+    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
+
+    let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403)
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['no_role'] = { code: 404 }
+
+      h['admin'] = {
+        code: 201,
+        response_object: diff_json
+      }
+
+      h['space_developer'] = {
+        code: 201,
+        response_object: diff_json
+      }
+
+      h.freeze
+    end
+
+    context 'when there are no changes in the manifest' do
+      let(:diff_json) do
+        {
+          diff: []
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'memory' => '1024M',
+                  'disk_quota' => '1024M',
+                  'health-check-type' =>  process1.health_check_type
+                }
+              ]
+            },
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when there are changes in the manifest' do
+      let(:diff_json) do
+        {
+          diff: [
+            { op: 'add', path: '/applications/0/comp', value: 'hoh' },
+            { op: 'replace', path: '/applications/0/stack', was: process1.stack.name, value: 'big brother' },
+            { op: 'remove', path: '/applications/0/processes/0/memory', was: '1024M' },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => 'big brother',
+              'comp' => 'hoh',
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'disk_quota' => '1024M',
+                  'health-check-type' =>  process1.health_check_type
+                }
+              ]
+            },
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+    context 'when there is a new app' do
+      let(:diff_json) do
+        {
+          diff: [
+            { op: 'add', path: '/applications/0/name', value: 'new-app' },
+            { op: 'add', path: '/applications/1/name', value: 'newer-app' },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'new-app',
+            },
+            {
+              'name' => 'newer-app',
+            }
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'the manifest is unparseable' do
+      let(:yml_manifest) do
+        {
+          89 => [
+            {
+              'name' => 'new-app',
+            },
+          ]
+        }.to_yaml
+      end
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'returns an appropriate error' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+      end
+    end
+    context 'the space does not exist' do
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'new-app',
+            },
+          ]
+        }.to_yaml
+      end
+
+      it 'returns an appropriate error' do
+        post '/v3/spaces/not-space-guid/manifest_diff', yml_manifest, yml_headers(user_header)
+
+        expect(last_response).to have_status_code(404)
       end
     end
   end

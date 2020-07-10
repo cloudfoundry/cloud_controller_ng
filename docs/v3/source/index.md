@@ -168,6 +168,7 @@ includes:
   - resources/manifests/object
   - resources/manifests/apply
   - resources/manifests/get
+  - resources/manifests/create_diff
   - resources/organizations/header
   - resources/organizations/object
   - resources/organizations/create
