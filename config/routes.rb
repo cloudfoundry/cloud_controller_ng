@@ -228,6 +228,7 @@ Rails.application.routes.draw do
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
+  post '/spaces/:guid/manifest_diff', to: 'space_manifests#diff_manifest'
 
   # space_quotas
   post '/space_quotas', to: 'space_quotas#create'
