@@ -17,7 +17,10 @@ Example Error
 
 An error response will always return a list of error objects. Errors appear on the [job resource](#jobs) for asynchronous operations.
 
-#### The error object
+### The error object
+
+Clients should use the `code` and `title` fields for programmatically handling specific errors.
+The message in the `detail` field is subject to change over time.
 
 Name | Type | Description
 ---- | ---- | -----------
@@ -25,3 +28,16 @@ Name | Type | Description
 **title** | _string_ | Name of the error
 **detail** | _string_ | Detailed description of the error
 
+### Common errors
+
+These are some of the more common errors returned by many endpoints.
+
+Title | Code | HTTP Status | Description
+----- | ---- | ----------- | -----------
+`CF-BadQueryParameter` | 10005 | 400 | An invalid query parameter was given
+`CF-InvalidAuthToken` | 1000 | 401 | An invalid auth token was given
+`CF-NotAuthenticated` | 10002 | 401 | No auth token was given, but authentication is required for this endpoint
+`CF-NotAuthorized` | 10003 | 403 | The authenticated user does not have permission to perform this operation
+`CF-ResourceNotFound` | 10010 | 404 | The specified resource does not exist, or the authenticated user cannot read it
+`CF-UnprocessableEntity` | 10008 | 422 | Catch-all error when an operation fails to complete; the `detail` field will contain more information
+`UnknownError` | 10001 | 500 | An unexpected, uncaught error occurred; the CC logs will contain more information

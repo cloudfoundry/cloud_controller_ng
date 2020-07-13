@@ -51,6 +51,14 @@ Name | Type | Description | Default
 **metadata.labels** | [_label object_](#labels) | Labels applied to the app
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the app
 
+#### Potential errors
+
+In addition to any [common errors](#common-errors), this endpoint may return the following errors.
+
+Title | Code | HTTP Status | Description
+----- | ---- | ----------- | -----------
+`CF-UniquenessError` | 10016 | 422 | The given app name is already taken in the targeted space
+
 #### Permitted roles
  |
 --- | ---
