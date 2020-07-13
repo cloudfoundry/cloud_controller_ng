@@ -57,6 +57,8 @@ module Kpack
     end
 
     def image_resource(staging_details)
+      # fetch or create custom builder
+
       Kubeclient::Resource.new({
         metadata: {
           name: staging_details.package.app.guid,
@@ -72,7 +74,7 @@ module Kpack
         },
         spec: {
           serviceAccount: registry_service_account_name,
-          builder: CF_DEFAULT_BUILDER,
+          builder: get_custom_builder(staging_details),
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
           source: {
             blob: {
@@ -90,6 +92,10 @@ module Kpack
       staging_details.environment_variables.
         except('VCAP_SERVICES').
         map { |key, value| { name: key, value: value.to_s } }
+    end
+
+    def get_custom_builder(staging_details)
+      return CF_DEFAULT_BUILDER
     end
 
     def logger

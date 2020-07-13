@@ -91,6 +91,26 @@ module Kpack
         expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
       end
 
+      context 'when specifying buildpacks for a build' do
+        before do
+          let(:staging_message) do
+            BuildCreateMessage.new(lifecycle: { data: { buildpacks: 'paketo/java' }, type: 'kpack' })
+          end
+          let(:lifecycle) do
+            VCAP::CloudController::KpackLifecycle.new(package, :staging_message)
+          end
+        end
+        it 'uses CustomBuilder besides the Default CustomBuilder' do
+        end
+
+        context 'when spcifycing buildpacks in a particular order' do
+          before do
+          end
+          it 'preserves the buildpack order' do
+          end
+        end
+      end
+
       context 'when staging fails' do
         before do
           allow(client).to receive(:create_image).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
