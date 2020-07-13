@@ -20,19 +20,19 @@ module VCAP::CloudController
       let(:message) do
         AppCreateMessage.new(
           {
-            name:                  'my-app',
-            relationships:         relationships,
+            name: 'my-app',
+            relationships: relationships,
             environment_variables: environment_variables,
-            lifecycle:             lifecycle_request,
+            lifecycle: lifecycle_request,
             metadata: {
-                labels: {
-                    release: 'stable',
-                    'seriouseats.com/potato': 'mashed'
-                },
-                annotations: {
-                  superhero: 'Bummer-boy',
-                  superpower: 'Bums you out',
-                }
+              labels: {
+                release: 'stable',
+                'seriouseats.com/potato': 'mashed'
+              },
+              annotations: {
+                superhero: 'Bummer-boy',
+                superpower: 'Bums you out',
+              }
             }
           })
       end
@@ -141,7 +141,7 @@ module VCAP::CloudController
           it 'raises an error' do
             expect {
               app_create.create(message, lifecycle)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            }.to raise_api_error(:CustomBuildpacksDisabled)
           end
 
           it 'does not create an app' do
@@ -167,6 +167,16 @@ module VCAP::CloudController
         expect {
           app_create.create(message, lifecycle)
         }.to raise_error(AppCreate::InvalidApp)
+      end
+
+      context 'when the app name is a duplicate within the space' do
+        let!(:existing_app) { AppModel.make(space: space, name: 'my-app') }
+
+        it 'fails the right way' do
+          expect {
+            app_create.create(message, lifecycle)
+          }.to raise_v3_api_error(:UniquenessError)
+        end
       end
     end
   end

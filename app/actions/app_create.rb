@@ -1,9 +1,12 @@
 require 'process_create'
 require 'models/helpers/process_types'
 require 'actions/labels_update'
+require 'cloud_controller/errors/api_error_helpers'
 
 module VCAP::CloudController
   class AppCreate
+    include CloudController::Errors::ApiErrorHelpers
+
     class InvalidApp < StandardError; end
 
     def initialize(user_audit_info)
@@ -25,7 +28,7 @@ module VCAP::CloudController
 
         MetadataUpdate.update(app, message)
 
-        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
+        api_error!(:CustomBuildpacksDisabled) if using_disabled_custom_buildpack?(app)
 
         ProcessCreate.new(@user_audit_info).create(app, {
           guid: app.guid,
@@ -42,6 +45,10 @@ module VCAP::CloudController
 
       app
     rescue Sequel::ValidationFailed => e
+      if e.errors.on([:space_guid, :name])
+        v3_api_error!(:UniquenessError, e.message)
+      end
+
       raise InvalidApp.new(e.message)
     end
 
