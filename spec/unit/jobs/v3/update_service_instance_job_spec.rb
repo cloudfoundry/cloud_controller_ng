@@ -108,13 +108,13 @@ module VCAP
           expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
           expect(pollable_job.cf_api_error).not_to be_nil
           error = YAML.safe_load(pollable_job.cf_api_error)
-          expect(error['errors'].first['code']).to eq(60004)
+          expect(error['errors'].first['code']).to eq(10010)
           expect(error['errors'].first['detail']).
             to include('The service instance could not be found')
         end
 
         it 'raises if `last_operation` is not `update`' do
-          service_instance.save_with_new_operation({}, { type: 'create' })
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
           run_job(job, jobs_succeeded: 0, jobs_failed: 1)
 
           expect(service_instance.reload.last_operation.type).to eq('create')

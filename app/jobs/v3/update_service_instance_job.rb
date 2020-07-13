@@ -36,13 +36,6 @@ module VCAP::CloudController
 
       attr_reader :message
 
-      def check_pre_conditions
-        gone! && return if service_instance.blank?
-
-        operation_in_progress = service_instance.last_operation&.type
-        aborted!(operation_in_progress) if operation_in_progress != operation_type
-      end
-
       def operation_succeeded
         updates = message.updates.tap do |u|
           u[:service_plan_guid] = service_plan.guid

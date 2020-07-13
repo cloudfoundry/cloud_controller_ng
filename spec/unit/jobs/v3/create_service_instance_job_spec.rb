@@ -147,7 +147,7 @@ module VCAP
                 expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
                 expect(pollable_job.cf_api_error).not_to be_nil
                 error = YAML.safe_load(pollable_job.cf_api_error)
-                expect(error['errors'].first['code']).to eq(60004)
+                expect(error['errors'].first['code']).to eq(10010)
                 expect(error['errors'].first['detail']).
                   to include('The service instance could not be found')
               end
@@ -156,12 +156,11 @@ module VCAP
             context 'when the service instance deletion is started while create is in progress' do
               before do
                 service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+                Timecop.travel(job.polling_interval_seconds + 1.second)
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
               end
 
               it 'fails the job' do
-                Timecop.travel(job.polling_interval_seconds + 1.second)
-                execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
                 pollable_job = PollableJobModel.last
                 expect(pollable_job.resource_guid).to eq(service_instance.guid)
                 expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
@@ -170,6 +169,12 @@ module VCAP
                 expect(error['errors'].first['code']).to eq(10009)
                 expect(error['errors'].first['detail']).
                   to eq('create could not be completed: delete in progress')
+              end
+
+              it 'does not update the last operation' do
+                service_instance.reload
+                expect(service_instance.last_operation.type).to eq('delete')
+                expect(service_instance.last_operation.state).to eq('in progress')
               end
             end
           end

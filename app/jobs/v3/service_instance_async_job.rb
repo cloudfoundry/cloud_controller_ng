@@ -15,9 +15,14 @@ module VCAP::CloudController
       end
 
       def perform
-        client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+        gone! && return if service_instance.blank?
+        last_operation_type = service_instance.last_operation&.type
 
-        check_pre_conditions
+        if service_instance.operation_in_progress? && last_operation_type != operation_type
+          aborted!(last_operation_type)
+        end
+
+        client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
 
         begin
           if @first_time
@@ -27,15 +32,11 @@ module VCAP::CloudController
             @first_time = false
           end
 
-          gone! && return if service_instance.blank?
-          operation_in_progress = service_instance.last_operation&.type
-          aborted!(operation_in_progress) if operation_in_progress != operation_type
-
           if service_instance.operation_in_progress?
             fetch_last_operation(client)
           end
 
-          if service_instance.last_operation.state == 'succeeded'
+          if operation_completed?
             si = service_instance
             operation_succeeded
             record_event(si, @request_attr)
@@ -94,6 +95,10 @@ module VCAP::CloudController
         )
       end
 
+      def operation_completed?
+        service_instance.last_operation.state == 'succeeded' && service_instance.last_operation.type == operation_type
+      end
+
       def fetch_last_operation(client)
         last_operation_result = client.fetch_service_instance_last_operation(service_instance)
         self.polling_interval_seconds = last_operation_result[:retry_after] if last_operation_result[:retry_after]
@@ -128,16 +133,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, msg)
       end
 
+      def gone!
+        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The service instance could not be found: #{service_instance_guid}")
+      end
+
       def operation_succeeded
         nil
-      end
-
-      def check_pre_conditions
-        nil
-      end
-
-      def gone!
-        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance_guid)
       end
 
       def fail!(e)

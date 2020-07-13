@@ -1,4 +1,24 @@
 RSpec.shared_examples 'service instance reocurring job' do |operation_type, client_response, api_error_code|
+  context 'when there is another operation in progress' do
+    before do
+      service_instance.save_with_new_operation({}, { type: 'some-other-operation', state: 'in progress', description: 'barz' })
+      run_job(job, jobs_succeeded: 0, jobs_failed: 1, jobs_to_execute: 1)
+    end
+
+    it 'aborts the operation' do
+      pollable_job = VCAP::CloudController::PollableJobModel.last
+      expect(pollable_job.resource_guid).to eq(service_instance.guid)
+      expect(pollable_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+    end
+
+    it 'do not update the last_operation' do
+      service_instance.reload
+      expect(service_instance.last_operation.type).to eq('some-other-operation')
+      expect(service_instance.last_operation.state).to eq('in progress')
+      expect(service_instance.last_operation.description).to eq('barz')
+    end
+  end
+
   describe 'when the broker client response is asynchronous' do
     let(:broker_response) {
       {
@@ -11,7 +31,6 @@ RSpec.shared_examples 'service instance reocurring job' do |operation_type, clie
         }
       }
     }
-
     let(:in_progress_last_operation) { { last_operation: { state: 'in progress' } } }
     let(:operation_type_client_method) {
       case operation_type
@@ -27,6 +46,7 @@ RSpec.shared_examples 'service instance reocurring job' do |operation_type, clie
     before do
       allow(client).to receive(operation_type_client_method).and_return(client_response.call(broker_response))
       allow(client).to receive(:fetch_service_instance_last_operation).and_return(in_progress_last_operation)
+
       run_job(job, jobs_succeeded: 1, jobs_to_execute: 1)
     end
 
@@ -199,7 +219,7 @@ RSpec.shared_examples 'service instance reocurring job' do |operation_type, clie
     end
 
     context 'when action has succeeded' do
-      let(:succeeded_last_operation) { { last_operation: { state: 'succeeded', description: '789' } } }
+      let(:succeeded_last_operation) { { last_operation: { type: operation_type, state: 'succeeded', description: '789' } } }
 
       before do
         Timecop.travel(job.polling_interval_seconds + 1.second)
