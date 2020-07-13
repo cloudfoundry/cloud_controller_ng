@@ -1,0 +1,8 @@
+## Query Parameters
+
+Clients can assume that query parameters on the API will always follow these rules:
+
+- Parameter names (before the `=`, and ignoring any modifiers like `[gt]`) will only contain characters `a-z` (lowercase) and `-`.
+- When a parameter accepts multiple values, these will be represented as a comma-delimited list of strings (see [filters](#filters)).
+
+Because commas are used to separate list entries, **parameter values that contain commas must be percent-encoded**. For example, to retrieve apps named either `a,b` or `c,d`, the request would look like `GET /v3/apps?names=a%2Cb,c%2Cd`. Note that the commas within the app names are encoded (as `%2C`), but the comma separating the two app names is not. If a client is encoding the whole query string before sending it to the API, the commas within the app names will end up double-encoded.

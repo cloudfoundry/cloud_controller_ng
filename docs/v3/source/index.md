@@ -53,6 +53,7 @@ includes:
   - concepts/metadata
   - concepts/pagination
   - concepts/procfiles
+  - concepts/query_parameters
   - concepts/relationships
   - concepts/status_codes
   - concepts/timestamps
