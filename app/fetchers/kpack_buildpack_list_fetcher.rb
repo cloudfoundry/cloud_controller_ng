@@ -11,7 +11,7 @@ module VCAP::CloudController
       version_map = default_builder.status.builderMetadata.each.with_object({}) do |metadata, h|
         h[metadata.id] = metadata.version
       end
-      stack = default_builder.spec.stack
+      stack = default_builder.status.stack.id
       created_at = Time.parse(default_builder.metadata.creationTimestamp)
 
       latest_condition = default_builder.status.conditions[0]
