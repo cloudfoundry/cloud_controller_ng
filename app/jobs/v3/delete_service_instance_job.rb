@@ -27,14 +27,8 @@ module VCAP::CloudController
         'delete'
       end
 
-      private
-
       def gone!
         finish
-      end
-
-      def compatibility_checks
-        nil
       end
     end
   end
