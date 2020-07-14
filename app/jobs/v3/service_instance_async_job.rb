@@ -41,14 +41,12 @@ module VCAP::CloudController
             operation_succeeded
             record_event(si, @request_attr)
             finish
-
-            return
           end
         rescue => err
           fail!(err)
         end
 
-        if service_instance.last_operation.state == 'failed'
+        if service_instance.present? && service_instance.last_operation.state == 'failed'
           operation_failed!(service_instance.last_operation.description)
         end
       end

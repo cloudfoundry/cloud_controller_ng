@@ -32,10 +32,6 @@ module VCAP::CloudController
         @update_response
       end
 
-      private
-
-      attr_reader :message
-
       def operation_succeeded
         updates = message.updates.tap do |u|
           u[:service_plan_guid] = service_plan.guid
@@ -46,9 +42,12 @@ module VCAP::CloudController
         ServiceInstance.db.transaction do
           service_instance.update_service_instance(updates)
           MetadataUpdate.update(service_instance, message)
-          record_event(service_instance, message.audit_hash)
         end
       end
+
+      private
+
+      attr_reader :message
 
       def service_plan_gone!
         raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotFound', service_instance_guid)

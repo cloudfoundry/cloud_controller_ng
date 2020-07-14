@@ -7,61 +7,58 @@ module VCAP::CloudController
     RSpec.describe DeleteServiceInstanceJob do
       it_behaves_like 'delayed job', described_class
 
-      let(:broker_client_response) { {} }
-      let(:operation) { :deprovision }
-      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
       let(:service_offering) { Service.make }
-      let(:maximum_polling_duration) { nil }
-      let(:service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
+      let(:service_plan) { ServicePlan.make(service: service_offering) }
       let(:service_instance) {
-        si = ManagedServiceInstance.make(service_plan: service_plan)
-        si.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
-        si.reload
+        ManagedServiceInstance.make(service_plan: service_plan)
       }
 
       let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
-      let(:job) { described_class.new(service_instance.guid, user_audit_info) }
+      let(:subject) { described_class.new(service_instance.guid, user_audit_info) }
 
-      def run_job(job, jobs_succeeded: 2, jobs_failed: 0, jobs_to_execute: 100)
-        pollable_job = Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue_pollable
-        execute_all_jobs(expected_successes: jobs_succeeded, expected_failures: jobs_failed, jobs_to_execute: jobs_to_execute)
-        pollable_job
+      describe '#operation' do
+        it 'returns "deprovision"' do
+          expect(subject.operation).to eq(:deprovision)
+        end
       end
 
-      before do
-        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+      describe '#operation_type' do
+        it 'returns "delete"' do
+          expect(subject.operation_type).to eq('delete')
+        end
       end
 
-      after do
-        Timecop.return
-      end
+      describe '#send_broker_request' do
+        let(:client) { double('BrokerClient', deprovision: 'some response') }
 
-      context 'deprovisioning' do
-        let(:operation) { :deprovision }
-        let(:operation_type) { 'delete' }
-        let(:db_checks) do
-          -> {
-            expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
-          }
+        it 'sends a deprovision request' do
+          subject.send_broker_request(client)
+
+          expect(client).to have_received(:deprovision).with(
+            service_instance,
+            accepts_incomplete: true,
+          )
         end
 
-        context 'when the broker responds synchronously' do
-          it_behaves_like 'a one-off service instance job'
+        it 'returns the client response' do
+          response = subject.send_broker_request(client)
+          expect(response).to eq('some response')
         end
+      end
 
-        context 'asynchronous' do
-          let(:broker_request_expect) { -> {
-            expect(client).to have_received(operation).with(
-              service_instance,
-              accepts_incomplete: true
-            )
-          }
-          }
+      describe '#gone!' do
+        it 'finishes the job' do
+          job = DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
+          expect { job.gone! }.not_to raise_error
+          expect(job.finished).to eq(true)
+        end
+      end
 
-          client_response = ->(broker_response) { broker_response }
-          api_error_code = 10009
-
-          it_behaves_like 'service instance reocurring job', 'delete', client_response, api_error_code
+      describe '#operation_succeeded' do
+        it 'deletes the service instance from the db' do
+          expect(ManagedServiceInstance.first(guid: service_instance.guid)).not_to be_nil
+          subject.operation_succeeded
+          expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
         end
       end
     end
