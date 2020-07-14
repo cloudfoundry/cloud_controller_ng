@@ -529,6 +529,7 @@ RSpec.describe 'Space Manifests' do
 
       let(:yml_manifest) do
         {
+          'version' => 1,
           'applications' => [
             {
               'name' => app1_model.name,
@@ -572,7 +573,6 @@ RSpec.describe 'Space Manifests' do
       end
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
-
     context 'the manifest is unparseable' do
       let(:yml_manifest) do
         {
@@ -595,6 +595,31 @@ RSpec.describe 'Space Manifests' do
 
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+      end
+    end
+    context 'the manifest is a not supported version' do
+      let(:yml_manifest) do
+        {
+          'version' => 1234567,
+          'applications' => [
+            {
+              'name' => 'new-app',
+            },
+          ]
+        }.to_yaml
+      end
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'returns an appropriate error' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
       end
     end
     context 'the space does not exist' do

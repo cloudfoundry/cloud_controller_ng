@@ -41,7 +41,7 @@ Content-Type: application/json
 }
 ```
 
-Create a manifest diff for apps in the provided manifest and their underlying processes.
+Create a manifest diff for apps in the provided manifest and their underlying processes. Currently manifest_diff only supports version 1 manifests.
 
 #### Definition
 `GET /v3/spaces/:guid/manifest_diff`
