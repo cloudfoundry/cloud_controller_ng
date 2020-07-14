@@ -40,7 +40,6 @@ module VCAP::CloudController
       def asynchronous_destroy(service_instance)
         delete_job = V3::DeleteServiceInstanceJob.new(
           service_instance.guid,
-          :deprovision,
           service_event_repository.user_audit_info)
 
         pollable_job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable

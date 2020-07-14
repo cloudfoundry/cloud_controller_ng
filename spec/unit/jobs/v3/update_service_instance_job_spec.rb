@@ -108,13 +108,13 @@ module VCAP
           expect(pollable_job.state).to eq(PollableJobModel::FAILED_STATE)
           expect(pollable_job.cf_api_error).not_to be_nil
           error = YAML.safe_load(pollable_job.cf_api_error)
-          expect(error['errors'].first['code']).to eq(60004)
+          expect(error['errors'].first['code']).to eq(10010)
           expect(error['errors'].first['detail']).
             to include('The service instance could not be found')
         end
 
         it 'raises if `last_operation` is not `update`' do
-          service_instance.save_with_new_operation({}, { type: 'create' })
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
           run_job(job, jobs_succeeded: 0, jobs_failed: 1)
 
           expect(service_instance.reload.last_operation.type).to eq('create')
@@ -126,7 +126,7 @@ module VCAP
           error = YAML.safe_load(pollable_job.cf_api_error)
           expect(error['errors'].first['code']).to eq(10009)
           expect(error['errors'].first['detail']).
-            to include('Update could not be completed: delete in progress')
+            to include('update could not be completed: create in progress')
         end
 
         context 'when the broker client response is synchronous' do
@@ -227,7 +227,7 @@ module VCAP
           client_response = ->(broker_response) { [broker_response, nil] }
           api_error_code = 10009
 
-          it_behaves_like 'service instance last operation polling job', 'update', client_response, api_error_code
+          it_behaves_like 'service instance reocurring job', 'update', client_response, api_error_code
 
           context 'when operation is in progress' do
             let(:broker_response) {
