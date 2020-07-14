@@ -57,7 +57,9 @@ module Kpack
     end
 
     def image_resource(staging_details)
-      # fetch or create custom builder
+      # create custom builder
+      # staging details should have list of buildpacks (probably need a KpackLifecycle for this -- similar to buildpack list fetcher)
+      # grab custom builder but update name, tag and order with list of supplied buildpacks
 
       Kubeclient::Resource.new({
         metadata: {
@@ -95,7 +97,17 @@ module Kpack
     end
 
     def get_custom_builder(staging_details)
-      return CF_DEFAULT_BUILDER
+      return create_custom_builder(staging_details) unless staging_details.lifecycle.staging_message.empty?
+
+      CF_DEFAULT_BUILDER
+    end
+
+    def create_custom_builder(staging_details)
+      custom_builder = client.get_custom_builder(CF_DEFAULT_BUILDER[:name], builder_namespace)
+      # custom_builder[:name] = "foo"
+      # custom_builder[:tag] = "tag"
+      # custom_builder[:order] = "list_of_buildpacks"
+      custom_builder
     end
 
     def logger
