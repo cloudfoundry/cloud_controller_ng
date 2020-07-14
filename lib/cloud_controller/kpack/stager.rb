@@ -103,11 +103,38 @@ module Kpack
     end
 
     def create_custom_builder(staging_details)
-      custom_builder = client.get_custom_builder(CF_DEFAULT_BUILDER[:name], builder_namespace)
-      # custom_builder[:name] = "foo"
-      # custom_builder[:tag] = "tag"
-      # custom_builder[:order] = "list_of_buildpacks"
-      custom_builder
+      default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER[:name], builder_namespace)
+
+      custom_builder_name = "#{staging_details.package.app.guid}-custom-builder"
+      Kubeclient::Resource.new({
+        metadata: {
+          name: custom_builder_name,
+          namespace: builder_namespace,
+          labels: {
+            APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
+            BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid,
+            # Should the logs for the custom builder be put into the app log stream?  do they even emit logs?
+            # STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
+          },
+          # annotations: {
+          #   'sidecar.istio.io/inject' => 'false'
+          # },
+        },
+        spec: {
+          serviceAccount: default_builder.spec.serviceAccount,
+          stack: default_builder.spec.stack,
+          store: default_builder.spec.store,
+          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-custom-builder",
+          order: [
+            group: staging_details.SOMETHING.map { |buildpack| { id: buildpack.name } }
+          ]
+        }
+      })
+
+      {
+        name: custom_builder_name,
+        kind: 'CustomBuilder'
+      }
     end
 
     def logger

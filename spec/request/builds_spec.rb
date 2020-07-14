@@ -152,6 +152,7 @@ RSpec.describe 'Builds' do
         expect(parsed_response['lifecycle']['type']).to eq 'kpack'
         expect(parsed_response['state']).to eq 'STAGING'
       end
+
       context 'with a buildpack specified' do
         let(:request) do
           {
@@ -166,10 +167,11 @@ RSpec.describe 'Builds' do
               }
           }
         end
+
         it 'uses the buildpack' do
           post 'v3/builds', request.to_json, developer_headers
 
-          expect(last_response.status).to eq(201) # gettin 422 unprocessessable
+          expect(last_response.status).to eq(201)
           expect(parsed_response['lifecycle']['type']).to eq 'kpack'
           expect(parsed_response['lifecycle']['data']['buildpacks']).to eq ['paketo-buildpacks/java']
         end

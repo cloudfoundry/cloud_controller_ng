@@ -133,9 +133,6 @@ module Kpack
           VCAP::CloudController::KpackLifecycle.new(package, :staging_message)
         end
 
-        before do
-        end
-
         it 'creates a custom builder' do
           expect(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace')
           expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
