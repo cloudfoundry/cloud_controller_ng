@@ -113,7 +113,7 @@ module VCAP::CloudController
           expect {
             action.update(service_instance, message)
           }.to raise_error(
-            ServiceInstanceUpdateUserProvided::InvalidUserProvidedServiceInstance,
+            ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
             'The service instance name is taken: already_taken',
           )
         end
@@ -127,7 +127,7 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           expect { action.update(service_instance, message) }.
-            to raise_error(ServiceInstanceUpdateUserProvided::InvalidUserProvidedServiceInstance, 'blork is busted')
+            to raise_error(ServiceInstanceUpdateUserProvided::UnprocessableUpdate, 'blork is busted')
         end
       end
     end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   class ServiceInstanceUpdateUserProvided
     include ServiceInstanceCreateMixin
 
-    class InvalidUserProvidedServiceInstance < ::StandardError
+    class UnprocessableUpdate < ::StandardError
     end
 
     def initialize(service_event_repository)
@@ -37,7 +37,7 @@ module VCAP::CloudController
     attr_reader :service_event_repository
 
     def error!(message)
-      raise InvalidUserProvidedServiceInstance.new(message)
+      raise UnprocessableUpdate.new(message)
     end
   end
 end

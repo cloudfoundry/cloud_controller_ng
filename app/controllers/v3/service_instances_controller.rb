@@ -229,16 +229,18 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def update_user_provided(service_instance)
     message = ServiceInstanceUpdateUserProvidedMessage.new(hashed_params[:body])
-    bad_request!(message.errors.full_messages) unless message.valid?
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
     render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+  rescue ServiceInstanceUpdateUserProvided::UnprocessableUpdate => api_err
+    unprocessable!(api_err.message)
   end
 
   def update_managed(service_instance)
     message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
-    bad_request!(message.errors.full_messages) unless message.valid?
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
     if message.service_plan_guid
       service_plan = ServicePlan.first(guid: message.service_plan_guid)
@@ -315,7 +317,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def build_create_message(params)
     generic_message = ServiceInstanceCreateMessage.new(params)
-    invalid_param!(generic_message.errors.full_messages) unless generic_message.valid?
+    unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
 
     specific_message = if generic_message.type == 'managed'
                          ServiceInstanceCreateManagedMessage.new(params)
@@ -323,7 +325,7 @@ class ServiceInstancesV3Controller < ApplicationController
                          ServiceInstanceCreateUserProvidedMessage.new(params)
                        end
 
-    invalid_param!(specific_message.errors.full_messages) unless specific_message.valid?
+    unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
     specific_message
   end
 
