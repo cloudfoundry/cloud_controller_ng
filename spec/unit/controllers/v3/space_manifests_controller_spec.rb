@@ -115,18 +115,18 @@ RSpec.describe SpaceManifestsController, type: :controller do
       context 'when the yaml is missing an applications array' do
         let(:request_body) { { 'name' => 'blah', 'instances' => 4 } }
 
-        it 'returns a 400' do
+        it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
-          expect(response.status).to eq(400)
+          expect(response.status).to eq(422)
         end
       end
 
       context 'when the requested applications array is empty' do
         let(:request_body) { { 'applications' => [] } }
 
-        it 'returns a 400' do
+        it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
-          expect(response.status).to eq(400)
+          expect(response.status).to eq(422)
         end
       end
 

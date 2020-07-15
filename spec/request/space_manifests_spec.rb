@@ -573,53 +573,67 @@ RSpec.describe 'Space Manifests' do
       end
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
-    context 'the manifest is unparseable' do
-      let(:yml_manifest) do
-        {
-          89 => [
-            {
-              'name' => 'new-app',
-            },
-          ]
-        }.to_yaml
-      end
-
+    context 'when the request is invalid' do
       before do
         space.organization.add_user(user)
         space.add_developer(user)
       end
 
-      it 'returns an appropriate error' do
-        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+      context 'when there is a manifest without \'applications\'' do
+        let(:yml_manifest) do
+          {
+            'not-applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
 
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
-      end
-    end
-    context 'the manifest is a not supported version' do
-      let(:yml_manifest) do
-        {
-          'version' => 1234567,
-          'applications' => [
-            {
-              'name' => 'new-app',
-            },
-          ]
-        }.to_yaml
-      end
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
 
-      before do
-        space.organization.add_user(user)
-        space.add_developer(user)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq("Cannot parse manifest with no 'applications' field.")
+        end
       end
 
-      it 'returns an appropriate error' do
-        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+      context 'the manifest is unparseable' do
+        let(:yml_manifest) do
+          {
+            'key' => 'this is json, not yaml'
+          }
+        end
 
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: invalid request body')
+        end
+      end
+
+      context 'the manifest is a not supported version' do
+        let(:yml_manifest) do
+          {
+            'version' => 1234567,
+            'applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
+        end
       end
     end
     context 'the space does not exist' do

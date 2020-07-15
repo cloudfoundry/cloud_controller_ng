@@ -120,7 +120,7 @@ class SpaceManifestsController < ApplicationController
   def parsed_app_manifests
     check_version_is_supported!
     parsed_applications = params[:body]['applications']
-    raise invalid_request!('Invalid app manifest') unless parsed_applications.present?
+    raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
 
     parsed_applications.map(&:to_unsafe_h)
   end
