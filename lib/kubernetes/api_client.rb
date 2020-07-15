@@ -57,7 +57,8 @@ module Kubernetes
     def update_route(resource_config)
       @route_kube_client.update_route(resource_config)
     rescue Kubeclient::HttpError => e
-      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', resource_name(resource_config))
+      logger.error('update_route', error: e.inspect, response: e.response)
+      error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', resource_name(resource_config), e.message, e.response)
       error.set_backtrace(e.backtrace)
       raise error
     end
@@ -81,6 +82,10 @@ module Kubernetes
     end
 
     private
+
+    def logger
+      Steno.logger('kubernetes.api_client')
+    end
 
     def resource_name(resource_config)
       resource_metadata = resource_config.to_hash.symbolize_keys[:metadata] || {}

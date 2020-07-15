@@ -37,24 +37,25 @@ module Kubernetes
 
       @client.create_route(Kubeclient::Resource.new(route_resource_hash))
     rescue => e
-      Steno.logger('cc.action.route_create').info("Failed to Create Route CRD: #{e}")
+      Steno.logger('cc.action.route_create').error("Failed to Create Route CRD: #{e}")
       raise
     end
 
     def update_destinations(route)
       route_resource = @client.get_route(route.guid, 'cf-workloads')
       route_resource.spec.destinations = get_destinations(route)
+      route_resource.metadata.resourceVersion = 'bogus'
 
       @client.update_route(route_resource)
     rescue => e
-      Steno.logger('cc.action.route_update').info("Failed to Update Route CRD: #{e}")
+      Steno.logger('cc.action.route_update').error("Failed to Update Route CRD: #{e}")
       raise
     end
 
     def delete_route(route)
       @client.delete_route(route.guid, VCAP::CloudController::Config.config.kubernetes_workloads_namespace)
     rescue => e
-      Steno.logger('cc.action.route_create').info("Failed to Delete Route CRD: #{e}")
+      Steno.logger('cc.action.route_delete').error("Failed to Delete Route CRD: #{e}")
       raise
     end
 

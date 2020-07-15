@@ -230,11 +230,14 @@ RSpec.describe Kubernetes::ApiClient do
 
         context 'when the config is a Kubeclient::Resource' do
           let(:resource_config) { Kubeclient::Resource.new(config_hash) }
+          let(:logger) { instance_double(Steno::Logger, error: nil) }
 
           it 'raises as an ApiError that includes the resource name' do
+            allow(Steno).to receive(:logger).and_return(logger)
             expect {
               subject.update_route(resource_config)
             }.to raise_error(CloudController::Errors::ApiError, /resource-name/)
+            expect(logger).to have_received(:error).with('update_route', error: /status code/, response: 'bar')
           end
         end
 
