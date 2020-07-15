@@ -199,12 +199,18 @@ RSpec.describe Kubernetes::ApiClient do
       end
 
       context 'when there is an error' do
-        it 'raises as an ApiError' do
-          allow(route_kube_client).to receive(:get_route).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+        let(:error) { Kubeclient::HttpError.new(422, 'foo', 'bar') }
+        let(:logger) { instance_double(Steno::Logger, error: nil) }
+        before do
+          allow(route_kube_client).to receive(:get_route).and_raise(error)
+          allow(Steno).to receive(:logger).and_return(logger)
+        end
 
+        it 'raises as an ApiError' do
           expect {
             subject.get_route('resource-name', 'namespace')
           }.to raise_error(CloudController::Errors::ApiError, /resource-name/)
+          expect(logger).to have_received(:error).with('get_route', error: /status code/, response: error.response, backtrace: error.backtrace)
         end
       end
     end
@@ -224,8 +230,11 @@ RSpec.describe Kubernetes::ApiClient do
       end
 
       context 'when there is an error' do
+        let(:error) { Kubeclient::HttpError.new(422, 'foo', 'bar') }
+        let(:logger) { instance_double(Steno::Logger, error: nil) }
         before do
-          allow(route_kube_client).to receive(:update_route).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(route_kube_client).to receive(:update_route).and_raise(error)
+          allow(Steno).to receive(:logger).and_return(logger)
         end
 
         context 'when the config is a Kubeclient::Resource' do
@@ -235,6 +244,7 @@ RSpec.describe Kubernetes::ApiClient do
             expect {
               subject.update_route(resource_config)
             }.to raise_error(CloudController::Errors::ApiError, /resource-name/)
+            expect(logger).to have_received(:error).with('update_route', error: /status code/, response: error.response, backtrace: error.backtrace)
           end
         end
 
