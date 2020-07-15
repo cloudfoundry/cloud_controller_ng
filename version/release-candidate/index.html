@@ -28550,10 +28550,25 @@ This endpoint is not available for User-Provided Service Instances.</p>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
-<pre class="highlight plaintext"><code>Example Response
+<pre class="highlight plaintext"><code>Example Response for User-provided Service Instances
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
+<pre class="highlight plaintext"><code>Example Response for Managed Service Instance
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
+</code></pre>
+
+<p>This endpoint deletes a service instance. When deleting a user-provided service instance, this endpoint will</p>
+
+<p>This endpoint deletes a service instance. User provided service instances do not require interactions with
+service brokers, therefore the API will respond synchronously to the delete request. For managed service instances, 
+the API will respond asynchronously. </p>
+
+<p>If failures occur while deleting managed service instances, the API might execute orphan mitigation steps
+accordingly to cases outlined in the <a href="https://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#orphan-mitigation">OSBAPI specification</a></p>
 
 <h4 id="definition">Definition</h4>
 
