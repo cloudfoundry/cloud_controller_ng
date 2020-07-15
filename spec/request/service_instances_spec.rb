@@ -708,7 +708,11 @@ RSpec.describe 'V3 service instances' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(403)
         expect(parsed_response['errors']).to include(
-          include({ 'detail' => 'Feature Disabled: service_instance_creation' })
+          include({
+            'detail' => 'Feature Disabled: service_instance_creation',
+            'title' => 'CF-FeatureDisabled',
+            'code' => 330002,
+          })
         )
       end
 
@@ -728,7 +732,11 @@ RSpec.describe 'V3 service instances' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(403)
         expect(parsed_response['errors']).to include(
-          include({ 'detail' => 'You are not authorized to perform the requested action' })
+          include({
+            'detail' => 'You are not authorized to perform the requested action',
+            'title' => 'CF-NotAuthorized',
+            'code' => 10003,
+          })
         )
       end
 
@@ -741,11 +749,15 @@ RSpec.describe 'V3 service instances' do
     context 'when the request body is invalid' do
       let(:request_body) { { type: 'foo' } }
 
-      it 'returns a bad request' do
+      it 'says the message is unprocessable' do
         api_call.call(admin_headers)
-        expect(last_response).to have_status_code(400)
+        expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(
-          include({ 'detail' => include("Type must be one of 'managed', 'user-provided'") })
+          include({
+            'detail' => "Relationships 'relationships' is not an object, Type must be one of 'managed', 'user-provided', Name must be a string, Name can't be blank",
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          })
         )
       end
     end
@@ -757,7 +769,11 @@ RSpec.describe 'V3 service instances' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(
-          include({ 'detail' => 'Invalid space. Ensure that the space exists and you have access to it.' })
+          include({
+            'detail' => 'Invalid space. Ensure that the space exists and you have access to it.',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          })
         )
       end
     end
@@ -830,7 +846,11 @@ RSpec.describe 'V3 service instances' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
-            include({ 'detail' => include("The service instance name is taken: #{name}") })
+            include({
+              'detail' => "The service instance name is taken: #{name}",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
           )
         end
 
@@ -923,7 +943,11 @@ RSpec.describe 'V3 service instances' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
-            include({ 'detail' => include("The service instance name is taken: #{name}") })
+            include({
+              'detail' => "The service instance name is taken: #{name}",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
           )
         end
 
@@ -971,6 +995,13 @@ RSpec.describe 'V3 service instances' do
           it 'fails to create a service instance' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({
+                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
+            )
           end
         end
 
@@ -979,6 +1010,13 @@ RSpec.describe 'V3 service instances' do
           it 'fails to create a service instance' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({
+                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
+            )
           end
         end
       end
@@ -991,7 +1029,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -1003,7 +1045,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -1015,8 +1061,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
-            )
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              }))
           end
         end
 
@@ -1027,7 +1076,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -1041,7 +1094,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -1308,7 +1365,11 @@ RSpec.describe 'V3 service instances' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
-                include({ 'detail' => "You have exceeded your space's services limit." })
+                include({
+                  'detail' => "You have exceeded your space's services limit.",
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
               )
             end
           end
@@ -1324,7 +1385,11 @@ RSpec.describe 'V3 service instances' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
-                include({ 'detail' => 'The service instance cannot be created because paid service plans are not allowed for your space.' })
+                include({
+                  'detail' => 'The service instance cannot be created because paid service plans are not allowed for your space.',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
               )
             end
           end
@@ -1342,7 +1407,11 @@ RSpec.describe 'V3 service instances' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
-                include({ 'detail' => "You have exceeded your organization's services limit." })
+                include({
+                  'detail' => "You have exceeded your organization's services limit.",
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
               )
             end
           end
@@ -1358,7 +1427,11 @@ RSpec.describe 'V3 service instances' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
-                include({ 'detail' => 'The service instance cannot be created because paid service plans are not allowed.' })
+                include({
+                  'detail' => 'The service instance cannot be created because paid service plans are not allowed.',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
               )
             end
           end
@@ -1397,6 +1470,13 @@ RSpec.describe 'V3 service instances' do
       it 'fails saying the service instance is not found (404)' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(
+          include({
+            'detail' => 'Service instance not found',
+            'title' => 'CF-ResourceNotFound',
+            'code' => 10010,
+          })
+        )
       end
     end
 
@@ -1927,7 +2007,8 @@ RSpec.describe 'V3 service instances' do
               include(
                 {
                   'title' => 'CF-UnprocessableEntity',
-                  'detail' => 'The service broker does not support upgrades for service instances created from this plan.'
+                  'detail' => 'The service broker does not support upgrades for service instances created from this plan.',
+                  'code' => 10008,
                 }
               )
             )
@@ -1962,7 +2043,8 @@ RSpec.describe 'V3 service instances' do
               include(
                 {
                   'title' => 'CF-UnprocessableEntity',
-                  'detail' => include('maintenance_info.version requested is invalid')
+                  'detail' => include('maintenance_info.version requested is invalid'),
+                  'code' => 10008,
                 }
               )
             )
@@ -2014,7 +2096,8 @@ RSpec.describe 'V3 service instances' do
               include(
                 {
                   'title' => 'CF-UnprocessableEntity',
-                  'detail' => include('maintenance_info should not be changed when switching to different plan.')
+                  'detail' => include('maintenance_info should not be changed when switching to different plan.'),
+                  'code' => 10008,
                 }
               )
             )
@@ -2051,7 +2134,11 @@ RSpec.describe 'V3 service instances' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2064,7 +2151,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2077,7 +2168,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2092,7 +2187,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.' })
+              include({
+                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2105,7 +2204,11 @@ RSpec.describe 'V3 service instances' do
 
             expect(last_response).to have_status_code(400)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => include('service plan relates to a different service offering') })
+              include({
+                'detail' => 'service plan relates to a different service offering',
+                'title' => 'CF-InvalidRelation',
+                'code' => 1002,
+              })
             )
           end
         end
@@ -2130,7 +2233,11 @@ RSpec.describe 'V3 service instances' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => include("The service instance name is taken: #{name}") })
+              include({
+                'detail' => "The service instance name is taken: #{name}",
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2161,9 +2268,13 @@ RSpec.describe 'V3 service instances' do
         it 'should fail' do
           api_call.call(space_dev_headers)
 
-          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
-            include({ 'detail' => include("Relationships Unknown field(s): 'space'") })
+            include({
+              'detail' => include("Relationships Unknown field(s): 'space'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
           )
         end
       end
@@ -2190,7 +2301,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan' })
+              include({
+                'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2202,7 +2317,11 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
-              include({ 'detail' => 'Cannot update maintenance_info of a service instance that belongs to inaccessible plan' })
+              include({
+                'detail' => 'Cannot update maintenance_info of a service instance that belongs to inaccessible plan',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
             )
           end
         end
@@ -2217,7 +2336,11 @@ RSpec.describe 'V3 service instances' do
               api_call.call(admin_headers)
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
-                include({ 'detail' => 'Cannot update name of a service instance that belongs to inaccessible plan' })
+                include({
+                  'detail' => 'Cannot update name of a service instance that belongs to inaccessible plan',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
               )
             end
           end
@@ -2259,10 +2382,11 @@ RSpec.describe 'V3 service instances' do
       end
 
       let(:guid) { service_instance.guid }
+      let(:new_name) { 'my_service_instance' }
 
       let(:request_body) do
         {
-          name: 'my_service_instance',
+          name: new_name,
           credentials: {
             used_in: 'bindings',
             foo: 'bar',
@@ -2310,9 +2434,35 @@ RSpec.describe 'V3 service instances' do
 
         it 'is rejected' do
           api_call.call(space_dev_headers)
-          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
-            include({ 'detail' => include("Unknown field(s): 'guid'") })
+            include({
+              'detail' => include("Unknown field(s): 'guid'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
+          )
+        end
+      end
+
+      context 'when the name is already taken' do
+        let!(:duplicate_name) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, name: new_name) }
+
+        let(:request_body) do
+          {
+            name: new_name
+          }
+        end
+
+        it 'is rejected' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({
+              'detail' => "The service instance name is taken: #{new_name}",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
           )
         end
       end
