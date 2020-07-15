@@ -44,6 +44,23 @@ module VCAP::CloudController
           response = subject.send_broker_request(client)
           expect(response).to eq('some response')
         end
+
+        context 'when the client raises a ServiceBrokerBadResponse' do
+          it 'raises a DeprovisionBadResponse error' do
+            r = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'unexpected failure!')
+            err = VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, :delete, r)
+            allow(client).to receive(:deprovision).and_raise(err)
+
+            expect { subject.send_broker_request(client) }.to raise_error(DeprovisionBadResponse, /unexpected failure!/)
+          end
+        end
+
+        context 'when the client raises an unknown error' do
+          it 'raises the error' do
+            allow(client).to receive(:deprovision).and_raise(RuntimeError.new('oh boy'))
+            expect { subject.send_broker_request(client) }.to raise_error(RuntimeError, 'oh boy')
+          end
+        end
       end
 
       describe '#gone!' do
@@ -59,6 +76,22 @@ module VCAP::CloudController
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).not_to be_nil
           subject.operation_succeeded
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
+        end
+      end
+
+      describe '#trigger_orphan_mitigation?' do
+        it 'returns true for DeprovisionBadResponse errors' do
+          expect(subject.trigger_orphan_mitigation?(DeprovisionBadResponse.new('some message'))).to eq(true)
+        end
+
+        it 'returns false for other types of errors' do
+          expect(subject.trigger_orphan_mitigation?(RuntimeError.new('boom'))).to eq(false)
+        end
+      end
+
+      describe '#restart_on_failure?' do
+        it 'returns true' do
+          expect(subject.restart_on_failure?).to eq(true)
         end
       end
     end

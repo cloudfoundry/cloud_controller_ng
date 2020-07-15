@@ -2,7 +2,11 @@ require 'jobs/reoccurring_job'
 
 module VCAP::CloudController
   module V3
+    class LastOperationStateFailed < StandardError
+    end
+
     class ServiceInstanceAsyncJob < VCAP::CloudController::Jobs::ReoccurringJob
+      MAX_RETRIES = 3
       attr_reader :warnings
 
       def initialize(guid, audit_info)
@@ -12,15 +16,13 @@ module VCAP::CloudController
         @warnings = []
         @request_attr = {}
         @first_time = true
+        @attempts = 0
       end
 
       def perform
         gone! && return if service_instance.blank?
-        last_operation_type = service_instance.last_operation&.type
 
-        if service_instance.operation_in_progress? && last_operation_type != operation_type
-          aborted!(last_operation_type)
-        end
+        raise_if_cannot_proceed!
 
         client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
 
@@ -42,12 +44,14 @@ module VCAP::CloudController
             record_event(si, @request_attr)
             finish
           end
-        rescue => err
-          fail!(err)
-        end
+        rescue LastOperationStateFailed => err
+          fail_and_raise!(err.message) unless restart_on_failure?
 
-        if service_instance.present? && service_instance.last_operation.state == 'failed'
-          operation_failed!(service_instance.last_operation.description)
+          restart_job(err.message || 'no error description returned by the broker')
+        rescue => err
+          fail!(err) unless trigger_orphan_mitigation?(err)
+
+          restart_job(err.message)
         end
       end
 
@@ -80,6 +84,14 @@ module VCAP::CloudController
         "service_instance.#{operation_type}"
       end
 
+      def trigger_orphan_mitigation?(_)
+        false
+      end
+
+      def restart_on_failure?
+        false
+      end
+
       private
 
       attr_reader :service_instance_guid
@@ -93,6 +105,22 @@ module VCAP::CloudController
         )
       end
 
+      def raise_if_cannot_proceed!
+        last_operation_type = service_instance.last_operation&.type
+
+        if service_instance.operation_in_progress? && last_operation_type != operation_type
+          aborted!(last_operation_type)
+        end
+      end
+
+      def restart_job(msg)
+        @attempts += 1
+        fail_and_raise!(msg) unless @attempts < MAX_RETRIES
+
+        @first_time = true
+        logger.info("could not complete the operation: #{msg}. Triggering orphan mitigation")
+      end
+
       def operation_completed?
         service_instance.last_operation.state == 'succeeded' && service_instance.last_operation.type == operation_type
       end
@@ -100,6 +128,13 @@ module VCAP::CloudController
       def fetch_last_operation(client)
         last_operation_result = client.fetch_service_instance_last_operation(service_instance)
         self.polling_interval_seconds = last_operation_result[:retry_after] if last_operation_result[:retry_after]
+
+        operation_failed!(last_operation_result.dig(:last_operation)[:description]) if last_operation_result[:http_status_code] == HTTP::Status::BAD_REQUEST
+
+        lo = last_operation_result[:last_operation]
+        if lo[:state] == 'failed'
+          raise LastOperationStateFailed.new(lo[:description])
+        end
 
         service_instance.save_and_update_operation(
           last_operation: last_operation_result[:last_operation].slice(:state, :description)
@@ -139,15 +174,23 @@ module VCAP::CloudController
         nil
       end
 
-      def fail!(e)
+      def fail_last_operation(msg)
         unless service_instance.blank?
           service_instance.save_with_new_operation({}, {
             type: operation_type,
             state: 'failed',
-            description: e.message,
+            description: msg,
           })
         end
+      end
 
+      def fail_and_raise!(msg)
+        fail_last_operation(msg)
+        operation_failed!(msg)
+      end
+
+      def fail!(e)
+        fail_last_operation(e.message)
         raise e
       end
 
@@ -167,6 +210,10 @@ module VCAP::CloudController
 
       def route_services_disabled?
         !VCAP::CloudController::Config.config.get(:route_services_enabled)
+      end
+
+      def logger
+        Steno.logger('cc-background')
       end
     end
   end

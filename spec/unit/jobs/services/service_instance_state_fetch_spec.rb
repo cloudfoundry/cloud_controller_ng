@@ -119,7 +119,7 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
-          let(:last_operation_response) { { last_operation: { state: state, description: description } } }
+          let(:last_operation_response) { { last_operation: { state: state, description: description }, response_code: 200 } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do

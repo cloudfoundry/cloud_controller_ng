@@ -423,7 +423,7 @@ module VCAP::Services
           }
         end
 
-        def self.client_result_with_state(state, description: nil)
+        def self.client_result_with_state(state, description: nil, status_code: nil)
           response_body = {
             'last_operation' => {
               'state' => state,
@@ -431,6 +431,7 @@ module VCAP::Services
           }
 
           response_body['last_operation']['description'] = description if description
+          response_body['http_status_code'] = status_code if status_code
           response_body
         end
 
@@ -773,11 +774,11 @@ module VCAP::Services
         test_case(:fetch_state, 409, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_state, 409, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_state, 409, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
-        test_case(:fetch_state, 400, broker_empty_json,                                         result: client_result_with_state('failed', description: 'Bad request'))
-        test_case(:fetch_state, 400, broker_partial_json,                                       result: client_result_with_state('failed', description: 'Bad request'))
-        test_case(:fetch_state, 400, broker_malformed_json,                                     result: client_result_with_state('failed', description: 'Bad request'))
-        test_case(:fetch_state, 400, broker_error_json,                                         result: client_result_with_state('failed', description: 'Bad request'))
-        test_case(:fetch_state, 400, broker_error_json(description: 'Some description'),        result: client_result_with_state('failed', description: 'Some description'))
+        test_case(:fetch_state, 400, broker_empty_json,                                         result: client_result_with_state('failed', description: 'Bad request', status_code: 400))
+        test_case(:fetch_state, 400, broker_partial_json,                                       result: client_result_with_state('failed', description: 'Bad request', status_code: 400))
+        test_case(:fetch_state, 400, broker_malformed_json,                                     result: client_result_with_state('failed', description: 'Bad request', status_code: 400))
+        test_case(:fetch_state, 400, broker_error_json,                                         result: client_result_with_state('failed', description: 'Bad request', status_code: 400))
+        test_case(:fetch_state, 400, broker_error_json(description: 'Some description'),        result: client_result_with_state('failed', description: 'Some description', status_code: 400))
         test_case(:fetch_state, 410, broker_empty_json,                                         result: {})
         test_case(:fetch_state, 410, broker_partial_json,                                       result: {})
         test_case(:fetch_state, 410, broker_malformed_json,                                     result: {})

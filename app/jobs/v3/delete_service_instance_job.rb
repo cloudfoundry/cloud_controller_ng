@@ -2,6 +2,9 @@ require 'jobs/v3/service_instance_async_job'
 
 module VCAP::CloudController
   module V3
+    class DeprovisionBadResponse < StandardError
+    end
+
     class DeleteServiceInstanceJob < ServiceInstanceAsyncJob
       def initialize(guid, audit_info)
         super(guid, audit_info)
@@ -9,6 +12,8 @@ module VCAP::CloudController
 
       def send_broker_request(client)
         client.deprovision(service_instance, { accepts_incomplete: true })
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse => err
+        raise DeprovisionBadResponse.new(err.message)
       end
 
       def operation_succeeded
@@ -29,6 +34,19 @@ module VCAP::CloudController
 
       def gone!
         finish
+      end
+
+      def restart_on_failure?
+        true
+      end
+
+      def trigger_orphan_mitigation?(err)
+        case err
+        when DeprovisionBadResponse
+          return true
+        else
+          false
+        end
       end
     end
   end
