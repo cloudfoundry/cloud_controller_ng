@@ -39,17 +39,23 @@ RSpec.describe BackgroundJobEnvironment do
       background_job_environment.setup_environment
     end
 
+    def open_port_count
+      `lsof -i -P -n | grep LISTEN | wc -l`.to_i
+    end
+
     it 'doesnt attempt to open a readiness port' do
-      expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
-      background_job_environment.setup_environment
-      expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+      expect {
+        background_job_environment.setup_environment
+      }.not_to change { open_port_count }
     end
 
     context 'readiness_port provided' do
       it 'opens the readiness port' do
-        expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
-        background_job_environment.setup_environment(9999)
-        expect { TCPSocket.new('localhost', 9999).close }.not_to raise_error
+        expect { TCPSocket.new('127.0.0.1', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+        expect {
+          background_job_environment.setup_environment(9999)
+        }.to change { open_port_count }.by(1)
+        expect { TCPSocket.new('127.0.0.1', 9999).close }.not_to raise_error
       end
     end
   end
