@@ -472,7 +472,7 @@ GEM
     unicode-display_width (1.6.1)
     vhd (0.0.4)
       bit-struct
-    vmstat (2.3.0)
+    vmstat (2.3.1)
     webmock (3.5.1)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -571,7 +571,7 @@ DEPENDENCIES
   timecop
   unf
   vcap-concurrency!
-  vmstat (~> 2.0)
+  vmstat (~> 2.3)
   webmock (> 2.3.1)
   yajl-ruby
 
