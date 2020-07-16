@@ -40,13 +40,24 @@ module VCAP::CloudController
         true
       end
 
-      def trigger_orphan_mitigation?(err)
+      def restart_job(msg)
+        super
+        logger.info("could not complete the operation: #{msg}. Triggering orphan mitigation")
+      end
+
+      def fail!(err)
         case err
         when DeprovisionBadResponse
-          return true
+          trigger_orphan_mitigation(err)
         else
-          false
+          super
         end
+      end
+
+      private
+
+      def trigger_orphan_mitigation(err)
+        restart_job(err.message)
       end
     end
   end

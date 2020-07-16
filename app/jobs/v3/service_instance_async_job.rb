@@ -49,9 +49,7 @@ module VCAP::CloudController
 
           restart_job(err.message || 'no error description returned by the broker')
         rescue => err
-          fail!(err) unless trigger_orphan_mitigation?(err)
-
-          restart_job(err.message)
+          fail!(err)
         end
       end
 
@@ -84,10 +82,6 @@ module VCAP::CloudController
         "service_instance.#{operation_type}"
       end
 
-      def trigger_orphan_mitigation?(_)
-        false
-      end
-
       def restart_on_failure?
         false
       end
@@ -118,7 +112,6 @@ module VCAP::CloudController
         fail_and_raise!(msg) unless @attempts < MAX_RETRIES
 
         @first_time = true
-        logger.info("could not complete the operation: #{msg}. Triggering orphan mitigation")
       end
 
       def operation_completed?
