@@ -61,6 +61,32 @@ module VCAP::CloudController
       allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
     end
 
+    describe '#fetch' do
+      let(:names) {["paketo-community/ruby"]}
+      subject(:result) { fetcher.fetch(names) }
+
+      it "returns the specified buildpacks" do
+        expect(result.length).to(eq(1))
+
+        expect(buildpack.name).to(eq('paketo-community/ruby'))
+        expect(buildpack.id).to(eq('paketo-community/ruby@0.0.11'))
+        expect(buildpack.filename).to(eq('paketo-community/ruby@0.0.11'))
+        expect(buildpack.stack).to(eq(cflinuxfs3_stackname))
+        expect(buildpack.guid).to(be_blank)
+        expect(buildpack.state).to(eq('READY'))
+        expect(buildpack.position).to(eq(0))
+        expect(buildpack.enabled).to(eq(true))
+        expect(buildpack.locked).to(eq(false))
+        expect(buildpack.created_at).to(eq(Time.parse(default_builder_created_at_str)))
+        expect(buildpack.updated_at).to(eq(Time.parse(default_builder_ready_at_str)))
+        expect(buildpack.labels).to(be_empty)
+        expect(buildpack.annotations).to(be_empty)
+
+        expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
+      end
+
+    end
+
     describe '#fetch_all' do
       let(:message) { BuildpacksListMessage.from_params(filters) }
       subject(:result) { fetcher.fetch_all(message) }

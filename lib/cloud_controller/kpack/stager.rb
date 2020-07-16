@@ -15,6 +15,8 @@ module Kpack
     end
 
     def stage(staging_details)
+      # if staging_details include specific buildpacks, create custombuilder
+
       existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
       if existing_image.nil?
         client.create_image(image_resource(staging_details))

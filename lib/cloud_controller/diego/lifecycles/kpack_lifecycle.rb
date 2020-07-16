@@ -1,10 +1,11 @@
 module VCAP::CloudController
   class KpackLifecycle
-    attr_reader :staging_message
+    attr_reader :staging_message, :buildpack_infos
 
     def initialize(package, staging_message)
       @staging_message = staging_message
       @package = package
+      @buildpack_infos = KpackBuildpackListFetcher.new.fetch(staging_message.buildpack_data.buildpacks)
     end
 
     def type
