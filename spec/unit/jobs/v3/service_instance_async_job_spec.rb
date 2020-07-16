@@ -18,10 +18,6 @@ module VCAP::CloudController
       def operation_succeeded; end
 
       def send_broker_request(_) end
-
-      def trigger_orphan_mitigation?(_)
-        super
-      end
     end
 
     RSpec.describe ServiceInstanceAsyncJob do
@@ -169,35 +165,6 @@ module VCAP::CloudController
               expect(service_instance.last_operation.type).to eq(operation)
               expect(service_instance.last_operation.state).to eq('failed')
               expect(service_instance.last_operation.description).to eq('not today')
-            end
-
-            context 'when it should trigger orphan mitigation' do
-              before do
-                allow_any_instance_of(FakeAsyncOperation).to receive(:trigger_orphan_mitigation?).and_return(true)
-              end
-
-              it 'does not raise an error' do
-                expect { job.perform }.not_to raise_error
-              end
-
-              it 'does not update the last operation' do
-                job.perform
-
-                expect(service_instance.last_operation.type).to eq(operation)
-                expect(service_instance.last_operation.state).to eq('in progress')
-              end
-
-              it 'logs a message' do
-                job.perform
-
-                expect(logger).to have_received(:info)
-              end
-
-              it 'retries the operation' do
-                job.perform
-                job.perform
-                expect(job).to have_received(:send_broker_request).twice
-              end
             end
           end
 
@@ -379,12 +346,6 @@ module VCAP::CloudController
 
                     expect(service_instance.last_operation.type).to eq(operation)
                     expect(service_instance.last_operation.state).to eq('in progress')
-                  end
-
-                  it 'logs a message' do
-                    job.perform
-
-                    expect(logger).to have_received(:info).with(/Triggering orphan mitigation/)
                   end
 
                   it 'retries the operation' do
@@ -645,12 +606,6 @@ module VCAP::CloudController
       describe '#display_name' do
         it 'returns the display name' do
           expect(job.display_name).to eq('service_instance.fake-operation')
-        end
-      end
-
-      describe '#trigger_orphan_mitigation?' do
-        it 'is false by default' do
-          expect(job.trigger_orphan_mitigation?(nil)).to eq(false)
         end
       end
 

@@ -15,6 +15,87 @@ module VCAP::CloudController
 
       let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
       let(:subject) { described_class.new(service_instance.guid, user_audit_info) }
+      let(:logger) { instance_double(Steno::Logger, error: nil, info: nil, warn: nil) }
+
+      before do
+        allow(Steno).to receive(:logger).and_return(logger)
+      end
+
+      describe '#perform' do
+        let(:client) { double('BrokerClient', deprovision: 'some response') }
+
+        before do
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        end
+
+        context 'when the client raises a ServiceBrokerBadResponse' do
+          let(:r) do
+            VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'unexpected failure!')
+          end
+
+          let(:err) do
+            VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, :delete, r)
+          end
+
+          before do
+            allow(client).to receive(:deprovision).and_raise(err)
+          end
+
+          it 'restarts the job, as to perform orphan mitigation' do
+            subject.perform
+
+            expect(subject.instance_variable_get(:@attempts)).to eq(1)
+            expect(subject.instance_variable_get(:@first_time)).to eq(true)
+          end
+
+          it 'does not modify the service instance operation' do
+            service_instance.save_with_new_operation(
+              {},
+              {type: 'create', state: 'done'}
+            )
+
+            subject.perform
+
+            service_instance.reload
+
+            expect(service_instance.last_operation.type).to eq('create')
+            expect(service_instance.last_operation.state).to eq('done')
+          end
+
+          it 'logs a message' do
+            subject.perform
+
+            expect(logger).to have_received(:info).with(/Triggering orphan mitigation/)
+          end
+
+          it 'fails after too many retries' do
+            number_of_successes = VCAP::CloudController::V3::ServiceInstanceAsyncJob::MAX_RETRIES - 1
+            number_of_successes.times do
+              subject.perform
+            end
+
+            expect { subject.perform }.to raise_error(CloudController::Errors::ApiError)
+          end
+        end
+
+        context 'when the client raises a general error' do
+          let(:err) { StandardError.new("random error") }
+
+          before do
+            allow(client).to receive(:deprovision).and_raise(err)
+          end
+
+          it 'fails the job' do
+            expect { subject.perform }.to raise_error(err)
+            expect(subject.instance_variable_get(:@attempts)).to eq(0)
+
+            service_instance.reload
+
+            expect(service_instance.last_operation.type).to eq('delete')
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+        end
+      end
 
       describe '#operation' do
         it 'returns "deprovision"' do
@@ -76,16 +157,6 @@ module VCAP::CloudController
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).not_to be_nil
           subject.operation_succeeded
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
-        end
-      end
-
-      describe '#trigger_orphan_mitigation?' do
-        it 'returns true for DeprovisionBadResponse errors' do
-          expect(subject.trigger_orphan_mitigation?(DeprovisionBadResponse.new('some message'))).to eq(true)
-        end
-
-        it 'returns false for other types of errors' do
-          expect(subject.trigger_orphan_mitigation?(RuntimeError.new('boom'))).to eq(false)
         end
       end
 
