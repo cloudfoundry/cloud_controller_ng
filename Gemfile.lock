@@ -65,11 +65,11 @@ GEM
       i18n
     ast (2.4.1)
     awesome_print (1.8.0)
-    azure-core (0.1.14)
+    azure-core (0.1.15)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
       nokogiri (~> 1.6)
-    azure-storage (0.14.0.preview)
+    azure-storage (0.15.0.preview)
       azure-core (~> 0.1)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
@@ -146,12 +146,12 @@ GEM
     erubi (1.9.0)
     eventmachine (1.0.9.1)
     excon (0.71.0)
-    faraday (0.15.4)
+    faraday (0.17.3)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
       faraday (>= 0.7.4)
       http-cookie (~> 1.0.0)
-    faraday_middleware (0.12.2)
+    faraday_middleware (0.14.0)
       faraday (>= 0.7.4, < 1.0)
     ffi (1.9.25)
     ffi-compiler (1.0.1)
@@ -495,7 +495,7 @@ DEPENDENCIES
   addressable
   allowy (>= 2.1.0)
   awesome_print
-  azure-storage (= 0.14.0.preview)
+  azure-storage (= 0.15.0.preview)
   bits_service_client (~> 3.3, >= 3.3.0)
   byebug
   cf-copilot (= 0.0.14)
