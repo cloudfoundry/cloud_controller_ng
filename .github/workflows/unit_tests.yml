@@ -1,0 +1,44 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  rubocop:
+    runs-on: ubuntu-latest
+    container:
+      image: "cloudfoundry/capi:ruby-units"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: bundle install
+    - name: Run Rubocop
+      run: bundle exec rake rubocop
+  test_postgres:
+    runs-on: ubuntu-latest
+    container:
+      image: "cloudfoundry/capi:ruby-units"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: bundle install
+    - name: Setup PostgreSQL
+      run: service postgresql restart
+    - name: Run tests
+      run: DB=postgres bundle exec rake spec:all
+  test_mysql:
+    runs-on: ubuntu-latest
+    container:
+      image: "cloudfoundry/capi:ruby-units"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: bundle install
+    - name: Setup MySQL
+      run: |
+        find /var/lib/mysql/mysql -exec touch -c -a {} +
+        service mysql restart
+    - name: Run tests
+      run: DB=mysql bundle exec rake spec:all
+
