@@ -4,42 +4,6 @@ require 'fetchers/null_filter_query_generator'
 
 module VCAP::CloudController
   class KpackBuildpackListFetcher
-    def fetch(buildpack_names)
-      staging_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
-      default_builder = k8s_api_client.get_custom_builder('cf-default-builder', staging_namespace)
-
-      version_map = default_builder.status.builderMetadata.each.with_object({}) do |metadata, h|
-        h[metadata.id] = metadata.version
-      end
-      stack = default_builder.spec.stack
-      created_at = Time.parse(default_builder.metadata.creationTimestamp)
-
-      latest_condition = default_builder.status.conditions[0]
-      if latest_condition
-        state = Buildpack::READY_STATE
-        updated_at = Time.parse(latest_condition.lastTransitionTime)
-      else
-        state = Buildpack::CREATED_STATE
-        updated_at = created_at
-      end
-
-      default_builder.spec.order.map do |entry|
-        name = entry.group.first.id
-        version = version_map.fetch(name, 'unknown')
-        if buildpack_names.include?(name)
-          KpackBuildpack.new(
-              id: "#{name}@#{version}",
-              name: name,
-              filename: "#{name}@#{version}",
-              stack: stack,
-              state: state,
-              created_at: created_at,
-              updated_at: updated_at,
-              )
-        end
-      end
-    end
-
     def fetch_all(message)
       staging_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
       default_builder = k8s_api_client.get_custom_builder('cf-default-builder', staging_namespace)
