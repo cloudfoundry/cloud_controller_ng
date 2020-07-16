@@ -73,6 +73,7 @@ module VCAP::CloudController
         it 'lists the not-present buildpacks in the error' do
           expect(lifecycle).not_to be_valid
 
+          expect(lifecycle.errors[:buildpack]).not_to include('"some-buildpack" must be an existing buildpack configured for use with kpack')
           expect(lifecycle.errors[:buildpack]).to include('"bunko-buildpack" must be an existing buildpack configured for use with kpack')
           expect(lifecycle.errors[:buildpack]).to include('"capi-fail-buildpack" must be an existing buildpack configured for use with kpack')
         end

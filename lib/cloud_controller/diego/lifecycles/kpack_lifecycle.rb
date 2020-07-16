@@ -10,6 +10,7 @@ module VCAP::CloudController
 
       # It is weird we need to pass a dummy list message here
       # TODO: extract a common way to get the unfiltered list of buildpacks that can then have filters applied if needed?
+      # TODO: Don't reach out to k8s unless buildpacks are requested
       available_buildpacks = KpackBuildpackListFetcher.new.fetch_all(BuildpacksListMessage.from_params({}))
       requested_buildpacks = if staging_message.buildpack_data.buildpacks.nil?
                                []
@@ -28,6 +29,7 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(build)
       VCAP::CloudController::KpackLifecycleDataModel.create(
+        # TODO: maybe save the buildpacks here
         build: build,
       )
     end

@@ -57,7 +57,7 @@ module Kpack
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
 
       allow(client).to receive(:get_image).and_return(nil)
-      allow(client). to receive(:get_custom_builder).and_return(default_builder_obj)
+      allow(client). to receive(:get_builder_spec).and_return(default_builder_obj)
     end
 
     it_behaves_like 'a stager'
@@ -134,7 +134,7 @@ module Kpack
         end
 
         it 'creates a custom builder' do
-          expect(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace')
+          expect(client).to receive(:get_builder_spec).with('cf-default-builder', 'namespace')
           expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
             metadata: {
               name: 'java-custom-builder',

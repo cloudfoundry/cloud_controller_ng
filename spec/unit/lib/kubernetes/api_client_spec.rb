@@ -346,7 +346,7 @@ RSpec.describe Kubernetes::ApiClient do
       let(:response) { double(Kubeclient::Resource) }
 
       it 'fetches the custom builder from Kubernetes' do
-        allow(kpack_kube_client).to receive(:get_custom_builder).with('name', 'namespace').and_return(response)
+        allow(kpack_kube_client).to receive(:get_builder_spec).with('name', 'namespace').and_return(response)
 
         custombuilder = subject.get_custom_builder('name', 'namespace')
         expect(custombuilder).to eq(response)
@@ -354,7 +354,7 @@ RSpec.describe Kubernetes::ApiClient do
 
       context 'when the custombuilder is not present' do
         it 'returns nil' do
-          allow(kpack_kube_client).to receive(:get_custom_builder).with('name', 'namespace').
+          allow(kpack_kube_client).to receive(:get_builder_spec).with('name', 'namespace').
             and_raise(Kubeclient::ResourceNotFoundError.new(404, 'custombuilders not found', '{"kind": "Status"}'))
 
           custombuilder = subject.get_custom_builder('name', 'namespace')
@@ -364,7 +364,7 @@ RSpec.describe Kubernetes::ApiClient do
 
       context 'when there is an error' do
         it 'raises as an ApiError' do
-          allow(kpack_kube_client).to receive(:get_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(kpack_kube_client).to receive(:get_builder_spec).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
 
           expect {
             subject.get_custom_builder('name', 'namespace')

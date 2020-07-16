@@ -58,7 +58,7 @@ module VCAP::CloudController
         },
       )
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
-      allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
+      allow(client).to receive(:get_builder_spec).and_return(default_builder_obj)
     end
 
     describe '#fetch_all' do
@@ -97,7 +97,7 @@ module VCAP::CloudController
         expect(buildpack2.labels).to(be_empty)
         expect(buildpack2.annotations).to(be_empty)
 
-        expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
+        expect(client).to have_received(:get_builder_spec).with('cf-default-builder', builder_namespace)
       end
 
       context 'when there are no status conditions' do
