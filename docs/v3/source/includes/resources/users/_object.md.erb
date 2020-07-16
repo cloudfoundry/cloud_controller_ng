@@ -9,12 +9,12 @@ Example User object
 
 | Name                                      | Type                          | Description                                                                                                                   |
 | --------------                            | ------------------------      | ------------------------------------------------------                                                                        |
-| **guid**                                  | _uuid_                        | Unique identifier for the user.                                                                                               |
-| **created_at**                            | _datetime_                    | The time with zone when the object was created.                                                                               |
-| **updated_at**                            | _datetime_                    | The time with zone when the object was last updated.                                                                          |
-| **username**                              | _string_                      | The name registered in UAA. Will be `null` for UAA clients and non-UAA users.                                                 |
-| **presentation_name**                     | _string_                      | The name displayed for the user. For UAA users, this is the same as the username. For UAA clients, this is the UAA client ID. |
-| **origin**                                | _string_                      | The identity provider for the UAA user. Will be `null` for UAA clients.                                                       |
-| **links**                                 | [_links object_](#links)      | Links to related resources.                                                                                                   |
-| **metadata.labels**       | [_label object_](#links)      | Labels applied to the user.                                                                                                   |
-| **metadata.annotations**  | [_annotation object_](#links) | Annotations added to the user.                                                                                                |
+| **guid**                                  | _uuid_                        | Unique identifier for the user                                                                                               |
+| **created_at**                            | _[timestamp](#timestamps)_                    | The time with zone when the object was created                                                                               |
+| **updated_at**                            | _[timestamp](#timestamps)_                    | The time with zone when the object was last updated                                                                          |
+| **username**                              | _string_                      | The name registered in UAA; will be `null` for UAA clients and non-UAA users                                                 |
+| **presentation_name**                     | _string_                      | The name displayed for the user; for UAA users, this is the same as the username. For UAA clients, this is the UAA client ID |
+| **origin**                                | _string_                      | The identity provider for the UAA user; will be `null` for UAA clients                                                       |
+| **metadata.labels**       | [_label object_](#links)      | Labels applied to the user                                                                                                   |
+| **metadata.annotations**  | [_annotation object_](#links) | Annotations added to the user                                                                                                |
+| **links**                                 | [_links object_](#links)      | Links to related resources                                                                                                   |

@@ -630,7 +630,7 @@ module VCAP::CloudController
           context 'when calling last operation responds with an error HttpResponseError' do
             before do
               response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
-              err = HttpResponseError.new('oops', 'uri', 'GET', response)
+              err = HttpResponseError.new('oops', 'GET', response)
               allow(client).to receive(:fetch_service_binding_last_operation).and_raise(err)
 
               run_job(job)

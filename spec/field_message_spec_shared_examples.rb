@@ -56,3 +56,9 @@ RSpec.shared_examples 'fields query hash' do
     ))
   end
 end
+
+RSpec.shared_examples 'fields to_param_hash' do |resource, keys|
+  it 'correctly formats the fields' do
+    expect(message.to_param_hash).to include("fields[#{resource}]": keys)
+  end
+end

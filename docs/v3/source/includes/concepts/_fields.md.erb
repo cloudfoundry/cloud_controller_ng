@@ -1,7 +1,8 @@
 ## Fields
 
-The `fields` parameter allows clients to fetch resources and include information of parent objects in the response.
-It works in a similar way to [include](#include), but the include section only displays the fields that were requested.
+The `fields` parameter allows clients to fetch resources and include information of parent objects
+in the response.  It works in a similar way to [include](#include), but the response only displays
+the requested fields rather than the entire resource.
 
 For example, a response to `/v3/service_instances/:guid?fields[space.organization]=name` will contain detailed
 information about the service instance, as well as the name of the organization it belongs to.
@@ -10,7 +11,7 @@ Developers may choose to use the `fields` feature to reduce the number of API ca
 query param can be used with a single resource or a list of resources.
 
 The fields query parameter may also grant visibility to parts of resources where the whole resource is not visible.
-For instance, the name of an Organization may be retrieved with fields, where the whole Organization resource may
+For instance, the name of an organization may be retrieved with fields, where the whole organization resource may
 not be visible.
 
 ### Fields parameter
@@ -21,6 +22,16 @@ For example `/v3/service_instances?fields[space]=name` where `space` is a direct
 or `/v3/service_instances?fields[space.organization]=name` where `organization` is a relationship of `space`.
 - `keys` is a comma-separated list of the fields in the object being requested. For example,
 `/v3/service_instances?fields[space]=name,guid` will return just the `name` and `guid` of the space in the includes section.
+
+For information on `fields` support for each resource refer to its documentation.
+
+### Resources with Fields
+
+Resource |  Endpoint
+-------- | --------------
+**Service Instances** | [v3/service_instances](#list-service-instances), [v3/service_instances/:guid](/#get-a-service-instance)
+**Service Offerings** | [v3/service_offerings](#list-service-offerings), [v3/service_offerings/:guid](/#get-a-service-offering)
+**Service Plans** | [v3/service_plans](#list-service-plans), [v3/service_plans/:guid](/#get-a-service-plan)
 
 ### Fields Sample requests
 
@@ -39,22 +50,22 @@ curl "https://api.example.org/v3/service_instances?fields[space]=name,guid,relat
 Example response
 ```
 
-```java
+```json
 {
    "pagination": {
-      "total_results": 2
-      // rest of pagination omitted
+      "total_results": 2,
+       "...": "..."
    },
    "resources": [
       {
          "guid": "42ad8d5a-8124-4fc7-baf2-3f39bfe1c170",
-         "name": "service_instance_1"
-         // rest omitted
+         "name": "service_instance_1",
+         "...": "..."
       },
       {
          "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
-         "name": "service_instance_2"
-         // rest omitted
+         "name": "service_instance_2",
+         "...": "..."
       }
    ],
    "included": {

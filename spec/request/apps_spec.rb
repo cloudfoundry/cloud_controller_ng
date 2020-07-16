@@ -12,11 +12,6 @@ RSpec.describe 'Apps' do
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
 
-  before do
-    space.organization.add_user(user)
-    space.add_developer(user)
-  end
-
   describe 'POST /v3/apps' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
     let(:create_request) do
@@ -48,6 +43,11 @@ RSpec.describe 'Apps' do
               }
           }
       }
+    end
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
     end
 
     it 'creates an app' do
@@ -353,6 +353,11 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps' do
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
     describe 'query list parameters' do
       it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
         let(:request) { 'v3/apps' }
@@ -1062,6 +1067,8 @@ RSpec.describe 'Apps' do
     }
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
@@ -1236,6 +1243,11 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/env' do
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
     it 'returns the environment of the app, including environment variables provided by the system' do
       app_model = VCAP::CloudController::AppModel.make(
         name: 'my_app',
@@ -1363,6 +1375,8 @@ RSpec.describe 'Apps' do
     let(:order_by) { '-created_at' }
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(second_build)
       build.update(state: droplet.state, error_description: droplet.error_description)
@@ -1402,14 +1416,14 @@ RSpec.describe 'Apps' do
                                                               },
                                                               'package' => { 'guid' => package.guid, },
                                                               'droplet' => {
-                                                                  'guid' => droplet.guid,
-                                                                  'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
+                                                                  'guid' => droplet.guid
                                                               },
                                                               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
                                                               },
                                                               'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
                                                           },
@@ -1429,13 +1443,13 @@ RSpec.describe 'Apps' do
                                                               'package' => { 'guid' => package.guid, },
                                                               'droplet' => {
                                                                   'guid' => second_droplet.guid,
-                                                                  'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
                                                               },
                                                               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
                                                               },
                                                               'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
                                                           },
@@ -1461,10 +1475,12 @@ RSpec.describe 'Apps' do
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
     let(:user_email) { nil }
-    let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+      space.organization.add_user(user)
+      space.add_developer(user)
+      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
     end
 
     it 'deletes an App' do
@@ -1543,6 +1559,9 @@ RSpec.describe 'Apps' do
     end
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+
       VCAP::CloudController::AppLabelModel.make(
         resource_guid: app_model.guid,
         key_name: 'delete-me',
@@ -1686,6 +1705,12 @@ RSpec.describe 'Apps' do
         desired_state: 'STOPPED',
       )
     }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
     it 'starts the app' do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
@@ -1888,6 +1913,8 @@ RSpec.describe 'Apps' do
     end
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
@@ -1984,6 +2011,11 @@ RSpec.describe 'Apps' do
         desired_state: 'STARTED',
       )
     }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
@@ -2147,6 +2179,8 @@ RSpec.describe 'Apps' do
     let(:app_guid) { droplet_model.app_guid }
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
       app_model.save
@@ -2190,6 +2224,8 @@ RSpec.describe 'Apps' do
     let(:app_guid) { droplet_model.app_guid }
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
       app_model.save
@@ -2223,6 +2259,7 @@ RSpec.describe 'Apps' do
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
                                           'method' => 'PATCH' },
         },
@@ -2246,6 +2283,8 @@ RSpec.describe 'Apps' do
     end
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
@@ -2417,6 +2456,11 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PATCH /v3/apps/:guid/environment_variables' do
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
     it 'patches the environment variables for the app' do
       app_model = VCAP::CloudController::AppModel.make(
         name: 'name1',
@@ -2456,6 +2500,11 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/environment_variables' do
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
     it 'gets the environment variables for the app' do
       app_model = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' })
 
@@ -2475,5 +2524,40 @@ RSpec.describe 'Apps' do
         }
                                  )
     end
+  end
+
+  describe 'GET /v3/apps/:guid/permissions' do
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED') }
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/permissions", nil, user_headers } }
+
+    let(:read_all_response) do
+      {
+        "read_basic_data": true,
+        "read_sensitive_data": true
+      }
+    end
+
+    let(:read_basic_response) do
+      {
+        "read_basic_data": true,
+        "read_sensitive_data": false
+      }
+    end
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 404)
+      h['admin'] = { code: 200, response_object: read_all_response }
+      h['admin_read_only'] = { code: 200, response_object: read_all_response }
+      h['global_auditor'] = { code: 200, response_object: read_basic_response }
+      h['org_manager'] = { code: 200, response_object: read_basic_response }
+      h['space_manager'] = { code: 200, response_object: read_basic_response }
+      h['space_auditor'] = { code: 200, response_object: read_basic_response }
+      h['space_developer'] = { code: 200, response_object: read_all_response }
+      h.freeze
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 end

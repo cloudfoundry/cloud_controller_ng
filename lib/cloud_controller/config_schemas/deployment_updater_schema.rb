@@ -170,6 +170,7 @@ module VCAP::CloudController
 
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
+          custom_metric_tag_prefix_list: Array,
         }
       end
       # rubocop:enable Metrics/BlockLength

@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'when targeting a Kubernetes API' do
-          let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
           let!(:config) do
             TestConfig.override(
               kubernetes: {
@@ -63,21 +63,21 @@ module VCAP::CloudController
           end
 
           before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-            allow(route_crd_client).to receive(:create_route)
+            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+            allow(route_resource_manager).to receive(:create_route)
           end
 
           it 'creates a route resource in Kubernetes' do
             expect {
               route = subject.create(message: message, space: space, domain: domain)
 
-              expect(route_crd_client).to have_received(:create_route).with(route)
+              expect(route_resource_manager).to have_received(:create_route).with(route)
             }.to change { Route.count }.by(1)
           end
         end
 
         context 'when not targeting a Kubernetes API' do
-          let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
           let!(:config) do
             TestConfig.override(
               kubernetes: {
@@ -86,15 +86,15 @@ module VCAP::CloudController
           end
 
           before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-            allow(route_crd_client).to receive(:create_route)
+            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+            allow(route_resource_manager).to receive(:create_route)
           end
 
           it 'does not create a route resource in Kubernetes' do
             expect {
               subject.create(message: message, space: space, domain: domain)
 
-              expect(route_crd_client).to_not have_received(:create_route)
+              expect(route_resource_manager).to_not have_received(:create_route)
             }.to change { Route.count }.by(1)
           end
         end
@@ -659,10 +659,22 @@ module VCAP::CloudController
               })
             end
 
-            it 'errors with a helpful error message' do
+            let(:router_group) { double('router_group1', type: 'tcp', guid: 'router_group_guid', reservable_ports: [1024]) }
+            let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+            before do
+              allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+              allow(routing_api_client).to receive(:enabled?).and_return(true)
+              allow(routing_api_client).to receive(:router_group).and_return(router_group)
+            end
+
+            it 'randomly assigns an available port' do
               expect {
                 subject.create(message: message, space: space, domain: domain)
-              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' must specify a port.")
+              }.to change { Route.count }.by(1)
+
+              route = Route.last
+              expect(route.port).to eq(1234)
             end
           end
 
@@ -685,7 +697,7 @@ module VCAP::CloudController
             it 'errors with a helpful error message' do
               expect {
                 subject.create(message: message, space: space, domain: domain)
-              }.to raise_error(RouteCreate::Error, "Routes with protocol 'tcp' do not support paths or hosts.")
+              }.to raise_error(RouteCreate::Error, 'Paths are not supported for TCP routes.')
             end
           end
         end

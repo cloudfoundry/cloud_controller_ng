@@ -15,7 +15,8 @@ module VCAP::CloudController
         actee_name: 'John Travolta',
         timestamp: Time.new(1997, 6, 27).utc,
         metadata: { 'popcorn_price' => '$(arm + leg)' },
-        space: space
+        space_guid: space.guid,
+        organization_guid: space.organization.guid,
       )
     end
 
@@ -97,7 +98,7 @@ module VCAP::CloudController
 
         let(:new_org) { Organization.make }
         let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
-        let!(:new_event) { Event.make(space: new_space) }
+        let!(:new_event) { Event.make(space_guid: new_space.guid, organization_guid: new_org.guid) }
 
         before { new_space.destroy }
 

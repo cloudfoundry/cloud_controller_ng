@@ -1,0 +1,43 @@
+### Get permissions
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/permissions" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "read_basic_data": true,
+  "read_sensitive_data": false
+}
+```
+
+Get the current user's permissions for the given app. If a user can see an app,
+then they can see its basic data. Only admin, read-only admins, and space
+developers can read sensitive data.
+
+#### Definition
+`GET /v3/apps/:guid/permissions`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

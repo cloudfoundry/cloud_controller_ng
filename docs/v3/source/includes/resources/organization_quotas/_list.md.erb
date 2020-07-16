@@ -30,12 +30,12 @@ This endpoint lists all organization quota resources.
 
 Name | Type | Description
 ---- | ---- | -----------
-**guids** | _list of strings_ | Comma-delimited list of organization quota guids to filter by.
-**names** | _list of strings_ | Comma-delimited list of organization quota names to filter by.
-**organization_guids** | _list of strings_ | Comma-delimited list of organization guids to filter by.
-**page** | _integer_ | Page to display. Valid values are integers >= 1.
-**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
-**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
+**guids** | _list of strings_ | Comma-delimited list of organization quota guids to filter by
+**names** | _list of strings_ | Comma-delimited list of organization quota names to filter by
+**organization_guids** | _list of strings_ | Comma-delimited list of organization guids to filter by
+**page** | _integer_ | Page to display; valid values are integers >= 1
+**per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
+**order_by** | _string_ | Value to sort by; defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`
 
 #### Permitted roles
 
@@ -44,9 +44,9 @@ Role | Notes
 Admin |
 Admin Read-Only |
 Global Auditor |
-Org Manager | Response will only include guids of managed organizations.
-Org Auditor | Response will only include guids of audited organizations.
-Org Billing Manager | Response will only include guids of billing-managed organizations.
-Space Auditor | Response will only include guids of parent organizations.
-Space Developer | Response will only include guids of parent organizations.
-Space Manager | Response will only include guids of parent organizations.
+Org Manager | Response will only include guids of managed organizations
+Org Auditor | Response will only include guids of audited organizations
+Org Billing Manager | Response will only include guids of billing-managed organizations
+Space Auditor | Response will only include guids of parent organizations
+Space Developer | Response will only include guids of parent organizations
+Space Manager | Response will only include guids of parent organizations

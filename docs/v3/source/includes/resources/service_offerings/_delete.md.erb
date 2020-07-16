@@ -1,0 +1,41 @@
+### Delete a service offering
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_offerings/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud
+Foundry database when they have been removed from the service broker catalog, or when the service broker has been
+removed.
+
+Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service
+broker.
+
+#### Definition
+`DELETE /v3/service_offerings/:guid`
+
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**purge** | _boolean_ | If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Developer (only service offerings from space-scoped brokers) |

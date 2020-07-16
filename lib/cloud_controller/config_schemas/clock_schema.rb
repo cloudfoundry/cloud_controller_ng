@@ -117,8 +117,13 @@ module VCAP::CloudController
           optional(:uaa_client_secret) => String,
           optional(:uaa_client_scope) => String,
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
+          },
+
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
           },
 
           skip_cert_verify: bool,
@@ -204,6 +209,7 @@ module VCAP::CloudController
 
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
+          custom_metric_tag_prefix_list: Array,
         }
       end
       # rubocop:enable Metrics/BlockLength

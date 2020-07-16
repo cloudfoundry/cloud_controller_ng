@@ -1,0 +1,47 @@
+### Get a service plan
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_plan %>
+```
+
+This endpoint retrieves the service plan by GUID.
+
+#### Definition
+`GET /v3/service_plans/:guid`
+
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**fields** | [_fields parameter_](#fields-parameter) | [_Allowed values_](#service-plan-fields)
+**include** | _list of strings_ | Optionally include a list of related resources in the response; <br>valid values are `space.organization` and `service_offering`
+
+##### Service Plan Fields
+
+Resource            | Allowed Keys
+------------------- | ----
+service_offering.service_broker| `guid`, `name`
+
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |
+Unauthenticated Users (for public plans, unless `hide_marketplace_from_unauthenticated_users` is set) |

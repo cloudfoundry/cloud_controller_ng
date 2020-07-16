@@ -4,50 +4,51 @@ module VCAP::CloudController
   RSpec.describe Config do
     let(:test_config_hash) {
       {
-          packages: {
-              fog_connection: {},
-              fog_aws_storage_options: {
-                  encryption: 'AES256'
-              },
-              app_package_directory_key: 'app_key',
+        packages: {
+          fog_connection: {},
+          fog_aws_storage_options: {
+            encryption: 'AES256'
           },
-          droplets: {
-              fog_connection: {},
-              droplet_directory_key: 'droplet_key',
+          app_package_directory_key: 'app_key',
+        },
+        droplets: {
+          fog_connection: {},
+          droplet_directory_key: 'droplet_key',
+        },
+        buildpacks: {
+          fog_connection: {},
+          buildpack_directory_key: 'bp_key',
+        },
+        resource_pool: {
+          minimum_size: 9001,
+          maximum_size: 0,
+          fog_connection: {},
+          resource_directory_key: 'resource_key',
+        },
+        bulk_api: {},
+        external_domain: 'host',
+        tls_port: 1234,
+        staging: {
+          auth: {
+            user: 'user',
+            password: 'password',
           },
-          buildpacks: {
-              fog_connection: {},
-              buildpack_directory_key: 'bp_key',
-          },
-          resource_pool: {
-              minimum_size: 9001,
-              maximum_size: 0,
-              fog_connection: {},
-              resource_directory_key: 'resource_key',
-          },
-          bulk_api: {},
-          external_domain: 'host',
-          tls_port: 1234,
-          staging: {
-              auth: {
-                  user: 'user',
-                  password: 'password',
-              },
-          },
-          bits_service: { enabled: false },
-          reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
-          diego: {},
-          stacks_file: 'path/to/stacks/file',
-          db_encryption_key: '123-456',
-          install_buildpacks: [
-            {
-                name: 'some-buildpack',
-            }
-          ]
+        },
+        bits_service: { enabled: false },
+        reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
+        diego: {},
+        stacks_file: 'path/to/stacks/file',
+        db_encryption_key: '123-456',
+        install_buildpacks: [
+          {
+            name: 'some-buildpack',
+          }
+        ]
       }
     }
+    subject(:config_instance) { Config.new(test_config_hash) }
 
-    describe '#load_from_file' do
+    describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect {
           Config.load_from_file('nonexistent.yml', context: :worker)
@@ -234,7 +235,6 @@ module VCAP::CloudController
 
     describe '#configure_components' do
       let(:dependency_locator) { CloudController::DependencyLocator.instance }
-
       let(:test_config_hash) {
         {
           packages: {
@@ -274,10 +274,6 @@ module VCAP::CloudController
           db_encryption_key: '123-456'
         }
       }
-
-      let(:config_instance) do
-        Config.new(test_config_hash)
-      end
 
       before do
         allow(Stack).to receive(:configure)
@@ -339,13 +335,13 @@ module VCAP::CloudController
       context 'when database encryption keys are used' do
         let(:keys) do
           {
-              keys: {
-                current: 'abc-123',
-                previous: 'def-456',
-                old: 'ghi-789'
-              },
-              current_key_label: 'current',
-              pbkdf2_hmac_iterations: 100_020
+            keys: {
+              current: 'abc-123',
+              previous: 'def-456',
+              old: 'ghi-789'
+            },
+            current_key_label: 'current',
+            pbkdf2_hmac_iterations: 100_020
           }
         end
 
@@ -395,10 +391,6 @@ module VCAP::CloudController
     end
 
     describe '#get' do
-      let(:config_instance) do
-        Config.new(test_config_hash)
-      end
-
       it 'returns the value at the given key' do
         expect(config_instance.get(:external_domain)).to eq 'host'
       end
@@ -409,12 +401,12 @@ module VCAP::CloudController
 
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
-                                                         fog_connection: {},
-                                                         fog_aws_storage_options: {
-                                                             encryption: 'AES256'
-                                                         },
-                                                         app_package_directory_key: 'app_key',
-                                                     })
+          fog_connection: {},
+          fog_aws_storage_options: {
+            encryption: 'AES256'
+          },
+          app_package_directory_key: 'app_key',
+        })
         expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
       end
 
@@ -450,13 +442,89 @@ module VCAP::CloudController
     end
 
     describe '#set' do
-      let(:config_instance) do
-        Config.new(test_config_hash)
-      end
-
       it 'saves the value at the key in the config' do
         config_instance.set(:external_host, 'foobar.example.com')
         expect(config_instance.get(:external_host)).to eq 'foobar.example.com'
+      end
+    end
+
+    describe '#kubernetes_service_account_token' do
+      subject(:config_instance) { Config.new(test_config_hash.merge(k8s_config_hash)) }
+
+      let(:k8s_config_hash) do
+        {
+          kubernetes: {
+            service_account: { token_file: service_account_token_file.path },
+            host_url: 'http://k8s.example.com',
+          }
+        }
+      end
+
+      let(:expected_service_account_token) { 'service-account-token' }
+      let(:service_account_token_file) do
+        Tempfile.new('service_account_token').tap do |file|
+          file.write(expected_service_account_token)
+          file.close
+        end
+      end
+
+      it 'returns the contents' do
+        expect(config_instance.kubernetes_service_account_token).to(eq(expected_service_account_token))
+      end
+
+      context 'when no kubernetes api is configured' do
+        let(:k8s_config_hash) do
+          {
+            kubernetes: {
+              service_account: { token_file: service_account_token_file.path },
+              host_url: '',
+            }
+          }
+        end
+
+        it 'raises' do
+          expect { config_instance.kubernetes_service_account_token }.to(raise_error(Config::KubernetesApiNotConfigured))
+        end
+      end
+    end
+
+    describe '#kubernetes_ca_cert' do
+      subject(:config_instance) { Config.new(test_config_hash.merge(k8s_config_hash)) }
+
+      let(:k8s_config_hash) do
+        {
+          kubernetes: {
+            ca_file: ca_file.path,
+            host_url: 'http://k8s.example.com',
+          }
+        }
+      end
+
+      let(:expected_ca_cert) { 'some-ca' }
+      let(:ca_file) do
+        Tempfile.new('ca_file').tap do |file|
+          file.write(expected_ca_cert)
+          file.close
+        end
+      end
+
+      it 'returns the contents' do
+        expect(config_instance.kubernetes_ca_cert).to(eq(expected_ca_cert))
+      end
+
+      context 'when no kubernetes api is configured' do
+        let(:k8s_config_hash) do
+          {
+            kubernetes: {
+              ca_file: ca_file.path,
+              host_url: '',
+            }
+          }
+        end
+
+        it 'raises' do
+          expect { config_instance.kubernetes_ca_cert }.to(raise_error(Config::KubernetesApiNotConfigured))
+        end
       end
     end
   end

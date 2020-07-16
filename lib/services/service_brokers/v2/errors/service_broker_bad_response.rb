@@ -12,15 +12,24 @@ module VCAP::Services
             message = if hash.is_a?(Hash) && hash.key?('description') && !ignore_description_key
                         "Service broker error: #{hash['description']}"
                       else
-                        "The service broker returned an invalid response for the request to #{uri}. " \
+                        'The service broker returned an invalid response. ' \
                                   "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
                       end
 
-            super(message, uri, method, response)
+            super(message, method, response)
           end
 
           def response_code
             502
+          end
+
+          def to_h
+            hash = super
+            hash['http'] = {
+              'method' => method,
+              'status' => status,
+            }
+            hash
           end
         end
       end

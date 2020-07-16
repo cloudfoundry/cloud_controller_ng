@@ -4,8 +4,8 @@ require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
-require 'kubernetes/kpack_client'
-require 'kubernetes/route_crd_client'
+require 'kubernetes/api_client'
+require 'kubernetes/route_resource_manager'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -368,28 +368,38 @@ module CloudController
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
     end
 
-    def kpack_client
-      kubernetes_config = VCAP::CloudController::Config.config.get(:kubernetes)
-      kube_client = Kubernetes::KubeClientBuilder.build({
-        api_group_url: "#{kubernetes_config[:host_url]}/apis/build.pivotal.io",
+    def k8s_api_client
+      config = VCAP::CloudController::Config.config
+      build_kube_client = Kubernetes::KubeClientBuilder.build(
+        api_group_url: "#{config.kubernetes_host_url}/apis/build.pivotal.io",
         version: 'v1alpha1',
-        service_account_token: File.open(kubernetes_config[:service_account][:token_file]).read,
-        ca_crt: File.open(kubernetes_config[:ca_file]).read
-      })
+        service_account_token: config.kubernetes_service_account_token,
+        ca_crt: config.kubernetes_ca_cert,
+      )
 
-      Kubernetes::KpackClient.new(kube_client)
+      kpack_kube_client = Kubernetes::KubeClientBuilder.build(
+        api_group_url: "#{config.kubernetes_host_url}/apis/experimental.kpack.pivotal.io",
+        version: 'v1alpha1',
+        service_account_token: config.kubernetes_service_account_token,
+        ca_crt: config.kubernetes_ca_cert,
+      )
+
+      route_kube_client = Kubernetes::KubeClientBuilder.build(
+        api_group_url: "#{config.kubernetes_host_url}/apis/networking.cloudfoundry.org",
+        version: 'v1alpha1',
+        service_account_token: config.kubernetes_service_account_token,
+        ca_crt: config.kubernetes_ca_cert,
+      )
+
+      Kubernetes::ApiClient.new(
+        build_kube_client: build_kube_client,
+        kpack_kube_client: kpack_kube_client,
+        route_kube_client: route_kube_client,
+      )
     end
 
-    def route_crd_client
-      kubernetes_config = VCAP::CloudController::Config.config.get(:kubernetes)
-      kube_client = Kubernetes::KubeClientBuilder.build({
-        api_group_url: "#{kubernetes_config[:host_url]}/apis/networking.cloudfoundry.org",
-        version: 'v1alpha1',
-        service_account_token: File.open(kubernetes_config[:service_account][:token_file]).read,
-        ca_crt: File.open(kubernetes_config[:ca_file]).read
-      })
-
-      Kubernetes::RouteCrdClient.new(kube_client)
+    def route_resource_manager
+      Kubernetes::RouteResourceManager.new(k8s_api_client)
     end
 
     private
@@ -445,11 +455,11 @@ module CloudController
     end
 
     def build_opi_task_client
-      ::OPI::TaskClient.new(config)
+      ::OPI::TaskClient.new(config, VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
     end
 
     def build_bbs_task_client
-      VCAP::CloudController::Diego::BbsTaskClient.new(build_bbs_client)
+      VCAP::CloudController::Diego::BbsTaskClient.new(config, build_bbs_client)
     end
 
     def build_instances_client

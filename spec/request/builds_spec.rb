@@ -11,13 +11,13 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
-  let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
+  let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
   let(:rails_logger) { double('rails_logger', info: nil) }
 
   before do
-    allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
-    allow(kpack_client).to receive(:create_image)
-    allow(kpack_client).to receive(:get_image)
+    allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+    allow(k8s_api_client).to receive(:create_image)
+    allow(k8s_api_client).to receive(:get_image)
   end
 
   describe 'POST /v3/builds' do
@@ -320,13 +320,13 @@ RSpec.describe 'Builds' do
               'package' => { 'guid' => package.guid, },
               'droplet' => {
                 'guid' => droplet.guid,
-                'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
               },
               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
               },
               'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
             },
@@ -346,13 +346,13 @@ RSpec.describe 'Builds' do
               'package' => { 'guid' => second_package.guid, },
               'droplet' => {
                 'guid' => second_droplet.guid,
-                'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
               },
               'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
               },
               'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
             },
@@ -441,7 +441,6 @@ RSpec.describe 'Builds' do
           },
           'droplet' => {
             'guid' => droplet.guid,
-            'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
           },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
@@ -451,6 +450,9 @@ RSpec.describe 'Builds' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{package.app.guid}",
+            },
+            'droplet' => {
+              'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
             }
           },
           'created_by' => {

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'cloud_controller/dependency_locator'
+require 'cloud_controller/diego/task_recipe_builder'
 
 RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
@@ -470,6 +471,28 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#traffic_controller_compatible_logcache_client' do
     let(:logcache_client) { instance_double(Logcache::Client) }
     before do
+      allow(Logcache::Client).to receive(:new).and_return(logcache_client)
+    end
+
+    it 'returns the tc-decorated client without TLS' do
+      TestConfig.override(
+        {
+          logcache_tls: nil
+        }
+      )
+      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(Logcache::Client).to have_received(:new).with(
+        host: 'http://doppler.service.cf.internal',
+        port: 8080,
+        client_ca_path: nil,
+        client_cert_path: nil,
+        client_key_path: nil,
+        tls_subject_name: nil,
+        temporary_ignore_server_unavailable_errors: false
+      )
+    end
+
+    it 'returns the tc-decorated client with TLS certificates' do
       TestConfig.override(
         {
           logcache: {
@@ -485,11 +508,6 @@ RSpec.describe CloudController::DependencyLocator do
           }
         }
       )
-
-      allow(Logcache::Client).to receive(:new).and_return(logcache_client)
-    end
-
-    it 'returns the tc-decorated client' do
       expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'some-logcache-host',
@@ -678,7 +696,7 @@ RSpec.describe CloudController::DependencyLocator do
       end
 
       it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(diego_client)
+        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
         expect(::OPI::TaskClient).to_not receive(:new)
         locator.bbs_task_client
       end
@@ -702,13 +720,15 @@ RSpec.describe CloudController::DependencyLocator do
       end
 
       it 'uses the configured opi url' do
-        expect(::OPI::TaskClient).to receive(:new).with(locator.config)
+        expect(::OPI::TaskClient).to receive(:new).with(
+          locator.config,
+          VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
         locator.bbs_task_client
       end
     end
   end
 
-  describe '#kpack_client' do
+  describe '#k8s_api_client' do
     before do
       ca_file = Tempfile.new('k8s_node_ca.crt')
       ca_file.write('my crt')
@@ -729,52 +749,33 @@ RSpec.describe CloudController::DependencyLocator do
       })
     end
 
-    it 'creates a kpack client from config' do
-      kube_client = nil
-      allow(Kubernetes::KpackClient).to receive(:new) { |arg| kube_client = arg }
+    it 'creates a k8s client from config' do
+      build_kube_client_arg = nil
+      kpack_kube_client_arg = nil
+      route_kube_client_arg = nil
+      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:|
+        build_kube_client_arg = build_kube_client
+        kpack_kube_client_arg = kpack_kube_client
+        route_kube_client_arg = route_kube_client
+      }
 
-      locator.kpack_client
+      locator.k8s_api_client
 
-      expect(kube_client.ssl_options).to eq({ ca: 'my crt' })
-      expect(kube_client.auth_options).to eq({ bearer_token: 'token' })
-      expect(kube_client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
+      expect(build_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
+      expect(build_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
+      expect(build_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
+
+      expect(kpack_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
+      expect(kpack_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
+      expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/experimental.kpack.pivotal.io'
+
+      expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
+      expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
+      expect(route_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
     end
 
     it 'always creates a new kpack client object from config' do
-      expect(locator.kpack_client).not_to eq(locator.kpack_client)
-    end
-  end
-
-  describe '#route_crd_client' do
-    before do
-      ca_file = Tempfile.new('k8s_node_ca.crt')
-      ca_file.write('my crt')
-      ca_file.close
-
-      token_file = Tempfile.new('token.token')
-      token_file.write('token')
-      token_file.close
-
-      TestConfig.override({
-        kubernetes: {
-          host_url: 'https://my.kubernetes.io',
-          service_account: {
-            token_file: token_file.path,
-          },
-          ca_file: ca_file.path
-        }
-      })
-    end
-
-    it 'creates a route_crd client from config' do
-      kube_client = nil
-      allow(Kubernetes::RouteCrdClient).to receive(:new) { |arg| kube_client = arg }
-
-      locator.route_crd_client
-
-      expect(kube_client.ssl_options).to eq({ ca: 'my crt' })
-      expect(kube_client.auth_options).to eq({ bearer_token: 'token' })
-      expect(kube_client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
+      expect(locator.k8s_api_client).not_to eq(locator.k8s_api_client)
     end
   end
 end

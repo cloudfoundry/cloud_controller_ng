@@ -15,6 +15,8 @@ module VCAP::CloudController
     end
 
     def resource_exists?
+      return false if resource_type.empty?
+
       model = case resource_type
               when 'role'
                 Role
@@ -25,6 +27,7 @@ module VCAP::CloudController
               else
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end
+
       !!model.find(guid: resource_guid)
     end
 

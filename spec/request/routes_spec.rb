@@ -1007,7 +1007,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 and a helpful error message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Hosts are not supported for TCP routes.')
         end
       end
@@ -1029,7 +1029,7 @@ RSpec.describe 'Routes Request' do
 
         it 'returns a 422 and a helpful error message' do
           post '/v3/routes', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Paths are not supported for TCP routes.')
         end
       end
@@ -1440,70 +1440,70 @@ RSpec.describe 'Routes Request' do
           allow(routing_api_client).to receive(:router_group).and_return(router_group)
         end
 
-        context 'when the user provides a valid port' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
-
-          let(:params) do
-            {
-              port: 123,
-              relationships: {
-                space: {
-                  data: { guid: space.guid }
-                },
-                domain: {
-                  data: { guid: domain.guid }
-                },
-              }
-            }
-          end
-
-          let(:route_json) do
-            {
-              guid: UUID_REGEX,
-              port: 123,
-              host: '',
-              path: '',
-              protocol: 'tcp',
-              url: "#{domain.name}:123",
-              created_at: iso8601,
-              updated_at: iso8601,
-              destinations: [],
-              relationships: {
-                space: {
-                  data: { guid: space.guid }
-                },
-                domain: {
-                  data: { guid: domain.guid }
-                },
+        let(:params) do
+          {
+            port: 123,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
               },
-              links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-                space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-                destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-                domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
-              },
-              metadata: {
-                labels: {},
-                annotations: {}
+              domain: {
+                data: { guid: domain.guid }
               },
             }
-          end
+          }
+        end
 
-          let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403,
-            )
-            h['admin'] = {
-              code: 201,
-              response_object: route_json
-            }
-            h['space_developer'] = {
-              code: 201,
-              response_object: route_json
-            }
-            h.freeze
-          end
+        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
 
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            port: 123,
+            host: '',
+            path: '',
+            protocol: 'tcp',
+            url: "#{domain.name}:123",
+            created_at: iso8601,
+            updated_at: iso8601,
+            destinations: [],
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h['space_developer'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h.freeze
+        end
+
+        context 'and the user provides a valid port' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
           context 'and a route with the domain and port already exist' do
@@ -1528,7 +1528,7 @@ RSpec.describe 'Routes Request' do
           end
         end
 
-        context 'when the user does not provide a port' do
+        context 'and the user does not provide a port' do
           let(:params) do
             {
               relationships: {
@@ -1542,10 +1542,30 @@ RSpec.describe 'Routes Request' do
             }
           end
 
-          it 'fails with a helpful error message' do
-            post '/v3/routes', params.to_json, admin_headers
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message("Routes with protocol 'tcp' must specify a port.")
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          context 'and randomly selected port is already in use' do
+            let(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
+
+            let(:params) do
+              {
+                port: existing_route.port,
+                relationships: {
+                  space: {
+                    data: { guid: space.guid }
+                  },
+                  domain: {
+                    data: { guid: domain.guid }
+                  },
+                }
+              }
+            end
+
+            it 'fails with a helpful error message' do
+              post '/v3/routes', params.to_json, admin_headers
+              expect(last_response).to have_status_code(422)
+              expect(last_response).to have_error_message("Route already exists with port '123' for domain 'my.domain'.")
+            end
           end
         end
       end
@@ -2123,6 +2143,84 @@ RSpec.describe 'Routes Request' do
         post '/v3/routes', params_with_invalid_domain.to_json, admin_header
         expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message('Invalid domain. Ensure that the domain exists and you have access to it.')
+      end
+    end
+
+    context 'when communicating with the routing API' do
+      let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+      let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'guid' => 'some-guid' }) }
+      let(:headers) { set_user_with_header_as_role(role: 'admin') }
+      let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+      let(:params) do
+        {
+            relationships: {
+                space: {
+                    data: { guid: space.guid }
+                },
+                domain: {
+                    data: { guid: domain_tcp.guid }
+                },
+            }
+        }
+      end
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+      end
+      context 'when UAA is unavailable' do
+        before do
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::UaaUnavailable
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.'
+        end
+      end
+
+      context 'when the routing API is unavailable' do
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return true
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiUnavailable
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is currently unavailable. Please try again later.'
+        end
+      end
+
+      context 'when the routing API is disabled' do
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return false
+          allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::RoutingApiDisabled
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is disabled.'
+        end
+      end
+
+      context 'when the router group is unavailable' do
+        let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'not a guid', name: 'my.domain') }
+        before do
+          allow(routing_api_client).to receive(:enabled?).and_return true
+          allow(routing_api_client).to receive(:router_group).and_return nil
+        end
+
+        it 'returns a 503 with a helpful error message' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq 'Route could not be created because the specified domain does not have a valid router group.'
+        end
       end
     end
   end

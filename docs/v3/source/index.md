@@ -4,6 +4,7 @@ title: Cloud Controller API Reference
 includes:
   - api_resources/app_features
   - api_resources/app_ssh_enabled
+  - api_resources/app_usage_events
   - api_resources/apps
   - api_resources/audit_events
   - api_resources/builds
@@ -31,6 +32,7 @@ includes:
   - api_resources/service_plans
   - api_resources/service_plan_visibility
   - api_resources/service_instances
+  - api_resources/service_usage_events
   - api_resources/sidecars
   - api_resources/spaces
   - api_resources/space_features
@@ -44,17 +46,21 @@ includes:
   - concepts/authentication
   - concepts/authorization
   - concepts/errors
+  - concepts/fields
   - concepts/filters
   - concepts/includes
-  - concepts/fields
   - concepts/lifecycles
   - concepts/metadata
   - concepts/pagination
   - concepts/procfiles
+  - concepts/query_parameters
   - concepts/relationships
   - concepts/status_codes
+  - concepts/timestamps
   - concepts/warnings
   - resources/header
+  - resources/admin/header
+  - resources/admin/clear_buildpack_cache
   - resources/apps/header
   - resources/apps/object
   - resources/apps/create
@@ -66,6 +72,7 @@ includes:
   - resources/apps/get_current_droplet_relationship
   - resources/apps/env
   - resources/apps/environment_variables
+  - resources/apps/permissions
   - resources/apps/current_droplet
   - resources/apps/ssh_enabled
   - resources/apps/start
@@ -77,6 +84,11 @@ includes:
   - resources/app_features/get
   - resources/app_features/list
   - resources/app_features/update
+  - resources/app_usage_events/header
+  - resources/app_usage_events/object
+  - resources/app_usage_events/get
+  - resources/app_usage_events/list
+  - resources/app_usage_events/delete
   - resources/audit_events/header
   - resources/audit_events/object
   - resources/audit_events/get
@@ -123,6 +135,7 @@ includes:
   - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/copy
+  - resources/droplets/download_bits
   - resources/droplets/upload_bits
   - resources/environment_variable_groups/header
   - resources/environment_variable_groups/object
@@ -136,6 +149,7 @@ includes:
   - resources/feature_flags/update
   - resources/info/header
   - resources/info/get
+  - resources/info/get_usage_summary
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create
@@ -150,6 +164,11 @@ includes:
   - resources/jobs/header
   - resources/jobs/object
   - resources/jobs/get
+  - resources/manifests/header
+  - resources/manifests/object
+  - resources/manifests/apply
+  - resources/manifests/get
+  - resources/manifests/create_diff
   - resources/organizations/header
   - resources/organizations/object
   - resources/organizations/create
@@ -231,6 +250,14 @@ includes:
   - resources/security_groups/unbind_staging
   - resources/security_groups/list_running_security_groups
   - resources/security_groups/list_staging_security_groups
+  - resources/service_brokers/header
+  - resources/service_brokers/object
+  - resources/service_brokers/create
+  - resources/service_brokers/get
+  - resources/service_brokers/list
+  - resources/service_brokers/update
+  - resources/service_brokers/delete
+  - resources/service_brokers/jobs
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/list
@@ -238,6 +265,31 @@ includes:
   - resources/service_instances/update
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
+  - resources/service_offerings/header
+  - resources/service_offerings/visibility
+  - resources/service_offerings/object
+  - resources/service_offerings/get
+  - resources/service_offerings/list
+  - resources/service_offerings/update
+  - resources/service_offerings/delete  
+  - resources/service_plans/header
+  - resources/service_plans/object
+  - resources/service_plans/get
+  - resources/service_plans/list
+  - resources/service_plans/update
+  - resources/service_plans/delete
+  - resources/service_plan_visibility/header
+  - resources/service_plan_visibility/object
+  - resources/service_plan_visibility/visibility_types
+  - resources/service_plan_visibility/get
+  - resources/service_plan_visibility/update
+  - resources/service_plan_visibility/apply
+  - resources/service_plan_visibility/delete  
+  - resources/service_usage_events/header
+  - resources/service_usage_events/object
+  - resources/service_usage_events/get
+  - resources/service_usage_events/list
+  - resources/service_usage_events/delete
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -252,9 +304,6 @@ includes:
   - resources/space_features/get
   - resources/space_features/list
   - resources/space_features/update
-  - resources/space_manifest/header
-  - resources/space_manifest/object
-  - resources/space_manifest/apply
   - resources/space_quotas/header
   - resources/space_quotas/object
   - resources/space_quotas/create
@@ -289,7 +338,6 @@ includes:
   - experimental_resources/header
   - experimental_resources/app_manifest/header
   - experimental_resources/app_manifest/object
-  - experimental_resources/app_manifest/get
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
@@ -306,39 +354,12 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/list
   - experimental_resources/service_bindings/delete
-  - experimental_resources/service_brokers/header
-  - experimental_resources/service_brokers/object
-  - experimental_resources/service_brokers/create
-  - experimental_resources/service_brokers/get
-  - experimental_resources/service_brokers/list
-  - experimental_resources/service_brokers/update
-  - experimental_resources/service_brokers/delete
-  - experimental_resources/service_brokers/jobs
-  - experimental_resources/service_offerings/header
-  - experimental_resources/service_offerings/visibility
-  - experimental_resources/service_offerings/object
-  - experimental_resources/service_offerings/get
-  - experimental_resources/service_offerings/list
-  - experimental_resources/service_offerings/update
-  - experimental_resources/service_offerings/delete
-  - experimental_resources/service_plans/header
-  - experimental_resources/service_plans/object
-  - experimental_resources/service_plans/get
-  - experimental_resources/service_plans/list
-  - experimental_resources/service_plans/update
-  - experimental_resources/service_plans/delete
-  - experimental_resources/service_plan_visibility/header
-  - experimental_resources/service_plan_visibility/object
-  - experimental_resources/service_plan_visibility/visibility_types
-  - experimental_resources/service_plan_visibility/get
-  - experimental_resources/service_plan_visibility/update
-  - experimental_resources/service_plan_visibility/apply
-  - experimental_resources/service_plan_visibility/delete
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get
   - experimental_resources/service_instances/credentials
   - experimental_resources/service_instances/parameters
+  - experimental_resources/service_instances/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
@@ -347,6 +368,43 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - upgrade_guide/upgrade_guide
+  - upgrade_guide/header
+  - upgrade_guide/conceptual_changes/header
+  - upgrade_guide/conceptual_changes/app_sub_resources
+  - upgrade_guide/conceptual_changes/starting_apps
+  - upgrade_guide/conceptual_changes/asynchronous_operations
+  - upgrade_guide/conceptual_changes/errors
+  - upgrade_guide/conceptual_changes/filtering
+  - upgrade_guide/conceptual_changes/including_associated_resources
+  - upgrade_guide/conceptual_changes/resource_summaries
+  - upgrade_guide/new_concepts/header
+  - upgrade_guide/new_concepts/actions
+  - upgrade_guide/new_concepts/links
+  - upgrade_guide/new_concepts/metadata
+  - upgrade_guide/new_concepts/relationships
+  - upgrade_guide/new_resources/header
+  - upgrade_guide/new_resources/app_features
+  - upgrade_guide/new_resources/builds
+  - upgrade_guide/new_resources/deployments
+  - upgrade_guide/new_resources/isolation_segments
+  - upgrade_guide/new_resources/manifests
+  - upgrade_guide/new_resources/revisions
+  - upgrade_guide/new_resources/sidecars
+  - upgrade_guide/new_resources/tasks
+  - upgrade_guide/changed_resources/header
+  - upgrade_guide/changed_resources/audit_events_in_v3
+  - upgrade_guide/changed_resources/domains_in_v3
+  - upgrade_guide/changed_resources/organization_quotas_in_v3
+  - upgrade_guide/changed_resources/routes_in_v3
+  - upgrade_guide/changed_resources/security_groups_in_v3
+  - upgrade_guide/changed_resources/service_brokers_in_v3
+  - upgrade_guide/changed_resources/service_offerings_in_v3
+  - upgrade_guide/changed_resources/service_plans_in_v3
+  - upgrade_guide/changed_resources/service_plan_visibility_in_v3
+  - upgrade_guide/changed_resources/space_quotas_in_v3
+  - upgrade_guide/changed_resources/usage_events_in_v3
+  - upgrade_guide/changed_resources/users_and_roles_in_v3
+  - upgrade_guide/deprecated_endpoints/header
+  - upgrade_guide/deprecated_endpoints/restage
 
 ---

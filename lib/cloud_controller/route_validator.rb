@@ -15,7 +15,7 @@ module VCAP::CloudController
       validate_router_group
       validate_path_not_included_for_internal_domain
       validate_wildcard_host_not_included_with_internal_domain
-      if is_tcp_router_group?
+      if domain_protocols&.include?('tcp')
         validate_host_not_included
         validate_path_not_included
         validate_port_included
@@ -28,23 +28,16 @@ module VCAP::CloudController
 
     private
 
-    def routing_api_client
-      routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
-      raise RoutingApi::RoutingApiDisabled unless routing_api_client.enabled?
-
-      routing_api_client
-    end
-
     def domain_has_router_group_guid?
       !route.domain.nil? && route.domain.shared? && !route.domain.router_group_guid.nil?
     end
 
-    def is_tcp_router_group?
-      domain_has_router_group_guid? && !router_group.nil? && router_group.type == 'tcp'
+    def domain_protocols
+      route.domain&.protocols
     end
 
     def router_group
-      @router_group ||= routing_api_client.router_group(route.domain.router_group_guid)
+      route.domain.router_group
     end
 
     def validate_router_group
@@ -59,7 +52,7 @@ module VCAP::CloudController
 
     def validate_path_not_included
       unless route.path.blank?
-        route.errors.add(:host, :host_and_path_domain_tcp)
+        route.errors.add(:path, :host_and_path_domain_tcp)
       end
     end
 

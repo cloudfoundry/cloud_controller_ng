@@ -4,8 +4,8 @@ require 'cloud_controller/paging/paginated_result'
 module VCAP::CloudController
   class RoleListFetcher
     class << self
-      def fetch(message, readable_users_dataset)
-        filter(message, readable_users_dataset)
+      def fetch(message, readable_users_dataset, eager_loaded_associations: [])
+        filter(message, readable_users_dataset).eager(eager_loaded_associations)
       end
 
       private

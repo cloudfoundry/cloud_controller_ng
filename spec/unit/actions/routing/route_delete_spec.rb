@@ -15,11 +15,11 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid', user_email: 'user-email') }
     let(:recursive) { false }
     let!(:route) { Route.make }
-    let(:route_crd_client) { instance_double(Kubernetes::RouteCrdClient) }
+    let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-      allow(route_crd_client).to receive(:delete_route)
+      allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+      allow(route_resource_manager).to receive(:delete_route)
     end
 
     describe 'delete_unmapped_route' do
@@ -134,13 +134,13 @@ module VCAP::CloudController
 
       context 'when targeting a Kubernetes API' do
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:route_crd_client).and_return(route_crd_client)
-          allow(route_crd_client).to receive(:delete_route)
+          allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
+          allow(route_resource_manager).to receive(:delete_route)
         end
         it 'deletes the route resource in Kubernetes' do
           expect {
             route_delete_action.delete_sync(route: route, recursive: false)
-            expect(route_crd_client).to have_received(:delete_route)
+            expect(route_resource_manager).to have_received(:delete_route)
           }.to change { Route.count }.by(-1)
         end
       end
@@ -153,7 +153,7 @@ module VCAP::CloudController
         end
         it 'does not delete the route resource in Kubernetes' do
           route_delete_action.delete_sync(route: route, recursive: false)
-          expect(route_crd_client).not_to have_received(:delete_route)
+          expect(route_resource_manager).not_to have_received(:delete_route)
         end
       end
     end

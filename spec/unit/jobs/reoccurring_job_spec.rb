@@ -73,14 +73,16 @@ module VCAP
         job.polling_interval_seconds = 95
         expect(job.polling_interval_seconds).to eq(95)
 
+        enqueued_time = Time.now
+
         Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        Timecop.freeze(Time.now + 94.second) do
+        Timecop.freeze(enqueued_time + 94.second) do
           execute_all_jobs(expected_successes: 0, expected_failures: 0)
         end
 
-        Timecop.freeze(Time.now + 96.seconds) do
+        Timecop.freeze(enqueued_time + 96.seconds) do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
       end

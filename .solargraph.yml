@@ -2,9 +2,8 @@
 include:
 - "**/*.rb"
 exclude:
-- spec/**/*
 - test/**/*
-- vendor/**/*
+- errors/**/*
 - ".bundle/**/*"
 require: []
 domains: []

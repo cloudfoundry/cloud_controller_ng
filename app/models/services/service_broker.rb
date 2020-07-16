@@ -39,7 +39,7 @@ module VCAP::CloudController
     end
 
     def available?
-      self.state == ServiceBrokerStateEnum::AVAILABLE
+      self.state.blank? || self.state == ServiceBrokerStateEnum::AVAILABLE
     end
 
     def space_scoped?

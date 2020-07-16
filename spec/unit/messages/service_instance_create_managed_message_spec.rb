@@ -36,6 +36,7 @@ module VCAP::CloudController
       expect(message.requested?(:name)).to be_truthy
       expect(message.requested?(:relationships)).to be_truthy
       expect(message.requested?(:tags)).to be_truthy
+      expect(message.requested?(:parameters)).to be_truthy
     end
 
     it 'builds the right message' do

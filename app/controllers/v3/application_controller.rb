@@ -37,6 +37,10 @@ module V3ErrorsHelper
   def resource_not_found!(resource)
     raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
   end
+
+  def not_found!
+    raise CloudController::Errors::NotFound.new_from_details('NotFound')
+  end
 end
 
 class ApplicationController < ActionController::Base
@@ -44,8 +48,8 @@ class ApplicationController < ActionController::Base
   include V3ErrorsHelper
   include VCAP::CloudController::ParamsHashifier
 
-  ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request'].map(&:freeze).freeze
-  UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
+  ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request', 'v3_info'].map(&:freeze).freeze
+  UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root', 'v3_info'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
   YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 

@@ -726,6 +726,33 @@ RSpec.describe 'Deployments' do
         end
       end
     end
+
+    context 'validation failures' do
+      let(:smol_quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1) }
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      before do
+        org.quota_definition = smol_quota
+        org.save
+      end
+
+      it 'should return a 422 when a quota is violated' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(422)
+
+        expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
+      end
+    end
   end
 
   describe 'PATCH /v3/deployments' do

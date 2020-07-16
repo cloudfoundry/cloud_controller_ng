@@ -150,7 +150,7 @@ module VCAP::CloudController
     private
 
     def k8s_enabled?
-      Config.config.get(:kubernetes, :host_url).present?
+      Config.config.kubernetes_api_configured?
     end
 
     def validate_change_owning_organization(organization)

@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   get '/', to: 'root#v3_root'
 
+  # admin actions
+  post '/admin/actions/clear_buildpack_cache', to: 'admin_actions#clear_buildpack_cache'
+
   # apps
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
@@ -11,6 +14,7 @@ Rails.application.routes.draw do
   post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
   post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
+  get '/apps/:guid/permissions', to: 'apps_v3#show_permissions'
   get '/apps/:guid/builds', to: 'apps_v3#builds'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
@@ -103,6 +107,7 @@ Rails.application.routes.draw do
   get '/packages/:package_guid/droplets', to: 'droplets#index'
   patch '/droplets/:guid', to: 'droplets#update'
   post '/droplets/:guid/upload', to: 'droplets#upload'
+  get '/droplets/:guid/download', to: 'droplets#download'
 
   # errors
   match '404', to: 'errors#not_found', via: :all
@@ -213,6 +218,7 @@ Rails.application.routes.draw do
   post '/service_instances', to: 'service_instances_v3#create'
   post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
   patch '/service_instances/:guid', to: 'service_instances_v3#update'
+  delete '/service_instances/:guid', to: 'service_instances_v3#destroy'
   delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # space_features
@@ -222,6 +228,7 @@ Rails.application.routes.draw do
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
+  post '/spaces/:guid/manifest_diff', to: 'space_manifests#diff_manifest'
 
   # space_quotas
   post '/space_quotas', to: 'space_quotas#create'
@@ -286,6 +293,16 @@ Rails.application.routes.draw do
   get '/audit_events', to: 'events#index'
   get '/audit_events/:guid', to: 'events#show'
 
+  # app usage events
+  get '/app_usage_events/:guid', to: 'app_usage_events#show'
+  get '/app_usage_events', to: 'app_usage_events#index'
+  post '/app_usage_events/actions/destructively_purge_all_and_reseed', to: 'app_usage_events#destructively_purge_all_and_reseed'
+
+  # service usage events
+  get '/service_usage_events/:guid', to: 'service_usage_events#show'
+  get '/service_usage_events', to: 'service_usage_events#index'
+  post '/service_usage_events/actions/destructively_purge_all_and_reseed', to: 'service_usage_events#destructively_purge_all_and_reseed'
+
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
   patch '/environment_variable_groups/:name', to: 'environment_variable_groups#update'
@@ -297,7 +314,8 @@ Rails.application.routes.draw do
   delete '/roles/:guid', to: 'roles#destroy'
 
   # info
-  get '/info', to: 'info#show'
+  get '/info', to: 'info#v3_info'
+  get '/info/usage_summary', to: 'info#show_usage_summary'
 
   namespace :internal do
     patch '/builds/:guid', to: 'builds#update'

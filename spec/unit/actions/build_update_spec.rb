@@ -141,16 +141,21 @@ module VCAP::CloudController
                 type: 'kpack',
                 data: {
                   image: 'some-fake-image:tag',
+                  processTypes: {
+                    foo: 'foo start',
+                    bar: 'bar start',
+                  },
                 }
               }
             }
           end
 
-          it 'updates the state to STAGED' do
+          it 'updates the build state as STAGED and updates the droplet with correct metadata' do
             build_update.update(build, message)
 
             expect(build.state).to eq('STAGED')
             expect(build.droplet.docker_receipt_image).to eq('some-fake-image:tag')
+            expect(build.droplet.process_types).to eq({ 'foo' => 'foo start', 'bar' => 'bar start' })
           end
         end
 

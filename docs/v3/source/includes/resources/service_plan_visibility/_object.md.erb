@@ -1,0 +1,30 @@
+### The service plan visibility object
+
+```
+Example Service Plan Visibility object - organization restricted
+```
+```json
+<%= yield_content :org_service_plan_visibility %>
+```
+
+```
+Example Service Plan Visibility object - space restricted
+```
+```json
+<%= yield_content :space_service_plan_visibility %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Denotes the visibility of the plan; can be `public`, `admin`, `organization`, `space`, see [_list of visibility types_](#list-of-visibility-types)
+**space.guid** | _string_ | Unique identifier for the space whose members can access the plan; present if `type` is `space`
+**space.name** | _string_ | Name of the space whose members can access the plan; present if `type` is `space`
+**organizations** | _array of [_organization object_](#the-organization-visibility-object)_ | List of organizations whose members can access the plan; present if `type` is `organization`
+
+#### The organization visibility object
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _string_ | Unique identifier for the organization where the plan is available
+**name** | _string_ | Name of the organization where the plan is available
+

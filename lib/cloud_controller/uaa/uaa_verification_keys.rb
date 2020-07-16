@@ -52,7 +52,7 @@ module VCAP::CloudController
         begin
           validation_hash = @info.validation_keys_hash
         rescue => e
-          logger.debug('fetch-verification-keys-retry', error: e.message, remaining_retries: retries - 1)
+          logger.error('fetch-verification-keys-retry', error: e.message, remaining_retries: retries - 1)
         end
         retries -= 1
       end

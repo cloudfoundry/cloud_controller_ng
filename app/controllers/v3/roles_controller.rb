@@ -29,7 +29,7 @@ class RolesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     RoleGuidPopulate.populate
-    roles = RoleListFetcher.fetch(message, readable_roles)
+    roles = RoleListFetcher.fetch(message, readable_roles, eager_loaded_associations: Presenters::V3::RolePresenter.associated_resources)
 
     decorators = []
     decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)
@@ -203,7 +203,7 @@ class RolesController < ApplicationController
 
     origin = given_origin
     if given_origin.nil?
-      origins = uaa_client.origins_for_username(username)
+      origins = uaa_client.origins_for_username(username).sort
 
       if origins.length > 1
         unprocessable!(

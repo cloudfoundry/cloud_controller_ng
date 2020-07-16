@@ -4,13 +4,14 @@ module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
     let(:space) { Space.make }
     let(:process) { ProcessModelFactory.make(space: space) }
+    let(:app_model) { process.app }
     let!(:first_route) { Route.make(space: space) }
     let!(:second_route) { Route.make(space: space) }
     let(:first_service) { ManagedServiceInstance.make(space: space) }
     let(:second_service) { ManagedServiceInstance.make(space: space) }
 
     let(:instances_reporters) { double(:instances_reporters) }
-    let(:running_instances) { { process.guid => 5 } }
+    let(:running_instances) { { app_model.guid => 5 } }
 
     before do
       ServiceBinding.make(app: process.app, service_instance: first_service)
@@ -37,7 +38,7 @@ module VCAP::CloudController
       it 'returns the space apps' do
         get "/v2/spaces/#{space.guid}/summary"
         expected_app_hash = {
-          guid: process.guid,
+          guid: app_model.guid,
           urls: [first_route.uri, second_route.uri],
           routes: [
             first_route.as_summary_json,
@@ -157,6 +158,7 @@ module VCAP::CloudController
 
       context 'when an app is deleted concurrently' do
         let(:deleted_process) { ProcessModelFactory.make(space: space) }
+        let!(:deleted_app_guid) { deleted_process.app.guid }
         before do
           deleted_process.app = nil
           allow_any_instance_of(Space).to receive(:apps).and_return([process, deleted_process])
@@ -166,7 +168,20 @@ module VCAP::CloudController
           get "/v2/spaces/#{space.guid}/summary"
           expect(last_response.status).to eq(200)
           expect(space.apps).to match([process, deleted_process])
-          expect(last_response.body).not_to include(deleted_process.guid)
+          expect(last_response.body).not_to include(deleted_app_guid)
+        end
+      end
+
+      context 'when the app has rolled to a new web process' do
+        before do
+          process.destroy
+          ProcessModel.make(app: app_model, type: ProcessTypes::WEB)
+        end
+
+        it 'returns the space apps with the appropriate app guid' do
+          get "/v2/spaces/#{space.guid}/summary"
+
+          expect(decoded_response['apps'][0]).to include({ 'guid' => app_model.guid })
         end
       end
     end

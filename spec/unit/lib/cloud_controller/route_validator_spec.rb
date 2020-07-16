@@ -16,6 +16,11 @@ module VCAP::CloudController
     let(:path) { '' }
 
     before do
+      TestConfig.override(
+        kubernetes: { host_url: nil },
+        external_domain: 'api2.vcap.me',
+        external_protocol: 'https',
+      )
       allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).
         and_return(routing_api_client)
     end
@@ -109,7 +114,7 @@ module VCAP::CloudController
 
           it 'adds host_and_path_domain_tcp to route model errors' do
             validator.validate
-            expect(route.errors.on(:host)).to include(:host_and_path_domain_tcp)
+            expect(route.errors.on(:path)).to include(:host_and_path_domain_tcp)
           end
         end
 

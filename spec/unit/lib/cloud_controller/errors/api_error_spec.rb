@@ -86,6 +86,11 @@ module CloudController::Errors
         expect(api_error.response_code).to eq(400)
       end
 
+      it 'can be set to a different http code' do
+        api_error.with_response_code(422)
+        expect(api_error.response_code).to eq(422)
+      end
+
       it 'exposes the name' do
         expect(api_error.name).to eq('ServiceInvalid')
       end

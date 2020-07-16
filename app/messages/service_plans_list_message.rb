@@ -36,6 +36,10 @@ module VCAP::CloudController
       super(params, @array_keys.map(&:to_s), fields: %w(fields))
     end
 
+    def to_param_hash
+      super(fields: [:fields])
+    end
+
     def available?
       requested?(:available) && available == 'true'
     end

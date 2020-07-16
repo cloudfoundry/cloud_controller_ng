@@ -9,16 +9,18 @@ Example Build object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | State of the build. Valid states are `STAGING`, `STAGED`, or `FAILED`.
-**error** | _string_ | A string describing errors during the build process.
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging. This will override the build's application's default lifecycle for this build.
-**package** | _object_ | The package that is the input to the staging process.
-**droplet** | _object_ | A resulting droplet from the staging process.
-**guid** | _uuid_ | Unique identifier for the build.
-**created_at** | _datetime_ | The time with zone when the build was created.
-**updated_at** | _datetime_ | The time with zone when the build was last updated.
-**created_by** | _object_ | The user that created the build.
-**relationships.app** _(experimental)_| [_to-one relationship_](#to-one-relationships) | The app the build belongs to.
-**links** | [_links object_](#links) | Links to related resources.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the build.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the build.
+**guid** | _uuid_ | Unique identifier for the build
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the build was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the build was last updated
+**state** | _string_ | State of the build; valid states are `STAGING`, `STAGED`, or `FAILED`
+**error** | _string_ | A string describing errors during the build process
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging; this will override the build's application's default lifecycle for this build
+**package.guid** | _string_ | The package that is the input to the staging process
+**droplet.guid** | _string_ | A resulting droplet from the staging process; `droplet` will be `null` if staging has not completed
+**created_by.guid** | _object_ | The guid of the user that created the build
+**created_by.name** | _object_ | The name of the user that created the build
+**created_by.email** | _object_ | The email of the user that created the build
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the build belongs to
+**metadata.labels** | [_label object_](#labels) | Labels applied to the build
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the build
+**links** | [_links object_](#links) | Links to related resources

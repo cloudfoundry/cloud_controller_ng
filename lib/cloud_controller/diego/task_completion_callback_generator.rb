@@ -6,10 +6,15 @@ module VCAP::CloudController
       end
 
       def generate(task)
-        schema = 'https'
+        if @config.kubernetes_api_configured?
+          port   = 80
+          schema = 'http'
+        else
+          port   = @config.get(:tls_port)
+          schema = 'https'
+        end
         auth = ''
         host = @config.get(:internal_service_hostname)
-        port = @config.get(:tls_port)
         api_version = 'v4'
 
         path = "/internal/#{api_version}/tasks/#{task.guid}/completed"

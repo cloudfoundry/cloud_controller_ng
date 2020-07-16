@@ -15,7 +15,6 @@ module VCAP::Services
           it 'initializes the base class correctly' do
             exception = AppRequired.new(uri, method, response)
             expect(exception.message).to eq('This service supports generation of credentials through binding an application only.')
-            expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to eq(MultiJson.load(response.body))
           end

@@ -82,8 +82,7 @@ module VCAP::CloudController
     end
 
     def submit_task(task)
-      task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)
-      dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
+      dependency_locator.bbs_task_client.desire_task(task, Diego::TASKS_DOMAIN)
       mark_task_as_running(task)
     rescue => e
       fail_task(task)

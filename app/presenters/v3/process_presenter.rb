@@ -20,6 +20,8 @@ module VCAP::CloudController
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
           {
             guid:         process.guid,
+            created_at:   process.created_at,
+            updated_at:   process.updated_at,
             type:         process.type,
             command:      redact(process.specified_or_detected_command),
             instances:    process.instances,
@@ -33,8 +35,6 @@ module VCAP::CloudController
               app: { data: { guid: process.app_guid } },
               revision:     revision,
             },
-            created_at:   process.created_at,
-            updated_at:   process.updated_at,
             metadata: {
               labels: hashified_labels(process.labels),
               annotations: hashified_annotations(process.annotations),

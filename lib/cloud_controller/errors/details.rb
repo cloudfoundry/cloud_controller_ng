@@ -22,7 +22,7 @@ module CloudController
     module V2
       class HardCodedDetails
         def self.yaml_file_path
-          File.join(File.expand_path('../../../vendor/errors', __dir__), 'v2.yml')
+          File.join(File.expand_path('../../../errors', __dir__), 'v2.yml')
         end
 
         HARD_CODED_DETAILS = CloudController::Errors::DetailsLoader.load_by_name(yaml_file_path)

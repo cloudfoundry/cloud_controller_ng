@@ -81,16 +81,20 @@ module VCAP::CloudController
     ).from_self
   )
 
+    many_to_one :user, key: :user_id
+    many_to_one :organization, key: :organization_id
+    many_to_one :space, key: :space_id
+
     def user_guid
-      User.first(id: user_id).guid
+      user.guid
     end
 
     def organization_guid
-      Organization.first(id: organization_id)&.guid
+      organization&.guid
     end
 
     def space_guid
-      Space.first(id: space_id)&.guid
+      space&.guid
     end
 
     def for_space?

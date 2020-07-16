@@ -8,17 +8,17 @@ Example Domain object
 <%= yield_content :single_domain %>
 ```
 
-| Name                                      | Type                                             | Description                                                                                                                                                   |
-| --------------                            | ------------------------                         | ------------------------------------------------------                                                                                                        |
-| **guid**                                  | _uuid_                                           | Unique identifier for the domain.                                                                                                                             |
-| **created_at**                            | _datetime_                                       | The time with zone when the object was created.                                                                                                               |
-| **updated_at**                            | _datetime_                                       | The time with zone when the object was last updated.                                                                                                          |
-| **name**                                  | _string_                                         | The name of the domain.<br>Must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035).                                     |
-| **internal**                              | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic.                                                                                     |
-| **router_group.guid** (*experimental*)                    | _uuid_                                           | The guid of the desired router group to route TCP traffic through. If set, the domain will only be available for TCP traffic.                                      |
-| **supported_protocols** (*experimental*)                  | _list of strings_                               |Available protocols for routes using the domain.                       |
-| **organization**                          | [_to-one relationship_](#to-one-relationships)   | The organization the domain is scoped to. If set, the domain will only be available in that organization. Otherwise, the domain will be globally available.   |
-| **shared_organizations**                  | [_to-many relationship_](#to-many-relationships) | Organizations the domain is shared with. If set, the domain will be available in these organizations in addition to the organization the domain is scoped to. |
-| **links**                                 | [_links object_](#links)                         | Links to related resources.                                                                                                                                   |
-| **metadata.labels**       | [_label object_](#labels)                        | Labels applied to the domain.                                                                                                                                 |
-| **metadata.annotations**  | [_annotation object_](#annotations)              | Annotations applied to the domain.                                                                                                                            |
+| Name                      | Type                                             | Description
+| --------------            | ------------------------                         | ------------------------------------------------------
+| **guid**                  | _uuid_                                           | Unique identifier for the domain
+| **created_at**            | _[timestamp](#timestamps)_                                       | The time with zone when the object was created
+| **updated_at**            | _[timestamp](#timestamps)_                                       | The time with zone when the object was last updated
+| **name**                  | _string_                                         | The name of the domain;<br>must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035)
+| **internal**              | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic
+| **router_group.guid**     | _uuid_                                           | The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
+| **supported_protocols**   | _list of strings_                                | Available protocols for routes using the domain, currently `http` and `tcp`
+| **relationships.organization**          | [_to-one relationship_](#to-one-relationships)   | The organization the domain is scoped to; if set, the domain will only be available in that organization; otherwise, the domain will be globally available
+| **relationships.shared_organizations**  | [_to-many relationship_](#to-many-relationships) | Organizations the domain is shared with; if set, the domain will be available in these organizations in addition to the organization the domain is scoped to
+| **metadata.labels**       | [_label object_](#labels)                        | Labels applied to the domain
+| **metadata.annotations**  | [_annotation object_](#annotations)              | Annotations applied to the domain
+| **links**                 | [_links object_](#links)                         | Links to related resources

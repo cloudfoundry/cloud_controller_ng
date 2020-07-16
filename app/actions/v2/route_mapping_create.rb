@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
 
         if VCAP::CloudController::Config.kubernetes_api_configured?
-          route_crd_client.update_destinations(route_mapping.route)
+          route_resource_manager.update_destinations(route_mapping.route)
         end
 
         route_mapping
@@ -65,8 +65,8 @@ module VCAP::CloudController
 
       attr_reader :request_attrs, :user_audit_info, :app, :route, :process
 
-      def route_crd_client
-        @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
+      def route_resource_manager
+        @route_resource_manager ||= CloudController::DependencyLocator.instance.route_resource_manager
       end
 
       def requested_port

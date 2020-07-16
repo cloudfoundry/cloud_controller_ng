@@ -329,7 +329,7 @@ RSpec.describe 'Roles Request' do
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
-            "User with username 'uuu' exists in the following origins: uaa, ldap, okta. Specify an origin to disambiguate."
+            "User with username 'uuu' exists in the following origins: ldap, okta, uaa. Specify an origin to disambiguate."
           )
         end
       end
@@ -945,6 +945,19 @@ RSpec.describe 'Roles Request' do
             include: 'user, space',
           }
         end
+      end
+    end
+
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::RoleListFetcher).to receive(:fetch).with(
+          anything,
+          anything,
+          hash_including(eager_loaded_associations: [:user, :space, :organization])
+        ).and_call_original
+
+        get '/v3/roles', nil, admin_header
+        expect(last_response).to have_status_code(200)
       end
     end
 

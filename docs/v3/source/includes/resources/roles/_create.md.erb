@@ -92,16 +92,16 @@ If the associated user is valid but does not exist in Cloud Controller's databas
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Role to create. See [valid role types](#valid-role-types).
-**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user. The user can be defined by either a `guid` or, if the `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled, a `username` (with the option of including an `origin` to disambiguate it).
-**relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization. Required only when creating an organization role.
-**relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space. Required only when creating a space role.
+**type** | _string_ | Role to create; see [valid role types](#valid-role-types)
+**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user; the user can be defined by either a `guid` or, if the `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled, a `username` (with the option of including an `origin` to disambiguate it)
+**relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization; required only when creating an organization role
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space; required only when creating a space role
 
 #### Permitted roles
 
 Role | Notes
 --- | ---
 Admin |
-Org Manager | Can create roles in managed organizations and spaces within those organizations. Can also create roles for users outside of managed organizations when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled. This requires identifying users by username and origin.
-Space Manager | Can create roles in managed spaces for users in their org.
+Org Manager | Can create roles in managed organizations and spaces within those organizations; can also create roles for users outside of managed organizations when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled; this requires identifying users by username and origin
+Space Manager | Can create roles in managed spaces for users in their org
 

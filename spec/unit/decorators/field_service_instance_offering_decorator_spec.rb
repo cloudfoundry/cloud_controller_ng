@@ -4,8 +4,8 @@ require 'decorators/field_service_instance_offering_decorator'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOfferingDecorator do
     describe '.decorate' do
-      let(:offering1) { Service.make }
-      let(:offering2) { Service.make }
+      let(:offering1) { Service.make(extra: '{"documentationUrl": "https://offering1.com"}') }
+      let(:offering2) { Service.make(extra: '{"documentationUrl": "https://offering2.com"}') }
 
       let(:plan1) { ServicePlan.make(service: offering1) }
       let(:plan2) { ServicePlan.make(service: offering2) }
@@ -13,7 +13,7 @@ module VCAP::CloudController
       let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
-      it 'decorated the given hash with offering name from service instances' do
+      it 'can decorate with the service offering name' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
         decorator = described_class.new({ 'service_plan.service_offering': ['name', 'foo'] })
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
         })
       end
 
-      it 'decorated the given hash with offering guids from service instances' do
+      it 'can decorate with the service offering guid' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
         decorator = described_class.new({ 'service_plan.service_offering': ['guid', 'foo'] })
 
@@ -51,6 +51,50 @@ module VCAP::CloudController
               },
               {
                 guid: offering2.guid,
+              }
+            ]
+          }
+        })
+      end
+
+      it 'can decorate with the service offering description' do
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        decorator = described_class.new({ 'service_plan.service_offering': ['description', 'foo'] })
+
+        hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
+
+        expect(hash).to match({
+          foo: 'bar',
+          included: {
+            monkeys: %w(zach greg),
+            service_offerings: [
+              {
+                description: offering1.description,
+              },
+              {
+                description: offering2.description,
+              }
+            ]
+          }
+        })
+      end
+
+      it 'can decorate with the service offering documentation' do
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        decorator = described_class.new({ 'service_plan.service_offering': ['documentation_url', 'foo'] })
+
+        hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
+
+        expect(hash).to match({
+          foo: 'bar',
+          included: {
+            monkeys: %w(zach greg),
+            service_offerings: [
+              {
+                documentation_url: 'https://offering1.com',
+              },
+              {
+                documentation_url: 'https://offering2.com',
               }
             ]
           }
@@ -116,20 +160,16 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it 'matches hashes containing key symbol `service_plan.service_offering` and value `name`' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['name'], other: ['bar'] })).to be_truthy
+      fields = %w(name guid description documentation_url relationships.service_broker)
+
+      fields.each do |field|
+        it "matches value `#{field}` for key symbol `service_plan.service_offering`" do
+          expect(described_class.match?({ 'service_plan.service_offering': [field], other: ['bar'] })).to be_truthy
+        end
       end
 
-      it 'matches hashes containing key symbol `service_plan.service_offering` and value `guid`' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['guid'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `service_plan.service_offering` and value `relationships.service_broker`' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['relationships.service_broker'], other: ['bar'] })).to be_truthy
-      end
-
-      it 'matches hashes containing key symbol `service_plan.service_offering` and value `name,guid,relationships.service_broker`' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['name', 'guid', 'relationships.service_broker', 'something'], other: ['bar'] })).to be_truthy
+      it 'matches all fields together for key symbol `service_plan.service_offering`' do
+        expect(described_class.match?({ 'service_plan.service_offering': fields, other: ['bar'] })).to be_truthy
       end
 
       it 'does not match other values for a valid key' do

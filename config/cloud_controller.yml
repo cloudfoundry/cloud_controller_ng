@@ -90,6 +90,8 @@ logging:
   level: debug2
   syslog: vcap.example
   anonymize_ips: false
+  format:
+    timestamp: 'rfc3339'
 
 telemetry_log_path: spec/artifacts/cloud_controller_telemetry.log
 
@@ -298,7 +300,7 @@ kubernetes:
   ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
   workloads_namespace: 'cf-workloads'
   kpack:
-    builder_namespace: 'cf-workloads'
+    builder_namespace: 'cf-workloads-staging'
     registry_service_account_name: 'fake-registry-service-account'
     registry_tag_base: 'gcr.io/fake-image-repository'
 
@@ -398,3 +400,4 @@ locket:
 threadpool_size: 20
 
 default_app_lifecycle: buildpack
+custom_metric_tag_prefix_list: ["metric.tag.cloudfoundry.org"]

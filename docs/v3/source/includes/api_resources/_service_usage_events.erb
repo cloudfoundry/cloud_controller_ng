@@ -1,0 +1,93 @@
+<% content_for :single_service_usage_event do %>
+{
+  "guid": "c9976002-96f4-435a-888e-db1e1178df62",
+  "created_at": "2020-05-28T12:34:56Z",
+  "updated_at": "2020-05-28T12:34:56Z",
+  "state": "CREATED",
+  "space": {
+    "guid": "guid-5e28f12f-9d80-473e-b826-537b148eb338",
+    "name": "name-1664"
+  },
+  "organization": {
+    "guid": "guid-036444f4-f2f5-4ea8-a353-e73330ca0f0a"
+  },
+  "service_instance": {
+    "guid": "guid-f93250f7-7ef5-4b02-8d33-353919ce8358",
+    "name": "name-1982",
+    "type": "managed_service_instance"
+  },
+  "service_plan": {
+    "guid": "guid-e9d2d5a0-69a6-46ef-bac5-43f3ed177614",
+    "name": "name-1983"
+  },
+  "service_offering": {
+    "guid": "guid-34916716-31d7-40c1-9afd-f312996c9654",
+    "name": "label-64"
+  },
+  "service_broker": {
+    "guid": "guid-7cc11646-bf38-4f4e-b6e0-9581916a74d9",
+    "name": "name-2929"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/service_usage_events/c9976002-96f4-435a-888e-db1e1178df62"
+    }
+  }
+}
+<% end %>
+
+<% content_for :paginated_list_of_service_usage_events do |path| %>
+{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= path %>?page=1&per_page=1"
+    },
+    "last": {
+      "href": "https://api.example.org<%= path %>?page=2&per_page=1"
+    },
+    "next": {
+      "href": "https://api.example.org<%= path %>?page=2&per_page=1"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "c9976002-96f4-435a-888e-db1e1178df62",
+      "created_at": "2020-05-28T12:34:56Z",
+      "updated_at": "2020-05-28T12:34:56Z",
+      "state": "CREATED",
+      "space": {
+        "guid": "guid-5e28f12f-9d80-473e-b826-537b148eb338",
+        "name": "name-1664"
+      },
+      "organization": {
+        "guid": "guid-036444f4-f2f5-4ea8-a353-e73330ca0f0a"
+      },
+      "service_instance": {
+        "guid": "guid-f93250f7-7ef5-4b02-8d33-353919ce8358",
+        "name": "name-1982",
+        "type": "managed_service_instance"
+      },
+      "service_plan": {
+        "guid": "guid-e9d2d5a0-69a6-46ef-bac5-43f3ed177614",
+        "name": "name-1983"
+      },
+      "service_offering": {
+        "guid": "guid-34916716-31d7-40c1-9afd-f312996c9654",
+        "name": "label-64"
+      },
+      "service_broker": {
+        "guid": "guid-7cc11646-bf38-4f4e-b6e0-9581916a74d9",
+        "name": "name-2929"
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/service_usage_events/c9976002-96f4-435a-888e-db1e1178df62"
+        }
+      }
+    }
+  ]
+}
+<% end %>

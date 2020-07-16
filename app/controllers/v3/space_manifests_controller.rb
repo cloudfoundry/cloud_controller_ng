@@ -3,6 +3,7 @@ require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
 require 'actions/app_find_or_create_skeleton'
 require 'actions/app_create'
+require 'json-diff'
 
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
@@ -39,6 +40,43 @@ class SpaceManifestsController < ApplicationController
 
     url_builder = Presenters::ApiUrlBuilder
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
+  def diff_manifest
+    space = Space.find(guid: hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    json_diff = []
+
+    parsed_app_manifests.each_with_index do |manifest_app_hash, index|
+      existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] } || {}
+
+      if existing_app == {}
+        existing_app_hash = {}
+      else
+        manifest_presenter = Presenters::V3::AppManifestPresenter.new(
+          existing_app,
+          existing_app.service_bindings,
+          existing_app.routes,
+        )
+        existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
+      end
+
+      curr_diff = JsonDiff.diff(
+        existing_app_hash,
+        manifest_app_hash.to_hash,
+        include_was: true,
+      )
+
+      curr_diff.each do |diff|
+        diff['path'] = "/applications/#{index}" + diff['path']
+      end
+
+      json_diff += curr_diff
+    end
+
+    render status: :created, json: { diff: json_diff }
   end
 
   private
@@ -82,7 +120,7 @@ class SpaceManifestsController < ApplicationController
   def parsed_app_manifests
     check_version_is_supported!
     parsed_applications = params[:body]['applications']
-    raise invalid_request!('Invalid app manifest') unless parsed_applications.present?
+    raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
 
     parsed_applications.map(&:to_unsafe_h)
   end

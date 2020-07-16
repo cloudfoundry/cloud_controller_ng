@@ -22,17 +22,17 @@ module VCAP::CloudController
         def to_hash
           {
             guid:       package.guid,
+            created_at: package.created_at,
+            updated_at: package.updated_at,
             type:       package.type,
             data:       build_data,
             state:      package.state,
-            created_at: package.created_at,
-            updated_at: package.updated_at,
             relationships: { app: { data: { guid: package.app_guid } } },
-            links:      build_links,
             metadata: {
               labels: hashified_labels(package.labels),
               annotations: hashified_annotations(package.annotations),
-            }
+            },
+            links:      build_links,
           }
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
                             { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
                           end
 
-            download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download"), method: 'GET' }
+            download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download") }
           end
 
           links = {

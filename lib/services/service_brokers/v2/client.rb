@@ -166,14 +166,14 @@ module VCAP::Services::ServiceBrokers::V2
       raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
     end
 
-    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil)
+    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil, name: instance.name)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
         service_id:      instance.service.broker_provided_id,
         plan_id:         plan.broker_provided_id,
         previous_values: previous_values,
-        context:         context_hash_with_instance_name(instance)
+        context:         context_hash_with_instance_name(instance, name: name)
       }
       body[:parameters]       = arbitrary_parameters if arbitrary_parameters
       body[:maintenance_info] = maintenance_info if maintenance_info
@@ -263,7 +263,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
       }
 
-      if result[:last_operation][:state] == 'failed'
+      if result[:last_operation][:state] == 'failed' && instance.last_operation.type == 'create'
         @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       end
 
@@ -300,8 +300,8 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def context_hash_with_instance_name(service_instance)
-      context_hash(service_instance).merge(instance_name: service_instance.name)
+    def context_hash_with_instance_name(service_instance, name: service_instance.name)
+      context_hash(service_instance).merge(instance_name: name)
     end
 
     def context_hash(service_instance)

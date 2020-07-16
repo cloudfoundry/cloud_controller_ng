@@ -29,7 +29,7 @@ module VCAP::CloudController
 
           expect(app.name).to eq(name)
           expect(app.space).to eq(space)
-          expect(app.lifecycle_type).to eq(Lifecycles::BUILDPACK)
+          expect(app.reload.lifecycle_type).to eq(Lifecycles::BUILDPACK)
         end
       end
 

@@ -1,0 +1,31 @@
+### Delete a service plan
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint deletes a service plan. This is used to remove service plans from the Cloud Foundry database when they
+are no longer provided by the service broker.
+
+#### Definition
+`DELETE /v3/service_plans/:guid`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Developer (only service plans from space-scoped brokers) |

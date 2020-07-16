@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class FieldServiceInstanceOfferingDecorator
     def self.allowed
-      Set['name', 'guid', 'relationships.service_broker']
+      Set.new(%w(name guid description documentation_url relationships.service_broker))
     end
 
     def self.match?(fields)
@@ -24,6 +24,8 @@ module VCAP::CloudController
         offering_view = {}
         offering_view[:name] = offering.name if @fields.include?('name')
         offering_view[:guid] = offering.guid if @fields.include?('guid')
+        offering_view[:description] = offering.description if @fields.include?('description')
+        offering_view[:documentation_url] = extract_documentation_url(offering.extra) if @fields.include?('documentation_url')
         if @fields.include?('relationships.service_broker')
           offering_view[:relationships] = {
             service_broker: {
@@ -38,6 +40,15 @@ module VCAP::CloudController
       end
 
       hash
+    end
+
+    private
+
+    def extract_documentation_url(extra)
+      metadata = JSON.parse(extra)
+      metadata['documentationUrl']
+    rescue JSON::ParserError
+      nil
     end
   end
 end

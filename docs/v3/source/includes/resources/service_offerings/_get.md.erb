@@ -1,0 +1,46 @@
+### Get a service offering
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_offerings/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_offering %>
+```
+
+This endpoint retrieves the service offering by GUID.
+
+#### Definition
+`GET /v3/service_offerings/:guid`
+
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**fields** | [_fields parameter_](#fields-parameter) | [_Allowed values_](#service-offering-fields)
+
+##### Service Offering Fields
+
+Resource            | Allowed Keys
+------------------- | ----
+service_broker| `guid`, `name`
+
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |
+Unauthenticated Users (for service offerings with public plans, unless `hide_marketplace_from_unauthenticated_users` is set)|

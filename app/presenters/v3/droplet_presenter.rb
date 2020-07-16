@@ -10,6 +10,8 @@ module VCAP::CloudController
         def to_hash
           {
             guid: droplet.guid,
+            created_at: droplet.created_at,
+            updated_at: droplet.updated_at,
             state: droplet.state,
             error: droplet.error,
             lifecycle: {
@@ -22,14 +24,12 @@ module VCAP::CloudController
             image: droplet.docker_receipt_image,
             execution_metadata: redact(droplet.execution_metadata),
             process_types: redact_hash(droplet.process_types),
-            created_at: droplet.created_at,
-            updated_at: droplet.updated_at,
             relationships: { app: { data: { guid: droplet.app_guid } } },
-            links: build_links,
             metadata: {
               labels: hashified_labels(droplet.labels),
               annotations: hashified_annotations(droplet.annotations),
-            }
+            },
+            links: build_links,
           }
         end
 
@@ -47,6 +47,9 @@ module VCAP::CloudController
           }.tap do |links|
             links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
             links[:upload] = { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}/upload"), method: 'POST' } if droplet.state == DropletModel::AWAITING_UPLOAD_STATE
+            if droplet.state == DropletModel::STAGED_STATE && !droplet.docker?
+              links[:download] = { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}/download") }
+            end
           end
         end
 

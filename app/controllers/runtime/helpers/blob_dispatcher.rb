@@ -9,6 +9,7 @@ module VCAP::CloudController
       raise CloudController::Errors::BlobNotFound unless guid
 
       blob = @blobstore.blob(guid)
+
       raise CloudController::Errors::BlobNotFound unless blob
 
       send_or_redirect_blob(blob)

@@ -76,25 +76,25 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Type of the package. Valid values are `bits`, `docker`.
-**relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
+**type** | _string_ | Type of the package; valid values are `bits`, `docker`
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app
 
 #### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
-**data** | _object_ | Data for package type. | `{}`
+**data** | _object_ | Data for package type | `{}`
 
 
 #### Conditional Parameters
 
 Name | Type | Description
 ---- | ---- | -----------
-**data.image** | _string_ | Required when `type` is `docker`. The registry address of the image.
-**data.username** | _string_ | Optional when `type` is `docker` and accessing a secured registry.
-**data.password** | _string_ | Optional when `type` is `docker` and accessing a secured registry.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the package.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the package.
+**data.image** | _string_ | Required when `type` is `docker`; the registry address of the image
+**data.username** | _string_ | Optional when `type` is `docker` and accessing a secured registry
+**data.password** | _string_ | Optional when `type` is `docker` and accessing a secured registry
+**metadata.labels** | [_label object_](#labels) | Labels applied to the package
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the package
 
 #### Permitted roles
  |

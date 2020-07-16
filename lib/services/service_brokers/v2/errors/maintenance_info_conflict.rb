@@ -16,7 +16,7 @@ module VCAP::Services
                         'catalog is up to date and you are providing a version supported by this service plan'
                       end
 
-            super(message, uri, method, response)
+            super(message, method, response)
           end
 
           def response_code

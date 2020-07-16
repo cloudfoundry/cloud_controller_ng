@@ -10,6 +10,8 @@ module VCAP::CloudController
         def to_hash
           hide_secrets({
             guid:         task.guid,
+            created_at:   task.created_at,
+            updated_at:   task.updated_at,
             sequence_id:  task.sequence_id,
             name:         task.name,
             command:      task.command,
@@ -17,8 +19,6 @@ module VCAP::CloudController
             memory_in_mb: task.memory_in_mb,
             disk_in_mb:   task.disk_in_mb,
             result:       { failure_reason: task.failure_reason },
-            created_at:   task.created_at,
-            updated_at:   task.updated_at,
             droplet_guid: task.droplet_guid,
             relationships: { app: { data: { guid: task.app_guid } } },
             metadata: {

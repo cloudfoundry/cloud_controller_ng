@@ -4,29 +4,29 @@ require 'field_message_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe ServicePlansListMessage do
-    describe '.from_params' do
-      let(:params) do
-        {
-          'available' => 'true',
-          'broker_catalog_ids' => 'broker_catalog_id_1,broker_catalog_id_2',
-          'include' => 'space.organization,service_offering',
-          'names' => 'name_1,name_2',
-          'organization_guids' => 'org_guid_1,org_guid_2',
-          'service_broker_guids' => 'broker_guid_1,broker_guid_2',
-          'service_broker_names' => 'broker_name_1,broker_name_2',
-          'service_instance_guids' => 'instance_guid_1,instance_guid_2',
-          'service_offering_guids' => 'offering_guid_1,offering_guid_2',
-          'service_offering_names' => 'offering_name_1,offering_name_2',
-          'space_guids' => 'space_guid_1,space_guid_2',
-          'fields' => { 'service_offering.service_broker' => 'guid,name' },
-        }.with_indifferent_access
-      end
+    let(:params) do
+      {
+        'available' => 'true',
+        'broker_catalog_ids' => 'broker_catalog_id_1,broker_catalog_id_2',
+        'include' => 'space.organization,service_offering',
+        'names' => 'name_1,name_2',
+        'organization_guids' => 'org_guid_1,org_guid_2',
+        'service_broker_guids' => 'broker_guid_1,broker_guid_2',
+        'service_broker_names' => 'broker_name_1,broker_name_2',
+        'service_instance_guids' => 'instance_guid_1,instance_guid_2',
+        'service_offering_guids' => 'offering_guid_1,offering_guid_2',
+        'service_offering_names' => 'offering_name_1,offering_name_2',
+        'space_guids' => 'space_guid_1,space_guid_2',
+        'fields' => { 'service_offering.service_broker' => 'guid,name' },
+      }.with_indifferent_access
+    end
 
-      it 'returns the correct ServicePlansListMessage' do
+    describe '.from_params' do
+      it 'returns the correct message' do
         message = described_class.from_params(params)
 
         expect(message).to be_valid
-        expect(message).to be_a(ServicePlansListMessage)
+        expect(message).to be_a(described_class)
         expect(message.available).to eq('true')
         expect(message.broker_catalog_ids).to contain_exactly('broker_catalog_id_1', 'broker_catalog_id_2')
         expect(message.include).to contain_exactly('space.organization', 'service_offering')
@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        message = ServicePlansListMessage.from_params(params)
+        message = described_class.from_params(params)
 
         expect(message.requested?(:available)).to be_truthy
         expect(message.requested?(:broker_catalog_ids)).to be_truthy
@@ -113,6 +113,12 @@ module VCAP::CloudController
 
         it_behaves_like 'field query parameter', 'service_offering.service_broker', 'guid,name'
       end
+    end
+
+    describe '.to_param_hash' do
+      let(:message) { described_class.from_params(params) }
+
+      it_behaves_like 'fields to_param_hash', 'service_offering.service_broker', 'guid,name'
     end
   end
 end

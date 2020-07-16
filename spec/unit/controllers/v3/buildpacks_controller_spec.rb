@@ -3,6 +3,10 @@ require 'messages/buildpack_create_message'
 require 'models/runtime/buildpack'
 
 RSpec.describe BuildpacksController, type: :controller do
+  before do
+    TestConfig.override(kubernetes: {})
+  end
+
   describe '#index' do
     let(:user) { VCAP::CloudController::User.make }
 

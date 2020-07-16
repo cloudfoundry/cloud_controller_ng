@@ -1,0 +1,68 @@
+### The service plan object
+
+```
+Example Service Plan object
+```
+```json
+<%= yield_content :single_service_plan %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the service plan
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**name** | _string_ | Name of the service plan
+**visibility_type** | _string_ | Denotes the visibility of the plan; can be `public`, `admin`, `organization`, `space`, see [_list of visibility types_](#list-of-visibility-types)
+**available** | _boolean_ | Whether or not the service plan is available
+**free** | _boolean_ | Whether or not the service plan is free of charge
+**costs** | _array of [cost objects](#the-service-plan-cost)_ | The cost of the service plan as obtained from the service broker catalog
+**description** | _string_ | Description of the service plan
+**maintenance_info** | _[maintenance_info object](#the-maintenance-info-object-for-service-plans)_ | Information about the version of this service plan
+**broker_catalog** | _[broker catalog object](#the-service-plan-broker-catalog)_ | This object contains information obtained from the service broker catalog
+**schemas** | _[schemas object](#the-service-plan-schemas)_ | Schema definitions for service instances and service bindings for the service plan
+**relationships.service_offering** | [_to-one relationship_](#to-one-relationships) | The service offering that this service plan relates to
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space of the service broker, if this service plan is from a space-scoped service broker
+**metadata.labels**       | [_label object_](#labels)      | Labels applied to the service plan
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations added to the service plan
+**links** | [_links object_](#links) | Links to related resources
+
+
+#### The service plan cost
+
+Name | Type | Description
+---- | ---- | -----------
+**amount** | _float_ | Pricing amount
+**currency** | _string_ | Currency code for the pricing amount, e.g. USD, GBP
+**unit** | _string_ | Display name for type of cost, e.g. Monthly, Hourly, Request, GB
+
+
+#### The maintenance info object for service plans
+
+Name | Type | Description
+---- | ---- | -----------
+**version** | _string_ | The current semantic version of the service plan; comparing this version with that of a service instance can be used to determine whether or not the service instance is up to date with this service plan
+**description** | _string_ | A textual explanation associated with this version
+
+
+#### The service plan broker catalog
+
+Name | Type | Description
+---- | ---- | -----------
+**id** | _string_ | The identifier that the service broker provided for this service plan
+**metadata** | _object_ | Additional information provided by the service broker as specified by [OSBAPI](https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#plan-metadata-fields)
+**maximum_polling_duration** | _integer_ | The maximum number of seconds that Cloud Foundry will wait for an asynchronous service broker operation
+**features.plan_updateable** | _boolean_ | Whether the service plan supports upgrade/downgrade for service plans; when the catalog does not specify a value, it is inherited from the service offering
+**features.bindable** | _boolean_ | Specifies whether service instances of the service can be bound to applications
+
+
+#### The service plan schemas
+
+Name | Type | Description
+---- | ---- | -----------
+**service_instance.create** | _object_ | Schema definition for service instance creation
+**service_instance.create.parameters** | _JSON Schema object_ | The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object
+**service_instance.update** | _object_ | Schema definition for service instance update
+**service_instance.update.parameters** | _JSON Schema object_ | The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object
+**service_binding.create** | _object_ | Schema definition for service Binding creation
+**service_binding.create.parameters** | _JSON Schema object_ | The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object

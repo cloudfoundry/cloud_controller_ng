@@ -17,9 +17,9 @@ module VCAP::CloudController
         elsif message.state == VCAP::CloudController::BuildModel::STAGED_STATE
           droplet = VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
           droplet.lock!
-          droplet.update(docker_receipt_image: message.lifecycle.dig(:data, :image))
+          droplet.docker_receipt_image = message.lifecycle.dig(:data, :image)
+          droplet.process_types = message.lifecycle.dig(:data, :processTypes)
           droplet.mark_as_staged
-          droplet.process_types = { web: '' }
           droplet.save_changes
           build.mark_as_staged
           build.save_changes

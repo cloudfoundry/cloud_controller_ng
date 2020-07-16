@@ -39,7 +39,7 @@ module VCAP::CloudController
       instances = instances_reporters.number_of_starting_and_running_instances_for_processes(space.apps)
       space.apps.reject { |process| process.app.nil? }.collect do |process|
         {
-          guid:              process.guid,
+          guid:              process.app_guid,
           urls:              process.routes.map(&:uri),
           routes:            process.routes.map(&:as_summary_json),
           service_count:     process.service_bindings_dataset.count,

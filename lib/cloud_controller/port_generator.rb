@@ -2,7 +2,8 @@ module VCAP::CloudController
   class PortGenerator
     class << self
       def generate_port(domain_guid, possible_ports)
-        router_group_guid = get_router_group_guid(domain_guid)
+        domain = SharedDomain.where(guid: domain_guid).first
+        router_group_guid = domain.router_group_guid
 
         unavailable_ports = Route.join(:domains, id: :domain_id).
                             where(router_group_guid: router_group_guid).
@@ -19,12 +20,6 @@ module VCAP::CloudController
         row_index = Random.new.rand(size)
 
         available_ports[row_index]
-      end
-
-      def get_router_group_guid(domain_guid)
-        SharedDomain.where(guid: domain_guid).
-          select(:router_group_guid).
-          first.router_group_guid
       end
     end
   end

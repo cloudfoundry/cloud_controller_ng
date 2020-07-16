@@ -18,6 +18,9 @@ module VCAP::CloudController
     class InvalidConfigPath < StandardError
     end
 
+    class KubernetesApiNotConfigured < StandardError
+    end
+
     class << self
       def load_from_file(file_name, context: :api)
         schema_class = schema_class_for_context(context)
@@ -34,9 +37,7 @@ module VCAP::CloudController
         const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
       end
 
-      def kubernetes_api_configured?
-        !!config.get(:kubernetes, :host_url)
-      end
+      delegate :kubernetes_api_configured?, to: :config
 
       private
 
@@ -124,7 +125,51 @@ module VCAP::CloudController
       end
     end
 
+    def kubernetes_api_configured?
+      get(:kubernetes, :host_url).present?
+    end
+
+    def kubernetes_host_url
+      ensure_k8s_api_configured!
+      get(:kubernetes, :host_url)
+    end
+
+    def kpack_config
+      ensure_k8s_api_configured!
+      get(:kubernetes, :kpack)
+    end
+
+    def kpack_builder_namespace
+      ensure_k8s_api_configured!
+      get(:kubernetes, :kpack, :builder_namespace)
+    end
+
+    def kubernetes_workloads_namespace
+      ensure_k8s_api_configured!
+      get(:kubernetes, :workloads_namespace)
+    end
+
+    def kubernetes_ca_cert
+      @kubernetes_ca_cert ||= begin
+                                ensure_k8s_api_configured!
+                                file = get(:kubernetes, :ca_file)
+                                File.read(file)
+                              end
+    end
+
+    def kubernetes_service_account_token
+      @kubernetes_service_account_token ||= begin
+                                              ensure_k8s_api_configured!
+                                              file = get(:kubernetes, :service_account, :token_file)
+                                              File.read(file)
+                                            end
+    end
+
     private
+
+    def ensure_k8s_api_configured!
+      raise KubernetesApiNotConfigured.new('No kubernetes API is configured') unless kubernetes_api_configured?
+    end
 
     def invalid_config_path!(keys)
       raise InvalidConfigPath.new(%("#{keys.join('.')}" is not a valid config key))

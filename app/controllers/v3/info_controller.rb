@@ -1,7 +1,9 @@
+require 'fetchers/global_usage_summary_fetcher'
 require 'presenters/v3/info_presenter'
+require 'presenters/v3/info_usage_summary_presenter'
 
-class InfoController < ActionController::Base
-  def show
+class InfoController < ApplicationController
+  def v3_info
     info = Info.new
     config = VCAP::CloudController::Config.config
 
@@ -15,6 +17,14 @@ class InfoController < ActionController::Base
     info.support_address = config.get(:info, :support_address) || ''
 
     render status: :ok, json: VCAP::CloudController::Presenters::V3::InfoPresenter.new(info)
+  end
+
+  def show_usage_summary
+    not_found! unless permission_queryer.can_read_globally?
+
+    summary = VCAP::CloudController::GlobalUsageSummaryFetcher.summary
+
+    render status: :ok, json: VCAP::CloudController::Presenters::V3::InfoUsageSummaryPresenter.new(summary)
   end
 end
 

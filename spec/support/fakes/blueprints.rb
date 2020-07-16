@@ -305,9 +305,10 @@ module VCAP::CloudController
     active                { true }
     service_broker        { ServiceBroker.make }
     description           { Sham.description } # remove hack
-    extra                 { '{"shareable": true, "documentation_url": "https://some.url.for.docs/"}' }
+    extra                 { '{"shareable": true, "documentationUrl": "https://some.url.for.docs/"}' }
     instances_retrievable { false }
     bindings_retrievable  { false }
+    plan_updateable       { false }
   end
 
   Service.blueprint(:routing) do
@@ -331,6 +332,7 @@ module VCAP::CloudController
     space                      { Space.make }
     service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
+    maintenance_info           {}
   end
 
   ManagedServiceInstance.blueprint(:routing) do
@@ -477,6 +479,7 @@ module VCAP::CloudController
     service           { Service.make }
     unique_id         { SecureRandom.uuid }
     active            { true }
+    maintenance_info  {}
   end
 
   ServicePlan.blueprint(:routing) do
@@ -502,7 +505,7 @@ module VCAP::CloudController
     actee      { Sham.guid }
     actee_type { Sham.name }
     actee_name { Sham.name }
-    space      { Space.make }
+    organization_guid { Sham.guid }
     metadata { {} }
   end
 

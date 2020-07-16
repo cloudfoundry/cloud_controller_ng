@@ -6,7 +6,6 @@ module VCAP::Services
           def initialize(uri, method, response)
             super(
               'The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider.',
-              uri,
               method,
               response
             )

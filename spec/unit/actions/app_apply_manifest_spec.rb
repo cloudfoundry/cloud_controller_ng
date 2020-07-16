@@ -553,6 +553,28 @@ module VCAP::CloudController
               end
             end
 
+            context 'when the app name has special characters' do
+              let(:message) { AppManifestMessage.create_from_yml({ name: 'blah!@#', default_route: true }) }
+              let(:app_model) { AppModel.make(name: 'blah!@#') }
+              it 'fails with a useful error message' do
+                expect {
+                  app_apply_manifest.apply(app_model.guid, message)
+                }.to raise_error(AppApplyManifest::Error,
+                  /Failed to create default route from app name: Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
+              end
+            end
+
+            context 'when the app name is too long' do
+              let(:app_name) { 'a' * 100 }
+              let(:message) { AppManifestMessage.create_from_yml({ name: app_name, default_route: true }) }
+              let(:app_model) { AppModel.make(name: app_name) }
+              it 'fails with a useful error' do
+                expect {
+                  app_apply_manifest.apply(app_model.guid, message)
+                }.to raise_error(AppApplyManifest::Error, 'Failed to create default route from app name: Host cannot exceed 63 characters')
+              end
+            end
+
             context 'when there is no shared domain' do
               let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
 

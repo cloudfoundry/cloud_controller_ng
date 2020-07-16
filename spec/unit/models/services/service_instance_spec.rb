@@ -492,6 +492,40 @@ module VCAP::CloudController
       end
     end
 
+    describe '#has_bindings?' do
+      it 'returns true when there are bindings' do
+        ServiceBinding.make(service_instance: service_instance)
+        expect(service_instance).to have_bindings
+      end
+
+      it 'returns false when there are no bindings' do
+        expect(service_instance).not_to have_bindings
+      end
+    end
+
+    describe '#has_keys?' do
+      it 'returns true when there are keys' do
+        ServiceKey.make(service_instance: service_instance)
+        expect(service_instance).to have_keys
+      end
+
+      it 'returns false when there are no keys' do
+        expect(service_instance).not_to have_keys
+      end
+    end
+
+    describe '#has_routes?' do
+      it 'returns true when there are routes' do
+        allow(service_instance).to receive(:route_service?).and_return(true)
+        RouteBinding.make(service_instance: service_instance, route: Route.make(space: service_instance.space))
+        expect(service_instance).to have_routes
+      end
+
+      it 'returns false when there are no routes' do
+        expect(service_instance).not_to have_routes
+      end
+    end
+
     describe 'metadata' do
       let(:service_instance) { ServiceInstance.make }
       let(:annotation) { ServiceInstanceAnnotationModel.make(service_instance: service_instance) }

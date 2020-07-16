@@ -1,0 +1,113 @@
+<% content_for :single_app_usage_event do %>
+{
+  "guid": "a595fe2f-01ff-4965-a50c-290258ab8582",
+  "created_at": "2020-05-28T16:41:23Z",
+  "updated_at": "2020-05-28T16:41:26Z",
+  "state": {
+    "current": "STARTED",
+    "previous": "STOPPED"
+  },
+  "app": {
+    "guid": "guid-f93250f7-7ef5-4b02-8d33-353919ce8358",
+    "name": "name-1982"
+  },
+  "process": {
+    "guid": "guid-e9d2d5a0-69a6-46ef-bac5-43f3ed177614",
+    "type": "type-1983"
+  },
+  "space": {
+    "guid": "guid-5e28f12f-9d80-473e-b826-537b148eb338",
+    "name": "name-1664"
+  },
+  "organization": {
+    "guid": "guid-036444f4-f2f5-4ea8-a353-e73330ca0f0a"
+  },
+  "buildpack": {
+    "guid": "guid-34916716-31d7-40c1-9afd-f312996c9654",
+    "name": "label-64"
+  },
+  "task": {
+    "guid": "guid-7cc11646-bf38-4f4e-b6e0-9581916a74d9",
+    "name": "name-2929"
+  },
+  "memory_in_mb_per_instance": {
+    "current": 512,
+    "previous": 256
+  },
+  "instance_count": {
+    "current": 10,
+    "previous": 5
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/app_usage_events/a595fe2f-01ff-4965-a50c-290258ab8582"
+    }
+  }
+}
+<% end %>
+
+<% content_for :paginated_list_of_app_usage_events do |path| %>
+{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= path %>?page=1&per_page=1"
+    },
+    "last": {
+      "href": "https://api.example.org<%= path %>?page=2&per_page=1"
+    },
+    "next": {
+      "href": "https://api.example.org<%= path %>?page=2&per_page=1"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "a595fe2f-01ff-4965-a50c-290258ab8582",
+      "created_at": "2020-05-28T16:41:23Z",
+      "updated_at": "2020-05-28T16:41:26Z",
+      "state": {
+        "current": "STARTED",
+        "previous": "STOPPED"
+      },
+      "app": {
+        "guid": "guid-f93250f7-7ef5-4b02-8d33-353919ce8358",
+        "name": "name-1982"
+      },
+      "process": {
+        "guid": "guid-e9d2d5a0-69a6-46ef-bac5-43f3ed177614",
+        "type": "type-1983"
+      },
+      "space": {
+        "guid": "guid-5e28f12f-9d80-473e-b826-537b148eb338",
+        "name": "name-1664"
+      },
+      "organization": {
+        "guid": "guid-036444f4-f2f5-4ea8-a353-e73330ca0f0a"
+      },
+      "buildpack": {
+        "guid": "guid-34916716-31d7-40c1-9afd-f312996c9654",
+        "name": "label-64"
+      },
+      "task": {
+        "guid": "guid-7cc11646-bf38-4f4e-b6e0-9581916a74d9",
+        "name": "name-2929"
+      },
+      "memory_in_mb_per_instance": {
+        "current": 512,
+        "previous": 256
+      },
+      "instance_count": {
+        "current": 10,
+        "previous": 5
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/app_usage_events/a595fe2f-01ff-4965-a50c-290258ab8582"
+        }
+      }
+    }
+  ]
+}
+<% end %>

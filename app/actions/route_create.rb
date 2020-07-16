@@ -8,10 +8,12 @@ module VCAP::CloudController
     end
 
     def create(message:, space:, domain:, manifest_triggered: false)
+      validate_tcp_route!(domain, message)
+
       route = Route.new(
         host: message.host || '',
         path: message.path || '',
-        port: message.port || 0,
+        port: port(message, domain),
         space: space,
         domain: domain,
       )
@@ -30,18 +32,42 @@ module VCAP::CloudController
       )
 
       if VCAP::CloudController::Config.kubernetes_api_configured?
-        route_crd_client.create_route(route)
+        route_resource_manager.create_route(route)
       end
 
       route
     rescue Sequel::ValidationFailed => e
       validation_error!(e, route.host, route.path, route.port, space, domain)
+    rescue Sequel::UniqueConstraintViolation => e
+      logger.warn("error creating route #{e}, retrying once")
+      RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain, manifest_triggered: manifest_triggered)
     end
 
     private
 
-    def route_crd_client
-      @route_crd_client ||= CloudController::DependencyLocator.instance.route_crd_client
+    def validate_tcp_route!(domain, message)
+      if domain.router_group_guid.present? && router_group(domain).nil?
+        error!('Route could not be created because the specified domain does not have a valid router group.')
+      end
+    end
+
+    def port(message, domain)
+      generated_port = if !message.requested?(:port) && domain.protocols.include?('tcp')
+                         PortGenerator.generate_port(domain.guid, router_group(domain).reservable_ports)
+                       else
+                         message.port || 0
+                       end
+      error!('There are no more ports available for this domain.') if generated_port < 0
+
+      generated_port
+    end
+
+    def router_group(domain)
+      @router_group ||= domain.router_group
+    end
+
+    def route_resource_manager
+      @route_resource_manager ||= CloudController::DependencyLocator.instance.route_resource_manager
     end
 
     def validation_error!(error, host, path, port, space, domain)
@@ -65,11 +91,26 @@ module VCAP::CloudController
         error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.")
       end
 
+      validation_error_routing_api!(error)
       validation_error_host!(error, host, domain)
       validation_error_path!(error, host, path, domain)
       validation_error_port!(error, host, port, domain)
 
       error!(error.message)
+    end
+
+    def validation_error_routing_api!(error)
+      if error.errors.on(:routing_api)&.include?(:uaa_unavailable)
+        raise RoutingApi::UaaUnavailable
+      end
+
+      if error.errors.on(:routing_api)&.include?(:routing_api_unavailable)
+        raise RoutingApi::RoutingApiUnavailable
+      end
+
+      if error.errors.on(:routing_api)&.include?(:routing_api_disabled)
+        raise RoutingApi::RoutingApiDisabled
+      end
     end
 
     def validation_error_host!(error, host, domain)
@@ -106,7 +147,11 @@ module VCAP::CloudController
       end
 
       if error.errors.on(:host)&.include?(:host_and_path_domain_tcp)
-        error!("Routes with protocol 'tcp' do not support paths or hosts.")
+        error!('Hosts are not supported for TCP routes.')
+      end
+
+      if error.errors.on(:path)&.include?(:host_and_path_domain_tcp)
+        error!('Paths are not supported for TCP routes.')
       end
     end
 
@@ -167,6 +212,10 @@ module VCAP::CloudController
 
     def error!(message)
       raise Error.new(message)
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.action.route_create')
     end
   end
 end

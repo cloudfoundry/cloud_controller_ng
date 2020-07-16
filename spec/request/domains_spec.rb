@@ -697,6 +697,50 @@ RSpec.describe 'Domains Request' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when querying with only port' do
+        let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '123' }) }
+        let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', name: 'my.domain') }
+        let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+        before do
+          TestConfig.override(
+            kubernetes: { host_url: nil },
+            external_domain: 'api2.vcap.me',
+            external_protocol: 'https',
+          )
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow(routing_api_client).to receive(:enabled?).and_return(true)
+          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        end
+
+        let!(:other_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
+        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{domain.guid}/route_reservations?port=123", nil, user_headers } }
+
+        let(:matching_route_json) do
+          {
+            "matching_route": true
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_object: matching_route_json
+          )
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when querying a TCP route without filtering the port' do
+          it 'returns no matching routes' do
+            get "/v3/domains/#{domain.guid}/route_reservations", nil, admin_headers
+
+            expect(parsed_response).to eq({ 'matching_route' => false })
+          end
+        end
+      end
     end
 
     context 'when the domain cannot be found' do

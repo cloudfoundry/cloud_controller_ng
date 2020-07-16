@@ -121,8 +121,13 @@ module VCAP::CloudController
             interpolate_service_bindings: bool
           },
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
+          },
+
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
           },
 
           skip_cert_verify: bool,
@@ -174,7 +179,7 @@ module VCAP::CloudController
             },
             ca_file: String,
             workloads_namespace: String,
-            optional(:kpack) => {
+            kpack: {
               builder_namespace: String,
               registry_service_account_name: String,
               registry_tag_base: String,
@@ -204,6 +209,7 @@ module VCAP::CloudController
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
           internal_route_vip_range: String,
+          custom_metric_tag_prefix_list: Array,
         }
       end
       # rubocop:enable Metrics/BlockLength

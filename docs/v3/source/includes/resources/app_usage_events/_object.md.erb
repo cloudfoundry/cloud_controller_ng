@@ -1,0 +1,32 @@
+### The app usage event object
+
+```
+Example App Usage Event object
+```
+```json
+<%= yield_content :single_app_usage_event %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the event
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the event occurred
+**updated_at** | _[timestamp](#timestamps)_ | Identical to `created_at` (events are created, never updated)
+**state.current** | _string_ or `null` | Current state of the app that this event pertains to, if applicable
+**state.previous** | _string_ or `null` | Previous state of the app that this event pertains to, if applicable
+**app.guid** | _string_ or `null` | Unique identifier of the app that this event pertains to, if applicable
+**app.name** | _string_ or `null` | Name of the app that this event pertains to, if applicable
+**process.guid** | _string_ or `null` | Unique identifier of the process that this event pertains to, if applicable
+**process.type** | _string_ or `null` | Type of the process that this event pertains to, if applicable
+**space.guid** | _string_ or `null` | Unique identifier of the space that this event pertains to, if applicable
+**space.name** | _string_ or `null` | Name of the space that this event pertains to, if applicable
+**organization.guid** | _string_ or `null` | Unique identifier of the org that this event pertains to, if applicable
+**buildpack.guid** | _string_ or `null` | Unique identifier of the buildpack that this event pertains to, if applicable
+**buildpack.name** | _string_ or `null` | Name of the buildpack that this event pertains to, if applicable
+**task.guid** | _string_ or `null` | Unique identifier of the task that this event pertains to, if applicable
+**task.name** | _string_ or `null` | Name of the task that this event pertains to, if applicable
+**memory_in_mb_per_instance.current** | _integer_ or `null` | Current memory in MB of the app that this event pertains to, if applicable
+**memory_in_mb_per_instance.previous** | _integer_ or `null` | Previous memory in MB of the app that this event pertains to, if applicable
+**instance_count.current** | _integer_ or `null` | Current instance count of the app that this event pertains to, if applicable
+**instance_count.previous** | _integer_ or `null` | Previous instance count of the app that this event pertains to, if applicable
+**links** | [_links object_](#links) | Links to related resources

@@ -20,7 +20,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::EventPresenter do
         expect(result[:target][:type]).to eq(event.target_type)
         expect(result[:target][:name]).to eq(event.target_name)
         expect(result[:data]).to eq(event.data)
-        expect(result[:space][:guid]).to eq(event.space.guid)
+        expect(result[:space]).to be_nil
         expect(result[:organization][:guid]).to eq(event.organization_guid)
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/audit_events/#{event.guid}")
       end

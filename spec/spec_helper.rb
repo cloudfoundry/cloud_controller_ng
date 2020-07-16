@@ -48,7 +48,7 @@ init_block = proc do
     require 'simplecov'
     SimpleCov.start do
       add_filter '/spec/'
-      add_filter '/vendor/'
+      add_filter '/errors/'
       add_filter '/docs/'
     end
   end

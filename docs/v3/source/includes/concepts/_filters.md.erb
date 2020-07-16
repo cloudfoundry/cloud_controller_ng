@@ -1,7 +1,8 @@
 ## Filters
 
-Endpoints which return lists of resources also support filtering the returned resources using query parameters.
-The available filter parameters are described in a resource's "list" endpoint in the section "Query parameters".
+Endpoints which return lists of resources also support filtering the returned resources using query parameters. Each
+resource's list endpoint documents the allowed filters for that endpoint. For details about the syntax of query parameters
+in general, see [query parameters](#query-parameters).
 
 #### Examples
 
@@ -15,7 +16,15 @@ This will return all apps with name `the_name`.
 
 This will return all apps with name `the_name` OR `second_name`.
 
-##### **Multiple value request** #2
+In the case of audit events, multiple timestamps can be requested, which will return all audit
+events that occurred at those timestamps. In the following request, all audit events that occurred
+New Year's just before midnight and July 4th at noon will be returned:
+
+`GET /v3/audit_events?created_ats=2019-12-31T23:59:59Z,2020-07-04T12:00:00Z`
+
+###### **Exception**
+The `label_selector` query parameter will act as AND function, not an OR.
+
 `GET /v3/spaces?label_selector=production,east_coast`
 
 This will return all spaces whose metadata has labels with keys `production` AND `east_coast`.
@@ -33,6 +42,35 @@ An empty filter (`/v3/resources?fields=`) can mean either empty string (`""`) or
 
 This will return all buildpacks with stack `NULL`.
 
-`GET /v3/routes?paths=pepper,,tabi`
+`GET /v3/routes?hosts=hostname1,,hostname2`
 
-This will return all routes with path `"pepper"`, `""` OR `"tabi"`.
+This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
+
+#### Relational Operators (Experimental)
+
+Fields can be filtered using relational operators when listing resources. Currently, this is
+supported only on the `created_at` field, using the `created_ats` filter.
+
+For example, a response to `/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
+audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
+
+Multiple relational operators can be combined to further refine the listed resources. For example, a
+response to `/v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&created_ats[gt]=2019-12-31T23:59:59Z`
+will return all audit events occurring on New Year's Day.
+
+Timestamps must be in [standard timestamp format](#timestamps).
+
+##### Valid relational operators
+
+**Operator** | **Description**
+-------------|-----------------
+**lt**       | Return resources strictly less than the given value for the filtered attribute
+**lte**      | Return resources less than or equal to the given value for the filtered attribute
+**gt**       | Return resources strictly greater than the given value for the filtered attribute
+**gte**      | Return resources greater than or equal to the given value for the filtered attribute
+
+##### Resources with relational operators
+
+The following resources can filter using relational operators:
+
+- **[audit_events](#list-audit-events)**

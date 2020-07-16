@@ -1,0 +1,28 @@
+### The service usage event object
+
+```
+Example Service Usage Event object
+```
+```json
+<%= yield_content :single_service_usage_event %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the event
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the event occurred
+**updated_at** | _[timestamp](#timestamps)_ | Identical to `created_at` (events are created, never updated)
+**state** | _string_ or `null` | Current state of the service that this event pertains to, if applicable
+**space.guid** | _string_ or `null` | Unique identifier of the space that this event pertains to, if applicable
+**space.name** | _string_ or `null` | Name of the space that this event pertains to, if applicable
+**organization.guid** | _string_ or `null` | Unique identifier of the org that this event pertains to, if applicable
+**service_instance.guid** | _string_ or `null` | Unique identifier of the service instance that this event pertains to, if applicable
+**service_instance.name** | _string_ or `null` | Name of the service instance that this event pertains to, if applicable
+**service_instance.type** | _string_ or `null` | Type of the service instance that this event pertains to, if applicable
+**service_plan.guid** | _string_ or `null` | Unique identifier of the service plan that this event pertains to, if applicable
+**service_plan.name** | _string_ or `null` | Name of the service plan that this event pertains to, if applicable
+**service_offering.guid** | _string_ or `null` | Unique identifier of the service offering that this event pertains to, if applicable
+**service_offering.name** | _string_ or `null` | Name of the service offering that this event pertains to, if applicable
+**service_broker.guid** | _string_ or `null` | Unique identifier of the service broker that this event pertains to, if applicable
+**service_broker.name** | _string_ or `null` | Name of the service broker that this event pertains to, if applicable
+**links** | [_links object_](#links) | Links to related resources

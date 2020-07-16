@@ -15,8 +15,7 @@ module VCAP::Services
 
             it 'initializes the base class correctly' do
               exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
-              expect(exception.message).to eq("Authentication with the service broker failed. Double-check that the username and password are correct: #{uri}")
-              expect(exception.uri).to eq(uri)
+              expect(exception.message).to eq('Authentication with the service broker failed. Double-check that the username and password are correct.')
               expect(exception.method).to eq(method)
               expect(exception.source).to be(response.body)
             end

@@ -9,22 +9,26 @@ Example Security Group object
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the security group.
-**globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of all applications.
-**globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
-**globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
-**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group.
-**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during staging.
-**relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during runtime.
+**guid**                  | _uuid_                                                    | Unique identifier for the security group
+**created_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was created
+**updated_at**            | _[timestamp](#timestamps)_                                                | The time with zone when the object was last updated
+**name** | _string_ | Name of the security group
+**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group
+**globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of all applications
+**globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications
+**globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications
+**relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during runtime
+**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during staging
+**links**                 | [_links object_](#links)                                  | Links to related resources
 
 #### The rule object
 
 | Name | Type | Description | Required | Default
 | ---- | ---- | ----------- | -------- | -------
-| **protocol** | _string_ | Protocol type. Valid values are `tcp`, `udp`, `icmp`, or `all` | yes | N/A |
-| **destination** | _string_ | Destinations that the rule applies to. Valid CIDR, IP address, or IP address range | yes | N/A |
-| **ports** | _string_ | Ports that the rule applies to. Can be a single port (`9000`), a comma-separated list (`9000,9001`), or a range (`9000-9200`). | no | `null` |
-| **type** | _integer_ |[Type](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types) required for ICMP protocol. Valid values are between -1 and 255 (inclusive), where -1 allows all. | no | `null` |
-| **code** | _integer_ |[Code](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes) required for ICMP protocol. Valid values are between -1 and 255 (inclusive), where -1 allows all. | no | `null` |
-| **description** | _string_ | A description for the rule. This field is limited to 16MB. | no | `null` |
+| **protocol** | _string_ | Protocol type Valid values are `tcp`, `udp`, `icmp`, or `all` | yes | N/A |
+| **destination** | _string_ | Destinations that the rule applies to Valid CIDR, IP address, or IP address range | yes | N/A |
+| **ports** | _string_ | Ports that the rule applies to; can be a single port (`9000`), a comma-separated list (`9000,9001`), or a range (`9000-9200`) | no | `null` |
+| **type** | _integer_ |[Type](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types) required for ICMP protocol; valid values are between -1 and 255 (inclusive), where -1 allows all | no | `null` |
+| **code** | _integer_ |[Code](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes) required for ICMP protocol; valid values are between -1 and 255 (inclusive), where -1 allows all | no | `null` |
+| **description** | _string_ | A description for the rule; this field is limited to 16MB | no | `null` |
 | **log** | _boolean_ | Enable logging for rule, only valid for tcp rules | no | `null` |

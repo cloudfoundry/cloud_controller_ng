@@ -9,19 +9,19 @@ Example Task object
 
 Name | Type | Description
 ---- | ---- | -----------
-**sequence_id** | _integer_ | User-facing id of the task. This number is unique for every task associated with a given app.
-**name** | _string_ | Name of the task.
-**command** | _string_ | Command that will be executed. This field may be excluded based on a user's role.
-**disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB.
-**memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB.
-**state** | _string_ | State of the task. Possible states are `PENDING`, `RUNNING`, `SUCCEEDED`, `CANCELING`, and `FAILED`
-**droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command.
+**guid** | _uuid_ | Unique identifier for the task
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**sequence_id** | _integer_ | User-facing id of the task; this number is unique for every task associated with a given app
+**name** | _string_ | Name of the task
+**command** | _string_ | Command that will be executed; this field may be excluded based on a user's role
+**state** | _string_ | State of the task Possible states are `PENDING`, `RUNNING`, `SUCCEEDED`, `CANCELING`, and `FAILED`
+**memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB
+**disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB
 **result** | _object_ | Results from the task
-**result.failure_reason** | _string_ | Null if the task succeeds, contains the error message if it fails.
-**guid** | _uuid_ | Unique identifier for the task.
-**created_at** | _datetime_ | The time with zone when the object was created.
-**updated_at** | _datetime_ | The time with zone when the object was last updated.
-**relationships.app** | _datetime_ | The app the task belongs to.
-**links** | [_links object_](#links) | Links to related resources.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the task.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the task.
+**result.failure_reason** | _string_ | Null if the task succeeds, contains the error message if it fails
+**droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command
+**relationships.app** | _[timestamp](#timestamps)_ | The app the task belongs to
+**metadata.labels** | [_label object_](#labels) | Labels applied to the task
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the task
+**links** | [_links object_](#links) | Links to related resources

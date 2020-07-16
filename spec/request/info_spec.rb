@@ -55,4 +55,43 @@ RSpec.describe 'Info Request' do
       end
     end
   end
+
+  describe 'GET /v3/info/usage_summary' do
+    let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:org) { space.organization }
+    let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
+    let(:api_call) { lambda { |user_headers| get '/v3/info/usage_summary', nil, user_headers } }
+
+    let!(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 100) }
+    let!(:completed_task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, memory_in_mb: 100) }
+    let!(:started_process1) { VCAP::CloudController::ProcessModelFactory.make(instances: 3, state: 'STARTED', memory: 100) }
+    let!(:started_process2) { VCAP::CloudController::ProcessModelFactory.make(instances: 6, state: 'STARTED', memory: 100) }
+    let!(:started_process3) { VCAP::CloudController::ProcessModelFactory.make(instances: 7, state: 'STARTED', memory: 100) }
+    let!(:stopped_process) { VCAP::CloudController::ProcessModelFactory.make(instances: 2, state: 'STOPPED', memory: 100) }
+    let!(:process2) { VCAP::CloudController::ProcessModelFactory.make(instances: 5, state: 'STARTED', memory: 100) }
+
+    let(:info_summary) do
+      {
+        usage_summary: {
+          started_instances: 21,
+          memory_in_mb: 2200
+        },
+        links: {
+          self: { href: "#{link_prefix}/v3/info/usage_summary" }
+        }
+      }
+    end
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 404)
+      h['admin'] = { code: 200, response_object: info_summary }
+      h['admin_read_only'] = { code: 200, response_object: info_summary }
+      h['global_auditor'] = { code: 200, response_object: info_summary }
+      h.freeze
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+  end
 end

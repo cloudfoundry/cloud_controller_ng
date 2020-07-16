@@ -15,10 +15,10 @@ module VCAP::CloudController
       let(:space_dataset) { Space.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
-      let(:kpack_client) { instance_double(Kubernetes::KpackClient, delete_image: nil) }
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(kpack_client)
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
         TestConfig.override(kubernetes: {})
       end
 
@@ -131,22 +131,18 @@ module VCAP::CloudController
               expect(results.first).to be_instance_of(CloudController::Errors::ApiError)
               expect(results.second).to be_instance_of(CloudController::Errors::ApiError)
 
-              instance_1_url = remove_basic_auth(deprovision_url(service_instance_1))
-              instance_2_url = remove_basic_auth(deprovision_url(service_instance_2))
-              instance_4_url = remove_basic_auth(deprovision_url(service_instance_4))
-
               results_messages = results.map(&:message).join(' ')
               expect(results_messages).
                 to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response for the request to #{instance_1_url}")
+                to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request to #{instance_2_url}")
+                to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response.")
 
               expect(results_messages).
                 to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
               expect(results_messages).
-                to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response for the request to #{instance_4_url}")
+                to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response.")
             end
           end
 

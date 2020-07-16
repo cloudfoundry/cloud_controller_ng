@@ -9,17 +9,17 @@ Example Process object
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Process type. A unique identifier for processes belonging to an app.
-**command** | _string_ or _null_ | The command used to start the process. Use _null_ to revert to the buildpack-detected or procfile-provided start command.
-**instances** | _integer_ | The number of instances to run.
-**memory_in_mb** | _integer_ | The memory in MB allocated per instance.
-**disk_in_mb** | _integer_ | The disk in MB allocated per instance.
-**health_check** | [_health check object_](#the-health-check-object) | The health check to perform on the process.
-**relationships.app** _(experimental)_| [_to-one relationship_](#to-one-relationships) | The app the process belongs to.
-**relationships.revision** _(experimental)_| [_to-one relationship_](#to-one-relationships) | The app revision the process is currently running.
-**guid** | _uuid_ | Unique identifier for the process.
-**created_at** | _datetime_ | The time with zone when the object was created.
-**updated_at** | _datetime_ | The time with zone when the object was last updated.
-**links** | [_links object_](#links) | Links to related resources.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the process.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the process.
+**guid** | _uuid_ | Unique identifier for the process
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**type** | _string_ | Process type; a unique identifier for processes belonging to an app
+**command** | _string_ or _null_ | The command used to start the process; use _null_ to revert to the buildpack-detected or procfile-provided start command
+**instances** | _integer_ | The number of instances to run
+**memory_in_mb** | _integer_ | The memory in MB allocated per instance
+**disk_in_mb** | _integer_ | The disk in MB allocated per instance
+**health_check** | [_health check object_](#the-health-check-object) | The health check to perform on the process
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the process belongs to
+**relationships.revision** (*experimental*)| [_to-one relationship_](#to-one-relationships) | The app revision the process is currently running
+**metadata.labels** | [_label object_](#labels) | Labels applied to the process
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the process
+**links** | [_links object_](#links) | Links to related resources

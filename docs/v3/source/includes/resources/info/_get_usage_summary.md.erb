@@ -1,0 +1,42 @@
+### Get platform usage summary
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/info/usage_summary" \
+  -X GET
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :info_usage_summary %>
+```
+
+This endpoint retrieves a high-level summary of usage across the entire Cloud Foundry installation.
+
+#### Definition
+
+`GET /v3/info/usage_summary`
+
+#### Usage summary object
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| **started_instances** | _integer_ | Total number of process instances in the `STARTED` state |
+| **memory_in_mb** | _integer_ | Sum of memory usage of all tasks in the `RUNNING` state and all process instances in the `STARTED` state |
+
+#### Permitted roles
+
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |

@@ -154,9 +154,10 @@ class DomainsController < ApplicationController
   private
 
   def to_route_list_params(query_params, domain)
-    check_route_params = { 'domain_guids' => domain.guid, 'paths' => '', 'hosts' => '' }
+    check_route_params = { 'domain_guids' => domain.guid, 'paths' => '', 'hosts' => '', 'ports' => 0 }
     check_route_params['paths'] = query_params[:path] if query_params.key?(:path)
     check_route_params['hosts'] = query_params[:host] if query_params.key?(:host)
+    check_route_params['ports'] = query_params[:port] if query_params.key?(:port)
     check_route_params
   end
 

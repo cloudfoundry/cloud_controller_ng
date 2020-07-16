@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:reserved) { nil }
 
     before(:each) do
-      TestConfig.override({ reserved_private_domains: reserved })
+      TestConfig.override(system_domain: 'customer-app-domain1.com', reserved_private_domains: reserved)
     end
 
     it { is_expected.to have_timestamp_columns }
@@ -30,6 +30,10 @@ module VCAP::CloudController
       describe 'domain' do
         subject { private_domain }
         include_examples 'domain validation'
+      end
+
+      it 'denies private uaa.customer-app-domain1.com when customer-app-domain1.com is the system domain' do
+        expect { PrivateDomain.make name: 'uaa.customer-app-domain1.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by the system/)
       end
 
       it 'allows private bar.foo.com when foo.com has the same owner' do

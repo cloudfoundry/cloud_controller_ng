@@ -1,0 +1,32 @@
+### Get a service plan visibility
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans/[guid]/visibility" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :public_service_plan_visibility %>
+```
+
+This endpoint retrieves the service plan visibility for a given plan.
+
+#### Definition
+`GET /v3/service_plans/:guid/visibility`
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |

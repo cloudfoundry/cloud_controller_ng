@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Space Manifests' do
   let(:user) { VCAP::CloudController::User.make }
@@ -9,12 +10,6 @@ RSpec.describe 'Space Manifests' do
   let(:second_route) {
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
   }
-
-  before do
-    space.organization.add_user(user)
-    space.add_developer(user)
-    TestConfig.override(kubernetes: {})
-  end
 
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
@@ -100,9 +95,13 @@ RSpec.describe 'Space Manifests' do
     end
 
     before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      TestConfig.override(kubernetes: {})
+
       stub_bind(service_instance)
       VCAP::CloudController::LabelsUpdate.update(app1_model, { 'potato' => 'french',
-        'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
+                                                               'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(app1_model, { 'potato' => 'baked',
         'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
     end
@@ -309,7 +308,7 @@ RSpec.describe 'Space Manifests' do
     end
 
     context 'when the app name is not a valid host name and the default-route flag is set to true' do
-      let(:app1_model) { VCAP::CloudController::AppModel.make(name: '!' * 64, space: space) }
+      let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'a' * 64, space: space) }
       let(:yml_manifest) do
         {
           'applications' => [
@@ -319,16 +318,51 @@ RSpec.describe 'Space Manifests' do
         }.to_yaml
       end
 
-      it 'returns a 422 with an informative message' do
+      it 'returns a 202 but fails on the job' do
         expect {
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
         }.to change { VCAP::CloudController::AppModel.count }.by(0)
 
-        expect(last_response).to have_status_code(422)
-        expect(last_response).to include_error_message(
-          /Failed to create default route from app name: Host cannot exceed 63 characters/)
-        expect(last_response).to include_error_message(
-          /Failed to create default route from app name: Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
+        expect(last_response).to have_status_code(202)
+        expect(last_response.status).to eq(202), last_response.body
+
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+        errors = YAML.safe_load(job.cf_api_error)['errors']
+        expect(errors.length).to eq 1
+        expect(errors[0]['detail']).to include('Host cannot exceed 63 characters')
+      end
+
+      context 'and routes are provided in the manifest' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'default-route' => true,
+                'routes' => [{ 'route' => "http://#{route.host}.#{shared_domain.name}" }] },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns a 202 and succeeds' do
+          expect {
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          }.to change { VCAP::CloudController::AppModel.count }.by(0)
+
+          expect(last_response).to have_status_code(202)
+          expect(last_response.status).to eq(202), last_response.body
+
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+          Delayed::Worker.new.work_off
+          job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+          expect(job.complete?).to be true
+          expect(job.cf_api_error).to be nil
+        end
       end
     end
 
@@ -423,6 +457,200 @@ RSpec.describe 'Space Manifests' do
 
         other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+      end
+    end
+  end
+
+  describe 'POST /v3/spaces/:guid/manifest_diff' do
+    let(:org) { space.organization }
+    let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
+    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
+
+    let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403)
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['no_role'] = { code: 404 }
+
+      h['admin'] = {
+        code: 201,
+        response_object: diff_json
+      }
+
+      h['space_developer'] = {
+        code: 201,
+        response_object: diff_json
+      }
+
+      h.freeze
+    end
+
+    context 'when there are no changes in the manifest' do
+      let(:diff_json) do
+        {
+          diff: []
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'memory' => '1024M',
+                  'disk_quota' => '1024M',
+                  'health-check-type' =>  process1.health_check_type
+                }
+              ]
+            },
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when there are changes in the manifest' do
+      let(:diff_json) do
+        {
+          diff: [
+            { op: 'add', path: '/applications/0/comp', value: 'hoh' },
+            { op: 'replace', path: '/applications/0/stack', was: process1.stack.name, value: 'big brother' },
+            { op: 'remove', path: '/applications/0/processes/0/memory', was: '1024M' },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'version' => 1,
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => 'big brother',
+              'comp' => 'hoh',
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'disk_quota' => '1024M',
+                  'health-check-type' =>  process1.health_check_type
+                }
+              ]
+            },
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+    context 'when there is a new app' do
+      let(:diff_json) do
+        {
+          diff: [
+            { op: 'add', path: '/applications/0/name', value: 'new-app' },
+            { op: 'add', path: '/applications/1/name', value: 'newer-app' },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'new-app',
+            },
+            {
+              'name' => 'newer-app',
+            }
+          ]
+        }.to_yaml
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+    context 'when the request is invalid' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      context 'when there is a manifest without \'applications\'' do
+        let(:yml_manifest) do
+          {
+            'not-applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq("Cannot parse manifest with no 'applications' field.")
+        end
+      end
+
+      context 'the manifest is unparseable' do
+        let(:yml_manifest) do
+          {
+            'key' => 'this is json, not yaml'
+          }
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: invalid request body')
+        end
+      end
+
+      context 'the manifest is a not supported version' do
+        let(:yml_manifest) do
+          {
+            'version' => 1234567,
+            'applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
+        end
+      end
+    end
+    context 'the space does not exist' do
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'new-app',
+            },
+          ]
+        }.to_yaml
+      end
+
+      it 'returns an appropriate error' do
+        post '/v3/spaces/not-space-guid/manifest_diff', yml_manifest, yml_headers(user_header)
+
+        expect(last_response).to have_status_code(404)
       end
     end
   end

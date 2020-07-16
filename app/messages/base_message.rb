@@ -42,12 +42,20 @@ module VCAP::CloudController
       request.deep_stringify_keys
     end
 
-    def to_param_hash(opts={ exclude: [] })
+    def to_param_hash(exclude: [], fields: [])
       params = {}
-      (requested_keys - opts[:exclude]).each do |key|
+      (requested_keys - exclude).each do |key|
         val = self.try(key)
-        params[key] = val.is_a?(Array) ? val.map { |v| v.gsub(',', CGI.escape(',')) }.join(',') : val
+
+        if fields.include?(key)
+          val.each do |resource, selectors|
+            params["#{key}[#{resource}]".to_sym] = selectors.join(',')
+          end
+        else
+          params[key] = val.is_a?(Array) ? val.map { |v| v.gsub(',', CGI.escape(',')) }.join(',') : val
+        end
       end
+
       params
     end
 
@@ -71,6 +79,7 @@ module VCAP::CloudController
 
     def self.to_array!(params, key)
       return if params[key].nil?
+      return if params[key].is_a?(Hash)
 
       params[key] = if params[key] == ''
                       ['']

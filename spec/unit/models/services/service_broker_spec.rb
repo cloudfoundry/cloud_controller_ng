@@ -108,6 +108,10 @@ module VCAP::CloudController
         broker.state = ServiceBrokerStateEnum::AVAILABLE
         expect(broker.available?).to eq true
       end
+      it 'returns true when state is empty to support old brokers' do
+        broker.state = ''
+        expect(broker.available?).to eq true
+      end
       it 'returns false when state is DELETE_IN_PROGRESS' do
         broker.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
         expect(broker.available?).to eq false

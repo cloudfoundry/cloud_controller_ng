@@ -29,10 +29,10 @@ Example Person Resource
 
 Name | Type | Description
 ---- | ---- | -----------
-**guid** | _uuid_ | The unique identifier for the resource.
-**created_at** | _datetime_ | The ISO8601 compatible date and time when resource was created.
-**updated_at** | _datetime_ | The ISO8601 compatible date and time when resource was last updated.
-**links** | [_links object_](#links) | URLs to related resources and actions for the current resource.
+**guid** | _uuid_ | The unique identifier for the resource
+**created_at** | _[timestamp](#timestamps)_ | The ISO8601 compatible date and time when resource was created
+**updated_at** | _[timestamp](#timestamps)_ | The ISO8601 compatible date and time when resource was last updated
+**links** | [_links object_](#links) | URLs to related resources and actions for the current resource
 
 
 ### Links
@@ -49,12 +49,12 @@ Example Link object
 ```json
 {
   "href": "http://example.com/some/endpoint",
-  "method": "GET"
+  "method": "POST"
 }
 ```
 
 Name | Type | Description
 ---- | ---- | -----------
-**href** | _string_ | The absolute URL.
-**method** | _string_ | An optional field containing the HTTP method to be used when following the URL.
+**href** | _string_ | The absolute URL
+**method** | _string_ | An optional field containing the HTTP method to be used when following the URL
 

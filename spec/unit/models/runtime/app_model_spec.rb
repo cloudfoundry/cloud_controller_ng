@@ -271,6 +271,7 @@ module VCAP::CloudController
         before { BuildpackLifecycleDataModel.make(app: app_model) }
 
         it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
+          app_model.reload
           expect(app_model.lifecycle_type).to eq('buildpack')
         end
       end
@@ -301,7 +302,7 @@ module VCAP::CloudController
         let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
 
         it 'returns buildpack_lifecycle_data if it is on the model' do
-          expect(app_model.lifecycle_data).to eq(buildpack_lifecycle_data)
+          expect(app_model.reload.lifecycle_data).to eq(buildpack_lifecycle_data)
         end
 
         it 'is a persistable hash' do

@@ -67,14 +67,17 @@ class RoutesController < ApplicationController
     unprocessable_space! unless space
     unprocessable_domain! unless domain
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    if domain.shared?
-      unprocessable_wildcard! if message.wildcard? && !permission_queryer.can_write_globally?
-      unprocessable_non_http_protocols(message, domain)
-    end
+    unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
+  rescue RoutingApi::UaaUnavailable, UaaUnavailable
+    service_unavailable!('Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.')
+  rescue RoutingApi::RoutingApiUnavailable
+    service_unavailable!('The Routing API is currently unavailable. Please try again later.')
+  rescue RoutingApi::RoutingApiDisabled
+    service_unavailable!('The Routing API is disabled.')
   rescue RouteCreate::Error => e
     unprocessable!(e)
   end
@@ -251,14 +254,7 @@ class RoutesController < ApplicationController
     resource_not_found!(:app)
   end
 
-  def non_http_protocols_present?(domain)
-    !(domain.protocols - ['http']).empty?
-  end
-
-  def unprocessable_non_http_protocols(message, domain)
-    if non_http_protocols_present?(domain)
-      unprocessable_protocol_host! if message.host
-      unprocessable_protocol_path! if message.path
-    end
+  def routing_api_client
+    @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
   end
 end

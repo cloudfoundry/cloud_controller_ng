@@ -1,0 +1,35 @@
+### Get a service usage event
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_usage_events/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_usage_event %>
+```
+
+Retrieve a service usage event.
+
+#### Definition
+
+`GET /v3/service_usage_events/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |

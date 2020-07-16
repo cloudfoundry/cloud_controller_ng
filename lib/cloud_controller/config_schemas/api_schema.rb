@@ -59,6 +59,9 @@ module VCAP::CloudController
             file: String, # Log file to use
             syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
             optional(:anonymize_ips) => bool,
+            optional(:format) => {
+              optional(:timestamp) => String,
+            },
           },
 
           telemetry_log_path: String, # path to log telemetry to, /dev/null to disable
@@ -210,16 +213,21 @@ module VCAP::CloudController
             temporary_ignore_server_unavailable_errors: bool,
           },
 
-          logcache_tls: {
+          optional(:logcache_tls) => {
             key_file: String,
             cert_file: String,
             ca_file: String,
             subject_name: String
           },
 
-          loggregator: {
+          optional(:loggregator) => {
             router: String,
             internal_url: String,
+          },
+
+          optional(:fluent) => {
+            optional(:host) => String,
+            optional(:port) => Integer,
           },
 
           doppler: {
@@ -354,6 +362,9 @@ module VCAP::CloudController
 
           internal_route_vip_range: String,
 
+          default_app_lifecycle: String,
+          custom_metric_tag_prefix_list: Array,
+
           optional(:kubernetes) => {
             host_url: String,
             service_account: {
@@ -361,13 +372,12 @@ module VCAP::CloudController
             },
             ca_file: String,
             workloads_namespace: String,
-            optional(:kpack) => {
+            kpack: {
               builder_namespace: String,
               registry_service_account_name: String,
               registry_tag_base: String,
             }
           },
-          default_app_lifecycle: String,
         }
       end
       # rubocop:enable Metrics/BlockLength

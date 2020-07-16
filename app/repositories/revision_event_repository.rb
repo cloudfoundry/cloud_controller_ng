@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Repositories
     class RevisionEventRepository
       def self.record_create(revision, app, user_audit_info)
-        VCAP::Loggregator.emit(revision.app_guid, "Creating revision for app with guid #{app.guid}")
+        VCAP::AppLogEmitter.emit(revision.app_guid, "Creating revision for app with guid #{app.guid}")
 
         Event.create(
           type:              'audit.app.revision.create',

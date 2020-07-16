@@ -1,0 +1,11 @@
+### Service broker jobs
+
+CRUD operations for service brokers are asynchronous. `create`, `update` and `delete` endpoints include a job URL in the `Location` header of the HTTP response.
+
+These jobs are the only source of information about the progress of the operation. Therefore, the job must be polled to find out when the process ends and if it was successful.
+There is no mechanism to link a service broker with its jobs, apart from the `Location` header in the API response.
+
+When a failure occurs during a create job, the service broker won't be usable. It will still be included in the `GET` endpoints responses, hence the importance of querying the job to find out the end status.
+
+When updating a service broker, catalog changes will be rolled-back in the event of the job failing. The service broker catalog will remain unchanged with no indication that the update operation failed. Querying the job will provide such information.
+

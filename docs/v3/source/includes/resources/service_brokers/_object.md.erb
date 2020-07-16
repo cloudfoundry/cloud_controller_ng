@@ -1,0 +1,20 @@
+### The service broker object
+
+```
+Example Service Broker object
+```
+```json
+<%= yield_content :single_service_broker %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the service broker
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**name** | _string_ | Name of the service broker
+**url** | _string_ | URL of the service broker
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the service broker is restricted to; omitted for globally available service brokers
+**metadata.labels**       | [_label object_](#labels)      | Labels applied to the service broker                                                                                                   |
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations added to the service broker                                                                                                |
+**links** | [_links object_](#links) | Links to related resources
