@@ -718,7 +718,8 @@ module VCAP::Services
               'last_operation' => {
                 'state' => 'failed',
                 'description' => description
-              }
+              },
+              'http_status_code' => 400
             }
           end
         end
