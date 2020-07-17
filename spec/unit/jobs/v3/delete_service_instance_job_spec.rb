@@ -51,7 +51,7 @@ module VCAP::CloudController
           it 'does not modify the service instance operation' do
             service_instance.save_with_new_operation(
               {},
-              {type: 'create', state: 'done'}
+              { type: 'create', state: 'done' }
             )
 
             subject.perform
@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         context 'when the client raises a general error' do
-          let(:err) { StandardError.new("random error") }
+          let(:err) { StandardError.new('random error') }
 
           before do
             allow(client).to receive(:deprovision).and_raise(err)
