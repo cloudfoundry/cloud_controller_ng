@@ -41,4 +41,18 @@ jobs:
         service mysql restart
     - name: Run tests
       run: DB=mysql bundle exec rake spec:all
+  test_docs:
+    runs-on: ubuntu-latest
+    container:
+      image: "cloudfoundry/capi:rc-docs"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          bundle install
+          cd docs/v3
+          bundle install
+          cd -
+      - name: Run docs tests
+        run: bundle exec rake check_doc_links
 
