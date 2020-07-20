@@ -8,7 +8,7 @@ require 'json-diff'
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
 
-  before_action :validate_content_type!, only: :apply_manifest
+  before_action :validate_content_type!
 
   def apply_manifest
     space = Space.find(guid: hashed_params[:guid])
@@ -103,7 +103,7 @@ class SpaceManifestsController < ApplicationController
 
   def validate_content_type!
     if !request_content_type_is_yaml?
-      logger.error("Context-type isn't yaml: #{request.content_type}")
+      logger.error("Content-type isn't yaml: #{request.content_type}")
       invalid_request!('Content-Type must be yaml')
     end
   end
