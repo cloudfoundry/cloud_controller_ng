@@ -22,7 +22,11 @@ module VCAP::CloudController
       end
 
       def maximum_duration_seconds=(duration)
-        @maximum_duration = duration if duration < default_maximum_duration_seconds
+        @maximum_duration = if duration.present? && duration < default_maximum_duration_seconds
+                              duration
+                            else
+                              default_maximum_duration_seconds
+                            end
       end
 
       def polling_interval_seconds

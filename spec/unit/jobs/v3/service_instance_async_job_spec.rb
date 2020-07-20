@@ -238,6 +238,27 @@ module VCAP::CloudController
             job.perform
           end
 
+          context 'the maximum duration' do
+            it 'recomputes the value' do
+              job.maximum_duration_seconds = 90009
+              TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+              job.perform
+              expect(job.maximum_duration_seconds).to eq(8088.minutes)
+            end
+
+            context 'when the plan value changes between calls' do
+              before do
+                job.maximum_duration_seconds = 90009
+                service_plan.update(maximum_polling_duration: 5000)
+                job.perform
+              end
+
+              it 'sets to the new plan value' do
+                expect(job.maximum_duration_seconds).to eq(5000)
+              end
+            end
+          end
+
           it 'does not send any operation request to the broker' do
             job.perform
             expect(job).to have_received(:send_broker_request).once

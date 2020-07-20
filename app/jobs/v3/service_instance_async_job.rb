@@ -25,10 +25,10 @@ module VCAP::CloudController
         raise_if_cannot_proceed!
 
         client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+        compute_maximum_duration
 
         begin
           if @first_time
-            compute_maximum_duration
             execute_request(client)
             compatibility_checks
             @first_time = false
@@ -139,7 +139,7 @@ module VCAP::CloudController
 
       def compute_maximum_duration
         max_poll_duration_on_plan = service_instance.service_plan.try(:maximum_polling_duration)
-        self.maximum_duration_seconds = max_poll_duration_on_plan if max_poll_duration_on_plan
+        self.maximum_duration_seconds = max_poll_duration_on_plan
       end
 
       def service_instance
