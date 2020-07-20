@@ -15,10 +15,6 @@ module Kpack
     end
 
     def stage(staging_details)
-      # if staging_details include specific buildpacks, create custombuilder
-      # create custom builder
-      # staging details should have list of buildpacks
-      # grab custom builder but update name, tag and order with list of supplied buildpacks
       builder_spec = get_builder_spec(staging_details)
 
       existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
@@ -108,19 +104,15 @@ module Kpack
       default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER_SPEC[:name], builder_namespace)
 
       custom_builder_name = "#{staging_details.package.app.guid}-custom-builder"
-      Kubeclient::Resource.new({
+      client.create_custom_builder(Kubeclient::Resource.new({
         metadata: {
           name: custom_builder_name,
           namespace: builder_namespace,
           labels: {
             APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
             BUILD_GUID_LABEL_KEY.to_sym => staging_details.staging_guid,
-            # Should the logs for the custom builder be put into the app log stream?  do they even emit logs?
-            # STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
+            STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
           },
-          # annotations: {
-          #   'sidecar.istio.io/inject' => 'false'
-          # },
         },
         spec: {
           serviceAccount: default_builder.spec.serviceAccount,
@@ -131,7 +123,7 @@ module Kpack
             group: staging_details.buildpack_infos.map { |buildpack| { id: buildpack } }
           ]
         }
-      })
+      }))
 
       {
         name: custom_builder_name,
