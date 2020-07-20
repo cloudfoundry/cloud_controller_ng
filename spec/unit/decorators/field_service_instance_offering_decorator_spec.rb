@@ -4,8 +4,8 @@ require 'decorators/field_service_instance_offering_decorator'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOfferingDecorator do
     describe '.decorate' do
-      let(:offering1) { Service.make(extra: '{"documentationUrl": "https://offering1.com"}') }
-      let(:offering2) { Service.make(extra: '{"documentationUrl": "https://offering2.com"}') }
+      let(:offering1) { Service.make(extra: '{"documentationUrl": "https://offering1.com"}', tags: %w(foo bar)) }
+      let(:offering2) { Service.make(extra: '{"documentationUrl": "https://offering2.com"}', tags: %w(baz)) }
 
       let(:plan1) { ServicePlan.make(service: offering1) }
       let(:plan2) { ServicePlan.make(service: offering2) }
@@ -101,6 +101,28 @@ module VCAP::CloudController
         })
       end
 
+      it 'can decorate with the service offering tags' do
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        decorator = described_class.new({ 'service_plan.service_offering': ['tags', 'foo'] })
+
+        hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
+
+        expect(hash).to match({
+          foo: 'bar',
+          included: {
+            monkeys: %w(zach greg),
+            service_offerings: [
+              {
+                tags: offering1.tags,
+              },
+              {
+                tags: offering2.tags,
+              }
+            ]
+          }
+        })
+      end
+
       it 'decorated the given hash with offering relationship to broker from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
         decorator = described_class.new({ 'service_plan.service_offering': ['relationships.service_broker', 'foo'] })
@@ -160,7 +182,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      fields = %w(name guid description documentation_url relationships.service_broker)
+      fields = %w(name guid description documentation_url tags relationships.service_broker)
 
       fields.each do |field|
         it "matches value `#{field}` for key symbol `service_plan.service_offering`" do
