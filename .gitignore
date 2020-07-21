@@ -12,6 +12,7 @@ spec/examples.txt
 ci-artifacts-dir
 ci-working-dir
 coverage
+db/schema.rb
 doc
 *.rbc
 *.swp

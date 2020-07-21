@@ -207,6 +207,29 @@ namespace :db do
       number_to_rollback = (args[:number_to_rollback] || 1).to_i
       for_each_database { rollback(number_to_rollback) }
     end
+
+    desc 'Dump schema to file'
+    task :dump_schema do
+      require_relative '../../spec/support/bootstrap/db_config'
+      require_relative '../../spec/support/bootstrap/table_recreator'
+
+      db = DbConfig.new.connection
+
+      puts 'Recreating tables...'
+      TableRecreator.new(db).recreate_tables(without_fake_tables: true)
+
+      db.extension(:schema_dumper)
+      puts 'Dumping schema...'
+      schema = db.dump_schema_migration(indexes: true, foreign_keys: true)
+
+      File.open('db/schema.rb', 'w') { |f|
+        f.write("# rubocop:disable all\n")
+        f.write(schema)
+        f.write("# rubocop:enable all\n")
+      }
+
+      puts 'Wrote db/schema.rb'
+    end
   end
 
   namespace :parallel do
