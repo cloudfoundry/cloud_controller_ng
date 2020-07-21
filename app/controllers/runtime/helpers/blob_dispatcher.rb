@@ -6,10 +6,12 @@ module VCAP::CloudController
     end
 
     def send_or_redirect(guid:)
+      logger.error('No guid for BlobNotFound')
       raise CloudController::Errors::BlobNotFound unless guid
 
       blob = @blobstore.blob(guid)
 
+      logger.error('No blob object for BlobNotFound')
       raise CloudController::Errors::BlobNotFound unless blob
 
       send_or_redirect_blob(blob)

@@ -405,6 +405,21 @@ RSpec.describe 'Droplets' do
       end
     end
 
+    context 'when the droplet cannot be retrieved from the blobstore' do
+      before do
+        droplet_model.update(
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          droplet_hash: nil
+        )
+      end
+
+      it 'returns an error with a helpful message' do
+        get "/v3/droplets/#{droplet_model.guid}/download", nil, developer_headers
+        expect(last_response).to have_status_code(404)
+        expect(last_response).to have_error_message('Blobstore key not present on droplet. This may be due to a failed build.')
+      end
+    end
+
     context 'when the droplet cannot be found' do
       it 'returns 404 for the droplet' do
         get '/v3/droplets/some-bogus-guid/download', nil, developer_headers

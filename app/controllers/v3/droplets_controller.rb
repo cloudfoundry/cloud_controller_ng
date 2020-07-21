@@ -161,6 +161,10 @@ class DropletsController < ApplicationController
   private
 
   def send_droplet_blob(droplet)
+    if droplet.blobstore_key.nil?
+      resource_not_found_with_message!('Blobstore key not present on droplet. This may be due to a failed build.')
+    end
+
     droplet_blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
     BlobDispatcher.new(blobstore: droplet_blobstore, controller: self).send_or_redirect(guid: droplet.blobstore_key)
   rescue CloudController::Errors::BlobNotFound
