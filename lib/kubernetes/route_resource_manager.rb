@@ -2,6 +2,8 @@ require 'kubernetes/kube_client_builder'
 
 module Kubernetes
   class RouteResourceManager
+    UPDATE_DESTINATION_CONFLICT_RETRIES = 3
+
     def initialize(kube_client)
       @client = kube_client
     end
@@ -37,28 +39,39 @@ module Kubernetes
 
       @client.create_route(Kubeclient::Resource.new(route_resource_hash))
     rescue => e
-      Steno.logger('cc.action.route_create').info("Failed to Create Route CRD: #{e}")
+      logger.info("Failed to Create Route CRD: #{e}")
       raise
     end
 
     def update_destinations(route)
-      route_resource = @client.get_route(route.guid, 'cf-workloads')
-      route_resource.spec.destinations = get_destinations(route)
-
-      @client.update_route(route_resource)
-    rescue => e
-      Steno.logger('cc.action.route_update').info("Failed to Update Route CRD: #{e}")
-      raise
+      remaining_retries = UPDATE_DESTINATION_CONFLICT_RETRIES
+      begin
+        route_resource = @client.get_route(route.guid, 'cf-workloads')
+        route_resource.spec.destinations = get_destinations(route)
+        @client.update_route(route_resource)
+      rescue ApiClient::ConflictError
+        remaining_retries -= 1
+        retry if remaining_retries.positive?
+        logger.info("Failed to Update Route CRD after #{UPDATE_DESTINATION_CONFLICT_RETRIES}: #{e}")
+        raise
+      rescue => e
+        logger.info("Failed to Update Route CRD: #{e}")
+        raise
+      end
     end
 
     def delete_route(route)
       @client.delete_route(route.guid, VCAP::CloudController::Config.config.kubernetes_workloads_namespace)
     rescue => e
-      Steno.logger('cc.action.route_create').info("Failed to Delete Route CRD: #{e}")
+      logger.info("Failed to Delete Route CRD: #{e}")
       raise
     end
 
     private
+
+    def logger
+      Steno.logger('kubernetes.route_resource_manager')
+    end
 
     def get_destinations(route)
       route.route_mappings.map do |route_mapping|

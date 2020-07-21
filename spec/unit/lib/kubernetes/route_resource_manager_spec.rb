@@ -224,6 +224,24 @@ RSpec.describe Kubernetes::RouteResourceManager do
           }.to raise_error(error)
         end
       end
+
+      context 'when there is a k8s conflict error' do
+        let(:error) { ::Kubernetes::ApiClient::ConflictError.new('boom') }
+
+        before do
+          # raise a 409 twice, then succeed
+          expect(k8s_client).to receive(:update_route).once.with(any_args).and_raise(error)
+          expect(k8s_client).to receive(:update_route).once.with(any_args).and_raise(error)
+          expect(k8s_client).to receive(:update_route).once.with(any_args)
+        end
+
+        it 'retries 3 times, fetching the route to patch each time' do
+          expect {
+            subject.update_destinations(route)
+          }.not_to raise_error
+          expect(k8s_client).to have_received(:get_route).exactly(3).times
+        end
+      end
     end
   end
 end

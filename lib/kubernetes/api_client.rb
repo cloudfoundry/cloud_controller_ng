@@ -2,6 +2,9 @@ require 'kubernetes/kube_client_builder'
 
 module Kubernetes
   class ApiClient
+    class Error < StandardError; end
+    class ConflictError < Error; end
+
     def initialize(build_kube_client:, kpack_kube_client:, route_kube_client:)
       @build_kube_client = build_kube_client
       @kpack_kube_client = kpack_kube_client
@@ -64,6 +67,9 @@ module Kubernetes
       @route_kube_client.update_route(resource_config)
     rescue Kubeclient::HttpError => e
       logger.error('update_route', error: e.inspect, response: e.response, backtrace: e.backtrace)
+
+      raise ConflictError.new("Conflict on update of #{resource_name(resource_config)}") if e.error_code == 409
+
       error = CloudController::Errors::ApiError.new_from_details('KubernetesRouteResourceError', resource_name(resource_config), e.message, e.response)
       error.set_backtrace(e.backtrace)
       raise error

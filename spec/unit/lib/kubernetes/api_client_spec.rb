@@ -248,6 +248,17 @@ RSpec.describe Kubernetes::ApiClient do
           end
         end
 
+        context 'when the error is a 409' do
+          let(:error) { Kubeclient::HttpError.new(409, 'foo', 'bar') }
+
+          it 'raises as an ApiError that includes the resource name' do
+            expect {
+              subject.update_route(resource_config)
+            }.to raise_error(Kubernetes::ApiClient::ConflictError)
+            expect(logger).to have_received(:error).with('update_route', error: /status code/, response: error.response, backtrace: error.backtrace)
+          end
+        end
+
         context 'when the config is a hash with symbol keys' do
           let(:resource_config) { config_hash.symbolize_keys }
 
