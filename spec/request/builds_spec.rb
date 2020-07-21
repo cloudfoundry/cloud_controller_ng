@@ -18,7 +18,7 @@ RSpec.describe 'Builds' do
     allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
     allow(k8s_api_client).to receive(:create_image)
     allow(k8s_api_client).to receive(:get_image)
-    allow(k8s_api_client).to receive(:get_builder_spec)
+    allow(k8s_api_client).to receive(:get_custom_builder)
   end
 
   describe 'POST /v3/builds' do
@@ -165,7 +165,7 @@ RSpec.describe 'Builds' do
         expect(parsed_response['lifecycle']['type']).to eq 'kpack'
         expect(parsed_response['state']).to eq 'STAGING'
       end
-
+      # TODO: whats the buildpack_info?
       context 'with buildpacks specified' do
         let(:create_request) do
           {

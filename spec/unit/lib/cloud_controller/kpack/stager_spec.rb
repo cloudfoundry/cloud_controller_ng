@@ -21,9 +21,10 @@ module Kpack
     end
     let(:client) { instance_double(Kubernetes::ApiClient) }
     let(:default_builder_obj) {
-      Kubeclient::CustomBuilder.new(
+      Kubeclient::Resource.new(
         metadata: {
-          name: 'cf-default-builder'
+          name: 'cf-default-builder',
+          creationTimestamp: '2020-06-27T03:13:07Z',
         },
         spec: {
           order: [
@@ -44,7 +45,7 @@ module Kpack
           ],
           conditions: [
             {
-              lastTransitionTime: 'timestamp',
+              lastTransitionTime: '2020-06-27T03:15:46Z',
               status: 'True',
               type: 'Ready',
             }
@@ -57,7 +58,7 @@ module Kpack
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
 
       allow(client).to receive(:get_image).and_return(nil)
-      allow(client). to receive(:get_builder_spec).and_return(default_builder_obj)
+      allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
     end
 
     it_behaves_like 'a stager'
@@ -73,6 +74,7 @@ module Kpack
         details.lifecycle = lifecycle
         details
       end
+      # TODO: should staging details be something like: let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: { buildpacks: [] }, type: 'kpack' }) }
       let(:lifecycle) do
         VCAP::CloudController::KpackLifecycle.new(package, {})
       end
@@ -134,7 +136,7 @@ module Kpack
         end
 
         it 'creates a custom builder' do
-          expect(client).to receive(:get_builder_spec).with('cf-default-builder', 'namespace')
+          expect(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace')
           expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
             metadata: {
               name: 'java-custom-builder',
