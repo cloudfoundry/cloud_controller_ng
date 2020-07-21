@@ -7,12 +7,17 @@ module VCAP::CloudController
 
     class DeleteServiceInstanceJob < ServiceInstanceAsyncJob
       def initialize(guid, audit_info)
-        super(guid, audit_info)
+        super
       end
 
       def send_broker_request(client)
-        client.deprovision(service_instance, { accepts_incomplete: true })
+        deprovision_response = client.deprovision(service_instance, { accepts_incomplete: true })
+
+        @request_failed = false
+
+        deprovision_response
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse => err
+        @request_failed = true
         raise DeprovisionBadResponse.new(err.message)
       end
 
@@ -38,6 +43,14 @@ module VCAP::CloudController
 
       def restart_on_failure?
         true
+      end
+
+      def pollable_job_state
+        if @request_failed
+          return PollableJobModel::PROCESSING_STATE
+        end
+
+        PollableJobModel::POLLING_STATE
       end
 
       def restart_job(msg)

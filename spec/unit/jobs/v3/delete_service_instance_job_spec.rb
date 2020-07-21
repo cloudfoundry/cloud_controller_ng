@@ -46,6 +46,7 @@ module VCAP::CloudController
 
             expect(subject.instance_variable_get(:@attempts)).to eq(1)
             expect(subject.instance_variable_get(:@first_time)).to eq(true)
+            expect(subject.instance_variable_get(:@request_failed)).to eq(true)
           end
 
           it 'does not modify the service instance operation' do
@@ -126,6 +127,11 @@ module VCAP::CloudController
           expect(response).to eq('some response')
         end
 
+        it 'sets the @request_failed to false' do
+          subject.send_broker_request(client)
+          expect(subject.instance_variable_get(:@request_failed)).to eq(false)
+        end
+
         context 'when the client raises a ServiceBrokerBadResponse' do
           it 'raises a DeprovisionBadResponse error' do
             r = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'unexpected failure!')
@@ -163,6 +169,17 @@ module VCAP::CloudController
       describe '#restart_on_failure?' do
         it 'returns true' do
           expect(subject.restart_on_failure?).to eq(true)
+        end
+      end
+
+      describe '#pollable_job_state' do
+        it 'returns POLLING' do
+          expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
+        end
+
+        it 'returns PROCESSING when the request has failed' do
+          subject.instance_variable_set(:@request_failed, true)
+          expect(subject.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
         end
       end
     end
