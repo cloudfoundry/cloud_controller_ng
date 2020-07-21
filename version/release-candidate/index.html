@@ -10658,6 +10658,7 @@ applications:
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/manifest_diff"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/x-yaml"</span> <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d @/path/to/manifest.yml
 </code></pre>
@@ -10688,13 +10689,47 @@ applications:
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>Create a manifest diff for apps in the provided manifest and their underlying processes. Currently manifest_diff only supports version 1 manifests.</p>
+<p>This endpoint returns a JSON representation of the difference between the
+provided manifest and the current state of a space.</p>
 
-<p>Manifests require the <code class="prettyprint">applications</code> field.</p>
+<p>Currently, this endpoint can only diff <a href="#the-manifest-schema">version 1</a> manifests.</p>
+
+<h5 id="the-diff-object">The diff object</h5>
+
+<p>The diff object format is inspired by the <a href="https://tools.ietf.org/html/rfc6902">JSON Patch
+specification</a>.</p>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>op</strong></td>
+<td><em>string</em></td>
+<td>Type of change; valid values are <code class="prettyprint">add</code>, <code class="prettyprint">remove</code>, <code class="prettyprint">replace</code></td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>Path to changing manifest field</td>
+</tr>
+<tr>
+<td><strong>was</strong></td>
+<td><em>any</em></td>
+<td>For <code class="prettyprint">remove</code> and <code class="prettyprint">replace</code> operations, the previous value;</td>
+</tr>
+</tbody></table>
+
+<p>otherwise key is omitted
+<strong>value</strong> | <em>any</em> | For <code class="prettyprint">add</code> and <code class="prettyprint">replace</code> operations, the new value; otherwise
+key is omitted</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/spaces/:guid/manifest_diff</code></p>
+<p><code class="prettyprint">POST /v3/spaces/:guid/manifest_diff</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
