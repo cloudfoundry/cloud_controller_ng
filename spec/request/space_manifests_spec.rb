@@ -538,7 +538,6 @@ RSpec.describe 'Space Manifests' do
       let(:diff_json) do
         {
           diff: a_collection_containing_exactly(
-            { op: 'add', path: '/applications/0/new-key', value: 'hoh' },
             { op: 'replace', path: '/applications/0/stack', was: process1.stack.name, value: 'big brother' },
           )
         }

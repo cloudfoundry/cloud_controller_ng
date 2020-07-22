@@ -49,15 +49,25 @@ module VCAP::CloudController
         end
       end
 
+      context 'when there is an unrecognized top-level field' do
+        before do
+          default_manifest['applications'][0]['foo'] = 'bar'
+        end
+
+        it 'returns an empty diff' do
+          expect(subject).to eq([])
+        end
+      end
+
       context 'when there are changes in the manifest' do
         before do
-          default_manifest['applications'][0]['new-key'] = 'hoh'
+          default_manifest['applications'][0]['random_route'] = true
           default_manifest['applications'][0]['stack'] = 'big brother'
         end
 
         it 'returns the correct diff' do
           expect(subject).to match_array([
-            { 'op' => 'add', 'path' => '/applications/0/new-key', 'value' => 'hoh' },
+            { 'op' => 'add', 'path' => '/applications/0/random_route', 'value' => true },
             { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' },
           ])
         end
@@ -75,7 +85,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there is a difference in a nested array' do
+      context 'when there is a change inside of a nested array' do
         before do
           default_manifest['applications'][0]['sidecars'] = [
             { 'name' => 'sidecar1', 'command' => 'bundle exec rake lol', 'process_types' => ['web', 'worker'] }
@@ -92,6 +102,32 @@ module VCAP::CloudController
               ]
             },
           ])
+        end
+      end
+
+      context 'when there is an unrecognized field in a nested hash' do
+        before do
+          default_manifest['applications'][0]['processes'][0]['foo'] = 'bar'
+          default_manifest['applications'][0]['services'] = [
+            {
+              'foo' => 'bar'
+            }
+          ]
+
+          default_manifest['applications'][0]['metadata'] = [
+            {
+              'foo' => 'bar'
+            }
+          ]
+          default_manifest['applications'][0]['sidecars'] = [
+            {
+              'foo' => 'bar'
+            }
+          ]
+        end
+
+        it 'returns an empty diff' do
+          expect(subject).to eq([])
         end
       end
 
