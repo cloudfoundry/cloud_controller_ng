@@ -28,6 +28,22 @@ module VCAP::CloudController
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
+        context 'when the client succeeds' do
+          let(:r) do
+            VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'all good')
+          end
+
+          before do
+            allow(client).to receive(:deprovision).and_return(r)
+          end
+
+          it 'the pollable job state is set to polling' do
+            subject.perform
+
+            expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
+          end
+        end
+
         context 'when the client raises a ServiceBrokerBadResponse' do
           let(:r) do
             VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'unexpected failure!')
@@ -46,7 +62,12 @@ module VCAP::CloudController
 
             expect(subject.instance_variable_get(:@attempts)).to eq(1)
             expect(subject.instance_variable_get(:@first_time)).to eq(true)
-            expect(subject.instance_variable_get(:@request_failed)).to eq(true)
+          end
+
+          it 'the pollable job state is set to processing' do
+            subject.perform
+
+            expect(subject.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
           end
 
           it 'does not modify the service instance operation' do
@@ -169,17 +190,6 @@ module VCAP::CloudController
       describe '#restart_on_failure?' do
         it 'returns true' do
           expect(subject.restart_on_failure?).to eq(true)
-        end
-      end
-
-      describe '#pollable_job_state' do
-        it 'returns POLLING' do
-          expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
-        end
-
-        it 'returns PROCESSING when the request has failed' do
-          subject.instance_variable_set(:@request_failed, true)
-          expect(subject.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
         end
       end
     end

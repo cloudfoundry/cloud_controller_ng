@@ -46,9 +46,7 @@ module VCAP::CloudController
       end
 
       def pollable_job_state
-        if @request_failed
-          return PollableJobModel::PROCESSING_STATE
-        end
+        return PollableJobModel::PROCESSING_STATE if @request_failed
 
         PollableJobModel::POLLING_STATE
       end

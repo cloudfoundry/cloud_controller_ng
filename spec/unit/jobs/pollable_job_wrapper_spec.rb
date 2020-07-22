@@ -62,7 +62,7 @@ module VCAP::CloudController::Jobs
 
         context 'when the job defines its state' do
           before do
-            job.class.define_method(:pollable_job_state) do
+            job.define_singleton_method(:pollable_job_state) do
               'ABRACADABRA'
             end
           end

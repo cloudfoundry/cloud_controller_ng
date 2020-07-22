@@ -13,11 +13,7 @@ module VCAP::CloudController
       # use custom hook as Job does not have the guid field populated during the normal `enqueue` hook
       def after_enqueue(job)
         if existing_guid && (existing = PollableJobModel.find(guid: existing_guid))
-          state = if @handler.respond_to?(:pollable_job_state)
-                    @handler.pollable_job_state
-                  else
-                    PollableJobModel::POLLING_STATE
-                  end
+          state = @handler.try(:pollable_job_state) || PollableJobModel::POLLING_STATE
           existing.update(
             delayed_job_guid: job.guid,
             state: state,
