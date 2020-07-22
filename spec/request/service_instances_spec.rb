@@ -2831,7 +2831,7 @@ RSpec.describe 'V3 service instances' do
               api_call.call(admin_headers)
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
             end
 
             it 'retries the deprovision' do
@@ -2875,7 +2875,7 @@ RSpec.describe 'V3 service instances' do
               api_call.call(admin_headers)
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
             end
 
             it 'retries the deprovision' do

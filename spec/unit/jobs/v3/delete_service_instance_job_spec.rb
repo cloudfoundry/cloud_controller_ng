@@ -28,6 +28,22 @@ module VCAP::CloudController
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
+        context 'when the client succeeds' do
+          let(:r) do
+            VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'all good')
+          end
+
+          before do
+            allow(client).to receive(:deprovision).and_return(r)
+          end
+
+          it 'the pollable job state is set to polling' do
+            subject.perform
+
+            expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
+          end
+        end
+
         context 'when the client raises a ServiceBrokerBadResponse' do
           let(:r) do
             VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'unexpected failure!')
@@ -46,6 +62,12 @@ module VCAP::CloudController
 
             expect(subject.instance_variable_get(:@attempts)).to eq(1)
             expect(subject.instance_variable_get(:@first_time)).to eq(true)
+          end
+
+          it 'the pollable job state is set to processing' do
+            subject.perform
+
+            expect(subject.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
           end
 
           it 'does not modify the service instance operation' do
@@ -124,6 +146,11 @@ module VCAP::CloudController
         it 'returns the client response' do
           response = subject.send_broker_request(client)
           expect(response).to eq('some response')
+        end
+
+        it 'sets the @request_failed to false' do
+          subject.send_broker_request(client)
+          expect(subject.instance_variable_get(:@request_failed)).to eq(false)
         end
 
         context 'when the client raises a ServiceBrokerBadResponse' do
