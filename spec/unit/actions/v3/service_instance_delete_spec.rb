@@ -63,15 +63,6 @@ module VCAP
         context 'managed service instances' do
           let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-          it 'locks the service instance' do
-            action.delete(service_instance)
-
-            lo = service_instance.reload.last_operation
-            expect(lo).to be
-            expect(lo.type).to eq('delete')
-            expect(lo.state).to eq('in progress')
-          end
-
           it 'enqueues a job and returns the job guid' do
             job_guid = subject.delete(service_instance)
             job = VCAP::CloudController::PollableJobModel.last
