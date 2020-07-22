@@ -114,6 +114,25 @@ module VCAP::CloudController
           ])
         end
       end
+
+      context 'when the user passes in a v2 manifest' do
+        let(:default_manifest) {
+          {
+            'applications' => [
+              {
+                'name' => app1_model.name,
+                'memory' => '256M'
+              }
+            ]
+          }
+        }
+
+        it 'returns the correct diff' do
+          expect(subject).to match_array([
+            { 'op' => 'replace', 'path' => '/applications/0/memory', 'was' => "#{process1.memory}M", 'value' => '256M' },
+          ])
+        end
+      end
     end
   end
 end

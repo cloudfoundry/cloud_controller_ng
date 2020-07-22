@@ -511,6 +511,29 @@ RSpec.describe 'Space Manifests' do
       h.freeze
     end
 
+    context 'when a v2 manifest has a change to the web process' do
+      let(:diff_json) do
+        {
+          diff: a_collection_containing_exactly(
+            { op: 'replace', path: '/applications/0/memory', was: '1024M', value: '256M' },
+          )
+        }
+      end
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'memory' => '256M'
+            }
+          ]
+        }.to_yaml
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
     context 'when there are changes in the manifest' do
       let(:diff_json) do
         {

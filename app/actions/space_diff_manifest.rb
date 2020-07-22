@@ -18,6 +18,8 @@ module VCAP::CloudController
             existing_app.routes,
           )
           existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
+          web_process_hash = existing_app_hash['processes'].find { |p| p['type'] == 'web' }
+          existing_app_hash = existing_app_hash.merge(web_process_hash) if web_process_hash
         end
 
         manifest_app_hash.each do |key, value|
@@ -28,7 +30,6 @@ module VCAP::CloudController
             value,
             include_was: true,
           )
-
           key_diffs.each do |diff|
             diff['path'] = "/applications/#{index}/#{key}" + diff['path']
 
