@@ -5,6 +5,9 @@ module VCAP::CloudController
     class LastOperationStateFailed < StandardError
     end
 
+    class OperationAborted < StandardError
+    end
+
     class ServiceInstanceAsyncJob < VCAP::CloudController::Jobs::ReoccurringJob
       MAX_RETRIES = 3
       attr_reader :warnings
@@ -48,6 +51,8 @@ module VCAP::CloudController
           fail_and_raise!(err.message) unless restart_on_failure?
 
           restart_job(err.message || 'no error description returned by the broker')
+        rescue OperationAborted
+          aborted!(service_instance.last_operation&.type)
         rescue => err
           fail!(err)
         end
@@ -101,6 +106,8 @@ module VCAP::CloudController
 
       def raise_if_cannot_proceed!
         last_operation_type = service_instance.last_operation&.type
+
+        return if operation_type == 'delete' && last_operation_type == 'create'
 
         if service_instance.operation_in_progress? && last_operation_type != operation_type
           aborted!(last_operation_type)

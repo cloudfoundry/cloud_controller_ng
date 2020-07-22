@@ -2528,17 +2528,6 @@ RSpec.describe 'V3 service instances' do
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       }
 
-      it 'sets the service instance last operation to delete in progress' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
-
-        instance.reload
-
-        expect(instance.last_operation).to_not be_nil
-        expect(instance.last_operation.type).to eq('delete')
-        expect(instance.last_operation.state).to eq('in progress')
-      end
-
       it 'responds with job resource' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(202)
@@ -2653,6 +2642,17 @@ RSpec.describe 'V3 service instances' do
 
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(Delayed::Job.count).to eq(1)
+          end
+
+          it 'sets the service instance last operation to delete in progress' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            instance.reload
+
+            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation.type).to eq('delete')
+            expect(instance.last_operation.state).to eq('in progress')
           end
 
           context 'when last operation eventually returns `delete succeeded`' do
@@ -2981,6 +2981,86 @@ RSpec.describe 'V3 service instances' do
           response = parsed_response['errors'].first
           expect(response).to include('title' => 'CF-ServiceInstanceDeletionSharesExists')
           expect(response).to include('detail' => include('Service instances must be unshared before they can be deleted.'))
+        end
+      end
+
+      context 'when the creation is still in progress' do
+        before do
+          instance.save_with_new_operation({}, {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: 'some create operation'
+          })
+        end
+
+        context 'and the broker confirms the deletion' do
+          it 'deletes the service instance' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).to be_nil
+          end
+        end
+
+        context 'and the broker accepts the delete' do
+          let(:broker_status_code) { 202 }
+          let(:broker_response) { { operation: 'some delete operation' } }
+          let(:last_operation_response) { { state: 'in progress', description: 'deleting si' } }
+          let(:last_operation_status_code) { 200 }
+
+          before do
+            stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+              with(
+                query: {
+                  operation: 'some delete operation',
+                  service_id: instance.service.broker_provided_id,
+                  plan_id: instance.service_plan.broker_provided_id
+                }).
+              to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+          end
+
+          it 'triggers the delete process' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            instance.reload
+
+            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation.type).to eq('delete')
+            expect(instance.last_operation.state).to eq('in progress')
+            expect(instance.last_operation.broker_provided_operation).to eq('some delete operation')
+          end
+        end
+
+        context 'but the broker rejects the delete' do
+          let(:broker_status_code) { 422 }
+          let(:broker_response) { { error: 'ConcurrencyError', description: 'Cannot delete right now' } }
+
+          it 'responds with an error' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            job = VCAP::CloudController::PollableJobModel.last
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+            expect(job.cf_api_error).to_not be_nil
+            api_error = YAML.safe_load(job.cf_api_error)['errors'].first
+            expect(api_error['title']).to eql('CF-UnableToPerform')
+            expect(api_error['detail']).to eql('delete could not be completed: create in progress')
+          end
+
+          it 'does not change the operation in progress' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            instance.reload
+
+            expect("#{instance.last_operation.type} #{instance.last_operation.state}").to eq('create in progress')
+            expect(instance.last_operation.broker_provided_operation).to eq('some create operation')
+          end
         end
       end
     end

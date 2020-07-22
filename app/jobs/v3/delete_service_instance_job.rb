@@ -19,6 +19,10 @@ module VCAP::CloudController
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse => err
         @request_failed = true
         raise DeprovisionBadResponse.new(err.message)
+      rescue CloudController::Errors::ApiError => err
+        raise OperationAborted.new('The service broker rejected the request') if err.name == 'AsyncServiceInstanceOperationInProgress'
+
+        raise err
       end
 
       def operation_succeeded

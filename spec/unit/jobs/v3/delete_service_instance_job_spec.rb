@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:client) { double('BrokerClient', deprovision: 'some response') }
+        let(:client) { double('BrokerClient', deprovision: { instance: {}, last_operation: {} }) }
 
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
@@ -41,6 +41,16 @@ module VCAP::CloudController
             subject.perform
 
             expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
+          end
+        end
+
+        context 'when there is a create operation in progress' do
+          before do
+            service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'barz' })
+          end
+
+          it 'attempts to delete anyways' do
+            expect { subject.perform }.to_not raise_error
           end
         end
 
@@ -97,6 +107,48 @@ module VCAP::CloudController
             end
 
             expect { subject.perform }.to raise_error(CloudController::Errors::ApiError)
+          end
+        end
+
+        context 'when the client raises an API Error' do
+          before do
+            allow(client).to receive(:deprovision).and_raise(err)
+            service_instance.save_with_new_operation({}, {
+              type: 'create',
+              state: 'in progress',
+              broker_provided_operation: 'some create operation'
+            })
+          end
+
+          let(:err) do
+            CloudController::Errors::ApiError.new_from_details('NotFound')
+          end
+
+          it 'fails the job and update the service instance last operation' do
+            expect { subject.perform }.to raise_error(CloudController::Errors::ApiError, /Unknown request/)
+            expect(subject.instance_variable_get(:@attempts)).to eq(0)
+
+            service_instance.reload
+
+            expect(service_instance.last_operation.type).to eq('delete')
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+
+          context 'and the error name is AsyncServiceInstanceOperationInProgress' do
+            let(:err) do
+              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'some name')
+            end
+
+            it 'fails the job but do not update the service instance last operation' do
+              expect { subject.perform }.to raise_error(CloudController::Errors::ApiError, /create in progress/)
+              expect(subject.instance_variable_get(:@attempts)).to eq(0)
+
+              service_instance.reload
+
+              expect(service_instance.last_operation.type).to eq('create')
+              expect(service_instance.last_operation.state).to eq('in progress')
+              expect(service_instance.last_operation.broker_provided_operation).to eq('some create operation')
+            end
           end
         end
 
@@ -160,6 +212,15 @@ module VCAP::CloudController
             allow(client).to receive(:deprovision).and_raise(err)
 
             expect { subject.send_broker_request(client) }.to raise_error(DeprovisionBadResponse, /unexpected failure!/)
+          end
+        end
+
+        context 'when the client raises a AsyncServiceInstanceOperationInProgress' do
+          it 'raises a DeprovisionBadResponse error' do
+            err = CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'some instance name')
+            allow(client).to receive(:deprovision).and_raise(err)
+
+            expect { subject.send_broker_request(client) }.to raise_error(OperationAborted, /rejected the request/)
           end
         end
 
