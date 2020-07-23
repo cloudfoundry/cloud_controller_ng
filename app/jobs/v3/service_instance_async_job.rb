@@ -98,10 +98,14 @@ module VCAP::CloudController
       def execute_request(client)
         broker_response = send_broker_request(client)
 
-        service_instance.save_with_new_operation(
-          broker_response[:instance] || {},
-          broker_response[:last_operation] || {}
-        )
+        ManagedServiceInstance.db.transaction do
+          service_instance.lock!
+          service_instance.last_operation.lock! if service_instance.last_operation
+          service_instance.save_with_new_operation(
+            broker_response[:instance] || {},
+            broker_response[:last_operation] || {}
+          )
+        end
       end
 
       def raise_if_cannot_proceed!
@@ -176,11 +180,15 @@ module VCAP::CloudController
 
       def fail_last_operation(msg)
         unless service_instance.blank?
-          service_instance.save_with_new_operation({}, {
-            type: operation_type,
-            state: 'failed',
-            description: msg,
-          })
+          ManagedServiceInstance.db.transaction do
+            service_instance.last_operation.lock! if service_instance.last_operation
+
+            service_instance.save_with_new_operation({}, {
+              type: operation_type,
+              state: 'failed',
+              description: msg,
+            })
+          end
         end
       end
 
