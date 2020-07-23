@@ -1,3 +1,5 @@
+require 'fetchers/service_credential_binding_fetcher'
+
 class ServiceCredentialBindingsController < ApplicationController
   before_action :ensure_service_credential_binding_exists!
   before_action :ensure_user_has_access!
@@ -28,8 +30,11 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def service_credential_binding
-    @service_credential_binding ||=
-      ServiceCredentialBinding.first(guid: hashed_params[:guid])
+    @service_credential_binding ||= fetcher.fetch(hashed_params[:guid])
+  end
+
+  def fetcher
+    @fetcher ||= VCAP::CloudController::ServiceCredentialBindingFetcher.new
   end
 
   def service_credential_binding_exists?
@@ -37,7 +42,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def allowed_to_access_space?
-    space = service_credential_binding.service_instance.space
+    space = service_credential_binding.space
 
     permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
