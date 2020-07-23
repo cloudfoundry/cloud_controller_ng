@@ -1924,7 +1924,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="potential-errors">Potential errors</h4>
+<h4 id="potential-errors-experimental">Potential errors (<em>experimental</em>)</h4>
 
 <p>In addition to any <a href="#common-errors">common errors</a>, this endpoint may return the following errors.</p>
 
@@ -1941,6 +1941,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>10016</td>
 <td>422</td>
 <td>The given app name is already taken in the targeted space</td>
+</tr>
+<tr>
+<td><code class="prettyprint">CF-FeatureDisabled</code></td>
+<td>330002</td>
+<td>422</td>
+<td>Some <a href="#list-of-feature-flags">feature flag</a> must be enabled by the CloudFoundry admin in order to push the app as is. The <code class="prettyprint">detail</code> message should contain information on which feature is disabled.</td>
 </tr>
 </tbody></table>
 
