@@ -7,6 +7,8 @@ module VCAP
       let(:fetcher) { ServiceCredentialBindingFetcher.new }
 
       describe 'not a real guid' do
+        let!(:existing_credential_binding) { ServiceBinding.make }
+
         it 'should return nothing' do
           credential_binding = fetcher.fetch('does-not-exist')
           expect(credential_binding).to be_nil

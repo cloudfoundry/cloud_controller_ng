@@ -25,7 +25,7 @@ module VCAP
         SERVICE_BINDING_VIEW
       ].inject do |statement, sub_select|
         statement.union(sub_select, all: true, from_self: false)
-      end.freeze
+      end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
         many_to_one :service_instance, class: 'VCAP::CloudController::ServiceInstance'
