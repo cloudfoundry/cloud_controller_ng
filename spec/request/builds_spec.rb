@@ -11,15 +11,7 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
-  let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
   let(:rails_logger) { double('rails_logger', info: nil) }
-
-  before do
-    allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-    allow(k8s_api_client).to receive(:create_image)
-    allow(k8s_api_client).to receive(:get_image)
-    allow(k8s_api_client).to receive(:get_custom_builder)
-  end
 
   describe 'POST /v3/builds' do
     let(:package) do
@@ -153,8 +145,20 @@ RSpec.describe 'Builds' do
           { name: 'paketo-buildpacks/httpd' }
         ]
       end
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
 
       before do
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+        allow(k8s_api_client).to receive(:create_image)
+        allow(k8s_api_client).to receive(:create_custom_builder)
+        allow(k8s_api_client).to receive(:get_image)
+        allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
+          spec: {
+            stack: 'cflinuxfs3-stack',
+            store: 'cf-buildpack-store',
+            serviceAccount: 'gcr-service-account'
+          }
+        }))
         allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
       end
 
@@ -165,7 +169,7 @@ RSpec.describe 'Builds' do
         expect(parsed_response['lifecycle']['type']).to eq 'kpack'
         expect(parsed_response['state']).to eq 'STAGING'
       end
-      # TODO: whats the buildpack_info?
+
       context 'with buildpacks specified' do
         let(:create_request) do
           {

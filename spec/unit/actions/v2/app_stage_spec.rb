@@ -192,6 +192,7 @@ module VCAP::CloudController
           context 'kpack lifecycle' do
             before do
               allow_any_instance_of(Kpack::Stager).to receive(:stage).and_return 'staging-complete'
+              allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([{ name: 'paketo/java' }])
             end
 
             it 'logs build creates' do

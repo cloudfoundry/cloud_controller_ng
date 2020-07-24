@@ -15,7 +15,7 @@ module Kpack
     end
 
     def stage(staging_details)
-      builder_spec = get_builder_spec(staging_details)
+      builder_spec = get_or_create_builder_spec(staging_details)
 
       existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
       if existing_image.nil?
@@ -94,7 +94,7 @@ module Kpack
         map { |key, value| { name: key, value: value.to_s } }
     end
 
-    def get_builder_spec(staging_details)
+    def get_or_create_builder_spec(staging_details)
       return create_custom_builder(staging_details) if staging_details.lifecycle.buildpack_infos.present?
 
       CF_DEFAULT_BUILDER_SPEC
@@ -103,7 +103,7 @@ module Kpack
     def create_custom_builder(staging_details)
       default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER_SPEC[:name], builder_namespace)
 
-      custom_builder_name = "#{staging_details.package.app.guid}-custom-builder"
+      custom_builder_name = "app-#{staging_details.package.app.guid}"
       client.create_custom_builder(Kubeclient::Resource.new({
         metadata: {
           name: custom_builder_name,
@@ -120,7 +120,7 @@ module Kpack
           store: default_builder.spec.store,
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-custom-builder",
           order: [
-            group: staging_details.buildpack_infos.map { |buildpack| { id: buildpack } }
+            group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } }
           ]
         }
       }))
