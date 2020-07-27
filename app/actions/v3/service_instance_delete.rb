@@ -17,12 +17,12 @@ module VCAP::CloudController
         cannot_delete_shared_instances! if service_instance.shared?
 
         lock = DeleterLock.new(service_instance)
-        lock.lock!
 
         job = case service_instance
               when ManagedServiceInstance
                 asynchronous_destroy(service_instance)
               when UserProvidedServiceInstance
+                lock.lock!
                 synchronous_destroy(service_instance, lock)
               end
 

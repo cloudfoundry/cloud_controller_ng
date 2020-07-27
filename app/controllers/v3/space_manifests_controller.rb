@@ -3,19 +3,19 @@ require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
 require 'actions/app_find_or_create_skeleton'
 require 'actions/app_create'
-require 'json-diff'
+require 'actions/space_diff_manifest'
 
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
 
-  before_action :validate_content_type!, only: :apply_manifest
+  before_action :validate_content_type!
 
   def apply_manifest
     space = Space.find(guid: hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    messages = parsed_app_manifests.map(&:to_unsafe_h).map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
@@ -47,36 +47,11 @@ class SpaceManifestsController < ApplicationController
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    json_diff = []
+    parsed_manifests = parsed_app_manifests.map(&:to_hash)
 
-    parsed_app_manifests.each_with_index do |manifest_app_hash, index|
-      existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] } || {}
+    diff = SpaceDiffManifest.generate_diff(parsed_manifests, space)
 
-      if existing_app == {}
-        existing_app_hash = {}
-      else
-        manifest_presenter = Presenters::V3::AppManifestPresenter.new(
-          existing_app,
-          existing_app.service_bindings,
-          existing_app.routes,
-        )
-        existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
-      end
-
-      curr_diff = JsonDiff.diff(
-        existing_app_hash,
-        manifest_app_hash.to_hash,
-        include_was: true,
-      )
-
-      curr_diff.each do |diff|
-        diff['path'] = "/applications/#{index}" + diff['path']
-      end
-
-      json_diff += curr_diff
-    end
-
-    render status: :created, json: { diff: json_diff }
+    render status: :created, json: { diff: diff }
   end
 
   private
@@ -103,7 +78,7 @@ class SpaceManifestsController < ApplicationController
 
   def validate_content_type!
     if !request_content_type_is_yaml?
-      logger.error("Context-type isn't yaml: #{request.content_type}")
+      logger.error("Content-type isn't yaml: #{request.content_type}")
       invalid_request!('Content-Type must be yaml')
     end
   end
@@ -119,10 +94,10 @@ class SpaceManifestsController < ApplicationController
 
   def parsed_app_manifests
     check_version_is_supported!
-    parsed_applications = params[:body]['applications']
+    parsed_applications = params[:body].permit!['applications']
     raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
 
-    parsed_applications.map(&:to_unsafe_h)
+    parsed_applications
   end
 
   def space_not_found!

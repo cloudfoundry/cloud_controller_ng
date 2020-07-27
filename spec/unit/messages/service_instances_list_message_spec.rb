@@ -83,7 +83,7 @@ module VCAP::CloudController
 
         it_behaves_like 'field query parameter', 'service_plan', 'guid,name,relationships.service_offering'
 
-        it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,description,documentation_url,relationships.service_broker'
+        it_behaves_like 'field query parameter', 'service_plan.service_offering', 'name,guid,description,documentation_url,tags,relationships.service_broker'
 
         it_behaves_like 'field query parameter', 'service_plan.service_offering.service_broker', 'name,guid'
       end

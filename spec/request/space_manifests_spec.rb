@@ -109,7 +109,6 @@ RSpec.describe 'Space Manifests' do
     it 'applies the manifest' do
       web_process = app1_model.web_processes.first
       expect(web_process.instances).to eq(1)
-
       post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
       expect(last_response.status).to eq(202)
@@ -462,11 +461,36 @@ RSpec.describe 'Space Manifests' do
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
+    let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+
     let(:org) { space.organization }
     let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
-
-    let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
+    let(:default_manifest) do
+      {
+        'applications' => [
+          {
+            'name' => app1_model.name,
+            'stack' => process1.stack.name,
+            'routes' => [
+              {
+                'route' => "a_host.#{shared_domain.name}"
+              }
+            ],
+            'processes' => [
+              {
+                'type' => process1.type,
+                'instances' => process1.instances,
+                'memory' => '1024M',
+                'disk_quota' => '1024M',
+                'health-check-type' =>  process1.health_check_type
+              }
+            ]
+          },
+        ]
+      }
+    end
 
     let(:expected_codes_and_responses) do
       h = Hash.new(code: 403)
@@ -487,10 +511,12 @@ RSpec.describe 'Space Manifests' do
       h.freeze
     end
 
-    context 'when there are no changes in the manifest' do
+    context 'when a v2 manifest has a change to the web process' do
       let(:diff_json) do
         {
-          diff: []
+          diff: a_collection_containing_exactly(
+            { op: 'replace', path: '/applications/0/memory', was: '1024M', value: '256M' },
+          )
         }
       end
 
@@ -499,80 +525,34 @@ RSpec.describe 'Space Manifests' do
           'applications' => [
             {
               'name' => app1_model.name,
-              'stack' => process1.stack.name,
-              'processes' => [
-                {
-                  'type' => process1.type,
-                  'instances' => process1.instances,
-                  'memory' => '1024M',
-                  'disk_quota' => '1024M',
-                  'health-check-type' =>  process1.health_check_type
-                }
-              ]
-            },
+              'memory' => '256M'
+            }
           ]
         }.to_yaml
       end
+
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when there are changes in the manifest' do
       let(:diff_json) do
         {
-          diff: [
-            { op: 'add', path: '/applications/0/comp', value: 'hoh' },
+          diff: a_collection_containing_exactly(
+            { op: 'add', path: '/applications/0/new-key', value: 'hoh' },
             { op: 'replace', path: '/applications/0/stack', was: process1.stack.name, value: 'big brother' },
-            { op: 'remove', path: '/applications/0/processes/0/memory', was: '1024M' },
-          ]
+          )
         }
       end
 
       let(:yml_manifest) do
-        {
-          'version' => 1,
-          'applications' => [
-            {
-              'name' => app1_model.name,
-              'stack' => 'big brother',
-              'comp' => 'hoh',
-              'processes' => [
-                {
-                  'type' => process1.type,
-                  'instances' => process1.instances,
-                  'disk_quota' => '1024M',
-                  'health-check-type' =>  process1.health_check_type
-                }
-              ]
-            },
-          ]
-        }.to_yaml
-      end
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-    context 'when there is a new app' do
-      let(:diff_json) do
-        {
-          diff: [
-            { op: 'add', path: '/applications/0/name', value: 'new-app' },
-            { op: 'add', path: '/applications/1/name', value: 'newer-app' },
-          ]
-        }
+        default_manifest['applications'][0]['new-key'] = 'hoh'
+        default_manifest['applications'][0]['stack'] = 'big brother'
+        default_manifest.to_yaml
       end
 
-      let(:yml_manifest) do
-        {
-          'applications' => [
-            {
-              'name' => 'new-app',
-            },
-            {
-              'name' => 'newer-app',
-            }
-          ]
-        }.to_yaml
-      end
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
+
     context 'when the request is invalid' do
       before do
         space.organization.add_user(user)
@@ -635,7 +615,53 @@ RSpec.describe 'Space Manifests' do
           expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
         end
       end
+
+      context 'the content-type is omitted' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          headers = yml_headers(user_header)
+          headers.delete('CONTENT_TYPE')
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, headers
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+        end
+      end
+
+      context 'the content-type is not yaml' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => 'new-app',
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          headers = yml_headers(user_header)
+          headers['CONTENT_TYPE'] = 'bogus'
+
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, headers
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+        end
+      end
     end
+
     context 'the space does not exist' do
       let(:yml_manifest) do
         {

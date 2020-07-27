@@ -1,4 +1,4 @@
-require 'support/bootstrap/fake_model_tables'
+require_relative 'fake_model_tables'
 
 class TableRecreator
   SAFE_VIEWS = [:pg_stat_statements].freeze
@@ -7,7 +7,7 @@ class TableRecreator
     @db = db
   end
 
-  def recreate_tables
+  def recreate_tables(without_fake_tables: false)
     prepare_database
 
     (db.views - SAFE_VIEWS).each do |view|
@@ -20,8 +20,10 @@ class TableRecreator
 
     DBMigrator.new(db).apply_migrations
 
-    fake_model_tables = FakeModelTables.new(db)
-    fake_model_tables.create_tables
+    unless without_fake_tables
+      fake_model_tables = FakeModelTables.new(db)
+      fake_model_tables.create_tables
+    end
   end
 
   private

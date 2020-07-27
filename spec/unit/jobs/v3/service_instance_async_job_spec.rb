@@ -155,9 +155,11 @@ module VCAP::CloudController
           end
 
           context 'when sending the operation request fails' do
-            it 'raises the error and fails the last operation' do
+            before do
               allow_any_instance_of(FakeAsyncOperation).to receive(:send_broker_request).and_raise(RuntimeError, 'not today')
+            end
 
+            it 'raises the error and fails the last operation' do
               expect { job.perform }.to raise_error(RuntimeError, 'not today')
 
               expect(service_instance.last_operation.type).to eq(operation)
@@ -234,6 +236,27 @@ module VCAP::CloudController
               *last_operation_responses
             )
             job.perform
+          end
+
+          context 'the maximum duration' do
+            it 'recomputes the value' do
+              job.maximum_duration_seconds = 90009
+              TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+              job.perform
+              expect(job.maximum_duration_seconds).to eq(8088.minutes)
+            end
+
+            context 'when the plan value changes between calls' do
+              before do
+                job.maximum_duration_seconds = 90009
+                service_plan.update(maximum_polling_duration: 5000)
+                job.perform
+              end
+
+              it 'sets to the new plan value' do
+                expect(job.maximum_duration_seconds).to eq(5000)
+              end
+            end
           end
 
           it 'does not send any operation request to the broker' do
@@ -327,6 +350,70 @@ module VCAP::CloudController
                 expect(service_instance.last_operation.type).to eq(operation)
                 expect(service_instance.last_operation.state).to eq('failed')
                 expect(service_instance.last_operation.description).to eq('im sorry')
+              end
+
+              context 'orphan mitigation' do
+                before do
+                  allow_any_instance_of(FakeAsyncOperation).to receive(:restart_on_failure?).and_return(true)
+                end
+
+                context 'when last operation does not fail with a 400 code' do
+                  it 'does not raise an error' do
+                    expect { job.perform }.not_to raise_error
+                  end
+
+                  it 'does not update the last operation' do
+                    job.perform
+
+                    expect(service_instance.last_operation.type).to eq(operation)
+                    expect(service_instance.last_operation.state).to eq('in progress')
+                  end
+
+                  it 'retries the operation' do
+                    job.perform
+                    job.perform
+                    expect(job).to have_received(:send_broker_request).twice
+                  end
+
+                  it 'raises an error and updates the last operation after MAX_RETRIES' do
+                    (0...ServiceInstanceAsyncJob::MAX_RETRIES - 1).each do
+                      expect { job.perform }.not_to raise_error
+                    end
+
+                    expect { job.perform }.to raise_error(
+                      CloudController::Errors::ApiError,
+                      /fake-operation could not be completed/
+                    )
+                    expect(job).to have_received(:send_broker_request).exactly(3).times
+
+                    expect(service_instance.last_operation.type).to eq(operation)
+                    expect(service_instance.last_operation.state).to eq('failed')
+                    expect(service_instance.last_operation.description).to eq('im sorry')
+                  end
+                end
+
+                context 'when last operation fails with a 400 code' do
+                  let(:last_operation_responses) {
+                    [
+                      { last_operation: { state: 'in progress', type: operation } },
+                      {
+                        last_operation: { state: 'failed', type: operation, description: 'im sorry' },
+                        http_status_code: 400
+                      }
+                    ]
+                  }
+
+                  it 'raises without attempting to run the orphan mitigation' do
+                    expect { job.perform }.to raise_error(
+                      CloudController::Errors::ApiError,
+                      /fake-operation could not be completed/
+                    )
+
+                    expect(service_instance.last_operation.type).to eq(operation)
+                    expect(service_instance.last_operation.state).to eq('failed')
+                    expect(service_instance.last_operation.description).to include('im sorry')
+                  end
+                end
               end
             end
 
@@ -540,6 +627,12 @@ module VCAP::CloudController
       describe '#display_name' do
         it 'returns the display name' do
           expect(job.display_name).to eq('service_instance.fake-operation')
+        end
+      end
+
+      describe '#restart_in_failures?' do
+        it 'is false by default' do
+          expect(job.restart_on_failure?).to eq(false)
         end
       end
     end

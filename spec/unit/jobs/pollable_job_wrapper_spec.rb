@@ -59,6 +59,20 @@ module VCAP::CloudController::Jobs
           expect(job_record.resource_type).to eq('droplet')
           expect(job_record.cf_api_error).to be_nil
         end
+
+        context 'when the job defines its state' do
+          before do
+            job.define_singleton_method(:pollable_job_state) do
+              'ABRACADABRA'
+            end
+          end
+
+          it 'updates the existing job state accordingly' do
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
+            expect(job_record.state).to eq('ABRACADABRA')
+          end
+        end
       end
 
       context 'when the job fails' do

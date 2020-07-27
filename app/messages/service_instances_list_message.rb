@@ -28,7 +28,7 @@ module VCAP::CloudController
         'space' => %w(guid name relationships.organization),
         'space.organization' => %w(name guid),
         'service_plan' => %w(guid name relationships.service_offering),
-        'service_plan.service_offering' => %w(name guid description documentation_url relationships.service_broker),
+        'service_plan.service_offering' => %w(name guid description documentation_url tags relationships.service_broker),
         'service_plan.service_offering.service_broker' => %w(name guid)
       }
     }

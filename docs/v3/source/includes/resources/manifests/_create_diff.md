@@ -1,4 +1,4 @@
-### Create a manifest diff for apps
+### Create a manifest diff for a space (experimental)
 
 ```
 Example Request
@@ -7,6 +7,7 @@ Example Request
 ```shell
 curl "https://api.example.org/v3/spaces/[guid]/manifest_diff" \
   -X POST \
+  -H "Content-Type: application/x-yaml" \
   -H "Authorization: bearer [token]" \
   -d @/path/to/manifest.yml
 ```
@@ -41,12 +42,26 @@ Content-Type: application/json
 }
 ```
 
-Create a manifest diff for apps in the provided manifest and their underlying processes. Currently manifest_diff only supports version 1 manifests.
+This endpoint returns a JSON representation of the difference between the
+provided manifest and the current state of a space.
 
-Manifests require the `applications` field.
+Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.
+
+##### The diff object
+
+The diff object format is inspired by the [JSON Patch
+specification](https://tools.ietf.org/html/rfc6902).
+
+Name           | Type | Description
+-------------- | ---- | -----------
+**op** | _string_ | Type of change; valid values are `add`, `remove`, `replace`
+**path** | _string_ | Path to changing manifest field
+**was** | _any_ | For `remove` and `replace` operations, the previous value; otherwise key is omitted
+**value** | _any_ | For `add` and `replace` operations, the new value; otherwise key is omitted
 
 #### Definition
-`GET /v3/spaces/:guid/manifest_diff`
+
+`POST /v3/spaces/:guid/manifest_diff`
 
 #### Permitted Roles
  |

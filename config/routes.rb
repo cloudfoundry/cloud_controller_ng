@@ -184,6 +184,9 @@ Rails.application.routes.draw do
   get '/service_bindings', to: 'service_bindings#index'
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
+  # service_credential_bindings
+  get '/service_credential_bindings/:guid', to: 'service_credential_bindings#show'
+
   # service_brokers
   get '/service_brokers', to: 'service_brokers#index'
   get '/service_brokers/:guid', to: 'service_brokers#show'

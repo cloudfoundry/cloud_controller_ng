@@ -25,14 +25,14 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
+        Hash.new(
           code: 200,
           response_object: create_managed_json(instance),
-        )
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
+        ).tap do |h|
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+        end
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -2518,8 +2518,7 @@ RSpec.describe 'V3 service instances' do
       let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:broker_status_code) { 200 }
       let(:broker_response) { {} }
-
-      before do
+      let!(:stub_delete) {
         stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
           with(query: {
             'accepts_incomplete' => true,
@@ -2527,18 +2526,7 @@ RSpec.describe 'V3 service instances' do
             'plan_id' => instance.service_plan.broker_provided_id
           }).
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
-      end
-
-      it 'sets the service instance last operation to delete in progress' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
-
-        instance.reload
-
-        expect(instance.last_operation).to_not be_nil
-        expect(instance.last_operation.type).to eq('delete')
-        expect(instance.last_operation.state).to eq('in progress')
-      end
+      }
 
       it 'responds with job resource' do
         api_call.call(admin_headers)
@@ -2588,7 +2576,7 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'with an error' do
-            let(:broker_status_code) { 500 }
+            let(:broker_status_code) { 404 }
 
             it 'marks the service instance as delete failed' do
               api_call.call(admin_headers)
@@ -2656,6 +2644,17 @@ RSpec.describe 'V3 service instances' do
             expect(Delayed::Job.count).to eq(1)
           end
 
+          it 'sets the service instance last operation to delete in progress' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            instance.reload
+
+            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation.type).to eq('delete')
+            expect(instance.last_operation.state).to eq('in progress')
+          end
+
           context 'when last operation eventually returns `delete succeeded`' do
             before do
               stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
@@ -2698,14 +2697,19 @@ RSpec.describe 'V3 service instances' do
                     plan_id: instance.service_plan.broker_provided_id
                   }).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
-                to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
+                to_return(status: 200, body: { state: 'failed', description: 'oh no failed' }.to_json, headers: {})
 
               api_call.call(admin_headers)
 
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              (1..2).each do |attempt|
+                Timecop.freeze(Time.now + attempt.hour) do
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
+                end
+              end
+              Timecop.freeze(Time.now + 3.hour) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
             end
@@ -2718,13 +2722,8 @@ RSpec.describe 'V3 service instances' do
             it 'sets the service instance last operation to delete failed' do
               expect(instance.last_operation.type).to eq('delete')
               expect(instance.last_operation.state).to eq('failed')
+              expect(instance.last_operation.description).to eq('oh no failed')
             end
-
-            # it 'fires an orphan mitigation job' do
-            #   jobs = Delayed::Job.where(failed_at: nil).all
-            #   expect(jobs).to have(1).jobs
-            #   expect(jobs.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance)
-            # end
           end
 
           context 'when last operation eventually returns 410 Gone' do
@@ -2820,6 +2819,153 @@ RSpec.describe 'V3 service instances' do
             end
           end
         end
+
+        context 'orphan mitigation' do
+          let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+          context 'when the broker responds with an unexpected 2xx code to the deprovision request' do
+            let(:broker_status_code) { [201, 203, 204, 205, 206, 207, 208, 226].sample }
+            let(:broker_response) { {} }
+
+            it 'does not fail the job' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+            end
+
+            it 'retries the deprovision' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              assert_requested(stub_delete, times: 3)
+            end
+
+            it 'fails if max attempts is reached' do
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+
+          context 'when the broker responds with 5xx code to the deprovision request' do
+            let(:broker_status_code) { [500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511].sample }
+            let(:broker_response) { {} }
+            let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+            it 'does not fail the job' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+            end
+
+            it 'retries the deprovision' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              assert_requested(stub_delete, times: 3)
+            end
+
+            it 'fails if max attempts is reached' do
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+
+          context 'when the last operation reports delete failed' do
+            let(:broker_status_code) { 202 }
+            let(:broker_response) { { operation: 'some delete operation' } }
+            let(:last_operation_response) { { state: 'failed', type: 'delete', description: 'oh oh oh' } }
+            let(:last_operation_status_code) { 200 }
+            let!(:stub_last_operation) {
+              stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+                with(
+                  query: {
+                    operation: 'some delete operation',
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  }).
+                to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+            }
+
+            it 'does not fail the job' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'retries the deprovision' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              assert_requested(stub_last_operation, times: 3)
+              assert_requested(stub_delete, times: 3)
+            end
+
+            it 'fails if max attempts is reached' do
+              api_call.call(admin_headers)
+
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              Timecop.freeze(Time.now + 2.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              end
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+        end
       end
 
       context 'when it is shared' do
@@ -2835,6 +2981,86 @@ RSpec.describe 'V3 service instances' do
           response = parsed_response['errors'].first
           expect(response).to include('title' => 'CF-ServiceInstanceDeletionSharesExists')
           expect(response).to include('detail' => include('Service instances must be unshared before they can be deleted.'))
+        end
+      end
+
+      context 'when the creation is still in progress' do
+        before do
+          instance.save_with_new_operation({}, {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: 'some create operation'
+          })
+        end
+
+        context 'and the broker confirms the deletion' do
+          it 'deletes the service instance' do
+            api_call.call(admin_headers)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).to be_nil
+          end
+        end
+
+        context 'and the broker accepts the delete' do
+          let(:broker_status_code) { 202 }
+          let(:broker_response) { { operation: 'some delete operation' } }
+          let(:last_operation_response) { { state: 'in progress', description: 'deleting si' } }
+          let(:last_operation_status_code) { 200 }
+
+          before do
+            stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
+              with(
+                query: {
+                  operation: 'some delete operation',
+                  service_id: instance.service.broker_provided_id,
+                  plan_id: instance.service_plan.broker_provided_id
+                }).
+              to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+          end
+
+          it 'triggers the delete process' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            instance.reload
+
+            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation.type).to eq('delete')
+            expect(instance.last_operation.state).to eq('in progress')
+            expect(instance.last_operation.broker_provided_operation).to eq('some delete operation')
+          end
+        end
+
+        context 'but the broker rejects the delete' do
+          let(:broker_status_code) { 422 }
+          let(:broker_response) { { error: 'ConcurrencyError', description: 'Cannot delete right now' } }
+
+          it 'responds with an error' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            job = VCAP::CloudController::PollableJobModel.last
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+            expect(job.cf_api_error).to_not be_nil
+            api_error = YAML.safe_load(job.cf_api_error)['errors'].first
+            expect(api_error['title']).to eql('CF-UnableToPerform')
+            expect(api_error['detail']).to eql('delete could not be completed: create in progress')
+          end
+
+          it 'does not change the operation in progress' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(HTTP::Status::ACCEPTED)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            instance.reload
+
+            expect("#{instance.last_operation.type} #{instance.last_operation.state}").to eq('create in progress')
+            expect(instance.last_operation.broker_provided_operation).to eq('some create operation')
+          end
         end
       end
     end

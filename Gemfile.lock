@@ -65,11 +65,11 @@ GEM
       i18n
     ast (2.4.1)
     awesome_print (1.8.0)
-    azure-core (0.1.14)
+    azure-core (0.1.15)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
       nokogiri (~> 1.6)
-    azure-storage (0.14.0.preview)
+    azure-storage (0.15.0.preview)
       azure-core (~> 0.1)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
@@ -135,7 +135,7 @@ GEM
     domain_name (0.5.20180417)
       unf (>= 0.0.5, < 1.0.0)
     e2mmap (0.1.0)
-    em-http-request (1.1.5)
+    em-http-request (1.1.6)
       addressable (>= 2.3.4)
       cookiejar (!= 0.3.1)
       em-socksify (>= 0.3)
@@ -146,12 +146,12 @@ GEM
     erubi (1.9.0)
     eventmachine (1.0.9.1)
     excon (0.71.0)
-    faraday (0.15.4)
+    faraday (0.17.3)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
       faraday (>= 0.7.4)
       http-cookie (~> 1.0.0)
-    faraday_middleware (0.12.2)
+    faraday_middleware (0.14.0)
       faraday (>= 0.7.4, < 1.0)
     ffi (1.9.25)
     ffi-compiler (1.0.1)
@@ -289,16 +289,16 @@ GEM
     mustache (1.1.1)
     mustermann (1.0.3)
     mysql2 (0.5.2)
-    net-ssh (5.0.2)
+    net-ssh (6.1.0)
     netaddr (2.0.4)
     netrc (0.11.0)
-    newrelic_rpm (5.3.0.346)
+    newrelic_rpm (6.11.0.365)
     nokogiri (1.10.9)
       mini_portile2 (~> 2.4.0)
     os (1.0.1)
     palm_civet (1.1.0)
     parallel (1.19.1)
-    parallel_tests (2.27.1)
+    parallel_tests (3.0.0)
       parallel
     parser (2.7.1.3)
       ast (~> 2.4.0)
@@ -357,7 +357,7 @@ GEM
       rspec-core (~> 3.8.0)
       rspec-expectations (~> 3.8.0)
       rspec-mocks (~> 3.8.0)
-    rspec-collection_matchers (1.1.3)
+    rspec-collection_matchers (1.2.0)
       rspec-expectations (>= 2.99.0.beta1)
     rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
@@ -394,7 +394,7 @@ GEM
       rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 1.7)
-    ruby-debug-ide (0.7.0.beta4)
+    ruby-debug-ide (0.7.2)
       rake (>= 0.8.1)
     ruby-mysql (2.9.14)
     ruby-progressbar (1.10.1)
@@ -472,7 +472,7 @@ GEM
     unicode-display_width (1.6.1)
     vhd (0.0.4)
       bit-struct
-    vmstat (2.3.0)
+    vmstat (2.3.1)
     webmock (3.5.1)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -495,7 +495,7 @@ DEPENDENCIES
   addressable
   allowy (>= 2.1.0)
   awesome_print
-  azure-storage (= 0.14.0.preview)
+  azure-storage (= 0.15.0.preview)
   bits_service_client (~> 3.3, >= 3.3.0)
   byebug
   cf-copilot (= 0.0.14)
@@ -571,7 +571,7 @@ DEPENDENCIES
   timecop
   unf
   vcap-concurrency!
-  vmstat (~> 2.0)
+  vmstat (~> 2.3)
   webmock (> 2.3.1)
   yajl-ruby
 
