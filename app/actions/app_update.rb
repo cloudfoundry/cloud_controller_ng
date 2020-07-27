@@ -59,7 +59,7 @@ module VCAP::CloudController
     def validate_not_changing_lifecycle_type!(app, lifecycle)
       return if app.lifecycle_type == lifecycle.type
 
-      raise InvalidApp.new('Lifecycle type cannot be changed')
+      raise InvalidApp.new("Lifecycle type cannot be changed from #{app.lifecycle_type} to #{lifecycle.type}")
     end
 
     def existing_environment_variables_for(app)

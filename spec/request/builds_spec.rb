@@ -212,6 +212,29 @@ RSpec.describe 'Builds' do
           },
         }
       end
+      let(:k8s_buildpacks) do
+        [
+          { name: 'paketo-buildpacks/java' },
+          { name: 'paketo-community/ruby' },
+          { name: 'paketo-buildpacks/httpd' }
+        ]
+      end
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+        allow(k8s_api_client).to receive(:create_image)
+        allow(k8s_api_client).to receive(:create_custom_builder)
+        allow(k8s_api_client).to receive(:get_image)
+        allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
+          spec: {
+            stack: 'cflinuxfs3-stack',
+            store: 'cf-buildpack-store',
+            serviceAccount: 'gcr-service-account'
+          }
+        }))
+        allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
+      end
 
       context 'when build has no lifecycle specified' do
         context 'when app has kpack lifecycle' do

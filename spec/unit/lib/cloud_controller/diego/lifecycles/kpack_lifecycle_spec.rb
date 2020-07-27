@@ -46,9 +46,9 @@ module VCAP::CloudController
         end
 
         it 'can save the buildpack_infos to the db' do
-          expect do
-            lifecycle.create_lifecycle_data_model(build)
-          end.to change(build.lifecycle_data.buildpacks).to contain_exactly('some-buildpack', 'super-duper-buildpack')
+          lifecycle.create_lifecycle_data_model(build)
+
+          expect(build.reload.lifecycle_data.buildpacks).to contain_exactly('some-buildpack', 'super-duper-buildpack')
         end
       end
 

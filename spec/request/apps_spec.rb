@@ -259,7 +259,9 @@ RSpec.describe 'Apps' do
             'state' => 'STOPPED',
             'lifecycle' => {
                 'type' => 'kpack',
-                'data' => {}
+                'data' => {
+                  'buildpacks' => []
+                },
             },
             'relationships' => {
                 'space' => {
@@ -1853,7 +1855,9 @@ RSpec.describe 'Apps' do
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'lifecycle' => {
             'type' => 'kpack',
-            'data' => {}
+            'data' => {
+              'buildpacks' => []
+            },
           },
           'relationships' => {
             'space' => {
@@ -2129,7 +2133,9 @@ RSpec.describe 'Apps' do
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'lifecycle' => {
               'type' => 'kpack',
-              'data' => {}
+              'data' => {
+                'buildpacks' => []
+              },
             },
             'relationships' => {
               'space' => {

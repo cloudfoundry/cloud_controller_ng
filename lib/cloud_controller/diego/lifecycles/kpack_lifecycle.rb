@@ -29,7 +29,7 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(build)
       VCAP::CloudController::KpackLifecycleDataModel.create(
-        # TODO: maybe save the buildpacks here
+        buildpacks: buildpack_infos,
         build: build,
       )
     end

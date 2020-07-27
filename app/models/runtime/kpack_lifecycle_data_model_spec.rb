@@ -6,15 +6,13 @@ module VCAP::CloudController
 
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
-        { buildpacks: buildpacks || [], stack: 'cflinuxfs3' }
+        { buildpacks: buildpacks || [] }
       end
       let(:buildpacks) { [buildpack] }
       let(:buildpack) { 'ruby' }
-      let(:stack) { 'cflinuxfs3' }
 
       before do
         Buildpack.make(name: 'ruby')
-        lifecycle_data.stack = stack
         lifecycle_data.buildpacks = buildpacks
         lifecycle_data.save
       end
@@ -24,7 +22,7 @@ module VCAP::CloudController
       end
 
       context 'when the user has not specified a buildpack' do
-        let(:buildpacks) { nil }
+        let(:buildpacks) { [] }
 
         it 'returns the lifecycle data as a hash' do
           expect(lifecycle_data.to_hash).to eq expected_lifecycle_data
