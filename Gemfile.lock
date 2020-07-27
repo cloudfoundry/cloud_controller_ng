@@ -268,9 +268,9 @@ GEM
     memoist (0.16.0)
     method_source (0.9.2)
     middleware (0.1.0)
-    mime-types (3.2.2)
+    mime-types (3.3.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2019.0331)
+    mime-types-data (3.2020.0512)
     mini_portile2 (2.4.0)
     minitest (5.14.1)
     ms_rest (0.6.4)
@@ -526,7 +526,7 @@ DEPENDENCIES
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
-  mime-types (~> 3.0)
+  mime-types (~> 3.3)
   multi_json
   multipart-parser
   mysql2 (~> 0.5.0)
