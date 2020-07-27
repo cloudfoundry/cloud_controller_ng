@@ -56,10 +56,8 @@ Name           | Type | Description
 -------------- | ---- | -----------
 **op** | _string_ | Type of change; valid values are `add`, `remove`, `replace`
 **path** | _string_ | Path to changing manifest field
-**was** | _any_ | For `remove` and `replace` operations, the previous value;
-otherwise key is omitted
-**value** | _any_ | For `add` and `replace` operations, the new value; otherwise
-key is omitted
+**was** | _any_ | For `remove` and `replace` operations, the previous value; otherwise key is omitted
+**value** | _any_ | For `add` and `replace` operations, the new value; otherwise key is omitted
 
 #### Definition
 
