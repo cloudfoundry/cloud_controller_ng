@@ -38,10 +38,17 @@ module VCAP::CloudController
 
       context('multiple present buildpacks') do
         let(:requested_buildpacks) { ['some-buildpack', 'super-duper-buildpack'] }
+        let(:build) { BuildModel.make }
 
         it 'sets the buildpack_infos correctly' do
           expect(lifecycle).to be_valid
           expect(lifecycle.buildpack_infos).to contain_exactly('some-buildpack', 'super-duper-buildpack')
+        end
+
+        it 'can save the buildpack_infos to the db' do
+          expect do
+            lifecycle.create_lifecycle_data_model(build)
+          end.to change(build.lifecycle_data.buildpacks).to contain_exactly('some-buildpack', 'super-duper-buildpack')
         end
       end
 

@@ -39,7 +39,9 @@ module VCAP::CloudController
     end
 
     def to_hash
-      { 'buildpacks' => 'AAA' }
+      {
+        buildpacks: buildpacks
+      }
     end
 
     def buildpacks=(new_buildpacks) end
