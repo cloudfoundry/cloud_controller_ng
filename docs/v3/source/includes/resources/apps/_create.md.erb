@@ -51,14 +51,14 @@ Name | Type | Description | Default
 **metadata.labels** | [_label object_](#labels) | Labels applied to the app
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the app
 
-#### Potential errors (*experimental*)
+#### Potential errors *(experimental)*
 
 In addition to any [common errors](#common-errors), this endpoint may return the following errors.
 
 Title | Code | HTTP Status | Description
 ----- | ---- | ----------- | -----------
 `CF-UniquenessError` | 10016  | 422 | The given app name is already taken in the targeted space
-`CF-FeatureDisabled` | 330002 | 422 | Some [feature flag](#list-of-feature-flags) must be enabled by the CloudFoundry admin in order to push the app as is. The `detail` message should contain information on which feature is disabled.
+`CF-FeatureDisabled` | 330002 | 403 | Some [feature flag](#list-of-feature-flags) must be enabled by the Cloud Foundry admin in order to push the app as is. The `detail` message should contain information on which feature is disabled.
 
 #### Permitted roles
  |
