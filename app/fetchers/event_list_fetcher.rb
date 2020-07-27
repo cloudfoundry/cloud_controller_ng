@@ -28,21 +28,29 @@ module VCAP::CloudController
           dataset = dataset.where(organization_guid: message.organization_guids)
         end
 
-        if message.requested?(:created_ats)
-          if message.created_ats.is_a?(Hash)
-            message.created_ats.map do |operator, given_timestamp|
+        advanced_filters = {}
+        advanced_filters['created_at'] = message.created_ats if message.requested?(:created_ats)
+        advanced_filters['updated_at'] = message.updated_ats if message.requested?(:updated_ats)
+
+        advanced_filters.each do |filter, values|
+          puts "filter: #{filter}"
+          puts "values: #{values}"
+          puts "db: #{Event.alls.map(&:updated_at)}"
+          if values.is_a?(Hash)
+            values.map do |operator, given_timestamp|
               if operator == Event::LESS_THAN_COMPARATOR
                 normalized_timestamp = Time.parse(given_timestamp).utc
-                dataset = dataset.where(Sequel.lit('created_at < ?', normalized_timestamp))
+                dataset = dataset.where(Sequel.lit("#{filter} < ?", normalized_timestamp))
               elsif operator == Event::LESS_THAN_OR_EQUAL_COMPARATOR
                 normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-                dataset = dataset.where(Sequel.lit('created_at <= ?', normalized_timestamp))
+                dataset = dataset.where(Sequel.lit("#{filter} <= ?", normalized_timestamp))
               elsif operator == Event::GREATER_THAN_COMPARATOR
+                puts 'I should be here'
                 normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-                dataset = dataset.where(Sequel.lit('created_at > ?', normalized_timestamp))
+                dataset = dataset.where(Sequel.lit("#{filter} > ?", normalized_timestamp))
               elsif operator == Event::GREATER_THAN_OR_EQUAL_COMPARATOR
                 normalized_timestamp = Time.parse(given_timestamp).utc
-                dataset = dataset.where(Sequel.lit('created_at >= ?', normalized_timestamp))
+                dataset = dataset.where(Sequel.lit("#{filter} >= ?", normalized_timestamp))
               end
             end
           else
@@ -53,9 +61,9 @@ module VCAP::CloudController
             # the span of the second (e.g. "12:34:56.00-12:34:56.9999999"), for databases store
             # timestamps in sub-second accuracy (PostgreSQL stores in microseconds, for example)
             sequel_query =
-              (['created_at BETWEEN ? AND ?'] * message.created_ats.size).join(' OR ')
+              (['created_at BETWEEN ? AND ?'] * values.size).join(' OR ')
 
-            times = message.created_ats.map do |created_at|
+            times = values.map do |created_at|
               lower_bound = Time.parse(created_at).utc
               upper_bound = Time.at(lower_bound + 0.999999).utc
               [lower_bound, upper_bound]
