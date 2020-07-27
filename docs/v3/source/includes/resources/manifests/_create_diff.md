@@ -1,4 +1,4 @@
-### Create a manifest diff for apps
+### Create a manifest diff for a space (experimental)
 
 ```
 Example Request
