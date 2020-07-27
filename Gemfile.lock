@@ -111,7 +111,8 @@ GEM
     cf-uaa-lib (3.14.3)
       httpclient (~> 2.8, >= 2.8.2.4)
       multi_json (~> 1.12.0, >= 1.12.1)
-    clockwork (2.0.3)
+    clockwork (2.0.4)
+      activesupport
       tzinfo
     cloudfront-signer (3.0.2)
     codeclimate-test-reporter (1.0.9)
