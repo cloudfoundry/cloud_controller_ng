@@ -118,7 +118,7 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     redcarpet (3.5.0)
-    rouge (1.10.1)
+    rouge (1.11.1)
     sass (3.4.25)
     sprockets (2.12.5)
       hike (~> 1.2)
