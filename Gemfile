@@ -65,7 +65,7 @@ gem 'cf-perm', '~> 0.0.10'
 gem 'scientist', '~> 1.1.0'
 
 group :db do
-  gem 'mysql2', '~> 0.5.0'
+  gem 'mysql2', '~> 0.5.3'
   gem 'pg'
 end
 
