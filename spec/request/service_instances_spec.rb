@@ -660,6 +660,99 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
+    let(:user_header) { headers_for(user) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:other_space) { VCAP::CloudController::Space.make }
+
+    before(:each) do
+      share_service_instance(instance, other_space)
+    end
+
+    it 'returns a list of space guids where the service instance is shared to' do
+      set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+      get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      expected_response = {
+        data: [{ guid: other_space.guid }],
+        links: {
+          self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+        }
+      }.with_indifferent_access
+
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    it 'respond with 404 when the user cannot read the originating space' do
+      set_current_user_as_role(role: 'space_developer', org: other_space.organization, space: other_space, user: user)
+      get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
+      expect(last_response.status).to eq(404)
+    end
+
+    describe 'fields' do
+      it 'can include the space name, guid and organization relationship fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=name,guid,relationships.organization", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        r = { organization: { data: { guid: other_space.organization.guid } } }
+        included = {
+          spaces: [
+            { name: other_space.name, guid: other_space.guid, relationships: r }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
+      it 'can include the organization name and guid fields through space' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=name,guid", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        included = {
+          organizations: [
+            {
+              name: other_space.organization.name,
+              guid: other_space.organization.guid
+            }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
+      it 'fails for invalid resources' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[fruit]=name", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields [fruit] valid resources are: 'space', 'space.organization'"
+          )
+        )
+      end
+
+      it 'fails for not allowed space fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=metadata", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields valid keys for 'space' are: 'name', 'guid', 'relationships.organization'"
+          )
+        )
+      end
+
+      it 'fails for not allowed space.organization fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=metadata", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields valid keys for 'space.organization' are: 'name', 'guid'"
+          )
+        )
+      end
+    end
+  end
+
   describe 'POST /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
     let(:space_guid) { space.guid }

@@ -27,7 +27,8 @@ module VCAP::CloudController::Presenters::V3
     let(:build_related) { true }
     let(:relation_url) { 'cash/guid' }
     let(:relationship_path) { 'money' }
-    subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related: build_related) }
+    let(:decorators) { [] }
+    subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related: build_related, decorators: decorators) }
     let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder }
 
     describe '#to_hash' do
@@ -89,6 +90,23 @@ module VCAP::CloudController::Presenters::V3
               href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
             }
           })
+        end
+      end
+
+      context 'when a decorator is provided' do
+        let(:fake_decorator) { double }
+        let(:impl) do
+          ->(hash, resources) do
+            hash.tap { |h| h[:included] = { resource: { guid: "included #{resources[0].guid}" } } }
+          end
+        end
+        before { allow(fake_decorator).to receive(:decorate, &impl) }
+
+        let(:decorators) { [fake_decorator] }
+        let(:data) { generate_relationships(1) }
+
+        it 'uses the decorator' do
+          expect(result[:included]).to match({ resource: { guid: 'included 1' } })
         end
       end
     end
