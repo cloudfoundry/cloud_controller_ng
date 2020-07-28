@@ -23,6 +23,7 @@ require 'decorators/field_service_instance_organization_decorator'
 require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
+require 'controllers/services/lifecycle/service_instance_purger'
 require 'decorators/field_service_instance_plan_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
@@ -96,10 +97,17 @@ class ServiceInstancesV3Controller < ApplicationController
   def destroy
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    purge = params['purge'] == 'true'
 
     unauthorized! unless can_write_space?(service_instance.space)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+
+    if purge
+      ServiceInstancePurger.new(service_event_repository).purge(service_instance)
+      return [:no_content, nil]
+    end
+
     job_guid = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
 
     if job_guid.blank?

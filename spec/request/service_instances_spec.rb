@@ -2470,7 +2470,8 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'DELETE /v3/service_instances/:guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{instance.guid}", '{}', user_headers } }
+    let(:query_params) { '' }
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{instance.guid}?#{query_params}", '{}', user_headers } }
 
     context 'permissions' do
       let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
@@ -2511,6 +2512,27 @@ RSpec.describe 'V3 service instances' do
         expect(last_response.status).to eq(404)
         expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
         expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
+      end
+
+      it 'fails to delete when there are bindings' do
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(422)
+      end
+
+      context 'with purge' do
+        let(:query_params) { 'purge=true' }
+        before(:each) { @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
+
+        it 'deletes the instance and the related resources' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(204)
+
+          expect(VCAP::CloudController::ServiceInstance.where(guid: instance.guid).all).to be_empty
+          expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
+          expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
+          expect(VCAP::CloudController::ServiceBinding.where(service_instance: instance).all).to be_empty
+        end
       end
     end
 
@@ -2984,6 +3006,62 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      context 'when there are associations' do
+        RSpec.shared_examples 'associations not empty' do
+          it 'returns a 422 Unprocessable Entity' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            response = parsed_response['errors'].first
+            expect(response).to include('title' => 'CF-AssociationNotEmpty')
+            expect(response).to include('detail' => include('Please delete the service_bindings, service_keys, and routes associations for your service_instances.'))
+          end
+        end
+
+        let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+        describe 'service bindings' do
+          before(:each) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
+          it_should_behave_like 'associations not empty'
+        end
+
+        describe 'service keys' do
+          before(:each) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+          it_should_behave_like 'associations not empty'
+        end
+
+        describe 'route bindings' do
+          before(:each) { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
+          it_should_behave_like 'associations not empty'
+        end
+
+        context 'but purge is true' do
+          let(:query_params) { 'purge=true' }
+          before(:each) do
+            @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+            @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+            @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
+
+            api_call.call(admin_headers)
+          end
+
+          it 'removes all associations' do
+            expect { @binding.reload }.to raise_error Sequel::NoExistingObject
+            expect { @key.reload }.to raise_error Sequel::NoExistingObject
+            expect { @route.reload }.to raise_error Sequel::NoExistingObject
+          end
+
+          it 'deletes the service instance' do
+            expect { instance.reload }.to raise_error Sequel::NoExistingObject
+          end
+
+          it 'responds with 204' do
+            expect(last_response).to have_status_code(204)
+          end
+        end
+      end
+
       context 'when the creation is still in progress' do
         before do
           instance.save_with_new_operation({}, {
@@ -3062,20 +3140,6 @@ RSpec.describe 'V3 service instances' do
             expect(instance.last_operation.broker_provided_operation).to eq('some create operation')
           end
         end
-      end
-    end
-
-    context 'when associations are not empty' do
-      let(:instance) { VCAP::CloudController::ServiceInstance.make(space: space) }
-
-      it 'returns a 422 Unprocessable Entity' do
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance)
-
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(422)
-        response = parsed_response['errors'].first
-        expect(response).to include('title' => 'CF-AssociationNotEmpty')
-        expect(response).to include('detail' => 'Please delete the service_bindings, service_keys, and routes associations for your service_instances.')
       end
     end
 
