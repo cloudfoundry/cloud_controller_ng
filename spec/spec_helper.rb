@@ -134,6 +134,12 @@ each_run_block = proc do
       @uaa_server.stop
     end
 
+    rspec_config.before(:example, :log_db) do
+      db = DbConfig.new.connection
+      db.loggers << Logger.new($stdout)
+      db.sql_log_level = :info
+    end
+
     rspec_config.example_status_persistence_file_path = 'spec/examples.txt'
     rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
