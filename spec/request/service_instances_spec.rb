@@ -861,6 +861,21 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(201)
         end
       end
+
+      context 'when the route is not https' do
+        it 'returns an error' do
+          request_body[:route_service_url] = 'http://banana.example.com'
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({
+              'detail' => 'Route service url must be https',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
+          )
+        end
+      end
     end
 
     context 'managed service instance' do
