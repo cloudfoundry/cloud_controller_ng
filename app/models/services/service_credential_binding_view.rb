@@ -36,9 +36,6 @@ module VCAP
       end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
-        def space
-          Space.first(guid: space_guid)
-        end
       end
     end
   end

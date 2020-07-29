@@ -10,7 +10,7 @@ module VCAP
         let!(:existing_credential_binding) { ServiceBinding.make }
 
         it 'should return nothing' do
-          credential_binding = fetcher.fetch('does-not-exist')
+          credential_binding = fetcher.fetch('does-not-exist', space_guids: :all)
           expect(credential_binding).to be_nil
         end
       end
@@ -21,17 +21,22 @@ module VCAP
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
         let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
 
-        it 'can be found' do
-          credential_binding = fetcher.fetch(service_key.guid)
+        describe 'when in the space' do
+          it 'can be found' do
+            credential_binding = fetcher.fetch(service_key.guid, space_guids: [space.guid])
 
-          expect(credential_binding).not_to be_nil
-          expect(credential_binding.type).to eql(type)
+            expect(credential_binding).not_to be_nil
+            expect(credential_binding.type).to eql(type)
+          end
         end
 
-        it 'can access the space' do
-          credential_binding = fetcher.fetch(service_key.guid)
+        describe 'when not in the space' do
+          let!(:other_space) { Space.make }
+          it 'can not be found' do
+            credential_binding = fetcher.fetch(service_key.guid, space_guids: [other_space.guid])
 
-          expect(credential_binding.space).to eql(space)
+            expect(credential_binding).to be_nil
+          end
         end
       end
 
@@ -44,16 +49,19 @@ module VCAP
           let!(:app_binding) { ServiceBinding.make(service_instance: service_instance) }
 
           it 'can be found' do
-            credential_binding = fetcher.fetch(app_binding.guid)
+            credential_binding = fetcher.fetch(app_binding.guid, space_guids: [space.guid])
 
             expect(credential_binding).not_to be_nil
             expect(credential_binding.type).to eql(type)
           end
 
-          it 'can access the space' do
-            credential_binding = fetcher.fetch(app_binding.guid)
+          describe 'when not in the space' do
+            let!(:other_space) { Space.make }
+            it 'can not be found' do
+              credential_binding = fetcher.fetch(app_binding.guid, space_guids: [other_space.guid])
 
-            expect(credential_binding.space).to eql(space)
+              expect(credential_binding).to be_nil
+            end
           end
         end
 
@@ -63,42 +71,19 @@ module VCAP
           let!(:app_binding) { ServiceBinding.make(service_instance: service_instance) }
 
           it 'can be found' do
-            credential_binding = fetcher.fetch(app_binding.guid)
+            credential_binding = fetcher.fetch(app_binding.guid, space_guids: [space.guid])
 
             expect(credential_binding).not_to be_nil
             expect(credential_binding.type).to eql(type)
           end
 
-          it 'can access the space' do
-            credential_binding = fetcher.fetch(app_binding.guid)
+          describe 'when not in the space' do
+            let!(:other_space) { Space.make }
+            it 'can not be found' do
+              credential_binding = fetcher.fetch(app_binding.guid, space_guids: [other_space.guid])
 
-            expect(credential_binding.space).to eql(space)
-          end
-        end
-
-        describe 'shared services' do
-          let(:space) { Space.make }
-          let(:other_space) { Space.make }
-          let(:service_instance) do
-            ManagedServiceInstance.make(space: other_space).tap do |si|
-              si.shared_spaces << space
+              expect(credential_binding).to be_nil
             end
-          end
-
-          let(:app) { AppModel.make(space: space) }
-          let!(:app_binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
-
-          it 'can be found' do
-            credential_binding = fetcher.fetch(app_binding.guid)
-
-            expect(credential_binding).not_to be_nil
-            expect(credential_binding.type).to eql(type)
-          end
-
-          it "can access the app's space" do
-            credential_binding = fetcher.fetch(app_binding.guid)
-
-            expect(credential_binding.space).to eql(space)
           end
         end
       end
