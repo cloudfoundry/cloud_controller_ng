@@ -208,19 +208,20 @@ module VCAP::CloudController::Presenters::V3
     end
 
     context 'when a decorator is provided' do
-      class FakeDecorator
-        def self.decorate(hash, resources)
-          hash[:included] = { resource: { guid: resources[0].guid } }
-          hash
+      let(:fake_decorator) { double }
+      let(:impl) do
+        ->(hash, resources) do
+          hash.tap { |h| h[:included] = { resource: { guid: "included #{resources[0].guid}" } } }
         end
       end
+      before { allow(fake_decorator).to receive(:decorate, &impl) }
 
-      let(:presenter) { described_class.new(service_instance, decorators: [FakeDecorator]) }
+      let(:presenter) { described_class.new(service_instance, decorators: [fake_decorator]) }
 
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
       it 'uses the decorator' do
-        expect(result[:included]).to match({ resource: { guid: service_instance.guid } })
+        expect(result[:included]).to match({ resource: { guid: "included #{service_instance.guid}" } })
       end
     end
   end

@@ -4,18 +4,22 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ToManyRelationshipPresenter < BasePresenter
-        def initialize(relation_url, relationships, relationship_path, build_related: true)
+        def initialize(relation_url, relationships, relationship_path, build_related: true, decorators: [])
           @relation_url = relation_url
           @relationships = relationships
           @relationship_path = relationship_path
           @build_related = build_related
+          @decorators = decorators
         end
 
         def to_hash
-          {
-            data: build_relations,
+          relations = build_relations
+          h = {
+            data: relations,
             links: build_links
           }
+
+          @decorators.reduce(h) { |memo, d| d.decorate(memo, @relationships) }
         end
 
         private

@@ -12,9 +12,9 @@ module VCAP::CloudController
       @fields = fields[:'space.organization'].to_set.intersection(self.class.allowed)
     end
 
-    def decorate(hash, service_instances)
+    def decorate(hash, resources)
       hash[:included] ||= {}
-      spaces = service_instances.map(&:space).uniq
+      spaces = resources.map { |r| r.try(:space) || r }.uniq
       orgs = spaces.map(&:organization).uniq
 
       hash[:included][:organizations] = orgs.sort_by(&:created_at).map do |org|

@@ -6,6 +6,7 @@ require 'messages/service_instance_create_message'
 require 'messages/service_instance_create_managed_message'
 require 'messages/service_instance_create_user_provided_message'
 require 'messages/service_instance_show_message'
+require 'messages/shared_spaces_show_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -161,8 +162,16 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
 
+    message = SharedSpacesShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
-      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+      "service_instances/#{service_instance.guid}",
+      service_instance.shared_spaces,
+      'shared_spaces',
+      build_related: false,
+      decorators: decorators_for_fields(message.fields)
+    )
   end
 
   def credentials

@@ -68,6 +68,27 @@ module VCAP::CloudController
           expect(hash[:included][:organizations]).to have(1).element
         end
       end
+
+      context 'decorating relationships' do
+        it 'includes the related resource correctly' do
+          decorator = described_class.new({ 'space.organization': ['name', 'guid'] })
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          relationship = [space1, space2, space1]
+
+          hash = decorator.decorate(undecorated_hash, relationship)
+
+          expect(hash).to match({
+            foo: 'bar',
+            included: {
+              monkeys: %w(zach greg),
+              organizations: [
+                { name: org1.name, guid: org1.guid },
+                { name: org2.name, guid: org2.guid }
+              ]
+            }
+          })
+        end
+      end
     end
 
     describe '.match?' do
