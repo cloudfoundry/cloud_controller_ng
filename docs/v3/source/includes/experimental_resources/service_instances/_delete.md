@@ -42,6 +42,12 @@ accordingly to cases outlined in the [OSBAPI specification](https://github.com/o
 #### Definition
 `DELETE /v3/service_instances/:guid`
 
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**purge** | _boolean_ | If `true`, deletes the service instance and all associated resources without any interaction with the service broker.
+
 #### Permitted Roles
  |
 --- | ---

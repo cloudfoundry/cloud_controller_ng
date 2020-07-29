@@ -18,6 +18,7 @@ require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
 require 'actions/service_instance_create_managed'
+require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
@@ -97,10 +98,17 @@ class ServiceInstancesV3Controller < ApplicationController
   def destroy
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    purge = params['purge'] == 'true'
 
     unauthorized! unless can_write_space?(service_instance.space)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+
+    if purge
+      ServiceInstancePurge.new(service_event_repository).purge(service_instance)
+      return [:no_content, nil]
+    end
+
     job_guid = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
 
     if job_guid.blank?
