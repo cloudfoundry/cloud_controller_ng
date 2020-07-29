@@ -19,6 +19,11 @@ module VCAP::CloudController
                              end
       @buildpack_infos = requested_buildpacks.select { |bp| available_buildpacks.include?({ name: bp }) }
       @validator = KpackLifecycleDataValidator.new({ requested_buildpacks: requested_buildpacks, buildpack_infos: buildpack_infos })
+
+      puts "!!!! available: #{available_buildpacks}"
+      puts "!!!! available names: #{available_buildpacks.map { |a| a[:name] }}"
+      puts "!!!! requested: #{requested_buildpacks}"
+      puts "!!!! buildpack_infos: #{@buildpack_infos}"
     end
 
     delegate :valid?, :errors, to: :validator
