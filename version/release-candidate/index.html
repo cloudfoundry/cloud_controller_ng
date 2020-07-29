@@ -517,6 +517,10 @@ or <code class="prettyprint">/v3/service_instances?fields[space.organization]=na
 <td><a href="#list-service-instances">v3/service_instances</a>, <a href="/#get-a-service-instance">v3/service_instances/:guid</a></td>
 </tr>
 <tr>
+<td><strong>Shared Spaces</strong></td>
+<td><a href="#list-shared-spaces-relationship">/v3/service_instances/:guid/relationships/shared_spaces</a></td>
+</tr>
+<tr>
 <td><strong>Service Offerings</strong></td>
 <td><a href="#list-service-offerings">v3/service_offerings</a>, <a href="/#get-a-service-offering">v3/service_offerings/:guid</a></td>
 </tr>
@@ -19855,6 +19859,40 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 
 <p><code class="prettyprint">GET /v3/service_instances/:guid/relationships/shared_spaces</code></p>
 
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>fields</strong> (<em>experimental</em>)</td>
+<td><a href="#fields-parameter"><em>fields parameter</em></a></td>
+<td><a href="#shared-spaces-list-fields"><em>Allowed values</em></a></td>
+</tr>
+</tbody></table>
+
+<h5 id="shared-spaces-list-fields">Shared Spaces List Fields</h5>
+
+<table><thead>
+<tr>
+<th>Resource</th>
+<th>Allowed Keys</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>space</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code>, <code class="prettyprint">relationships.organization</code></td>
+</tr>
+<tr>
+<td>space.organization</td>
+<td><code class="prettyprint">guid</code>, <code class="prettyprint">name</code></td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles-in-the-service-instances-originating-space">Permitted roles (in the service instance&rsquo;s originating space)</h4>
 
 <table><thead>
@@ -28617,6 +28655,22 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/service_instances/:guid</code></p>
+
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>purge</strong></td>
+<td><em>boolean</em></td>
+<td>If <code class="prettyprint">true</code>, deletes the service instance and all associated resources without any interaction with the service broker.</td>
+</tr>
+</tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
