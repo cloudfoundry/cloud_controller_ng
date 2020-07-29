@@ -2495,7 +2495,9 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'user provided service instances' do
-      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/') }
+      let(:instance_labels) { VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance) }
+      let(:instance_annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance) }
 
       before do
         VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'banana', service_instance: instance)
@@ -2522,16 +2524,20 @@ RSpec.describe 'V3 service instances' do
 
       context 'with purge' do
         let(:query_params) { 'purge=true' }
-        before(:each) { @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
+        before(:each) do
+          @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+          @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
+        end
 
         it 'deletes the instance and the related resources' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(204)
 
-          expect(VCAP::CloudController::ServiceInstance.where(guid: instance.guid).all).to be_empty
-          expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
-          expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
-          expect(VCAP::CloudController::ServiceBinding.where(service_instance: instance).all).to be_empty
+          expect { instance.reload }.to raise_error Sequel::NoExistingObject
+          expect { @binding.reload }.to raise_error Sequel::NoExistingObject
+          expect { @route.reload }.to raise_error Sequel::NoExistingObject
+          expect(instance_labels.count).to eq(0)
+          expect(instance_annotations.count).to eq(0)
         end
       end
     end

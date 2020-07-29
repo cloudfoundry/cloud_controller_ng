@@ -17,13 +17,13 @@ require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
 require 'actions/service_instance_create_managed'
+require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
 require 'decorators/field_service_instance_organization_decorator'
 require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
-require 'controllers/services/lifecycle/service_instance_purger'
 require 'decorators/field_service_instance_plan_decorator'
 
 class ServiceInstancesV3Controller < ApplicationController
@@ -104,7 +104,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
 
     if purge
-      ServiceInstancePurger.new(service_event_repository).purge(service_instance)
+      ServiceInstancePurge.new(service_event_repository).purge(service_instance)
       return [:no_content, nil]
     end
 
