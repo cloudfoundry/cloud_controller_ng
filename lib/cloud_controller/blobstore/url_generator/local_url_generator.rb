@@ -33,10 +33,23 @@ module CloudController
       end
 
       def droplet_download_url(droplet)
-        return nil unless droplet
-        return nil unless @droplet_blobstore.exists?(droplet.blobstore_key)
+        unless droplet
+          logger.info('Droplet to be downloaded is nil')
+          return nil
+        end
+
+        unless @droplet_blobstore.exists?(droplet.blobstore_key)
+          logger.info('Blobstore key for droplet to be downloaded not found in blobstore')
+          return nil
+        end
 
         http_basic_auth_uri("/staging/v3/droplets/#{droplet.guid}/download")
+      end
+
+      private
+
+      def logger
+        @logger ||= Steno.logger('cc.blobstore.local_url_generator')
       end
     end
   end
