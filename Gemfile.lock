@@ -304,7 +304,7 @@ GEM
     parser (2.7.1.4)
       ast (~> 2.4.1)
     pg (1.2.3)
-    posix-spawn (0.3.13)
+    posix-spawn (0.3.15)
     protobuf (3.6.12)
       activesupport (>= 3.2)
       middleware
@@ -538,7 +538,7 @@ DEPENDENCIES
   palm_civet
   parallel_tests
   pg
-  posix-spawn (~> 0.3.6)
+  posix-spawn (~> 0.3.15)
   protobuf (= 3.6.12)
   pry-byebug
   public_suffix
