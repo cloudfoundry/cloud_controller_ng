@@ -97,36 +97,32 @@ module ControllerHelpers
 
   def admin_headers
     if !@admin_headers
-      user = User.make
+      user = User.make_unsaved
       @admin_headers = headers_for(user, scopes: %w(cloud_controller.admin))
-      user.destroy
     end
     @admin_headers
   end
 
   def admin_read_only_headers
     if !@admin_read_only_headers
-      user = User.make
+      user = User.make_unsaved
       @admin_read_only_headers = headers_for(user, scopes: %w(cloud_controller.admin_read_only))
-      user.destroy
     end
     @admin_read_only_headers
   end
 
   def global_auditor_headers
     if !@global_auditor_headers
-      user = User.make
+      user = User.make_unsaved
       @global_auditor_headers = headers_for(user, scopes: %w(cloud_controller.global_auditor))
-      user.destroy
     end
     @global_auditor_headers
   end
 
   def build_state_updater_headers
     if !@build_state_updater_headers
-      user = User.make
+      user = User.make_unsaved
       @build_state_updater_headers = headers_for(user, scopes: %w(cloud_controller.write cloud_controller.update_build_state))
-      user.destroy
     end
     @build_state_updater_headers
   end
