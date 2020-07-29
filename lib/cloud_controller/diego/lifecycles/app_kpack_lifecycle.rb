@@ -6,6 +6,7 @@ module VCAP::CloudController
       app.kpack_lifecycle_data = KpackLifecycleDataModel.create(app: app)
     end
 
+    # oh noes
     def update_lifecycle_data_model(_); end
 
     def valid?

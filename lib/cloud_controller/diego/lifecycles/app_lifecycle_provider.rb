@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     def self.provide(message, app)
-      type = if message.requested?(:lifecycle)
+      type = if message.lifecycle_type.present?
                message.lifecycle_type
              elsif !app.nil?
                app.lifecycle_type

@@ -180,6 +180,7 @@ RSpec.describe 'Apps' do
         }
 
         post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+        expect(last_response.status).to eq(201), last_response.body
 
         created_app = VCAP::CloudController::AppModel.last
         expected_response = {
@@ -218,7 +219,6 @@ RSpec.describe 'Apps' do
         }
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         event = VCAP::CloudController::Event.last
@@ -251,6 +251,7 @@ RSpec.describe 'Apps' do
         }
 
         post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+        expect(last_response.status).to eq(201), last_response.body
 
         created_app = VCAP::CloudController::AppModel.last
         expected_response = {
@@ -291,7 +292,6 @@ RSpec.describe 'Apps' do
         }
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         event = VCAP::CloudController::Event.last
