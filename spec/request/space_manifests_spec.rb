@@ -459,6 +459,66 @@ RSpec.describe 'Space Manifests' do
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
       end
     end
+
+    context 'when the app has kpack lifecyle' do
+      let(:kpack_app_model) { VCAP::CloudController::AppModel.make(:kpack, space: space) }
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            { 'name' => kpack_app_model.name,
+              'instances' => 4,
+              'memory' => '2048MB',
+              'disk_quota' => '1.5GB',
+              'buildpack' => buildpack.name,
+              'stack' => buildpack.stack,
+              'command' => 'new-command',
+              'health_check_type' => 'http',
+              'health_check_http_endpoint' => '/health',
+              'timeout' => 42,
+              'env' => {
+                'k1' => 'mangos',
+                'k2' => 'pears',
+                'k3' => 'watermelon'
+              },
+              'routes' => [
+                { 'route' => "https://#{route.host}.#{route.domain.name}" },
+                { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
+              ],
+              'services' => [
+                service_instance.name
+              ],
+              'metadata' => {
+                'annotations' => {
+                  'potato' => 'idaho',
+                  'juice' => 'newton',
+                  'berry' => nil,
+                },
+                'labels' => {
+                  'potato' => 'yam',
+                  'downton' => nil,
+                  'myspace.com/songs' => 'missing',
+                },
+              },
+            }
+          ]
+        }.to_yaml
+      end
+      before do
+        TestConfig.override(kubernetes: { host_url: 'kube.com' })
+      end
+
+      it 'applies the manifest' do
+        # TODO: how to request buildpack? is this the right place for this test?
+        # context:code does go to app_manifest_mesage:256 but the requested_buildpacks are empty.
+        # How do we set it when the only action is apply this yaml? There is a buildpack here but that is not the "requested buildpacks list"
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        kpack_app_model.reload
+
+        lifecycle_data = kpack_app_model.lifecycle_data
+        expect(lifecycle_data.buildpacks).to include(buildpack.name)
+      end
+    end
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
