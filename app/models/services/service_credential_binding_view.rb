@@ -6,18 +6,26 @@ module VCAP
         SERVICE_BINDING = 'app'.freeze
       end
 
-      SERVICE_KEY_VIEW = VCAP::CloudController::ServiceKey.select(
-        :guid,
+      SERVICE_KEY_VIEW = Sequel::Model(:service_keys).select(
+        Sequel.as(:service_keys__guid, :guid),
         Sequel.as(Types::SERVICE_KEY, :type),
-        :service_instance_id,
-        Sequel.as(nil, :app_guid)
+        Sequel.as(:spaces__guid, :space_guid),
+        Sequel.as(:service_keys__created_at, :created_at)
+      ).join(
+        :service_instances, id: Sequel[:service_keys][:service_instance_id]
+      ).join(
+        :spaces, id: Sequel[:service_instances][:space_id]
       ).freeze
 
-      SERVICE_BINDING_VIEW = VCAP::CloudController::ServiceBinding.select(
-        :guid,
+      SERVICE_BINDING_VIEW = Sequel::Model(:service_bindings).select(
+        Sequel.as(:service_bindings__guid, :guid),
         Sequel.as(Types::SERVICE_BINDING, :type),
-        Sequel.as(nil, :service_instance_id),
-        :app_guid
+        Sequel.as(:spaces__guid, :space_guid),
+        Sequel.as(:service_bindings__created_at, :created_at)
+      ).join(
+        :apps, guid: Sequel[:service_bindings][:app_guid]
+      ).join(
+        :spaces, guid: Sequel[:apps][:space_guid]
       ).freeze
 
       VIEW = [
@@ -28,19 +36,8 @@ module VCAP
       end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
-        many_to_one :service_instance, class: 'VCAP::CloudController::ServiceInstance'
-        many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
-
         def space
-          relation =
-            case type
-            when Types::SERVICE_BINDING
-              app
-            else
-              service_instance
-            end
-
-          relation.space
+          Space.first(guid: space_guid)
         end
       end
     end
