@@ -185,7 +185,9 @@ Rails.application.routes.draw do
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
   # service_credential_bindings
-  get '/service_credential_bindings/:guid', to: 'service_credential_bindings#show'
+  resources :service_credential_bindings,
+            param: :guid,
+            only: [:show, :index]
 
   # service_brokers
   get '/service_brokers', to: 'service_brokers#index'

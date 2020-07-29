@@ -7,7 +7,59 @@ RSpec.describe 'v3 service credential bindings' do
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:other_space) { VCAP::CloudController::Space.make }
 
-  context 'GET /v3/service_credential_bindings/:missing_key' do
+  describe 'GET /v3/service_credential_bindings' do
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
+    let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+    let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance) }
+    let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
+    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance) }
+
+    describe 'permissions' do
+      let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings', nil, user_headers } }
+
+      let(:all_bindings) do
+        {
+          code: 200,
+          response_objects: [
+            expected_json(key_binding),
+            expected_json(other_key_binding),
+            expected_json(app_binding),
+            expected_json(other_app_binding),
+          ]
+        }
+      end
+
+      let(:space_bindings) do
+        {
+          code: 200,
+          response_objects: [
+            expected_json(key_binding),
+            expected_json(app_binding)
+          ]
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(
+          code: 200,
+          response_objects: []
+        ).tap do |h|
+          h['admin'] = all_bindings
+          h['admin_read_only'] = all_bindings
+          h['global_auditor'] = all_bindings
+          h['space_developer'] = space_bindings
+          h['space_manager'] = space_bindings
+          h['space_auditor'] = space_bindings
+          h['org_manager'] = space_bindings
+        end
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+  end
+
+  describe 'GET /v3/service_credential_bindings/:missing_key' do
     let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings/no-binding', nil, user_headers } }
 
     let(:expected_codes_and_responses) do
@@ -111,6 +163,27 @@ RSpec.describe 'v3 service credential bindings' do
           it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
         end
       end
+    end
+  end
+
+  def expected_json(binding)
+    {
+      guid: binding.guid
+    }.merge(extra(binding))
+  end
+
+  def extra(binding)
+    case binding
+    when VCAP::CloudController::ServiceKey
+      {
+        type: 'key'
+      }
+    when VCAP::CloudController::ServiceBinding
+      {
+        type: 'app'
+      }
+    else
+      raise 'not a binding'
     end
   end
 end
