@@ -36,7 +36,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def pagination_options
     query_params_with_order_by = query_params.reverse_merge(order_by: :created_at)
-    MetadataListMessage.from_params(query_params_with_order_by, []).pagination_options
+    ListMessage.from_params(query_params_with_order_by, []).pagination_options
   end
 
   def serialized
