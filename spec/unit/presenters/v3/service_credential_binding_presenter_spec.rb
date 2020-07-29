@@ -2,7 +2,7 @@ require 'presenters/v3/service_credential_binding_presenter'
 
 module VCAP
   module CloudController
-    describe Presenters::V3::ServiceCredentialBindingPresenter do
+    RSpec.describe Presenters::V3::ServiceCredentialBindingPresenter do
       CredentialBinding = Struct.new(:guid, :type)
 
       it 'should include the id and the guid' do
