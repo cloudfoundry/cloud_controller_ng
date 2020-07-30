@@ -8,6 +8,7 @@ module VCAP::CloudController
     let(:package) { PackageModel.make(app: app) }
     let(:requested_buildpacks) { [] }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: { buildpacks: requested_buildpacks }, type: 'kpack' }) }
+    # TODO: make these KpackBuildpacks
     let(:k8s_buildpacks) { [{ name: 'some-buildpack' }, { name: 'super-duper-buildpack' }] }
 
     it_behaves_like 'a lifecycle'

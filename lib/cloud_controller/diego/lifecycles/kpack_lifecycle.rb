@@ -17,6 +17,7 @@ module VCAP::CloudController
                              else
                                staging_message.buildpack_data.buildpacks
                              end
+      # this line works in units, but the available KpackBuildpack type IRL probably comes back "false" each time
       @buildpack_infos = requested_buildpacks.select { |bp| available_buildpacks.include?({ name: bp }) }
       @validator = KpackLifecycleDataValidator.new({ requested_buildpacks: requested_buildpacks, buildpack_infos: buildpack_infos })
 
