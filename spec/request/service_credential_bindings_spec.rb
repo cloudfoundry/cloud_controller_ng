@@ -8,12 +8,13 @@ RSpec.describe 'v3 service credential bindings' do
   let(:other_space) { VCAP::CloudController::Space.make }
 
   describe 'GET /v3/service_credential_bindings' do
+    let(:now) { Time.now }
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-    let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
-    let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance) }
-    let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
-    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance) }
+    let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
+    let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
+    let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds) }
+    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second) }
 
     describe 'permissions' do
       let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings', nil, user_headers } }
