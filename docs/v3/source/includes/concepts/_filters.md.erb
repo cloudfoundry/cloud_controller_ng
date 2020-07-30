@@ -48,8 +48,7 @@ This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
 
 #### Relational Operators (Experimental)
 
-Fields can be filtered using relational operators when listing resources. Currently, this is
-supported only on the `created_at` field, using the `created_ats` filter.
+Fields can be filtered using relational operators when listing resources.
 
 For example, a response to `/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
 audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
