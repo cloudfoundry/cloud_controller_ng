@@ -8,23 +8,11 @@ module VCAP::CloudController
       @staging_message = staging_message
       @package = package
 
-      # It is weird we need to pass a dummy list message here
-      # TODO: extract a common way to get the unfiltered list of buildpacks that can then have filters applied if needed?
-      # TODO: Don't reach out to k8s unless buildpacks are requested
-      available_buildpacks = KpackBuildpackListFetcher.new.fetch_all(BuildpacksListMessage.from_params({}))
-      requested_buildpacks = if staging_message.buildpack_data.buildpacks.nil?
-                               []
-                             else
-                               staging_message.buildpack_data.buildpacks
-                             end
-      # this line works in units, but the available KpackBuildpack type IRL probably comes back "false" each time
-      @buildpack_infos = requested_buildpacks.select { |bp| available_buildpacks.include?({ name: bp }) }
-      @validator = KpackLifecycleDataValidator.new({ requested_buildpacks: requested_buildpacks, buildpack_infos: buildpack_infos })
-
-      puts "!!!! available: #{available_buildpacks}"
-      puts "!!!! available names: #{available_buildpacks.map { |a| a[:name] }}"
-      puts "!!!! requested: #{requested_buildpacks}"
-      puts "!!!! buildpack_infos: #{@buildpack_infos}"
+      @buildpack_infos = requested_and_available_buildpacks(buildpacks_to_use)
+      @validator = KpackLifecycleDataValidator.new(
+        requested_buildpacks: buildpacks_to_use,
+        buildpack_infos: buildpack_infos
+      )
     end
 
     delegate :valid?, :errors, to: :validator
@@ -35,8 +23,8 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(build)
       VCAP::CloudController::KpackLifecycleDataModel.create(
-        buildpacks: buildpack_infos,
         build: build,
+        buildpacks: buildpacks_to_use,
       )
     end
 
@@ -49,5 +37,22 @@ module VCAP::CloudController
     end
 
     attr_reader :validator
+    private
+
+    def buildpacks_to_use
+      requested_buildpacks = @staging_message.buildpack_data.buildpacks
+
+      return requested_buildpacks unless requested_buildpacks.nil? || requested_buildpacks.empty?
+
+      @package.app.kpack_lifecycle_data.buildpacks || []
+    end
+
+    def requested_and_available_buildpacks(buildpacks_to_use)
+      # TODO: extract a common way to get the unfiltered list of buildpacks that can then have filters applied if needed?
+      # TODO: Don't reach out to k8s unless buildpacks are requested
+      available_buildpack_names = KpackBuildpackListFetcher.new.fetch_all(BuildpacksListMessage.from_params({})).map(&:name)
+
+      buildpacks_to_use & available_buildpack_names
+    end
   end
 end

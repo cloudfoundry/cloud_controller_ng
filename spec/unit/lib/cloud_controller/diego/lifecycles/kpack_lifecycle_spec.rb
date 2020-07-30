@@ -4,12 +4,12 @@ require_relative 'lifecycle_shared'
 module VCAP::CloudController
   RSpec.describe KpackLifecycle do
     subject(:lifecycle) { KpackLifecycle.new(package, staging_message) }
-    let(:app) { AppModel.make }
+    let(:app) { AppModel.make(:kpack) }
     let(:package) { PackageModel.make(app: app) }
     let(:requested_buildpacks) { [] }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: { buildpacks: requested_buildpacks }, type: 'kpack' }) }
-    # TODO: make these KpackBuildpacks
-    let(:k8s_buildpacks) { [{ name: 'some-buildpack' }, { name: 'super-duper-buildpack' }] }
+    # leaning on duck typing to keep KpackBuildpack class private to its fetcher
+    let(:k8s_buildpacks) { [Buildpack.make(name: 'some-buildpack'), Buildpack.make(name: 'super-duper-buildpack')] }
 
     it_behaves_like 'a lifecycle'
 
@@ -24,6 +24,27 @@ module VCAP::CloudController
 
       it 'has an empty list of buildpack_infos' do
         expect(lifecycle.buildpack_infos).to be_empty
+      end
+
+      context 'buildpacks specified on the app' do
+        let(:build) { BuildModel.make }
+        before do
+          app.update(
+            buildpack_lifecycle_data: nil,
+            kpack_lifecycle_data: KpackLifecycleDataModel.make(app: app, build: nil, buildpacks: ['some-buildpack'])
+          )
+        end
+
+        it 'uses the buildpacks specified on the app' do
+          expect(lifecycle).to be_valid
+          expect(lifecycle.buildpack_infos).to contain_exactly('some-buildpack')
+        end
+
+        it 'saves app buildpacks onto lifecycle data' do
+          lifecycle.create_lifecycle_data_model(build)
+
+          expect(build.reload.lifecycle_data.buildpacks).to contain_exactly('some-buildpack')
+        end
       end
     end
 

@@ -143,6 +143,7 @@ module Kpack
         let(:lifecycle) do
           VCAP::CloudController::KpackLifecycle.new(package, staging_message)
         end
+        let(:package) { PackageModel.make(app: AppModel.make(:kpack)) }
 
         before do
           allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([{ name: 'paketo/java' }])
