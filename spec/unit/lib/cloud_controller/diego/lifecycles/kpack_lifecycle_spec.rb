@@ -8,8 +8,7 @@ module VCAP::CloudController
     let(:package) { PackageModel.make(app: app) }
     let(:requested_buildpacks) { [] }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: { buildpacks: requested_buildpacks }, type: 'kpack' }) }
-    # leaning on duck typing to keep KpackBuildpack class private to its fetcher
-    let(:k8s_buildpacks) { [Buildpack.make(name: 'some-buildpack'), Buildpack.make(name: 'super-duper-buildpack')] }
+    let(:k8s_buildpacks) { [OpenStruct.new(name: 'some-buildpack'), OpenStruct.new(name: 'super-duper-buildpack')] }
 
     it_behaves_like 'a lifecycle'
 

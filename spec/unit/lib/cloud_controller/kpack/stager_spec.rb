@@ -76,18 +76,20 @@ module Kpack
         details.lifecycle = lifecycle
         details
       end
-
-      let(:staging_message) { ::VCAP::CloudController::BuildCreateMessage.new(lifecycle: { data: { buildpacks: [] }, type: 'kpack' }) }
-
+      let(:staging_message) do
+        VCAP::CloudController::BuildCreateMessage.new(lifecycle: {data: {buildpacks: []}, type: 'kpack'})
+      end
       let(:lifecycle) do
         VCAP::CloudController::KpackLifecycle.new(package, staging_message)
       end
+      let(:package) do
+        VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack))
+      end
+      let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
 
       before do
         allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return({})
       end
-
-      let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
 
       it 'checks if the image exists' do
         allow(client).to receive(:create_image)
@@ -143,17 +145,19 @@ module Kpack
         let(:lifecycle) do
           VCAP::CloudController::KpackLifecycle.new(package, staging_message)
         end
-        let(:package) { PackageModel.make(app: AppModel.make(:kpack)) }
+        let(:package) { VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack)) }
 
         before do
-          allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([{ name: 'paketo/java' }])
-          allow(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace').and_return(Kubeclient::Resource.new({
-            spec: {
-              stack: 'cflinuxfs3-stack',
-              store: 'cf-buildpack-store',
-              serviceAccount: 'gcr-service-account'
-            }
-          }))
+          allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).
+            and_return(OpenStruct.new(name: 'paketo/java'))
+          allow(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace').
+            and_return(Kubeclient::Resource.new({
+              spec: {
+                stack: 'cflinuxfs3-stack',
+                store: 'cf-buildpack-store',
+                serviceAccount: 'gcr-service-account'
+              }
+            }))
         end
 
         it 'creates a custom builder' do

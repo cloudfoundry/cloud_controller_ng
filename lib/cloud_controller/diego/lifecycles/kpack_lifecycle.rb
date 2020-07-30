@@ -37,6 +37,7 @@ module VCAP::CloudController
     end
 
     attr_reader :validator
+
     private
 
     def buildpacks_to_use
