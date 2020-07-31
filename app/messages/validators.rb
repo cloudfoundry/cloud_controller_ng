@@ -163,7 +163,11 @@ module VCAP::CloudController::Validators
         VCAP::CloudController::Lifecycles::KPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
       }
 
-      lifecycle_data_message_class = data_message[record.lifecycle_type]
+      lifecycle_data_message_class = if record.lifecycle_type.present?
+                                       data_message[record.lifecycle_type]
+                                     else
+                                       VCAP::CloudController::BuildpackLifecycleDataMessage
+                                     end
       if lifecycle_data_message_class.nil?
         record.errors[:lifecycle_type].concat ["is not included in the list: #{data_message.keys.join(', ')}"]
         return

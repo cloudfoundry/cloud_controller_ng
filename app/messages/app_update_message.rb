@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     validates_with NoAdditionalKeysValidator
-    validates_with LifecycleValidator, if: lifecycle_type_requested?
+    validates_with LifecycleValidator, if: lifecycle_requested?
 
     validates :name, string: true, allow_nil: true
 
