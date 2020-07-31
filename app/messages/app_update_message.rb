@@ -28,7 +28,6 @@ module VCAP::CloudController
     validates :lifecycle_data,
       hash: true,
       allow_nil: false,
-      exclusion: { in: [{}], message: 'must not be empty' },
       if: lifecycle_requested?
 
     def lifecycle_data

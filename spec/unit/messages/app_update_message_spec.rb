@@ -122,11 +122,9 @@ module VCAP::CloudController
             }
           end
 
-          it 'is not valid' do
+          it 'is valid' do
             message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
-
-            expect(message.errors_on(:lifecycle_data)).to include('must not be empty')
+            expect(message).to be_valid
           end
         end
 
