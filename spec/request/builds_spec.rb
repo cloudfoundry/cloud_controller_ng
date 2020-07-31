@@ -140,9 +140,9 @@ RSpec.describe 'Builds' do
       end
       let(:k8s_buildpacks) do
         [
-          { name: 'paketo-buildpacks/java' },
-          { name: 'paketo-community/ruby' },
-          { name: 'paketo-buildpacks/httpd' }
+          OpenStruct.new(name: 'paketo-buildpacks/java'),
+          OpenStruct.new(name: 'paketo-community/ruby'),
+          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
         ]
       end
       let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
@@ -214,9 +214,9 @@ RSpec.describe 'Builds' do
       end
       let(:k8s_buildpacks) do
         [
-          { name: 'paketo-buildpacks/java' },
-          { name: 'paketo-community/ruby' },
-          { name: 'paketo-buildpacks/httpd' }
+          OpenStruct.new(name: 'paketo-buildpacks/java'),
+          OpenStruct.new(name: 'paketo-community/ruby'),
+          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
         ]
       end
       let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }

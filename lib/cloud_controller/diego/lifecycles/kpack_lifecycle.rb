@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       return requested_buildpacks unless requested_buildpacks.nil? || requested_buildpacks.empty?
 
-      @package.app.kpack_lifecycle_data.buildpacks || []
+      @package&.app&.kpack_lifecycle_data&.buildpacks || []
     end
 
     def requested_and_available_buildpacks(buildpacks_to_use)

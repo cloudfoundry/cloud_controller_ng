@@ -25,6 +25,18 @@ module VCAP::CloudController
         expect(lifecycle.buildpack_infos).to be_empty
       end
 
+      context 'buildpacks ommitted in the request' do
+        let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: {}, type: 'kpack' }) }
+
+        it 'is valid' do
+          expect(lifecycle).to be_valid
+        end
+
+        it 'has an empty list of buildpack_infos' do
+          expect(lifecycle.buildpack_infos).to be_empty
+        end
+      end
+
       context 'buildpacks specified on the app' do
         let(:build) { BuildModel.make }
         before do

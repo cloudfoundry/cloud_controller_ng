@@ -27,7 +27,7 @@ module VCAP::CloudController
       context 'kpack type' do
         let(:type) { 'kpack' }
         before do
-          allow_any_instance_of(KpackBuildpackListFetcher).to receive(:fetch_all)
+          allow_any_instance_of(KpackBuildpackListFetcher).to receive(:fetch_all).and_return([])
         end
 
         it 'returns a KpackLifecycle' do
@@ -59,7 +59,7 @@ module VCAP::CloudController
       context 'kpack type' do
         let(:app) { AppModel.make(:kpack) }
         before do
-          allow_any_instance_of(KpackBuildpackListFetcher).to receive(:fetch_all)
+          allow_any_instance_of(KpackBuildpackListFetcher).to receive(:fetch_all).and_return([])
         end
 
         it 'returns a KpackLifecycle' do

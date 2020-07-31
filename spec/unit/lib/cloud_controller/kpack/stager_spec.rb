@@ -88,7 +88,7 @@ module Kpack
       let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
 
       before do
-        allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return({})
+        allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([])
       end
 
       it 'checks if the image exists' do
@@ -149,7 +149,7 @@ module Kpack
 
         before do
           allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).
-            and_return(OpenStruct.new(name: 'paketo/java'))
+            and_return([OpenStruct.new(name: 'paketo/java')])
           allow(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace').
             and_return(Kubeclient::Resource.new({
               spec: {
