@@ -44,6 +44,7 @@ module VCAP::CloudController
         creation_job = V3::CreateServiceInstanceJob.new(
           instance.guid,
           arbitrary_parameters: message.parameters,
+          request_attr: message.audit_hash,
           user_audit_info: service_event_repository.user_audit_info
         )
         pollable_job = Jobs::Enqueuer.new(creation_job, queue: Jobs::Queues.generic).enqueue_pollable
