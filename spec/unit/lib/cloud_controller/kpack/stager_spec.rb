@@ -63,7 +63,6 @@ module Kpack
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
-
       allow(client).to receive(:get_image).and_return(nil)
       allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
     end
@@ -87,8 +86,11 @@ module Kpack
       let(:package) do
         VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack))
       end
-      let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
-
+      let!(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
+      let!(:droplet) { VCAP::CloudController::DropletModel.make(:docker, app: package.app) }
+      before do
+        allow_any_instance_of(VCAP::CloudController::DropletCreate).to receive(:create_docker_droplet).with(build).and_return(droplet)
+      end
       it 'checks if the image exists' do
         allow(client).to receive(:create_image)
         expect(client).to receive(:get_image).with(package.app.guid, 'namespace').and_return(nil)
@@ -103,6 +105,7 @@ module Kpack
             name: package.app.guid,
             namespace: 'namespace',
             labels: {
+              Stager::DROPLET_GUID_LABEL_KEY => droplet.guid,
               Stager::APP_GUID_LABEL_KEY => package.app.guid,
               Stager::BUILD_GUID_LABEL_KEY => build.guid,
               Stager::STAGING_SOURCE_LABEL_KEY => 'STG',

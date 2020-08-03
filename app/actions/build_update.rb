@@ -15,7 +15,7 @@ module VCAP::CloudController
         if message.state == VCAP::CloudController::BuildModel::FAILED_STATE
           build.fail_to_stage!('StagerError', message.error)
         elsif message.state == VCAP::CloudController::BuildModel::STAGED_STATE
-          droplet = VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
+          droplet = build.droplet
           droplet.lock!
           droplet.docker_receipt_image = message.lifecycle.dig(:data, :image)
           droplet.process_types = message.lifecycle.dig(:data, :processTypes)

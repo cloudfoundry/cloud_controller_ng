@@ -78,9 +78,10 @@ module VCAP::CloudController
   BuildModel.blueprint(:kpack) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make }
+    app { AppModel.make(droplet_guid: guid) }
     kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
     package { PackageModel.make(app: app) }
+    droplet { DropletModel.make(:docker, build: object.save) }
   end
 
   BuildModel.blueprint(:buildpack) do

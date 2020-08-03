@@ -133,6 +133,7 @@ module VCAP::CloudController
 
       context 'when updating state' do
         let(:build) { BuildModel.make(:kpack) }
+
         context 'when a build was successfully completed' do
           let(:body) do
             {
@@ -154,6 +155,7 @@ module VCAP::CloudController
             build_update.update(build, message)
 
             expect(build.state).to eq('STAGED')
+            expect(build.droplet.state).to eq('STAGED')
             expect(build.droplet.docker_receipt_image).to eq('some-fake-image:tag')
             expect(build.droplet.process_types).to eq({ 'foo' => 'foo start', 'bar' => 'bar start' })
           end
