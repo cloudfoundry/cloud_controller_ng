@@ -58,14 +58,6 @@ RSpec.describe 'Builds' do
     }
 
     before do
-      stack_name = create_request[:lifecycle][:data][:stack] || VCAP::CloudController::Stack.default.name
-      stack = VCAP::CloudController::Stack.find(name: stack_name) ||
-              VCAP::CloudController::Stack.make(name: stack_name)
-      # putting stack in the App.make call leads to an "App doesn't have a primary key" error
-      # message from sequel.
-      process = VCAP::CloudController::ProcessModel.make(app: app_model, memory: 1024, disk_quota: 1536)
-      process.stack = stack
-      process.save
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
       CloudController::DependencyLocator.instance.register(:bbs_stager_client, bbs_stager_client)
@@ -168,6 +160,8 @@ RSpec.describe 'Builds' do
         expect(last_response.status).to(eq(201), last_response.body)
         expect(parsed_response['lifecycle']['type']).to eq 'kpack'
         expect(parsed_response['state']).to eq 'STAGING'
+
+        expect(k8s_api_client).to have_received(:create_image)
       end
 
       context 'with buildpacks specified' do
@@ -192,57 +186,36 @@ RSpec.describe 'Builds' do
           expect(parsed_response['lifecycle']['type']).to eq 'kpack'
           expect(parsed_response['lifecycle']['data']['buildpacks']).to eq ['paketo-buildpacks/java', 'paketo-community/ruby']
           expect(parsed_response['state']).to eq 'STAGING'
+
+          expect(k8s_api_client).to have_received(:create_custom_builder)
         end
       end
-    end
 
-    describe 'app kpack lifecycle' do
-      let(:kpack_app_model) { VCAP::CloudController::AppModel.make(:kpack, space: space) }
-      let(:package) do
-        VCAP::CloudController::PackageModel.make(
-          app_guid: kpack_app_model.guid,
-          type: VCAP::CloudController::PackageModel::BITS_TYPE,
-          state: VCAP::CloudController::PackageModel::READY_STATE
-        )
-      end
-      let(:request) do
-        {
-          package: {
-            guid: package.guid
-          },
-        }
-      end
-      let(:k8s_buildpacks) do
-        [
-          OpenStruct.new(name: 'paketo-buildpacks/java'),
-          OpenStruct.new(name: 'paketo-community/ruby'),
-          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
-        ]
-      end
-      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
-
-      before do
-        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-        allow(k8s_api_client).to receive(:create_image)
-        allow(k8s_api_client).to receive(:create_custom_builder)
-        allow(k8s_api_client).to receive(:get_image)
-        allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
-          spec: {
-            stack: 'cflinuxfs3-stack',
-            store: 'cf-buildpack-store',
-            serviceAccount: 'gcr-service-account'
+      context 'inheriting lifecycle from app' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:kpack, space_guid: space.guid, name: 'my-app') }
+        let(:package) do
+          VCAP::CloudController::PackageModel.make(
+            app_guid: app_model.guid,
+            type: VCAP::CloudController::PackageModel::BITS_TYPE,
+            state: VCAP::CloudController::PackageModel::READY_STATE
+          )
+        end
+        let(:create_request) do
+          {
+            package: {
+              guid: package.guid
+            },
           }
-        }))
-        allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
-      end
+        end
 
-      context 'when build has no lifecycle specified' do
-        context 'when app has kpack lifecycle' do
-          it 'uses the kpack lifecycle' do
-            post 'v3/builds', request.to_json, developer_headers
+        context 'when build has no lifecycle specified' do
+          context 'when app has kpack lifecycle' do
+            it 'uses the kpack lifecycle' do
+              post 'v3/builds', create_request.to_json, developer_headers
 
-            expect(last_response.status).to eq(201)
-            expect(parsed_response['lifecycle']['type']).to eq 'kpack'
+              expect(last_response.status).to eq(201)
+              expect(parsed_response['lifecycle']['type']).to eq 'kpack'
+            end
           end
         end
       end

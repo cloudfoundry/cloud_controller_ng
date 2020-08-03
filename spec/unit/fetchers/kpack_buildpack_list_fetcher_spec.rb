@@ -100,6 +100,16 @@ module VCAP::CloudController
         expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
       end
 
+      context 'without a message' do
+        let(:message) { nil }
+        subject(:result) { fetcher.fetch_all }
+
+        it 'can be called without a message' do
+          expect(result.length).to(eq(2))
+          expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
+        end
+      end
+
       context 'when there are no status conditions' do
         before do
           default_builder_obj.status.conditions = []

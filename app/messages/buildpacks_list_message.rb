@@ -26,4 +26,6 @@ module VCAP::CloudController
       super << :position
     end
   end
+
+  EmptyBuildpackListMessage = BuildpacksListMessage.from_params({}).freeze
 end

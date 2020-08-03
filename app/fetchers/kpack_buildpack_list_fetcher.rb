@@ -1,10 +1,11 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
 require 'fetchers/null_filter_query_generator'
+require 'messages/buildpacks_list_message'
 
 module VCAP::CloudController
   class KpackBuildpackListFetcher
-    def fetch_all(message)
+    def fetch_all(message=EmptyBuildpackListMessage)
       staging_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
       default_builder = k8s_api_client.get_custom_builder('cf-default-builder', staging_namespace)
 

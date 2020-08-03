@@ -51,7 +51,7 @@ module VCAP::CloudController
     def requested_and_available_buildpacks(buildpacks_to_use)
       # TODO: extract a common way to get the unfiltered list of buildpacks that can then have filters applied if needed?
       # TODO: Don't reach out to k8s unless buildpacks are requested
-      available_buildpack_names = KpackBuildpackListFetcher.new.fetch_all(BuildpacksListMessage.from_params({})).map(&:name)
+      available_buildpack_names = KpackBuildpackListFetcher.new.fetch_all.map(&:name)
 
       buildpacks_to_use & available_buildpack_names
     end

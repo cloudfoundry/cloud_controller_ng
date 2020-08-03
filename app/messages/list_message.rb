@@ -1,6 +1,7 @@
 require 'active_model'
 require 'messages/validators'
 require 'messages/base_message'
+require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
   class ListMessage < BaseMessage
