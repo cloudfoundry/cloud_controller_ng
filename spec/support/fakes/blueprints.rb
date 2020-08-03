@@ -548,6 +548,7 @@ module VCAP::CloudController
 
   KpackLifecycleDataModel.blueprint do
     build { BuildModel.make }
+    buildpacks { [] }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do

@@ -11,14 +11,7 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
-  let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
   let(:rails_logger) { double('rails_logger', info: nil) }
-
-  before do
-    allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-    allow(k8s_api_client).to receive(:create_image)
-    allow(k8s_api_client).to receive(:get_image)
-  end
 
   describe 'POST /v3/builds' do
     let(:package) do
@@ -65,8 +58,9 @@ RSpec.describe 'Builds' do
     }
 
     before do
-      stack = (VCAP::CloudController::Stack.find(name: create_request[:lifecycle][:data][:stack]) ||
-        VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
+      stack_name = create_request[:lifecycle][:data][:stack] || VCAP::CloudController::Stack.default.name
+      stack = VCAP::CloudController::Stack.find(name: stack_name) ||
+              VCAP::CloudController::Stack.make(name: stack_name)
       # putting stack in the App.make call leads to an "App doesn't have a primary key" error
       # message from sequel.
       process = VCAP::CloudController::ProcessModel.make(app: app_model, memory: 1024, disk_quota: 1536)
@@ -132,7 +126,7 @@ RSpec.describe 'Builds' do
     end
 
     context 'kpack lifecycle' do
-      let(:kpack_request) do
+      let(:create_request) do
         {
           lifecycle: {
             type: 'kpack',
@@ -144,13 +138,61 @@ RSpec.describe 'Builds' do
           }
         }
       end
+      let(:k8s_buildpacks) do
+        [
+          OpenStruct.new(name: 'paketo-buildpacks/java'),
+          OpenStruct.new(name: 'paketo-community/ruby'),
+          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
+        ]
+      end
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+        allow(k8s_api_client).to receive(:create_image)
+        allow(k8s_api_client).to receive(:create_custom_builder)
+        allow(k8s_api_client).to receive(:get_image)
+        allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
+          spec: {
+            stack: 'cflinuxfs3-stack',
+            store: 'cf-buildpack-store',
+            serviceAccount: 'gcr-service-account'
+          }
+        }))
+        allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
+      end
 
       it 'succeeds' do
-        post 'v3/builds', kpack_request.to_json, developer_headers
+        post 'v3/builds', create_request.to_json, developer_headers
 
         expect(last_response.status).to(eq(201), last_response.body)
         expect(parsed_response['lifecycle']['type']).to eq 'kpack'
         expect(parsed_response['state']).to eq 'STAGING'
+      end
+
+      context 'with buildpacks specified' do
+        let(:create_request) do
+          {
+              package: {
+                  guid: package.guid
+              },
+              lifecycle: {
+                  type: 'kpack',
+                  data: {
+                      buildpacks: ['paketo-buildpacks/java', 'paketo-community/ruby'],
+                  }
+              }
+          }
+        end
+
+        it 'uses the buildpacks' do
+          post 'v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response['lifecycle']['type']).to eq 'kpack'
+          expect(parsed_response['lifecycle']['data']['buildpacks']).to eq ['paketo-buildpacks/java', 'paketo-community/ruby']
+          expect(parsed_response['state']).to eq 'STAGING'
+        end
       end
     end
 
@@ -169,6 +211,29 @@ RSpec.describe 'Builds' do
             guid: package.guid
           },
         }
+      end
+      let(:k8s_buildpacks) do
+        [
+          OpenStruct.new(name: 'paketo-buildpacks/java'),
+          OpenStruct.new(name: 'paketo-community/ruby'),
+          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
+        ]
+      end
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+        allow(k8s_api_client).to receive(:create_image)
+        allow(k8s_api_client).to receive(:create_custom_builder)
+        allow(k8s_api_client).to receive(:get_image)
+        allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
+          spec: {
+            stack: 'cflinuxfs3-stack',
+            store: 'cf-buildpack-store',
+            serviceAccount: 'gcr-service-account'
+          }
+        }))
+        allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
       end
 
       context 'when build has no lifecycle specified' do

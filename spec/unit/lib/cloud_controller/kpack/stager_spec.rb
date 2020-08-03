@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'cloud_controller/kpack/stager'
 require 'kubernetes/api_client'
+require 'messages/build_create_message'
+require 'fetchers/kpack_buildpack_list_fetcher'
 
 module Kpack
   RSpec.describe Stager do
@@ -20,11 +22,45 @@ module Kpack
       )
     end
     let(:client) { instance_double(Kubernetes::ApiClient) }
+    let(:default_builder_obj) {
+      Kubeclient::Resource.new(
+        metadata: {
+          name: 'cf-default-builder',
+          creationTimestamp: '2020-06-27T03:13:07Z',
+        },
+        spec: {
+          order: [
+            { group: [{ id: 'paketo-community/ruby' }] },
+            { group: [{ id: 'paketo-buildpacks/java' }] },
+          ],
+          stack: 'cflinuxfs3-stack',
+        },
+        status: {
+          builderMetadata: [
+            { id: 'paketo-community/mri', version: '0.0.131' },
+            { id: 'paketo-community/bundler', version: '0.0.117' },
+            { id: 'paketo-community/bundle-install', version: '0.0.22' },
+            { id: 'paketo-community/rackup', version: '0.0.13' },
+            { id: 'paketo-buildpacks/maven', version: '1.4.5' },
+            { id: 'paketo-buildpacks/java', version: '1.14.0' },
+            { id: 'paketo-community/ruby', version: '0.0.11' },
+          ],
+          conditions: [
+            {
+              lastTransitionTime: '2020-06-27T03:15:46Z',
+              status: 'True',
+              type: 'Ready',
+            }
+          ]
+        }
+      )
+    }
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
 
       allow(client).to receive(:get_image).and_return(nil)
+      allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
     end
 
     it_behaves_like 'a stager'
@@ -40,10 +76,20 @@ module Kpack
         details.lifecycle = lifecycle
         details
       end
+      let(:staging_message) do
+        VCAP::CloudController::BuildCreateMessage.new(lifecycle: { data: { buildpacks: [] }, type: 'kpack' })
+      end
       let(:lifecycle) do
-        VCAP::CloudController::KpackLifecycle.new(package, {})
+        VCAP::CloudController::KpackLifecycle.new(package, staging_message)
+      end
+      let(:package) do
+        VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack))
       end
       let(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
+
+      before do
+        allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([])
+      end
 
       it 'checks if the image exists' do
         allow(client).to receive(:create_image)
@@ -53,6 +99,7 @@ module Kpack
 
       it 'creates an image using the kpack client' do
         expect(client).to_not receive(:update_image)
+        expect(client).to_not receive(:create_custom_builder)
         expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
           metadata: {
             name: package.app.guid,
@@ -89,6 +136,61 @@ module Kpack
 
         stager.stage(staging_details)
         expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
+      end
+
+      context 'when specifying buildpacks for a build' do
+        let(:staging_message) do
+          VCAP::CloudController::BuildCreateMessage.new(lifecycle: { data: { buildpacks: ['paketo/java'] }, type: 'kpack' })
+        end
+        let(:lifecycle) do
+          VCAP::CloudController::KpackLifecycle.new(package, staging_message)
+        end
+        let(:package) { VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack)) }
+
+        before do
+          allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).
+            and_return([OpenStruct.new(name: 'paketo/java')])
+          allow(client).to receive(:get_custom_builder).with('cf-default-builder', 'namespace').
+            and_return(Kubeclient::Resource.new({
+              spec: {
+                stack: 'cflinuxfs3-stack',
+                store: 'cf-buildpack-store',
+                serviceAccount: 'gcr-service-account'
+              }
+            }))
+        end
+
+        it 'creates a custom builder' do
+          expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
+            metadata: {
+              name: "app-#{package.app.guid}",
+              namespace: 'namespace',
+              labels: {
+                'cloudfoundry.org/app_guid' => package.app.guid,
+                'cloudfoundry.org/build_guid' => build.guid,
+                'cloudfoundry.org/source_type' => 'STG'
+              }
+            },
+            spec: {
+              tag: "gcr.io/capi-images/#{package.app.guid}-custom-builder",
+              serviceAccount: 'gcr-service-account',
+              stack: 'cflinuxfs3-stack',
+              store: 'cf-buildpack-store',
+              order: [
+                { group: [{ id: 'paketo/java' }] },
+              ],
+            }
+          }))
+          expect(client).to receive(:create_image)
+          stager.stage(staging_details)
+        end
+
+        context 'when specifying buildpacks in a particular order' do
+          before do
+          end
+          it 'preserves the buildpack order' do
+          end
+        end
       end
 
       context 'when staging fails' do

@@ -86,6 +86,12 @@ module Kubernetes
       raise error
     end
 
+    def create_custom_builder(resource_config)
+      @kpack_kube_client.create_custom_builder(resource_config)
+    rescue Kubeclient::HttpError => e
+      raise CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'create', e.message)
+    end
+
     def get_custom_builder(name, namespace)
       @kpack_kube_client.get_custom_builder(name, namespace)
     rescue Kubeclient::ResourceNotFoundError

@@ -129,7 +129,7 @@ module VCAP::CloudController
 
             expect {
               app_update.update(app_model, message, lifecycle)
-            }.to raise_error(AppUpdate::InvalidApp, 'Lifecycle type cannot be changed')
+            }.to raise_error(AppUpdate::InvalidApp, /Lifecycle type cannot be changed/)
           end
         end
 

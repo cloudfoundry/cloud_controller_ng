@@ -2,6 +2,8 @@ require 'cloud_controller/diego/lifecycles/lifecycles'
 
 module VCAP::CloudController
   class KpackLifecycleDataModel < Sequel::Model(:kpack_lifecycle_data)
+    include Serializer
+
     LIFECYCLE_TYPE = Lifecycles::KPACK
 
     many_to_one :app,
@@ -22,6 +24,9 @@ module VCAP::CloudController
                 primary_key: :guid,
                 without_guid_generation: true
 
+    # if this gets any thicker, we should model it properly in its own table
+    serializes_via_json :buildpacks
+
     def using_custom_buildpack?
       false
     end
@@ -34,11 +39,13 @@ module VCAP::CloudController
       return nil
     end
 
-    def buildpacks
-      []
-    end
+    # def buildpacks=(new_buildpacks) end
 
-    def buildpacks=(new_buildpacks) end
+    def to_hash
+      {
+        buildpacks: buildpacks
+      }
+    end
 
     def stack
       nil

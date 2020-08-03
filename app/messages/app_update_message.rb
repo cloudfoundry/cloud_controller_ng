@@ -11,6 +11,10 @@ module VCAP::CloudController
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
+    def self.lifecycle_type_requested?
+      @lifecycle_type_requested ||= proc { |a| a.requested?(:lifecycle) && a.lifecycle_type.present? }
+    end
+
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
 
@@ -19,7 +23,7 @@ module VCAP::CloudController
     validates :lifecycle_type,
       string: true,
       allow_nil: false,
-      if: lifecycle_requested?
+      if: lifecycle_type_requested?
 
     validates :lifecycle_data,
       hash: true,

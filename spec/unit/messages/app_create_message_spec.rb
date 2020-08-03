@@ -15,7 +15,8 @@ module VCAP::CloudController
                 annotations: {
                   happy: 'annotation',
                 },
-            }
+            },
+            lifecycle: { type: 'kpack', data: {} }
         }
       message = AppCreateMessage.new(params)
       expect(message).to be_valid
@@ -306,19 +307,6 @@ module VCAP::CloudController
               message = AppCreateMessage.new(params)
 
               expect(message).to_not be_valid
-              expect(message.errors_on(:lifecycle_type)).to include('must be a string')
-            end
-          end
-
-          context 'when lifecycle type is not provided' do
-            let(:params) do
-              { lifecycle: { data: {} } }
-            end
-
-            it 'is not valid' do
-              message = AppCreateMessage.new(params)
-
-              expect(message).not_to be_valid
               expect(message.errors_on(:lifecycle_type)).to include('must be a string')
             end
           end

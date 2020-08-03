@@ -113,7 +113,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when lifecycle type is not provided' do
+        context 'when lifecycle data is empty' do
           let(:params) do
             {
                 lifecycle: {
@@ -122,11 +122,26 @@ module VCAP::CloudController
             }
           end
 
-          it 'is not valid' do
+          it 'is valid' do
             message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
+            expect(message).to be_valid
+          end
+        end
 
-            expect(message.errors_on(:lifecycle_type)).to include('must be a string')
+        context 'when lifecycle type is not provided, but buildpacks are' do
+          let(:params) do
+            {
+              lifecycle: {
+                data: {
+                  buildpacks: ['java'],
+                }
+              }
+            }
+          end
+
+          it 'is valid' do
+            message = AppUpdateMessage.new(params)
+            expect(message).to be_valid
           end
         end
 

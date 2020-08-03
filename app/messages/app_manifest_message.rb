@@ -260,7 +260,6 @@ module VCAP::CloudController
       end
 
       {
-        type: Lifecycles::BUILDPACK,
         data: {
           buildpacks: requested_buildpacks,
           stack: @stack

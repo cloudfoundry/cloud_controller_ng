@@ -321,6 +321,27 @@ RSpec.describe Kubernetes::ApiClient do
   end
 
   context 'custom builder resources' do
+    describe '#create_custom_builder' do
+      let(:resource_config) { { metadata: { name: 'resource-name' } } }
+
+      it 'proxies call to kubernetes client with the same args' do
+        allow(kpack_kube_client).to receive(:create_custom_builder).with(resource_config)
+
+        subject.create_custom_builder(resource_config)
+
+        expect(kpack_kube_client).to have_received(:create_custom_builder).with(resource_config).once
+      end
+
+      context 'when there is an error' do
+        it 'raises as an ApiError' do
+          allow(kpack_kube_client).to receive(:create_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+
+          expect {
+            subject.create_custom_builder(resource_config)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+    end
     describe '#get_custom_builder' do
       let(:response) { double(Kubeclient::Resource) }
 

@@ -884,7 +884,6 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(params_from_yaml)
 
           expect(message).not_to be_valid
-          expect(message.errors.count).to eq(6)
           expect(message.errors.full_messages).to match_array([
             'Process "web": Instances must be greater than or equal to 0',
             'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
