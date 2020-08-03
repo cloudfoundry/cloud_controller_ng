@@ -65,9 +65,9 @@ class StacksController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                AppListFetcher.new.fetch_all(message)
+                AppListFetcher.fetch_all(message)
               else
-                AppListFetcher.new.fetch(message, permission_queryer.readable_space_guids)
+                AppListFetcher.fetch(message, permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

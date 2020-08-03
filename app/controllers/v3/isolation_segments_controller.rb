@@ -42,12 +42,10 @@ class IsolationSegmentsController < ApplicationController
     message = IsolationSegmentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    fetcher = IsolationSegmentListFetcher.new(message: message)
-
     dataset = if permission_queryer.can_read_globally?
-                fetcher.fetch_all
+                IsolationSegmentListFetcher.fetch_all(message)
               else
-                fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids)
+                IsolationSegmentListFetcher.fetch_for_organizations(message, org_guids: permission_queryer.readable_org_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

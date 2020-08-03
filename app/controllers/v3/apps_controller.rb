@@ -39,9 +39,9 @@ class AppsV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                AppListFetcher.new.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
+                AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
-                AppListFetcher.new.fetch(message, permission_queryer.readable_space_guids, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
+                AppListFetcher.fetch(message, permission_queryer.readable_space_guids, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 
     decorators = []

@@ -7,7 +7,7 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentListFetcher do
     let(:filters) { {} }
     let(:message) { IsolationSegmentsListMessage.from_params(filters) }
-    subject(:fetcher) { IsolationSegmentListFetcher.new(message: message) }
+    subject { IsolationSegmentListFetcher.fetch_all(message) }
 
     let!(:isolation_segment_model_1) { VCAP::CloudController::IsolationSegmentModel.make }
     let!(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'frank') }
@@ -27,12 +27,11 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_all
-        expect(results).to be_a(Sequel::Dataset)
+        expect(subject).to be_a(Sequel::Dataset)
       end
 
       it 'returns all isolation segments' do
-        isolation_segment_models = fetcher.fetch_all.all
+        isolation_segment_models = subject.all
 
         shared_isolation_segment_model = VCAP::CloudController::IsolationSegmentModel[guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID]
         expect(isolation_segment_models).to match_array([shared_isolation_segment_model, isolation_segment_model_1, isolation_segment_model_2, isolation_segment_model_3])
@@ -43,7 +42,7 @@ module VCAP::CloudController
           let(:filters) { { guids: [isolation_segment_model_1.guid] } }
 
           it 'filters by guids' do
-            isolation_segment_models = fetcher.fetch_all.all
+            isolation_segment_models = subject.all
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
           end
         end
@@ -52,7 +51,7 @@ module VCAP::CloudController
           let(:filters) { { names: [isolation_segment_model_2.name.capitalize, isolation_segment_model_3.name] } }
 
           it 'filters by names and ignores case' do
-            isolation_segment_models = fetcher.fetch_all.all
+            isolation_segment_models = subject.all
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_2, isolation_segment_model_3)
           end
         end
@@ -61,7 +60,7 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [org1.guid, org2.guid] } }
 
           it 'filters by organization guids' do
-            isolation_segment_models = fetcher.fetch_all.all
+            isolation_segment_models = subject.all
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
           end
         end
@@ -71,7 +70,7 @@ module VCAP::CloudController
           let!(:label) { IsolationSegmentLabelModel.make(resource_guid: isolation_segment_model_3.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of isosegs' do
-            isolation_segment_models = fetcher.fetch_all.all
+            isolation_segment_models = subject.all
             expect(isolation_segment_models).to match_array([isolation_segment_model_3])
           end
         end
@@ -79,18 +78,20 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_organizations' do
+      let(:fetcher) { IsolationSegmentListFetcher }
+
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_for_organizations(org_guids: [])
+        results = fetcher.fetch_for_organizations(message, org_guids: [])
         expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'fetches only those isolation segments associated with the specified orgs' do
-        isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
+        isolation_segment_models = fetcher.fetch_for_organizations(message, org_guids: [org1.guid, org2.guid]).all
         expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
       end
 
       it 'returns no isolation segments when the list of org guids is empty' do
-        isolation_segment_models = fetcher.fetch_for_organizations(org_guids: []).all
+        isolation_segment_models = fetcher.fetch_for_organizations(message, org_guids: []).all
         expect(isolation_segment_models).to be_empty
       end
 
@@ -98,7 +99,7 @@ module VCAP::CloudController
         let(:filters) { { names: [isolation_segment_model_2.name.capitalize, isolation_segment_model_3.name] } }
 
         it 'filters by names and ignores case' do
-          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
+          isolation_segment_models = fetcher.fetch_for_organizations(message, org_guids: [org1.guid, org2.guid]).all
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_2)
         end
       end
@@ -107,7 +108,7 @@ module VCAP::CloudController
         let(:filters) { { guids: [isolation_segment_model_1.guid] } }
 
         it 'filters by guids' do
-          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
+          isolation_segment_models = fetcher.fetch_for_organizations(message, org_guids: [org1.guid, org2.guid]).all
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
         end
       end
@@ -116,7 +117,7 @@ module VCAP::CloudController
         let(:filters) { { organization_guids: [org1.guid] } }
 
         it 'filters by organization guids' do
-          isolation_segment_models = fetcher.fetch_for_organizations(org_guids: [org1.guid, org2.guid]).all
+          isolation_segment_models = fetcher.fetch_for_organizations(message, org_guids: [org1.guid, org2.guid]).all
           expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1)
         end
       end

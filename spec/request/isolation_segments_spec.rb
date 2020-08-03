@@ -5,6 +5,7 @@ require 'request_spec_shared_examples'
 RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { admin_headers_for(user) }
+  let(:admin_header) { admin_headers_for(user) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
@@ -234,6 +235,8 @@ RSpec.describe 'IsolationSegmentModels' do
           per_page:   '10',
           order_by:   'updated_at',
           label_selector:   'foo,bar',
+          created_ats: [],
+          updated_ats: []
         }
       end
     end
@@ -401,6 +404,14 @@ RSpec.describe 'IsolationSegmentModels' do
           expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[1].name, models[2].name])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
+      end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::IsolationSegmentModel }
+
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/isolation_segments?#{filters}", nil, headers }
       end
     end
 

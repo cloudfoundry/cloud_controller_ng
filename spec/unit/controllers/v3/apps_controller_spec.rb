@@ -44,7 +44,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       it 'eager loads associated resources that the presenter specifies' do
-        expect_any_instance_of(VCAP::CloudController::AppListFetcher).to receive(:fetch_all).with(
+        expect(VCAP::CloudController::AppListFetcher).to receive(:fetch_all).with(
           anything,
           hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
         ).and_call_original

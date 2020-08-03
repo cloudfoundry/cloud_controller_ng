@@ -160,6 +160,14 @@ RSpec.describe 'Events' do
       end
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Event }
+
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/audit_events?#{filters}", nil, headers }
+      end
+    end
+
     context 'filtering by timestamp' do
       before do
         VCAP::CloudController::Event.plugin :timestamps, update_on_create: false

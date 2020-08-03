@@ -66,158 +66,18 @@ module VCAP::CloudController
         end
 
         context 'validates the created_ats filter' do
-          it 'requires a hash or an array of timestamps' do
+          it 'delegates to the TimestampValidator' do
             message = EventsListMessage.from_params({ created_ats: 47 })
             expect(message).not_to be_valid
             expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
           end
-
-          it 'requires a valid relational operator' do
-            message = EventsListMessage.from_params({ created_ats: { garbage: Time.now.utc.iso8601 } })
-            expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include("Invalid relational operator: 'garbage'")
-          end
-
-          context 'requires a valid timestamp' do
-            it "won't accept a malformed timestamp" do
-              message = EventsListMessage.from_params({ 'created_ats' => "#{Time.now.utc.iso8601},bogus" })
-              expect(message).not_to be_valid
-              expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept garbage" do
-              message = EventsListMessage.from_params({ created_ats: { gt: 123 } })
-              expect(message).not_to be_valid
-              expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept fractional seconds even though it's ISO 8601-compliant" do
-              message = EventsListMessage.from_params({ created_ats: { gt: '2020-06-30T12:34:56.78Z' } })
-              expect(message).not_to be_valid
-              expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept local time zones even though it's ISO 8601-compliant" do
-              message = EventsListMessage.from_params({ created_ats: { gt: '2020-06-30T12:34:56.78-0700' } })
-              expect(message).not_to be_valid
-              expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-          end
-
-          it 'allows comma-separated timestamps' do
-            message = EventsListMessage.from_params({ 'created_ats' => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" })
-            expect(message).to be_valid
-          end
-
-          it 'allows the lt operator' do
-            message = EventsListMessage.from_params({ created_ats: { lt: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the lte operator' do
-            message = EventsListMessage.from_params({ created_ats: { lte: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the gt operator' do
-            message = EventsListMessage.from_params({ created_ats: { gt: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the gte operator' do
-            message = EventsListMessage.from_params({ created_ats: { gte: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'does not allow multiple timestamps with an operator' do
-            message = EventsListMessage.from_params({ created_ats: { gte: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" } })
-            expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include('only accepts one value when using a relational operator')
-          end
-
-          context 'when the operator is an equals operator' do
-            it 'allows the equals operator' do
-              message = EventsListMessage.from_params({ 'created_ats' => Time.now.utc.iso8601 })
-              expect(message).to be_valid
-            end
-          end
         end
 
         context 'validates the updated_ats filter' do
-          it 'requires a hash or an array of timestamps' do
+          it 'delegates to the TimestampValidator' do
             message = EventsListMessage.from_params({ updated_ats: 47 })
             expect(message).not_to be_valid
             expect(message.errors[:updated_ats]).to include('relational operator and timestamp must be specified')
-          end
-
-          it 'requires a valid relational operator' do
-            message = EventsListMessage.from_params({ updated_ats: { garbage: Time.now.utc.iso8601 } })
-            expect(message).not_to be_valid
-            expect(message.errors[:updated_ats]).to include("Invalid relational operator: 'garbage'")
-          end
-
-          context 'requires a valid timestamp' do
-            it "won't accept a malformed timestamp" do
-              message = EventsListMessage.from_params({ 'updated_ats' => "#{Time.now.utc.iso8601},bogus" })
-              expect(message).not_to be_valid
-              expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept garbage" do
-              message = EventsListMessage.from_params({ updated_ats: { gt: 123 } })
-              expect(message).not_to be_valid
-              expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept fractional seconds even though it's ISO 8601-compliant" do
-              message = EventsListMessage.from_params({ updated_ats: { gt: '2020-06-30T12:34:56.78Z' } })
-              expect(message).not_to be_valid
-              expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-
-            it "won't accept local time zones even though it's ISO 8601-compliant" do
-              message = EventsListMessage.from_params({ updated_ats: { gt: '2020-06-30T12:34:56.78-0700' } })
-              expect(message).not_to be_valid
-              expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-            end
-          end
-
-          it 'allows comma-separated timestamps' do
-            message = EventsListMessage.from_params({ 'updated_ats' => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" })
-            expect(message).to be_valid
-          end
-
-          it 'allows the lt operator' do
-            message = EventsListMessage.from_params({ updated_ats: { lt: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the lte operator' do
-            message = EventsListMessage.from_params({ updated_ats: { lte: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the gt operator' do
-            message = EventsListMessage.from_params({ updated_ats: { gt: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'allows the gte operator' do
-            message = EventsListMessage.from_params({ updated_ats: { gte: Time.now.utc.iso8601 } })
-            expect(message).to be_valid
-          end
-
-          it 'does not allow multiple timestamps with an operator' do
-            message = EventsListMessage.from_params({ updated_ats: { gte: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" } })
-            expect(message).not_to be_valid
-            expect(message.errors[:updated_ats]).to include('only accepts one value when using a relational operator')
-          end
-
-          context 'when the operator is an equals operator' do
-            it 'allows the equals operator' do
-              message = EventsListMessage.from_params({ 'updated_ats' => Time.now.utc.iso8601 })
-              expect(message).to be_valid
-            end
           end
         end
       end

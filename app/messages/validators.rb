@@ -5,6 +5,7 @@ require 'models/helpers/health_check_types'
 require 'models/helpers/metadata_error'
 require 'models/helpers/metadata_helpers'
 require 'models/helpers/label_selector_requirement'
+require 'models/helpers/relational_operators'
 require 'cloud_controller/domain_decorator'
 require 'messages/metadata_validator_helper'
 
@@ -295,6 +296,49 @@ module VCAP::CloudController::Validators
 
     def is_semver?(value)
       VCAP::SemverValidator.valid?(value)
+    end
+  end
+
+  class TimestampValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, values)
+      if values.is_a?(Array)
+        values.each do |timestamp|
+          opinionated_iso_8601(timestamp, record, attribute)
+        end
+      else
+        unless values.is_a?(Hash)
+          record.errors[attribute] << 'relational operator and timestamp must be specified'
+          return
+        end
+
+        valid_relational_operators = [
+          VCAP::CloudController::RelationalOperators::LESS_THAN_COMPARATOR,
+          VCAP::CloudController::RelationalOperators::GREATER_THAN_COMPARATOR,
+          VCAP::CloudController::RelationalOperators::LESS_THAN_OR_EQUAL_COMPARATOR,
+          VCAP::CloudController::RelationalOperators::GREATER_THAN_OR_EQUAL_COMPARATOR,
+        ]
+
+        values.each do |relational_operator, timestamp|
+          unless valid_relational_operators.include?(relational_operator)
+            record.errors[attribute] << "Invalid relational operator: '#{relational_operator}'"
+          end
+
+          if timestamp.to_s.include?(',')
+            record.errors[attribute] << 'only accepts one value when using a relational operator'
+            next
+          end
+
+          opinionated_iso_8601(timestamp, record, attribute)
+        end
+      end
+    end
+
+    private
+
+    def opinionated_iso_8601(timestamp, record, attribute)
+      if timestamp !~ /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/
+        record.errors[attribute] << "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'"
+      end
     end
   end
 end

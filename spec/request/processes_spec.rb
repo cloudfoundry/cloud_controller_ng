@@ -7,6 +7,8 @@ RSpec.describe 'Processes' do
   let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
+  let(:user) { VCAP::CloudController::User.make }
+  let(:admin_header) { admin_headers_for(user) }
   let(:user_name) { 'ProcHudson' }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
   let(:metadata) do
@@ -72,7 +74,17 @@ RSpec.describe 'Processes' do
           per_page:   '10',
           order_by:   'updated_at',
           label_selector:   'foo,bar',
+          created_ats: [],
+          updated_ats: []
         }
+      end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::ProcessModel }
+
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/processes?#{filters}", nil, headers }
       end
     end
 

@@ -9,15 +9,19 @@ module VCAP::CloudController
       :organization_guids,
       :app_guids,
       :guids,
+      :created_ats,
+      :updated_ats,
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
 
     validates :app_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
+    validates :created_ats, timestamp: true, allow_nil: true
+    validates :updated_ats, timestamp: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(types space_guids organization_guids app_guids guids))
+      super(params, %w(types space_guids organization_guids app_guids guids created_ats updated_ats))
     end
 
     def to_param_hash

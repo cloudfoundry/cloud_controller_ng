@@ -3,12 +3,13 @@ require 'messages/apps_list_message'
 
 module VCAP::CloudController
   RSpec.describe AppListFetcher do
+    subject { AppListFetcher.fetch_all(message) }
     let!(:stack) { Stack.make }
     let(:space) { Space.make(guid: 'main-space') }
     let!(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
     let!(:sad_app) { AppModel.make(space_guid: space.guid) }
     let(:org) { space.organization }
-    let(:fetcher) { AppListFetcher.new }
+    let(:fetcher) { AppListFetcher }
     let(:space_guids) { [space.guid] }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:filters) { {} }
@@ -36,7 +37,7 @@ module VCAP::CloudController
 
       it 'includes all the apps' do
         app = AppModel.make
-        expect(fetcher.fetch_all(message).all).to include(app, sad_app)
+        expect(subject.all).to include(app, sad_app)
       end
     end
 
@@ -186,6 +187,41 @@ module VCAP::CloudController
 
           it 'returns all of the docker apps' do
             expect(apps.all).to contain_exactly(docker_app)
+          end
+        end
+      end
+
+      context 'filtering timestamps' do
+        before do
+          AppModel.plugin :timestamps, update_on_create: false
+        end
+
+        let!(:resource_1) { AppModel.create(name: '1', created_at: '2020-05-26T18:47:01Z', updated_at: '2020-05-26T18:47:01Z', space: space) }
+        let!(:resource_2) { AppModel.create(name: '2', created_at: '2020-05-26T18:47:02Z', updated_at: '2020-05-26T18:47:02Z', space: space) }
+        let!(:resource_3) { AppModel.create(name: '3', created_at: '2020-05-26T18:47:03Z', updated_at: '2020-05-26T18:47:03Z', space: space) }
+        let!(:resource_4) { AppModel.create(name: '4', created_at: '2020-05-26T18:47:04Z', updated_at: '2020-05-26T18:47:04Z', space: space) }
+
+        after do
+          AppModel.plugin :timestamps, update_on_create: true
+        end
+
+        context 'filtering on created_at' do
+          let(:filters) do
+            { created_ats: { lt: resource_3.created_at.iso8601 } }
+          end
+
+          it 'delegates filtering to the base class' do
+            expect(subject).to match_array([resource_1, resource_2])
+          end
+        end
+
+        context 'filtering on updated_at' do
+          let(:filters) do
+            { updated_ats: { lt: resource_3.updated_at.iso8601 } }
+          end
+
+          it 'delegates filtering to the base class' do
+            expect(subject).to match_array([resource_1, resource_2])
           end
         end
       end

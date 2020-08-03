@@ -37,7 +37,8 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       it 'eager loads associated resources that the presenter specifies' do
-        expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_for_app).with(
+        expect(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_for_app).with(
+          an_instance_of(VCAP::CloudController::ProcessesListMessage),
           hash_including(eager_loaded_associations: [:labels, :annotations])
         ).and_call_original
 
@@ -122,7 +123,8 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'eager loads associated resources that the presenter specifies' do
-          expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_all).with(
+          expect(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_all).with(
+            an_instance_of(VCAP::CloudController::ProcessesListMessage),
             hash_including(eager_loaded_associations: [:labels, :annotations])
           ).and_call_original
 

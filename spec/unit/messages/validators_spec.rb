@@ -588,5 +588,89 @@ module VCAP::CloudController::Validators
         expect(invalid_three).not_to be_valid
       end
     end
+
+    describe 'TimestampValidator' do
+      let(:timestamp_class) do
+        Class.new(fake_class) do
+          validates :field, timestamp: true
+        end
+      end
+
+      it 'requires a hash or an array of timestamps' do
+        message = timestamp_class.new({ field: 47 })
+        expect(message).not_to be_valid
+        expect(message.errors[:field]).to include('relational operator and timestamp must be specified')
+      end
+
+      it 'requires a valid relational operator' do
+        message = timestamp_class.new({ field: { garbage: Time.now.utc.iso8601 } })
+        expect(message).not_to be_valid
+        expect(message.errors[:field]).to include("Invalid relational operator: 'garbage'")
+      end
+
+      context 'requires a valid timestamp' do
+        it "won't accept a malformed timestamp" do
+          message = timestamp_class.new({ field: [Time.now.utc.iso8601.to_s, 'bogus'] })
+          expect(message).not_to be_valid
+          expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+
+        it "won't accept garbage" do
+          message = timestamp_class.new({ field: { gt: 123 } })
+          expect(message).not_to be_valid
+          expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+
+        it "won't accept fractional seconds even though it's ISO 8601-compliant" do
+          message = timestamp_class.new({ field: { gt: '2020-06-30T12:34:56.78Z' } })
+          expect(message).not_to be_valid
+          expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+
+        it "won't accept local time zones even though it's ISO 8601-compliant" do
+          message = timestamp_class.new({ field: { gt: '2020-06-30T12:34:56.78-0700' } })
+          expect(message).not_to be_valid
+          expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+      end
+
+      it 'allows comma-separated timestamps' do
+        message = timestamp_class.new({ field: [Time.now.utc.iso8601.to_s, Time.now.utc.iso8601.to_s] })
+        expect(message).to be_valid
+      end
+
+      it 'allows the lt operator' do
+        message = timestamp_class.new({ field: { lt: Time.now.utc.iso8601 } })
+        expect(message).to be_valid
+      end
+
+      it 'allows the lte operator' do
+        message = timestamp_class.new({ field: { lte: Time.now.utc.iso8601 } })
+        expect(message).to be_valid
+      end
+
+      it 'allows the gt operator' do
+        message = timestamp_class.new({ field: { gt: Time.now.utc.iso8601 } })
+        expect(message).to be_valid
+      end
+
+      it 'allows the gte operator' do
+        message = timestamp_class.new({ field: { gte: Time.now.utc.iso8601 } })
+        expect(message).to be_valid
+      end
+
+      it 'does not allow multiple timestamps with an operator' do
+        message = timestamp_class.new({ field: { gte: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}" } })
+        expect(message).not_to be_valid
+        expect(message.errors[:field]).to include('only accepts one value when using a relational operator')
+      end
+
+      context 'when the operator is an equals operator' do
+        it 'allows the equals operator' do
+          message = timestamp_class.new({ field: [Time.now.utc.iso8601] })
+          expect(message).to be_valid
+        end
+      end
+    end
   end
 end

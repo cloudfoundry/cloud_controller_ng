@@ -379,6 +379,8 @@ RSpec.describe 'Apps' do
             include:   'space',
             lifecycle_type:   'buildpack',
             label_selector:   'foo,bar',
+            created_ats: [],
+            updated_ats: [],
           }
         end
       end
@@ -526,6 +528,36 @@ RSpec.describe 'Apps' do
             }
         }
       )
+    end
+
+    context 'filtering by timestamps' do
+      before do
+        VCAP::CloudController::AppModel.plugin :timestamps, update_on_create: false
+      end
+
+      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
+      let!(:resource_1) { VCAP::CloudController::AppModel.create(name: '1', created_at: '2020-05-26T18:47:01Z', updated_at: '2020-05-26T18:47:01Z', space: space) }
+      let!(:resource_2) { VCAP::CloudController::AppModel.create(name: '2', created_at: '2020-05-26T18:47:02Z', updated_at: '2020-05-26T18:47:02Z', space: space) }
+      let!(:resource_3) { VCAP::CloudController::AppModel.create(name: '3', created_at: '2020-05-26T18:47:03Z', updated_at: '2020-05-26T18:47:03Z', space: space) }
+      let!(:resource_4) { VCAP::CloudController::AppModel.create(name: '4', created_at: '2020-05-26T18:47:04Z', updated_at: '2020-05-26T18:47:04Z', space: space) }
+
+      after do
+        VCAP::CloudController::AppModel.plugin :timestamps, update_on_create: true
+      end
+
+      it 'filters by the created at' do
+        get "/v3/apps?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_header
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+      end
+
+      it 'filters ny the updated_at' do
+        get "/v3/apps?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_header
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+      end
     end
 
     context 'faceted search' do

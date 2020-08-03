@@ -6,6 +6,8 @@ module VCAP::CloudController
       :names,
       :guids,
       :organization_guids,
+      :created_ats,
+      :updated_ats,
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -13,9 +15,11 @@ module VCAP::CloudController
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
+    validates :created_ats, timestamp: true, allow_nil: true
+    validates :updated_ats, timestamp: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(names guids organization_guids))
+      super(params, %w(names guids organization_guids created_ats updated_ats))
     end
 
     def valid_order_by_values

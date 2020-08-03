@@ -3,24 +3,27 @@ require 'fetchers/process_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ProcessListFetcher do
-    let(:fetcher) { ProcessListFetcher.new(message) }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { ProcessesListMessage.from_params(filters) }
+    let(:eager_loaded_associations) { [] }
     let(:filters) { {} }
 
     describe '#fetch_all' do
+      subject { ProcessListFetcher.fetch_all(message, eager_loaded_associations: eager_loaded_associations) }
+
       let!(:web) { ProcessModel.make(type: 'web') }
       let!(:web2) { ProcessModel.make(type: 'web') }
       let!(:worker) { ProcessModel.make(type: 'worker') }
 
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_all
-        expect(results).to be_a(Sequel::Dataset)
+        expect(subject).to be_a(Sequel::Dataset)
       end
 
       describe 'eager loading associated resources' do
+        let(:eager_loaded_associations) { [:labels] }
+
         it 'eager loads the specified resources for the processes' do
-          results = fetcher.fetch_all(eager_loaded_associations: [:labels]).all
+          results = subject.all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:annotations)).to be false
@@ -28,7 +31,7 @@ module VCAP::CloudController
       end
 
       it 'returns all of the processes' do
-        results = fetcher.fetch_all.all
+        results = subject.all
         expect(results).to match_array([web, web2, worker])
       end
 
@@ -37,7 +40,7 @@ module VCAP::CloudController
           let(:filters) { { types: ['web'] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([web, web2])
           end
         end
@@ -46,7 +49,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [web.space.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([web])
           end
         end
@@ -55,7 +58,7 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [web.space.organization.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([web])
           end
         end
@@ -66,7 +69,7 @@ module VCAP::CloudController
           let(:filters) { { app_guids: [desired_app.guid] } }
 
           it 'only returns matching processes' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([desired_process])
           end
         end
@@ -75,7 +78,7 @@ module VCAP::CloudController
           let(:filters) { { guids: [web.guid, web2.guid] } }
 
           it 'returns the matching processes' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([web, web2])
           end
         end
@@ -85,7 +88,7 @@ module VCAP::CloudController
           let!(:label) { ProcessLabelModel.make(resource_guid: web2.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of packages' do
-            results = fetcher.fetch_all.all
+            results = subject.all
             expect(results).to match_array([web2])
           end
         end
@@ -100,33 +103,43 @@ module VCAP::CloudController
       let(:app2) { AppModel.make }
       let(:space2) { app2.space }
       let!(:process_in_space2) { ProcessModel.make(app: app2) }
+      let(:space_guids) { [] }
+
+      subject { ProcessListFetcher.fetch_for_spaces(message, space_guids: space_guids, eager_loaded_associations: eager_loaded_associations) }
 
       before { ProcessModel.make }
 
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_for_spaces(space_guids: [])
-        expect(results).to be_a(Sequel::Dataset)
+        expect(subject).to be_a(Sequel::Dataset)
       end
 
       describe 'eager loading associated resources' do
+        let(:space_guids) { [space1.guid, space2.guid] }
+        let(:eager_loaded_associations) { [:labels] }
+
         it 'eager loads the specified resources for the processes' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid], eager_loaded_associations: [:labels]).all
+          results = subject.all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:annotations)).to be false
         end
       end
 
-      it 'returns only the processes in spaces requested' do
-        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
-        expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
+      context 'limited to spaces' do
+        let(:space_guids) { [space1.guid, space2.guid] }
+
+        it 'returns only the processes in spaces requested' do
+          results = subject.all
+          expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
+        end
       end
 
       context 'with a space_guid filter' do
         let(:filters) { { space_guids: [space1.guid] } }
+        let(:space_guids) { [space1.guid, space2.guid] }
 
         it 'only returns matching processes' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
+          results = subject.all
           expect(results).to match_array([process_in_space1, process2_in_space1])
         end
       end
@@ -136,17 +149,21 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:filters) { { app_guid: app.guid } }
 
+      subject { ProcessListFetcher.fetch_for_app(message, eager_loaded_associations: eager_loaded_associations) }
+
       it 'returns a Sequel::Dataset and the app' do
-        returned_app, results = fetcher.fetch_for_app
+        returned_app, results = subject
         expect(returned_app.guid).to eq(app.guid)
         expect(results).to be_a(Sequel::Dataset)
       end
 
       describe 'eager loading associated resources' do
+        let(:eager_loaded_associations) { [:labels] }
+
         it 'eager loads the specified resources for the processes' do
           ProcessModel.make(:process, app: app)
 
-          _, processes_dataset = fetcher.fetch_for_app(eager_loaded_associations: [:labels])
+          _, processes_dataset = subject
           results = processes_dataset.all
 
           expect(results.first.associations.key?(:labels)).to be true
@@ -159,7 +176,7 @@ module VCAP::CloudController
         process2 = ProcessModel.make(:process, app: app)
         ProcessModel.make(:process)
 
-        _app, results = fetcher.fetch_for_app
+        _app, results = subject
         expect(results.all).to match_array([process1, process2])
       end
 
@@ -167,7 +184,7 @@ module VCAP::CloudController
         let(:filters) { { app_guid: 'made-up' } }
 
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app
+          returned_app, results = subject
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
