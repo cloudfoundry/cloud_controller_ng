@@ -583,7 +583,9 @@ RSpec.describe 'Builds' do
       end
 
       context 'updating state' do
-        let(:build_model) { VCAP::CloudController::BuildModel.make(package: package_model, state: VCAP::CloudController::BuildModel::STAGING_STATE) }
+        let(:build_model) { VCAP::CloudController::BuildModel.make(:kpack, package: package_model,
+          state: VCAP::CloudController::BuildModel::STAGING_STATE)
+        }
         let(:request) do
           {
             state: 'STAGED',

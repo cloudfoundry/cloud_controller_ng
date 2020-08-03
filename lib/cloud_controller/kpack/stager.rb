@@ -6,6 +6,7 @@ module Kpack
     }.freeze
     APP_GUID_LABEL_KEY = 'cloudfoundry.org/app_guid'.freeze
     BUILD_GUID_LABEL_KEY = 'cloudfoundry.org/build_guid'.freeze
+    DROPLET_GUID_LABEL_KEY = 'cloudfoundry.org/droplet_guid'.freeze
     STAGING_SOURCE_LABEL_KEY = 'cloudfoundry.org/source_type'.freeze
 
     def initialize(builder_namespace:, registry_service_account_name:, registry_tag_base:)
@@ -64,8 +65,9 @@ module Kpack
           name: staging_details.package.app.guid,
           namespace: builder_namespace,
           labels: {
-            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
-            BUILD_GUID_LABEL_KEY.to_sym => staging_details.staging_guid,
+            APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
+            BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid,
+            DROPLET_GUID_LABEL_KEY.to_sym => create_droplet_and_get_guid(staging_details),
             STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
           },
           annotations: {
@@ -153,6 +155,12 @@ module Kpack
 
     def blobstore_url_generator
       ::CloudController::DependencyLocator.instance.blobstore_url_generator
+    end
+
+    def create_droplet_and_get_guid(staging_details)
+      build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
+      droplet = VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
+      droplet.guid
     end
   end
 end
