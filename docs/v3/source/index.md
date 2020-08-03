@@ -364,6 +364,7 @@ includes:
   - experimental_resources/service_instances/credentials
   - experimental_resources/service_instances/parameters
   - experimental_resources/service_instances/delete
+  - experimental_resources/service_instances/get_shared_spaces_usage_summary
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

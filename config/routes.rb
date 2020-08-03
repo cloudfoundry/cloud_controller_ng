@@ -218,6 +218,7 @@ Rails.application.routes.draw do
   get '/service_instances', to: 'service_instances_v3#index'
   get '/service_instances/:guid', to: 'service_instances_v3#show'
   get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
+  get '/service_instances/:guid/relationships/shared_spaces/usage_summary', to: 'service_instances_v3#shared_spaces_usage_summary'
   get '/service_instances/:guid/credentials', to: 'service_instances_v3#credentials'
   get '/service_instances/:guid/parameters', to: 'service_instances_v3#parameters'
   post '/service_instances', to: 'service_instances_v3#create'

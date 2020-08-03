@@ -1,0 +1,38 @@
+### Get usage summary in shared spaces
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces/usage_summary" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :shared_spaces_usage_summary %>
+```
+
+This endpoint returns the number of bound apps in spaces where the service instance has been shared to.
+
+#### Definition
+`GET /v3/service_instances/:guid/relationships/shared_spaces/usage_summary`
+
+#### Permitted roles (in the service instance's originating space)
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |
