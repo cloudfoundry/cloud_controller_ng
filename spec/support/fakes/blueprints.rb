@@ -129,6 +129,8 @@ module VCAP::CloudController
     guid { Sham.guid }
     droplet_hash { nil }
     sha256_checksum { nil }
+    docker_receipt_image { nil }
+    app { AppModel.make(:kpack, droplet_guid: guid) }
     state { VCAP::CloudController::DropletModel::STAGED_STATE }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end

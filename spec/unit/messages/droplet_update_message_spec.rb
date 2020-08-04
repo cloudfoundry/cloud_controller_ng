@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe DropletUpdateMessage do
     let(:body) do
       {
+        'image' => 'some-image-reference',
         'metadata' => {
           'labels' => {
             'potatoes' => 'taterTots'
@@ -17,6 +18,7 @@ module VCAP::CloudController
       it 'can parse labels and annotations' do
         params =
           {
+            "image": 'new-image-reference',
             "metadata": {
               "labels": {
                 "potato": 'mashed'
@@ -30,6 +32,7 @@ module VCAP::CloudController
         expect(message).to be_valid
         expect(message.labels).to include("potato": 'mashed')
         expect(message.annotations).to include("eating": 'potatoes')
+        expect(message.image).to eq('new-image-reference')
       end
 
       it 'validates both bad labels and bad annotations' do
@@ -42,6 +45,15 @@ module VCAP::CloudController
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid
         expect(message.errors_on(:metadata)).to match_array(["'annotations' is not an object", "'labels' is not an object"])
+      end
+
+      it 'validates bad image references' do
+        params = {
+          "image": { 'blah': 34234 }
+        }
+        message = DropletUpdateMessage.new(params)
+        expect(message).not_to be_valid
+        expect(message.errors_on(:image)).to match_array(['must be a string'])
       end
     end
   end

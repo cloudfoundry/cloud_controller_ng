@@ -1463,5 +1463,39 @@ RSpec.describe 'Droplets' do
         }
       )
     end
+
+    context 'when updating the image (on a docker droplet)' do
+      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
+      let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+      let(:rebased_image_reference) { 'rebased-image-reference' }
+      let!(:og_docker_droplet) do
+        VCAP::CloudController::DropletModel.make(
+          :kpack,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid: app_model.guid,
+          package_guid: package_model.guid,
+          droplet_hash: 'shalalala',
+          sha256_checksum: 'droplet-checksum-sha256',
+        )
+      end
+      before do
+        og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
+      end
+      let(:update_request) do
+        {
+          image: rebased_image_reference
+        }
+      end
+      it 'updates the image' do
+        patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, developer_headers
+        expect(last_response.status).to eq(200), last_response.body
+
+        og_docker_droplet.reload
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['image']).to eq(
+          rebased_image_reference
+        )
+      end
+    end
   end
 end
