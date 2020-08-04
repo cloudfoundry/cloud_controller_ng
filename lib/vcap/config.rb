@@ -1,6 +1,8 @@
 require 'cloud_controller/yaml_config'
 require 'yaml'
 require 'membrane'
+require 'active_support'
+require 'active_support/core_ext'
 
 module VCAP
   class Config
@@ -11,10 +13,14 @@ module VCAP
         @schema = Membrane::SchemaParser.parse(&blk)
       end
 
-      def from_file(filename, symbolize_keys=true)
+      def from_file(filename, secrets_hash: {})
         config = VCAP::CloudController::YAMLConfig.safe_load_file(filename)
-        config = deep_symbolize_keys_except_in_arrays(config) if symbolize_keys
+        config = deep_symbolize_keys_except_in_arrays(config)
+        secrets_hash = deep_symbolize_keys_except_in_arrays(secrets_hash)
+
+        config = config.deep_merge(secrets_hash)
         @schema.validate(config)
+
         config
       end
 

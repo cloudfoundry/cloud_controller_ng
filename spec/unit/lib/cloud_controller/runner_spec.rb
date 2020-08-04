@@ -217,7 +217,34 @@ module VCAP::CloudController
               end
 
               it 'should set the configuration file' do
+                expect(subject.secrets_file).to eq(nil)
                 expect(subject.config_file).to eq(config_file.path)
+              end
+            end
+          end
+        end
+
+        describe 'Configuration File with Optional Secrets Files' do
+          let(:secrets_file) do
+            file = Tempfile.new('secrets_file.yml')
+            file.write(YAML.dump({ 'cloud_controller_username_lookup_client_secret' => secret_value_file.path }))
+            file.close
+            file
+          end
+          let(:secret_value_file) do
+            file = Tempfile.new('secret_value_file')
+            file.write('some-password')
+            file.close
+            file
+          end
+
+          ['-s', '--secrets'].each do |flag|
+            describe flag do
+              let(:argv_options) { ['-c', config_file.path, flag, secrets_file.path] }
+
+              it 'merges the values the secrets file references into the main config' do
+                expect(subject.secrets_file).to eq(secrets_file.path)
+                expect(subject.config.get(:cloud_controller_username_lookup_client_secret)).to eq('some-password')
               end
             end
           end

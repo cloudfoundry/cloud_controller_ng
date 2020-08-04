@@ -9,10 +9,11 @@ require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
 require 'cloud_controller/telemetry_logger'
+require 'cloud_controller/secrets_fetcher'
 
 module VCAP::CloudController
   class Runner
-    attr_reader :config_file, :insert_seed_data
+    attr_reader :config, :config_file, :insert_seed_data, :secrets_file
 
     def initialize(argv)
       @argv = argv
@@ -21,7 +22,8 @@ module VCAP::CloudController
       ENV['NEW_RELIC_ENV'] ||= 'production'
 
       parse_options!
-      parse_config
+      secrets_hash = parse_secrets
+      parse_config(secrets_hash)
 
       @log_counter = Steno::Sink::Counter.new
     end
@@ -35,6 +37,9 @@ module VCAP::CloudController
       @options_parser ||= OptionParser.new do |opts|
         opts.on('-c', '--config [ARG]', 'Configuration File') do |opt|
           @config_file = opt
+        end
+        opts.on('-s', '--secrets [ARG]', 'Secrets File') do |opt|
+          @secrets_file = opt
         end
       end
     end
@@ -50,12 +55,20 @@ module VCAP::CloudController
       raise options_parser.to_s
     end
 
-    def parse_config
-      @config = Config.load_from_file(@config_file, context: :api)
+    def parse_secrets
+      return {} unless secrets_file
+
+      SecretsFetcher.fetch_secrets_from_file(secrets_file)
+    rescue => e
+      raise "ERROR: Failed loading secrets from file '#{secrets_file}': #{e}"
+    end
+
+    def parse_config(secrets_hash)
+      @config = Config.load_from_file(config_file, context: :api, secrets_hash: secrets_hash)
     rescue Membrane::SchemaValidationError => ve
       raise "ERROR: There was a problem validating the supplied config: #{ve}"
     rescue => e
-      raise "ERROR: Failed loading config from file '#{@config_file}': #{e}"
+      raise "ERROR: Failed loading config from file '#{config_file}': #{e}"
     end
 
     def run!

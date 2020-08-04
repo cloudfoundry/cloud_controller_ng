@@ -22,9 +22,9 @@ module VCAP::CloudController
     end
 
     class << self
-      def load_from_file(file_name, context: :api)
+      def load_from_file(file_name, context: :api, secrets_hash: {})
         schema_class = schema_class_for_context(context)
-        config_from_file = schema_class.from_file(file_name)
+        config_from_file = schema_class.from_file(file_name, secrets_hash: secrets_hash)
         hash = merge_defaults(config_from_file)
         @instance = new(hash, context: context)
       end
