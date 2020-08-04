@@ -5,10 +5,10 @@ module VCAP::CloudController
                 join(:spaces, id: Sequel[:service_instances][:space_id]).
                 left_join(:service_instance_shares, service_instance_guid: Sequel[:service_instances][:guid])
 
-      if !omniscient
+      unless omniscient
         dataset = dataset.where do
           (Sequel[:spaces][:guid] =~ readable_space_guids) |
-          (Sequel[:service_instance_shares][:target_space_guid] =~ readable_space_guids)
+            (Sequel[:service_instance_shares][:target_space_guid] =~ readable_space_guids)
         end
       end
 
@@ -35,6 +35,17 @@ module VCAP::CloudController
                   when 'user-provided'
                     dataset.where { (Sequel[:service_instances][:is_gateway_service] =~ false) }
                   end
+      end
+
+      if message.requested?(:organization_guids)
+        spaces_in_orgs = Space.dataset.select(:spaces__guid).
+                         join(:organizations, id: Sequel[:spaces][:organization_id]).
+                         where(Sequel[:organizations][:guid] =~ message.organization_guids)
+
+        dataset = dataset.where do
+          (Sequel[:spaces][:guid] =~ spaces_in_orgs) |
+          (Sequel[:service_instance_shares][:target_space_guid] =~ spaces_in_orgs)
+        end
       end
 
       if message.requested?(:space_guids)

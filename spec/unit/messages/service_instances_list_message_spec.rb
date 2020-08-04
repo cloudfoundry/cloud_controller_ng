@@ -11,6 +11,7 @@ module VCAP::CloudController
         'order_by' => 'name',
         'names' => 'rabbitmq, redis,mysql',
         'space_guids' => 'space-1, space-2, space-3',
+        'organization_guids' => 'organization-1, organization-2',
         'label_selector' => 'key=value',
         'type' => 'managed',
         'service_plan_names' => 'plan1, plan2',
