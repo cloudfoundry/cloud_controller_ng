@@ -133,7 +133,7 @@ GEM
       activesupport (>= 3.0, < 6.1)
     diff-lcs (1.4.4)
     docile (1.1.5)
-    domain_name (0.5.20180417)
+    domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     e2mmap (0.1.0)
     em-http-request (1.1.6)
@@ -160,7 +160,7 @@ GEM
       rake
     fluent-logger (0.8.2)
       msgpack (>= 1.0.0, < 2)
-    fog-aliyun (0.3.17)
+    fog-aliyun (0.3.18)
       aliyun-sdk (~> 0.7.3)
       fog-core
       fog-json
@@ -469,7 +469,7 @@ GEM
     uber (0.1.0)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.5)
+    unf_ext (0.0.7.7)
     unicode-display_width (1.6.1)
     vhd (0.0.4)
       bit-struct
