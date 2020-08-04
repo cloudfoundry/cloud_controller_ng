@@ -11,6 +11,7 @@ require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_instance_presenter'
+require 'presenters/v3/shared_spaces_usage_summary_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update_managed'
@@ -180,6 +181,13 @@ class ServiceInstancesV3Controller < ApplicationController
       build_related: false,
       decorators: decorators_for_fields(message.fields)
     )
+  end
+
+  def shared_spaces_usage_summary
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance.present? && can_read_space?(service_instance.space)
+
+    render status: :ok, json: Presenters::V3::SharedSpacesUsageSummaryPresenter.new(service_instance)
   end
 
   def credentials

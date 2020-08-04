@@ -753,6 +753,90 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces/usage_summary' do
+    let(:guid) { instance.guid }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:space_1) { VCAP::CloudController::Space.make }
+    let(:space_2) { VCAP::CloudController::Space.make }
+    let(:space_3) { VCAP::CloudController::Space.make }
+    let(:url) { "/v3/service_instances/#{guid}/relationships/shared_spaces/usage_summary" }
+    let(:api_call) { lambda { |user_headers| get url, nil, user_headers } }
+    let(:bindings_on_space_1) { 1 }
+    let(:bindings_on_space_2) { 3 }
+
+    def create_bindings(instance, space:, count:)
+      (1..count).each do
+        VCAP::CloudController::ServiceBinding.make(
+          app: VCAP::CloudController::AppModel.make(space: space),
+          service_instance: instance
+        )
+      end
+    end
+
+    before do
+      share_service_instance(instance, space_1)
+      share_service_instance(instance, space_2)
+      share_service_instance(instance, space_3)
+
+      create_bindings(instance, space: space_1, count: bindings_on_space_1)
+      create_bindings(instance, space: space_2, count: bindings_on_space_2)
+    end
+
+    context 'permissions' do
+      let(:response_object) {
+        {
+          usage_summary: [
+            { space: { guid: space_1.guid }, bound_app_count: bindings_on_space_1 },
+            { space: { guid: space_2.guid }, bound_app_count: bindings_on_space_2 },
+            { space: { guid: space_3.guid }, bound_app_count: 0 }
+          ],
+          links: {
+            self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces/usage_summary" },
+            shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+            service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
+          }
+        }
+      }
+      let(:usage_summary_response) { { code: 200, response_object: response_object } }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(
+          code: 404,
+          response_objects: []
+        ).tap do |h|
+          h['admin'] = usage_summary_response
+          h['admin_read_only'] = usage_summary_response
+          h['global_auditor'] = usage_summary_response
+          h['space_developer'] = usage_summary_response
+          h['space_manager'] = usage_summary_response
+          h['space_auditor'] = usage_summary_response
+          h['org_manager'] = usage_summary_response
+        end
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the instance does not exist' do
+      let(:guid) { 'a-fake-guid' }
+      it 'responds with 404 Not Found' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the user cannot read from the originating space' do
+      it 'responds with 404 Not Found' do
+        user = VCAP::CloudController::User.make
+        set_current_user_as_role(role: 'space_developer', org: space_2.organization, space: space_2, user: user)
+
+        api_call.call(headers_for(user))
+
+        expect(last_response).to have_status_code(404)
+      end
+    end
+  end
+
   describe 'POST /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
     let(:space_guid) { space.guid }
@@ -3400,41 +3484,6 @@ RSpec.describe 'V3 service instances' do
     let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
     let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
     let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
-
-    describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
-      before do
-        share_request = {
-          'data' => [
-            { 'guid' => target_space.guid }
-          ]
-        }
-
-        enable_feature_flag!
-        post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
-        expect(last_response.status).to eq(200)
-
-        disable_feature_flag!
-      end
-
-      it 'returns a list of space guids where the service instance is shared to' do
-        set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
-
-        get "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", nil, user_header
-
-        expect(last_response.status).to eq(200)
-
-        expected_response = {
-          'data' => [
-            { 'guid' => target_space.guid }
-          ],
-          'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces" },
-          }
-        }
-
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
-    end
 
     describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
       before do
