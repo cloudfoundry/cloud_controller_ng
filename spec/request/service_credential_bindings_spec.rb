@@ -74,7 +74,7 @@ RSpec.describe 'v3 service credential bindings' do
     let(:key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-    let(:expected_object) { { guid: key.guid, type: 'key' } }
+    let(:expected_object) { expected_json(key) }
 
     context 'global roles' do
       let(:expected_codes_and_responses) do
@@ -117,10 +117,18 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'GET /v3/service_credential_bindings/:app_guid' do
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) }
+    let(:app_binding) {
+      b = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to)
+      b.save_with_new_operation({
+        type: 'create',
+        state: 'succeeded',
+        description: 'some description'
+      })
+      b
+    }
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
-    let(:expected_object) { { guid: app_binding.guid, type: 'app' } }
+    let(:expected_object) { expected_json(app_binding) }
 
     context 'global roles' do
       let(:expected_codes_and_responses) do
@@ -169,19 +177,60 @@ RSpec.describe 'v3 service credential bindings' do
 
   def expected_json(binding)
     {
-      guid: binding.guid
-    }.merge(extra(binding))
+      guid: binding.guid,
+      created_at: iso8601,
+      updated_at: iso8601,
+      name: binding.name,
+      last_operation: nil,
+      relationships: {
+        service_instance: {
+          data: {
+            guid: binding.service_instance.guid
+          }
+        }
+      },
+      links: {
+        self: {
+          href: "#{link_prefix}/v3/service_credential_bindings/#{binding.guid}"
+        },
+        service_instance: {
+          href: "#{link_prefix}/v3/service_instances/#{binding.service_instance.guid}"
+        }
+      }
+    }.deep_merge(extra(binding))
   end
 
   def extra(binding)
     case binding
     when VCAP::CloudController::ServiceKey
       {
-        type: 'key'
+        type: 'key',
       }
     when VCAP::CloudController::ServiceBinding
+      if binding.last_operation.present?
+        last_operation = {
+                            type: binding.last_operation.type,
+                            state: binding.last_operation.state,
+                            description: binding.last_operation.description,
+                            created_at: iso8601,
+                            updated_at: iso8601
+                         }
+      end
       {
-        type: 'app'
+        type: 'app',
+        last_operation: last_operation,
+        relationships: {
+          app: {
+            data: {
+              guid: binding.app.guid
+            }
+          }
+        },
+        links: {
+          app: {
+            href: "#{link_prefix}/v3/apps/#{binding.app.guid}"
+          }
+        }
       }
     else
       raise 'not a binding'

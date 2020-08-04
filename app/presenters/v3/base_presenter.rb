@@ -1,4 +1,5 @@
 require 'presenters/helpers/censorship'
+require 'presenters/api_url_builder'
 
 module VCAP
   module CloudController
