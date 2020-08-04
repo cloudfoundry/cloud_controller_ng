@@ -1,6 +1,6 @@
 module Kpack
   class Stager
-    CF_DEFAULT_BUILDER_SPEC = {
+    CF_DEFAULT_BUILDER_REFERENCE = {
       name: 'cf-default-builder',
       kind: 'CustomBuilder'
     }.freeze
@@ -15,13 +15,13 @@ module Kpack
     end
 
     def stage(staging_details)
-      builder_spec = get_or_create_builder_spec(staging_details)
+      builder_reference = find_or_create_builder_reference(staging_details)
 
       existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
       if existing_image.present?
-        client.update_image(update_image_resource(existing_image, staging_details, builder_spec))
+        client.update_image(update_image_resource(existing_image, staging_details, builder_reference))
       else
-        client.create_image(image_resource(staging_details, builder_spec))
+        client.create_image(image_resource(staging_details, builder_reference))
       end
     rescue CloudController::Errors::ApiError => e
       build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
@@ -94,19 +94,36 @@ module Kpack
         map { |key, value| { name: key, value: value.to_s } }
     end
 
-    def get_or_create_builder_spec(staging_details)
-      return create_custom_builder(staging_details) if staging_details.lifecycle.buildpack_infos.present?
-
-      CF_DEFAULT_BUILDER_SPEC
-    end
-
-    def create_custom_builder(staging_details)
-      default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER_SPEC[:name], builder_namespace)
+    def find_or_create_builder_reference(staging_details)
+      return CF_DEFAULT_BUILDER_REFERENCE unless staging_details.lifecycle.buildpack_infos.present?
 
       custom_builder_name = "app-#{staging_details.package.app.guid}"
-      client.create_custom_builder(Kubeclient::Resource.new({
+      create_or_update_custom_builder(custom_builder_name, staging_details)
+
+      {
+        name: custom_builder_name,
+        kind: 'CustomBuilder'
+      }
+    end
+
+    def create_or_update_custom_builder(name, staging_details)
+      existing = client.get_custom_builder(name, builder_namespace)
+      unless existing.present?
+        return client.create_custom_builder(generate_custom_builder_from_default(name, staging_details))
+      end
+
+      desired_custom_builder = generate_custom_builder_from_default(name, staging_details)
+      desired_custom_builder.metadata.resourceVersion = existing.metadata.resourceVersion
+      desired_custom_builder.apiVersion = existing.apiVersion
+      client.update_custom_builder(desired_custom_builder)
+    end
+
+    def generate_custom_builder_from_default(name, staging_details)
+      default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER_REFERENCE[:name], builder_namespace)
+      Kubeclient::Resource.new({
+        kind: 'CustomBuilder',
         metadata: {
-          name: custom_builder_name,
+          name: name,
           namespace: builder_namespace,
           labels: {
             APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
@@ -123,12 +140,7 @@ module Kpack
             group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } }
           ]
         }
-      }))
-
-      {
-        name: custom_builder_name,
-        kind: 'CustomBuilder'
-      }
+      })
     end
 
     def logger

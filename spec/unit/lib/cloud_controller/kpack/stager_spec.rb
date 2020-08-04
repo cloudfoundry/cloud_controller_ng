@@ -145,8 +145,15 @@ module Kpack
         end
         let(:package) { VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack)) }
 
+        before do
+          allow(client).to receive(:get_custom_builder).
+            with("app-#{package.app.guid}", 'namespace').
+            and_return(nil)
+        end
+
         it 'creates a custom builder' do
           expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
+            kind: 'CustomBuilder',
             metadata: {
               name: "app-#{package.app.guid}",
               namespace: 'namespace',
@@ -171,10 +178,46 @@ module Kpack
           stager.stage(staging_details)
         end
 
-        context 'when specifying buildpacks in a particular order' do
+        context 'when the custombuilder already exists' do
           before do
+            allow(client).to receive(:get_custom_builder).
+              with("app-#{package.app.guid}", 'namespace').
+              and_return(Kubeclient::Resource.new({
+                kind: 'CustomBuilder',
+                apiVersion: 'fake',
+                metadata: {
+                  resourceVersion: 'bogus',
+                },
+              }))
           end
-          it 'preserves the buildpack order' do
+
+          it 'overrides the existing custombuilder' do
+            expect(client).to receive(:update_custom_builder).with(Kubeclient::Resource.new({
+              kind: 'CustomBuilder',
+              apiVersion: 'fake',
+              metadata: {
+                resourceVersion: 'bogus',
+                name: "app-#{package.app.guid}",
+                namespace: 'namespace',
+                labels: {
+                  'cloudfoundry.org/app_guid' => package.app.guid,
+                  'cloudfoundry.org/build_guid' => build.guid,
+                  'cloudfoundry.org/source_type' => 'STG'
+                }
+              },
+              spec: {
+                tag: "gcr.io/capi-images/#{package.app.guid}-custom-builder",
+                serviceAccount: 'gcr-service-account',
+                stack: 'cflinuxfs3-stack',
+                store: 'cf-buildpack-store',
+                order: [
+                  { group: [{ id: 'paketo-buildpacks/java' }] },
+                ],
+              }
+            }))
+            expect(client).to receive(:create_image)
+
+            stager.stage(staging_details)
           end
         end
       end

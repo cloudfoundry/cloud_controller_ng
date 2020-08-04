@@ -342,6 +342,38 @@ RSpec.describe Kubernetes::ApiClient do
         end
       end
     end
+
+    describe '#delete_custom_builder' do
+      it 'proxies calls to the k8s client with the same args' do
+        allow(kpack_kube_client).to receive(:delete_custom_builder).with('name', 'namespace')
+
+        subject.delete_custom_builder('name', 'namespace')
+
+        expect(kpack_kube_client).to have_received(:delete_custom_builder).with('name', 'namespace').once
+      end
+
+      context 'when there is an error' do
+        it 'raises as an ApiError' do
+          allow(kpack_kube_client).to receive(:delete_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+
+          expect {
+            subject.delete_custom_builder('name', 'namespace')
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+
+      context 'when it returns a 404' do
+        it 'eats the error' do
+          allow(kpack_kube_client).to receive(:delete_custom_builder).
+            and_raise(Kubeclient::ResourceNotFoundError.new(404, 'custombuilders not found', '{"kind": "Status"}'))
+
+          expect {
+            subject.delete_custom_builder('name', 'namespace')
+          }.not_to raise_error
+        end
+      end
+    end
+
     describe '#get_custom_builder' do
       let(:response) { double(Kubeclient::Resource) }
 

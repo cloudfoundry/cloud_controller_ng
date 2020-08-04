@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     let!(:app) { AppModel.make }
     let!(:app_dataset) { [app] }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil) }
+    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_custom_builder: nil) }
     let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager, update_destinations: nil) }
 
     before do
@@ -48,9 +48,10 @@ module VCAP::CloudController
         app_delete.delete(app_dataset)
       end
 
-      it 'deletes the associated kpack Image' do
+      it 'deletes the associated kpack resources' do
         build_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
         expect(k8s_api_client).to receive(:delete_image).with(app.guid, build_namespace)
+        expect(k8s_api_client).to receive(:delete_custom_builder).with("app-#{app.guid}", build_namespace)
         app_delete.delete(app_dataset)
       end
 

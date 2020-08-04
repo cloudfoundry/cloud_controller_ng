@@ -1122,7 +1122,7 @@ module VCAP::CloudController
         s.add_shared_space(space)
         s
       end
-      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil) }
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_custom_builder: nil) }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)

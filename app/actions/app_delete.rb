@@ -17,6 +17,7 @@ require 'actions/staging_cancel'
 module VCAP::CloudController
   class AppDelete
     class AsyncBindingDeletionsTriggered < StandardError; end
+
     class SubResourceError < StandardError
       def initialize(errors)
         @errors = errors
@@ -53,10 +54,15 @@ module VCAP::CloudController
         logger.info("Deleted app: #{app.guid}")
 
         if VCAP::CloudController::Config.kubernetes_api_configured?
-          logger.info('Deleting associated kpack image')
+          # an app CRD could simplify this garbage collection
+          logger.info("Deleting kpack resources associated with app #{app.guid}")
           k8s_api_client.delete_image(
             app.guid,
-            VCAP::CloudController::Config.config.kpack_builder_namespace
+            VCAP::CloudController::Config.config.kpack_builder_namespace,
+          )
+          k8s_api_client.delete_custom_builder(
+            "app-#{app.guid}",
+            VCAP::CloudController::Config.config.kpack_builder_namespace,
           )
         end
       end

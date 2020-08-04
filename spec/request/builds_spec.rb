@@ -142,6 +142,7 @@ RSpec.describe 'Builds' do
         allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
         allow(k8s_api_client).to receive(:create_image)
         allow(k8s_api_client).to receive(:create_custom_builder)
+        allow(k8s_api_client).to receive(:update_custom_builder)
         allow(k8s_api_client).to receive(:get_image)
         allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
           metadata: {
@@ -208,7 +209,7 @@ RSpec.describe 'Builds' do
           expect(parsed_response['lifecycle']['data']['buildpacks']).to eq ['paketo-buildpacks/java', 'paketo-community/ruby']
           expect(parsed_response['state']).to eq 'STAGING'
 
-          expect(k8s_api_client).to have_received(:create_custom_builder)
+          expect(k8s_api_client).to have_received(:update_custom_builder)
         end
       end
 
