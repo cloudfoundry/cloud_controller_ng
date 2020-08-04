@@ -18,10 +18,10 @@ module Kpack
       builder_spec = get_or_create_builder_spec(staging_details)
 
       existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
-      if existing_image.nil?
-        client.create_image(image_resource(staging_details, builder_spec))
-      else
+      if existing_image.present?
         client.update_image(update_image_resource(existing_image, staging_details, builder_spec))
+      else
+        client.create_image(image_resource(staging_details, builder_spec))
       end
     rescue CloudController::Errors::ApiError => e
       build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)

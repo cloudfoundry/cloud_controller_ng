@@ -134,7 +134,6 @@ RSpec.describe 'Builds' do
         [
           OpenStruct.new(name: 'paketo-buildpacks/java'),
           OpenStruct.new(name: 'paketo-community/ruby'),
-          OpenStruct.new(name: 'paketo-buildpacks/httpd'),
         ]
       end
       let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
@@ -145,13 +144,35 @@ RSpec.describe 'Builds' do
         allow(k8s_api_client).to receive(:create_custom_builder)
         allow(k8s_api_client).to receive(:get_image)
         allow(k8s_api_client).to receive(:get_custom_builder).and_return(Kubeclient::Resource.new({
+          metadata: {
+            creationTimestamp: '1/1',
+          },
           spec: {
             stack: 'cflinuxfs3-stack',
             store: 'cf-buildpack-store',
-            serviceAccount: 'gcr-service-account'
-          }
+            serviceAccount: 'gcr-service-account',
+            order: [
+              { group: [{ id: 'paketo-buildpacks/java' }] },
+              { group: [{ id: 'paketo-community/ruby' }] },
+            ],
+          },
+          status: {
+            builderMetadata: [
+              { id: 'paketo-buildpacks/java', version: '1.14.0' },
+              { id: 'paketo-community/ruby', version: '0.0.11' },
+            ],
+            stack: {
+              id: 'org.cloudfoundry.stacks.cflinuxfs3'
+            },
+            conditions: [
+              {
+                lastTransitionTime: '1/1',
+                status: 'True',
+                type: 'Ready',
+              }
+            ],
+          },
         }))
-        allow_any_instance_of(VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return(k8s_buildpacks)
       end
 
       it 'succeeds' do
