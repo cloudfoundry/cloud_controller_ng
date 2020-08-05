@@ -5,6 +5,7 @@ module VCAP::CloudController
     @array_keys = [
       :names,
       :space_guids,
+      :organization_guids,
       :service_plan_guids,
       :service_plan_names,
     ]

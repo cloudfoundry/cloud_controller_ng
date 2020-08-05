@@ -182,6 +182,7 @@ RSpec.describe 'V3 service instances' do
         {
           names: ['foo', 'bar'],
           space_guids: ['foo', 'bar'],
+          organization_guids: ['org-1', 'org-2'],
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
@@ -258,6 +259,15 @@ RSpec.describe 'V3 service instances' do
 
       it 'filters by space guid' do
         get "/v3/service_instances?space_guids=#{another_space.guid}", nil, admin_headers
+        check_filtered_instances(
+          create_managed_json(msi_2),
+          create_user_provided_json(upsi_2),
+          create_managed_json(ssi),
+        )
+      end
+
+      it 'filters by organization guids' do
+        get "/v3/service_instances?organization_guids=#{another_space.organization.guid}", nil, admin_headers
         check_filtered_instances(
           create_managed_json(msi_2),
           create_user_provided_json(upsi_2),

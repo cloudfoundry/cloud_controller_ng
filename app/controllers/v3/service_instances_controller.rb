@@ -31,21 +31,6 @@ require 'decorators/field_service_instance_plan_decorator'
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
 
-  def show
-    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
-
-    message = ServiceInstanceShowMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    presenter = Presenters::V3::ServiceInstancePresenter.new(
-      service_instance,
-      decorators: decorators_for_fields(message.fields)
-    )
-
-    render status: :ok, json: presenter.to_json
-  end
-
   def index
     message = ServiceInstancesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -63,6 +48,21 @@ class ServiceInstancesV3Controller < ApplicationController
       message: message,
       decorators: decorators_for_fields(message.fields)
     )
+  end
+
+  def show
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+
+    message = ServiceInstanceShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    presenter = Presenters::V3::ServiceInstancePresenter.new(
+      service_instance,
+      decorators: decorators_for_fields(message.fields)
+    )
+
+    render status: :ok, json: presenter.to_json
   end
 
   def create
