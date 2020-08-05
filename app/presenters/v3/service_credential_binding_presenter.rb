@@ -29,14 +29,16 @@ module VCAP
           end
 
           def last_operation
-            return nil if @resource.last_operation_id.blank?
+            return nil if @resource.last_operation.blank?
+
+            last_operation = @resource.last_operation
 
             {
-              type: @resource.last_operation_type,
-              state: @resource.last_operation_state,
-              description: @resource.last_operation_description,
-              created_at: @resource.last_operation_created_at,
-              updated_at: @resource.last_operation_updated_at
+              type: last_operation.type,
+              state: last_operation.state,
+              description: last_operation.description,
+              created_at: last_operation.created_at,
+              updated_at: last_operation.updated_at
             }
           end
 

@@ -58,6 +58,20 @@ module VCAP
       end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
+        LastOperation = Struct.new(:id, :type, :state, :description, :created_at, :updated_at)
+
+        def last_operation
+          if last_operation_id.present?
+            LastOperation.new(
+              last_operation_id,
+              last_operation_type,
+              last_operation_state,
+              last_operation_description,
+              last_operation_created_at,
+              last_operation_updated_at
+            )
+          end
+        end
       end
     end
   end

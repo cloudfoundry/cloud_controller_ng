@@ -13,7 +13,11 @@ RSpec.describe 'v3 service credential bindings' do
     let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
     let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
     let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
-    let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds) }
+    let!(:app_binding) do
+      VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds).tap do |binding|
+        operate_on(binding)
+      end
+    end
     let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second) }
 
     describe 'permissions' do
@@ -117,15 +121,11 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'GET /v3/service_credential_bindings/:app_guid' do
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:app_binding) {
-      b = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to)
-      b.save_with_new_operation({
-        type: 'create',
-        state: 'succeeded',
-        description: 'some description'
-      })
-      b
-    }
+    let(:app_binding) do
+      VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
+        operate_on(binding)
+      end
+    end
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
     let(:expected_object) { expected_json(app_binding) }
@@ -207,18 +207,9 @@ RSpec.describe 'v3 service credential bindings' do
         type: 'key',
       }
     when VCAP::CloudController::ServiceBinding
-      if binding.last_operation.present?
-        last_operation = {
-                            type: binding.last_operation.type,
-                            state: binding.last_operation.state,
-                            description: binding.last_operation.description,
-                            created_at: iso8601,
-                            updated_at: iso8601
-                         }
-      end
       {
         type: 'app',
-        last_operation: last_operation,
+        last_operation: last_operation(binding),
         relationships: {
           app: {
             data: {
@@ -235,5 +226,27 @@ RSpec.describe 'v3 service credential bindings' do
     else
       raise 'not a binding'
     end
+  end
+
+  def last_operation(binding)
+    if binding.last_operation.present?
+      {
+        type: binding.last_operation.type,
+        state: binding.last_operation.state,
+        description: binding.last_operation.description,
+        created_at: iso8601,
+        updated_at: iso8601
+      }
+    end
+  end
+
+  def operate_on(binding)
+    binding.save_with_new_operation(
+      {
+        type: 'create',
+        state: 'succeeded',
+        description: 'some description'
+      }
+    )
   end
 end

@@ -5,18 +5,18 @@ module VCAP
   module CloudController
     RSpec.describe Presenters::V3::ServiceCredentialBindingPresenter do
       CredentialBinding = Struct.new(:guid, :type, :created_at, :updated_at, :name,
-        :last_operation_id, :last_operation_type, :last_operation_state,
-        :last_operation_description, :last_operation_created_at, :last_operation_updated_at,
-        :app_guid, :service_instance_guid
+        :last_operation, :app_guid, :service_instance_guid
       )
+
+      LastOperation = Struct.new(:id, :type, :state, :description, :created_at, :updated_at)
 
       let(:service_instance) { 'instance-guid' }
       let(:app) { 'app-guid' }
       let(:last_operation) {
-        ['1', 'create', 'succeeded', 'some description', 'last-operation-create-date', 'last-operation-update-date']
+        LastOperation.new('1', 'create', 'succeeded', 'some description', 'last-operation-create-date', 'last-operation-update-date')
       }
       let(:credential_binding) {
-        CredentialBinding.new('some-guid', 'some-type', 'create-date', 'update-date', 'some-name', *last_operation, app, service_instance)
+        CredentialBinding.new('some-guid', 'some-type', 'create-date', 'update-date', 'some-name', last_operation, app, service_instance)
       }
 
       it 'should include the binding fields plus links and relationships' do
@@ -75,7 +75,7 @@ module VCAP
       end
 
       describe 'last operation not present' do
-        let(:last_operation) { [nil, nil, nil, nil, nil, nil] }
+        let(:last_operation) { nil }
 
         it 'should include last_operation as null' do
           result = described_class.new(credential_binding).to_hash
