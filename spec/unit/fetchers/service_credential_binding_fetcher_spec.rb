@@ -16,7 +16,6 @@ module VCAP
       end
 
       describe 'service keys' do
-        let(:type) { 'key' }
         let(:space) { Space.make }
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
         let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
@@ -26,13 +25,11 @@ module VCAP
             credential_binding = fetcher.fetch(service_key.guid, space_guids: [space.guid])
 
             expect(credential_binding).not_to be_nil
-            expect(credential_binding.type).to eql(type)
+            expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceKey)
             expect(credential_binding.name).to eql(service_key.name)
             expect(credential_binding.created_at).to eql(service_key.created_at)
             expect(credential_binding.updated_at).to eql(service_key.updated_at)
             expect(credential_binding.service_instance_guid).to eql(service_instance.guid)
-            expect(credential_binding.app_guid).to be_nil
-            expect(credential_binding.last_operation).to be_nil
           end
         end
 
@@ -47,8 +44,6 @@ module VCAP
       end
 
       describe 'app bindings' do
-        let(:type) { 'app' }
-
         describe 'managed services' do
           let(:space) { Space.make }
           let(:service_instance) { ManagedServiceInstance.make(space: space) }
@@ -58,7 +53,7 @@ module VCAP
             credential_binding = fetcher.fetch(app_binding.guid, space_guids: [space.guid])
 
             expect(credential_binding).not_to be_nil
-            expect(credential_binding.type).to eql(type)
+            expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceBinding)
             expect(credential_binding.name).to eql('some-name')
             expect(credential_binding.created_at).to eql(app_binding.created_at)
             expect(credential_binding.updated_at).to eql(app_binding.updated_at)
@@ -86,7 +81,7 @@ module VCAP
             credential_binding = fetcher.fetch(app_binding.guid, space_guids: [space.guid])
 
             expect(credential_binding).not_to be_nil
-            expect(credential_binding.type).to eql(type)
+            expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceBinding)
             expect(credential_binding.name).to eql('some-name')
             expect(credential_binding.created_at).to eql(app_binding.created_at)
             expect(credential_binding.updated_at).to eql(app_binding.updated_at)

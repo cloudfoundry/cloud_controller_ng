@@ -8,24 +8,39 @@ module VCAP
           def to_hash
             {
               guid: @resource.guid,
-              type: @resource.type,
               name: @resource.name,
               created_at: @resource.created_at,
               updated_at: @resource.updated_at,
-              last_operation: last_operation,
-              relationships: build_relationships,
-              links: build_links
-            }
+              type: type
+            }.merge(extra)
           end
 
           private
 
-          def build_relationships
-            base_relationships.merge(app_relationship)
+          def type
+            case @resource
+            when VCAP::CloudController::ServiceKey
+              'key'
+            when VCAP::CloudController::ServiceBinding
+              'app'
+            end
           end
 
-          def build_links
-            base_links.merge(app_link)
+          def extra
+            case type
+            when 'app'
+              {
+                last_operation: last_operation,
+                relationships: base_relationships.merge(app_relationship),
+                links: base_links.merge(app_link)
+              }
+            when 'key'
+              {
+                last_operation: nil,
+                relationships: base_relationships,
+                links: base_links
+              }
+            end
           end
 
           def last_operation
