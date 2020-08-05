@@ -51,6 +51,7 @@ module Kpack
     end
 
     def update_image_resource(image, staging_details, builder_spec)
+      image.metadata.labels[DROPLET_GUID_LABEL_KEY.to_sym] = create_droplet_and_get_guid(staging_details)
       image.metadata.labels[BUILD_GUID_LABEL_KEY.to_sym] = staging_details.staging_guid
       image.spec.source.blob.url = blobstore_url_generator.package_download_url(staging_details.package)
       image.spec.build.env = get_environment_variables(staging_details)

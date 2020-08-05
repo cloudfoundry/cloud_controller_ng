@@ -255,6 +255,7 @@ module Kpack
               labels: {
                 Stager::APP_GUID_LABEL_KEY => package.app.guid,
                 Stager::BUILD_GUID_LABEL_KEY => 'old-build-guid',
+                Stager::DROPLET_GUID_LABEL_KEY => 'old-droplet-guid',
                 Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
               },
               annotations: {
@@ -291,6 +292,7 @@ module Kpack
         it 'updates the existing Image resource' do
           updated_image = Kubeclient::Resource.new(existing_image.to_hash)
           updated_image.metadata.labels[Kpack::Stager::BUILD_GUID_LABEL_KEY.to_sym] = build.guid
+          updated_image.metadata.labels[Kpack::Stager::DROPLET_GUID_LABEL_KEY.to_sym] = droplet.guid
           updated_image.spec.source.blob.url = 'package-download-url'
           updated_image.spec.build.env = [
             { name: 'FOO', value: 'BAR' }
