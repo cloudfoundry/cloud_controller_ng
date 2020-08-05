@@ -220,7 +220,7 @@ module VCAP::CloudController
             err = CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'some instance name')
             allow(client).to receive(:deprovision).and_raise(err)
 
-            expect { subject.send_broker_request(client) }.to raise_error(OperationAborted, /rejected the request/)
+            expect { subject.send_broker_request(client) }.to raise_error(OperationCancelled, /rejected the request/)
           end
         end
 
