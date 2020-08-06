@@ -62,6 +62,16 @@ module VCAP
             }
           )
         end
+
+        context 'when name is not set' do
+          let(:instance) { ServiceInstance.make(name: 'smashed-avocado') }
+          let(:credential_binding) { ServiceBinding.make(service_instance: instance) }
+
+          it 'should return the service instance name as the binding name' do
+            presenter = described_class.new(credential_binding)
+            expect(presenter.to_hash[:name]).to eq('smashed-avocado')
+          end
+        end
       end
 
       describe 'key bindings' do

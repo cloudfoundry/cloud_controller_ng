@@ -8,7 +8,7 @@ module VCAP
           def to_hash
             {
               guid: @resource.guid,
-              name: @resource.name,
+              name: @resource.name || @resource.service_instance.name,
               created_at: @resource.created_at,
               updated_at: @resource.updated_at,
               type: type
