@@ -78,6 +78,14 @@ module VCAP::CloudController
         end
       end
 
+      context 'validates the created_ats filter' do
+        it 'delegates to the TimestampValidator' do
+          message = AppUsageEventsListMessage.from_params({ created_ats: 47 })
+          expect(message).not_to be_valid
+          expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
+        end
+      end
+
       context 'when the order_by filter is provided' do
         context 'and the value is invalid' do
           let(:params) { { order_by: 'updated_at' } }
