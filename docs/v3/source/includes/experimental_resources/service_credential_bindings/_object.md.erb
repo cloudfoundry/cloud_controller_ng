@@ -1,0 +1,30 @@
+### The service credential binding object
+
+```
+Example Service Credential Binding object
+```
+```json
+<%= yield_content :single_service_credential_binding_app %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the service credential binding
+**name** | _string_ | Name of the binding. Defaults to the service instance name when not defined.
+**type** | _string_ | Either `app` or `key`
+**last_operation** (*experimental*)| _[last operation object](#the-last-operation-object-for-service-credential-binding)_ | The last operation of this binding; `null` when type is `key`
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance that this binding is originated from
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app using this binding; omitted for `key` bindings
+**links** | [_links object_](#links) | Links to related resources
+
+#### The last operation object for service credential binding
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Either `create`, `update`, or `delete`
+**state** | _string_ | Either `in progress`, `succeeded`, or `failed`
+**description** | _string_ | A textual explanation associated with this state
+**created_at** | _[timestamp](#timestamps)_ | The time with zone when the operation started
+**updated_at** | _[timestamp](#timestamps)_ | The time with zone when the operation was last updated
