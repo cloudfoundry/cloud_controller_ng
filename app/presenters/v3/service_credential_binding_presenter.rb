@@ -8,35 +8,52 @@ module VCAP
           def to_hash
             {
               guid: @resource.guid,
-              type: @resource.type,
               name: @resource.name,
               created_at: @resource.created_at,
               updated_at: @resource.updated_at,
-              last_operation: last_operation,
-              relationships: build_relationships,
-              links: build_links
-            }
+              type: type
+            }.merge(extra)
           end
 
           private
 
-          def build_relationships
-            base_relationships.merge(app_relationship)
+          def type
+            case @resource
+            when VCAP::CloudController::ServiceKey
+              'key'
+            when VCAP::CloudController::ServiceBinding
+              'app'
+            end
           end
 
-          def build_links
-            base_links.merge(app_link)
+          def extra
+            case type
+            when 'app'
+              {
+                last_operation: last_operation,
+                relationships: base_relationships.merge(app_relationship),
+                links: base_links.merge(app_link)
+              }
+            when 'key'
+              {
+                last_operation: nil,
+                relationships: base_relationships,
+                links: base_links
+              }
+            end
           end
 
           def last_operation
-            return nil if @resource.last_operation_id.blank?
+            return nil if @resource.last_operation.blank?
+
+            last_operation = @resource.last_operation
 
             {
-              type: @resource.last_operation_type,
-              state: @resource.last_operation_state,
-              description: @resource.last_operation_description,
-              created_at: @resource.last_operation_created_at,
-              updated_at: @resource.last_operation_updated_at
+              type: last_operation.type,
+              state: last_operation.state,
+              description: last_operation.description,
+              created_at: last_operation.created_at,
+              updated_at: last_operation.updated_at
             }
           end
 
