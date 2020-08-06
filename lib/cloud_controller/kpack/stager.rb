@@ -1,3 +1,5 @@
+require 'kubernetes/update_reapply_client'
+
 module Kpack
   class Stager
     CF_DEFAULT_BUILDER_REFERENCE = {
@@ -17,12 +19,14 @@ module Kpack
 
     def stage(staging_details)
       builder_reference = find_or_create_builder_reference(staging_details)
+      image_resource_name = staging_details.package.app.guid
 
-      existing_image = client.get_image(staging_details.package.app.guid, builder_namespace)
-      if existing_image.present?
-        client.update_image(update_image_resource(existing_image, staging_details, builder_reference))
-      else
-        client.create_image(image_resource(staging_details, builder_reference))
+      unless client.get_image(image_resource_name, builder_namespace).present?
+        return client.create_image(image_resource(staging_details, builder_reference))
+      end
+
+      reapply_client.apply_image_update(image_resource_name, builder_namespace) do |existing_image|
+        update_image_resource(existing_image, staging_details, builder_reference)
       end
     rescue CloudController::Errors::ApiError => e
       build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
@@ -110,15 +114,17 @@ module Kpack
     end
 
     def create_or_update_custom_builder(name, staging_details)
-      existing = client.get_custom_builder(name, builder_namespace)
-      unless existing.present?
-        return client.create_custom_builder(generate_custom_builder_from_default(name, staging_details))
+      desired_custom_builder = generate_custom_builder_from_default(name, staging_details)
+
+      unless client.get_custom_builder(name, builder_namespace).present?
+        return client.create_custom_builder(desired_custom_builder)
       end
 
-      desired_custom_builder = generate_custom_builder_from_default(name, staging_details)
-      desired_custom_builder.metadata.resourceVersion = existing.metadata.resourceVersion
-      desired_custom_builder.apiVersion = existing.apiVersion
-      client.update_custom_builder(desired_custom_builder)
+      reapply_client.apply_custom_builder_update(name, builder_namespace) do |existing_custom_builder|
+        desired_custom_builder.metadata.resourceVersion = existing_custom_builder.metadata.resourceVersion
+        desired_custom_builder.apiVersion = existing_custom_builder.apiVersion
+        desired_custom_builder
+      end
     end
 
     def generate_custom_builder_from_default(name, staging_details)
@@ -152,6 +158,10 @@ module Kpack
 
     def client
       ::CloudController::DependencyLocator.instance.k8s_api_client
+    end
+
+    def reapply_client
+      @reapply_client ||= Kubernetes::UpdateReapplyClient.new(client)
     end
 
     def blobstore_url_generator
