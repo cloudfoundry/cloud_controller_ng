@@ -1,4 +1,5 @@
 require 'kubernetes/kube_client_builder'
+require 'kubernetes/update_reapply_client'
 
 module Kubernetes
   class RouteResourceManager
@@ -6,6 +7,7 @@ module Kubernetes
 
     def initialize(kube_client)
       @client = kube_client
+      @reapply_client = UpdateReapplyClient.new(kube_client)
     end
 
     def create_route(route)
@@ -44,19 +46,10 @@ module Kubernetes
     end
 
     def update_destinations(route)
-      remaining_retries = UPDATE_DESTINATION_CONFLICT_RETRIES
-      begin
-        route_resource = @client.get_route(route.guid, 'cf-workloads')
-        route_resource.spec.destinations = get_destinations(route)
-        @client.update_route(route_resource)
-      rescue ApiClient::ConflictError
-        remaining_retries -= 1
-        retry if remaining_retries.positive?
-        logger.info("Failed to Update Route CRD after #{UPDATE_DESTINATION_CONFLICT_RETRIES}: #{e}")
-        raise
-      rescue => e
-        logger.info("Failed to Update Route CRD: #{e}")
-        raise
+      destinations = get_destinations(route)
+      @reapply_client.apply_route_update(route.guid, 'cf-workloads') do |route_resource|
+        route_resource.spec.destinations = destinations
+        route_resource
       end
     end
 
