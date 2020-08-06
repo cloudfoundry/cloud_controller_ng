@@ -72,10 +72,13 @@ class DropletsController < ApplicationController
   end
 
   def update
-    droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-
+    droplet, space, _ = DropletFetcher.new.fetch(hashed_params[:guid])
+    droplet_not_found! unless droplet && can_read_build?(space)
+    if hashed_params[:body].key?(:image)
+      unauthorized! unless permission_queryer.can_update_build_state?
+    else
+      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    end
     message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -159,6 +162,10 @@ class DropletsController < ApplicationController
   end
 
   private
+
+  def can_read_build?(space)
+    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+  end
 
   def send_droplet_blob(droplet)
     if droplet.blobstore_key.nil?

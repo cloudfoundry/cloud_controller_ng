@@ -1640,6 +1640,70 @@ RSpec.describe 'Droplets' do
           }
         )
       end
+
+      context 'when updating the image (on a docker droplet)' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
+        let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+        let(:rebased_image_reference) { 'rebased-image-reference' }
+        let!(:og_docker_droplet) do
+          VCAP::CloudController::DropletModel.make(
+            :kpack,
+            state: VCAP::CloudController::DropletModel::STAGED_STATE,
+            app_guid: app_model.guid,
+            package_guid: package_model.guid,
+            droplet_hash: 'shalalala',
+            sha256_checksum: 'droplet-checksum-sha256',
+          )
+        end
+        before do
+          og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
+        end
+        let(:update_request) do
+          {
+            image: rebased_image_reference
+          }
+        end
+        it 'allows admins to update the image' do
+          patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, admin_headers
+          expect(last_response.status).to eq(200), last_response.body
+
+          og_docker_droplet.reload
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['image']).to eq(
+            rebased_image_reference
+          )
+        end
+
+        context 'when the cloud_controller.update_build_state scope is present' do
+          it 'updates the image' do
+            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, build_state_updater_headers
+            expect(last_response.status).to eq(200)
+
+            og_docker_droplet.reload
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['image']).to eq(
+              rebased_image_reference
+            )
+          end
+        end
+
+        context 'when the cloud_controller.update_build_state scope is NOT present' do
+          it '403s' do
+            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, developer_headers
+            expect(last_response.status).to eq(403), last_response.body
+          end
+        end
+
+        context 'when the the developer is looking in the wrong space' do
+          let(:wrong_developer) { make_developer_for_space(VCAP::CloudController::Space.make) }
+          let(:wrong_developer_headers) { headers_for(wrong_developer, user_name: user_name, email: 'bob@loblaw.com') }
+
+          it '404s' do
+            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, wrong_developer_headers
+            expect(last_response.status).to eq(404), last_response.body
+          end
+        end
+      end
     end
   end
 end

@@ -530,8 +530,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
     before do
-      allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      set_current_user_as_admin
     end
 
     context 'when there is an invalid message validation failure' do
@@ -566,7 +565,7 @@ RSpec.describe DropletsController, type: :controller do
       context 'when the user cannot read the droplet due to roles' do
         before do
           disallow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
+          disallow_user_build_update_access(user)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -579,7 +578,9 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user can read but cannot write to the space' do
         before do
+          allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)
+          disallow_user_build_update_access(user)
         end
 
         it 'returns 403 NotAuthorized' do
