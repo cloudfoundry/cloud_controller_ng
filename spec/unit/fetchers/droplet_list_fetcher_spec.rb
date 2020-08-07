@@ -152,6 +152,10 @@ module VCAP::CloudController
         expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, staged_droplet_for_app2.guid])
       end
 
+      it 'returns no droplets when no spaces are provided' do
+        expect(fetcher.fetch_for_spaces(space_guids: []).all).to be_empty
+      end
+
       context 'filtering app guids' do
         let(:filters) { { app_guids: [app2.guid, app3.guid] } }
         let(:space_guids) { [space1.guid, space2.guid, space3.guid] }

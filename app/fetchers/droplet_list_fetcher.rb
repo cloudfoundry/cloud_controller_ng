@@ -58,7 +58,7 @@ module VCAP::CloudController
                   join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
       end
 
-      if scoped_space_guids.present?
+      unless scoped_space_guids.nil?
         dataset = dataset.select_all(droplet_table_name).
                   join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: scoped_space_guids }, { table_alias: :apps_spaces })
       end

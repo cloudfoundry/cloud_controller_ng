@@ -472,6 +472,43 @@ RSpec.describe 'Droplets' do
         state: VCAP::CloudController::DropletModel::FAILED_STATE
       )
     end
+    let(:droplet1_json) do
+      {
+        guid: droplet1.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        state: droplet1.state,
+        error: droplet1.error,
+        lifecycle: {
+          type: droplet1.lifecycle_type,
+          data: {},
+        },
+        checksum: nil,
+        buildpacks: [
+          {
+            "name": buildpack.name,
+            "detect_output": nil,
+            "buildpack_name": nil,
+            "version": nil
+          }
+        ],
+        stack: droplet1.lifecycle_data.try(:stack),
+        image: nil,
+        execution_metadata: '[PRIVATE DATA HIDDEN IN LISTS]',
+        process_types: { redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]' },
+        relationships: { app: { data: { guid: droplet1.app_guid } } },
+        metadata: {
+          labels: {},
+          annotations: {},
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet1.guid}) },
+          app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{droplet1.app_guid}) },
+          assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps/#{droplet1.app_guid}/relationships/current_droplet), method: 'PATCH' },
+          package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{package_model.guid}) },
+        }
+      }
+    end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
@@ -486,6 +523,45 @@ RSpec.describe 'Droplets' do
         error_description: 'example-error'
       )
     end
+    let(:droplet2_json) do
+      {
+        guid: droplet2.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        state: droplet2.state,
+        error: droplet2.error,
+        lifecycle: {
+          type: droplet2.lifecycle_type,
+          data: {},
+        },
+        checksum: { type: 'sha256', value: 'droplet-checksum-sha256' },
+        buildpacks: [
+          {
+            "name": 'http://buildpack.git.url.com',
+            "detect_output": nil,
+            "buildpack_name": nil,
+            "version": nil
+          }
+        ],
+        stack: droplet2.lifecycle_data.try(:stack),
+        image: droplet2.docker_receipt_image,
+        execution_metadata: '[PRIVATE DATA HIDDEN IN LISTS]',
+        process_types: { redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]' },
+        relationships: { app: { data: { guid: droplet2.app_guid } } },
+        metadata: {
+          labels: {},
+          annotations: {},
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet2.guid}) },
+          app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{droplet2.app_guid}) },
+          assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps/#{droplet2.app_guid}/relationships/current_droplet), method: 'PATCH' },
+          download: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet2.guid}\/download) },
+          package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{package_model.guid}) },
+        },
+      }
+    end
+    let(:api_call) { lambda { |user_headers| get '/v3/droplets', nil, user_headers } }
 
     let(:per_page) { 2 }
     let(:order_by) { '-created_at' }
@@ -507,16 +583,16 @@ RSpec.describe 'Droplets' do
       end
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          guids:   'foo,bar',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          guids: 'foo,bar',
           app_guids: 'foo,bar',
           package_guid: package_model.guid,
           space_guids: 'test',
-          states:  ['test', 'foo'],
+          states: ['test', 'foo'],
           organization_guids: 'foo,bar',
-          label_selector:   'foo,bar',
+          label_selector: 'foo,bar',
         }
       end
     end
@@ -534,17 +610,89 @@ RSpec.describe 'Droplets' do
       end
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          guids:   'foo,bar',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          guids: 'foo,bar',
           app_guid: app_model.guid,
           current: true,
           package_guid: package_model.guid,
-          states:  ['test', 'foo'],
-          label_selector:   'foo,bar',
+          states: ['test', 'foo'],
+          label_selector: 'foo,bar',
         }
       end
+    end
+
+    context 'when the user is a member in the droplets space' do
+      let(:other_space) { VCAP::CloudController::Space.make }
+      let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: other_space.guid, name: 'my-other-app') }
+      let(:other_package_model) do
+        VCAP::CloudController::PackageModel.make(
+          app_guid: other_app_model.guid,
+          type: VCAP::CloudController::PackageModel::BITS_TYPE
+        )
+      end
+      let(:droplet_in_other_space) do
+        VCAP::CloudController::DropletModel.make(
+          app_guid: other_app_model.guid,
+          package_guid: other_package_model.guid,
+          droplet_hash: nil,
+          sha256_checksum: nil,
+          buildpack_receipt_buildpack: buildpack.name,
+          buildpack_receipt_buildpack_guid: buildpack.guid,
+          staging_disk_in_mb: 235,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
+        )
+      end
+      let(:droplet_in_other_space_json) do
+        {
+          guid: droplet_in_other_space.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          state: droplet_in_other_space.state,
+          error: nil,
+          lifecycle: {
+            type: droplet_in_other_space.lifecycle_type,
+            data: {},
+          },
+          checksum: nil,
+          buildpacks: [],
+          stack: droplet_in_other_space.lifecycle_data.try(:stack),
+          image: nil,
+          execution_metadata: '[PRIVATE DATA HIDDEN IN LISTS]',
+          process_types: { redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]' },
+          relationships: { app: { data: { guid: droplet_in_other_space.app_guid } } },
+          metadata: {
+            labels: {},
+            annotations: {},
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet_in_other_space.guid}) },
+            app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{droplet_in_other_space.app_guid}) },
+            assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps/#{droplet_in_other_space.app_guid}/relationships/current_droplet), method: 'PATCH' },
+            package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{other_package_model.guid}) },
+            download: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet_in_other_space.guid}\/download) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [droplet1_json, droplet2_json]
+        )
+
+        h['admin'] = { code: 200, response_objects: [droplet1_json, droplet2_json, droplet_in_other_space_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [droplet1_json, droplet2_json, droplet_in_other_space_json] }
+        h['global_auditor'] = { code: 200, response_objects: [droplet1_json, droplet2_json, droplet_in_other_space_json] }
+
+        h['org_auditor'] = { code: 200, response_objects: [] }
+        h['org_billing_manager'] = { code: 200, response_objects: [] }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -1426,19 +1574,24 @@ RSpec.describe 'Droplets' do
         process_types: { 'web' => 'start-command' },
       )
     end
+
+    let(:metadata) do
+      {
+        labels: {
+          'release' => 'stable',
+          'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+          'delete-me' => nil,
+        },
+        annotations: {
+          'potato' => 'sieglinde',
+          'key' => ''
+        }
+      }
+    end
+
     let(:update_request) do
       {
-        metadata: {
-          labels: {
-            'release' => 'stable',
-            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
-            'delete-me' => nil,
-          },
-          annotations: {
-            'potato' => 'sieglinde',
-            'key' => ''
-          }
-        }
+        metadata: metadata
       }
     end
 
@@ -1446,54 +1599,45 @@ RSpec.describe 'Droplets' do
       og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
-    it 'updates the metadata on a droplet' do
-      patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, developer_headers
-      expect(last_response.status).to eq(200), last_response.body
-
-      og_droplet.reload
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response['metadata']).to eq(
-        'labels' => {
-          'release' => 'stable',
-          'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-        },
-        'annotations' => {
-          'potato' => 'sieglinde',
-          'key' => ''
-        }
-      )
+    context 'when the droplet does not exist' do
+      it 'returns a 404' do
+        patch '/v3/droplets/POTATO', { metadata: metadata }.to_json, developer_headers
+        expect(last_response).to have_status_code(404)
+      end
     end
+    context 'when the droplet exists' do
+      context 'when the message is invalid' do
+        let(:update_request) do
+          { metadata: 567 }
+        end
 
-    context 'when updating the image (on a docker droplet)' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
-      let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-      let(:rebased_image_reference) { 'rebased-image-reference' }
-      let!(:og_docker_droplet) do
-        VCAP::CloudController::DropletModel.make(
-          :kpack,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          app_guid: app_model.guid,
-          package_guid: package_model.guid,
-          droplet_hash: 'shalalala',
-          sha256_checksum: 'droplet-checksum-sha256',
-        )
+        it 'returns 422 and renders the errors' do
+          patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include('UnprocessableEntity')
+        end
       end
-      before do
-        og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
+
+      it 'cloud_controller returns 403 if not admin and not build_state_updater' do
+        patch "/v3/droplets/#{og_droplet.guid}", { metadata: metadata }.to_json, headers_for(make_auditor_for_space(space), user_name: user_name, email: 'bob@loblaw.com')
+        expect(last_response.status).to eq(403), last_response.body
       end
-      let(:update_request) do
-        {
-          image: rebased_image_reference
-        }
-      end
-      it 'updates the image' do
-        patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, developer_headers
+
+      it 'updates the metadata on a droplet' do
+        patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, developer_headers
         expect(last_response.status).to eq(200), last_response.body
 
-        og_docker_droplet.reload
+        og_droplet.reload
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['image']).to eq(
-          rebased_image_reference
+        expect(parsed_response['metadata']).to eq(
+          'labels' => {
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+          },
+          'annotations' => {
+            'potato' => 'sieglinde',
+            'key' => ''
+          }
         )
       end
     end
