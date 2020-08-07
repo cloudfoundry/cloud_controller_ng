@@ -16,6 +16,8 @@ module VCAP::CloudController
           'guids' => 'process-guid,process-guid2',
           'order_by' => 'created_at',
           'label_selector' => 'key=value',
+          'created_ats'        => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          'updated_ats'        => { gt: Time.now.utc.iso8601 }
         }
       end
 
@@ -32,6 +34,8 @@ module VCAP::CloudController
         expect(message.app_guids).to eq(['the-app-guid', 'the-app-guid2'])
         expect(message.guids).to eq(['process-guid', 'process-guid2'])
         expect(message.label_selector).to eq('key=value')
+        expect(message.created_ats).to match_array([iso8601, iso8601])
+        expect(message.updated_ats).to match({ gt: iso8601 })
       end
 
       it 'converts requested keys to symbols' do
@@ -46,6 +50,8 @@ module VCAP::CloudController
         expect(message.requested?(:app_guids)).to be_truthy
         expect(message.requested?(:guids)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
+        expect(message.requested?(:created_ats)).to be_truthy
+        expect(message.requested?(:updated_ats)).to be_truthy
       end
     end
 
@@ -62,11 +68,22 @@ module VCAP::CloudController
           label_selector:     'key=value',
           per_page:           5,
           order_by:           'created_at',
+          created_ats:        [Time.now.utc.iso8601, Time.now.utc.iso8601],
+          updated_ats:        { gt: Time.now.utc.iso8601 }
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:types, :app_guids, :space_guids, :organization_guids, :guids, :label_selector]
+        expected_params = [
+          :types,
+          :app_guids,
+          :space_guids,
+          :organization_guids,
+          :guids,
+          :label_selector,
+          :created_ats,
+          :updated_ats,
+        ]
         message = ProcessesListMessage.from_params(opts)
 
         expect(message.to_param_hash.keys).to match_array(expected_params)
@@ -133,6 +150,22 @@ module VCAP::CloudController
               message = ProcessesListMessage.from_params(app_guid: 'blah', space_guids: ['space1', 'space2'])
               expect(message).to_not be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
+            end
+          end
+
+          context 'validates the created_ats filter' do
+            it 'delegates to the TimestampValidator' do
+              message = EventsListMessage.from_params({ created_ats: 47 })
+              expect(message).not_to be_valid
+              expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
+            end
+          end
+
+          context 'validates the updated_ats filter' do
+            it 'delegates to the TimestampValidator' do
+              message = EventsListMessage.from_params({ updated_ats: 47 })
+              expect(message).not_to be_valid
+              expect(message.errors[:updated_ats]).to include('relational operator and timestamp must be specified')
             end
           end
         end

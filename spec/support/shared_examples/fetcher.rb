@@ -11,7 +11,7 @@ module VCAP::CloudController
       end
 
       it 'delegates filtering to the base class' do
-        expect(subject).to match_array([resource_1, resource_2])
+        expect(subject.all).to match_array([resource_1, resource_2])
       end
     end
   end
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       it 'delegates filtering to the base class' do
-        expect(subject).to match_array([resource_1, resource_2])
+        expect(subject.all).to match_array([resource_1, resource_2])
       end
     end
   end

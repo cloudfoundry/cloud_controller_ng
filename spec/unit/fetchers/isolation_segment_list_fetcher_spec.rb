@@ -30,6 +30,9 @@ module VCAP::CloudController
         expect(subject).to be_a(Sequel::Dataset)
       end
 
+      it_behaves_like 'filtering timestamps on creation', IsolationSegmentModel
+      it_behaves_like 'filtering timestamps on update', IsolationSegmentModel
+
       it 'returns all isolation segments' do
         isolation_segment_models = subject.all
 

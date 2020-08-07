@@ -12,7 +12,9 @@ module VCAP::CloudController
           'label_selector'     => 'foo=bar',
           'page'               => 1,
           'per_page'           => 5,
-          'order_by'           => 'created_at'
+          'order_by'           => 'created_at',
+          'created_ats'        => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          'updated_ats'        => { gt: Time.now.utc.iso8601 }
         }
       end
 
@@ -27,6 +29,8 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
+        expect(message.created_ats).to match_array([iso8601, iso8601])
+        expect(message.updated_ats).to match({ gt: iso8601 })
       end
 
       it 'converts requested keys to symbols' do
@@ -39,6 +43,8 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
+        expect(message.requested?(:created_ats)).to be_truthy
+        expect(message.requested?(:updated_ats)).to be_truthy
       end
     end
 
@@ -52,11 +58,20 @@ module VCAP::CloudController
             page:               1,
             per_page:           5,
             order_by:           'created_at',
+            created_ats:        [Time.now.utc.iso8601, Time.now.utc.iso8601],
+            updated_ats:        { gt: Time.now.utc.iso8601 }
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids, :label_selector]
+        expected_params = [
+          :names,
+          :guids,
+          :organization_guids,
+          :label_selector,
+          :created_ats,
+          :updated_ats,
+        ]
         expect(IsolationSegmentsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -116,6 +131,22 @@ module VCAP::CloudController
             with(message).
             and_call_original
           message.valid?
+        end
+
+        context 'validates the created_ats filter' do
+          it 'delegates to the TimestampValidator' do
+            message = EventsListMessage.from_params({ created_ats: 47 })
+            expect(message).not_to be_valid
+            expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
+          end
+        end
+
+        context 'validates the updated_ats filter' do
+          it 'delegates to the TimestampValidator' do
+            message = EventsListMessage.from_params({ updated_ats: 47 })
+            expect(message).not_to be_valid
+            expect(message.errors[:updated_ats]).to include('relational operator and timestamp must be specified')
+          end
         end
       end
     end
