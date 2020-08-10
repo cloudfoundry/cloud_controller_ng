@@ -196,8 +196,11 @@ module VCAP::CloudController
 
         def with_parameters_redacted(params)
           return params unless params.respond_to? :[]=
+          return params unless params.key?('parameters')
 
-          params.dup.tap { |p| p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN }
+          params.dup.tap do |p|
+            p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN
+          end
         end
 
         def metadata_for_broker_params(params)

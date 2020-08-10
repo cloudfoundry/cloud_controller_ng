@@ -137,9 +137,21 @@ module VCAP::CloudController
     end
 
     describe '.audit_hash' do
-      it 'produces a redacted audit hash' do
-        expected = body.dup.tap { |b| b[:credentials] = '[PRIVATE DATA HIDDEN]' }
-        expect(message.audit_hash).to match(expected.with_indifferent_access)
+      context 'when credentials are provided' do
+        it 'produces a redacted audit hash' do
+          expected = body.dup.tap { |b| b[:credentials] = '[PRIVATE DATA HIDDEN]' }
+          expect(message.audit_hash).to match(expected.with_indifferent_access)
+        end
+      end
+
+      context 'when no credentials are provided' do
+        let(:body_without_credentials) { body.without(:credentials) }
+        let(:message) { described_class.new(body_without_credentials) }
+
+        it 'should not contain a credentials param' do
+          expected = body.without(:credentials)
+          expect(message.audit_hash).to match(expected.with_indifferent_access)
+        end
       end
     end
   end
