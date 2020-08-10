@@ -31,6 +31,9 @@ module Kubernetes
       @build_kube_client.update_image(resource_config)
     rescue Kubeclient::HttpError => e
       logger.error('update_image', error: e.inspect, response: e.response, backtrace: e.backtrace)
+
+      raise ConflictError.new("Conflict on update of #{resource_name(resource_config)}") if e.error_code == 409
+
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'update', e.message)
     end
 
@@ -90,6 +93,9 @@ module Kubernetes
       @kpack_kube_client.update_custom_builder(resource_config)
     rescue Kubeclient::HttpError => e
       logger.error('update_custom_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
+
+      raise ConflictError.new("Conflict on update of #{resource_name(resource_config)}") if e.error_code == 409
+
       error = CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'update', e.message)
       error.set_backtrace(e.backtrace)
       raise error

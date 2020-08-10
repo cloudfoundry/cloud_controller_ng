@@ -79,12 +79,30 @@ RSpec.describe Kubernetes::ApiClient do
       end
 
       context 'when there is an error' do
+        let(:error) { Kubeclient::HttpError.new(422, 'foo', 'bar') }
+        let(:logger) { instance_double(Steno::Logger, error: nil) }
+        before do
+          allow(build_kube_client).to receive(:update_image).and_raise(error)
+          allow(Steno).to receive(:logger).and_return(logger)
+        end
+
         it 'raises as an ApiError' do
-          allow(build_kube_client).to receive(:update_image).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(build_kube_client).to receive(:update_image).and_raise(error)
 
           expect {
             subject.update_image(resource_config)
           }.to raise_error(CloudController::Errors::ApiError)
+        end
+
+        context 'when the error is a 409' do
+          let(:error) { Kubeclient::HttpError.new(409, 'foo', 'bar') }
+
+          it 'raises as an ApiError that includes the resource name' do
+            expect {
+              subject.update_image(resource_config)
+            }.to raise_error(Kubernetes::ApiClient::ConflictError)
+            expect(logger).to have_received(:error).with('update_image', error: /status code/, response: error.response, backtrace: error.backtrace)
+          end
         end
       end
     end
@@ -401,6 +419,47 @@ RSpec.describe Kubernetes::ApiClient do
           expect {
             subject.get_custom_builder('name', 'namespace')
           }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+    end
+
+    describe '#update_custom_builder' do
+      let(:resource_config) { { metadata: { name: 'resource-name' } } }
+      let(:response) { double(Kubeclient::Resource) }
+
+      it 'proxies call to kubernetes client with the same args' do
+        allow(kpack_kube_client).to receive(:update_custom_builder).with(resource_config)
+
+        subject.update_custom_builder(resource_config)
+
+        expect(kpack_kube_client).to have_received(:update_custom_builder).with(resource_config).once
+      end
+
+      context 'when there is an error' do
+        let(:error) { Kubeclient::HttpError.new(422, 'foo', 'bar') }
+        let(:logger) { instance_double(Steno::Logger, error: nil) }
+        before do
+          allow(kpack_kube_client).to receive(:update_custom_builder).and_raise(error)
+          allow(Steno).to receive(:logger).and_return(logger)
+        end
+
+        it 'raises as an ApiError' do
+          allow(kpack_kube_client).to receive(:update_custom_builder).and_raise(error)
+
+          expect {
+            subject.update_custom_builder(resource_config)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+
+        context 'when the error is a 409' do
+          let(:error) { Kubeclient::HttpError.new(409, 'foo', 'bar') }
+
+          it 'raises as an ApiError that includes the resource name' do
+            expect {
+              subject.update_custom_builder(resource_config)
+            }.to raise_error(Kubernetes::ApiClient::ConflictError)
+            expect(logger).to have_received(:error).with('update_custom_builder', error: /status code/, response: error.response, backtrace: error.backtrace)
+          end
         end
       end
     end
