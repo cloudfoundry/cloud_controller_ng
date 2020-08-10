@@ -951,8 +951,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'request' => {
             'name'              => instance.name,
             'service_plan_guid' => instance.service_plan.guid,
-            'space_guid'        => instance.space_guid,
-            'parameters'        => '[PRIVATE DATA HIDDEN]'
+            'space_guid'        => instance.space_guid
           }
         }
       }
@@ -976,8 +975,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         space_guid: instance.space_guid,
         metadata:   {
           'request' => {
-            'service_plan_guid' => instance.service_plan.guid,
-            'parameters'        => '[PRIVATE DATA HIDDEN]'
+            'service_plan_guid' => instance.service_plan.guid
           }
         }
       }
@@ -998,9 +996,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_name: instance.name,
         space_guid: instance.space_guid,
         metadata:   {
-          'request' => {
-            'parameters' => '[PRIVATE DATA HIDDEN]'
-          }
+          'request' => {}
         }
       }
     end
@@ -1024,8 +1020,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         space_guid: instance.space_guid,
         metadata:   {
           'request' => {
-            'route_guid' => route.guid,
-            'parameters' => '[PRIVATE DATA HIDDEN]'
+            'route_guid' => route.guid
           }
         }
       }
@@ -1050,8 +1045,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         space_guid: instance.space_guid,
         metadata:   {
           'request' => {
-            'route_guid' => route.guid,
-            'parameters' => '[PRIVATE DATA HIDDEN]'
+            'route_guid' => route.guid
           }
         }
       }

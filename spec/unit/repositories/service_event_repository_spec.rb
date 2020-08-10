@@ -470,23 +470,34 @@ module VCAP::CloudController
           expect(event.metadata['request'].reject { |key, _value| key == 'parameters' }).to eq(params)
         end
 
-        it 'redacts the arbitrary user parameters' do
-          repository.record_service_instance_event(:create, instance, {
-            'parameters' => {
-              'favorite_dog' => 'chihuahua',
-              'username' => 'my-secret-username',
-              'password' => 'my-secret-password'
-            }
-          })
-
-          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
-          expect(event.metadata['request']['parameters']).to eq('[PRIVATE DATA HIDDEN]')
-        end
-
         it 'allows parameters to not be hashy' do
           expect {
             repository.record_service_instance_event(:create, instance, 5)
           }.not_to raise_error
+        end
+
+        context 'when there are params' do
+          it 'redacts the arbitrary user parameters' do
+            repository.record_service_instance_event(:create, instance, {
+              'parameters' => {
+                'favorite_dog' => 'chihuahua',
+                'username' => 'my-secret-username',
+                'password' => 'my-secret-password'
+              }
+            })
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+            expect(event.metadata['request']['parameters']).to eq('[PRIVATE DATA HIDDEN]')
+          end
+        end
+
+        context 'when there are no params' do
+          it 'does not redact anything' do
+            repository.record_service_instance_event(:create, instance, {})
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+            expect(event.metadata['request']).not_to have_key('parameters')
+          end
         end
       end
 

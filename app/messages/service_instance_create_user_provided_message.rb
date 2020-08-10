@@ -26,7 +26,11 @@ module VCAP::CloudController
     end
 
     def audit_hash
-      super.tap { |h| h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
+      super.tap do |h|
+        if h['credentials'].present?
+          h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
+        end
+      end
     end
 
     private
