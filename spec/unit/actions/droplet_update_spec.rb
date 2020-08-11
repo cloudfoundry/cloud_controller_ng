@@ -100,10 +100,11 @@ module VCAP::CloudController
           before do
             docker_droplet.update(state: VCAP::CloudController::DropletModel::STAGING_STATE)
           end
+
           it 'returns an error saying that a droplet update cannot occur during staging' do
             expect(message).to be_valid
             expect { droplet_update.update(docker_droplet, message)
-            }.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image cannot be updated during staging')
+            }.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image can only be updated on staged droplets')
           end
         end
       end

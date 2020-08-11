@@ -8,7 +8,7 @@ module VCAP::CloudController
         droplet.lock!
 
         if message.requested?(:image)
-          raise InvalidDroplet.new('Droplet image cannot be updated during staging') if droplet.staging?
+          raise InvalidDroplet.new('Droplet image can only be updated on staged droplets') unless droplet.staged?
           raise InvalidDroplet.new('Images can only be updated for docker droplets') unless droplet.docker?
 
           droplet.docker_receipt_image = message.image

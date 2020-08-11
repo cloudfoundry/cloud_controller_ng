@@ -157,18 +157,6 @@ module VCAP::CloudController
 
     private
 
-    def entering_staged?
-      column_changed?(:state) && self.state == STAGED_STATE
-    end
-
-    def entering_failed?
-      column_changed?(:state) && self.state == FAILED_STATE
-    end
-
-    def exiting_processing_upload?
-      column_changed?(:state) && initial_value(:state) == PROCESSING_UPLOAD_STATE
-    end
-
     def app_usage_event_repository
       @app_usage_event_repository ||= Repositories::AppUsageEventRepository.new
     end
