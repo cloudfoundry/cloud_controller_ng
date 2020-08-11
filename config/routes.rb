@@ -217,15 +217,15 @@ Rails.application.routes.draw do
   # service_instances
   get '/service_instances', to: 'service_instances_v3#index'
   get '/service_instances/:guid', to: 'service_instances_v3#show'
-  get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
+  get '/service_instances/:guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
   get '/service_instances/:guid/relationships/shared_spaces/usage_summary', to: 'service_instances_v3#shared_spaces_usage_summary'
   get '/service_instances/:guid/credentials', to: 'service_instances_v3#credentials'
   get '/service_instances/:guid/parameters', to: 'service_instances_v3#parameters'
   post '/service_instances', to: 'service_instances_v3#create'
-  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
+  post '/service_instances/:guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
   patch '/service_instances/:guid', to: 'service_instances_v3#update'
   delete '/service_instances/:guid', to: 'service_instances_v3#destroy'
-  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
+  delete '/service_instances/:guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'

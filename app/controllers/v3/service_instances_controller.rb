@@ -126,19 +126,18 @@ class ServiceInstancesV3Controller < ApplicationController
   def share_service_instance
     FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
 
-    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
-
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    spaces = Space.where(guid: message.guids)
-    check_spaces_exist_and_are_writeable!(service_instance, message.guids, spaces)
+    target_spaces = Space.where(guid: message.guids)
+    check_spaces_exist_and_are_writeable!(service_instance, message.guids, target_spaces)
 
     share = ServiceInstanceShare.new
-    share.create(service_instance, spaces, user_audit_info)
+    share.create(service_instance, target_spaces, user_audit_info)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
@@ -147,7 +146,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unshare_service_instance
-    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
@@ -168,7 +167,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def relationships_shared_spaces
-    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
 
     message = SharedSpacesShowMessage.from_params(query_params)
