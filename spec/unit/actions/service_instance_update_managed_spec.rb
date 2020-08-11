@@ -341,6 +341,7 @@ module VCAP::CloudController
               to have_received(:new).with(
                 service_instance.guid,
                 message: instance_of(ServiceInstanceUpdateManagedMessage),
+                request_attr: message.audit_hash,
                 user_audit_info: instance_of(UserAuditInfo)
               )
           end

@@ -90,6 +90,7 @@ module VCAP::CloudController
         update_job = V3::UpdateServiceInstanceJob.new(
           service_instance.guid,
           message: message,
+          request_attr: message.audit_hash,
           user_audit_info: user_audit_info
         )
         pollable_job = Jobs::Enqueuer.new(update_job, queue: Jobs::Queues.generic).enqueue_pollable

@@ -3,10 +3,16 @@ require 'jobs/v3/service_instance_async_job'
 module VCAP::CloudController
   module V3
     class UpdateServiceInstanceJob < ServiceInstanceAsyncJob
-      def initialize(service_instance_guid, user_audit_info:, message:)
+      def initialize(
+        service_instance_guid,
+        user_audit_info:,
+        message:,
+        request_attr: {}
+      )
         super(service_instance_guid, user_audit_info)
         @message = message
         @update_response = {}
+        @request_attr = request_attr
       end
 
       def operation
