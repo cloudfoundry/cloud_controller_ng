@@ -1,5 +1,6 @@
 require 'messages/base_message'
 require 'messages/validators/metadata_validator'
+require 'utils/hash_utils'
 
 module VCAP::CloudController
   class MetadataBaseMessage < BaseMessage

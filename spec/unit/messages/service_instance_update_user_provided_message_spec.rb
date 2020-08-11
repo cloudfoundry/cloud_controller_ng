@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/service_instance_update_user_provided_message'
 
 module VCAP::CloudController
@@ -99,9 +99,21 @@ module VCAP::CloudController
     end
 
     describe '.audit_hash' do
-      it 'produces a redacted audit hash' do
-        expected = body.dup.tap { |b| b[:credentials] = '[PRIVATE DATA HIDDEN]' }
-        expect(message.audit_hash).to match(expected.with_indifferent_access)
+      context 'when credentials are passed in' do
+        it 'produces a redacted audit hash' do
+          expected = body.dup.tap { |b| b[:credentials] = '[PRIVATE DATA HIDDEN]' }
+          expect(message.audit_hash).to match(expected.with_indifferent_access)
+        end
+      end
+
+      context 'when no credentials are passed in' do
+        let(:body_without_credentials) { body.without(:credentials) }
+        let(:message) { described_class.new(body_without_credentials) }
+
+        it 'does not add a redacted credentials key' do
+          expected = body.without(:credentials)
+          expect(message.audit_hash).to match(expected.with_indifferent_access)
+        end
       end
     end
   end

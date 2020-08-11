@@ -25,14 +25,6 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
-    def audit_hash
-      super.tap do |h|
-        if h['credentials'].present?
-          h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
-        end
-      end
-    end
-
     private
 
     def route_service_url_must_be_https
