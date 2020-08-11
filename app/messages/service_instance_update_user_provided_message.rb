@@ -1,7 +1,7 @@
-require 'messages/metadata_base_message'
+require 'messages/service_instance_message'
 
 module VCAP::CloudController
-  class ServiceInstanceUpdateUserProvidedMessage < MetadataBaseMessage
+  class ServiceInstanceUpdateUserProvidedMessage < ServiceInstanceMessage
     register_allowed_keys [
       :name,
       :tags,
@@ -20,10 +20,6 @@ module VCAP::CloudController
 
     validate :tags_must_be_strings
     validate :route_service_url_must_be_https
-
-    def audit_hash
-      super.tap { |h| h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
-    end
 
     private
 

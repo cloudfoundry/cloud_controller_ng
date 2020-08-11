@@ -1,9 +1,9 @@
-require 'messages/metadata_base_message'
+require 'messages/service_instance_message'
 require 'presenters/helpers/censorship'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
-  class ServiceInstanceCreateMessage < MetadataBaseMessage
+  class ServiceInstanceCreateMessage < ServiceInstanceMessage
     register_allowed_keys [
       :type,
       :relationships,
