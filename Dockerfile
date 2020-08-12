@@ -3,7 +3,6 @@ WORKDIR /cloud_controller_ng
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV BUNDLE_GEMFILE /cloud_controller_ng/Gemfile
-ENV CLOUD_CONTROLLER_NG_CONFIG /config/cloud_controller_ng.yml
 ENV C_INCLUDE_PATH /libpq/include
 ENV DYNO #{spec.job.name}-#{spec.index}
 ENV LANG en_US.UTF-8
@@ -52,4 +51,4 @@ RUN gem install bundler -v 1.17.3 && \
 
 COPY . .
 
-ENTRYPOINT ["/cloud_controller_ng/bin/cloud_controller", "-c", "/config/cloud_controller_ng.yml"]
+ENTRYPOINT ["/cloud_controller_ng/bin/cloud_controller"]
