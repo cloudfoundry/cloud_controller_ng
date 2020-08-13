@@ -18,7 +18,7 @@ RSpec.describe 'v3 service credential bindings' do
         operate_on(binding)
       end
     end
-    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second) }
+    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
 
     describe 'permissions' do
       let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings', nil, user_headers } }
@@ -61,6 +61,97 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'pagination' do
+      let(:resources) { [key_binding, other_key_binding, app_binding, other_app_binding] }
+
+      it_behaves_like 'paginated response', '/v3/service_credential_bindings'
+    end
+
+    describe 'filters' do
+      before do
+        some_instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+        VCAP::CloudController::ServiceKey.make(service_instance: some_instance)
+        VCAP::CloudController::ServiceBinding.make(service_instance: some_instance)
+
+        get '/v3/service_credential_bindings', nil, admin_headers
+        expect(parsed_response['resources']).to have(6).items
+      end
+
+      describe 'service instance names' do
+        it 'returns empty when there is no match' do
+          get '/v3/service_credential_bindings?service_instance_names=fake-name', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources']).to be_empty
+        end
+
+        it 'returns the filtered bindings' do
+          get "/v3/service_credential_bindings?service_instance_names=#{instance.name},#{other_instance.name}", nil, admin_headers
+          check_filtered_bindings(
+            expected_json(key_binding),
+            expected_json(other_key_binding),
+            expected_json(app_binding),
+            expected_json(other_app_binding)
+          )
+        end
+      end
+
+      describe 'service instance guids' do
+        it 'returns empty when there is no match' do
+          get '/v3/service_credential_bindings?service_instance_guids=fake-guid', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources']).to be_empty
+        end
+
+        it 'returns the filtered bindings' do
+          get "/v3/service_credential_bindings?service_instance_guids=#{instance.guid},#{other_instance.guid}", nil, admin_headers
+          check_filtered_bindings(
+            expected_json(key_binding),
+            expected_json(other_key_binding),
+            expected_json(app_binding),
+            expected_json(other_app_binding)
+          )
+        end
+      end
+
+      describe 'names' do
+        it 'returns empty when there is no match' do
+          get '/v3/service_credential_bindings?names=fake-name', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources']).to be_empty
+        end
+
+        it 'returns the filtered bindings' do
+          get "/v3/service_credential_bindings?names=#{key_binding.name},#{other_app_binding.name}", nil, admin_headers
+          check_filtered_bindings(
+            expected_json(key_binding),
+            expected_json(other_app_binding)
+          )
+        end
+      end
+
+      def check_filtered_bindings(*bindings)
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].length).to be(bindings.length)
+        expect({ resources: parsed_response['resources'] }).to match_json_response(
+          { resources: bindings }
+        )
+      end
+    end
+
+    describe 'unknown filter' do
+      let(:valid_query_params) { "'page', 'per_page', 'order_by', 'names', 'service_instance_guids', 'service_instance_names'" }
+
+      it 'returns an error' do
+        get '/v3/service_credential_bindings?fruits=avocado,guava', nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: #{valid_query_params}",
+          'title' => 'CF-BadQueryParameter',
+          'code' => 10005,
+        }))
+      end
     end
   end
 
