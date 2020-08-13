@@ -50,15 +50,7 @@ module VCAP
 
           it 'can filter by service instance name' do
             allow(message).to receive(:requested?).with(:service_instance_names).and_return(true)
-            allow(message).to receive(:service_instance_names).and_return(instance.name)
-
-            bindings = fetcher.fetch(space_guids: :all, message: message).all
-            expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
-          end
-
-          it 'can filter by binding name' do
-            allow(message).to receive(:requested?).with(:names).and_return(true)
-            allow(message).to receive(:names).and_return([key_binding.name, app_binding.name])
+            allow(message).to receive(:service_instance_names).and_return([instance.name])
 
             bindings = fetcher.fetch(space_guids: :all, message: message).all
             expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
@@ -66,7 +58,31 @@ module VCAP
 
           it 'can filter by service instance guid' do
             allow(message).to receive(:requested?).with(:service_instance_guids).and_return(true)
-            allow(message).to receive(:service_instance_guids).and_return(instance.guid)
+            allow(message).to receive(:service_instance_guids).and_return([instance.guid])
+
+            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
+          end
+
+          it 'can filter by app name' do
+            allow(message).to receive(:requested?).with(:app_names).and_return(true)
+            allow(message).to receive(:app_names).and_return([app_binding.app.name, 'some-other-name'])
+
+            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid)
+          end
+
+          it 'can filter by app guid' do
+            allow(message).to receive(:requested?).with(:app_guids).and_return(true)
+            allow(message).to receive(:app_guids).and_return([app_binding.app.guid, 'some-other-guid'])
+
+            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid)
+          end
+
+          it 'can filter by binding name' do
+            allow(message).to receive(:requested?).with(:names).and_return(true)
+            allow(message).to receive(:names).and_return([key_binding.name, app_binding.name])
 
             bindings = fetcher.fetch(space_guids: :all, message: message).all
             expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
@@ -79,8 +95,8 @@ module VCAP
 
           it 'returns empty if there is no match' do
             allow(message).to receive(:requested?).with(:service_instance_guids).and_return(true)
-            allow(message).to receive(:service_instance_guids).and_return('fake-guid')
-            allow(message).to receive(:service_instance_names).and_return('fake-name')
+            allow(message).to receive(:service_instance_guids).and_return(['fake-guid'])
+            allow(message).to receive(:service_instance_names).and_return(['fake-name'])
 
             bindings = fetcher.fetch(space_guids: :all, message: message).all
             expect(bindings).to be_empty
@@ -90,7 +106,7 @@ module VCAP
             allow(message).to receive(:requested?).with(:names).and_return(true)
             allow(message).to receive(:requested?).with(:service_instance_guids).and_return(true)
             allow(message).to receive(:names).and_return([key_binding.name, another_binding.name])
-            allow(message).to receive(:service_instance_guids).and_return(another_instance.guid)
+            allow(message).to receive(:service_instance_guids).and_return([another_instance.guid])
 
             bindings = fetcher.fetch(space_guids: :all, message: message).all
             expect(bindings.map(&:guid)).to contain_exactly(another_binding.guid)

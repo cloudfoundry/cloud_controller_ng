@@ -12,7 +12,9 @@ module VCAP::CloudController
         'order_by'  => 'created_at',
         'service_instance_guids' => 'service-instance-1-guid, service-instance-2-guid,service-instance-3-guid',
         'service_instance_names' => 'service-instance-1-name, service-instance-2-name,service-instance-3-name',
-        'names' => 'name1, name2'
+        'names' => 'name1, name2',
+        'app_guids' => 'app-1-guid, app-2-guid,app-3-guid',
+        'app_names' => 'app-1-name, app-2-name,app-3-name'
       }
     end
 
@@ -25,6 +27,8 @@ module VCAP::CloudController
         expect(message.service_instance_guids).to match_array(['service-instance-1-guid', 'service-instance-2-guid', 'service-instance-3-guid'])
         expect(message.service_instance_names).to match_array(['service-instance-1-name', 'service-instance-2-name', 'service-instance-3-name'])
         expect(message.names).to match_array(['name1', 'name2'])
+        expect(message.app_guids).to match_array(['app-1-guid', 'app-2-guid', 'app-3-guid'])
+        expect(message.app_names).to match_array(['app-1-name', 'app-2-name', 'app-3-name'])
       end
 
       it 'converts requested keys to symbols' do
@@ -34,6 +38,8 @@ module VCAP::CloudController
         expect(message.requested?(:service_instance_guids)).to be_truthy
         expect(message.requested?(:service_instance_names)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
+        expect(message.requested?(:app_guids)).to be_truthy
+        expect(message.requested?(:app_names)).to be_truthy
       end
     end
 

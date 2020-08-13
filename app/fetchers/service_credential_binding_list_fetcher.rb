@@ -25,7 +25,7 @@ module VCAP
       end
 
       def filters_from_message(message)
-        %w{service_instance_name service_instance_guid name}.map do |field|
+        %w{service_instance_name service_instance_guid name app_name app_guid}.map do |field|
           filter = field.pluralize.to_sym
           if message.requested?(filter)
             (Sequel[field.to_sym] =~ message.public_send(filter))

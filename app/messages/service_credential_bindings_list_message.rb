@@ -6,12 +6,14 @@ module VCAP::CloudController
       :names,
       :service_instance_guids,
       :service_instance_names,
+      :app_guids,
+      :app_names,
     ]
 
     validates_with NoAdditionalParamsValidator
 
     def self.from_params(params)
-      super(params, %w(names service_instance_guids service_instance_names))
+      super(params, %w(names service_instance_guids service_instance_names app_guids app_names))
     end
   end
 end

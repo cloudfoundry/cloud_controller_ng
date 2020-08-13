@@ -17,6 +17,7 @@ module VCAP
         Sequel.as(:service_instances__guid, :service_instance_guid),
         Sequel.as(:service_instances__name, :service_instance_name),
         Sequel.as(nil, :app_guid),
+        Sequel.as(nil, :app_name),
         Sequel.as(:service_keys__service_instance_id, :service_instance_id)
       ).join(
         :service_instances, id: Sequel[:service_keys][:service_instance_id]
@@ -35,6 +36,7 @@ module VCAP
         Sequel.as(:service_bindings__service_instance_guid, :service_instance_guid),
         Sequel.as(:service_instances__name, :service_instance_name),
         Sequel.as(:service_bindings__app_guid, :app_guid),
+        Sequel.as(:apps__name, :app_name),
         Sequel.as(nil, :service_instance_id)
       ).join(
         :apps, guid: Sequel[:service_bindings][:app_guid]
