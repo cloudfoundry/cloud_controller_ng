@@ -70,11 +70,11 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'filters' do
-      before do
-        some_instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-        VCAP::CloudController::ServiceKey.make(service_instance: some_instance)
-        VCAP::CloudController::ServiceBinding.make(service_instance: some_instance)
+      let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
+      let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
 
+      before do
         get '/v3/service_credential_bindings', nil, admin_headers
         expect(parsed_response['resources']).to have(6).items
       end
@@ -163,6 +163,42 @@ RSpec.describe 'v3 service credential bindings' do
         end
       end
 
+      describe 'type' do
+        it 'returns empty when there is no match' do
+          another_key.destroy
+          other_key_binding.destroy
+          key_binding.destroy
+
+          get '/v3/service_credential_bindings?type=key', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources']).to be_empty
+        end
+
+        it 'errors for unknown type' do
+          get '/v3/service_credential_bindings?type=route', nil, admin_headers
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => "The query parameter is invalid: Type must be one of 'app', 'key'"
+          }))
+        end
+
+        it 'returns the filtered bindings' do
+          get '/v3/service_credential_bindings?type=key', nil, admin_headers
+          check_filtered_bindings(
+            expected_json(key_binding),
+            expected_json(other_key_binding),
+            expected_json(another_key)
+          )
+
+          get '/v3/service_credential_bindings?type=app', nil, admin_headers
+          check_filtered_bindings(
+            expected_json(app_binding),
+            expected_json(other_app_binding),
+            expected_json(another_binding)
+          )
+        end
+      end
+
       def check_filtered_bindings(*bindings)
         expect(last_response).to have_status_code(200)
         expect(parsed_response['resources'].length).to be(bindings.length)
@@ -177,7 +213,8 @@ RSpec.describe 'v3 service credential bindings' do
         'page', 'per_page', 'order_by',
         'names',
         'service_instance_guids', 'service_instance_names',
-        'app_guids', 'app_names'
+        'app_guids', 'app_names',
+        'type'
       ]
       }
 

@@ -88,6 +88,17 @@ module VCAP
             expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
           end
 
+          it 'can filter by type' do
+            allow(message).to receive(:requested?).with(:type).and_return(true)
+            allow(message).to receive(:type).and_return('app', 'key')
+
+            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, another_binding.guid)
+
+            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, another_key.guid)
+          end
+
           it 'returns all if no filter is passed' do
             bindings = fetcher.fetch(space_guids: :all, message: message).all
             expect(bindings.count).to eq(4)

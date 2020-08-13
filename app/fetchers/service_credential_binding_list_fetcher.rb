@@ -25,12 +25,21 @@ module VCAP
       end
 
       def filters_from_message(message)
-        %w{service_instance_name service_instance_guid name app_name app_guid}.map do |field|
-          filter = field.pluralize.to_sym
-          if message.requested?(filter)
-            (Sequel[field.to_sym] =~ message.public_send(filter))
+        [].tap do |arr|
+          %w{service_instance_name service_instance_guid name app_name app_guid}.each do |field|
+            arr = append_filter(arr, message, field, field.pluralize.to_sym)
           end
-        end.compact
+
+          %w{type}.each do |field|
+            arr = append_filter(arr, message, field, field.to_sym)
+          end
+        end
+      end
+
+      def append_filter(arr, message, field, filter)
+        return arr unless message.requested?(filter)
+
+        arr << (Sequel[field.to_sym] =~ message.public_send(filter))
       end
     end
   end

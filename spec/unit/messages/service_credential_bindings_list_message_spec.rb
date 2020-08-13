@@ -10,11 +10,12 @@ module VCAP::CloudController
         'page'      => 1,
         'per_page'  => 5,
         'order_by'  => 'created_at',
-        'service_instance_guids' => 'service-instance-1-guid, service-instance-2-guid,service-instance-3-guid',
-        'service_instance_names' => 'service-instance-1-name, service-instance-2-name,service-instance-3-name',
+        'service_instance_guids' => 'service-instance-1-guid, service-instance-2-guid, service-instance-3-guid',
+        'service_instance_names' => 'service-instance-1-name, service-instance-2-name, service-instance-3-name',
         'names' => 'name1, name2',
-        'app_guids' => 'app-1-guid, app-2-guid,app-3-guid',
-        'app_names' => 'app-1-name, app-2-name,app-3-name'
+        'app_guids' => 'app-1-guid, app-2-guid, app-3-guid',
+        'app_names' => 'app-1-name, app-2-name, app-3-name',
+        'type' => 'app'
       }
     end
 
@@ -29,6 +30,7 @@ module VCAP::CloudController
         expect(message.names).to match_array(['name1', 'name2'])
         expect(message.app_guids).to match_array(['app-1-guid', 'app-2-guid', 'app-3-guid'])
         expect(message.app_names).to match_array(['app-1-name', 'app-2-name', 'app-3-name'])
+        expect(message.type).to eq('app')
       end
 
       it 'converts requested keys to symbols' do
@@ -40,6 +42,7 @@ module VCAP::CloudController
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:app_guids)).to be_truthy
         expect(message.requested?(:app_names)).to be_truthy
+        expect(message.requested?(:type)).to be_truthy
       end
     end
 
@@ -58,6 +61,17 @@ module VCAP::CloudController
         message = described_class.from_params({ foobar: 'pants' })
         expect(message).not_to be_valid
         expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
+      end
+
+      it 'returns true for valid types' do
+        expect(described_class.from_params({ type: 'app' })).to be_valid
+        expect(described_class.from_params({ type: 'key' })).to be_valid
+      end
+
+      it 'returns false for invalid types' do
+        message = described_class.from_params({ type: 'route' })
+        expect(message).not_to be_valid
+        expect(message.errors[:type]).to include("must be one of 'app', 'key'")
       end
     end
   end
