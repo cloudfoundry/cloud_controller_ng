@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'json', '>= 2.3.0'
-gem 'middleman', '>= 3.4.1'
+gem 'middleman', '>= 4.3.8'
 gem 'middleman-autoprefixer', '>= 2.6.1'
 gem 'middleman-gh-pages', '>= 0.0.3'
 gem 'middleman-livereload', '>= 3.4.6'
