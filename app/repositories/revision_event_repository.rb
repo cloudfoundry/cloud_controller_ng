@@ -22,6 +22,26 @@ module VCAP::CloudController
           organization_guid: app.space.organization_guid,
         )
       end
+
+      def self.record_show_environment_variables(revision, app, user_audit_info)
+        Event.create(
+          type:              'audit.app.revision.environment_variables.show',
+          actor:             user_audit_info.user_guid,
+          actor_type:        'user',
+          actor_name:        user_audit_info.user_email,
+          actor_username:    user_audit_info.user_name,
+          actee:             app.guid,
+          actee_type:        'app',
+          actee_name:        app.name,
+          timestamp:         Sequel::CURRENT_TIMESTAMP,
+          metadata:          {
+            revision_guid: revision.guid,
+            revision_version: revision.version
+          },
+          space_guid:        app.space_guid,
+          organization_guid: app.space.organization_guid,
+        )
+      end
     end
   end
 end
