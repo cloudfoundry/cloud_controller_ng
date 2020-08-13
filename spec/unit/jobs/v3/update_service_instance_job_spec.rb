@@ -19,8 +19,10 @@ module VCAP
             public: true
           )
         }
+        let(:original_name) { 'old name' }
         let(:service_instance) do
           si = ManagedServiceInstance.make(
+            name: original_name,
             service_plan: service_plan,
             space: space,
             maintenance_info: { version: '2.0.0' }
@@ -64,6 +66,10 @@ module VCAP
         let(:update_response) { { some_key: 'some value' } }
         let(:client) { double('BrokerClient', update: update_response) }
 
+        before do
+          VCAP::Services::ServiceClientProvider.stub(:provide) { client }
+        end
+
         describe '#operation' do
           it 'returns "update"' do
             expect(subject.operation).to eq(:update)
@@ -76,17 +82,12 @@ module VCAP
           end
         end
 
-        describe '#send_broker_request' do
-          it 'returns the client response' do
-            response = subject.send_broker_request(client)
-            expect(response).to eq({ some_key: 'some value' })
-          end
-
+        describe 'broker interactions' do
           context 'when paramaters are changing' do
             let(:arbitrary_parameters) { { some_data: 'some_value' } }
 
             it 'calls the broker client with the right arguments' do
-              subject.send_broker_request(client)
+              subject.perform
 
               expect(client).to have_received(:update).with(
                 service_instance,
@@ -107,7 +108,7 @@ module VCAP
               })
             }
             it 'calls the broker client with the right arguments' do
-              subject.send_broker_request(client)
+              subject.perform
 
               expect(client).to have_received(:update).with(
                 service_instance,
@@ -142,7 +143,7 @@ module VCAP
             }
 
             it 'calls the broker client with the right arguments' do
-              subject.send_broker_request(client)
+              subject.perform
 
               expect(client).to have_received(:update).with(
                 service_instance,
@@ -164,7 +165,7 @@ module VCAP
             }
 
             it 'calls the broker client with the right arguments' do
-              subject.send_broker_request(client)
+              subject.perform
 
               expect(client).to have_received(:update).with(
                 service_instance,
@@ -184,8 +185,9 @@ module VCAP
                 relationships: { service_plan: { data: { guid: 'fake-plan' } } } }
               )
             }
+
             it 'raises an error' do
-              expect { subject.send_broker_request(client) }.to raise_error(
+              expect { subject.perform }.to raise_error(
                 ::CloudController::Errors::ApiError,
                 /The service plan could not be found/
               )
@@ -193,7 +195,7 @@ module VCAP
           end
         end
 
-        describe '#operation_succeeded' do
+        describe 'when operation is successful' do
           let(:message) {
             ServiceInstanceUpdateManagedMessage.new({
               tags: %w(foo bar),
@@ -202,17 +204,25 @@ module VCAP
             })
           }
 
+          let(:update_response) do
+            {
+              last_operation: { state: 'succeeded', type: :update }
+            }
+          end
+
           before do
-            subject.send_broker_request(client)
-            subject.operation_succeeded
+            subject.perform
             service_instance.reload
           end
 
           context 'when dashboard url changed' do
             let(:new_dashboard_url) { 'https://example.com/new-dashboard' }
-            let(:update_response) {
-              { dashboard_url: new_dashboard_url }
-            }
+            let(:update_response) do
+              {
+                dashboard_url: new_dashboard_url,
+                last_operation: { state: 'succeeded', type: :update }
+              }
+            end
 
             it 'updates the service instance dashboard url' do
               expect(service_instance.dashboard_url).to eq(new_dashboard_url)
@@ -269,6 +279,11 @@ module VCAP
               { prefix: nil, key: 'baz', value: 'quz' },
               { prefix: 'pre.fix', key: 'fox', value: 'bushy' }
             ])
+          end
+
+          it 'logs an audit event with the original service instance as the target' do
+            last_audit_event = Event.find(type: 'audit.service_instance.update')
+            expect(last_audit_event.target_name).to eql(original_name)
           end
         end
       end

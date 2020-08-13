@@ -22,9 +22,10 @@ module VCAP::CloudController
       updates[:tags] = message.tags if message.requested?(:tags)
 
       service_instance.db.transaction do
+        original_service_instance = service_instance.dup
         service_instance.update(updates)
         MetadataUpdate.update(service_instance, message)
-        service_event_repository.record_user_provided_service_instance_event(:update, service_instance, message.audit_hash)
+        service_event_repository.record_user_provided_service_instance_event(:update, original_service_instance, message.audit_hash)
       end
       logger.info("Finished updating user-provided service_instance #{service_instance.guid}")
       service_instance

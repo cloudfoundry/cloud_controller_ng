@@ -28,8 +28,9 @@ module VCAP::CloudController
           lock.asynchronous_unlock!
           return nil, job
         else
+          original_service_instance = service_instance.dup
           si = updater.update_sync
-          service_event_repository.record_service_instance_event(:update, service_instance, message.audit_hash)
+          service_event_repository.record_service_instance_event(:update, original_service_instance, message.audit_hash)
           lock.synchronous_unlock!
           return si, nil
         end

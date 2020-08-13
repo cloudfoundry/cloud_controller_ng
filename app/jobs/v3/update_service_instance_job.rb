@@ -23,6 +23,8 @@ module VCAP::CloudController
         'update'
       end
 
+      private
+
       def send_broker_request(client)
         @update_response, err = client.update(
           service_instance,
@@ -50,8 +52,6 @@ module VCAP::CloudController
           MetadataUpdate.update(service_instance, message)
         end
       end
-
-      private
 
       attr_reader :message
 
