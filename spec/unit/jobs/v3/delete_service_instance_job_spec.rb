@@ -16,18 +16,15 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
       let(:subject) { described_class.new(service_instance.guid, user_audit_info) }
       let(:logger) { instance_double(Steno::Logger, error: nil, info: nil, warn: nil) }
+      let(:client) { double('BrokerClient', deprovision: deprovision_response) }
+      let(:deprovision_response) { { instance: {}, last_operation: {} } }
 
       before do
         allow(Steno).to receive(:logger).and_return(logger)
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
       end
 
       describe '#perform' do
-        let(:client) { double('BrokerClient', deprovision: { instance: {}, last_operation: {} }) }
-
-        before do
-          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        end
-
         context 'when the client succeeds' do
           let(:r) do
             VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: '204', body: 'all good')
@@ -35,11 +32,11 @@ module VCAP::CloudController
 
           before do
             allow(client).to receive(:deprovision).and_return(r)
+
+            subject.perform
           end
 
           it 'the pollable job state is set to polling' do
-            subject.perform
-
             expect(subject.pollable_job_state).to eq(PollableJobModel::POLLING_STATE)
           end
         end
@@ -241,10 +238,26 @@ module VCAP::CloudController
       end
 
       describe '#operation_succeeded' do
+        let(:deprovision_response) do
+          {
+            last_operation: { state: 'succeeded', type: 'delete' }
+          }
+        end
+
         it 'deletes the service instance from the db' do
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).not_to be_nil
-          subject.operation_succeeded
+          subject.perform
           expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
+        end
+
+        it 'logs an audit event with null request body' do
+          subject.perform
+
+          last_audit_event = Event.find(type: 'audit.service_instance.delete')
+          expect(last_audit_event.metadata).to have_key('request')
+
+          request = last_audit_event.metadata['request']
+          expect(request).to eql(nil)
         end
       end
 

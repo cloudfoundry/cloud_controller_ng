@@ -470,6 +470,15 @@ module VCAP::CloudController
           expect(event.metadata['request'].reject { |key, _value| key == 'parameters' }).to eq(params)
         end
 
+        it 'allows no params' do
+          repository.record_service_instance_event(:create, instance)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+
+          expect(event.metadata.keys).to eq(['request'])
+          expect(event.metadata['request']).to eql(nil)
+        end
+
         it 'allows parameters to not be hashy' do
           expect {
             repository.record_service_instance_event(:create, instance, 5)
@@ -524,6 +533,15 @@ module VCAP::CloudController
           expect(event.actee_name).to eq instance.name
           expect(event.space_guid).to eq instance.space.guid
           expect(event.metadata).to eq('request' => params)
+        end
+
+        it 'allows no params' do
+          repository.record_user_provided_service_instance_event(:create, instance)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.create')
+
+          expect(event.metadata.keys).to eq(['request'])
+          expect(event.metadata['request']).to eql(nil)
         end
 
         context 'when the params contain credentials' do

@@ -112,31 +112,26 @@ module VCAP::CloudController
           create_event("audit.service_broker.#{type}", user_actor, actee, metadata)
         end
 
-        def record_service_instance_event(type, service_instance, params)
-          actee = {
-            actee:      service_instance.guid,
-            actee_type: 'service_instance',
-            actee_name: service_instance.name,
-          }
-          space_data = { space: service_instance.space }
+        def record_service_instance_event(event, service_instance, params=nil)
+          metadata = { request: with_parameters_redacted(params) }
 
-          create_event("audit.service_instance.#{type}", user_actor, actee, { request: with_parameters_redacted(params) }, space_data)
+          create_service_instance_event(
+            'service_instance',
+            event,
+            service_instance,
+            metadata
+          )
         end
 
-        def record_user_provided_service_instance_event(type, service_instance, params)
-          actee = {
-            actee:      service_instance.guid,
-            actee_type: 'user_provided_service_instance',
-            actee_name: service_instance.name,
-          }
+        def record_user_provided_service_instance_event(event, service_instance, params=nil)
+          metadata = { request: with_credentials_redacted(params) }
 
-          metadata = { request: params.dup }
-          if params.key?('credentials')
-            metadata[:request]['credentials'] = Presenters::Censorship::REDACTED
-          end
-
-          space_data = { space: service_instance.space }
-          create_event("audit.user_provided_service_instance.#{type}", user_actor, actee, metadata, space_data)
+          create_service_instance_event(
+            'user_provided_service_instance',
+            event,
+            service_instance,
+            metadata
+          )
         end
 
         def record_service_key_event(type, service_key, params=nil)
@@ -194,12 +189,24 @@ module VCAP::CloudController
 
         attr_reader :user_audit_info
 
-        def with_parameters_redacted(params)
+        def with_parameters_redacted(request_data)
+          redact(request_data, for_key: 'parameters', with: Presenters::Censorship::PRIVATE_DATA_HIDDEN)
+        end
+
+        def with_credentials_redacted(request_data)
+          redact(request_data, for_key: 'credentials', with: Presenters::Censorship::REDACTED)
+        end
+
+        def redact(
+          params,
+          for_key:,
+          with:
+        )
           return params unless params.respond_to? :[]=
-          return params unless params.key?('parameters')
+          return params unless params.key?(for_key)
 
           params.dup.tap do |p|
-            p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN
+            p[for_key] = with
           end
         end
 
@@ -215,6 +222,18 @@ module VCAP::CloudController
             metadata[:request] = request_hash
           end
           metadata
+        end
+
+        def create_service_instance_event(type, event, service_instance, metadata)
+          actee = {
+            actee:      service_instance.guid,
+            actee_type: type,
+            actee_name: service_instance.name,
+          }
+
+          space_data = { space: service_instance.space }
+
+          create_event("audit.#{type}.#{event}", user_actor, actee, metadata, space_data)
         end
 
         def user_actor

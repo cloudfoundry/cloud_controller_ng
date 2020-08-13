@@ -8,6 +8,7 @@ module VCAP::CloudController
     class DeleteServiceInstanceJob < ServiceInstanceAsyncJob
       def initialize(guid, audit_info)
         super
+        @request_attr = nil
       end
 
       def send_broker_request(client)
@@ -23,14 +24,6 @@ module VCAP::CloudController
         raise OperationCancelled.new('The service broker rejected the request') if err.name == 'AsyncServiceInstanceOperationInProgress'
 
         raise err
-      end
-
-      def operation_succeeded
-        ServiceInstance.db.transaction do
-          service_instance.lock!
-          service_instance.last_operation&.destroy
-          service_instance.destroy
-        end
       end
 
       def operation
@@ -70,6 +63,14 @@ module VCAP::CloudController
       end
 
       private
+
+      def operation_succeeded
+        ServiceInstance.db.transaction do
+          service_instance.lock!
+          service_instance.last_operation&.destroy
+          service_instance.destroy
+        end
+      end
 
       def trigger_orphan_mitigation(err)
         restart_job(err.message)
