@@ -52,7 +52,7 @@ module VCAP
 
             expect(event_repository).
               to have_received(:record_user_provided_service_instance_event).
-              with(:delete, instance_of(UserProvidedServiceInstance), {})
+              with(:delete, instance_of(UserProvidedServiceInstance))
           end
 
           it 'returns nothing' do

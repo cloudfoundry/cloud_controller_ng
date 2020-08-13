@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       def synchronous_destroy(service_instance, lock)
         lock.unlock_and_destroy!
-        service_event_repository.record_user_provided_service_instance_event(:delete, service_instance, {})
+        service_event_repository.record_user_provided_service_instance_event(:delete, service_instance)
         nil
       end
 
