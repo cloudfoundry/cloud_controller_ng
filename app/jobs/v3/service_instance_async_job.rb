@@ -126,7 +126,8 @@ module VCAP::CloudController
       end
 
       def operation_completed?
-        service_instance.last_operation.state == 'succeeded' && service_instance.last_operation.type == operation_type
+        last_operation = service_instance.last_operation
+        last_operation.state == 'succeeded' && last_operation.type == operation_type
       end
 
       def fetch_last_operation(client)

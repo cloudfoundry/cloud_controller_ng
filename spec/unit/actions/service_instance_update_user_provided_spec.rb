@@ -32,9 +32,10 @@ module VCAP::CloudController
           }
         }
       end
+      let(:original_name) { 'foo' }
       let!(:service_instance) do
         si = VCAP::CloudController::UserProvidedServiceInstance.make(
-          name: 'foo',
+          name: original_name,
           credentials: {
             foo: 'bar',
             baz: 'qux'
@@ -80,7 +81,7 @@ module VCAP::CloudController
         expect(si).to eq(service_instance.reload)
       end
 
-      it 'creates an audit event' do
+      it 'creates an audit event against the pre-updated service instance' do
         action.update(service_instance, message)
 
         body[:credentials] = '[PRIVATE DATA HIDDEN]'
@@ -88,7 +89,11 @@ module VCAP::CloudController
         expect(event_repository).
           to have_received(:record_user_provided_service_instance_event).with(
             :update,
-            instance_of(UserProvidedServiceInstance),
+            have_attributes(
+              name: original_name,
+              guid: service_instance.guid,
+              space: service_instance.space
+            ),
             body.with_indifferent_access
           )
       end

@@ -18,10 +18,11 @@ module VCAP::CloudController
       let(:service_offering) { Service.make(plan_updateable: true) }
       let(:original_maintenance_info) { { version: '2.1.0', description: 'original version' } }
       let(:service_plan) { ServicePlan.make(service: service_offering, maintenance_info: original_maintenance_info) }
+      let(:original_name) { 'foo' }
       let!(:service_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: service_plan,
-          name: 'foo',
+          name: original_name,
           tags: %w(accounting mongodb),
           space: space,
           maintenance_info: original_maintenance_info
@@ -95,7 +96,11 @@ module VCAP::CloudController
           expect(event_repository).
             to have_received(:record_service_instance_event).with(
               :update,
-              instance_of(ManagedServiceInstance),
+              have_attributes(
+                name: original_name,
+                guid: service_instance.guid,
+                space: service_instance.space
+              ),
               body.with_indifferent_access
             )
         end
