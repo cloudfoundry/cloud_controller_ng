@@ -32,6 +32,7 @@ require 'fetchers/app_builds_list_fetcher'
 require 'fetchers/app_fetcher'
 require 'fetchers/app_delete_fetcher'
 require 'fetchers/assign_current_droplet_fetcher'
+require 'repositories/app_event_repository'
 
 class AppsV3Controller < ApplicationController
   def index
@@ -244,6 +245,8 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
+
+    Repositories::AppEventRepository.new.record_app_show_env(app, user_audit_info)
 
     render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
   end
