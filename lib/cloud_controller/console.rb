@@ -15,13 +15,20 @@ rescue LoadError
   # db_config.rb does not exist in a release, but a config with a database should exist there.
 end
 
-@config_file = ARGV[0] || File.expand_path('../../config/cloud_controller.yml', __dir__)
-context = ARGV[1].try(:to_sym) || :api
+@config_file = ARGV[0] || ENV['CLOUD_CONTROLLER_NG_CONFIG'] || File.expand_path('../../config/cloud_controller.yml', __dir__)
 unless File.exist?(@config_file)
   warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
   exit 1
 end
-@config = VCAP::CloudController::Config.load_from_file(@config_file, context: context)
+
+context = ARGV[1].try(:to_sym) || :api
+config_kwargs = { context: context }
+if ENV['CLOUD_CONTROLLER_NG_SECRETS']
+  secrets_hash = VCAP::CloudController::SecretsFetcher.fetch_secrets_from_file(ENV['CLOUD_CONTROLLER_NG_SECRETS'])
+  config_kwargs.merge!(secrets_hash: secrets_hash)
+end
+
+@config = VCAP::CloudController::Config.load_from_file(@config_file, config_kwargs)
 logger = Logger.new(STDOUT)
 
 db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
