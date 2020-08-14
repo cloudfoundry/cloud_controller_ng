@@ -28484,6 +28484,62 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">GET /v3/service_credential_bindings</code></p>
 
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of service credential binding names to filter by*</td>
+</tr>
+<tr>
+<td><strong>service_instance_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of service instance guids to filter by</td>
+</tr>
+<tr>
+<td><strong>service_instance_names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of service instance names to filter by</td>
+</tr>
+<tr>
+<td><strong>app_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of app guids to filter by</td>
+</tr>
+<tr>
+<td><strong>app_names</strong></td>
+<td><em>strings</em></td>
+<td>Type of credential binding to filter by. Valid values are: <code class="prettyprint">app</code> or <code class="prettyprint">key</code></td>
+</tr>
+<tr>
+<td><strong>type</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of app names to filter by</td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display; valid values are integers &gt;= 1</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page; <br>valid values are 1 through 5000</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
+</tr>
+</tbody></table>
+
+<p><strong>Note:</strong> The <code class="prettyprint">names</code> filter will only filter service credentials bindings that were originally created with a name.</p>
+
 <h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
