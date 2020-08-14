@@ -1,15 +1,20 @@
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'presenters/v3/service_credential_binding_presenter'
+require 'messages/service_credential_bindings_list_message'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
-    results = list_fetcher.fetch(space_guids: space_guids)
+    message = ServiceCredentialBindingsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    results = list_fetcher.fetch(space_guids: space_guids, message: message)
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceCredentialBindingPresenter,
       paginated_result: SequelPaginator.new.get_page(results, pagination_options),
-      path: '/v3' + service_credential_bindings_path
+      path: '/v3' + service_credential_bindings_path,
+      message: message,
     )
 
     render status: :ok, json: presenter
@@ -61,5 +66,9 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def fetcher
     @fetcher ||= VCAP::CloudController::ServiceCredentialBindingFetcher.new
+  end
+
+  def query_params
+    request.query_parameters.with_indifferent_access
   end
 end
