@@ -3463,18 +3463,13 @@ RSpec.describe 'V3 service instances' do
     end
 
   end
-  describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
-    let(:api_call) { lambda { |user_headers| post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
+
+  describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{guid}/relationships/shared_spaces/#{space_guid}", nil, user_headers } }
     let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:request_body) do
-      {
-        'data' => [
-          { 'guid' => target_space.guid }
-        ]
-      }
-    end
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:guid) { service_instance.guid }
+    let(:space_guid) { target_space.guid }
     let(:space_dev_headers) do
       org.add_user(user)
       space.add_developer(user)
@@ -3484,17 +3479,26 @@ RSpec.describe 'V3 service instances' do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
     end
 
-    describe 'permissions' do
-      before do
-        org.add_user(user)
-        target_space.add_developer(user)
-      end
+    before do
+      org.add_user(user)
+      target_space.add_developer(user)
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      share_service_instance(service_instance, target_space)
+    end
+
+    describe 'permissions' do
+      let(:db_check) {
+        lambda {
+          si = VCAP::CloudController::ServiceInstance.first(guid: guid)
+          expect(si.shared?).to be_falsey
+        }
+      }
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 200 }
-            h['admin'] = { code: 200 }
+            h['space_developer'] = { code: 204 }
+            h['admin'] = { code: 204 }
             h['no_role'] = { code: 404 }
             h['org_billing_manager'] = { code: 404 }
             h['org_auditor'] = { code: 404 }
@@ -3503,68 +3507,23 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
-    describe 'response body' do
-      before do
-        org.add_user(user)
-        target_space.add_developer(user)
-      end
+    it 'shares the service instance with the target space and logs audit' do
+      api_call.call(space_dev_headers)
 
-      it 'shares the service instance with the target space and logs audit' do
-        api_call.call(space_dev_headers)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['data']).to include({ 'guid' => target_space.guid })
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['data']).to include({ 'guid' => target_space.guid })
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type: 'audit.service_instance.share',
-          actor: user.guid,
-          actee_type: 'service_instance',
-          actee_name: service_instance.name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid
-        })
-        expect(event.metadata['target_space_guids']).to eq([target_space.guid])
-      end
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.service_instance.share',
+        actor: user.guid,
+        actee_type: 'service_instance',
+        actee_name: service_instance.name,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['target_space_guids']).to eq([target_space.guid])
     end
-
-    context 'when service_instance_sharing flag is disabled' do
-      before do
-        feature_flag.enabled = false
-        feature_flag.save
-
-        org.add_user(user)
-        target_space.add_developer(user)
-      end
-
-      it 'makes users unable to share services' do
-        api_call.call(space_dev_headers)
-
-        expect(last_response).to have_status_code(403)
-        expect(parsed_response['errors']).to include(
-          include(
-            {
-              'detail' => 'Feature Disabled: service_instance_sharing',
-              'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
-        )
-      end
-    end
-
-    it 'responds with 404 when the instance does not exist' do
-      post "/v3/service_instances/some-fake-guid/relationships/shared_spaces", request_body.to_json, space_dev_headers
-
-      expect(last_response).to have_status_code(404)
-      expect(parsed_response['errors']).to include(
-        include(
-          {
-            'detail' => 'Service instance not found',
-            'title' => 'CF-ResourceNotFound'
-          })
-      )
-    end
-
   end
 
   def create_managed_json(instance, labels: {}, annotations: {}, last_operation: {}, tags: [])
