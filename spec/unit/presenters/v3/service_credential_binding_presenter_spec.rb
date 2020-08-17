@@ -67,9 +67,9 @@ module VCAP
           let(:instance) { ServiceInstance.make(name: 'smashed-avocado') }
           let(:credential_binding) { ServiceBinding.make(service_instance: instance) }
 
-          it 'should return the service instance name as the binding name' do
+          it 'should return null as the binding name' do
             presenter = described_class.new(credential_binding)
-            expect(presenter.to_hash[:name]).to eq('smashed-avocado')
+            expect(presenter.to_hash[:name]).to be_nil
           end
         end
       end

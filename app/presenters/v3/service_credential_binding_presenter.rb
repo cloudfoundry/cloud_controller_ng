@@ -10,7 +10,7 @@ module VCAP
               guid: @resource.guid,
               created_at: @resource.created_at,
               updated_at: @resource.updated_at,
-              name: @resource.name || @resource.service_instance.name,
+              name: @resource.name,
               type: type
             }.merge(extra)
           end

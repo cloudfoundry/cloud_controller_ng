@@ -346,7 +346,7 @@ RSpec.describe 'v3 service credential bindings' do
       guid: binding.guid,
       created_at: iso8601,
       updated_at: iso8601,
-      name: binding.name || binding.service_instance.name,
+      name: binding.name,
       last_operation: nil,
       relationships: {
         service_instance: {

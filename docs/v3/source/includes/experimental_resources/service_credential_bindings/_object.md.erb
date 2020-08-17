@@ -10,7 +10,7 @@ Example Service Credential Binding object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the service credential binding
-**name** | _string_ | Name of the binding. Defaults to the service instance name when not defined.
+**name** | _string_ | Name of the binding. `null` when it's not defined.
 **type** | _string_ | Either `app` or `key`
 **last_operation** (*experimental*)| _[last operation object](#the-last-operation-object-for-service-credential-binding)_ | The last operation of this binding; `null` when type is `key`
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
