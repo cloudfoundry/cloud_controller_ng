@@ -24,22 +24,33 @@ module VCAP
         dataset
       end
 
-      def filters_from_message(message)
-        [].tap do |arr|
-          %w{service_instance_name service_instance_guid name app_name app_guid}.each do |field|
-            arr = append_filter(arr, message, field, field.pluralize.to_sym)
-          end
+      FILTERABLE_PROPERTIES = %w{
+        service_instance_name
+        service_instance_guid
+        name
+        app_name
+        app_guid
+        type
+      }.freeze
 
-          %w{type}.each do |field|
-            arr = append_filter(arr, message, field, field.to_sym)
-          end
-        end
+      def filters_from_message(message)
+        FILTERABLE_PROPERTIES.
+          select { |property| message.requested?(message_param_for(property)) }.
+          reduce([]) { |clauses, property| clauses << build_where_clause(message, property) }
       end
 
-      def append_filter(arr, message, field, filter)
-        return arr unless message.requested?(filter)
+      def build_where_clause(message, field)
+        message_param = message_param_for(field)
+        Sequel[field.to_sym] =~ message.public_send(message_param)
+      end
 
-        arr << (Sequel[field.to_sym] =~ message.public_send(filter))
+      def message_param_for(field)
+        case field
+        when 'type'
+          :type
+        else
+          field.pluralize.to_sym
+        end
       end
     end
   end
