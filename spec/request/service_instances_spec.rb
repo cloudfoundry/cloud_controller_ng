@@ -3461,6 +3461,107 @@ RSpec.describe 'V3 service instances' do
       })
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)
     end
+
+    describe 'unbind from all apps in target space' do
+      let(:app_1) { VCAP::CloudController::AppModel.make(space: target_space) }
+      let(:app_2) { VCAP::CloudController::AppModel.make(space: target_space) }
+
+      let(:binding_1) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_1) }
+      let(:binding_2) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_2) }
+
+      context 'when bindings in shared space were deleted successfully' do
+        before do
+          stub_unbind(binding_1, accepts_incomplete: true, status: 200, body: {}.to_json)
+          stub_unbind(binding_2, accepts_incomplete: true, status: 200, body: {}.to_json)
+        end
+
+        it 'unbinds from all apps in target space and unshares' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(204)
+
+          service_instance.reload
+          expect(service_instance.shared?).to be_falsey
+          expect(service_instance.has_bindings?).to be_falsey
+        end
+      end
+
+      context 'when a binding in shared space is deleted async' do
+        before do
+          stub_unbind(binding_1, accepts_incomplete: true, status: 202, body: {}.to_json)
+          stub_unbind(binding_2, accepts_incomplete: true, status: 200, body: {}.to_json)
+        end
+
+        it 'should respond with 502 and it does not unshare' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(502)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unshare of service instance failed: \n\nUnshare of service instance failed because one or more bindings could not be deleted.\n\n " \
+                            "\tThe binding between an application and service instance #{service_instance.name} in space #{target_space.name} is being deleted asynchronously.",
+                'title' => 'CF-ServiceInstanceUnshareFailed'
+              })
+          )
+
+          expect(service_instance.shared?).to be_truthy
+        end
+      end
+    end
+
+    it 'responds with 404 when the instance does not exist' do
+      delete "/v3/service_instances/some-fake-guid/relationships/shared_spaces/#{space_guid}",
+        nil,
+        space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Service instance not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+
+    describe 'target space to unshare from' do
+      context 'when it does not exist' do
+        let(:space_guid) { 'fake-target' }
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to unshare service instance from space #{space_guid}. " \
+                      'Ensure the space exists and the service instance has been shared to this space.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'when instance was not shared to the space' do
+        let(:space_guid) { VCAP::CloudController::Space.make(organization: org).guid }
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to unshare service instance from space #{space_guid}. " \
+                      'Ensure the space exists and the service instance has been shared to this space.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
   end
 
   describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
@@ -3762,68 +3863,5 @@ RSpec.describe 'V3 service instances' do
     VCAP::CloudController::FeatureFlag.
       find_or_create(name: 'service_instance_sharing') { |ff| ff.enabled = true }.
       update(enabled: true)
-  end
-
-  describe 'unrefactored' do
-    let(:user_email) { 'user@email.example.com' }
-    let(:user_name) { 'username' }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:user_header) { headers_for(user) }
-    let(:admin_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:another_space) { VCAP::CloudController::Space.make }
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
-    let!(:annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value') }
-    let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
-    let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
-    let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
-
-    describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
-      before do
-        allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
-          FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-        end
-
-        share_request = {
-          'data' => [
-            { 'guid' => target_space.guid }
-          ]
-        }
-
-        enable_feature_flag!
-        post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
-        expect(last_response.status).to eq(200)
-
-        disable_feature_flag!
-      end
-
-      it 'deletes associated bindings in target space when service instance is unshared' do
-        process = VCAP::CloudController::ProcessModelFactory.make(diego: false, space: target_space)
-
-        enable_feature_flag!
-        service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1, app: process.app, credentials: { secret: 'key' })
-        disable_feature_flag!
-
-        get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
-
-        delete "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces/#{target_space.guid}", nil, admin_header
-        expect(last_response.status).to eq(204)
-
-        get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
-        expect(last_response.status).to eq(404)
-      end
-    end
-
-    def enable_feature_flag!
-      feature_flag.enabled = true
-      feature_flag.save
-    end
-
-    def disable_feature_flag!
-      feature_flag.enabled = false
-      feature_flag.save
-    end
   end
 end
