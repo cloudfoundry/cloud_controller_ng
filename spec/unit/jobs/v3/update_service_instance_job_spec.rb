@@ -67,7 +67,7 @@ module VCAP
         let(:client) { double('BrokerClient', update: update_response) }
 
         before do
-          VCAP::Services::ServiceClientProvider.stub(:provide) { client }
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
         describe '#operation' do
