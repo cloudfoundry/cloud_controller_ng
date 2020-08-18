@@ -670,183 +670,6 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
-  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
-    let(:user_header) { headers_for(user) }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:other_space) { VCAP::CloudController::Space.make }
-
-    before(:each) do
-      share_service_instance(instance, other_space)
-    end
-
-    it 'returns a list of space guids where the service instance is shared to' do
-      set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
-      get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      expected_response = {
-        data: [{ guid: other_space.guid }],
-        links: {
-          self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
-        }
-      }.with_indifferent_access
-
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-
-    it 'respond with 404 when the user cannot read the originating space' do
-      set_current_user_as_role(role: 'space_developer', org: other_space.organization, space: other_space, user: user)
-      get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
-      expect(last_response.status).to eq(404)
-    end
-
-    describe 'fields' do
-      it 'can include the space name, guid and organization relationship fields' do
-        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=name,guid,relationships.organization", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        r = { organization: { data: { guid: other_space.organization.guid } } }
-        included = {
-          spaces: [
-            { name: other_space.name, guid: other_space.guid, relationships: r }
-          ]
-        }
-
-        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
-      end
-
-      it 'can include the organization name and guid fields through space' do
-        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=name,guid", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        included = {
-          organizations: [
-            {
-              name: other_space.organization.name,
-              guid: other_space.organization.guid
-            }
-          ]
-        }
-
-        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
-      end
-
-      it 'fails for invalid resources' do
-        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[fruit]=name", nil, admin_headers
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors']).to include(
-          include(
-            'detail' => "The query parameter is invalid: Fields [fruit] valid resources are: 'space', 'space.organization'"
-          )
-        )
-      end
-
-      it 'fails for not allowed space fields' do
-        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=metadata", nil, admin_headers
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors']).to include(
-          include(
-            'detail' => "The query parameter is invalid: Fields valid keys for 'space' are: 'name', 'guid', 'relationships.organization'"
-          )
-        )
-      end
-
-      it 'fails for not allowed space.organization fields' do
-        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=metadata", nil, admin_headers
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors']).to include(
-          include(
-            'detail' => "The query parameter is invalid: Fields valid keys for 'space.organization' are: 'name', 'guid'"
-          )
-        )
-      end
-    end
-  end
-
-  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces/usage_summary' do
-    let(:guid) { instance.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:space_1) { VCAP::CloudController::Space.make }
-    let(:space_2) { VCAP::CloudController::Space.make }
-    let(:space_3) { VCAP::CloudController::Space.make }
-    let(:url) { "/v3/service_instances/#{guid}/relationships/shared_spaces/usage_summary" }
-    let(:api_call) { lambda { |user_headers| get url, nil, user_headers } }
-    let(:bindings_on_space_1) { 1 }
-    let(:bindings_on_space_2) { 3 }
-
-    def create_bindings(instance, space:, count:)
-      (1..count).each do
-        VCAP::CloudController::ServiceBinding.make(
-          app: VCAP::CloudController::AppModel.make(space: space),
-          service_instance: instance
-        )
-      end
-    end
-
-    before do
-      share_service_instance(instance, space_1)
-      share_service_instance(instance, space_2)
-      share_service_instance(instance, space_3)
-
-      create_bindings(instance, space: space_1, count: bindings_on_space_1)
-      create_bindings(instance, space: space_2, count: bindings_on_space_2)
-    end
-
-    context 'permissions' do
-      let(:response_object) {
-        {
-          usage_summary: [
-            { space: { guid: space_1.guid }, bound_app_count: bindings_on_space_1 },
-            { space: { guid: space_2.guid }, bound_app_count: bindings_on_space_2 },
-            { space: { guid: space_3.guid }, bound_app_count: 0 }
-          ],
-          links: {
-            self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces/usage_summary" },
-            shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
-            service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
-          }
-        }
-      }
-      let(:usage_summary_response) { { code: 200, response_object: response_object } }
-
-      let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 404,
-          response_objects: []
-        ).tap do |h|
-          h['admin'] = usage_summary_response
-          h['admin_read_only'] = usage_summary_response
-          h['global_auditor'] = usage_summary_response
-          h['space_developer'] = usage_summary_response
-          h['space_manager'] = usage_summary_response
-          h['space_auditor'] = usage_summary_response
-          h['org_manager'] = usage_summary_response
-        end
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    context 'when the instance does not exist' do
-      let(:guid) { 'a-fake-guid' }
-      it 'responds with 404 Not Found' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(404)
-      end
-    end
-
-    context 'when the user cannot read from the originating space' do
-      it 'responds with 404 Not Found' do
-        user = VCAP::CloudController::User.make
-        set_current_user_as_role(role: 'space_developer', org: space_2.organization, space: space_2, user: user)
-
-        api_call.call(headers_for(user))
-
-        expect(last_response).to have_status_code(404)
-      end
-    end
-  end
-
   describe 'POST /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
     let(:space_guid) { space.guid }
@@ -1175,50 +998,52 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'when the service broker does not have state (v2 brokers)' do
-        let(:service_broker) { service_plan.service_broker }
+      describe 'unavailable broker' do
+        context 'when the service broker does not have state (v2 brokers)' do
+          let(:service_broker) { service_plan.service_broker }
 
-        it 'creates a service instance' do
-          service_broker.update(state: '')
-          api_call.call(space_dev_headers)
-          expect(last_response).to have_status_code(202)
-        end
-      end
-
-      context 'when there is an operation in progress for the service broker' do
-        let(:service_broker) { service_plan.service_broker }
-
-        before do
-          service_broker.update(state: broker_state)
-        end
-
-        context 'when the service broker is being deleted' do
-          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
-          it 'fails to create a service instance' do
+          it 'creates a service instance' do
+            service_broker.update(state: '')
             api_call.call(space_dev_headers)
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(
-              include({
-                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
-            )
+            expect(last_response).to have_status_code(202)
           end
         end
 
-        context 'when the service broker is synchronising the catalog' do
-          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
-          it 'fails to create a service instance' do
-            api_call.call(space_dev_headers)
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(
-              include({
-                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
-            )
+        context 'when there is an operation in progress for the service broker' do
+          let(:service_broker) { service_plan.service_broker }
+
+          before do
+            service_broker.update(state: broker_state)
+          end
+
+          context 'when the service broker is being deleted' do
+            let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+            it 'fails to create a service instance' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
+              )
+            end
+          end
+
+          context 'when the service broker is synchronising the catalog' do
+            let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+            it 'fails to create a service instance' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
+              )
+            end
           end
         end
       end
@@ -1553,7 +1378,7 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'quotas' do
+      describe 'quotas restrictions' do
         describe 'space quotas' do
           context 'when the total services quota has been reached' do
             before do
@@ -3360,6 +3185,465 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
+    let(:api_call) { lambda { |user_headers| post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
+    let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
+    let(:request_body) do
+      {
+        'data' => [
+          { 'guid' => target_space_1.guid },
+          { 'guid' => target_space_2.guid }
+        ]
+      }
+    end
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:guid) { service_instance.guid }
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      org.add_user(user)
+      target_space_1.add_developer(user)
+      target_space_2.add_developer(user)
+    end
+
+    describe 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['space_developer'] = { code: 200 }
+            h['admin'] = { code: 200 }
+            h['no_role'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['org_auditor'] = { code: 404 }
+          end
+        end
+      end
+    end
+
+    it 'shares the service instance to the target space and logs audit event' do
+      api_call.call(space_dev_headers)
+
+      expect(last_response.status).to eq(200)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.service_instance.share',
+        actor: user.guid,
+        actee_type: 'service_instance',
+        actee_name: service_instance.name,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['target_space_guids']).to include(target_space_1.guid, target_space_2.guid)
+
+      service_instance.reload
+      expect(service_instance.shared_spaces).to include(target_space_1, target_space_2)
+    end
+
+    describe 'when service_instance_sharing flag is disabled' do
+      before do
+        feature_flag.enabled = false
+        feature_flag.save
+      end
+
+      it 'makes users unable to share services' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => 'Feature Disabled: service_instance_sharing',
+              'title' => 'CF-FeatureDisabled',
+              'code' => 330002,
+            })
+        )
+      end
+    end
+
+    it 'responds with 404 when the instance does not exist' do
+      post '/v3/service_instances/some-fake-guid/relationships/shared_spaces', request_body.to_json, space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Service instance not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+
+    describe 'when the request body is invalid' do
+      context 'when it is not a valid relationship' do
+        let(:request_body) do
+          {
+            'data' => { 'guid' => target_space_1.guid }
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'Data must be an array',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'when there are additional keys' do
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => target_space_1.guid }
+            ],
+            'fake-key' => 'foo'
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unknown field(s): 'fake-key'",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+
+    describe 'target space to share to' do
+      context 'does not exist' do
+        let(:target_space_guid) { 'fake-target' }
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => target_space_guid }
+            ]
+          }
+        end
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{target_space_guid}']. " \
+                            'Ensure the spaces exist and that you have access to them.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have access to one of the target spaces' do
+        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => no_access_target_space.guid },
+              { 'guid' => target_space_1.guid }
+            ]
+          }
+        end
+
+        it 'responds with 422 and does not share the instance' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. "\
+                            'Ensure the spaces exist and that you have access to them.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+
+          service_instance.reload
+          expect(service_instance.shared?).to be_falsey
+        end
+      end
+    end
+
+    describe 'errors while sharing' do
+      context 'service instance is user provided' do
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+
+        it 'should respond with 422 and the error' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'User-provided services cannot be shared.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+  end
+
+  describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{guid}/relationships/shared_spaces/#{space_guid}", nil, user_headers } }
+    let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:guid) { service_instance.guid }
+    let(:space_guid) { target_space.guid }
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      share_service_instance(service_instance, target_space)
+    end
+
+    describe 'permissions' do
+      let(:db_check) {
+        lambda {
+          si = VCAP::CloudController::ServiceInstance.first(guid: guid)
+          expect(si.shared?).to be_falsey
+        }
+      }
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['space_developer'] = { code: 204 }
+            h['admin'] = { code: 204 }
+            h['no_role'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['org_auditor'] = { code: 404 }
+          end
+        end
+      end
+    end
+
+    it 'unshares the service instance from the target space and logs audit event' do
+      api_call.call(space_dev_headers)
+
+      expect(last_response.status).to eq(204)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.service_instance.unshare',
+        actor: user.guid,
+        actee_type: 'service_instance',
+        actee_name: service_instance.name,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['target_space_guid']).to eq(target_space.guid)
+    end
+  end
+
+  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
+    let(:user_header) { headers_for(user) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:other_space) { VCAP::CloudController::Space.make }
+
+    before(:each) do
+      share_service_instance(instance, other_space)
+    end
+
+    describe 'permissions in originating space' do
+      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_headers } }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_response) do
+          {
+             data: [{ guid: other_space.guid }],
+             links: {
+               self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+             }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_object: expected_response,
+          ).tap do |h|
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+          end
+        end
+      end
+    end
+
+    it 'respond with 404 when the user cannot read the originating space' do
+      set_current_user_as_role(role: 'space_developer', org: other_space.organization, space: other_space, user: user)
+      get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
+      expect(last_response.status).to eq(404)
+    end
+
+    describe 'fields' do
+      it 'can include the space name, guid and organization relationship fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=name,guid,relationships.organization", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        r = { organization: { data: { guid: other_space.organization.guid } } }
+        included = {
+          spaces: [
+            { name: other_space.name, guid: other_space.guid, relationships: r }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
+      it 'can include the organization name and guid fields through space' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=name,guid", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        included = {
+          organizations: [
+            {
+              name: other_space.organization.name,
+              guid: other_space.organization.guid
+            }
+          ]
+        }
+
+        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      end
+
+      it 'fails for invalid resources' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[fruit]=name", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields [fruit] valid resources are: 'space', 'space.organization'"
+          )
+        )
+      end
+
+      it 'fails for not allowed space fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=metadata", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields valid keys for 'space' are: 'name', 'guid', 'relationships.organization'"
+          )
+        )
+      end
+
+      it 'fails for not allowed space.organization fields' do
+        get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space.organization]=metadata", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include(
+            'detail' => "The query parameter is invalid: Fields valid keys for 'space.organization' are: 'name', 'guid'"
+          )
+        )
+      end
+    end
+  end
+
+  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces/usage_summary' do
+    let(:guid) { instance.guid }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:space_1) { VCAP::CloudController::Space.make }
+    let(:space_2) { VCAP::CloudController::Space.make }
+    let(:space_3) { VCAP::CloudController::Space.make }
+    let(:url) { "/v3/service_instances/#{guid}/relationships/shared_spaces/usage_summary" }
+    let(:api_call) { lambda { |user_headers| get url, nil, user_headers } }
+    let(:bindings_on_space_1) { 1 }
+    let(:bindings_on_space_2) { 3 }
+
+    def create_bindings(instance, space:, count:)
+      (1..count).each do
+        VCAP::CloudController::ServiceBinding.make(
+          app: VCAP::CloudController::AppModel.make(space: space),
+          service_instance: instance
+        )
+      end
+    end
+
+    before do
+      share_service_instance(instance, space_1)
+      share_service_instance(instance, space_2)
+      share_service_instance(instance, space_3)
+
+      create_bindings(instance, space: space_1, count: bindings_on_space_1)
+      create_bindings(instance, space: space_2, count: bindings_on_space_2)
+    end
+
+    context 'permissions' do
+      let(:response_object) {
+        {
+          usage_summary: [
+            { space: { guid: space_1.guid }, bound_app_count: bindings_on_space_1 },
+            { space: { guid: space_2.guid }, bound_app_count: bindings_on_space_2 },
+            { space: { guid: space_3.guid }, bound_app_count: 0 }
+          ],
+          links: {
+            self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces/usage_summary" },
+            shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+            service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
+          }
+        }
+      }
+      let(:usage_summary_response) { { code: 200, response_object: response_object } }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(usage_summary_response).tap do |h|
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+        end
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the instance does not exist' do
+      let(:guid) { 'a-fake-guid' }
+      it 'responds with 404 Not Found' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the user cannot read from the originating space' do
+      it 'responds with 404 Not Found' do
+        user = VCAP::CloudController::User.make
+        set_current_user_as_role(role: 'space_developer', org: space_2.organization, space: space_2, user: user)
+
+        api_call.call(headers_for(user))
+
+        expect(last_response).to have_status_code(404)
+      end
+    end
+  end
+
   def create_managed_json(instance, labels: {}, annotations: {}, last_operation: {}, tags: [])
     {
       guid: instance.guid,
@@ -3495,51 +3779,6 @@ RSpec.describe 'V3 service instances' do
     let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
     let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
 
-    describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
-      before do
-        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
-      end
-
-      it 'shares the service instance with the target space' do
-        share_request = {
-          'data' => [
-            { 'guid' => target_space.guid }
-          ]
-        }
-
-        post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-
-        expected_response = {
-          'data' => [
-            { 'guid' => target_space.guid }
-          ],
-          'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces" },
-          }
-        }
-
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type: 'audit.service_instance.share',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          actee: service_instance1.guid,
-          actee_type: 'service_instance',
-          actee_name: service_instance1.name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid
-        })
-        expect(event.metadata['target_space_guids']).to eq([target_space.guid])
-      end
-    end
-
     describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
       before do
         allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -3557,26 +3796,6 @@ RSpec.describe 'V3 service instances' do
         expect(last_response.status).to eq(200)
 
         disable_feature_flag!
-      end
-
-      it 'unshares the service instance from the target space' do
-        delete "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces/#{target_space.guid}", nil, admin_header
-        expect(last_response.status).to eq(204)
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type: 'audit.service_instance.unshare',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          actee: service_instance1.guid,
-          actee_type: 'service_instance',
-          actee_name: service_instance1.name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid
-        })
-        expect(event.metadata['target_space_guid']).to eq(target_space.guid)
       end
 
       it 'deletes associated bindings in target space when service instance is unshared' do

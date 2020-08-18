@@ -47,31 +47,31 @@ module VCAP::CloudController
 
     def validate_plan_visibility!(service_instance, space)
       unless service_instance.service_plan.visible_in_space?(space)
-        error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not enabled in #{space.organization.name}/#{space.name}"
+        error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not enabled in #{space.organization.name}/#{space.name}."
         error!(error_msg)
       end
     end
 
     def validate_name_uniqueness!(service_instance, space)
       if space.service_instances.map(&:name).include?(service_instance.name)
-        error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}"
+        error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}."
         error!(error_msg)
       end
     end
 
     def validate_not_sharing_to_self!(service_instance, spaces)
       if spaces.include?(service_instance.space)
-        error!('Service instances cannot be shared into the space where they were created')
+        error!('Service instances cannot be shared into the space where they were created.')
       end
     end
 
     def validate_supported_service_type!(service_instance)
       if service_instance.route_service?
-        error!('Route services cannot be shared')
+        error!('Route services cannot be shared.')
       end
 
       unless service_instance.managed_instance?
-        error!('User-provided services cannot be shared')
+        error!('User-provided services cannot be shared.')
       end
     end
 
