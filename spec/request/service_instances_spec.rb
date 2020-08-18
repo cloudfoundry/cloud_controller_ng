@@ -3462,20 +3462,20 @@ RSpec.describe 'V3 service instances' do
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)
     end
 
-    describe 'unbind from all apps in target space' do
+    describe 'when there are bindings in the shared space' do
       let(:app_1) { VCAP::CloudController::AppModel.make(space: target_space) }
       let(:app_2) { VCAP::CloudController::AppModel.make(space: target_space) }
 
       let(:binding_1) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_1) }
       let(:binding_2) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_2) }
 
-      context 'when bindings in shared space were deleted successfully' do
+      context 'and the bindings can be deleted synchronously' do
         before do
           stub_unbind(binding_1, accepts_incomplete: true, status: 200, body: {}.to_json)
           stub_unbind(binding_2, accepts_incomplete: true, status: 200, body: {}.to_json)
         end
 
-        it 'unbinds from all apps in target space and unshares' do
+        it 'deletes all bindings and successfully unshares' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(204)
@@ -3486,13 +3486,13 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'when a binding in shared space is deleted async' do
+      context 'but the bindings can only be deleted asynchronously' do
         before do
           stub_unbind(binding_1, accepts_incomplete: true, status: 202, body: {}.to_json)
           stub_unbind(binding_2, accepts_incomplete: true, status: 200, body: {}.to_json)
         end
 
-        it 'should respond with 502 and it does not unshare' do
+        it 'responds with 502 and does not unshare' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(502)
