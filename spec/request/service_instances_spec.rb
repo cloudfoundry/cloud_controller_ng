@@ -3282,8 +3282,8 @@ RSpec.describe 'V3 service instances' do
       )
     end
 
-    describe 'invalid request body' do
-      context 'when request is not a valid relationship' do
+    describe 'when the request body is invalid' do
+      context 'when it is not a valid relationship' do
         let(:request_body) do
           {
             'data' => { 'guid' => target_space_1.guid }
@@ -3347,7 +3347,8 @@ RSpec.describe 'V3 service instances' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{target_space_guid}']. Ensure the spaces exist and that you have access to them.",
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{target_space_guid}']. " \
+                            'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
               })
           )
@@ -3365,17 +3366,21 @@ RSpec.describe 'V3 service instances' do
           }
         end
 
-        it 'responds with 422' do
+        it 'responds with 422 and does not share the instance' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. Ensure the spaces exist and that you have access to them.",
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. "\
+                            'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
               })
           )
+
+          service_instance.reload
+          expect(service_instance.shared?).to be_falsey
         end
       end
     end
