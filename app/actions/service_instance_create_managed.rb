@@ -52,15 +52,17 @@ module VCAP::CloudController
 
       pollable_job
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, name: message.name)
+      validation_error!(e, name: message.name, validation_error_handler: ValidationErrorHandler.new)
     end
 
     private
 
-    def error!(message)
-      raise InvalidManagedServiceInstance.new(message)
-    end
-
     attr_reader :service_event_repository
+
+    class ValidationErrorHandler
+      def error!(message)
+        raise InvalidManagedServiceInstance.new(message)
+      end
+    end
   end
 end

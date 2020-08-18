@@ -19,13 +19,17 @@ module VCAP::CloudController
       raise VCAP::CloudController::ServiceInstanceCreateManaged::UnprocessableCreate.new_from_details(code) unless code.nil?
     end
 
-    def validation_error!(error, name:)
+    def validation_error!(
+      error,
+      name:,
+      validation_error_handler:
+    )
       validate_quotas!(error)
 
       if error.errors.on(:name)&.include?(:unique)
-        error!("The service instance name is taken: #{name}")
+        validation_error_handler.error!("The service instance name is taken: #{name}")
       end
-      error!(error.message)
+      validation_error_handler.error!(error.message)
     end
   end
 end

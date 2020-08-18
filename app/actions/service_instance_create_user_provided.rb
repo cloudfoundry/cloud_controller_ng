@@ -29,13 +29,19 @@ module VCAP::CloudController
 
       instance
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, name: message.name)
+      validation_error!(
+        e,
+        name: message.name,
+        validation_error_handler: ValidationErrorHandler.new
+      )
     end
 
     private
 
-    def error!(message)
-      raise InvalidUserProvidedServiceInstance.new(message)
+    class ValidationErrorHandler
+      def error!(message)
+        raise InvalidUserProvidedServiceInstance.new(message)
+      end
     end
 
     attr_reader :service_event_repository

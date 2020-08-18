@@ -30,15 +30,21 @@ module VCAP::CloudController
       logger.info("Finished updating user-provided service_instance #{service_instance.guid}")
       service_instance
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, name: message.name)
+      validation_error!(
+        e,
+        name: message.name,
+        validation_error_handler: ValidationErrorHandler.new
+      )
     end
 
     private
 
     attr_reader :service_event_repository
 
-    def error!(message)
-      raise UnprocessableUpdate.new(message)
+    class ValidationErrorHandler
+      def error!(message)
+        raise UnprocessableUpdate.new(message)
+      end
     end
   end
 end
