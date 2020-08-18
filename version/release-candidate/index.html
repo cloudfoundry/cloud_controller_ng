@@ -28196,7 +28196,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the binding. Defaults to the service instance name when not defined.</td>
+<td>Name of the binding. <code class="prettyprint">null</code> when it&rsquo;s not defined.</td>
 </tr>
 <tr>
 <td><strong>type</strong></td>
@@ -28494,7 +28494,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service credential binding names to filter by*</td>
+<td>Comma-delimited list of service credential binding names to filter by</td>
 </tr>
 <tr>
 <td><strong>service_instance_guids</strong></td>
@@ -28537,8 +28537,6 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 </tbody></table>
-
-<p><strong>Note:</strong> The <code class="prettyprint">names</code> filter will only filter service credentials bindings that were originally created with a name.</p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
