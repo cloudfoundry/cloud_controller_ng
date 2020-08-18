@@ -379,8 +379,8 @@ RSpec.describe 'Apps' do
             include:   'space',
             lifecycle_type:   'buildpack',
             label_selector:   'foo,bar',
-            created_ats: [],
-            updated_ats: [],
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
           }
         end
       end
@@ -536,6 +536,7 @@ RSpec.describe 'Apps' do
       end
 
       # .make updates the resource after creating it, over writing our passed in updated_at timestamp
+      # Therefore we cannot use shared_examples as the updated_at will not be as written
       let!(:resource_1) { VCAP::CloudController::AppModel.create(name: '1', created_at: '2020-05-26T18:47:01Z', updated_at: '2020-05-26T18:47:01Z', space: space) }
       let!(:resource_2) { VCAP::CloudController::AppModel.create(name: '2', created_at: '2020-05-26T18:47:02Z', updated_at: '2020-05-26T18:47:02Z', space: space) }
       let!(:resource_3) { VCAP::CloudController::AppModel.create(name: '3', created_at: '2020-05-26T18:47:03Z', updated_at: '2020-05-26T18:47:03Z', space: space) }
@@ -1489,6 +1490,15 @@ RSpec.describe 'Apps' do
                                                           },
                                                         ]
                                                     })
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::BuildModel }
+      let(:additional_resource_params) { { app: app_model } }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/builds?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_header }
     end
 
     it 'filters on label_selector' do

@@ -19,9 +19,6 @@ module VCAP::CloudController
         expect(subject).to be_a(Sequel::Dataset)
       end
 
-      it_behaves_like 'filtering timestamps on creation', ProcessModel
-      it_behaves_like 'filtering timestamps on update', ProcessModel
-
       describe 'eager loading associated resources' do
         let(:eager_loaded_associations) { [:labels] }
 

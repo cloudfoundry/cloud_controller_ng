@@ -18,9 +18,6 @@ module VCAP::CloudController
         expect(subject).to be_a(Sequel::Dataset)
       end
 
-      it_behaves_like 'filtering timestamps on creation', Event
-      it_behaves_like 'filtering timestamps on update', Event
-
       context 'non-timestamp filtering' do
         let!(:unscoped_event) { Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
         let!(:org_scoped_event) { Event.make(created_at: Time.now + 100, organization_guid: org.guid) }

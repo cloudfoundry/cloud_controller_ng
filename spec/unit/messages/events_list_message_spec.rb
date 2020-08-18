@@ -64,22 +64,6 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors[:organization_guids]).to include('must be an array')
         end
-
-        context 'validates the created_ats filter' do
-          it 'delegates to the TimestampValidator' do
-            message = EventsListMessage.from_params({ created_ats: 47 })
-            expect(message).not_to be_valid
-            expect(message.errors[:created_ats]).to include('relational operator and timestamp must be specified')
-          end
-        end
-
-        context 'validates the updated_ats filter' do
-          it 'delegates to the TimestampValidator' do
-            message = EventsListMessage.from_params({ updated_ats: 47 })
-            expect(message).not_to be_valid
-            expect(message.errors[:updated_ats]).to include('relational operator and timestamp must be specified')
-          end
-        end
       end
     end
   end

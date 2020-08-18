@@ -12,11 +12,10 @@ class DeploymentsController < ApplicationController
   def index
     message = DeploymentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    deployment_list_fetcher = DeploymentListFetcher.new(message: message)
     dataset = if permission_queryer.can_read_globally?
-                deployment_list_fetcher.fetch_all
+                DeploymentListFetcher.fetch_all(message)
               else
-                deployment_list_fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
+                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

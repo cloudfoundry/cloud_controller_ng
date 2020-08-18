@@ -593,6 +593,8 @@ RSpec.describe 'Droplets' do
           states: ['test', 'foo'],
           organization_guids: 'foo,bar',
           label_selector: 'foo,bar',
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
@@ -619,6 +621,8 @@ RSpec.describe 'Droplets' do
           package_guid: package_model.guid,
           states: ['test', 'foo'],
           label_selector: 'foo,bar',
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
@@ -908,6 +912,64 @@ RSpec.describe 'Droplets' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(dropletB.guid, dropletC.guid)
+      end
+    end
+
+    context 'filtering by timestamps' do
+      before do
+        VCAP::CloudController::DropletModel.plugin :timestamps, update_on_create: false
+
+        # Delete all the existing DropletModels so they don't overlap in timestamp with our queries
+        VCAP::CloudController::DropletModel.dataset.delete
+      end
+
+      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
+      # Therefore we cannot use shared_examples as the updated_at will not be as written
+      let!(:resource_1) {
+        VCAP::CloudController::DropletModel.create(
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          created_at: '2020-05-26T18:47:01Z',
+          updated_at: '2020-05-26T18:47:01Z',
+          app: app_model)
+      }
+      let!(:resource_2) {
+        VCAP::CloudController::DropletModel.create(
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          created_at: '2020-05-26T18:47:02Z',
+          updated_at: '2020-05-26T18:47:02Z',
+          app: app_model)
+      }
+      let!(:resource_3) {
+        VCAP::CloudController::DropletModel.create(
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          created_at: '2020-05-26T18:47:03Z',
+          updated_at: '2020-05-26T18:47:03Z',
+          app: app_model)
+      }
+      let!(:resource_4) {
+        VCAP::CloudController::DropletModel.create(
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          created_at: '2020-05-26T18:47:04Z',
+          updated_at: '2020-05-26T18:47:04Z',
+          app: app_model)
+      }
+
+      after do
+        VCAP::CloudController::DropletModel.plugin :timestamps, update_on_create: true
+      end
+
+      it 'filters by the created at' do
+        get "/v3/droplets?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+      end
+
+      it 'filters by the updated_at' do
+        get "/v3/droplets?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
       end
     end
   end

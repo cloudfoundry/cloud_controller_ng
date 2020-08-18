@@ -162,7 +162,7 @@ RSpec.describe 'Events' do
 
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::Event }
-
+      let(:headers) { admin_headers }
       let(:api_call) do
         lambda { |headers, filters| get "/v3/audit_events?#{filters}", nil, headers }
       end

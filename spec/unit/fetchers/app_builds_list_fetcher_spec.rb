@@ -4,6 +4,7 @@ require 'fetchers/app_builds_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe AppBuildsListFetcher do
+    let(:subject) { AppBuildsListFetcher.fetch_all(app_guid, message) }
     let(:space1) { Space.make }
     let(:space2) { Space.make }
     let(:space3) { Space.make }
@@ -23,32 +24,29 @@ module VCAP::CloudController
     let!(:staging_build_for_app3_space2) { BuildModel.make(app_guid: app3_in_space2.guid, state: BuildModel::STAGING_STATE) }
     let!(:staging_build_for_app4_space3) { BuildModel.make(app_guid: app4_in_space3.guid, state: BuildModel::STAGING_STATE) }
 
-    subject(:fetcher) { AppBuildsListFetcher.new(app_guid, message) }
+    # let(:fetcher) { AppBuildsListFetcher.new(app_guid, message) }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { AppBuildsListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      context 'when looking at app_in_space1' do
-        let(:app_guid) { app_in_space1.guid }
+      let(:app_guid) { app_in_space1.guid }
 
+      context 'when looking at app_in_space1' do
         it 'returns a Sequel::Dataset' do
-          results = fetcher.fetch_all
-          expect(results).to be_a(Sequel::Dataset)
+          expect(subject).to be_a(Sequel::Dataset)
         end
 
         it 'returns all of the builds' do
-          results = fetcher.fetch_all
-          expect(results.count).to eq(2)
-          expect(results.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+          expect(subject.count).to eq(2)
+          expect(subject.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
         end
 
         context 'filtering states' do
           let(:filters) { { states: [BuildModel::STAGED_STATE] } }
 
           it 'returns all of the builds with the requested states' do
-            results = fetcher.fetch_all.all
-            expect(results).to match_array([staged_build_for_app1_space1])
+            expect(subject.all).to match_array([staged_build_for_app1_space1])
           end
         end
       end

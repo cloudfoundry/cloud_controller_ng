@@ -5,10 +5,10 @@ module VCAP::CloudController
     register_allowed_keys [
       :after_guid,
       :guids,
-      :created_ats,
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with DisallowUpdatedAtsParamValidator
 
     validates :after_guid, array: true, allow_nil: true, length: {
       is: 1,
@@ -16,14 +16,13 @@ module VCAP::CloudController
     }
 
     validates :guids, array: true, allow_nil: true
-    validates :created_ats, timestamp: true, allow_nil: true
 
     def valid_order_by_values
       [:created_at]
     end
 
     def self.from_params(params)
-      super(params, %w(after_guid guids created_ats))
+      super(params, %w(after_guid guids))
     end
   end
 end

@@ -74,8 +74,8 @@ RSpec.describe 'Processes' do
           per_page:   '10',
           order_by:   'updated_at',
           label_selector:   'foo,bar',
-          created_ats: [],
-          updated_ats: []
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
@@ -86,6 +86,7 @@ RSpec.describe 'Processes' do
       let(:api_call) do
         lambda { |headers, filters| get "/v3/processes?#{filters}", nil, headers }
       end
+      let(:headers) { admin_header }
     end
 
     it 'returns a paginated list of processes' do

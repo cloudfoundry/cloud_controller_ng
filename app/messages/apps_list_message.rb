@@ -9,9 +9,7 @@ module VCAP::CloudController
       :space_guids,
       :stacks,
       :include,
-      :lifecycle_type,
-      :created_ats,
-      :updated_ats
+      :lifecycle_type
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -23,15 +21,13 @@ module VCAP::CloudController
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :stacks, array: true, allow_nil: true
-    validates :created_ats, timestamp: true, allow_nil: true
-    validates :updated_ats, timestamp: true, allow_nil: true
 
     def valid_order_by_values
       super << :name
     end
 
     def self.from_params(params)
-      super(params, %w(names guids organization_guids space_guids stacks include created_ats updated_ats))
+      super(params, %w(names guids organization_guids space_guids stacks include))
     end
   end
 end

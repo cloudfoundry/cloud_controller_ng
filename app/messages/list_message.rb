@@ -9,8 +9,9 @@ module VCAP::CloudController
     include Validators
 
     ALLOWED_PAGINATION_KEYS = [:page, :per_page, :order_by].freeze
+    ADVANCED_FILTERING_KEYS = [:created_ats, :updated_ats].freeze
 
-    register_allowed_keys ALLOWED_PAGINATION_KEYS
+    register_allowed_keys ALLOWED_PAGINATION_KEYS + ADVANCED_FILTERING_KEYS
 
     # Disallow directly calling <any>ListMessage.new
     # All ListMessage classes should be instantiated via the from_params method
@@ -73,8 +74,11 @@ module VCAP::CloudController
     validates_with PaginationPageValidator
     validates_with PaginationOrderValidator, if: -> { @pagination_params[:order_by].present? }
 
+    validates :created_ats, timestamp: true, allow_nil: true
+    validates :updated_ats, timestamp: true, allow_nil: true
+
     def self.from_params(params, to_array_keys, fields: [])
-      message = super(params, to_array_keys, fields: fields)
+      message = super(params, to_array_keys + ADVANCED_FILTERING_KEYS, fields: fields)
       message.requirements = parse_label_selector(params.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message

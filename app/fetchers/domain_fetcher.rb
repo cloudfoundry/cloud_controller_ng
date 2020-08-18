@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DomainFetcher
+  class DomainFetcher < BaseListFetcher
     class << self
       def fetch_all_for_orgs(readable_org_guids)
         # Q: The "Domain" in Domain.dataset is arbitrary -- just a way to get access to any database table.
@@ -53,7 +53,7 @@ module VCAP::CloudController
           )
         end
 
-        dataset
+        super(message, dataset, Domain)
       end
     end
   end

@@ -106,6 +106,14 @@ module VCAP::CloudController
       end
     end
 
+    class DisallowUpdatedAtsParamValidator < ActiveModel::Validator
+      def validate(record)
+        if record.requested?(:updated_ats)
+          record.errors[:base] << "Filtering by 'updated_ats' is not allowed on this resource."
+        end
+      end
+    end
+
     class IncludeParamValidator < ActiveModel::Validator
       def validate(record)
         if record.requested?(:include)

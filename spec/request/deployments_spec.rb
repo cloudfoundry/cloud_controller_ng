@@ -1214,6 +1214,8 @@ RSpec.describe 'Deployments' do
             status_reasons:   'foo',
             app_guids:   '123',
             label_selector:   'bar',
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
           }
         end
       end
@@ -1281,6 +1283,14 @@ RSpec.describe 'Deployments' do
           ]
         })
       end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::DeploymentModel }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/deployments?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
     end
   end
 

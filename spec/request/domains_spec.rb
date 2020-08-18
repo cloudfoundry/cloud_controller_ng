@@ -32,6 +32,8 @@ RSpec.describe 'Domains Request' do
           guids:   'foo,bar',
           organization_guids: 'foo,bar',
           label_selector:   'foo,bar',
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
@@ -606,6 +608,14 @@ RSpec.describe 'Domains Request' do
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::PrivateDomain }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/domains?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
     end
   end
 

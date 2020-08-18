@@ -121,6 +121,28 @@ RSpec.describe 'Service Usage Events' do
       end
     end
 
+    context 'filtering by timestamps' do
+      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
+      let!(:event_1) { VCAP::CloudController::ServiceUsageEvent.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
+      let!(:event_2) { VCAP::CloudController::ServiceUsageEvent.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
+      let!(:event_3) { VCAP::CloudController::ServiceUsageEvent.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
+      let!(:event_4) { VCAP::CloudController::ServiceUsageEvent.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+
+      it 'filters by the created at' do
+        get "/v3/service_usage_events?created_ats[lt]=#{event_3.created_at.iso8601}", nil, admin_header
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(event_1.guid, event_2.guid)
+      end
+
+      it 'returns an error when trying to filter by updated_ats' do
+        get "/v3/service_usage_events?updated_ats[lt]=#{event_3.created_at.iso8601}", nil, admin_header
+
+        expect(last_response).to have_status_code(422)
+        expect(last_response).to have_error_message("Filtering by 'updated_ats' is not allowed on this resource.")
+      end
+    end
+
     context 'when using the service_instance_types filter' do
       it 'returns the usage event matching the requested service instance type' do
         get "/v3/service_usage_events?service_instance_types=#{service_usage_event.service_instance_type}", nil, admin_headers

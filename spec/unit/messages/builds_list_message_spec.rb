@@ -13,6 +13,8 @@ module VCAP::CloudController
           'per_page'  => 5,
           'order_by'  => 'created_at',
           'label_selector' => 'key=value',
+          'created_ats'        => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          'updated_ats'        => { gt: Time.now.utc.iso8601 }
         }
       end
 
@@ -38,6 +40,8 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be true
         expect(message.requested?(:per_page)).to be true
         expect(message.requested?(:order_by)).to be true
+        expect(message.requested?(:created_ats)).to be_truthy
+        expect(message.requested?(:updated_ats)).to be_truthy
       end
     end
 

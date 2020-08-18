@@ -29,8 +29,18 @@ RSpec.describe 'buildpacks' do
           names: 'foo',
           stacks: 'cf',
           label_selector: 'foo,bar',
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Buildpack }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/buildpacks?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
     end
 
     context 'when filtered by label_selector' do

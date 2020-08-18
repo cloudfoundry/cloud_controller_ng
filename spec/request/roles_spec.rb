@@ -943,6 +943,8 @@ RSpec.describe 'Roles Request' do
             page: 2,
             order_by: 'updated_at',
             include: 'user, space',
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
           }
         end
       end

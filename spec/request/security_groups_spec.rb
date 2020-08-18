@@ -754,7 +754,8 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Unknown query parameter(s): 'blork'. Valid parameters are: " \
-            "'page', 'per_page', 'order_by', 'guids', 'names', 'running_space_guids', 'staging_space_guids', 'globally_enabled_running', 'globally_enabled_staging'")
+            "'page', 'per_page', 'order_by', 'created_ats', 'updated_ats', 'guids', 'names', 'running_space_guids', " \
+            "'staging_space_guids', 'globally_enabled_running', 'globally_enabled_staging'")
       end
     end
   end

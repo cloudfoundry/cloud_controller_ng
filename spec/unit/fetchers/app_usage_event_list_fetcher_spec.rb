@@ -17,8 +17,6 @@ module VCAP::CloudController
         expect(subject).to be_a(Sequel::Dataset)
       end
 
-      it_behaves_like 'filtering timestamps on creation', AppUsageEvent
-
       it 'returns all of the events' do
         expect(subject.count).to eq(3)
         expect(subject).to match_array([app_usage_event, app_usage_event_2, app_usage_event_3])

@@ -1,7 +1,13 @@
 module VCAP::CloudController
-  class ServiceUsageEventListFetcher
+  class ServiceUsageEventListFetcher < BaseListFetcher
     class << self
       def fetch_all(message, dataset)
+        filter(message, dataset)
+      end
+
+      private
+
+      def filter(message, dataset)
         if message.requested?(:after_guid)
           last_event = dataset.first(guid: message.after_guid[0])
           invalid_after_guid! unless last_event
@@ -21,10 +27,8 @@ module VCAP::CloudController
           dataset = dataset.where(service_guid: message.service_offering_guids)
         end
 
-        dataset
+        super(message, dataset, ServiceUsageEvent)
       end
-
-      private
 
       def invalid_after_guid!
         raise CloudController::Errors::ApiError.new_from_details(

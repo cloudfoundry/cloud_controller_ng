@@ -429,6 +429,8 @@ RSpec.describe 'v3 service bindings' do
           per_page:   '10',
           page: 2,
           order_by:   'updated_at',
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end

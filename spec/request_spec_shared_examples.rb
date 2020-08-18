@@ -234,15 +234,17 @@ end
 RSpec.shared_examples 'list_endpoint_with_common_filters' do
   let(:resource_klass) { fail 'Please define a resource_klass!' }
   let(:api_call) { ->(headers, filter) { fail 'Please define an api_call!' } }
+  let(:headers) { fail 'Please define headers to use for the api call' }
+  let(:additional_resource_params) { {} }
 
   context 'filtering timestamps on creation' do
-    let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-    let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+    let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     it 'filters' do
-      api_call.call(admin_header, "created_ats[lt]=#{resource_3.created_at.iso8601}")
+      api_call.call(headers, "created_ats[lt]=#{resource_3.created_at.iso8601}")
 
       expect(last_response).to have_status_code(200)
       expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
@@ -256,17 +258,17 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
       resource_klass.plugin :timestamps, update_on_create: false
     end
 
-    let!(:resource_1) { resource_klass.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
-    let!(:resource_2) { resource_klass.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
-    let!(:resource_3) { resource_klass.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
-    let!(:resource_4) { resource_klass.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+    let!(:resource_1) { resource_klass.make(guid: '1', updated_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '2', updated_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '3', updated_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_4) { resource_klass.make(guid: '4', updated_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     after do
       resource_klass.plugin :timestamps, update_on_create: true
     end
 
     it 'filters' do
-      api_call.call(admin_header, "updated_ats[lt]=#{resource_3.updated_at.iso8601}")
+      api_call.call(headers, "updated_ats[lt]=#{resource_3.updated_at.iso8601}")
 
       expect(last_response).to have_status_code(200)
       expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)

@@ -226,7 +226,7 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
+    dataset = AppBuildsListFetcher.fetch_all(app.guid, message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::BuildPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),

@@ -211,10 +211,11 @@ RSpec.describe 'v3 service credential bindings' do
     describe 'unknown filter' do
       let(:valid_query_params) { [
         'page', 'per_page', 'order_by',
+        'created_ats', 'updated_ats',
         'names',
         'service_instance_guids', 'service_instance_names',
         'app_guids', 'app_names',
-        'type'
+        'type',
       ]
       }
 

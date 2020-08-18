@@ -195,7 +195,9 @@ RSpec.describe 'V3 service plans' do
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo==bar',
-          fields: { 'service_offering.service_broker' => 'name' }
+          fields: { 'service_offering.service_broker' => 'name' },
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end

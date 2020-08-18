@@ -3,7 +3,7 @@ require 'fetchers/buildpack_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe BuildpackListFetcher do
-    let(:fetcher) { BuildpackListFetcher.new }
+    let(:fetcher) { BuildpackListFetcher }
 
     describe '#fetch_all' do
       let!(:stack1) { Stack.make }

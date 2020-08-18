@@ -10,6 +10,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with DisallowUpdatedAtsParamValidator
 
     validates :after_guid, array: true, allow_nil: true, length: {
       is: 1,

@@ -87,7 +87,7 @@ RSpec.describe BuildpacksController, type: :controller do
       end
 
       it 'eager loads associated resources that the presenter specifies' do
-        expect_any_instance_of(VCAP::CloudController::BuildpackListFetcher).to receive(:fetch_all).with(
+        expect(VCAP::CloudController::BuildpackListFetcher).to receive(:fetch_all).with(
           anything, hash_including(eager_loaded_associations: [:labels, :annotations])
         ).and_call_original
 

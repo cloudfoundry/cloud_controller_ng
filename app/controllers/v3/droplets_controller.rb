@@ -30,16 +30,16 @@ class DropletsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = DropletListFetcher.new(message: message).fetch_for_app
+      app, dataset = DropletListFetcher.fetch_for_app(message)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     elsif package_nested?
-      package, dataset = DropletListFetcher.new(message: message).fetch_for_package
+      package, dataset = DropletListFetcher.fetch_for_package(message)
       package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
-                  DropletListFetcher.new(message: message).fetch_all
+                  DropletListFetcher.fetch_all(message)
                 else
-                  DropletListFetcher.new(message: message).fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
+                  DropletListFetcher.fetch_for_spaces(message, permission_queryer.readable_space_guids)
                 end
     end
 

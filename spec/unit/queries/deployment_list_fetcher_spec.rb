@@ -46,19 +46,19 @@ module VCAP::CloudController
       status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
     }
 
-    subject(:fetcher) { DeploymentListFetcher.new(message: message) }
+    subject(:fetcher) { DeploymentListFetcher }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { DeploymentsListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_all
+        results = fetcher.fetch_all(message)
         expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the deployments' do
-        results = fetcher.fetch_all
+        results = fetcher.fetch_all(message)
         expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded,
                                         deployment_for_app2_space1, deployment_for_app3_space2, deployment_for_app4_space3])
       end
@@ -67,7 +67,7 @@ module VCAP::CloudController
         let(:filters) { { app_guids: [app_in_space1.guid, app3_in_space2.guid] } }
 
         it 'returns all of the deployments with the requested app guids' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
         end
       end
@@ -76,7 +76,7 @@ module VCAP::CloudController
         let(:filters) { { states: %w/DEPLOYED CANCELED/ } }
 
         it 'returns all of the deployments with the requested states' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
         end
       end
@@ -85,7 +85,7 @@ module VCAP::CloudController
         let(:filters) { { status_reasons: %w/DEPLOYED SUPERSEDED/ } }
 
         it 'returns all of the deployments with the requested states' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded])
         end
       end
@@ -94,7 +94,7 @@ module VCAP::CloudController
         let(:filters) { { status_reasons: %w/DEPLOYING CANCELING/ } }
 
         it 'returns all of the deployments with the requested states' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app2_space1, deployment_for_app4_space3])
         end
       end
@@ -103,7 +103,7 @@ module VCAP::CloudController
         let(:filters) { { status_reasons: %w(CANCELED CANCELING DEPLOYING) } }
 
         it 'returns all of the deployments with the requested states' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app2_space1, deployment_for_app3_space2, deployment_for_app4_space3])
         end
       end
@@ -112,7 +112,7 @@ module VCAP::CloudController
         let(:filters) { { status_values: %w/FINALIZED/ } }
 
         it 'returns all of the deployments with the requested states' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
         end
       end
@@ -123,7 +123,7 @@ module VCAP::CloudController
         let!(:deployment2label) { DeploymentLabelModel.make(key_name: 'key2', value: 'value2', deployment: deployment_for_app2_space1) }
 
         it 'returns the correct set of deployments' do
-          results = fetcher.fetch_all.all
+          results = fetcher.fetch_all(message).all
           expect(results).to contain_exactly(deployment_for_app1_space1)
         end
       end
@@ -131,12 +131,12 @@ module VCAP::CloudController
 
     describe '#fetch_for_spaces' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+        results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
         expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns only the deployments in spaces requested' do
-        results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+        results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
         expect(results.all).to match_array([
           deployment_for_app1_space1,
           deployment_for_app1_space1_superseded,
@@ -149,7 +149,7 @@ module VCAP::CloudController
         let(:filters) { { app_guids: [app_in_space1.guid, app4_in_space3.guid] } }
 
         it 'returns all the deployments associated with the requested app guid' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+          results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
           expect(results.all).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app4_space3])
         end
       end
@@ -158,7 +158,7 @@ module VCAP::CloudController
         let(:filters) { { states: %w/DEPLOYED CANCELED/ } }
 
         it 'returns all the deployments associated with the requested states' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+          results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
           expect(results.all).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded])
         end
       end
@@ -170,7 +170,7 @@ module VCAP::CloudController
         let!(:deployment2label) { DeploymentLabelModel.make(key_name: 'key2', value: 'value2', deployment: deployment_for_app4_space3) }
 
         it 'returns the correct set of deployments' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+          results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
           expect(results).to contain_exactly(deployment_for_app1_space1)
         end
       end

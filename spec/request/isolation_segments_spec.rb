@@ -235,8 +235,8 @@ RSpec.describe 'IsolationSegmentModels' do
           per_page:   '10',
           order_by:   'updated_at',
           label_selector:   'foo,bar',
-          created_ats: [],
-          updated_ats: []
+          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
@@ -409,10 +409,10 @@ RSpec.describe 'IsolationSegmentModels' do
 
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::IsolationSegmentModel }
-
       let(:api_call) do
         lambda { |headers, filters| get "/v3/isolation_segments?#{filters}", nil, headers }
       end
+      let(:headers) { admin_header }
     end
 
     context 'label_selector' do

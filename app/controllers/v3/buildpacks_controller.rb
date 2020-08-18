@@ -24,7 +24,7 @@ class BuildpacksController < ApplicationController
         message: message
       )
     else
-      dataset = BuildpackListFetcher.new.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildpackPresenter.associated_resources)
+      dataset = BuildpackListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildpackPresenter.associated_resources)
       render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
         presenter: Presenters::V3::BuildpackPresenter,
         paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
