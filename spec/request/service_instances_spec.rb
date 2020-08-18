@@ -998,50 +998,52 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'when the service broker does not have state (v2 brokers)' do
-        let(:service_broker) { service_plan.service_broker }
+      describe 'unavailable broker' do
+        context 'when the service broker does not have state (v2 brokers)' do
+          let(:service_broker) { service_plan.service_broker }
 
-        it 'creates a service instance' do
-          service_broker.update(state: '')
-          api_call.call(space_dev_headers)
-          expect(last_response).to have_status_code(202)
-        end
-      end
-
-      context 'when there is an operation in progress for the service broker' do
-        let(:service_broker) { service_plan.service_broker }
-
-        before do
-          service_broker.update(state: broker_state)
-        end
-
-        context 'when the service broker is being deleted' do
-          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
-          it 'fails to create a service instance' do
+          it 'creates a service instance' do
+            service_broker.update(state: '')
             api_call.call(space_dev_headers)
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(
-              include({
-                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
-            )
+            expect(last_response).to have_status_code(202)
           end
         end
 
-        context 'when the service broker is synchronising the catalog' do
-          let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
-          it 'fails to create a service instance' do
-            api_call.call(space_dev_headers)
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(
-              include({
-                'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
-            )
+        context 'when there is an operation in progress for the service broker' do
+          let(:service_broker) { service_plan.service_broker }
+
+          before do
+            service_broker.update(state: broker_state)
+          end
+
+          context 'when the service broker is being deleted' do
+            let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+            it 'fails to create a service instance' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
+              )
+            end
+          end
+
+          context 'when the service broker is synchronising the catalog' do
+            let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+            it 'fails to create a service instance' do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(
+                include({
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'title' => 'CF-UnprocessableEntity',
+                  'code' => 10008,
+                })
+              )
+            end
           end
         end
       end
@@ -1376,7 +1378,7 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'quotas' do
+      describe 'quotas restrictions' do
         describe 'space quotas' do
           context 'when the total services quota has been reached' do
             before do
@@ -3185,11 +3187,13 @@ RSpec.describe 'V3 service instances' do
 
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
     let(:api_call) { lambda { |user_headers| post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
-    let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
       {
         'data' => [
-          { 'guid' => target_space.guid }
+          { 'guid' => target_space_1.guid },
+          { 'guid' => target_space_2.guid }
         ]
       }
     end
@@ -3206,7 +3210,8 @@ RSpec.describe 'V3 service instances' do
 
     before do
       org.add_user(user)
-      target_space.add_developer(user)
+      target_space_1.add_developer(user)
+      target_space_2.add_developer(user)
     end
 
     describe 'permissions' do
@@ -3237,10 +3242,13 @@ RSpec.describe 'V3 service instances' do
         space_guid: space.guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['target_space_guids']).to eq([target_space.guid])
+      expect(event.metadata['target_space_guids']).to include(target_space_1.guid, target_space_2.guid)
+
+      service_instance.reload
+      expect(service_instance.shared_spaces).to include(target_space_1, target_space_2)
     end
 
-    context 'when service_instance_sharing flag is disabled' do
+    describe 'when service_instance_sharing flag is disabled' do
       before do
         feature_flag.enabled = false
         feature_flag.save
@@ -3272,6 +3280,123 @@ RSpec.describe 'V3 service instances' do
             'title' => 'CF-ResourceNotFound'
           })
       )
+    end
+
+    describe 'invalid request body' do
+      context 'when request is not a valid relationship' do
+        let(:request_body) do
+          {
+            'data' => { 'guid' => target_space_1.guid }
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'Data must be an array',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'when there are additional keys' do
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => target_space_1.guid }
+            ],
+            'fake-key' => 'foo'
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unknown field(s): 'fake-key'",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+
+    describe 'target space to share to' do
+      context 'does not exist' do
+        let(:target_space_guid) { 'fake-target' }
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => target_space_guid }
+            ]
+          }
+        end
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{target_space_guid}']. Ensure the spaces exist and that you have access to them.",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have access to one of the target spaces' do
+        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => no_access_target_space.guid },
+              { 'guid' => target_space_1.guid }
+            ]
+          }
+        end
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. Ensure the spaces exist and that you have access to them.",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+
+    describe 'errors while sharing' do
+      context 'service instance is user provided' do
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+
+        it 'should respond with 422 and the error' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'User-provided services cannot be shared.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
     end
   end
 
