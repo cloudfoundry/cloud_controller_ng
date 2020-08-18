@@ -1,3 +1,5 @@
+require 'fetchers/base_list_fetcher'
+
 module VCAP::CloudController
   class DomainFetcher < BaseListFetcher
     class << self
