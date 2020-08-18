@@ -189,6 +189,11 @@ Rails.application.routes.draw do
             param: :guid,
             only: [:show, :index]
 
+  # service_route_bindings
+  resources :service_route_bindings,
+    param: :guid,
+    only: [:create]
+
   # service_brokers
   get '/service_brokers', to: 'service_brokers#index'
   get '/service_brokers/:guid', to: 'service_brokers#show'
