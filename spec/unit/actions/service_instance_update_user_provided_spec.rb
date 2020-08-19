@@ -108,33 +108,64 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the name is already taken' do
-        let!(:other_service_instance) { UserProvidedServiceInstance.make(name: 'already_taken', space: service_instance.space) }
-        let(:body) do
-          { name: 'already_taken' }
+      describe 'validation fails' do
+        context 'name' do
+          describe 'when missing' do
+            let(:body) do
+              { name: '' }
+            end
+
+            it 'raises an error' do
+              expect { action.update(service_instance, message) }.
+                to raise_error(ServiceInstanceUpdateUserProvided::UnprocessableUpdate, 'name presence')
+            end
+          end
+
+          describe 'when too long' do
+            let(:body) do
+              { name: way_too_long }
+            end
+
+            it 'raises an error' do
+              expect { action.update(service_instance, message) }.
+                to raise_error(ServiceInstanceUpdateUserProvided::UnprocessableUpdate, 'name max_length')
+            end
+          end
+
+          describe 'when already taken' do
+            let!(:other_service_instance) { UserProvidedServiceInstance.make(name: 'already_taken', space: service_instance.space) }
+            let(:body) do
+              { name: 'already_taken' }
+            end
+
+            it 'fails' do
+              expect {
+                action.update(service_instance, message)
+              }.to raise_error(
+                ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
+                'The service instance name is taken: already_taken',
+              )
+            end
+          end
         end
 
-        it 'fails' do
-          expect {
-            action.update(service_instance, message)
-          }.to raise_error(
-            ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
-            'The service instance name is taken: already_taken',
-          )
+        context 'tags' do
+          let(:body) do
+            { tags: [way_too_long] }
+          end
+
+          describe 'when too long' do
+            it 'raises an error' do
+              expect { action.update(service_instance, message) }.
+                to raise_error(ServiceInstanceUpdateUserProvided::UnprocessableUpdate, 'tags too_long')
+            end
+          end
         end
       end
+    end
 
-      context 'SQL validation fails' do
-        it 'raises an error' do
-          errors = Sequel::Model::Errors.new
-          errors.add(:blork, 'is busted')
-          expect_any_instance_of(UserProvidedServiceInstance).to receive(:update).
-            and_raise(Sequel::ValidationFailed.new(errors))
-
-          expect { action.update(service_instance, message) }.
-            to raise_error(ServiceInstanceUpdateUserProvided::UnprocessableUpdate, 'blork is busted')
-        end
-      end
+    def way_too_long
+      'a' * 10_000
     end
   end
 end

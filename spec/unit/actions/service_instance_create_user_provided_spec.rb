@@ -11,6 +11,7 @@ module VCAP
       let(:message) { ServiceInstanceCreateUserProvidedMessage.new(request) }
       let(:instance) { ServiceInstance.last }
       let(:name) { 'my-service-instance' }
+      let(:tags) { %w(foo bar baz) }
 
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
@@ -28,7 +29,7 @@ module VCAP
           },
           syslog_drain_url: 'https://drain.com/foo',
           route_service_url: 'https://route.com/bar',
-          tags: %w(foo bar baz),
+          tags: tags,
           relationships: {
             space: {
               data: {
@@ -102,28 +103,53 @@ module VCAP
         end
       end
 
-      context 'name is already taken' do
-        it 'raises an error' do
-          ServiceInstance.make(name: name, space: space)
+      describe 'validation fails' do
+        context 'name' do
+          describe 'when missing' do
+            let(:name) { '' }
 
-          expect { action.create(message) }.
-            to raise_error(
-              ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
-              "The service instance name is taken: #{name}"
-            )
+            it 'raises an error' do
+              expect { action.create(message) }.
+                to raise_error(ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'name presence')
+            end
+          end
+
+          describe 'when too long' do
+            let(:name) { way_too_long }
+
+            it 'raises an error' do
+              expect { action.create(message) }.
+                to raise_error(ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'name max_length')
+            end
+          end
+
+          describe 'when already taken' do
+            it 'raises an error' do
+              ServiceInstance.make(name: name, space: space)
+
+              expect { action.create(message) }.
+                to raise_error(
+                  ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
+                     "The service instance name is taken: #{name}"
+                   )
+            end
+          end
+        end
+
+        context 'tags' do
+          let(:tags) { [way_too_long] }
+
+          describe 'when too long' do
+            it 'raises an error' do
+              expect { action.create(message) }.
+                to raise_error(ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'tags too_long')
+            end
+          end
         end
       end
 
-      context 'SQL validation fails' do
-        it 'raises an error' do
-          errors = Sequel::Model::Errors.new
-          errors.add(:blork, 'is busted')
-          expect(UserProvidedServiceInstance).to receive(:create).
-            and_raise(Sequel::ValidationFailed.new(errors))
-
-          expect { action.create(message) }.
-            to raise_error(ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance, 'blork is busted')
-        end
+      def way_too_long
+        'a' * 10_000
       end
     end
   end
