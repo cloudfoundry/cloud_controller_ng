@@ -2,9 +2,9 @@ module VCAP::CloudController
   module ServiceInstanceCreateMixin
     private
 
-    def validate_quotas!(e)
-      quota_errors = e.errors.on(:quota).to_a
-      plan_errors = e.errors.on(:service_plan).to_a
+    def validate_quotas!(errors)
+      quota_errors = errors.on(:quota).to_a
+      plan_errors = errors.on(:service_plan).to_a
 
       code = if quota_errors.include?(:service_instance_space_quota_exceeded)
                'ServiceInstanceSpaceQuotaExceeded'
@@ -20,16 +20,18 @@ module VCAP::CloudController
     end
 
     def validation_error!(
-      error,
+      exception,
       name:,
       validation_error_handler:
     )
-      validate_quotas!(error)
+      errors = exception.errors
+      validate_quotas!(errors)
 
-      if error.errors.on(:name)&.include?(:unique)
+      if errors.on(:name)&.include?(:unique)
         validation_error_handler.error!("The service instance name is taken: #{name}")
       end
-      validation_error_handler.error!(error.message)
+
+      validation_error_handler.error!(exception.message)
     end
   end
 end

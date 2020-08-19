@@ -52,7 +52,11 @@ module VCAP::CloudController
 
       pollable_job
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, name: message.name, validation_error_handler: ValidationErrorHandler.new)
+      validation_error!(
+        e,
+        name: message.name,
+        validation_error_handler: ValidationErrorHandler.new
+      )
     end
 
     private
