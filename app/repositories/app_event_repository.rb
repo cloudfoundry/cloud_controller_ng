@@ -160,6 +160,11 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.environment.show', app, app.space, actor_hash, {})
       end
 
+      def record_app_show_environment_variables(app, user_audit_info)
+        actor_hash = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
+        create_app_audit_event('audit.app.environment_variables.show', app, app.space, actor_hash, {})
+      end
+
       private
 
       def create_app_audit_event(type, app, space, actor, metadata)

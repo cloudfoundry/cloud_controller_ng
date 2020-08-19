@@ -261,6 +261,8 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
+    Repositories::AppEventRepository.new.record_app_show_environment_variables(app, user_audit_info)
+
     render status: :ok, json: Presenters::V3::AppEnvironmentVariablesPresenter.new(app)
   end
 
