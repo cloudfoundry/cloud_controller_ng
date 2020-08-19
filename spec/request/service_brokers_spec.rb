@@ -99,7 +99,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     it_behaves_like 'paginated response', '/v3/service_brokers' do
-      let!(:resources) { (0..1).collect { VCAP::CloudController::ServiceBroker.make } }
+      let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceBroker.make } }
     end
 
     it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do

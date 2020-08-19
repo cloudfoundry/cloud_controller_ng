@@ -188,7 +188,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'pagination' do
-      let!(:resources) { (0..2).collect { VCAP::CloudController::ServiceInstance.make } }
+      let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceInstance.make } }
 
       it_behaves_like 'paginated response', '/v3/service_instances'
 
