@@ -504,7 +504,7 @@ RSpec.describe 'V3 service offerings' do
       end
     end
 
-    context 'filters and sorting' do
+    context 'filters' do
       context 'when filtering on the `available` property' do
         let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?available=#{available}", nil, user_headers } }
 
@@ -706,6 +706,12 @@ RSpec.describe 'V3 service offerings' do
         end
 
         it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      end
+    end
+
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_offerings' do
+        let(:resource_klass) { VCAP::CloudController::Service }
       end
     end
 

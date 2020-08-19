@@ -90,13 +90,17 @@ RSpec.describe 'V3 service brokers' do
   end
 
   describe 'GET /v3/service_brokers' do
+    let(:api_call) { lambda { |user_headers| get '/v3/service_brokers', nil, user_headers } }
+
     before do
       stub_request(:get, 'http://example.org/broker-url-v2/v2/catalog').
         to_return(status: 200, body: catalog('v2-broker').to_json, headers: {})
       stub_uaa_for('v2-broker')
     end
 
-    let(:api_call) { lambda { |user_headers| get '/v3/service_brokers', nil, user_headers } }
+    it_behaves_like 'paginated response', '/v3/service_brokers' do
+      let!(:resources) { (0..1).collect { VCAP::CloudController::ServiceBroker.make } }
+    end
 
     it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
       let(:request) { 'v3/service_brokers' }
@@ -116,7 +120,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when there are no service brokers' do
+    describe 'empty response' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 200,
@@ -129,7 +133,7 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
-    context 'when there are global service brokers' do
+    describe 'global service brokers' do
       let(:global_broker_request_body_v2) do
         {
           name: 'v2 broker name',
@@ -202,7 +206,7 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
-    context 'when there are spaced-scoped service brokers' do
+    describe 'spaced-scoped service brokers' do
       let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
       let(:space_scoped_service_broker_json) do
         {
@@ -260,31 +264,9 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'filters and sorting' do
-      let!(:global_service_broker) {
-        VCAP::CloudController::ServiceBroker.make(name: 'test-broker-foo')
-      }
-
-      let!(:space_scoped_service_broker) {
-        VCAP::CloudController::ServiceBroker.make(name: 'test-broker-bar', space: space)
-      }
-
-      let(:resources) { [global_service_broker, space_scoped_service_broker] }
-      it_behaves_like 'paginated response', '/v3/service_brokers'
-
-      context 'when requesting with a specific order by name' do
-        context 'in ascending order' do
-          it 'returns 200 OK and a body containg the brokers ordered by created at time' do
-            expect_filtered_brokers('order_by=name', [space_scoped_service_broker, global_service_broker])
-          end
-        end
-
-        context 'descending order' do
-          it 'returns 200 OK and a body containg the brokers ordered by created at time' do
-            expect_filtered_brokers('order_by=-name', [global_service_broker, space_scoped_service_broker])
-          end
-        end
-      end
+    describe 'filters' do
+      let!(:global_service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'test-broker-foo') }
+      let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'test-broker-bar', space: space) }
 
       context 'when requesting with a space guid filter' do
         it 'returns 200 OK and a body containing one broker matching the space guid filter' do
@@ -311,6 +293,16 @@ RSpec.describe 'V3 service brokers' do
 
           expect_filtered_brokers('label_selector=boomerang=gel', [global_service_broker])
         end
+      end
+    end
+
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by name', '/v3/service_brokers' do
+        let(:resource_klass) { VCAP::CloudController::ServiceBroker }
+      end
+
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_brokers' do
+        let(:resource_klass) { VCAP::CloudController::ServiceBroker }
       end
     end
 
@@ -1486,7 +1478,7 @@ RSpec.describe 'V3 service brokers' do
       )
   end
 
-  def catalog(id = global_broker_id)
+  def catalog(id=global_broker_id)
     {
       'services' => [
         {
@@ -1523,7 +1515,7 @@ RSpec.describe 'V3 service brokers' do
     }
   end
 
-  def dashboard_client(id = global_broker_id)
+  def dashboard_client(id=global_broker_id)
     {
       'id' => "#{id}-uaa-id",
       'secret' => 'my-dashboard-secret',

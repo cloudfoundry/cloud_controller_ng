@@ -8,256 +8,264 @@ RSpec.describe 'v3 service credential bindings' do
   let(:other_space) { VCAP::CloudController::Space.make }
 
   describe 'GET /v3/service_credential_bindings' do
-    let(:now) { Time.now }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-    let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
-    let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
-    let!(:app_binding) do
-      VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds).tap do |binding|
-        operate_on(binding)
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by name', '/v3/service_credential_bindings' do
+        let(:resource_klass) { VCAP::CloudController::ServiceBinding }
+      end
+
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_credential_bindings' do
+        let(:resource_klass) { VCAP::CloudController::ServiceBinding }
       end
     end
-    let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
 
-    describe 'permissions' do
-      let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings', nil, user_headers } }
-
-      let(:all_bindings) do
-        {
-          code: 200,
-          response_objects: [
-            expected_json(key_binding),
-            expected_json(other_key_binding),
-            expected_json(app_binding),
-            expected_json(other_app_binding),
-          ]
-        }
-      end
-
-      let(:space_bindings) do
-        {
-          code: 200,
-          response_objects: [
-            expected_json(key_binding),
-            expected_json(app_binding)
-          ]
-        }
-      end
-
-      let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 200,
-          response_objects: []
-        ).tap do |h|
-          h['admin'] = all_bindings
-          h['admin_read_only'] = all_bindings
-          h['global_auditor'] = all_bindings
-          h['space_developer'] = space_bindings
-          h['space_manager'] = space_bindings
-          h['space_auditor'] = space_bindings
-          h['org_manager'] = space_bindings
+    context 'given a mixture of bindings' do
+      let(:now) { Time.now }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
+      let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
+      let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
+      let!(:app_binding) do
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds).tap do |binding|
+          operate_on(binding)
         end
       end
+      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-    end
+      describe 'permissions' do
+        let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings?order_by=created_at', nil, user_headers } }
 
-    describe 'pagination' do
-      let(:resources) { [key_binding, other_key_binding, app_binding, other_app_binding] }
+        let(:all_bindings) do
+          {
+            code: 200,
+            response_objects: [
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding),
+            ]
+          }
+        end
 
-      it_behaves_like 'paginated response', '/v3/service_credential_bindings'
-    end
+        let(:space_bindings) do
+          {
+            code: 200,
+            response_objects: [
+              expected_json(key_binding),
+              expected_json(app_binding)
+            ]
+          }
+        end
 
-    describe 'filters' do
-      let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-      let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
-      let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: []
+          ).tap do |h|
+            h['admin'] = all_bindings
+            h['admin_read_only'] = all_bindings
+            h['global_auditor'] = all_bindings
+            h['space_developer'] = space_bindings
+            h['space_manager'] = space_bindings
+            h['space_auditor'] = space_bindings
+            h['org_manager'] = space_bindings
+          end
+        end
 
-      before do
-        get '/v3/service_credential_bindings', nil, admin_headers
-        expect(parsed_response['resources']).to have(6).items
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
-      describe 'service instance names' do
-        it 'returns empty when there is no match' do
-          get '/v3/service_credential_bindings?service_instance_names=fake-name', nil, admin_headers
+      describe 'pagination' do
+        let(:resources) { [key_binding, other_key_binding, app_binding, other_app_binding] }
+
+        it_behaves_like 'paginated response', '/v3/service_credential_bindings'
+      end
+
+      describe 'filters' do
+        let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+        let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
+        let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
+
+        before do
+          get '/v3/service_credential_bindings', nil, admin_headers
+          expect(parsed_response['resources']).to have(6).items
+        end
+
+        describe 'service instance names' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_instance_names=fake-name', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            get "/v3/service_credential_bindings?order_by=created_at&service_instance_names=#{instance.name},#{other_instance.name}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'service instance guids' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_instance_guids=fake-guid', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            get "/v3/service_credential_bindings?order_by=created_at&service_instance_guids=#{instance.guid},#{other_instance.guid}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'names' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?names=fake-name', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            get "/v3/service_credential_bindings?order_by=created_at&names=#{key_binding.name},#{other_app_binding.name}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'app names' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?app_names=fake-app-name', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            get "/v3/service_credential_bindings?app_names=#{app_binding.app.name},#{other_app_binding.app.name}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'app guids' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?app_guids=fake-app-guid', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            get "/v3/service_credential_bindings?app_guids=#{app_binding.app.guid},#{other_app_binding.app.guid}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'type' do
+          it 'returns empty when there is no match' do
+            another_key.destroy
+            other_key_binding.destroy
+            key_binding.destroy
+
+            get '/v3/service_credential_bindings?type=key', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'errors for unknown type' do
+            get '/v3/service_credential_bindings?type=route', nil, admin_headers
+            expect(last_response).to have_status_code(400)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => "The query parameter is invalid: Type must be one of 'app', 'key'"
+            }))
+          end
+
+          it 'returns the filtered bindings' do
+            get '/v3/service_credential_bindings?type=key', nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(another_key)
+            )
+
+            get '/v3/service_credential_bindings?type=app', nil, admin_headers
+            check_filtered_bindings(
+              expected_json(app_binding),
+              expected_json(other_app_binding),
+              expected_json(another_binding)
+            )
+          end
+        end
+
+        def check_filtered_bindings(*bindings)
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'returns the filtered bindings' do
-          get "/v3/service_credential_bindings?service_instance_names=#{instance.name},#{other_instance.name}", nil, admin_headers
-          check_filtered_bindings(
-            expected_json(key_binding),
-            expected_json(other_key_binding),
-            expected_json(app_binding),
-            expected_json(other_app_binding)
+          expect(parsed_response['resources'].length).to be(bindings.length)
+          expect({ resources: parsed_response['resources'] }).to match_json_response(
+            { resources: bindings }
           )
         end
       end
 
-      describe 'service instance guids' do
-        it 'returns empty when there is no match' do
-          get '/v3/service_credential_bindings?service_instance_guids=fake-guid', nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'returns the filtered bindings' do
-          get "/v3/service_credential_bindings?service_instance_guids=#{instance.guid},#{other_instance.guid}", nil, admin_headers
-          check_filtered_bindings(
-            expected_json(key_binding),
-            expected_json(other_key_binding),
-            expected_json(app_binding),
-            expected_json(other_app_binding)
+      describe 'unknown filter' do
+        let(:valid_query_params) do
+          %w(
+            page per_page order_by created_ats updated_ats names service_instance_guids service_instance_names
+            app_guids app_names include type
           )
         end
-      end
 
-      describe 'names' do
-        it 'returns empty when there is no match' do
-          get '/v3/service_credential_bindings?names=fake-name', nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'returns the filtered bindings' do
-          get "/v3/service_credential_bindings?names=#{key_binding.name},#{other_app_binding.name}", nil, admin_headers
-          check_filtered_bindings(
-            expected_json(key_binding),
-            expected_json(other_app_binding)
-          )
-        end
-      end
-
-      describe 'app names' do
-        it 'returns empty when there is no match' do
-          get '/v3/service_credential_bindings?app_names=fake-app-name', nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'returns the filtered bindings' do
-          get "/v3/service_credential_bindings?app_names=#{app_binding.app.name},#{other_app_binding.app.name}", nil, admin_headers
-          check_filtered_bindings(
-            expected_json(app_binding),
-            expected_json(other_app_binding)
-          )
-        end
-      end
-
-      describe 'app guids' do
-        it 'returns empty when there is no match' do
-          get '/v3/service_credential_bindings?app_guids=fake-app-guid', nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'returns the filtered bindings' do
-          get "/v3/service_credential_bindings?app_guids=#{app_binding.app.guid},#{other_app_binding.app.guid}", nil, admin_headers
-          check_filtered_bindings(
-            expected_json(app_binding),
-            expected_json(other_app_binding)
-          )
-        end
-      end
-
-      describe 'type' do
-        it 'returns empty when there is no match' do
-          another_key.destroy
-          other_key_binding.destroy
-          key_binding.destroy
-
-          get '/v3/service_credential_bindings?type=key', nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources']).to be_empty
-        end
-
-        it 'errors for unknown type' do
-          get '/v3/service_credential_bindings?type=route', nil, admin_headers
+        it 'returns an error' do
+          get '/v3/service_credential_bindings?fruits=avocado,guava', nil, admin_headers
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(include({
-            'detail' => "The query parameter is invalid: Type must be one of 'app', 'key'"
+            'detail' => "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: '#{valid_query_params.join("', '")}'",
+            'title' => 'CF-BadQueryParameter',
+            'code' => 10005,
           }))
         end
+      end
 
-        it 'returns the filtered bindings' do
-          get '/v3/service_credential_bindings?type=key', nil, admin_headers
-          check_filtered_bindings(
-            expected_json(key_binding),
-            expected_json(other_key_binding),
-            expected_json(another_key)
-          )
+      describe 'include' do
+        it 'can include `app`' do
+          get '/v3/service_credential_bindings?include=app', nil, admin_headers
+          expect(last_response).to have_status_code(200)
 
-          get '/v3/service_credential_bindings?type=app', nil, admin_headers
-          check_filtered_bindings(
-            expected_json(app_binding),
-            expected_json(other_app_binding),
-            expected_json(another_binding)
-          )
+          expect(parsed_response['included']['apps']).to have(2).items
+          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
         end
-      end
 
-      def check_filtered_bindings(*bindings)
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].length).to be(bindings.length)
-        expect({ resources: parsed_response['resources'] }).to match_json_response(
-          { resources: bindings }
-        )
-      end
-    end
+        it 'can include `service_instance`' do
+          get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
+          expect(last_response).to have_status_code(200)
 
-    describe 'unknown filter' do
-      let(:valid_query_params) { [
-        'page', 'per_page', 'order_by',
-        'created_ats', 'updated_ats',
-        'names',
-        'service_instance_guids', 'service_instance_names',
-        'app_guids', 'app_names',
-        'include',
-        'type'
-      ]
-      }
+          expect(parsed_response['included']['service_instances']).to have(2).items
+          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+        end
 
-      it 'returns an error' do
-        get '/v3/service_credential_bindings?fruits=avocado,guava', nil, admin_headers
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: '#{valid_query_params.join("', '")}'",
-          'title' => 'CF-BadQueryParameter',
-          'code' => 10005,
-        }))
-      end
-    end
-
-    describe 'include' do
-      it 'can include `app`' do
-        get '/v3/service_credential_bindings?include=app', nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['apps']).to have(2).items
-        guids = parsed_response['included']['apps'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
-      end
-
-      it 'can include `service_instance`' do
-        get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['service_instances']).to have(2).items
-        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(instance.guid, other_instance.guid)
-      end
-
-      it 'returns a 400 for invalid includes' do
-        get '/v3/service_credential_bindings?include=routes', nil, admin_headers
-        expect(last_response).to have_status_code(400)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => include("Invalid included resource: 'routes'"),
-          'title' => 'CF-BadQueryParameter',
-          'code' => 10005,
-        }))
+        it 'returns a 400 for invalid includes' do
+          get '/v3/service_credential_bindings?include=routes', nil, admin_headers
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Invalid included resource: 'routes'"),
+            'title' => 'CF-BadQueryParameter',
+            'code' => 10005,
+          }))
+        end
       end
     end
   end

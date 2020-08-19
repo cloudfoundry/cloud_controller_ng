@@ -196,13 +196,13 @@ RSpec.describe 'V3 service plans' do
           order_by: 'updated_at',
           label_selector: 'foo==bar',
           fields: { 'service_offering.service_broker' => 'name' },
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
     end
 
-    context 'when there are no service plans' do
+    context 'no service plans' do
       it 'returns an empty list' do
         get '/v3/service_plans', nil, admin_headers
         expect(last_response).to have_status_code(200)
@@ -486,6 +486,16 @@ RSpec.describe 'V3 service plans' do
           get '/v3/service_plans?available=false', {}, admin_headers
           check_filtered_plans(alternate_plan)
         end
+      end
+    end
+
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by name', '/v3/service_plans' do
+        let(:resource_klass) { VCAP::CloudController::ServicePlan }
+      end
+
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_plans' do
+        let(:resource_klass) { VCAP::CloudController::ServicePlan }
       end
     end
 

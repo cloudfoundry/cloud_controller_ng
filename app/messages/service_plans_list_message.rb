@@ -32,6 +32,10 @@ module VCAP::CloudController
       }
     }
 
+    def valid_order_by_values
+      super << :name
+    end
+
     def self.from_params(params)
       super(params, @array_keys.map(&:to_s), fields: %w(fields))
     end
