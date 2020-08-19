@@ -191,7 +191,7 @@ RSpec.describe 'V3 service instances' do
           service_plan_guids: ['guid-1', 'guid-2'],
           service_plan_names: ['plan-1', 'plan-2'],
           fields: { 'space.organization' => 'name' },
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
@@ -3581,10 +3581,10 @@ RSpec.describe 'V3 service instances' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_response) do
           {
-             data: [{ guid: other_space.guid }],
-             links: {
-               self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
-             }
+            data: [{ guid: other_space.guid }],
+            links: {
+              self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+            }
           }
         end
 

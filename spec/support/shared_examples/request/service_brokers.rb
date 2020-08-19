@@ -30,19 +30,19 @@ RSpec.shared_examples 'a successful broker delete' do
     expect(VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(uaa_client_id)).to be_nil
 
     expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
-        with(
-          body: [
-            {
-                  "client_id": uaa_client_id,
-                  "client_secret": nil,
-                  "redirect_uri": nil,
-                  "scope": %w(openid cloud_controller_service_permissions.read),
-                  "authorities": ['uaa.resource'],
-                  "authorized_grant_types": ['authorization_code'],
-                  "action": 'delete'
-              }
-          ].to_json
-        )).to have_been_made
+      with(
+        body: [
+          {
+            "client_id": uaa_client_id,
+            "client_secret": nil,
+            "redirect_uri": nil,
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'delete'
+          }
+        ].to_json
+      )).to have_been_made
   end
 
   def clear_events

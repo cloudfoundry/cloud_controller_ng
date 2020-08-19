@@ -7,9 +7,9 @@ module VCAP::CloudController
 
     let(:params) do
       {
-        'page'      => 1,
-        'per_page'  => 5,
-        'order_by'  => 'created_at',
+        'page' => 1,
+        'per_page' => 5,
+        'order_by' => 'created_at',
         'service_instance_guids' => 'service-instance-1-guid, service-instance-2-guid, service-instance-3-guid',
         'service_instance_names' => 'service-instance-1-name, service-instance-2-name, service-instance-3-name',
         'names' => 'name1, name2',
