@@ -9,7 +9,7 @@ module VCAP::CloudController
       bindings.map { |b| Presenters::V3::AppPresenter.new(b.app).to_hash }
     }
 
-    it 'decorates the given hash with organizations from apps' do
+    it 'decorates the given hash with apps from bindings' do
       dict = { foo: 'bar' }
       hash = subject.decorate(dict, bindings)
       expect(hash[:foo]).to eq('bar')

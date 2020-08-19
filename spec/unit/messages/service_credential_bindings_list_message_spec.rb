@@ -16,7 +16,7 @@ module VCAP::CloudController
         'app_guids' => 'app-1-guid, app-2-guid, app-3-guid',
         'app_names' => 'app-1-name, app-2-name, app-3-name',
         'type' => 'app',
-        'include' => 'app'
+        'include' => 'app,service_instance'
       }
     end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
         expect(message.app_guids).to match_array(['app-1-guid', 'app-2-guid', 'app-3-guid'])
         expect(message.app_names).to match_array(['app-1-name', 'app-2-name', 'app-3-name'])
         expect(message.type).to eq('app')
-        expect(message.include).to match_array(['app'])
+        expect(message.include).to match_array(['app', 'service_instance'])
       end
 
       it 'converts requested keys to symbols' do
@@ -87,7 +87,7 @@ module VCAP::CloudController
         end
 
         it 'returns true for valid values' do
-          message = described_class.from_params({ 'include' => 'app' })
+          message = described_class.from_params({ 'include' => 'app, service_instance' })
           expect(message).to be_valid
         end
       end

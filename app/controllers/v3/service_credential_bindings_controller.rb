@@ -4,6 +4,7 @@ require 'presenters/v3/service_credential_binding_presenter'
 require 'messages/service_credential_bindings_list_message'
 require 'messages/service_credential_bindings_show_message'
 require 'decorators/include_binding_app_decorator'
+require 'decorators/include_binding_service_instance_decorator'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -35,7 +36,8 @@ class ServiceCredentialBindingsController < ApplicationController
   private
 
   AVAILABLE_DECORATORS = [
-    IncludeBindingAppDecorator
+    IncludeBindingAppDecorator,
+    IncludeBindingServiceInstanceDecorator
   ].freeze
 
   def decorators(message)
