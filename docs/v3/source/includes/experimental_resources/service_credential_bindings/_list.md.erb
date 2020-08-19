@@ -27,6 +27,8 @@ This endpoint retrieves the service credential bindings the user has access to.
 #### Definition
 `GET <%= @service_credential_binding_list_path %>`
 
+#### Query parameters
+
 Name | Type | Description
 ---- | ---- | ------------
 **names** | _list of strings_ | Comma-delimited list of service credential binding names to filter by
@@ -35,6 +37,7 @@ Name | Type | Description
 **app_guids** | _list of strings_ | Comma-delimited list of app guids to filter by
 **app_names** | _strings_ | Type of credential binding to filter by. Valid values are: `app` or `key`
 **type** | _list of strings_ | Comma-delimited list of app names to filter by
+**include** | _list of strings_ | Optionally include a list of unique related resources in the response. Valid values are: `app`
 **page** | _integer_ | Page to display; valid values are integers >= 1
 **per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
 **order_by** | _string_ | Value to sort by. Defaults to ascending; prepend with `-` to sort descending<br>Valid values are `created_at`, `updated_at`, and `name`

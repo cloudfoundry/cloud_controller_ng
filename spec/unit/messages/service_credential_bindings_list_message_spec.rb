@@ -15,7 +15,8 @@ module VCAP::CloudController
         'names' => 'name1, name2',
         'app_guids' => 'app-1-guid, app-2-guid, app-3-guid',
         'app_names' => 'app-1-name, app-2-name, app-3-name',
-        'type' => 'app'
+        'type' => 'app',
+        'include' => 'app'
       }
     end
 
@@ -31,6 +32,7 @@ module VCAP::CloudController
         expect(message.app_guids).to match_array(['app-1-guid', 'app-2-guid', 'app-3-guid'])
         expect(message.app_names).to match_array(['app-1-name', 'app-2-name', 'app-3-name'])
         expect(message.type).to eq('app')
+        expect(message.include).to match_array(['app'])
       end
 
       it 'converts requested keys to symbols' do
@@ -43,6 +45,7 @@ module VCAP::CloudController
         expect(message.requested?(:app_guids)).to be_truthy
         expect(message.requested?(:app_names)).to be_truthy
         expect(message.requested?(:type)).to be_truthy
+        expect(message.requested?(:include)).to be_truthy
       end
     end
 
@@ -58,20 +61,35 @@ module VCAP::CloudController
       end
 
       it 'returns false for invalid fields' do
-        message = described_class.from_params({ foobar: 'pants' })
+        message = described_class.from_params({ 'foobar' => 'pants' })
         expect(message).not_to be_valid
         expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
-      it 'returns true for valid types' do
-        expect(described_class.from_params({ type: 'app' })).to be_valid
-        expect(described_class.from_params({ type: 'key' })).to be_valid
+      context 'type' do
+        it 'returns true for valid types' do
+          expect(described_class.from_params({ 'type' => 'app' })).to be_valid
+          expect(described_class.from_params({ 'type' => 'key' })).to be_valid
+        end
+
+        it 'returns false for invalid types' do
+          message = described_class.from_params({ 'type' => 'route' })
+          expect(message).not_to be_valid
+          expect(message.errors[:type]).to include("must be one of 'app', 'key'")
+        end
       end
 
-      it 'returns false for invalid types' do
-        message = described_class.from_params({ type: 'route' })
-        expect(message).not_to be_valid
-        expect(message.errors[:type]).to include("must be one of 'app', 'key'")
+      context 'include' do
+        it 'returns false for arbitrary values' do
+          message = described_class.from_params({ 'include' => 'route' })
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include(include("Invalid included resource: 'route'"))
+        end
+
+        it 'returns true for valid values' do
+          message = described_class.from_params({ 'include' => 'app' })
+          expect(message).to be_valid
+        end
       end
     end
   end

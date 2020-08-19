@@ -6,16 +6,24 @@ module VCAP
       module V3
         class ServiceCredentialBindingPresenter < BasePresenter
           def to_hash
+            base_hash.merge(extra).merge(decorations)
+          end
+
+          private
+
+          def base_hash
             {
               guid: @resource.guid,
               created_at: @resource.created_at,
               updated_at: @resource.updated_at,
               name: @resource.name,
               type: type
-            }.merge(extra)
+            }
           end
 
-          private
+          def decorations
+            @decorators.reduce({}) { |memo, d| d.decorate(memo, [@resource]) }
+          end
 
           def type
             case @resource

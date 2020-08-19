@@ -108,6 +108,26 @@ module VCAP
           )
         end
       end
+
+      context 'when a decorator is provided' do
+        let(:decorator) { double('FakeDecorator') }
+
+        before do
+          allow(decorator).to receive(:decorate).with({}, array_including(credential_binding)).and_return({
+            included: { resource: { guid: 'app-guid' } }
+          })
+        end
+
+        let(:credential_binding) do
+          ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
+        end
+
+        let(:result) { described_class.new(credential_binding, decorators: [decorator]).to_hash.deep_symbolize_keys }
+
+        it 'uses the decorator' do
+          expect(result[:included]).to match({ resource: { guid: 'app-guid' } })
+        end
+      end
     end
   end
 end

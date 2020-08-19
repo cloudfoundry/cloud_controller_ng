@@ -215,7 +215,8 @@ RSpec.describe 'v3 service credential bindings' do
         'names',
         'service_instance_guids', 'service_instance_names',
         'app_guids', 'app_names',
-        'type',
+        'include',
+        'type'
       ]
       }
 
@@ -224,6 +225,27 @@ RSpec.describe 'v3 service credential bindings' do
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(include({
           'detail' => "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: '#{valid_query_params.join("', '")}'",
+          'title' => 'CF-BadQueryParameter',
+          'code' => 10005,
+        }))
+      end
+    end
+
+    describe 'include' do
+      it 'can include `app`' do
+        get '/v3/service_credential_bindings?include=app', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['apps']).to have(2).items
+        guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
+      end
+
+      it 'returns a 400 for invalid includes' do
+        get '/v3/service_credential_bindings?include=routes', nil, admin_headers
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => include("Invalid included resource: 'routes'"),
           'title' => 'CF-BadQueryParameter',
           'code' => 10005,
         }))
@@ -284,6 +306,17 @@ RSpec.describe 'v3 service credential bindings' do
         it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
       end
     end
+
+    describe 'query params' do
+      describe 'include' do
+        it 'can include `app`' do
+          get "/v3/service_credential_bindings/#{key.guid}?include=app", nil, admin_headers
+          expect(last_response).to have_status_code(200)
+
+          expect(parsed_response['included']['apps']).to have(0).items
+        end
+      end
+    end
   end
 
   describe 'GET /v3/service_credential_bindings/:app_guid' do
@@ -337,6 +370,47 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
+        end
+      end
+    end
+
+    describe 'include' do
+      it 'can include `app`' do
+        get "/v3/service_credential_bindings/#{app_binding.guid}?include=app", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['apps']).to have(1).items
+        guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(app_to_bind_to.guid)
+      end
+    end
+  end
+
+  describe 'GET /v3/service_credential_bindings/:guid' do
+    let(:binding) { VCAP::CloudController::ServiceBinding.make }
+
+    describe 'query params' do
+      it 'returns 400 for invalid query params' do
+        get "/v3/service_credential_bindings/#{binding.guid}?bahamas=yes-please", nil, admin_headers
+
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => "The query parameter is invalid: Unknown query parameter(s): 'bahamas'. Valid parameters are: 'include'",
+          'title' => 'CF-BadQueryParameter',
+          'code' => 10005,
+        }))
+      end
+
+      describe 'includes' do
+        it 'returns 400 for invalid includes' do
+          get "/v3/service_credential_bindings/#{binding.guid}?include=routes", nil, admin_headers
+
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Invalid included resource: 'routes'"),
+            'title' => 'CF-BadQueryParameter',
+            'code' => 10005,
+          }))
         end
       end
     end
