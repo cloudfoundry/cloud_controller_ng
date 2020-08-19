@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
     validates :type, allow_nil: true, inclusion: { in: %w(app key), message: "must be one of 'app', 'key'" }
-    validates_with IncludeParamValidator, valid_values: %w(app)
+    validates_with IncludeParamValidator, valid_values: %w(app service_instance)
 
     def self.from_params(params)
       super(params, ARRAY_KEYS.map(&:to_s))

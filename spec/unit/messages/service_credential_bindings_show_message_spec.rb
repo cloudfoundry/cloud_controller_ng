@@ -7,14 +7,14 @@ module VCAP::CloudController
 
     let(:params) do
       {
-        'include' => 'app'
+        'include' => 'app, service_instance'
       }
     end
 
     describe '.from_params' do
       it 'returns the correct ServiceCredentialBindingsShowMessage' do
         expect(message).to be_a(ServiceCredentialBindingsShowMessage)
-        expect(message.include).to match_array(['app'])
+        expect(message.include).to match_array(['app', 'service_instance'])
       end
 
       it 'converts requested keys to symbols' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'returns true for valid values' do
-          message = described_class.from_params({ 'include' => 'app' })
+          message = described_class.from_params({ 'include' => 'app, service_instance' })
           expect(message).to be_valid
         end
       end

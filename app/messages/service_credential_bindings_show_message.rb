@@ -9,7 +9,7 @@ module VCAP::CloudController
     register_allowed_keys ARRAY_KEYS
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: %w(app)
+    validates_with IncludeParamValidator, valid_values: %w(app service_instance)
 
     def self.from_params(params)
       super(params, ARRAY_KEYS.map(&:to_s))

@@ -241,6 +241,15 @@ RSpec.describe 'v3 service credential bindings' do
         expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
       end
 
+      it 'can include `service_instance`' do
+        get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(2).items
+        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+      end
+
       it 'returns a 400 for invalid includes' do
         get '/v3/service_credential_bindings?include=routes', nil, admin_headers
         expect(last_response).to have_status_code(400)
@@ -312,8 +321,16 @@ RSpec.describe 'v3 service credential bindings' do
         it 'can include `app`' do
           get "/v3/service_credential_bindings/#{key.guid}?include=app", nil, admin_headers
           expect(last_response).to have_status_code(200)
-
           expect(parsed_response['included']['apps']).to have(0).items
+        end
+
+        it 'can include `service_instance`' do
+          get "/v3/service_credential_bindings/#{key.guid}?include=service_instance", nil, admin_headers
+          expect(last_response).to have_status_code(200)
+
+          expect(parsed_response['included']['service_instances']).to have(1).items
+          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          expect(guids).to contain_exactly(instance.guid)
         end
       end
     end
@@ -382,6 +399,15 @@ RSpec.describe 'v3 service credential bindings' do
         expect(parsed_response['included']['apps']).to have(1).items
         guids = parsed_response['included']['apps'].map { |x| x['guid'] }
         expect(guids).to contain_exactly(app_to_bind_to.guid)
+      end
+
+      it 'can include `service_instance`' do
+        get "/v3/service_credential_bindings/#{app_binding.guid}?include=service_instance", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(1).items
+        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(instance.guid)
       end
     end
   end
