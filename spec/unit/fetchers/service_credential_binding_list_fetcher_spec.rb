@@ -18,15 +18,37 @@ module VCAP
       describe 'app and key bindings' do
         let(:space) { VCAP::CloudController::Space.make }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-        let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
-        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name) }
+
+        let(:key_details) {
+          {
+            credentials: '{"some":"key"}'
+          }
+        }
+
+        let(:app_details) {
+          {
+            credentials: '{"some":"app secret"}',
+            syslog_drain_url: 'http://example.com/drain-app',
+            volume_mounts: ['ccc', 'ddd']
+          }
+        }
+        let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, **key_details) }
+        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_details) }
 
         context 'when getting everything' do
           it 'returns both key and app bindings' do
             bindings = fetcher.fetch(space_guids: :all, message: message).all
-            binding_guids = bindings.map(&:guid)
+            to_hash = ->(b) {
+              {
+                guid: b.guid,
+                credentials: b.credentials,
+                syslog_drain_url: b.try(:syslog_drain_url) || nil,
+                volume_mounts: b.try(:volume_mount) || []
+              }
+            }
 
-            expect(binding_guids).to contain_exactly(key_binding.guid, app_binding.guid)
+            actual_bindings = bindings.map { |b| to_hash.call(b) }
+            expect(actual_bindings).to contain_exactly(to_hash.call(key_binding), to_hash.call(app_binding))
           end
         end
 

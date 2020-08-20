@@ -14,11 +14,18 @@ module VCAP
         Sequel.as(:service_keys__created_at, :created_at),
         Sequel.as(:service_keys__updated_at, :updated_at),
         Sequel.as(:service_keys__name, :name),
+        Sequel.as(:service_keys__credentials, :credentials),
+        Sequel.as(:service_keys__salt, :salt),
+        Sequel.as(:service_keys__encryption_key_label, :encryption_key_label),
+        Sequel.as(:service_keys__encryption_iterations, :encryption_iterations),
         Sequel.as(:service_instances__guid, :service_instance_guid),
         Sequel.as(:service_instances__name, :service_instance_name),
         Sequel.as(nil, :app_guid),
         Sequel.as(nil, :app_name),
-        Sequel.as(:service_keys__service_instance_id, :service_instance_id)
+        Sequel.as(:service_keys__service_instance_id, :service_instance_id),
+        Sequel.as(nil, :syslog_drain_url),
+        Sequel.as(nil, :volume_mounts),
+        Sequel.as(nil, :volume_mounts_salt)
       ).join(
         :service_instances, id: Sequel[:service_keys][:service_instance_id]
       ).join(
@@ -33,11 +40,18 @@ module VCAP
         Sequel.as(:service_bindings__created_at, :created_at),
         Sequel.as(:service_bindings__updated_at, :updated_at),
         Sequel.as(:service_bindings__name, :name),
+        Sequel.as(:service_bindings__credentials, :credentials),
+        Sequel.as(:service_bindings__salt, :salt),
+        Sequel.as(:service_bindings__encryption_key_label, :encryption_key_label),
+        Sequel.as(:service_bindings__encryption_iterations, :encryption_iterations),
         Sequel.as(:service_bindings__service_instance_guid, :service_instance_guid),
         Sequel.as(:service_instances__name, :service_instance_name),
         Sequel.as(:service_bindings__app_guid, :app_guid),
         Sequel.as(:apps__name, :app_name),
-        Sequel.as(nil, :service_instance_id)
+        Sequel.as(nil, :service_instance_id),
+        Sequel.as(:service_bindings__syslog_drain_url, :syslog_drain_url),
+        Sequel.as(:service_bindings__volume_mounts, :volume_mounts),
+        Sequel.as(:service_bindings__volume_mounts_salt, :volume_mounts_salt)
       ).join(
         :apps, guid: Sequel[:service_bindings][:app_guid]
       ).join(

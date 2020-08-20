@@ -359,6 +359,7 @@ includes:
   - experimental_resources/service_credential_bindings/object
   - experimental_resources/service_credential_bindings/get
   - experimental_resources/service_credential_bindings/list
+  - experimental_resources/service_credential_bindings/details
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get

@@ -1,0 +1,35 @@
+### Get a service credential binding details
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_credential_bindings/[guid]/details" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Credential Binding Details Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_credential_binding_details %>
+```
+
+This endpoint retrieves the service credential binding details.
+
+#### Definition
+`GET /v3/service_service_credential_bindings/:guid/details`
+
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Space Developer |
