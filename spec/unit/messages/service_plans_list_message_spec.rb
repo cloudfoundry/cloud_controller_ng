@@ -120,5 +120,12 @@ module VCAP::CloudController
 
       it_behaves_like 'fields to_param_hash', 'service_offering.service_broker', 'guid,name'
     end
+
+    describe 'order_by' do
+      it 'allows name' do
+        message = described_class.from_params(order_by: 'name')
+        expect(message).to be_valid
+      end
+    end
   end
 end

@@ -24,5 +24,9 @@ module VCAP::CloudController
     def self.from_params(params)
       super(params, ARRAY_KEYS.map(&:to_s))
     end
+
+    def valid_order_by_values
+      super + [:name]
+    end
   end
 end

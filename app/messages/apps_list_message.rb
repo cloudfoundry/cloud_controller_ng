@@ -23,7 +23,7 @@ module VCAP::CloudController
     validates :stacks, array: true, allow_nil: true
 
     def valid_order_by_values
-      super << :name
+      super + [:name]
     end
 
     def self.from_params(params)

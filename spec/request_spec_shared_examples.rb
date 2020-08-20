@@ -22,6 +22,9 @@ RSpec.shared_examples 'paginated response' do |endpoint|
 
     expect(parsed_response['pagination']['total_results']).to eq(resources.length)
     expect(parsed_response['pagination']['total_pages']).to eq(resources.length)
+    expect(parsed_response['pagination']['first']['href']).to include("#{endpoint}?page=1&per_page=1")
+    expect(parsed_response['pagination']['next']['href']).to include("#{endpoint}?page=2&per_page=1")
+    expect(parsed_response['pagination']['last']['href']).to include("#{endpoint}?page=#{resources.length}&per_page=1")
   end
 
   it 'keeps filtering information in links' do
@@ -272,6 +275,99 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
 
       expect(last_response).to have_status_code(200)
       expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+    end
+  end
+end
+
+RSpec.shared_examples 'list endpoint order_by name' do |endpoint|
+  let(:resource_klass) { fail 'Please define a resource_klass!' }
+  let(:additional_resource_params) { {} }
+
+  let!(:resource_1) { resource_klass.make(guid: '1', name: 'flopsy', **additional_resource_params) }
+  let!(:resource_2) { resource_klass.make(guid: '2', name: 'mopsy', **additional_resource_params) }
+  let!(:resource_3) { resource_klass.make(guid: '3', name: 'cottontail', **additional_resource_params) }
+  let!(:resource_4) { resource_klass.make(guid: '4', name: 'peter', **additional_resource_params) }
+
+  it 'sorts ascending' do
+    get("#{endpoint}?order_by=name", nil, admin_headers)
+    expect(last_response).to have_status_code(200)
+    expect(parsed_response['resources'][0]['guid']).to eq('3') # cottontail
+    expect(parsed_response['resources'][1]['guid']).to eq('1') # flopsy
+    expect(parsed_response['resources'][2]['guid']).to eq('2') # mopsy
+    expect(parsed_response['resources'][3]['guid']).to eq('4') # peter
+  end
+
+  it 'sorts descending' do
+    get("#{endpoint}?order_by=-name", nil, admin_headers)
+    expect(last_response).to have_status_code(200)
+    expect(parsed_response['resources'][0]['guid']).to eq('4') # peter
+    expect(parsed_response['resources'][1]['guid']).to eq('2') # mopsy
+    expect(parsed_response['resources'][2]['guid']).to eq('1') # flopsy
+    expect(parsed_response['resources'][3]['guid']).to eq('3') # cottontail
+  end
+end
+
+RSpec.shared_examples 'list endpoint order_by timestamps' do |endpoint|
+  let(:resource_klass) { fail 'Please define a resource_klass!' }
+  let(:additional_resource_params) { {} }
+
+  context 'order_by created_at' do
+    let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+
+    it 'sorts ascending' do
+      get("#{endpoint}?order_by=created_at", nil, admin_headers)
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response['resources'][0]['guid']).to eq('3')
+      expect(parsed_response['resources'][1]['guid']).to eq('2')
+      expect(parsed_response['resources'][2]['guid']).to eq('1')
+      expect(parsed_response['resources'][3]['guid']).to eq('4')
+    end
+
+    it 'sorts descending' do
+      get("#{endpoint}?order_by=-created_at", nil, admin_headers)
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response['resources'][0]['guid']).to eq('4')
+      expect(parsed_response['resources'][1]['guid']).to eq('1')
+      expect(parsed_response['resources'][2]['guid']).to eq('2')
+      expect(parsed_response['resources'][3]['guid']).to eq('3')
+    end
+  end
+
+  context 'order_by updated_at' do
+    # before must occur before the let! otherwise the resources will be created with
+    # update_on_create: true
+    before do
+      resource_klass.plugin :timestamps, update_on_create: false
+    end
+
+    let!(:resource_1) { resource_klass.make(guid: '1', updated_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '2', updated_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '3', updated_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_4) { resource_klass.make(guid: '4', updated_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+
+    after do
+      resource_klass.plugin :timestamps, update_on_create: true
+    end
+
+    it 'sorts ascending' do
+      get("#{endpoint}?order_by=updated_at", nil, admin_headers)
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response['resources'][0]['guid']).to eq('3')
+      expect(parsed_response['resources'][1]['guid']).to eq('2')
+      expect(parsed_response['resources'][2]['guid']).to eq('1')
+      expect(parsed_response['resources'][3]['guid']).to eq('4')
+    end
+
+    it 'sorts descending' do
+      get("#{endpoint}?order_by=-updated_at", nil, admin_headers)
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response['resources'][0]['guid']).to eq('4')
+      expect(parsed_response['resources'][1]['guid']).to eq('1')
+      expect(parsed_response['resources'][2]['guid']).to eq('2')
+      expect(parsed_response['resources'][3]['guid']).to eq('3')
     end
   end
 end

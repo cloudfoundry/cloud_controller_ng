@@ -15,7 +15,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceCredentialBindingPresenter,
-      paginated_result: SequelPaginator.new.get_page(results, pagination_options),
+      paginated_result: SequelPaginator.new.get_page(results, message.try(:pagination_options)),
       path: '/v3' + service_credential_bindings_path,
       message: message,
       decorators: decorators(message)

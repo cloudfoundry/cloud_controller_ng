@@ -163,17 +163,7 @@ RSpec.describe 'V3 service instances' do
   describe 'GET /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_instances', nil, user_headers } }
 
-    let!(:msi_1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let!(:msi_2) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
-    let!(:upsi_1) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
-    let!(:upsi_2) { VCAP::CloudController::UserProvidedServiceInstance.make(space: another_space) }
-    let!(:ssi) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
-
-    before do
-      ssi.add_shared_space(space)
-    end
-
-    describe 'list query parameters' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
       let(:user_header) { admin_headers }
       let(:request) { 'v3/service_instances' }
       let(:message) { VCAP::CloudController::ServiceInstancesListMessage }
@@ -191,61 +181,15 @@ RSpec.describe 'V3 service instances' do
           service_plan_guids: ['guid-1', 'guid-2'],
           service_plan_names: ['plan-1', 'plan-2'],
           fields: { 'space.organization' => 'name' },
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
-
-      it_behaves_like 'request_spec_shared_examples.rb list query endpoint'
-    end
-
-    describe 'permissions' do
-      let(:all_instances) do
-        {
-          code: 200,
-          response_objects: [
-            create_managed_json(msi_1),
-            create_managed_json(msi_2),
-            create_user_provided_json(upsi_1),
-            create_user_provided_json(upsi_2),
-            create_managed_json(ssi),
-          ]
-        }
-      end
-
-      let(:space_instances) do
-        {
-          code: 200,
-          response_objects: [
-            create_managed_json(msi_1),
-            create_user_provided_json(upsi_1),
-            create_managed_json(ssi),
-          ]
-        }
-      end
-
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: []
-        )
-
-        h['admin'] = all_instances
-        h['admin_read_only'] = all_instances
-        h['global_auditor'] = all_instances
-        h['space_developer'] = space_instances
-        h['space_manager'] = space_instances
-        h['space_auditor'] = space_instances
-        h['org_manager'] = space_instances
-
-        h
-      end
-
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'pagination' do
-      let(:resources) { [msi_1, msi_2, upsi_1, upsi_2, ssi] }
+      let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceInstance.make } }
+
       it_behaves_like 'paginated response', '/v3/service_instances'
 
       it_behaves_like 'paginated fields response', '/v3/service_instances', 'space', 'guid,name,relationships.organization'
@@ -253,226 +197,293 @@ RSpec.describe 'V3 service instances' do
       it_behaves_like 'paginated fields response', '/v3/service_instances', 'space.organization', 'name,guid'
     end
 
-    describe 'filters' do
-      it 'filters by name' do
-        get "/v3/service_instances?names=#{msi_1.name}", nil, admin_headers
-        check_filtered_instances(create_managed_json(msi_1))
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by name', '/v3/service_instances' do
+        let(:resource_klass) { VCAP::CloudController::ServiceInstance }
       end
 
-      it 'filters by space guid' do
-        get "/v3/service_instances?space_guids=#{another_space.guid}", nil, admin_headers
-        check_filtered_instances(
-          create_managed_json(msi_2),
-          create_user_provided_json(upsi_2),
-          create_managed_json(ssi),
-        )
-      end
-
-      it 'filters by organization guids' do
-        get "/v3/service_instances?organization_guids=#{another_space.organization.guid}", nil, admin_headers
-        check_filtered_instances(
-          create_managed_json(msi_2),
-          create_user_provided_json(upsi_2),
-          create_managed_json(ssi),
-        )
-      end
-
-      it 'filters by label' do
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: msi_1)
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'raspberry', service_instance: msi_2)
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: ssi)
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: upsi_2)
-
-        get '/v3/service_instances?label_selector=fruit=strawberry', nil, admin_headers
-
-        check_filtered_instances(
-          create_managed_json(msi_1, labels: { fruit: 'strawberry' }),
-          create_user_provided_json(upsi_2, labels: { fruit: 'strawberry' }),
-          create_managed_json(ssi, labels: { fruit: 'strawberry' }),
-        )
-      end
-
-      it 'filters by type' do
-        get '/v3/service_instances?type=managed', nil, admin_headers
-        check_filtered_instances(
-          create_managed_json(msi_1),
-          create_managed_json(msi_2),
-          create_managed_json(ssi),
-        )
-      end
-
-      it 'filters by service_plan_guids' do
-        get "/v3/service_instances?service_plan_guids=#{msi_1.service_plan.guid},#{msi_2.service_plan.guid}", nil, admin_headers
-        check_filtered_instances(
-          create_managed_json(msi_1),
-          create_managed_json(msi_2)
-        )
-      end
-
-      it 'filters by service_plan_names' do
-        get "/v3/service_instances?service_plan_names=#{msi_1.service_plan.name},#{msi_2.service_plan.name}", nil, admin_headers
-        check_filtered_instances(
-          create_managed_json(msi_1),
-          create_managed_json(msi_2)
-        )
-      end
-
-      def check_filtered_instances(*instances)
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].length).to be(instances.length)
-        expect({ resources: parsed_response['resources'] }).to match_json_response(
-          { resources: instances }
-        )
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_instances' do
+        let(:resource_klass) { VCAP::CloudController::ServiceInstance }
       end
     end
 
-    context 'fields' do
-      it 'can include the space and organization name and guid fields' do
-        get '/v3/service_instances?fields[space]=guid,name,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
-        expect(last_response).to have_status_code(200)
+    context 'given a mixture of managed, user-provided and shared service instances' do
+      let!(:msi_1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let!(:msi_2) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
+      let!(:upsi_1) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+      let!(:upsi_2) { VCAP::CloudController::UserProvidedServiceInstance.make(space: another_space) }
+      let!(:ssi) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
 
-        included = {
-          spaces: [
-            {
-              guid: space.guid,
-              name: space.name,
-              relationships: {
-                organization: {
-                  data: {
-                    guid: space.organization.guid
-                  }
-                }
-              }
-            },
-            {
-              guid: another_space.guid,
-              name: another_space.name,
-              relationships: {
-                organization: {
-                  data: {
-                    guid: another_space.organization.guid
-                  }
-                }
-              }
-            }
-          ],
-          organizations: [
-            {
-              name: space.organization.name,
-              guid: space.organization.guid
-            },
-            {
-              name: another_space.organization.name,
-              guid: another_space.organization.guid
-            }
-          ]
-        }
-
-        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+      before do
+        ssi.add_shared_space(space)
       end
 
-      it 'can include the service plan, offering and broker fields' do
-        get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
+      describe 'permissions' do
+        let(:all_instances) do
+          {
+            code: 200,
+            response_objects: [
+              create_managed_json(msi_1),
+              create_managed_json(msi_2),
+              create_user_provided_json(upsi_1),
+              create_user_provided_json(upsi_2),
+              create_managed_json(ssi),
+            ]
+          }
+        end
+
+        let(:space_instances) do
+          {
+            code: 200,
+            response_objects: [
+              create_managed_json(msi_1),
+              create_user_provided_json(upsi_1),
+              create_managed_json(ssi),
+            ]
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: []
+          )
+
+          h['admin'] = all_instances
+          h['admin_read_only'] = all_instances
+          h['global_auditor'] = all_instances
+          h['space_developer'] = space_instances
+          h['space_manager'] = space_instances
+          h['space_auditor'] = space_instances
+          h['org_manager'] = space_instances
+
+          h
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'filters' do
+        it 'filters by name' do
+          get "/v3/service_instances?names=#{msi_1.name}", nil, admin_headers
+          check_filtered_instances(create_managed_json(msi_1))
+        end
+
+        it 'filters by space guid' do
+          get "/v3/service_instances?space_guids=#{another_space.guid}", nil, admin_headers
+          check_filtered_instances(
+            create_managed_json(msi_2),
+            create_user_provided_json(upsi_2),
+            create_managed_json(ssi),
+          )
+        end
+
+        it 'filters by organization guids' do
+          get "/v3/service_instances?organization_guids=#{another_space.organization.guid}", nil, admin_headers
+          check_filtered_instances(
+            create_managed_json(msi_2),
+            create_user_provided_json(upsi_2),
+            create_managed_json(ssi),
+          )
+        end
+
+        it 'filters by label' do
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: msi_1)
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'raspberry', service_instance: msi_2)
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: ssi)
+          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: upsi_2)
+
+          get '/v3/service_instances?label_selector=fruit=strawberry', nil, admin_headers
+
+          check_filtered_instances(
+            create_managed_json(msi_1, labels: { fruit: 'strawberry' }),
+            create_user_provided_json(upsi_2, labels: { fruit: 'strawberry' }),
+            create_managed_json(ssi, labels: { fruit: 'strawberry' }),
+          )
+        end
+
+        it 'filters by type' do
+          get '/v3/service_instances?type=managed', nil, admin_headers
+          check_filtered_instances(
+            create_managed_json(msi_1),
+            create_managed_json(msi_2),
+            create_managed_json(ssi),
+          )
+        end
+
+        it 'filters by service_plan_guids' do
+          get "/v3/service_instances?service_plan_guids=#{msi_1.service_plan.guid},#{msi_2.service_plan.guid}", nil, admin_headers
+          check_filtered_instances(
+            create_managed_json(msi_1),
+            create_managed_json(msi_2)
+          )
+        end
+
+        it 'filters by service_plan_names' do
+          get "/v3/service_instances?service_plan_names=#{msi_1.service_plan.name},#{msi_2.service_plan.name}", nil, admin_headers
+          check_filtered_instances(
+            create_managed_json(msi_1),
+            create_managed_json(msi_2)
+          )
+        end
+
+        def check_filtered_instances(*instances)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].length).to be(instances.length)
+          expect({ resources: parsed_response['resources'] }).to match_json_response(
+            { resources: instances }
+          )
+        end
+      end
+
+      context 'fields' do
+        it 'can include the space and organization name and guid fields' do
+          get '/v3/service_instances?fields[space]=guid,name,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+
+          included = {
+            spaces: [
+              {
+                guid: space.guid,
+                name: space.name,
+                relationships: {
+                  organization: {
+                    data: {
+                      guid: space.organization.guid
+                    }
+                  }
+                }
+              },
+              {
+                guid: another_space.guid,
+                name: another_space.name,
+                relationships: {
+                  organization: {
+                    data: {
+                      guid: another_space.organization.guid
+                    }
+                  }
+                }
+              }
+            ],
+            organizations: [
+              {
+                name: space.organization.name,
+                guid: space.organization.guid
+              },
+              {
+                name: another_space.organization.name,
+                guid: another_space.organization.guid
+              }
+            ]
+          }
+
+          expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+        end
+
+        it 'can include the service plan, offering and broker fields' do
+          get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
                 'fields[service_plan.service_offering]=name,guid,description,documentation_url,relationships.service_broker&' \
                 'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
 
-        expect(last_response).to have_status_code(200)
+          expect(last_response).to have_status_code(200)
 
-        included = {
-          service_plans: [
-            {
-              guid: msi_1.service_plan.guid,
-              name: msi_1.service_plan.name,
-              relationships: {
-                service_offering: {
-                  data: {
-                    guid: msi_1.service_plan.service.guid
+          included = {
+            service_plans: [
+              {
+                guid: msi_1.service_plan.guid,
+                name: msi_1.service_plan.name,
+                relationships: {
+                  service_offering: {
+                    data: {
+                      guid: msi_1.service_plan.service.guid
+                    }
+                  }
+                }
+              },
+              {
+                guid: msi_2.service_plan.guid,
+                name: msi_2.service_plan.name,
+                relationships: {
+                  service_offering: {
+                    data: {
+                      guid: msi_2.service_plan.service.guid
+                    }
+                  }
+                }
+              },
+              {
+                guid: ssi.service_plan.guid,
+                name: ssi.service_plan.name,
+                relationships: {
+                  service_offering: {
+                    data: {
+                      guid: ssi.service_plan.service.guid
+                    }
                   }
                 }
               }
-            },
-            {
-              guid: msi_2.service_plan.guid,
-              name: msi_2.service_plan.name,
-              relationships: {
-                service_offering: {
-                  data: {
-                    guid: msi_2.service_plan.service.guid
+            ],
+            service_offerings: [
+              {
+                name: msi_1.service_plan.service.name,
+                guid: msi_1.service_plan.service.guid,
+                description: msi_1.service_plan.service.description,
+                documentation_url: 'https://some.url.for.docs/',
+                relationships: {
+                  service_broker: {
+                    data: {
+                      guid: msi_1.service_plan.service.service_broker.guid
+                    }
+                  }
+                }
+              },
+              {
+                name: msi_2.service_plan.service.name,
+                guid: msi_2.service_plan.service.guid,
+                description: msi_2.service_plan.service.description,
+                documentation_url: 'https://some.url.for.docs/',
+                relationships: {
+                  service_broker: {
+                    data: {
+                      guid: msi_2.service_plan.service.service_broker.guid
+                    }
+                  }
+                }
+              },
+              {
+                name: ssi.service_plan.service.name,
+                guid: ssi.service_plan.service.guid,
+                description: ssi.service_plan.service.description,
+                documentation_url: 'https://some.url.for.docs/',
+                relationships: {
+                  service_broker: {
+                    data: {
+                      guid: ssi.service_plan.service.service_broker.guid
+                    }
                   }
                 }
               }
-            },
-            {
-              guid: ssi.service_plan.guid,
-              name: ssi.service_plan.name,
-              relationships: {
-                service_offering: {
-                  data: {
-                    guid: ssi.service_plan.service.guid
-                  }
-                }
+            ],
+            service_brokers: [
+              {
+                name: msi_1.service_plan.service.service_broker.name,
+                guid: msi_1.service_plan.service.service_broker.guid
+              },
+              {
+                name: msi_2.service_plan.service.service_broker.name,
+                guid: msi_2.service_plan.service.service_broker.guid
+              },
+              {
+                name: ssi.service_plan.service.service_broker.name,
+                guid: ssi.service_plan.service.service_broker.guid
               }
-            }
-          ],
-          service_offerings: [
-            {
-              name: msi_1.service_plan.service.name,
-              guid: msi_1.service_plan.service.guid,
-              description: msi_1.service_plan.service.description,
-              documentation_url: 'https://some.url.for.docs/',
-              relationships: {
-                service_broker: {
-                  data: {
-                    guid: msi_1.service_plan.service.service_broker.guid
-                  }
-                }
-              }
-            },
-            {
-              name: msi_2.service_plan.service.name,
-              guid: msi_2.service_plan.service.guid,
-              description: msi_2.service_plan.service.description,
-              documentation_url: 'https://some.url.for.docs/',
-              relationships: {
-                service_broker: {
-                  data: {
-                    guid: msi_2.service_plan.service.service_broker.guid
-                  }
-                }
-              }
-            },
-            {
-              name: ssi.service_plan.service.name,
-              guid: ssi.service_plan.service.guid,
-              description: ssi.service_plan.service.description,
-              documentation_url: 'https://some.url.for.docs/',
-              relationships: {
-                service_broker: {
-                  data: {
-                    guid: ssi.service_plan.service.service_broker.guid
-                  }
-                }
-              }
-            }
-          ],
-          service_brokers: [
-            {
-              name: msi_1.service_plan.service.service_broker.name,
-              guid: msi_1.service_plan.service.service_broker.guid
-            },
-            {
-              name: msi_2.service_plan.service.service_broker.name,
-              guid: msi_2.service_plan.service.service_broker.guid
-            },
-            {
-              name: ssi.service_plan.service.service_broker.name,
-              guid: ssi.service_plan.service.service_broker.guid
-            }
 
-          ]
-        }
+            ]
+          }
 
-        expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+          expect({ included: parsed_response['included'] }).to match_json_response({ included: included })
+        end
       end
     end
   end
@@ -3581,10 +3592,10 @@ RSpec.describe 'V3 service instances' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_response) do
           {
-             data: [{ guid: other_space.guid }],
-             links: {
-               self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
-             }
+            data: [{ guid: other_space.guid }],
+            links: {
+              self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+            }
           }
         end
 

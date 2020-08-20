@@ -7,9 +7,9 @@ module VCAP::CloudController
 
     let(:params) do
       {
-        'page'      => 1,
-        'per_page'  => 5,
-        'order_by'  => 'created_at',
+        'page' => 1,
+        'per_page' => 5,
+        'order_by' => 'created_at',
         'service_instance_guids' => 'service-instance-1-guid, service-instance-2-guid, service-instance-3-guid',
         'service_instance_names' => 'service-instance-1-name, service-instance-2-name, service-instance-3-name',
         'names' => 'name1, name2',
@@ -90,6 +90,13 @@ module VCAP::CloudController
           message = described_class.from_params({ 'include' => 'app, service_instance' })
           expect(message).to be_valid
         end
+      end
+    end
+
+    describe 'order_by' do
+      it 'allows name' do
+        message = described_class.from_params(order_by: 'name')
+        expect(message).to be_valid
       end
     end
   end
