@@ -344,7 +344,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  describe 'GET /v3/service_credential_bindings/:app_guid' do
+  describe 'GET /v3/service_credential_bindings/:app_binding_guid' do
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
     let(:app_binding) do
       VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
@@ -445,6 +445,99 @@ RSpec.describe 'v3 service credential bindings' do
             'title' => 'CF-BadQueryParameter',
             'code' => 10005,
           }))
+        end
+      end
+    end
+  end
+
+  describe 'GET /v3/service_credential_bindings/:binding_guid/details' do
+    let(:details) {
+      {
+        service_instance: instance,
+        volume_mounts: ['foo', 'bar'],
+        syslog_drain_url: 'some-drain-url',
+        credentials: '{"cred_key": "creds-val-64", "magic": true}'
+      }
+    }
+    let(:app_binding) { VCAP::CloudController::ServiceBinding.make(**details) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}/details", nil, user_headers } }
+    let(:binding_credentials) {
+      {
+        credentials: {
+          cred_key: 'creds-val-64',
+          magic: true
+        },
+        syslog_drain_url: 'some-drain-url',
+        volume_mounts: ['foo', 'bar']
+      }
+    }
+
+    context 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['space_developer'] = { code: 200, response_object: binding_credentials }
+            h['admin'] = { code: 200, response_object: binding_credentials }
+            h['admin_read_only'] = { code: 200, response_object: binding_credentials }
+          end
+        end
+      end
+
+      describe 'when the service instance is shared' do
+        let(:originating_space) { VCAP::CloudController::Space.make }
+        let(:shared_space) { space }
+        let(:user_in_shared_space) {
+          u = VCAP::CloudController::User.make
+          shared_space.organization.add_user(u)
+          shared_space.add_developer(u)
+          u
+        }
+        let(:user_in_originating_space) do
+          u = VCAP::CloudController::User.make
+          originating_space.organization.add_user(u)
+          originating_space.add_developer(u)
+          u
+        end
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
+        let(:details) {
+          {
+            service_instance: instance,
+            credentials: '{"password": "terces"}',
+            app: source_app
+          }
+        }
+
+        before do
+          instance.add_shared_space(shared_space)
+        end
+
+        context 'bindings in the originating space' do
+          let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
+
+          it 'should return the credentials for users in the originating space' do
+            api_call.call(headers_for(user_in_originating_space))
+            expect(last_response).to have_status_code(200)
+          end
+
+          it 'should return 404 for users in the shared space' do
+            api_call.call(headers_for(user_in_shared_space))
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
+        context 'bindings in the shared space' do
+          let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
+
+          it 'should return 404 for users in the originating space' do
+            api_call.call(headers_for(user_in_originating_space))
+            expect(last_response).to have_status_code(404)
+          end
+
+          it 'should return the credentials for users in the shared space space' do
+            api_call.call(headers_for(user_in_shared_space))
+            expect(last_response).to have_status_code(200)
+          end
         end
       end
     end

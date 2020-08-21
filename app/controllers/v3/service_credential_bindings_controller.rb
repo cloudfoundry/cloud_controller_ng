@@ -1,6 +1,7 @@
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'presenters/v3/service_credential_binding_presenter'
+require 'presenters/v3/service_credential_binding_details_presenter'
 require 'messages/service_credential_bindings_list_message'
 require 'messages/service_credential_bindings_show_message'
 require 'decorators/include_binding_app_decorator'
@@ -31,6 +32,13 @@ class ServiceCredentialBindingsController < ApplicationController
     ensure_service_credential_binding_is_accessible!
 
     render status: :ok, json: serialized(message)
+  end
+
+  def details
+    ensure_service_credential_binding_is_accessible!
+    not_found! unless can_read_secrets_in_the_binding_space?
+
+    render status: :ok, json: credential_binding_details
   end
 
   private
@@ -65,6 +73,10 @@ class ServiceCredentialBindingsController < ApplicationController
     Presenters::V3::ServiceCredentialBindingPresenter.new(service_credential_binding, decorators: decorators(message)).to_hash
   end
 
+  def credential_binding_details
+    Presenters::V3::ServiceCredentialBindingDetailsPresenter.new(service_credential_binding).to_hash
+  end
+
   def ensure_service_credential_binding_is_accessible!
     not_found! unless service_credential_binding_exists?
   end
@@ -75,6 +87,18 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def service_credential_binding_exists?
     !!service_credential_binding
+  end
+
+  def can_read_secrets_in_the_binding_space?
+    permission_queryer.can_read_secrets_in_space?(binding_space.guid, binding_org.guid)
+  end
+
+  def binding_space
+    service_credential_binding.space
+  end
+
+  def binding_org
+    service_credential_binding.space.organization
   end
 
   def list_fetcher

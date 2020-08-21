@@ -448,6 +448,7 @@ module VCAP::CloudController
     syslog_drain_url { nil }
     type { 'app' }
     name { nil }
+    guid { Sham.guid }
   end
 
   ServiceKey.blueprint do
