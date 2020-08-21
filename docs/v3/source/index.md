@@ -32,6 +32,7 @@ includes:
   - api_resources/service_plans
   - api_resources/service_plan_visibility
   - api_resources/service_credential_bindings
+  - api_resources/service_route_bindings
   - api_resources/service_instances
   - api_resources/service_usage_events
   - api_resources/sidecars
@@ -360,6 +361,9 @@ includes:
   - experimental_resources/service_credential_bindings/get
   - experimental_resources/service_credential_bindings/list
   - experimental_resources/service_credential_bindings/details
+  - experimental_resources/service_route_bindings/header
+  - experimental_resources/service_route_bindings/object
+  - experimental_resources/service_route_bindings/create
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get

@@ -164,12 +164,13 @@ RSpec.describe 'v3 service route bindings' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(201)
 
-        binding = VCAP::CloudController::RouteBinding.first
-        expect(parsed_response['guid']).to eq(binding.guid)
-
-        expect(binding.service_instance).to eq(service_instance)
-        expect(binding.route).to eq(route)
-        expect(binding.route_service_url).to eq(route_service_url)
+        expect(parsed_response).to match_json_response(
+          expected_json(
+            binding_guid: VCAP::CloudController::RouteBinding.first.guid,
+            service_instance_guid: service_instance.guid,
+            route_guid: route.guid,
+          )
+        )
       end
 
       describe 'permissions' do
@@ -277,5 +278,36 @@ RSpec.describe 'v3 service route bindings' do
     org.add_user(user)
     space.add_developer(user)
     headers_for(user)
+  end
+
+  def expected_json(binding_guid:, route_guid:, service_instance_guid:)
+    {
+      guid: binding_guid,
+      created_at: iso8601,
+      updated_at: iso8601,
+      relationships: {
+        service_instance: {
+          data: {
+            guid: service_instance_guid
+          }
+        },
+        route: {
+          data: {
+            guid: route_guid
+          }
+        }
+      },
+      links: {
+        self: {
+          href: "#{link_prefix}/v3/service_route_bindings/#{binding_guid}"
+        },
+        service_instance: {
+          href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
+        },
+        route: {
+          href: "#{link_prefix}/v3/routes/#{route_guid}"
+        }
+      }
+    }
   end
 end
