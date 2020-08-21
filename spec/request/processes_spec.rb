@@ -741,6 +741,32 @@ RSpec.describe 'Processes' do
       })
     end
 
+    it 'returns a helpful error when the meemory is too large' do
+      process = VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+      )
+
+      scale_request = {
+        memory_in_mb: 100000000000,
+      }
+
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
+      # parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(422)
+      expect(parsed_response['errors'][0]['detail']).to eq 'Memory in mb must be less than or equal to 2147483647'
+
+      process.reload
+      expect(process.memory).to eq(1024)
+    end
+
     it 'ensures that the memory allocation is greater than existing sidecar memory allocation' do
       process = VCAP::CloudController::ProcessModel.make(
         :process,

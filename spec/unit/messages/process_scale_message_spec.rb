@@ -74,6 +74,18 @@ module VCAP::CloudController
       end
     end
 
+    context 'when memory_in_mb is > the max value allowed in the database' do
+      let(:params) { { memory_in_mb: 0 } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:memory_in_mb]).to include('must be greater than 0')
+      end
+    end
+
     context 'when memory_in_mb is not an integer' do
       let(:params) { { memory_in_mb: 3.5 } }
 
