@@ -1,0 +1,59 @@
+### Create a service route binding
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_route_bindings" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "relationships": {
+      "route": {
+        "data": {
+          "guid": "7304bc3c-7010-11ea-8840-48bf6bec2d78"
+        }
+      },
+      "service_instance": {
+        "data": {
+          "guid": "e0e4417c-74ee-11ea-a604-48bf6bec2d78"
+        }
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_service_route_binding %>
+```
+
+This endpoint creates a new route service binding. The service instance and the route
+must be in the same space.
+
+To bind to a route to a user-provided service instance, the service instance must
+have the `route_service_url` property set.
+
+#### Definition
+`POST /v3/service_route_bindings`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**relationships.route** | [_to-one relationship_](#to-one-relationships) | The route to bind
+**relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance to bind
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Developer |

@@ -1,5 +1,6 @@
 require 'messages/service_route_binding_create_message'
 require 'actions/service_route_binding_create'
+require 'presenters/v3/service_route_binding_presenter'
 
 class ServiceRouteBindingsController < ApplicationController
   def create
@@ -17,7 +18,7 @@ class ServiceRouteBindingsController < ApplicationController
       head :not_implemented
     when UserProvidedServiceInstance
       binding = action.create(service_instance, route)
-      render status: :created, json: { guid: binding.guid }.to_json
+      render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(binding)
     end
   rescue V3::ServiceRouteBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
