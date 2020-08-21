@@ -10,7 +10,6 @@ module VCAP
       let(:credential_binding) do
         ServiceBinding.make(
           name: 'some-name',
-          guid: 'some-guid',
           app: app,
           service_instance: instance,
           credentials: json_creds,

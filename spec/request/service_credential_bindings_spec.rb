@@ -336,7 +336,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  describe 'GET /v3/service_credential_bindings/:app_guid' do
+  describe 'GET /v3/service_credential_bindings/:app_binding_guid' do
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
     let(:app_binding) do
       VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
@@ -442,7 +442,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  describe 'GET /v3/service_credential_bindings/:app_guid/details' do
+  describe 'GET /v3/service_credential_bindings/:binding_guid/details' do
     let(:details) {
       {
         service_instance: instance,

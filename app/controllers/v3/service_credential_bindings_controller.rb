@@ -36,7 +36,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def details
     ensure_service_credential_binding_is_accessible!
-    ensure_binding_details_are_accessible!
+    not_found! unless can_read_secrets_in_the_binding_space?
 
     render status: :ok, json: credential_binding_details
   end
@@ -79,10 +79,6 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def ensure_service_credential_binding_is_accessible!
     not_found! unless service_credential_binding_exists?
-  end
-
-  def ensure_binding_details_are_accessible!
-    not_found! unless can_read_secrets_in_the_binding_space?
   end
 
   def not_found!

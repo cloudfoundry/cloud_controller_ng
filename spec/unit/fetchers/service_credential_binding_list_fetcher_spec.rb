@@ -25,7 +25,7 @@ module VCAP
           }
         }
 
-        let(:app_details) {
+        let(:app_binding_details) {
           {
             credentials: '{"some":"app secret"}',
             syslog_drain_url: 'http://example.com/drain-app',
@@ -33,7 +33,7 @@ module VCAP
           }
         }
         let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, **key_details) }
-        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_details) }
+        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_binding_details) }
 
         context 'when getting everything' do
           it 'returns both key and app bindings' do
