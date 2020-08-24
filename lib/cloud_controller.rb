@@ -8,6 +8,8 @@ require 'allowy'
 
 require 'uaa/token_coder'
 
+module VCAP; end
+
 require 'sinatra/vcap'
 require File.expand_path('../config/environment', __dir__)
 

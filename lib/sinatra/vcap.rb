@@ -1,4 +1,3 @@
-require 'vcap/ring_buffer'
 require 'vcap/rest_api'
 require 'vcap/request'
 require 'presenters/error_presenter'
