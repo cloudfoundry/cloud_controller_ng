@@ -456,12 +456,13 @@ RSpec.describe 'v3 service credential bindings' do
         service_instance: instance,
         volume_mounts: ['foo', 'bar'],
         syslog_drain_url: 'some-drain-url',
-        credentials: '{"cred_key": "creds-val-64", "magic": true}'
+        credentials: { 'cred_key' => 'creds-val-64', 'magic' => true }
       }
     }
     let(:app_binding) { VCAP::CloudController::ServiceBinding.make(**details) }
+    let(:guid) { app_binding.guid }
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}/details", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/details", nil, user_headers } }
     let(:binding_credentials) {
       {
         credentials: {
@@ -538,6 +539,94 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(200)
           end
+        end
+      end
+    end
+
+    describe 'credhub interaction' do
+      let(:key_binding) { VCAP::CloudController::ServiceKey.make(:credhub_reference, service_instance: instance) }
+      let(:credhub_url) { VCAP::CloudController::Config.config.get(:credhub_api, :internal_url) }
+      let(:uaa_url) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
+      let(:credentials) { { 'username' => 'cinnamon', 'password' => 'roll' } }
+      let(:credhub_response_status) { 200 }
+      let(:credhub_response_body) { { data: [value: credentials] }.to_json }
+      let!(:credhub_server_stub) {
+        stub_request(:get, "#{credhub_url}/api/v1/data?name=#{key_binding.credhub_reference}&current=true").
+          with(headers: {
+            'Authorization' => 'Bearer my-favourite-access-token',
+            'Content-Type'  => 'application/json'
+          }).to_return(status: credhub_response_status, body: credhub_response_body)
+      }
+
+      before do
+        token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
+        stub_request(:post, "#{uaa_url}/oauth/token").
+          to_return(status: 200, body: token.to_json, headers: { 'Content-Type' => 'application/json' })
+      end
+
+      context 'for key bindings with a credhub reference' do
+        let(:guid) { key_binding.guid }
+
+        it 'fetches and returns the credentials values from credhub' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(credhub_server_stub).to have_been_requested
+          expect(parsed_response['credentials']).to eq(credentials)
+        end
+      end
+
+      context 'for key bindings without a credhub reference' do
+        let(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+        let(:guid) { key_binding.guid }
+
+        it 'returns the credentials as found in the datbase' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(credhub_server_stub).not_to have_been_requested
+          expect(parsed_response['credentials']).to eq(key_binding.credentials)
+        end
+      end
+
+      context 'for app bindings with credhub references' do
+        let(:details) { { service_instance: instance, credentials: { 'credhub-ref' => '/secret/super/morish' } } }
+
+        it 'returns the credentials as found in the database' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(credhub_server_stub).not_to have_been_requested
+          expect(parsed_response['credentials']).to eq({ 'credhub-ref' => '/secret/super/morish' })
+        end
+      end
+
+      context 'when the reference cannot be found on credhub' do
+        let(:guid) { key_binding.guid }
+        let(:credhub_response_status) { 404 }
+        let(:credhub_response_body) { { error: 'cred does not exist' }.to_json }
+
+        it 'returns an error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => 'cred does not exist',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when credhub returns an error' do
+        let(:guid) { key_binding.guid }
+        let(:credhub_response_status) { 500 }
+        let(:credhub_response_body) { nil }
+
+        it 'returns an error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => 'Server error, status: 500',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
         end
       end
     end
