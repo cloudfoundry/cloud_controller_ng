@@ -196,7 +196,7 @@ RSpec.describe 'v3 service route bindings' do
 
         it 'fails with a specific error' do
           api_call.call(space_dev_headers)
-          expect(last_response).to have_status_code(400)
+          expect(last_response).to have_status_code(422)
 
           expect(parsed_response['errors']).to include(
             include({

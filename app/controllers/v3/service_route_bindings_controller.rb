@@ -83,6 +83,6 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def already_exists!
-    raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute')
+    raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute').with_response_code(422)
   end
 end
