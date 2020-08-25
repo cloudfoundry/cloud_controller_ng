@@ -25,9 +25,17 @@ module VCAP
         Sequel.as(:service_keys__service_instance_id, :service_instance_id),
         Sequel.as(nil, :syslog_drain_url),
         Sequel.as(nil, :volume_mounts),
-        Sequel.as(nil, :volume_mounts_salt)
+        Sequel.as(nil, :volume_mounts_salt),
+        Sequel.as(:service_plans__name, :service_plan_name),
+        Sequel.as(:service_plans__guid, :service_plan_guid),
+        Sequel.as(:services__label, :service_offering_name),
+        Sequel.as(:services__guid, :service_offering_guid)
       ).join(
         :service_instances, id: Sequel[:service_keys][:service_instance_id]
+      ).left_join(
+        :service_plans, id: Sequel[:service_instances][:service_plan_id]
+      ).left_join(
+        :services, id: Sequel[:service_plans][:service_id]
       ).join(
         :spaces, id: Sequel[:service_instances][:space_id]
       ).freeze
@@ -51,11 +59,19 @@ module VCAP
         Sequel.as(nil, :service_instance_id),
         Sequel.as(:service_bindings__syslog_drain_url, :syslog_drain_url),
         Sequel.as(:service_bindings__volume_mounts, :volume_mounts),
-        Sequel.as(:service_bindings__volume_mounts_salt, :volume_mounts_salt)
+        Sequel.as(:service_bindings__volume_mounts_salt, :volume_mounts_salt),
+        Sequel.as(:service_plans__name, :service_plan_name),
+        Sequel.as(:service_plans__guid, :service_plan_guid),
+        Sequel.as(:services__label, :service_offering_name),
+        Sequel.as(:services__guid, :service_offering_guid)
       ).join(
         :apps, guid: Sequel[:service_bindings][:app_guid]
       ).join(
         :service_instances, guid: Sequel[:service_bindings][:service_instance_guid]
+      ).left_join(
+        :service_plans, id: Sequel[:service_instances][:service_plan_id]
+      ).left_join(
+        :services, id: Sequel[:service_plans][:service_id]
       ).join(
         :spaces, guid: Sequel[:apps][:space_guid]
       ).freeze
