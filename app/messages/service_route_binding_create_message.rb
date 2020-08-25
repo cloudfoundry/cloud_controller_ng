@@ -3,9 +3,10 @@ require 'utils/hash_utils'
 
 module VCAP::CloudController
   class ServiceRouteBindingCreateMessage < BaseMessage
-    register_allowed_keys [:relationships]
+    register_allowed_keys [:relationships, :parameters]
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator
+    validates :parameters, hash: true, allow_nil: true
 
     delegate :route_guid, :service_instance_guid, to: :relationships_message
 
