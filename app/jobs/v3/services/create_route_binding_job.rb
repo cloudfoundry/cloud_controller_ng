@@ -33,7 +33,8 @@ module VCAP::CloudController
 
       def perform
         precursor = RouteBinding.first(guid: @precursor_guid)
-        action = V3::ServiceRouteBindingCreate.new(@user_audit_info)
+        service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
+        action = V3::ServiceRouteBindingCreate.new(service_event_repository)
         action.bind(precursor, parameters: @parameters)
       end
     end

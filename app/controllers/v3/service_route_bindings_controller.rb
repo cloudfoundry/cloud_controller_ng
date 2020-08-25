@@ -19,7 +19,7 @@ class ServiceRouteBindingsController < ApplicationController
     when ManagedServiceInstance
       bind_job = VCAP::CloudController::V3::CreateRouteBindingJob.new(
         precursor.guid,
-        user_audit_info: service_event_repository,
+        user_audit_info: user_audit_info,
         parameters: message.parameters,
       )
       pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
