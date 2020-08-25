@@ -52,6 +52,9 @@ module VCAP
                 self: {
                   href: %r{.*/v3/service_credential_bindings/some-guid}
                 },
+                details: {
+                  href: %r{.*/v3/service_credential_bindings/some-guid/details}
+                },
                 app: {
                   href: %r{.*/v3/apps/app-guid}
                 },
@@ -99,6 +102,9 @@ module VCAP
               links: {
                 self: {
                   href: %r{.*/v3/service_credential_bindings/some-guid}
+                },
+                details: {
+                  href: %r{.*/v3/service_credential_bindings/some-guid/details}
                 },
                 service_instance: {
                   href: %r{.*/v3/service_instances/instance-guid}
