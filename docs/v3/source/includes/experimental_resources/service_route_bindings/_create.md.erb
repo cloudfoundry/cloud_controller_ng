@@ -21,12 +21,26 @@ curl "https://api.example.org/v3/service_route_bindings" \
           "guid": "e0e4417c-74ee-11ea-a604-48bf6bec2d78"
         }
       }
+    },
+    "parameters": {
+      "key1": "value1",
+      "key2": "value2"
     }
   }'
 ```
 
 ```
-Example Response
+Example Response for Managed Service Instance
+```
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
+```
+
+```
+Example Request for User-Provided Service Instance
 ```
 
 ```http
@@ -39,8 +53,11 @@ Content-Type: application/json
 This endpoint creates a new route service binding. The service instance and the route
 must be in the same space.
 
-To bind to a route to a user-provided service instance, the service instance must
+To bind a route to a user-provided service instance, the service instance must
 have the `route_service_url` property set.
+
+To bind a route to a managed service instance, the service offering must be bindable,
+and the service offering must have `route_forwarding` set in the `requires` property.
 
 #### Definition
 `POST /v3/service_route_bindings`
@@ -51,6 +68,13 @@ Name | Type | Description
 ---- | ---- | -----------
 **relationships.route** | [_to-one relationship_](#to-one-relationships) | The route to bind
 **relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance to bind
+
+#### Optional parameters for managed service instances
+
+Name | Type | Description |
+---- | ---- | ----------- |
+**parameters** | _object_ | A JSON object that is passed to the service broker
+
 
 #### Permitted roles
  |
