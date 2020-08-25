@@ -38,7 +38,18 @@ class ServiceCredentialBindingsController < ApplicationController
     ensure_service_credential_binding_is_accessible!
     not_found! unless can_read_secrets_in_the_binding_space?
 
-    render status: :ok, json: credential_binding_details
+    credentials = if service_credential_binding[:type] == 'key' && service_credential_binding.credhub_reference?
+                    fetch_credentials_value(service_credential_binding.credhub_reference)
+                  else
+                    service_credential_binding.credentials
+                  end
+
+    details = Presenters::V3::ServiceCredentialBindingDetailsPresenter.new(
+      binding: service_credential_binding,
+      credentials: credentials
+    ).to_hash
+
+    render status: :ok, json: details
   end
 
   private
@@ -50,6 +61,29 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def decorators(message)
     AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }.reduce([]) { |decorators, d| decorators << d }
+  end
+
+  def config
+    @config ||= VCAP::CloudController::Config.config
+  end
+
+  def uaa_client
+    @uaa_client ||= UaaClient.new(
+      uaa_target: config.get(:uaa, :internal_url),
+      client_id: config.get(:cc_service_key_client_name),
+      secret: config.get(:cc_service_key_client_secret),
+      ca_file: config.get(:uaa, :ca_file),
+    )
+  end
+
+  def credhub_client
+    @credhub_client ||= Credhub::Client.new(config.get(:credhub_api, :internal_url), uaa_client)
+  end
+
+  def fetch_credentials_value(name)
+    credhub_client.get_credential_by_name(name)
+  rescue => e
+    unprocessable!(e.message)
   end
 
   def service_credential_binding
@@ -71,10 +105,6 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def serialized(message)
     Presenters::V3::ServiceCredentialBindingPresenter.new(service_credential_binding, decorators: decorators(message)).to_hash
-  end
-
-  def credential_binding_details
-    Presenters::V3::ServiceCredentialBindingDetailsPresenter.new(service_credential_binding).to_hash
   end
 
   def ensure_service_credential_binding_is_accessible!
