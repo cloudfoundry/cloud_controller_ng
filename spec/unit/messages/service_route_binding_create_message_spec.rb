@@ -13,14 +13,16 @@ module VCAP::CloudController
             data: { guid: 'route-guid' }
           }
         }
-      }
+      }.deep_merge(body_extra)
     end
+    let(:body_extra) { {} }
 
     let(:message) { described_class.new(body) }
 
-    it 'accepts the allowed keys' do
+    it 'accepts the minimal keys' do
       expect(message).to be_valid
       expect(message.requested?(:relationships)).to be_truthy
+      expect(message.requested?(:parameters)).to be_falsey
     end
 
     it 'builds the right message' do
@@ -28,11 +30,27 @@ module VCAP::CloudController
       expect(message.route_guid).to eq('route-guid')
     end
 
+    context 'when the request has parameters' do
+      let(:body_extra) do
+        { parameters: { foo: 'bar' } }
+      end
+
+      it 'accepts the parameters key' do
+        expect(message).to be_valid
+        expect(message.requested?(:relationships)).to be_truthy
+        expect(message.requested?(:parameters)).to be_truthy
+      end
+
+      it 'builds the right message' do
+        expect(message.parameters).to eq({ foo: 'bar' })
+      end
+    end
+
     describe 'validations' do
       it 'is invalid when there are unknown keys' do
-        body[:parameters] = 'foo'
+        body[:unknown] = 'foo'
         expect(message).to_not be_valid
-        expect(message.errors.full_messages).to include("Unknown field(s): 'parameters'")
+        expect(message.errors.full_messages).to include("Unknown field(s): 'unknown'")
       end
 
       describe 'service instance relationship' do
@@ -57,6 +75,14 @@ module VCAP::CloudController
             /Route must be structured like this.*/,
           )
           expect(message.errors[:relationships].count).to eq(2)
+        end
+      end
+
+      describe 'parameters' do
+        it 'fails when not a hash' do
+          body[:parameters] = 'hello'
+          expect(message).to_not be_valid
+          expect(message.errors[:parameters]).to include('must be an object')
         end
       end
     end

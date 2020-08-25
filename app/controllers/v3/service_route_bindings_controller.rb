@@ -1,5 +1,6 @@
 require 'messages/service_route_binding_create_message'
 require 'actions/service_route_binding_create'
+require 'jobs/v3/services/create_route_binding_job'
 require 'presenters/v3/service_route_binding_presenter'
 
 class ServiceRouteBindingsController < ApplicationController
@@ -10,15 +11,22 @@ class ServiceRouteBindingsController < ApplicationController
     service_instance = fetch_service_instance(message.service_instance_guid)
     route = fetch_route(message.route_guid)
 
+    check_parameters_support(service_instance, message)
     action = V3::ServiceRouteBindingCreate.new(service_event_repository)
-    action.preflight(service_instance, route)
+    precursor = action.precursor(service_instance, route)
 
     case service_instance
     when ManagedServiceInstance
-      head :not_implemented
+      bind_job = VCAP::CloudController::V3::CreateRouteBindingJob.new(
+        precursor.guid,
+        user_audit_info: user_audit_info,
+        parameters: message.parameters,
+      )
+      pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
     when UserProvidedServiceInstance
-      binding = action.create(service_instance, route)
-      render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(binding)
+      action.bind(precursor)
+      render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(precursor)
     end
   rescue V3::ServiceRouteBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
@@ -54,6 +62,12 @@ class ServiceRouteBindingsController < ApplicationController
     route
   end
 
+  def check_parameters_support(service_instance, message)
+    unless service_instance.is_a?(VCAP::CloudController::ManagedServiceInstance)
+      parameters_not_supported! if message.requested?(:parameters)
+    end
+  end
+
   def service_event_repository
     VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
   end
@@ -80,6 +94,10 @@ class ServiceRouteBindingsController < ApplicationController
 
   def route_services_disabled!
     unprocessable!('Support for route services is disabled')
+  end
+
+  def parameters_not_supported!
+    unprocessable!('Binding parameters are not supported for user-provided service instances')
   end
 
   def already_exists!

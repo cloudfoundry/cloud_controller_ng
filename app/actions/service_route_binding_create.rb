@@ -5,33 +5,38 @@ module VCAP::CloudController
         @service_event_repository = service_event_repository
       end
 
-      def preflight(service_instance, route)
+      def precursor(service_instance, route)
         not_supported! unless service_instance.route_service?
+        not_bindable! unless service_instance.bindable?
         route_is_internal! if route.try(:internal?)
         space_mismatch! unless route.space == service_instance.space
         already_exists! if route.service_instance == service_instance
         already_bound! if route.service_instance
+
+        RouteBinding.create(
+          service_instance: service_instance,
+          route: route,
+        )
       end
 
-      def create(service_instance, route)
-        binding = RouteBinding.new
-        binding.service_instance = service_instance
-        binding.route = route
+      def bind(precursor, parameters: {})
+        client = VCAP::Services::ServiceClientProvider.provide(instance: precursor.service_instance)
+        details = client.bind(precursor, arbitrary_parameters: parameters)
 
-        client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
-        details = client.bind(binding)
+        precursor.route_service_url = details[:binding][:route_service_url]
+        precursor.save
 
-        binding.route_service_url = details[:binding][:route_service_url]
-        binding.save
+        precursor.notify_diego
 
-        binding.notify_diego
-
-        service_event_repository.record_service_instance_event(:bind_route, service_instance, { route_guid: route.guid })
-
-        binding
+        service_event_repository.record_service_instance_event(
+          :bind_route,
+          precursor.service_instance,
+          { route_guid: precursor.route.guid },
+        )
       end
 
       class UnprocessableCreate < StandardError; end
+
       class RouteBindingAlreadyExists < StandardError; end
 
       private
@@ -52,6 +57,10 @@ module VCAP::CloudController
 
       def not_supported!
         raise UnprocessableCreate.new('This service instance does not support route binding')
+      end
+
+      def not_bindable!
+        raise UnprocessableCreate.new('This service instance does not support binding')
       end
 
       def already_exists!
