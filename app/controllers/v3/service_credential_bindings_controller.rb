@@ -83,7 +83,7 @@ class ServiceCredentialBindingsController < ApplicationController
   def fetch_credentials_value(name)
     credhub_client.get_credential_by_name(name)
   rescue => e
-    unprocessable!(e.message)
+    service_unavailable!("Fetching credentials from CredHub failed; reason: #{e.message}")
   end
 
   def service_credential_binding

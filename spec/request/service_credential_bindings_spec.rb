@@ -605,11 +605,11 @@ RSpec.describe 'v3 service credential bindings' do
 
         it 'returns an error' do
           api_call.call(admin_headers)
-          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_status_code(503)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'cred does not exist',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
+            'detail' => 'Fetching credentials from CredHub failed; reason: cred does not exist',
+            'title' => 'CF-ServiceUnavailable',
+            'code' => 10015,
           }))
         end
       end
@@ -621,11 +621,11 @@ RSpec.describe 'v3 service credential bindings' do
 
         it 'returns an error' do
           api_call.call(admin_headers)
-          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_status_code(503)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Server error, status: 500',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
+            'detail' => 'Fetching credentials from CredHub failed; reason: Server error, status: 500',
+            'title' => 'CF-ServiceUnavailable',
+            'code' => 10015,
           }))
         end
       end
