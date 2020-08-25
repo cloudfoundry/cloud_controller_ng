@@ -67,11 +67,18 @@ module VCAP
 
           def base_links
             {
-              self: { href: url_builder.build_url(path: "/v3/service_credential_bindings/#{@resource.guid}") },
+              self: { href: url_builder.build_url(path: path_to_self) },
+              details: {
+                href: url_builder.build_url(path: "#{path_to_self}/details")
+              },
               service_instance: {
                 href: url_builder.build_url(path: "/v3/service_instances/#{@resource.service_instance_guid}")
               }
             }
+          end
+
+          def path_to_self
+            "/v3/service_credential_bindings/#{@resource.guid}"
           end
 
           def base_relationships
