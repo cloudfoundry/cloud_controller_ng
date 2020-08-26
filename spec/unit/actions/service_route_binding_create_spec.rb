@@ -18,13 +18,15 @@ module VCAP::CloudController
 
       describe '#precursor' do
         RSpec.shared_examples '#precursor' do
-          it 'returns a route precursor' do
+          it 'returns a route binding precursor' do
             precursor = action.precursor(service_instance, route)
             expect(precursor).to be_a(RouteBinding)
             expect(precursor).to eq(RouteBinding.first)
-            expect(precursor.service_instance).to be(service_instance)
-            expect(precursor.route).to be(route)
+            expect(precursor.service_instance).to eq(service_instance)
+            expect(precursor.route).to eq(route)
             expect(precursor.route_service_url).to be_nil
+            expect(precursor.last_operation.type).to eq('create')
+            expect(precursor.last_operation.state).to eq('in progress')
           end
 
           context 'route is internal' do
@@ -150,6 +152,8 @@ module VCAP::CloudController
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.route).to eq(route)
             expect(binding.route_service_url).to eq(route_service_url)
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq('succeeded')
           end
 
           it 'creates an audit event' do

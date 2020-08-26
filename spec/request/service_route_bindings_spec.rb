@@ -381,6 +381,8 @@ RSpec.describe 'v3 service route bindings' do
             binding_guid: binding.guid,
             service_instance_guid: service_instance.guid,
             route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'succeeded',
           )
         )
       end
@@ -474,11 +476,18 @@ RSpec.describe 'v3 service route bindings' do
     headers_for(user)
   end
 
-  def expected_json(binding_guid:, route_guid:, service_instance_guid:)
+  def expected_json(binding_guid:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:)
     {
       guid: binding_guid,
       created_at: iso8601,
       updated_at: iso8601,
+      last_operation: {
+        created_at: iso8601,
+        updated_at: iso8601,
+        description: nil,
+        state: last_operation_state,
+        type: last_operation_type,
+      },
       relationships: {
         service_instance: {
           data: {

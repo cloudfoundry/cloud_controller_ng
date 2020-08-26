@@ -10,10 +10,17 @@ module VCAP
       let(:route) { Route.make(space: space) }
       let(:guid) { Sham.guid }
       let(:binding) do
-        RouteBinding.make(
+        RouteBinding.new.save_with_new_operation(
+          {
           guid: guid,
           service_instance: service_instance,
           route: route,
+          },
+          {
+            type: 'fake type',
+            state: 'fake state',
+            description: 'fake description',
+          }
         )
       end
 
@@ -24,6 +31,13 @@ module VCAP
             guid: guid,
             created_at: binding.created_at,
             updated_at: binding.updated_at,
+            last_operation: {
+              type: 'fake type',
+              state: 'fake state',
+              description: 'fake description',
+              updated_at: binding.last_operation.updated_at,
+              created_at: binding.last_operation.created_at
+            },
             relationships: {
               route: {
                 data: {

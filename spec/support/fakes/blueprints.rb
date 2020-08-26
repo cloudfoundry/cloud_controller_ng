@@ -442,6 +442,13 @@ module VCAP::CloudController
     route_service_url { Sham.url }
   end
 
+  RouteBindingOperation.blueprint do
+    type                      { 'create' }
+    state                     { 'succeeded' }
+    description               { 'description goes here' }
+    updated_at                { Time.now.utc }
+  end
+
   ServiceBinding.blueprint do
     credentials { Sham.service_credentials }
     service_instance { ManagedServiceInstance.make }

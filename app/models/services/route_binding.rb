@@ -2,6 +2,8 @@ module VCAP::CloudController
   class RouteBinding < Sequel::Model
     plugin :after_initialize
 
+    one_to_one :route_binding_operation
+
     many_to_one :route
     many_to_one :service_instance
 
@@ -33,8 +35,32 @@ module VCAP::CloudController
       { route: route.uri }
     end
 
+    def last_operation
+      route_binding_operation
+    end
+
     def operation_in_progress?
-      false
+      !!route_binding_operation && route_binding_operation.state == 'in progress'
+    end
+
+    def save_with_new_operation(attributes, last_operation)
+      RouteBinding.db.transaction do
+        self.lock!
+        set(attributes)
+        save_changes
+
+        if self.last_operation
+          self.last_operation.destroy
+        end
+
+        # it is important to create the service route binding operation with the service binding
+        # instead of doing self.service_route_binding_operation = x
+        # because mysql will deadlock when requests happen concurrently otherwise.
+        RouteBindingOperation.create(last_operation.merge(route_binding_id: self.id))
+        self.route_binding_operation(reload: true)
+      end
+
+      self
     end
 
     private
