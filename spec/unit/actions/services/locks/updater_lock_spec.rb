@@ -57,11 +57,11 @@ module VCAP::CloudController
           service_binding_2.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
         end
 
-        it 'raises an AsyncServiceBindingOperationInProgress error' do
+        it 'raises an ServiceBindingLockedError error' do
           expect {
             updater_lock.lock!
-          }.to raise_error CloudController::Errors::ApiError do |err|
-            expect(err.name).to eq('AsyncServiceBindingOperationInProgress')
+          }.to raise_error LockCheck::ServiceBindingLockedError do |err|
+            expect(err.service_binding).to eq(service_binding_2)
           end
         end
       end

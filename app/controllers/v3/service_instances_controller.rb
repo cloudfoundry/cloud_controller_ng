@@ -282,6 +282,8 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   rescue ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
     unprocessable!(api_err.message)
+  rescue LockCheck::ServiceBindingLockedError => e
+    raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
   end
 
   def admin?

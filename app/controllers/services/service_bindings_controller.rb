@@ -1,7 +1,7 @@
 require 'vcap/services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 require 'models/helpers/process_types'
-require 'actions/services/service_binding_read'
+require 'actions/service_binding_read'
 
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
@@ -119,6 +119,8 @@ module VCAP::CloudController
         [HTTP::OK, parameters.to_json]
       rescue ServiceBindingRead::NotSupportedError
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
+      rescue LockCheck::ServiceBindingLockedError => e
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
       end
     end
 
