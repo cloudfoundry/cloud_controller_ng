@@ -27,6 +27,7 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/bits_service_resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'cloud_controller/packager/bits_service_packer'
+require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/instances_client'
@@ -356,7 +357,9 @@ module CloudController
     end
 
     def packer
-      if use_bits_service
+      if config.get(:packages, :image_registry)
+        Packager::RegistryBitsPacker.new
+      elsif use_bits_service
         Packager::BitsServicePacker.new
       else
         Packager::LocalBitsPacker.new

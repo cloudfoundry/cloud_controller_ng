@@ -196,6 +196,10 @@ buildpacks:
     provider: "Local"
   fog_aws_storage_options: {}
 
+package_image_uploader:
+  host: "127.0.0.1"
+  port: 8080
+
 db_encryption_key: "asdfasdfasdf"
 database_encryption:
   keys: {"encryption_key_0":"asdfasdfasdf"}

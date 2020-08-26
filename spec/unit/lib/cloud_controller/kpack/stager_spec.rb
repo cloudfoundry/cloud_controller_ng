@@ -80,63 +80,117 @@ module Kpack
         details.lifecycle = lifecycle
         details
       end
+
       let(:lifecycle) do
         instance_double(VCAP::CloudController::KpackLifecycle, buildpack_infos: [])
       end
+
       let(:package) do
-        VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack))
+        VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack), sha256_checksum: 'sha-2-5-6-hex')
       end
+
       let!(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
       let!(:droplet) { VCAP::CloudController::DropletModel.make(:docker, app: package.app) }
+
       before do
         allow_any_instance_of(VCAP::CloudController::DropletCreate).to receive(:create_docker_droplet).with(build).and_return(droplet)
       end
+
       it 'checks if the image exists' do
         allow(client).to receive(:create_image)
         expect(client).to receive(:get_image).with(package.app.guid, 'namespace').and_return(nil)
         stager.stage(staging_details)
       end
 
-      it 'creates an image using the kpack client' do
-        expect(client).to_not receive(:update_image)
-        expect(client).to_not receive(:create_custom_builder)
-        expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
-          metadata: {
-            name: package.app.guid,
-            namespace: 'namespace',
-            labels: {
-              Stager::DROPLET_GUID_LABEL_KEY => droplet.guid,
-              Stager::APP_GUID_LABEL_KEY => package.app.guid,
-              Stager::BUILD_GUID_LABEL_KEY => build.guid,
-              Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
-            },
-            annotations: {
-              'sidecar.istio.io/inject' => 'false'
-            }
-          },
-          spec: {
-            tag: "gcr.io/capi-images/#{package.app.guid}",
-            serviceAccount: 'gcr-service-account',
-            builder: {
-              name: 'cf-default-builder',
-              kind: 'CustomBuilder'
-            },
-            source: {
-              blob: {
-                url: 'package-download-url',
+      context 'package image registry is configured' do
+        before do
+          TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+        end
+
+        it 'creates an image with an image path from a registry for the source code using the kpack client' do
+          expect(client).to_not receive(:update_image)
+          expect(client).to_not receive(:create_custom_builder)
+          expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
+            metadata: {
+              name: package.app.guid,
+              namespace: 'namespace',
+              labels: {
+                Stager::DROPLET_GUID_LABEL_KEY => droplet.guid,
+                Stager::APP_GUID_LABEL_KEY => package.app.guid,
+                Stager::BUILD_GUID_LABEL_KEY => build.guid,
+                Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
+              },
+              annotations: {
+                'sidecar.istio.io/inject' => 'false'
               }
             },
-            build: {
-              env: [
-                { name: 'BP_JAVA_VERSION', value: '8.*' },
-                { name: 'BPL_HEAD_ROOM', value: '0' },
-              ]
+            spec: {
+              tag: "gcr.io/capi-images/#{package.app.guid}",
+              serviceAccount: 'gcr-service-account',
+              builder: {
+                name: 'cf-default-builder',
+                kind: 'CustomBuilder'
+              },
+              source: {
+                registry: {
+                  image: "hub.example.com/user/#{package.guid}@sha256:#{package.sha256_checksum}",
+                }
+              },
+              build: {
+                env: [
+                  { name: 'BP_JAVA_VERSION', value: '8.*' },
+                  { name: 'BPL_HEAD_ROOM', value: '0' },
+                ]
+              }
             }
-          }
-        }))
+          }))
 
-        stager.stage(staging_details)
-        expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
+          stager.stage(staging_details)
+        end
+      end
+
+      context 'package image registry is not configured' do
+        it 'creates an image with a blobstore url for the source code using the kpack client' do
+          expect(client).to_not receive(:update_image)
+          expect(client).to_not receive(:create_custom_builder)
+          expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
+            metadata: {
+              name: package.app.guid,
+              namespace: 'namespace',
+              labels: {
+                Stager::DROPLET_GUID_LABEL_KEY => droplet.guid,
+                Stager::APP_GUID_LABEL_KEY => package.app.guid,
+                Stager::BUILD_GUID_LABEL_KEY => build.guid,
+                Stager::STAGING_SOURCE_LABEL_KEY => 'STG',
+              },
+              annotations: {
+                'sidecar.istio.io/inject' => 'false'
+              }
+            },
+            spec: {
+              tag: "gcr.io/capi-images/#{package.app.guid}",
+              serviceAccount: 'gcr-service-account',
+              builder: {
+                name: 'cf-default-builder',
+                kind: 'CustomBuilder'
+              },
+              source: {
+                blob: {
+                  url: 'package-download-url',
+                }
+              },
+              build: {
+                env: [
+                  { name: 'BP_JAVA_VERSION', value: '8.*' },
+                  { name: 'BPL_HEAD_ROOM', value: '0' },
+                ]
+              }
+            }
+          }))
+
+          stager.stage(staging_details)
+          expect(blobstore_url_generator).to have_received(:package_download_url).with(package)
+        end
       end
 
       context 'when specifying buildpacks for a build' do

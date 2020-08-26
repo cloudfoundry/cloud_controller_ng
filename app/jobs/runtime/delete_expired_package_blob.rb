@@ -14,6 +14,7 @@ module VCAP::CloudController
           package = PackageModel.find(guid: package_guid)
           return unless package
 
+          # TODO: skip this if we're using an image registry?
           BlobstoreDelete.new(package_guid, :package_blobstore).perform
           package.update(package_hash: nil, sha256_checksum: nil)
         end

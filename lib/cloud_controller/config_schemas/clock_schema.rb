@@ -97,7 +97,7 @@ module VCAP::CloudController
             app_package_directory_key: String,
             fog_connection: Hash,
             fog_aws_storage_options: Hash
-          },
+        },
 
           droplets: {
             droplet_directory_key: String,

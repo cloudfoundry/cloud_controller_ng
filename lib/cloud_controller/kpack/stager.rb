@@ -83,16 +83,23 @@ module Kpack
           serviceAccount: registry_service_account_name,
           builder: builder_spec,
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
-          source: {
-            blob: {
-              url: blobstore_url_generator.package_download_url(staging_details.package),
-            }
-          },
+          source: configure_source(staging_details),
           build: {
             env: get_environment_variables(staging_details),
           }
         }
       })
+    end
+
+    def configure_source(staging_details)
+      if registry_configured?
+        package_registry_base_path = config.get(:packages, :image_registry, :base_path)
+        { registry: {
+          image: "#{package_registry_base_path}/#{staging_details.package.guid}@sha256:#{staging_details.package.sha256_checksum}"
+        } }
+      else
+        { blob: { url: blobstore_url_generator.package_download_url(staging_details.package) } }
+      end
     end
 
     def get_environment_variables(staging_details)
@@ -158,6 +165,14 @@ module Kpack
 
     def client
       ::CloudController::DependencyLocator.instance.k8s_api_client
+    end
+
+    def registry_configured?
+      !config.get(:packages, :image_registry).nil?
+    end
+
+    def config
+      VCAP::CloudController::Config.config
     end
 
     def reapply_client

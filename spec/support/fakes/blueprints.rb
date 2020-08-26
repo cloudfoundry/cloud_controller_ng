@@ -96,6 +96,7 @@ module VCAP::CloudController
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'bits' }
     app { AppModel.make }
+    sha256_checksum { Sham.guid }
   end
 
   PackageModel.blueprint(:docker) do
