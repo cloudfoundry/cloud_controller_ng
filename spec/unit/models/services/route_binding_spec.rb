@@ -165,5 +165,37 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#terminal_state?' do
+      let(:space) { Space.make }
+      let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+      let(:service_plan) { ServicePlan.make(service: service_offering) }
+      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+      let(:route) { Route.make(space: space) }
+
+      def build_binding_with_op_state(state)
+        binding = RouteBinding.make(
+          service_instance: service_instance,
+          route: route,
+        )
+        binding.route_binding_operation = RouteBindingOperation.make(state: state)
+        binding
+      end
+
+      it 'returns true when state is `succeeded`' do
+        binding = build_binding_with_op_state('succeeded')
+        expect(binding.terminal_state?).to be true
+      end
+
+      it 'returns true when state is `failed`' do
+        binding = build_binding_with_op_state('failed')
+        expect(binding.terminal_state?).to be true
+      end
+
+      it 'returns false otherwise' do
+        binding = build_binding_with_op_state('other')
+        expect(binding.terminal_state?).to be false
+      end
+    end
   end
 end

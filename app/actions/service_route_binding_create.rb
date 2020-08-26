@@ -25,27 +25,57 @@ module VCAP::CloudController
         )
       end
 
-      def bind(precursor, parameters: {})
+      def bind(precursor, parameters: {}, accepts_incomplete: false)
         client = VCAP::Services::ServiceClientProvider.provide(instance: precursor.service_instance)
-        details = client.bind(precursor, arbitrary_parameters: parameters)
+        details = client.bind(precursor, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
 
-        precursor.save_with_new_operation(
-          {
-            route_service_url: details[:binding][:route_service_url]
-          },
+        if details[:async]
+          save_incomplete_binding(precursor, details[:operation])
+        else
+          complete_binding_and_save(precursor, details[:binding][:route_service_url])
+        end
+      rescue => e
+        precursor.save_with_new_operation({}, {
+          type: 'create',
+          state: 'failed',
+          description: e.message,
+        })
+      end
+
+      def poll(binding)
+        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+        details = client.fetch_service_binding_last_operation(binding)
+        attributes = {}
+
+        complete = details[:last_operation][:state] == 'succeeded'
+        if complete
+          params = client.fetch_service_binding(binding)
+          attributes[:route_service_url] = params[:route_service_url]
+        end
+
+        binding.save_with_new_operation(
+          attributes,
           {
             type: 'create',
-            state: 'succeeded',
+            state: details[:last_operation][:state],
+            description: details[:last_operation][:description],
           }
         )
 
-        precursor.notify_diego
+        if complete
+          binding.notify_diego
+          record_audit_event(binding)
+        end
 
-        service_event_repository.record_service_instance_event(
-          :bind_route,
-          precursor.service_instance,
-          { route_guid: precursor.route.guid },
-        )
+        binding.reload.terminal_state?
+      rescue => e
+        binding.save_with_new_operation({}, {
+          type: 'create',
+          state: 'failed',
+          description: e.message,
+        })
+
+        true
       end
 
       class UnprocessableCreate < StandardError; end
@@ -55,6 +85,42 @@ module VCAP::CloudController
       private
 
       attr_reader :service_event_repository
+
+      def save_incomplete_binding(precursor, operation)
+        precursor.save_with_new_operation({},
+          {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: operation
+          }
+        )
+      end
+
+      def complete_binding_and_save(precursor, route_service_url)
+        save_with_route_service_url(precursor, route_service_url)
+        precursor.notify_diego
+        record_audit_event(precursor)
+      end
+
+      def save_with_route_service_url(precursor, route_service_url)
+        precursor.save_with_new_operation(
+          {
+            route_service_url: route_service_url
+          },
+          {
+            type: 'create',
+            state: 'succeeded',
+          }
+        )
+      end
+
+      def record_audit_event(precursor)
+        service_event_repository.record_service_instance_event(
+          :bind_route,
+          precursor.service_instance,
+          { route_guid: precursor.route.guid },
+        )
+      end
 
       def route_is_internal!
         raise UnprocessableCreate.new('Route services cannot be bound to internal routes')

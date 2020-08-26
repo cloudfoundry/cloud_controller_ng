@@ -184,6 +184,29 @@ module VCAP::CloudController
               expect(messenger).to have_received(:send_desire_request).with(process)
             end
           end
+
+          context 'bind fails' do
+            class BadError < StandardError; end
+
+            let(:client) do
+              dbl = double
+              allow(dbl).to receive(:bind).and_raise(BadError)
+              dbl
+            end
+
+            before do
+              allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+            end
+
+            it 'marks the binding as failed' do
+              action.bind(precursor)
+
+              binding = precursor.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('failed')
+              expect(binding.last_operation.description).to eq('VCAP::CloudController::V3::BadError')
+            end
+          end
         end
 
         context 'managed service instance' do
@@ -203,7 +226,38 @@ module VCAP::CloudController
             it 'sends the parameters to the broker client' do
               action.bind(precursor, parameters: { foo: 'bar' })
 
-              expect(broker_client).to have_received(:bind).with(precursor, arbitrary_parameters: { foo: 'bar' })
+              expect(broker_client).to have_received(:bind).with(
+                precursor,
+                arbitrary_parameters: { foo: 'bar' },
+                accepts_incomplete: false,
+              )
+            end
+          end
+
+          context 'asynchronous binding' do
+            let(:broker_provided_operation) { Sham.guid }
+            let(:bind_response) { { async: true, operation: broker_provided_operation } }
+
+            it 'saves the operation ID' do
+              action.bind(precursor, accepts_incomplete: true)
+
+              expect(broker_client).to have_received(:bind).with(
+                precursor,
+                arbitrary_parameters: {},
+                accepts_incomplete: true,
+              )
+
+              binding = precursor.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+            end
+
+            it 'does not notify diego or create an audit event' do
+              action.bind(precursor, accepts_incomplete: true)
+
+              expect(messenger).not_to have_received(:send_desire_request)
+              expect(event_repository).not_to have_received(:record_service_instance_event)
             end
           end
         end
@@ -213,6 +267,174 @@ module VCAP::CloudController
           let(:service_instance) { UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
 
           it_behaves_like '#bind'
+        end
+      end
+
+      describe '#poll' do
+        let(:binding) { action.precursor(service_instance, route) }
+        let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
+        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+        let(:service_plan) { ServicePlan.make(service: service_offering) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:broker_provided_operation) { Sham.guid }
+        let(:bind_response) { { async: true, operation: broker_provided_operation } }
+        let(:description) { Sham.description }
+        let(:state) { 'in progress' }
+        let(:fetch_last_operation_response) do
+          {
+            last_operation: {
+              state: state,
+              description: description,
+            },
+          }
+        end
+        let(:fetch_binding_response) { {} }
+        let(:broker_client) do
+          instance_double(
+            VCAP::Services::ServiceBrokers::V2::Client,
+            {
+              bind: bind_response,
+              fetch_service_binding_last_operation: fetch_last_operation_response,
+              fetch_service_binding: fetch_binding_response,
+            }
+          )
+        end
+
+        before do
+          allow(Diego::Messenger).to receive(:new).and_return(messenger)
+          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+
+          action.bind(binding, accepts_incomplete: true)
+        end
+
+        it 'fetches the last operation' do
+          action.poll(binding)
+
+          expect(broker_client).to have_received(:fetch_service_binding_last_operation).with(binding)
+        end
+
+        context 'response says complete' do
+          let(:description) { Sham.description }
+          let(:state) { 'succeeded' }
+          let(:fetch_binding_response) do
+            {
+              route_service_url: route_service_url
+            }
+          end
+
+          it 'returns true' do
+            expect(action.poll(binding)).to be_truthy
+          end
+
+          it 'updates the last operation' do
+            action.poll(binding)
+
+            binding.reload
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq('succeeded')
+            expect(binding.last_operation.description).to eq(description)
+          end
+
+          it 'fetches the service binding and updates the route_services_url' do
+            action.poll(binding)
+
+            expect(broker_client).to have_received(:fetch_service_binding).with(binding)
+
+            binding.reload
+            expect(binding.route_service_url).to eq(route_service_url)
+          end
+
+          it 'creates an audit event' do
+            action.poll(binding)
+
+            expect(event_repository).to have_received(:record_service_instance_event).with(
+              :bind_route,
+              service_instance,
+              { route_guid: route.guid },
+            )
+          end
+
+          context 'route does not have app' do
+            it 'does not notify diego' do
+              action.poll(binding)
+
+              expect(messenger).not_to have_received(:send_desire_request)
+            end
+          end
+
+          context 'route has app' do
+            let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
+
+            it 'notifies diego' do
+              RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+              action.poll(binding)
+
+              expect(messenger).to have_received(:send_desire_request).with(process)
+            end
+          end
+
+          context 'fails while fetching binding' do
+            class BadError < StandardError; end
+
+            before do
+              allow(broker_client).to receive(:fetch_service_binding).and_raise(BadError)
+            end
+
+            it 'marks the binding as failed' do
+              complete = action.poll(binding)
+
+              expect(complete).to be_truthy
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('failed')
+              expect(binding.last_operation.description).to eq('VCAP::CloudController::V3::BadError')
+            end
+          end
+        end
+
+        context 'response says in progress' do
+          it 'returns false' do
+            expect(action.poll(binding)).to be_falsey
+          end
+
+          it 'updates the last operation' do
+            action.poll(binding)
+
+            binding.reload
+            expect(binding.last_operation.state).to eq('in progress')
+            expect(binding.last_operation.description).to eq(description)
+          end
+
+          it 'does not notify diego or create an audit event' do
+            action.poll(binding)
+
+            expect(messenger).not_to have_received(:send_desire_request)
+            expect(event_repository).not_to have_received(:record_service_instance_event)
+          end
+        end
+
+        context 'response says failed' do
+          let(:state) { 'failed' }
+
+          it 'returns true' do
+            expect(action.poll(binding)).to be_truthy
+          end
+
+          it 'updates the last operation' do
+            action.poll(binding)
+
+            binding.reload
+            expect(binding.last_operation.state).to eq('failed')
+            expect(binding.last_operation.description).to eq(description)
+          end
+
+          it 'does not notify diego or create an audit event' do
+            action.poll(binding)
+
+            expect(messenger).not_to have_received(:send_desire_request)
+            expect(event_repository).not_to have_received(:record_service_instance_event)
+          end
         end
       end
     end

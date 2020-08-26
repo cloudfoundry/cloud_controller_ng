@@ -1,6 +1,6 @@
 require 'messages/service_route_binding_create_message'
 require 'actions/service_route_binding_create'
-require 'jobs/v3/services/create_route_binding_job'
+require 'jobs/v3/create_route_binding_job'
 require 'presenters/v3/service_route_binding_presenter'
 
 class ServiceRouteBindingsController < ApplicationController
