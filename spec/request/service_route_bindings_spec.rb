@@ -244,6 +244,7 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(202)
 
           stub_request(:put, broker_bind_url).
+            with(query: { accepts_incomplete: true }).
             to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
         end
 
@@ -252,7 +253,10 @@ RSpec.describe 'v3 service route bindings' do
 
           expect(
             a_request(:put, broker_bind_url).
-              with(body: client_body)
+              with(
+                query: { accepts_incomplete: true },
+                body: client_body,
+              )
           ).to have_been_made.once
         end
 
@@ -268,23 +272,132 @@ RSpec.describe 'v3 service route bindings' do
 
             expect(
               a_request(:put, broker_bind_url).
-                with(body: client_body.deep_merge(request_extra))
+                with(
+                  query: { accepts_incomplete: true },
+                  body: client_body.deep_merge(request_extra)
+                )
             ).to have_been_made.once
           end
         end
 
         context 'when the bind completes synchronously' do
-          it 'updates the route service URL on the binding' do
+          it 'updates the the binding' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             binding.reload
             expect(binding.route_service_url).to eq(route_service_url)
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq('succeeded')
           end
 
-          it 'completes' do
+          it 'completes the job' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+          end
+        end
+
+        context 'when the binding completes asynchronously' do
+          let(:broker_status_code) { 202 }
+          let(:operation) { Sham.guid }
+          let(:broker_response) { { operation: operation } }
+          let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
+          let(:last_operation_status_code) { 200 }
+          let(:description) { Sham.description }
+          let(:state) { 'in progress' }
+          let(:last_operation_body) do
+            {
+              description: description,
+              state: state,
+            }
+          end
+
+          before do
+            stub_request(:get, broker_binding_last_operation_url).
+              with(query: {
+                operation: operation,
+                service_id: service_instance.service_plan.service.unique_id,
+                plan_id: service_instance.service_plan.unique_id,
+              }).
+              to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
+          end
+
+          it 'polls the last operation endpoint' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:get, broker_binding_last_operation_url).
+                with(query: {
+                  operation: operation,
+                  service_id: service_instance.service_plan.service.unique_id,
+                  plan_id: service_instance.service_plan.unique_id,
+                })
+            ).to have_been_made.once
+          end
+
+          it 'updates the binding and job' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq(state)
+            expect(binding.last_operation.description).to eq(description)
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+          end
+
+          it 'enqueues the next fetch last operation job' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            expect(Delayed::Job.count).to eq(1)
+          end
+
+          context 'last operation indicates success' do
+            let(:state) { 'succeeded' }
+            let(:fetch_binding_status_code) { 200 }
+            let(:fetch_binding_body) do
+              { route_service_url: route_service_url }
+            end
+
+            before do
+              stub_request(:get, broker_bind_url).
+                to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
+            end
+
+            it 'fetches the service instance' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_bind_url)
+              ).to have_been_made.once
+            end
+
+            it 'updates the binding and job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq(state)
+              expect(binding.last_operation.description).to eq(description)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'last operation indicates failure' do
+            let(:state) { 'failed' }
+
+            it 'does not queue another polling job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(0)
+            end
+
+            it 'updates the binding and job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq(state)
+              expect(binding.last_operation.description).to eq(description)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
           end
         end
       end

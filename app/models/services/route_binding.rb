@@ -43,6 +43,10 @@ module VCAP::CloudController
       !!route_binding_operation && route_binding_operation.state == 'in progress'
     end
 
+    def terminal_state?
+      %w(succeeded failed).include? last_operation.state
+    end
+
     def save_with_new_operation(attributes, last_operation)
       RouteBinding.db.transaction do
         self.lock!
