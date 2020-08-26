@@ -13,9 +13,15 @@ module VCAP::CloudController
         already_exists! if route.service_instance == service_instance
         already_bound! if route.service_instance
 
-        RouteBinding.create(
-          service_instance: service_instance,
-          route: route,
+        RouteBinding.new.save_with_new_operation(
+          {
+            service_instance: service_instance,
+            route: route,
+          },
+          {
+            type: 'create',
+            state: 'in progress',
+          }
         )
       end
 
@@ -23,8 +29,15 @@ module VCAP::CloudController
         client = VCAP::Services::ServiceClientProvider.provide(instance: precursor.service_instance)
         details = client.bind(precursor, arbitrary_parameters: parameters)
 
-        precursor.route_service_url = details[:binding][:route_service_url]
-        precursor.save
+        precursor.save_with_new_operation(
+          {
+            route_service_url: details[:binding][:route_service_url]
+          },
+          {
+            type: 'create',
+            state: 'succeeded',
+          }
+        )
 
         precursor.notify_diego
 

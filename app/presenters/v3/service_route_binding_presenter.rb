@@ -7,9 +7,10 @@ module VCAP
         class ServiceRouteBindingPresenter < BasePresenter
           def to_hash
             {
-              guid: @resource.guid,
-              created_at: @resource.created_at,
-              updated_at: @resource.updated_at,
+              guid: binding.guid,
+              created_at: binding.created_at,
+              updated_at: binding.updated_at,
+              last_operation: last_operation,
               relationships: relationships,
               links: links
             }
@@ -17,24 +18,42 @@ module VCAP
 
           private
 
+          def binding
+            @resource
+          end
+
+          def last_operation
+            return nil if binding.last_operation.blank?
+
+            last_operation = binding.last_operation
+
+            {
+              type: last_operation.type,
+              state: last_operation.state,
+              description: last_operation.description,
+              created_at: last_operation.created_at,
+              updated_at: last_operation.updated_at
+            }
+          end
+
           def links
             {
               self: {
-                href: url_builder.build_url(path: "/v3/service_route_bindings/#{@resource.guid}")
+                href: url_builder.build_url(path: "/v3/service_route_bindings/#{binding.guid}")
               },
               service_instance: {
-                href: url_builder.build_url(path: "/v3/service_instances/#{@resource.service_instance.guid}")
+                href: url_builder.build_url(path: "/v3/service_instances/#{binding.service_instance.guid}")
               },
               route: {
-                href: url_builder.build_url(path: "/v3/routes/#{@resource.route.guid}")
+                href: url_builder.build_url(path: "/v3/routes/#{binding.route.guid}")
               }
             }
           end
 
           def relationships
             {
-              service_instance: { data: { guid: @resource.service_instance.guid } },
-              route: { data: { guid: @resource.route.guid } }
+              service_instance: { data: { guid: binding.service_instance.guid } },
+              route: { data: { guid: binding.route.guid } }
             }
           end
         end
