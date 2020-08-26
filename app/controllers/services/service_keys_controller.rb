@@ -89,6 +89,8 @@ module VCAP::CloudController
       [HTTP::OK, parameters.to_json]
     rescue ServiceBindingRead::NotSupportedError
       raise CloudController::Errors::ApiError.new_from_details('ServiceKeyNotSupported', 'This service does not support fetching service key parameters.')
+    rescue LockCheck::ServiceBindingLockedError => e
+      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
     rescue CloudController::Errors::ApiError => e
       e.name == 'NotAuthorized' ? raise(CloudController::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)) : raise(e)
     end

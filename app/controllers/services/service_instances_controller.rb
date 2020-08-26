@@ -148,6 +148,8 @@ module VCAP::CloudController
         headers,
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
+    rescue LockCheck::ServiceBindingLockedError => e
+      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
     end
 
     def read(guid)
@@ -292,6 +294,8 @@ module VCAP::CloudController
         [HTTP::OK, parameters.to_json]
       rescue ServiceBindingRead::NotSupportedError
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
+      rescue LockCheck::ServiceBindingLockedError => e
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
       end
     end
 

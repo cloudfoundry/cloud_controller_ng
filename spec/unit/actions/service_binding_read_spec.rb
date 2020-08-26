@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/services/service_binding_read'
+require 'actions/service_binding_read'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingRead do
@@ -44,8 +44,8 @@ module VCAP::CloudController
 
             action = ServiceBindingRead.new
             expect { action.fetch_parameters(service_binding) }.to raise_error do |error|
-              expect(error).to be_a(CloudController::Errors::ApiError)
-              expect(error.name).to eql('AsyncServiceBindingOperationInProgress')
+              expect(error).to be_a(ServiceBindingRead::ServiceBindingLockedError)
+              expect(error.service_binding).to eql(service_binding)
             end
           end
         end
