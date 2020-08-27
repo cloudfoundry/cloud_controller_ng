@@ -190,6 +190,7 @@ Rails.application.routes.draw do
             only: [:show, :index] do
     member do
       get :details
+      get :parameters
     end
   end
 
