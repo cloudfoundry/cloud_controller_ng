@@ -48,8 +48,9 @@ module VCAP::CloudController
           return finish if precursor.reload.terminal_state?
         end
 
-        complete = action.poll(precursor)
+        complete, retry_after = action.poll(precursor)
         finish if complete
+        self.polling_interval_seconds = retry_after if retry_after
       end
 
       private

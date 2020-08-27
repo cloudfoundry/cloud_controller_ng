@@ -335,7 +335,8 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            expect(action.poll(binding)).to be_truthy
+            complete, _retry_after = action.poll(binding)
+            expect(complete).to be_truthy
           end
 
           it 'updates the last operation' do
@@ -407,7 +408,8 @@ module VCAP::CloudController
 
         context 'response says in progress' do
           it 'returns false' do
-            expect(action.poll(binding)).to be_falsey
+            complete, _retry_after = action.poll(binding)
+            expect(complete).to be_falsey
           end
 
           it 'updates the last operation' do
@@ -430,7 +432,8 @@ module VCAP::CloudController
           let(:state) { 'failed' }
 
           it 'returns true' do
-            expect(action.poll(binding)).to be_truthy
+            complete, _retry_after = action.poll(binding)
+            expect(complete).to be_truthy
           end
 
           it 'updates the last operation' do
@@ -446,6 +449,32 @@ module VCAP::CloudController
 
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
+          end
+        end
+
+        context 'retry interval' do
+          context 'no retry interval' do
+            it 'returns nil' do
+              _complete, retry_after = action.poll(binding)
+              expect(retry_after).to be_nil
+            end
+          end
+
+          context 'retry interval specified' do
+            let(:fetch_last_operation_response) do
+              {
+                last_operation: {
+                  state: state,
+                  description: description,
+                },
+                retry_after: 10,
+              }
+            end
+
+            it 'returns the value when there was a retry header' do
+              _complete, retry_after = action.poll(binding)
+              expect(retry_after).to eq(10)
+            end
           end
         end
       end

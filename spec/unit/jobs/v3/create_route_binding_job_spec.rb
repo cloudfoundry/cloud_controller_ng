@@ -125,6 +125,21 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'retry interval' do
+          def test_retry_after(value, expected)
+            allow(action).to receive(:poll).and_return([false, value])
+            subject.perform
+            expect(subject.polling_interval_seconds).to eq(expected)
+          end
+
+          it 'updates the polling interval' do
+            test_retry_after(10, 60) # below default
+            test_retry_after(65, 65)
+            test_retry_after(1.hour, 1.hour)
+            test_retry_after(25.hours, 24.hours) # above limit
+          end
+        end
       end
 
       describe '#operation' do
