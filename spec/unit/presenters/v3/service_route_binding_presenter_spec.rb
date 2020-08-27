@@ -12,9 +12,10 @@ module VCAP
       let(:binding) do
         RouteBinding.new.save_with_new_operation(
           {
-          guid: guid,
-          service_instance: service_instance,
-          route: route,
+            guid: guid,
+            service_instance: service_instance,
+            route: route,
+            route_service_url: route_service_url,
           },
           {
             type: 'fake type',
@@ -31,6 +32,7 @@ module VCAP
             guid: guid,
             created_at: binding.created_at,
             updated_at: binding.updated_at,
+            route_service_url: route_service_url,
             last_operation: {
               type: 'fake type',
               state: 'fake state',

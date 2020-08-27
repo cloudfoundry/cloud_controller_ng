@@ -492,6 +492,7 @@ RSpec.describe 'v3 service route bindings' do
         expect(parsed_response).to match_json_response(
           expected_json(
             binding_guid: binding.guid,
+            route_service_url: route_service_url,
             service_instance_guid: service_instance.guid,
             route_guid: route.guid,
             last_operation_type: 'create',
@@ -584,6 +585,7 @@ RSpec.describe 'v3 service route bindings' do
     let(:expected_body) do
       expected_json(
         binding_guid: guid,
+        route_service_url:route_service_url,
         service_instance_guid: service_instance.guid,
         route_guid: route.guid,
         last_operation_type: 'create',
@@ -649,11 +651,12 @@ RSpec.describe 'v3 service route bindings' do
     headers_for(user)
   end
 
-  def expected_json(binding_guid:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:)
+  def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:)
     {
       guid: binding_guid,
       created_at: iso8601,
       updated_at: iso8601,
+      route_service_url: route_service_url,
       last_operation: {
         created_at: iso8601,
         updated_at: iso8601,
