@@ -364,6 +364,7 @@ includes:
   - experimental_resources/service_route_bindings/header
   - experimental_resources/service_route_bindings/object
   - experimental_resources/service_route_bindings/create
+  - experimental_resources/service_route_bindings/get
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get
