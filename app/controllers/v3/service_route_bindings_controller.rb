@@ -34,6 +34,12 @@ class ServiceRouteBindingsController < ApplicationController
     already_exists!
   end
 
+  def show
+    route_binding = RouteBinding.first(guid: hashed_params[:guid])
+    route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
+    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(route_binding)
+  end
+
   private
 
   def parse_create_request
@@ -82,6 +88,10 @@ class ServiceRouteBindingsController < ApplicationController
 
   def route_services_enabled?
     VCAP::CloudController::Config.config.get(:route_services_enabled)
+  end
+
+  def route_binding_not_found!
+    resource_not_found!(:service_route_binding)
   end
 
   def service_instance_not_found!(guid)
