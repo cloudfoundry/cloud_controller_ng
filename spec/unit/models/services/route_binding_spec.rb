@@ -89,12 +89,12 @@ module VCAP::CloudController
       end
 
       context 'when saving the binding operation fails' do
-        before do
-          allow(RouteBindingOperation).to receive(:create).and_raise(Sequel::DatabaseError, 'failed to create new-binding operation')
-        end
-
         it 'should rollback the binding' do
-          expect { route_binding.save_with_new_operation({}, { state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
+          invalid_new_operation = {
+            state: 'will fail',
+            broker_provided_operation: 'too long' * 10000
+          }
+          expect { route_binding.save_with_new_operation({}, invalid_new_operation) }.to raise_error(Sequel::DatabaseError)
           expect(RouteBinding.count).to eq(0)
         end
       end

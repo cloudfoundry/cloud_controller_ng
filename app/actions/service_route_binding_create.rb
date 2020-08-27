@@ -30,6 +30,7 @@ module VCAP::CloudController
         details = client.bind(precursor, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
 
         if details[:async]
+          not_retrievable! unless bindings_retrievable?(precursor)
           save_incomplete_binding(precursor, details[:operation])
         else
           complete_binding_and_save(precursor, details[:binding][:route_service_url])
@@ -40,6 +41,8 @@ module VCAP::CloudController
           state: 'failed',
           description: e.message,
         })
+
+        raise e
       end
 
       def poll(binding)
@@ -82,6 +85,8 @@ module VCAP::CloudController
 
       class RouteBindingAlreadyExists < StandardError; end
 
+      class BindingNotRetrievable < StandardError; end
+
       private
 
       attr_reader :service_event_repository
@@ -122,6 +127,10 @@ module VCAP::CloudController
         )
       end
 
+      def bindings_retrievable?(binding)
+        binding.service_instance.service.bindings_retrievable
+      end
+
       def route_is_internal!
         raise UnprocessableCreate.new('Route services cannot be bound to internal routes')
       end
@@ -144,6 +153,10 @@ module VCAP::CloudController
 
       def already_exists!
         raise RouteBindingAlreadyExists.new('The route and service instance are already bound')
+      end
+
+      def not_retrievable!
+        raise BindingNotRetrievable.new('The broker responded asynchronously but does not support fetching binding data')
       end
     end
   end

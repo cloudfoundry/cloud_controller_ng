@@ -47,7 +47,7 @@ module VCAP::CloudController
       %w(succeeded failed).include? last_operation.state
     end
 
-    def save_with_new_operation(attributes, last_operation)
+    def save_with_new_operation(attributes, new_operation)
       RouteBinding.db.transaction do
         self.lock!
         set(attributes)
@@ -60,7 +60,7 @@ module VCAP::CloudController
         # it is important to create the service route binding operation with the service binding
         # instead of doing self.service_route_binding_operation = x
         # because mysql will deadlock when requests happen concurrently otherwise.
-        RouteBindingOperation.create(last_operation.merge(route_binding_id: self.id))
+        RouteBindingOperation.create(new_operation.merge(route_binding_id: self.id))
         self.route_binding_operation(reload: true)
       end
 

@@ -199,7 +199,9 @@ module VCAP::CloudController
             end
 
             it 'marks the binding as failed' do
-              action.bind(precursor)
+              expect {
+                action.bind(precursor)
+              }.to raise_error(BadError)
 
               binding = precursor.reload
               expect(binding.last_operation.type).to eq('create')
@@ -210,7 +212,7 @@ module VCAP::CloudController
         end
 
         context 'managed service instance' do
-          let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+          let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
           let(:service_plan) { ServicePlan.make(service: service_offering) }
           let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
           let(:bind_response) { { binding: { route_service_url: route_service_url } } }
@@ -259,6 +261,16 @@ module VCAP::CloudController
               expect(messenger).not_to have_received(:send_desire_request)
               expect(event_repository).not_to have_received(:record_service_instance_event)
             end
+
+            context 'binding not retrievable' do
+              let(:service_offering) { Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
+
+              it 'it raises a BindingNotRetrievable error' do
+                expect {
+                  action.bind(precursor, accepts_incomplete: true)
+                }.to raise_error(ServiceRouteBindingCreate::BindingNotRetrievable)
+              end
+            end
           end
         end
 
@@ -273,7 +285,7 @@ module VCAP::CloudController
       describe '#poll' do
         let(:binding) { action.precursor(service_instance, route) }
         let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
-        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+        let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
         let(:service_plan) { ServicePlan.make(service: service_offering) }
         let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
         let(:broker_provided_operation) { Sham.guid }
