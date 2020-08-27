@@ -126,6 +126,82 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
+        describe 'service plan names' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_plan_names=fake-name', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            filter = "service_plan_names=#{instance.service_plan.name},#{other_instance.service_plan.name}"
+            get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'service plan guids' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_plan_guids=fake-guid', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            filter = "service_plan_guids=#{instance.service_plan.guid},#{other_instance.service_plan.guid}"
+            get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'service offering names' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_offering_names=fake-name', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            filter = "service_offering_names=#{instance.service.name},#{other_instance.service.name}"
+            get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
+        describe 'service offering guids' do
+          it 'returns empty when there is no match' do
+            get '/v3/service_credential_bindings?service_offering_guids=fake-guid', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'returns the filtered bindings' do
+            filter = "service_offering_guids=#{instance.service.guid},#{other_instance.service.guid}"
+            get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
+            check_filtered_bindings(
+              expected_json(key_binding),
+              expected_json(other_key_binding),
+              expected_json(app_binding),
+              expected_json(other_app_binding)
+            )
+          end
+        end
+
         describe 'names' do
           it 'returns empty when there is no match' do
             get '/v3/service_credential_bindings?names=fake-name', nil, admin_headers
@@ -223,7 +299,8 @@ RSpec.describe 'v3 service credential bindings' do
         let(:valid_query_params) do
           %w(
             page per_page order_by created_ats updated_ats names service_instance_guids service_instance_names
-            app_guids app_names include type
+            service_plan_names service_plan_guids service_offering_names service_offering_guids app_guids app_names
+            include type
           )
         end
 
