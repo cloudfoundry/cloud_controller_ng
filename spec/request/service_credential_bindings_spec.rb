@@ -709,6 +709,163 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
+  describe 'GET /v3/service_credential_bindings/:binding_guid/parameters' do
+    let(:binding_params) { { foo: 'bar', baz: 'xyzzy' }.with_indifferent_access }
+    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) }
+    let(:guid) { binding.guid }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/parameters", nil, user_headers } }
+
+    context 'permissions' do
+      before do
+        instance.service.update(bindings_retrievable: true)
+        stub_param_broker_request_for_binding(binding, binding_params)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 200, response_object: binding_params).tap do |h|
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+          end
+        end
+      end
+
+      describe 'when the service instance is shared' do
+        let(:originating_space) { VCAP::CloudController::Space.make }
+        let(:shared_space) { space }
+        let(:user_in_shared_space) {
+          u = VCAP::CloudController::User.make
+          shared_space.organization.add_user(u)
+          shared_space.add_developer(u)
+          u
+        }
+        let(:user_in_originating_space) do
+          u = VCAP::CloudController::User.make
+          originating_space.organization.add_user(u)
+          originating_space.add_developer(u)
+          u
+        end
+        let(:instance) do
+          VCAP::CloudController::ManagedServiceInstance.make(space: originating_space).tap do |instance|
+            instance.add_shared_space(shared_space)
+          end
+        end
+        let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: source_app) }
+
+        context 'bindings in the originating space' do
+          let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
+
+          it 'should return the parameters for users in the originating space' do
+            api_call.call(headers_for(user_in_originating_space))
+            expect(last_response).to have_status_code(200)
+          end
+
+          it 'should return 404 for users in the shared space' do
+            api_call.call(headers_for(user_in_shared_space))
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
+        context 'bindings in the shared space' do
+          let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
+
+          it 'should return 404 for users in the originating space' do
+            api_call.call(headers_for(user_in_originating_space))
+            expect(last_response).to have_status_code(404)
+          end
+
+          it 'should return the parameters for users in the shared space space' do
+            api_call.call(headers_for(user_in_shared_space))
+            expect(last_response).to have_status_code(200)
+          end
+        end
+      end
+    end
+
+    describe 'app bindings' do
+      context 'when the service does not allow bindings to be fetched' do
+        before do
+          instance.service.update(bindings_retrievable: false)
+        end
+
+        it 'should fail as can not be done' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(502)
+        end
+      end
+
+      context 'when the service allows bindings to be fetched' do
+        before do
+          instance.service.update(bindings_retrievable: true)
+        end
+
+        context 'when an operation is still on going for the binding' do
+          before do
+            binding.save_with_new_operation({ type: 'create', state: 'in progress' })
+          end
+
+          it 'should fail as not allowed' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(409)
+          end
+        end
+
+        context 'when the broker returns params' do
+          before do
+            stub_param_broker_request_for_binding(binding, binding_params)
+          end
+
+          it 'returns the params in the response body' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to eq(binding_params)
+          end
+        end
+      end
+    end
+
+    describe 'key bindings' do
+      let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+
+      context 'when the service does not allow bindings to be fetched' do
+        before do
+          instance.service.update(bindings_retrievable: false)
+        end
+
+        it 'should fail as can not be done' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(502)
+        end
+      end
+
+      context 'when the service allows bindings to be fetched' do
+        before do
+          instance.service.update(bindings_retrievable: true)
+        end
+
+        context 'when the broker returns params' do
+          before do
+            stub_param_broker_request_for_binding(binding, binding_params)
+          end
+
+          it 'returns the params in the response body' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to eq(binding_params)
+          end
+        end
+      end
+    end
+  end
+
   def expected_json(binding)
     {
       guid: binding.guid,
@@ -785,5 +942,14 @@ RSpec.describe 'v3 service credential bindings' do
         description: 'some description'
       }
     )
+  end
+
+  def stub_param_broker_request_for_binding(binding, binding_params, status: 200)
+    instance = binding.service_instance
+    broker_url = instance.service_broker.broker_url
+    broker_binding_url = "#{broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
+
+    stub_request(:get, /#{broker_binding_url}/).
+      to_return(status: status, body: { parameters: binding_params }.to_json)
   end
 end
