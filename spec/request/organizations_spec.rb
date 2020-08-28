@@ -130,6 +130,14 @@ module VCAP::CloudController
         end
       end
 
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::Organization }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/organizations?#{filters}", nil, headers }
+        end
+        let(:headers) { admin_headers }
+      end
+
       it 'returns a paginated list of orgs the user has access to' do
         get '/v3/organizations?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
