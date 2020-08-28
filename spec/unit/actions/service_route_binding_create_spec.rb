@@ -335,8 +335,8 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            complete, _retry_after = action.poll(binding)
-            expect(complete).to be_truthy
+            polling_status = action.poll(binding)
+            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingComplete)
           end
 
           it 'updates the last operation' do
@@ -408,8 +408,8 @@ module VCAP::CloudController
 
         context 'response says in progress' do
           it 'returns false' do
-            complete, _retry_after = action.poll(binding)
-            expect(complete).to be_falsey
+            polling_status = action.poll(binding)
+            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingNotComplete)
           end
 
           it 'updates the last operation' do
@@ -432,8 +432,8 @@ module VCAP::CloudController
           let(:state) { 'failed' }
 
           it 'returns true' do
-            complete, _retry_after = action.poll(binding)
-            expect(complete).to be_truthy
+            polling_status = action.poll(binding)
+            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingComplete)
           end
 
           it 'updates the last operation' do
@@ -455,8 +455,8 @@ module VCAP::CloudController
         context 'retry interval' do
           context 'no retry interval' do
             it 'returns nil' do
-              _complete, retry_after = action.poll(binding)
-              expect(retry_after).to be_nil
+              polling_status = action.poll(binding)
+              expect(polling_status.retry_after).to be_nil
             end
           end
 
@@ -472,8 +472,9 @@ module VCAP::CloudController
             end
 
             it 'returns the value when there was a retry header' do
-              _complete, retry_after = action.poll(binding)
-              expect(retry_after).to eq(10)
+              polling_status = action.poll(binding)
+              expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingNotComplete)
+              expect(polling_status.retry_after).to eq(10)
             end
           end
         end

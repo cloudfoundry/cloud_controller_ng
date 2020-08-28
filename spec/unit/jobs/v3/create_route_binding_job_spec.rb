@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:poll_response) { false }
+        let(:poll_response) { ServiceRouteBindingCreate::PollingNotComplete.new(nil) }
         let(:action) do
           instance_double(V3::ServiceRouteBindingCreate, {
             bind: nil,
@@ -116,7 +116,7 @@ module VCAP::CloudController
           end
 
           context 'poll indicates binding complete' do
-            let(:poll_response) { true }
+            let(:poll_response) { ServiceRouteBindingCreate::PollingComplete.new }
 
             it 'finishes the job' do
               subject.perform
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
         context 'retry interval' do
           def test_retry_after(value, expected)
-            allow(action).to receive(:poll).and_return([false, value])
+            allow(action).to receive(:poll).and_return(ServiceRouteBindingCreate::PollingNotComplete.new(value))
             subject.perform
             expect(subject.polling_interval_seconds).to eq(expected)
           end
