@@ -924,6 +924,15 @@ RSpec.describe 'Roles Request' do
       }
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::SpaceAuditor }
+      let(:additional_resource_params) { { user: user } }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/roles?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
+
     describe 'list query parameters' do
       before do
         allow(uaa_client).to receive(:users_for_ids).and_return([])

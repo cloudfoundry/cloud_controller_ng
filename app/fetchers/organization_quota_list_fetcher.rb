@@ -1,8 +1,9 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
-  class OrganizationQuotaListFetcher
+  class OrganizationQuotaListFetcher < BaseListFetcher
     class << self
       def fetch(message:, readable_org_guids:)
         dataset = QuotaDefinition.dataset
@@ -27,7 +28,7 @@ module VCAP::CloudController
                     qualify(:quota_definitions)
         end
 
-        dataset
+        super(message, dataset, QuotaDefinition)
       end
     end
   end

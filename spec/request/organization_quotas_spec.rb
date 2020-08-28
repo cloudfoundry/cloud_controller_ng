@@ -212,6 +212,14 @@ module VCAP::CloudController
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
+        it_behaves_like 'list_endpoint_with_common_filters' do
+          let(:resource_klass) { VCAP::CloudController::QuotaDefinition }
+          let(:api_call) do
+            lambda { |headers, filters| get "/v3/organization_quotas?#{filters}", nil, headers }
+          end
+          let(:headers) { admin_headers }
+        end
+
         context 'with filters' do
           let!(:organization_quota_2) { VCAP::CloudController::QuotaDefinition.make(guid: 'second-guid', name: 'second-name') }
           let!(:organization_quota_3) { VCAP::CloudController::QuotaDefinition.make(guid: 'third-guid', name: 'third-name') }

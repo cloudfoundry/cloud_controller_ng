@@ -910,6 +910,15 @@ RSpec.describe 'Processes' do
     let!(:revision2) { VCAP::CloudController::RevisionModel.make }
     let!(:deployment_revision) { VCAP::CloudController::RevisionModel.make }
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::ProcessModel }
+      let(:additional_resource_params) { { app: app_model } }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/processes?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
+
     it 'returns a paginated list of processes for an app' do
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
 

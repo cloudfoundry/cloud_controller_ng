@@ -21,13 +21,13 @@ class PackagesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = PackageListFetcher.new.fetch_for_app(message: message)
+      app, dataset = PackageListFetcher.fetch_for_app(message: message)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
-                  PackageListFetcher.new.fetch_all(message: message)
+                  PackageListFetcher.fetch_all(message: message)
                 else
-                  PackageListFetcher.new.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
+                  PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
                 end
     end
 

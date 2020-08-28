@@ -1,8 +1,9 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
-  class RoleListFetcher
+  class RoleListFetcher < BaseListFetcher
     class << self
       def fetch(message, readable_users_dataset, eager_loaded_associations: [])
         filter(message, readable_users_dataset).eager(eager_loaded_associations)
@@ -29,7 +30,8 @@ module VCAP::CloudController
           space_ids = Space.dataset.where(guid: message.space_guids).select(:id)
           dataset = dataset.where(space_id: space_ids)
         end
-        dataset
+
+        super(message, dataset, Role)
       end
     end
   end

@@ -161,7 +161,7 @@ RSpec.describe 'Packages' do
 
   describe 'GET /v3/apps/:guid/packages' do
     let(:space) { VCAP::CloudController::Space.make }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(1)) }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
     let(:page) { 1 }
@@ -174,7 +174,7 @@ RSpec.describe 'Packages' do
     end
 
     it 'lists paginated result of all packages for an app' do
-      package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(2))
+      package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: package.created_at + 1.hour)
 
       expected_response = {
         'pagination' => {
@@ -233,6 +233,15 @@ RSpec.describe 'Packages' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::PackageModel }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/apps/#{guid}/packages?#{filters}", nil, headers }
+      end
+      let(:additional_resource_params) { { app: app_model } }
+      let(:headers) { admin_headers }
     end
 
     context 'faceted search' do
@@ -347,6 +356,14 @@ RSpec.describe 'Packages' do
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::PackageModel }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/packages?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
     end
 
     it 'gets all the packages' do
