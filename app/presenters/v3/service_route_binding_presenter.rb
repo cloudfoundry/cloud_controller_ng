@@ -8,6 +8,7 @@ module VCAP
           def to_hash
             {
               guid: binding.guid,
+              route_service_url: binding.route_service_url,
               created_at: binding.created_at,
               updated_at: binding.updated_at,
               last_operation: last_operation,
