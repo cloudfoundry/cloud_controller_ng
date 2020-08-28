@@ -75,6 +75,16 @@ module VCAP::CloudController
         else
           PollingNotComplete.new(details[:retry_after])
         end
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed => e
+
+        binding.save_with_new_operation({}, {
+          type: 'create',
+          state: 'failed',
+          description: e.message,
+        })
+
+        raise e
       rescue => e
         binding.save_with_new_operation({}, {
           type: 'create',

@@ -47,17 +47,6 @@ module VCAP::CloudController
           allow(V3::ServiceRouteBindingCreate).to receive(:new).and_return(action)
         end
 
-        context 'binding not found' do
-          it 'raises' do
-            binding.destroy
-
-            expect { subject.perform }.to raise_error(
-              CloudController::Errors::ApiError,
-              /The binding could not be found/,
-            )
-          end
-        end
-
         context 'first time' do
           context 'synchronous response' do
             let(:state) { 'succeeded' }
@@ -88,6 +77,21 @@ module VCAP::CloudController
               expect(action).to have_received(:poll).with(binding)
 
               expect(subject.finished).to be_falsey
+            end
+
+            context 'bind fails with BindingNotRetrievable' do
+              before do
+                allow(action).to receive(:bind).and_raise(ServiceRouteBindingCreate::BindingNotRetrievable)
+              end
+
+              it 'raises an API error' do
+                expect {
+                  subject.perform
+                }.to raise_error(
+                  CloudController::Errors::ApiError,
+                  'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data'
+                )
+              end
             end
           end
         end
@@ -138,6 +142,39 @@ module VCAP::CloudController
             test_retry_after(65, 65)
             test_retry_after(1.hour, 1.hour)
             test_retry_after(25.hours, 24.hours) # above limit
+          end
+        end
+
+        context 'binding not found' do
+          it 'raises an API error' do
+            binding.destroy
+
+            expect { subject.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              /The binding could not be found/,
+            )
+          end
+        end
+
+        context 'bind fails' do
+          it 'raises an API error' do
+            allow(action).to receive(:bind).and_raise(StandardError)
+
+            expect { subject.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              'bind could not be completed: StandardError',
+            )
+          end
+        end
+
+        context 'poll fails' do
+          it 'raises an API error' do
+            allow(action).to receive(:poll).and_raise(StandardError)
+
+            expect { subject.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              'bind could not be completed: StandardError',
+            )
           end
         end
       end

@@ -57,6 +57,10 @@ module VCAP::CloudController
             self.polling_interval_seconds = polling_status.retry_after
           end
         end
+      rescue ServiceRouteBindingCreate::BindingNotRetrievable
+        raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
+      rescue => e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'bind', e.message)
       end
 
       private
