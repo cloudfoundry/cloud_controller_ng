@@ -120,6 +120,14 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::ServiceBroker }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/service_brokers?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
+
     describe 'empty response' do
       let(:expected_codes_and_responses) do
         h = Hash.new(

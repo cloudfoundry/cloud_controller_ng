@@ -111,6 +111,14 @@ RSpec.describe 'Routes Request' do
       }
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Route }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/routes?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
+
     describe 'query list parameters' do
       it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
         let(:request) { 'v3/routes' }

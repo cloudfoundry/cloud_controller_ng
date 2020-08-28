@@ -1,5 +1,7 @@
+require 'fetchers/base_list_fetcher'
+
 module VCAP::CloudController
-  class RouteFetcher
+  class RouteFetcher < BaseListFetcher
     class << self
       def fetch(message, readable_route_guids, eager_loaded_associations: [])
         dataset = Route.where(guid: readable_route_guids).eager(eager_loaded_associations).qualify
@@ -48,7 +50,7 @@ module VCAP::CloudController
           )
         end
 
-        dataset
+        super(message, dataset, Route)
       end
     end
   end

@@ -16,7 +16,7 @@ module VCAP::CloudController
       let(:space_3) { Space.make }
       let(:space_scoped_broker_3) { ServiceBroker.make(space_guid: space_3.guid, name: 'broker-3') }
 
-      let(:fetcher) { ServiceBrokerListFetcher.new }
+      let(:fetcher) { ServiceBrokerListFetcher }
       let(:message) { ServiceBrokersListMessage.from_params(filters) }
 
       before do

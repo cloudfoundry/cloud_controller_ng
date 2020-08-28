@@ -511,6 +511,14 @@ RSpec.describe 'Security_Groups Request' do
       security_group_2.add_staging_space(space)
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::SecurityGroup }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/security_groups?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
+
     context 'getting security groups' do
       let(:expected_response_1) do
         {

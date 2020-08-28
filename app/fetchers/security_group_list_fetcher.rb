@@ -1,9 +1,10 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
 require 'fetchers/label_selector_query_generator'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
-  class SecurityGroupListFetcher
+  class SecurityGroupListFetcher < BaseListFetcher
     class << self
       def fetch_all(message)
         dataset = SecurityGroup.dataset
@@ -44,7 +45,7 @@ module VCAP::CloudController
           dataset = dataset.where(staging_default: ActiveModel::Type::Boolean.new.cast(message.globally_enabled_staging))
         end
 
-        dataset
+        super(message, dataset, SecurityGroup)
       end
     end
   end
