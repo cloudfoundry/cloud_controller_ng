@@ -67,14 +67,13 @@ module VCAP
 
           def base_links
             {
-              self: { href: url_builder.build_url(path: path_to_self) },
-              details: {
-                href: url_builder.build_url(path: "#{path_to_self}/details")
-              },
-              service_instance: {
-                href: url_builder.build_url(path: "/v3/service_instances/#{@resource.service_instance_guid}")
-              }
-            }
+              self: path_to_self,
+              details: "#{path_to_self}/details",
+              parameters: "#{path_to_self}/parameters",
+              service_instance: "/v3/service_instances/#{@resource.service_instance_guid}"
+            }.transform_values do |path|
+              hrefify(path)
+            end
           end
 
           def path_to_self
@@ -96,7 +95,11 @@ module VCAP
           def app_link
             return {} if @resource.app_guid.blank?
 
-            { app: { href: url_builder.build_url(path: "/v3/apps/#{@resource.app_guid}") } }
+            { app: hrefify("/v3/apps/#{@resource.app_guid}") }
+          end
+
+          def hrefify(path)
+            { href: url_builder.build_url(path: path) }
           end
         end
       end

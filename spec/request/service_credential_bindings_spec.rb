@@ -887,6 +887,9 @@ RSpec.describe 'v3 service credential bindings' do
         details: {
           href: "#{link_prefix}/v3/service_credential_bindings/#{binding.guid}/details"
         },
+        parameters: {
+          href: "#{link_prefix}/v3/service_credential_bindings/#{binding.guid}/parameters"
+        },
         service_instance: {
           href: "#{link_prefix}/v3/service_instances/#{binding.service_instance.guid}"
         }

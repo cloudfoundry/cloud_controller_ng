@@ -55,6 +55,9 @@ module VCAP
                 details: {
                   href: %r{.*/v3/service_credential_bindings/some-guid/details}
                 },
+                parameters: {
+                  href: %r{.*/v3/service_credential_bindings/some-guid/parameters}
+                },
                 app: {
                   href: %r{.*/v3/apps/app-guid}
                 },
@@ -105,6 +108,9 @@ module VCAP
                 },
                 details: {
                   href: %r{.*/v3/service_credential_bindings/some-guid/details}
+                },
+                parameters: {
+                  href: %r{.*/v3/service_credential_bindings/some-guid/parameters}
                 },
                 service_instance: {
                   href: %r{.*/v3/service_instances/instance-guid}
