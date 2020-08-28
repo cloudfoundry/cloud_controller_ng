@@ -48,8 +48,15 @@ module VCAP::CloudController
           return finish if precursor.reload.terminal_state?
         end
 
-        complete = action.poll(precursor)
-        finish if complete
+        polling_status = action.poll(precursor)
+        case polling_status
+        when ServiceRouteBindingCreate::PollingComplete
+          finish
+        when ServiceRouteBindingCreate::PollingNotComplete
+          unless polling_status.retry_after.nil?
+            self.polling_interval_seconds = polling_status.retry_after
+          end
+        end
       end
 
       private

@@ -70,7 +70,11 @@ module VCAP::CloudController
           record_audit_event(binding)
         end
 
-        binding.reload.terminal_state?
+        if binding.reload.terminal_state?
+          PollingComplete.new
+        else
+          PollingNotComplete.new(details[:retry_after])
+        end
       rescue => e
         binding.save_with_new_operation({}, {
           type: 'create',
@@ -78,8 +82,11 @@ module VCAP::CloudController
           description: e.message,
         })
 
-        true
+        return PollingComplete.new
       end
+
+      PollingComplete = Class.new.freeze
+      PollingNotComplete = Struct.new(:retry_after).freeze
 
       class UnprocessableCreate < StandardError; end
 
