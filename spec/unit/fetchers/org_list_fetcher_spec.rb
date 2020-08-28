@@ -11,7 +11,7 @@ module VCAP::CloudController
     let!(:org5) { Organization.make(name: 'Groundhog') }
     let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
 
-    let(:fetcher) { OrgListFetcher.new }
+    let(:fetcher) { OrgListFetcher }
 
     let(:message) { OrgsListMessage.from_params({}) }
 
