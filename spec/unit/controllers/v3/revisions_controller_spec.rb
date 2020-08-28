@@ -343,7 +343,7 @@ RSpec.describe RevisionsController, type: :controller do
     }
 
     before do
-      set_current_user(user)
+      set_current_user(user, email: 'mona@example.com')
       allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
     end
@@ -353,6 +353,28 @@ RSpec.describe RevisionsController, type: :controller do
 
       expect(response.status).to eq(200)
       expect(parsed_body['var']).to eq({ 'key' => 'value' })
+    end
+
+    it 'records an audit event' do
+      expect {
+        get :show_environment_variables, params: { revision_guid: revision.guid }
+      }.to change { VCAP::CloudController::Event.count }.by(1)
+
+      event = VCAP::CloudController::Event.find(type: 'audit.app.revision.environment_variables.show')
+      expect(event).not_to be_nil
+      expect(event.actor).to eq(user.guid)
+      expect(event.actor_type).to eq('user')
+      expect(event.actor_name).to eq('mona@example.com')
+      expect(event.actee).to eq(app_model.guid)
+      expect(event.actee_type).to eq('app')
+      expect(event.actee_name).to eq(app_model.name)
+      expect(event.timestamp).to be
+      expect(event.space_guid).to eq(app_model.space_guid)
+      expect(event.organization_guid).to eq(app_model.space.organization.guid)
+      expect(event.metadata).to eq({
+        'revision_guid' => revision.guid,
+        'revision_version' => revision.version,
+      })
     end
 
     context 'when retrieving env variables for revision that do not exist' do

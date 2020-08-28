@@ -2,6 +2,7 @@ require 'messages/revisions_update_message'
 require 'actions/revisions_update'
 require 'presenters/v3/revision_presenter'
 require 'presenters/v3/revision_environment_variables_presenter'
+require 'repositories/revision_event_repository'
 
 class RevisionsController < ApplicationController
   def show
@@ -22,6 +23,7 @@ class RevisionsController < ApplicationController
 
   def show_environment_variables
     revision = fetch_revision(hashed_params[:revision_guid], needs_secrets_read_permission: true)
+    Repositories::RevisionEventRepository.record_show_environment_variables(revision, revision.app, user_audit_info)
     render status: :ok, json: Presenters::V3::RevisionEnvironmentVariablesPresenter.new(revision)
   end
 
