@@ -585,7 +585,7 @@ RSpec.describe 'v3 service route bindings' do
     let(:expected_body) do
       expected_json(
         binding_guid: guid,
-        route_service_url:route_service_url,
+        route_service_url: route_service_url,
         service_instance_guid: service_instance.guid,
         route_guid: route.guid,
         last_operation_type: 'create',
