@@ -83,8 +83,10 @@ module VCAP::CloudController
 
         it 'returns the correct diff' do
           expect(subject).to eq([
-            { 'op' => 'add', 'path' => '/applications/0/metadata/labels/foo', 'value' => 'bar' },
-            { 'op' => 'add', 'path' => '/applications/0/metadata/annotations/baz', 'value' => 'qux' },
+            { 'op' => 'add', 'path' => '/applications/0/metadata', 'value' => {
+              'labels' => { 'foo' => 'bar' },
+              'annotations' => { 'baz' => 'qux' },
+            } },
           ])
         end
       end
@@ -130,11 +132,9 @@ module VCAP::CloudController
             }
           ]
 
-          default_manifest['applications'][0]['metadata'] = [
-            {
-              'foo' => 'bar'
-            }
-          ]
+          default_manifest['applications'][0]['metadata'] = {
+           'foo' => 'bar'
+          }
           default_manifest['applications'][0]['sidecars'] = [
             {
               'foo' => 'bar'
