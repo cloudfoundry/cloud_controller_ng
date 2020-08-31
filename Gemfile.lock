@@ -253,7 +253,7 @@ GEM
       multi_json
       to_regexp (~> 0.2.1)
     jwt (2.2.1)
-    kubeclient (4.9.0)
+    kubeclient (4.9.1)
       http (>= 3.0, < 5.0)
       jsonpath (~> 1.0)
       recursive-open-struct (~> 1.1, >= 1.1.1)
