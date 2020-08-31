@@ -13,6 +13,7 @@ module VCAP::CloudController
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,
+          optional(:internal_service_port) => Integer,
           info: {
             name: String,
             build: String,

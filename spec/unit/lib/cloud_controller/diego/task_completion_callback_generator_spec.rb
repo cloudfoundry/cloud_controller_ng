@@ -12,6 +12,7 @@ module VCAP::CloudController
         let(:task_config) do
           {
             internal_service_hostname: 'google.com',
+            internal_service_port:     '9090',
             tls_port:                  '8888',
             kubernetes:                kubernetes_config,
           }
@@ -38,7 +39,7 @@ module VCAP::CloudController
 
           it 'configures the callback url with http and relies on Istio for mTLS' do
             expect(generator.generate(task)).to eq(
-              "http://google.com:80/internal/v4/tasks/#{task.guid}/completed"
+              "http://google.com:9090/internal/v4/tasks/#{task.guid}/completed"
             )
           end
         end
