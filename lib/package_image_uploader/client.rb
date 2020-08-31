@@ -1,3 +1,5 @@
+require 'jsonclient'
+
 module PackageImageUploader
   class Client
     def initialize(host, port)
@@ -7,7 +9,10 @@ module PackageImageUploader
     def post_package(package_guid, zip_file_path, registry)
       response = with_request_error_handling do
         client.post('/packages',
-        { package_zip_path: zip_file_path, package_guid: package_guid, registry_base_path: registry })
+          body: { 'package_zip_path' => zip_file_path,
+            'package_guid' => package_guid,
+            'registry_base_path' => registry }
+        )
       end
       JSON.parse(response.body)
     end
@@ -15,7 +20,7 @@ module PackageImageUploader
     private
 
     def client
-      HTTPClient.new(base_url: @url)
+      @client ||= JSONClient.new(base_url: @url)
     end
 
     def logger

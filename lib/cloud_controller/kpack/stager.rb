@@ -57,7 +57,7 @@ module Kpack
     def update_image_resource(image, staging_details, builder_spec)
       image.metadata.labels[DROPLET_GUID_LABEL_KEY.to_sym] = create_droplet_and_get_guid(staging_details)
       image.metadata.labels[BUILD_GUID_LABEL_KEY.to_sym] = staging_details.staging_guid
-      image.spec.source.blob.url = blobstore_url_generator.package_download_url(staging_details.package)
+      image.spec.source = get_source(staging_details)
       image.spec.build.env = get_environment_variables(staging_details)
       image.spec.builder = builder_spec
 
@@ -83,7 +83,7 @@ module Kpack
           serviceAccount: registry_service_account_name,
           builder: builder_spec,
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
-          source: configure_source(staging_details),
+          source: get_source(staging_details),
           build: {
             env: get_environment_variables(staging_details),
           }
@@ -91,15 +91,13 @@ module Kpack
       })
     end
 
-    def configure_source(staging_details)
-      if registry_configured?
-        package_registry_base_path = config.get(:packages, :image_registry, :base_path)
-        { registry: {
+    def get_source(staging_details)
+      package_registry_base_path = config.get(:packages, :image_registry, :base_path)
+      {
+        registry: {
           image: "#{package_registry_base_path}/#{staging_details.package.guid}@sha256:#{staging_details.package.sha256_checksum}"
-        } }
-      else
-        { blob: { url: blobstore_url_generator.package_download_url(staging_details.package) } }
-      end
+        }
+      }
     end
 
     def get_environment_variables(staging_details)

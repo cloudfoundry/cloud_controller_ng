@@ -14,7 +14,7 @@ module Kubernetes
     def create_image(resource_config)
       @build_kube_client.create_image(resource_config)
     rescue Kubeclient::HttpError => e
-      logger.error('create_image', error: e.inspect, response: e.response, backtrace: e.backtrace)
+      logger.error('create_image', error: e.inspect, response: e.response, backtrace: e.backtrace, resource: resource_config)
       raise CloudController::Errors::ApiError.new_from_details('KpackImageError', 'create', e.message)
     end
 
