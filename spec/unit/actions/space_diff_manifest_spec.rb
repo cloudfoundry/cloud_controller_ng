@@ -73,6 +73,22 @@ module VCAP::CloudController
         end
       end
 
+      context 'metadata is added' do
+        before do
+          default_manifest['applications'][0]['metadata'] = {
+            'labels' => { 'foo' => 'bar' },
+            'annotations' => { 'baz' => 'qux' }
+          }
+        end
+
+        it 'returns the correct diff' do
+          expect(subject).to eq([
+            { 'op' => 'add', 'path' => '/applications/0/metadata/labels/foo', 'value' => 'bar' },
+            { 'op' => 'add', 'path' => '/applications/0/metadata/annotations/baz', 'value' => 'qux' },
+          ])
+        end
+      end
+
       context 'when there is a change inside of a nested hash' do
         before do
           default_manifest['applications'][0]['processes'][0].delete('memory')

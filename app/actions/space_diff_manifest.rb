@@ -43,14 +43,13 @@ module VCAP::CloudController
       end
 
       if manifest_app_hash.key? 'metadata'
-        manifest_app_hash['metadata'] = manifest_app_hash['metadata'].map do |hash|
-          hash.slice(
-            'labels',
-            'annotations'
-          )
-        end
-        manifest_app_hash = manifest_app_hash.except('metadata') if manifest_app_hash['metadata'] == [{}]
+        manifest_app_hash['metadata'] = manifest_app_hash['metadata'].slice(
+          'labels',
+          'annotations'
+        )
+        manifest_app_hash = manifest_app_hash.except('metadata') if manifest_app_hash['metadata'] == {}
       end
+
       manifest_app_hash
     end
 
