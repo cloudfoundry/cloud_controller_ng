@@ -2,6 +2,7 @@ require 'messages/service_route_binding_create_message'
 require 'actions/service_route_binding_create'
 require 'jobs/v3/create_route_binding_job'
 require 'presenters/v3/service_route_binding_presenter'
+require 'fetchers/route_binding_list_fetcher'
 
 class ServiceRouteBindingsController < ApplicationController
   def create
@@ -40,7 +41,31 @@ class ServiceRouteBindingsController < ApplicationController
     render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(route_binding)
   end
 
+  def index
+    route_bindings = fetch_route_bindings
+    message = ListMessage.from_params(query_params, [])
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::ServiceRouteBindingPresenter,
+      paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
+      path: '/v3/service_route_bindings',
+      message: message,
+    )
+  end
+
   private
+
+  def fetch_route_bindings
+    fetcher = RouteBindingListFetcher.new
+    if permission_queryer.can_read_globally?
+      fetcher.fetch_all
+    else
+      fetcher.fetch_some(space_guids: space_guids)
+    end
+  end
+
+  def space_guids
+    permission_queryer.readable_space_guids
+  end
 
   def parse_create_request
     message = ServiceRouteBindingCreateMessage.new(hashed_params[:body])

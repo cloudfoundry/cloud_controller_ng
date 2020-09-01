@@ -641,6 +641,67 @@ RSpec.describe 'v3 service route bindings' do
     end
   end
 
+  describe 'GET /v3/service_route_bindings' do
+    describe 'no bindings to list' do
+      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 200, response_objects: [])
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'a mix of bindings' do
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
+      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
+      let(:route_binding_1) do
+        bind_service_to_route(service_instance_1, route)
+      end
+      let(:route_binding_2) do
+        bind_service_to_route(service_instance_2, route)
+      end
+      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
+      let(:response_objects) do
+        [
+          expected_json(
+            binding_guid: route_binding_1.guid,
+              route_service_url: route_service_url,
+              service_instance_guid: service_instance_1.guid,
+              route_guid: route.guid,
+              last_operation_type: 'create',
+              last_operation_state: 'successful',
+          ),
+          expected_json(
+            binding_guid: route_binding_2.guid,
+            route_service_url: route_service_url,
+            service_instance_guid: service_instance_2.guid,
+            route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'successful',
+          )
+        ]
+      end
+      let(:bindings_response_body) do
+        { code: 200, response_objects: response_objects }
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 200, response_objects: []).tap do |h|
+          h['admin'] = bindings_response_body
+          h['admin_read_only'] = bindings_response_body
+          h['global_auditor'] = bindings_response_body
+          h['space_developer'] = bindings_response_body
+          h['space_manager'] = bindings_response_body
+          h['space_auditor'] = bindings_response_body
+          h['org_manager'] = bindings_response_body
+        end
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'GET /v3/service_route_bindings/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{guid}", nil, user_headers } }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
@@ -754,5 +815,13 @@ RSpec.describe 'v3 service route bindings' do
         }
       }
     }
+  end
+
+  def bind_service_to_route(service_instance, route)
+    route_service_url = service_instance.route_service_url
+    VCAP::CloudController::RouteBinding.new.save_with_new_operation(
+      { service_instance: service_instance, route: route, route_service_url: route_service_url },
+        { type: 'create', state: 'successful' }
+    )
   end
 end
