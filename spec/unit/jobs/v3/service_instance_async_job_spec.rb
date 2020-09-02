@@ -458,11 +458,11 @@ module VCAP::CloudController
               [
                 {
                   last_operation: { state: 'in progress', type: operation },
-                  retry_after: 95
+                  retry_after: '95'
                 },
                 {
                   last_operation: { state: 'in progress', type: operation },
-                  retry_after: 180
+                  retry_after: '180'
                 },
               ]
             }

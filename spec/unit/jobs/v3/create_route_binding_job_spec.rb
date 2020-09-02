@@ -132,7 +132,7 @@ module VCAP::CloudController
 
         context 'retry interval' do
           def test_retry_after(value, expected)
-            allow(action).to receive(:poll).and_return(ServiceRouteBindingCreate::PollingNotComplete.new(value))
+            allow(action).to receive(:poll).and_return(ServiceRouteBindingCreate::PollingNotComplete.new(value.to_s))
             subject.perform
             expect(subject.polling_interval_seconds).to eq(expected)
           end
