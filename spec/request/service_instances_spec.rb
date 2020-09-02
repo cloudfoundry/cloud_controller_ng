@@ -25,14 +25,9 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        Hash.new(
-          code: 200,
-          response_object: create_managed_json(instance),
-        ).tap do |h|
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-        end
+        responses_for_space_restricted_single_endpoint(
+          create_managed_json(instance)
+        )
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -43,14 +38,9 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: create_user_provided_json(instance),
+        responses_for_space_restricted_single_endpoint(
+          create_user_provided_json(instance)
         )
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -66,15 +56,9 @@ RSpec.describe 'V3 service instances' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: create_managed_json(instance),
+        responses_for_space_restricted_single_endpoint(
+          create_managed_json(instance)
         )
-
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -3600,14 +3584,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         let(:expected_codes_and_responses) do
-          Hash.new(
-            code: 200,
-            response_object: expected_response,
-          ).tap do |h|
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-          end
+          responses_for_space_restricted_single_endpoint(expected_response)
         end
       end
     end
@@ -3725,14 +3702,9 @@ RSpec.describe 'V3 service instances' do
           }
         }
       }
-      let(:usage_summary_response) { { code: 200, response_object: response_object } }
 
       let(:expected_codes_and_responses) do
-        Hash.new(usage_summary_response).tap do |h|
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-        end
+        responses_for_space_restricted_single_endpoint(response_object)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

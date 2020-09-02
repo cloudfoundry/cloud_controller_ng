@@ -60,28 +60,36 @@ RSpec.describe 'V3 service plan visibility' do
         VCAP::CloudController::ServicePlan.make(public: false, service: offering)
       end
 
-      let(:space_response) {
+      let(:response_object) do
         {
-          code: 200,
-          response_object: {
-            'type' => 'space',
-            'space' => {
-              'guid' => space.guid,
-              'name' => space.name
-            }
+          'type' => 'space',
+          'space' => {
+            'guid' => space.guid,
+            'name' => space.name
           }
         }
-      }
-      let(:expected_codes_and_responses) {
-        Hash.new(code: 404).tap do |h|
-          h['admin'] = space_response
-          h['admin_read_only'] = space_response
-          h['global_auditor'] = space_response
-          h['space_developer'] = space_response
-          h['space_manager'] = space_response
-          h['space_auditor'] = space_response
-        end
-      }
+      end
+
+      let(:space_response) do
+        {
+          code: 200,
+          response_object: response_object
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        responses_for_space_restricted_single_endpoint(
+          response_object,
+          permitted_roles: %w(
+            admin
+            admin_read_only
+            global_auditor
+            space_developer
+            space_manager
+            space_auditor
+          )
+        )
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end

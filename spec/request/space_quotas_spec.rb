@@ -14,15 +14,7 @@ module VCAP::CloudController
 
       context 'when the space quota is applied to the space where the current user has a role' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
-          h['admin'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['global_auditor'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['org_manager'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['space_manager'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['space_auditor'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h['space_developer'] = { code: 200, response_object: make_space_quota_json(space_quota) }
-          h.freeze
+          responses_for_space_restricted_single_endpoint(make_space_quota_json(space_quota))
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

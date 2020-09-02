@@ -724,15 +724,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     let(:expected_codes_and_responses) do
-      Hash.new(code: 404).tap do |h|
-        h['admin'] = { code: 200, response_object: expected_body }
-        h['admin_read_only'] = { code: 200, response_object: expected_body }
-        h['global_auditor'] = { code: 200, response_object: expected_body }
-        h['space_developer'] = { code: 200, response_object: expected_body }
-        h['space_manager'] = { code: 200, response_object: expected_body }
-        h['space_auditor'] = { code: 200, response_object: expected_body }
-        h['org_manager'] = { code: 200, response_object: expected_body }
-      end
+      responses_for_space_restricted_single_endpoint(expected_body)
     end
 
     context 'user-provided service instance' do

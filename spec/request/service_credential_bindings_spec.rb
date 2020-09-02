@@ -363,42 +363,12 @@ RSpec.describe 'v3 service credential bindings' do
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
     let(:expected_object) { expected_json(key) }
 
-    context 'global roles' do
+    describe 'permissions' do
       let(:expected_codes_and_responses) do
-        Hash.new({ code: 200, response_object: expected_object })
+        responses_for_space_restricted_single_endpoint(expected_object)
       end
 
-      it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
-    end
-
-    context 'local roles' do
-      context 'user is in the original space of the service instance' do
-        let(:expected_codes_and_responses) do
-          Hash.new({ code: 200, response_object: expected_object }).tap do |h|
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-          end
-        end
-
-        it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
-      end
-
-      context 'user is in a space that the service instance is shared to' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-
-        before do
-          instance.add_shared_space(space)
-        end
-
-        let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 404)
-        end
-
-        it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
-      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     describe 'query params' do
@@ -432,48 +402,12 @@ RSpec.describe 'v3 service credential bindings' do
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
     let(:expected_object) { expected_json(app_binding) }
 
-    context 'global roles' do
+    describe 'permissions' do
       let(:expected_codes_and_responses) do
-        Hash.new({ code: 200, response_object: expected_object })
+        responses_for_space_restricted_single_endpoint(expected_object)
       end
 
-      it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
-    end
-
-    context 'local roles' do
-      let(:expected_codes_and_responses) do
-        Hash.new({ code: 200, response_object: expected_object }).tap do |h|
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-        end
-      end
-
-      context 'user is in the original space of the service instance' do
-        it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
-      end
-
-      context 'user is in a space that the service instance is shared to' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-
-        before do
-          instance.add_shared_space(space)
-        end
-
-        context 'the app is in the users space' do
-          it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
-        end
-
-        context 'the app is not in the users space' do
-          let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
-
-          let(:expected_codes_and_responses) do
-            Hash.new(code: 404)
-          end
-
-          it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
-        end
-      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     describe 'include' do
@@ -725,11 +659,7 @@ RSpec.describe 'v3 service credential bindings' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_object: binding_params).tap do |h|
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-          end
+          responses_for_space_restricted_single_endpoint(binding_params)
         end
       end
 

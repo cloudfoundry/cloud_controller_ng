@@ -26,11 +26,7 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: space_features_json)
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
-      h['no_role'] = { code: 404 }
-      h
+      responses_for_space_restricted_single_endpoint(space_features_json)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -50,11 +46,7 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: space_ssh_feature_json)
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
-      h['no_role'] = { code: 404 }
-      h
+      responses_for_space_restricted_single_endpoint(space_ssh_feature_json)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

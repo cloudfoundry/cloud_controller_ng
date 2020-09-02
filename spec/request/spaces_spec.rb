@@ -540,6 +540,7 @@ RSpec.describe 'Spaces' do
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
 
       let(:expected_codes_and_responses) do
+        responses_for_space_restricted_single_endpoint(response_object)
         h = Hash.new(code: 404)
         h['admin'] = { code: 200, response_objects: response_object }
         h['admin_read_only'] = { code: 200, response_objects: response_object }

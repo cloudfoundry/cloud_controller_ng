@@ -106,14 +106,17 @@ RSpec.describe 'V3 service offerings' do
         let(:space) { broker_space }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
-          h['admin'] = successful_response
-          h['admin_read_only'] = successful_response
-          h['global_auditor'] = successful_response
-          h['space_developer'] = successful_response
-          h['space_manager'] = successful_response
-          h['space_auditor'] = successful_response
-          h
+          responses_for_space_restricted_single_endpoint(
+            create_offering_json(service_offering),
+            permitted_roles: %w(
+              admin
+              admin_read_only
+              global_auditor
+              space_developer
+              space_manager
+              space_auditor
+            )
+          )
         end
 
         it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS

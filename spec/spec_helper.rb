@@ -123,6 +123,8 @@ each_run_block = proc do
     rspec_config.include IntegrationSetupHelpers, type: :integration
     rspec_config.include IntegrationSetup, type: :integration
 
+    rspec_config.include SpaceRestrictedResponseGenerators
+
     rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
     rspec_config.before(:all, type: :integration) do
       WebMock.allow_net_connect!

@@ -79,13 +79,17 @@ RSpec.describe 'V3 service plans' do
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_objects: create_plan_json(service_plan)).tap do |r|
-            r['unauthenticated'] = { code: 404 }
-            r['no_role'] = { code: 404 }
-            r['org_billing_manager'] = { code: 404 }
-            r['org_auditor'] = { code: 404 }
-            r['org_manager'] = { code: 404 }
-          end
+          responses_for_space_restricted_single_endpoint(
+            create_plan_json(service_plan),
+            permitted_roles: %w(
+              admin
+              admin_read_only
+              global_auditor
+              space_developer
+              space_manager
+              space_auditor
+            )
+          )
         end
 
         it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS

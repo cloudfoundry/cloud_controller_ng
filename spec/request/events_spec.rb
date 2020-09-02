@@ -240,27 +240,17 @@ RSpec.describe 'Events' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: event_json
+          responses_for_space_restricted_single_endpoint(
+            event_json,
+            permitted_roles: %w(
+              admin
+              admin_read_only
+              global_auditor
+              org_auditor
+              space_auditor
+              space_developer
+            )
           )
-          h['space_manager'] = {
-            code: 404,
-            response_object: []
-          }
-          h['org_manager'] = {
-            code: 404,
-            response_object: []
-          }
-          h['org_billing_manager'] = {
-            code: 404,
-            response_object: []
-          }
-          h['no_role'] = {
-            code: 404,
-            response_object: []
-          }
-          h.freeze
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
