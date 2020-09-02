@@ -48,7 +48,7 @@ This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
 
 #### Relational Operators (Experimental)
 
-Fields can be filtered using relational operators when listing resources.
+Some fields (e.g. `created_at` and `updated_at`) can be filtered using relational operators when listing resources.
 
 For example, a response to `/v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
 audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
@@ -67,9 +67,3 @@ Timestamps must be in [standard timestamp format](#timestamps).
 **lte**      | Return resources less than or equal to the given value for the filtered attribute
 **gt**       | Return resources strictly greater than the given value for the filtered attribute
 **gte**      | Return resources greater than or equal to the given value for the filtered attribute
-
-##### Resources with relational operators
-
-The following resources can filter using relational operators:
-
-- **[audit_events](#list-audit-events)**

@@ -12,6 +12,14 @@ RSpec.describe 'Stacks Request' do
       expect(last_response.status).to eq(200)
     end
 
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Stack }
+      let(:headers) { admin_headers }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/stacks?#{filters}", nil, headers }
+      end
+    end
+
     it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
       let(:request) { 'v3/stacks' }
       let(:message) { VCAP::CloudController::StacksListMessage }

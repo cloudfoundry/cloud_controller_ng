@@ -21,14 +21,14 @@ class TasksController < ApplicationController
     show_secrets = false
 
     if app_nested?
-      app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
+      app, dataset = TaskListFetcher.fetch_for_app(message: message)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
       show_secrets = can_read_secrets?(app.organization, app.space)
     else
       dataset = if permission_queryer.can_read_globally?
-                  TaskListFetcher.new.fetch_all(message: message)
+                  TaskListFetcher.fetch_all(message: message)
                 else
-                  TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                  TaskListFetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
                 end
     end
 

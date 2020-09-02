@@ -3,7 +3,7 @@ require 'fetchers/stack_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe StackListFetcher do
-    let(:fetcher) { StackListFetcher.new }
+    let(:fetcher) { StackListFetcher }
 
     describe '#fetch_all' do
       before do

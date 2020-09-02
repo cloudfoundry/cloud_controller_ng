@@ -1,8 +1,9 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
-  class SpaceQuotaListFetcher
+  class SpaceQuotaListFetcher < BaseListFetcher
     class << self
       def fetch(message:, readable_space_quota_guids:)
         dataset = SpaceQuotaDefinition.dataset
@@ -34,7 +35,7 @@ module VCAP::CloudController
                     qualify(:space_quota_definitions)
         end
 
-        dataset
+        super(message, dataset, SpaceQuotaDefinition)
       end
     end
   end

@@ -244,6 +244,14 @@ module VCAP::CloudController
     describe 'GET /v3/space_quotas' do
       let(:api_call) { lambda { |user_headers| get '/v3/space_quotas', nil, user_headers } }
 
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::SpaceQuotaDefinition }
+        let(:headers) { admin_headers }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/space_quotas?#{filters}", nil, headers }
+        end
+      end
+
       context 'when listing space quotas without filters' do
         let!(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, guid: 'unapplied-space-quota') }
 

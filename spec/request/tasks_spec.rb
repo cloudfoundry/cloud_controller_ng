@@ -23,6 +23,14 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'GET /v3/tasks' do
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::TaskModel }
+      let(:headers) { admin_headers }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/tasks?#{filters}", nil, headers }
+      end
+    end
+
     it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
       let(:request) { 'v3/tasks' }
       let(:message) { VCAP::CloudController::TasksListMessage }
