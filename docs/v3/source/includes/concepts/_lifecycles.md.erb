@@ -7,7 +7,7 @@ pull a Docker image from a registry to run an app.
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Type of the lifecycle; valid values are `buildpack`, `docker`
+**type** | _string_ | Type of the lifecycle; valid values are `buildpack`, `docker`, `kpack`
 **data** | _object_ | Data that is used during staging and running for a lifecycle
 
 ### Buildpack lifecycle
@@ -26,16 +26,18 @@ Example Buildpack Lifecycle
 }
 ```
 
-This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
+This is the default lifecycle for Cloud Foundry for VMs. When staging an app with this lifecycle, the app source code will be
 compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
 will be created and the droplet will be expanded inside that container to be executed.
+
+**Note**: This lifecycle is not supported on Cloud Foundry for Kubernetes.
 
 #### Buildpack lifecycle object
 
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
-**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack
+**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
 
 ### Docker lifecycle
@@ -51,7 +53,7 @@ Example Docker Lifecycle
 }
 ```
 
-This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
+This allows Cloud Foundry to run pre-built Docker images. When staging an app with this lifecycle, the Docker registry is queried for
 metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
 and the Docker image is executed inside of it.
 
@@ -62,3 +64,32 @@ Name | Type | Description
 **type** | _string_ | `docker`
 **data** | _object_ | Data is not used by the Docker lifecycle; valid value is `{}`
 
+### Kpack lifecycle
+
+```
+Example Kpack Lifecycle
+```
+
+```json
+{
+  "type": "kpack",
+  "data": {
+    "buildpacks": ["paketo-buildpacks/java"]
+  }
+}
+```
+
+This is the default lifecycle for Cloud Foundry for Kubernetes. When staging an app with this lifecycle, the app source code will be
+built into an OCI image using a [Cloud Native Buildpack](https://buildpacks.io/) and [kpack](https://github.com/pivotal/kpack).
+This image is published to the app image registry and a `docker` lifecycle droplet is created referring to the image.
+
+When running an app with this lifecycle, a container is created and the OCI image is executed inside of it.
+
+**Note**: This lifecycle is not supported on Cloud Foundry for VMs.
+
+#### Kpack lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `kpack`
+**data.buildpacks** | _array of strings_ | An optional list of buildpack names. Specify an empty list to auto-detect a suitable buildpack during staging
