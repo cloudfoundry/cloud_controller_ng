@@ -54,7 +54,7 @@ module VCAP::CloudController
           finish
         when ServiceRouteBindingCreate::PollingNotComplete
           unless polling_status.retry_after.nil?
-            self.polling_interval_seconds = polling_status.retry_after
+            self.polling_interval_seconds = polling_status.retry_after.to_i
           end
         end
       rescue ServiceRouteBindingCreate::BindingNotRetrievable
