@@ -713,6 +713,31 @@ RSpec.describe 'V3 service offerings' do
     end
 
     describe 'order_by' do
+      context 'name' do # can't use shared example as it sets 'name' rather than 'label'
+        let!(:resource_1) { VCAP::CloudController::Service.make(guid: '1', label: 'flopsy') }
+        let!(:resource_2) { VCAP::CloudController::Service.make(guid: '2', label: 'mopsy') }
+        let!(:resource_3) { VCAP::CloudController::Service.make(guid: '3', label: 'cottontail') }
+        let!(:resource_4) { VCAP::CloudController::Service.make(guid: '4', label: 'peter') }
+
+        it 'sorts ascending' do
+          get('/v3/service_offerings?order_by=name', nil, admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'][0]['name']).to eq('cottontail')
+          expect(parsed_response['resources'][1]['name']).to eq('flopsy')
+          expect(parsed_response['resources'][2]['name']).to eq('mopsy')
+          expect(parsed_response['resources'][3]['name']).to eq('peter')
+        end
+
+        it 'sorts descending' do
+          get('/v3/service_offerings?order_by=-name', nil, admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'][0]['name']).to eq('peter')
+          expect(parsed_response['resources'][1]['name']).to eq('mopsy')
+          expect(parsed_response['resources'][2]['name']).to eq('flopsy')
+          expect(parsed_response['resources'][3]['name']).to eq('cottontail')
+        end
+      end
+
       it_behaves_like 'list endpoint order_by timestamps', '/v3/service_offerings' do
         let(:resource_klass) { VCAP::CloudController::Service }
       end
