@@ -291,19 +291,19 @@ RSpec.shared_examples 'list endpoint order_by name' do |endpoint|
   it 'sorts ascending' do
     get("#{endpoint}?order_by=name", nil, admin_headers)
     expect(last_response).to have_status_code(200)
-    expect(parsed_response['resources'][0]['guid']).to eq('3') # cottontail
-    expect(parsed_response['resources'][1]['guid']).to eq('1') # flopsy
-    expect(parsed_response['resources'][2]['guid']).to eq('2') # mopsy
-    expect(parsed_response['resources'][3]['guid']).to eq('4') # peter
+    expect(parsed_response['resources'][0]['name']).to eq('cottontail')
+    expect(parsed_response['resources'][1]['name']).to eq('flopsy')
+    expect(parsed_response['resources'][2]['name']).to eq('mopsy')
+    expect(parsed_response['resources'][3]['name']).to eq('peter')
   end
 
   it 'sorts descending' do
     get("#{endpoint}?order_by=-name", nil, admin_headers)
     expect(last_response).to have_status_code(200)
-    expect(parsed_response['resources'][0]['guid']).to eq('4') # peter
-    expect(parsed_response['resources'][1]['guid']).to eq('2') # mopsy
-    expect(parsed_response['resources'][2]['guid']).to eq('1') # flopsy
-    expect(parsed_response['resources'][3]['guid']).to eq('3') # cottontail
+    expect(parsed_response['resources'][0]['name']).to eq('peter')
+    expect(parsed_response['resources'][1]['name']).to eq('mopsy')
+    expect(parsed_response['resources'][2]['name']).to eq('flopsy')
+    expect(parsed_response['resources'][3]['name']).to eq('cottontail')
   end
 end
 

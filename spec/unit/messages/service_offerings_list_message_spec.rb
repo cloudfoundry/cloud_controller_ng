@@ -86,5 +86,21 @@ module VCAP::CloudController
 
       it_behaves_like 'fields to_param_hash', 'service_broker', 'guid,name'
     end
+
+    describe 'order_by' do
+      it 'corrects `name` to `label`' do
+        message = described_class.from_params(order_by: 'name')
+        expect(message).to be_valid
+        expect(message.pagination_options.order_by).to eq('label')
+        expect(message.pagination_options.order_direction).to eq('asc')
+      end
+
+      it 'corrects `-name` to `label`' do
+        message = described_class.from_params(order_by: '-name')
+        expect(message).to be_valid
+        expect(message.pagination_options.order_by).to eq('label')
+        expect(message.pagination_options.order_direction).to eq('desc')
+      end
+    end
   end
 end
