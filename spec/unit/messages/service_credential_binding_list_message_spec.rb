@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'messages/service_credential_bindings_list_message'
+require 'messages/service_credential_binding_list_message'
 
 module VCAP::CloudController
-  RSpec.describe ServiceCredentialBindingsListMessage do
+  RSpec.describe ServiceCredentialBindingListMessage do
     subject(:message) { described_class.from_params(params) }
 
     let(:params) do
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     describe '.from_params' do
       it 'returns the correct ServiceCredentialBindingsListMessage' do
-        expect(message).to be_a(ServiceCredentialBindingsListMessage)
+        expect(message).to be_a(ServiceCredentialBindingListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')

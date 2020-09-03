@@ -187,7 +187,7 @@ Rails.application.routes.draw do
   # service_credential_bindings
   resources :service_credential_bindings,
             param: :guid,
-            only: [:show, :index] do
+            only: [:show, :index, :create] do
     member do
       get :details
       get :parameters

@@ -1,7 +1,7 @@
 require 'messages/list_message'
 
 module VCAP::CloudController
-  class ServiceCredentialBindingsListMessage < ListMessage
+  class ServiceCredentialBindingListMessage < ListMessage
     ARRAY_KEYS = [
       :names,
       :service_instance_guids,

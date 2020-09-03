@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class ServiceCredentialBindingsShowMessage < BaseMessage
+  class ServiceCredentialBindingShowMessage < BaseMessage
     ARRAY_KEYS = [
       :include
     ].freeze

@@ -866,6 +866,184 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
+  describe 'POST /v3/service_credential_bindings' do
+    let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
+
+    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+    let(:app_guid) { app_to_bind_to.guid }
+    let(:service_instance_guid) { service_instance.guid }
+    let(:create_body) {
+      {
+        type: 'app',
+        name: 'some-name',
+        relationships: {
+          service_instance: { data: { guid: service_instance_guid } },
+          app: { data: { guid: app_guid } }
+        }
+      }
+    }
+
+    describe 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['space_developer'] = { code: 501 }
+            h['admin'] = { code: 501 }
+            h['org_billing_manager'] = { code: 422 }
+            h['org_auditor'] = { code: 422 }
+            h['no_role'] = { code: 422 }
+          end
+        end
+      end
+    end
+
+    describe 'invalid requests' do
+      it 'returns 422 when type is missing' do
+        create_body.delete(:type)
+
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => include("Type must be one of 'key', 'app'"),
+          'title' => 'CF-UnprocessableEntity',
+          'code' => 10008,
+        }))
+      end
+
+      it 'returns 422 when service instance relationship is not included' do
+        create_body[:relationships].delete(:service_instance)
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => include("Relationships Service instance can't be blank"),
+          'title' => 'CF-UnprocessableEntity',
+          'code' => 10008,
+        }))
+      end
+
+      context 'when attempting to create a key from a user-provided instance' do
+        it 'returns a 422' do
+          create_body[:type] = 'key'
+
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('Cannot create service keys from user-provided service instances'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the service instance does not exist' do
+        let(:service_instance_guid) { 'fake-instance' }
+
+        it 'returns a 422 when the service instance does not exist' do
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Service instance 'fake-instance' not found"),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the app does not exist' do
+        let(:app_guid) { 'fake-app' }
+
+        it 'returns a 422 when the service instance does not exist' do
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("App 'fake-app' not found"),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the user has no access to the related resources' do
+        let(:space_user) do
+          u = VCAP::CloudController::User.make
+          other_space.organization.add_user(u)
+          other_space.add_developer(u)
+          u
+        end
+
+        let(:space_dev_headers) { headers_for(space_user) }
+
+        context 'service instance' do
+          it 'returns a 422' do
+            api_call.call space_dev_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("Service instance '#{service_instance_guid}' not found"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'app' do
+          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: other_space) }
+
+          it 'returns a 422' do
+            api_call.call space_dev_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("App '#{app_guid}' not found"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+      end
+
+      context 'when creating an app binding without app relationship' do
+        it 'returns a 422' do
+          create_body[:relationships].delete(:app)
+
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Relationships App can't be blank"),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the service instance is managed' do
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+        it 'returns a 422 when the service instance does not exist' do
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('Bindings for managed service instances are not supported'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the service instance and the app are not in the same space' do
+        let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
+        it 'returns a 422 error' do
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('The service instance and the app are in different spaces'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+    end
+  end
+
   def expected_json(binding)
     {
       guid: binding.guid,
