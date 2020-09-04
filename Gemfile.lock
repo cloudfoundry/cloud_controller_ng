@@ -158,7 +158,7 @@ GEM
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
-    fluent-logger (0.8.2)
+    fluent-logger (0.9.0)
       msgpack (>= 1.0.0, < 2)
     fog-aliyun (0.3.17)
       aliyun-sdk (~> 0.7.3)
