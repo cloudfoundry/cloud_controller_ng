@@ -3534,7 +3534,7 @@ RSpec.describe 'V3 service instances' do
             include(
               {
                 'detail' => "Unable to unshare service instance from space #{space_guid}. " \
-                      'Ensure the space exists and the service instance has been shared to this space.',
+                      'Ensure the space exists.',
                 'title' => 'CF-UnprocessableEntity'
               })
           )
@@ -3544,18 +3544,10 @@ RSpec.describe 'V3 service instances' do
       context 'when instance was not shared to the space' do
         let(:space_guid) { VCAP::CloudController::Space.make(organization: org).guid }
 
-        it 'responds with 422' do
+        it 'responds with 204' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
-          expect(parsed_response['errors']).to include(
-            include(
-              {
-                'detail' => "Unable to unshare service instance from space #{space_guid}. " \
-                      'Ensure the space exists and the service instance has been shared to this space.',
-                'title' => 'CF-UnprocessableEntity'
-              })
-          )
+          expect(last_response.status).to eq(204)
         end
       end
     end
