@@ -9,7 +9,8 @@ module VCAP
           {
             'page'      => 1,
             'per_page'  => 5,
-            'service_instance_guids' => 'guid-1,guid-2,guid-3'
+            'service_instance_guids' => 'guid-1,guid-2,guid-3',
+            'route_guids' => 'guid-4,guid-5,guid-6'
           }
         end
 
@@ -21,12 +22,14 @@ module VCAP
           expect(message.page).to eq(1)
           expect(message.per_page).to eq(5)
           expect(message.service_instance_guids).to eq(%w[guid-1 guid-2 guid-3])
+          expect(message.route_guids).to eq(%w[guid-4 guid-5 guid-6])
         end
 
         it 'converts requested keys to symbols' do
           expect(message.requested?(:page)).to be_truthy
           expect(message.requested?(:per_page)).to be_truthy
           expect(message.requested?(:service_instance_guids)).to be_truthy
+          expect(message.requested?(:route_guids)).to be_truthy
         end
       end
     end

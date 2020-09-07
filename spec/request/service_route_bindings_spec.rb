@@ -718,6 +718,23 @@ RSpec.describe 'v3 service route bindings' do
         route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
         expect(route_binding_guids).to eq(expected_route_binding_guids)
       end
+
+      it 'can be filtered by route guids' do
+        VCAP::CloudController::RouteBinding.make
+        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        route_guids = filtered_route_bindings.
+                      map(&:route).
+                      map(&:guid).
+                      join(',')
+
+        get "/v3/service_route_bindings?route_guids=#{route_guids}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+
+        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
+        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
+        expect(route_binding_guids).to eq(expected_route_binding_guids)
+      end
     end
   end
 

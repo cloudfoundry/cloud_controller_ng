@@ -19,7 +19,8 @@ module VCAP
 
       def all_bindings
         RouteBinding.dataset.
-          join(:service_instances, id: Sequel[:route_bindings][:service_instance_id])
+          join(:service_instances, id: Sequel[:route_bindings][:service_instance_id]).
+          join(:routes, id: Sequel[:route_bindings][:route_id])
       end
 
       def filter(message, bindings)
@@ -27,6 +28,10 @@ module VCAP
 
         if message.requested?(:service_instance_guids)
           filtered_bindings = filtered_bindings.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
+        end
+
+        if message.requested?(:route_guids)
+          filtered_bindings = filtered_bindings.where { Sequel[:routes][:guid] =~ message.route_guids }
         end
 
         filtered_bindings

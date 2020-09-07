@@ -3,7 +3,10 @@ require 'messages/list_message'
 module VCAP
   module CloudController
     class ServiceRouteBindingsListMessage < ListMessage
-      FILTERS = %w[service_instance_guids].freeze
+      FILTERS = %w[
+        service_instance_guids
+        route_guids
+      ].freeze
 
       register_allowed_keys(FILTERS.map(&:to_sym))
 
