@@ -24,18 +24,20 @@ module VCAP
       end
 
       def filter(message, bindings)
-        filtered_bindings = bindings
-
-        if message.requested?(:service_instance_guids)
-          filtered_bindings = filtered_bindings.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
-        end
-
-        if message.requested?(:route_guids)
-          filtered_bindings = filtered_bindings.where { Sequel[:routes][:guid] =~ message.route_guids }
-        end
-
-        filtered_bindings
+        FILTERS.
+          select { |filter_name| message.requested?(filter_name) }.
+          values.
+          inject(bindings) { |dataset, filter| filter.call(dataset, message) }
       end
+
+      FILTERS = {
+        service_instance_guids: ->(dataset, message) do
+          dataset.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
+        end,
+        route_guids: ->(dataset, message) do
+          dataset.where { Sequel[:routes][:guid] =~ message.route_guids }
+        end
+      }.freeze
     end
   end
 end
