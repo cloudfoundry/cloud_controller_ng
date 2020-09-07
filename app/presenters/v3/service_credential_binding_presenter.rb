@@ -66,12 +66,13 @@ module VCAP
           end
 
           def base_links
+            parameters = { parameters: "#{path_to_self}/parameters" } unless @resource.service_instance.user_provided_instance?
+
             {
               self: path_to_self,
               details: "#{path_to_self}/details",
-              parameters: "#{path_to_self}/parameters",
               service_instance: "/v3/service_instances/#{@resource.service_instance_guid}"
-            }.transform_values do |path|
+            }.merge(parameters || {}).transform_values do |path|
               hrefify(path)
             end
           end

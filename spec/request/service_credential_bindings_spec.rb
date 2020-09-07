@@ -800,7 +800,14 @@ RSpec.describe 'v3 service credential bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
 
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+    let(:service_instance_details) {
+      {
+        space: space,
+        syslog_drain_url: 'http://syslog.example.com/wow',
+        credentials: { password: 'foo' }
+      }
+    }
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
     let(:app_guid) { app_to_bind_to.guid }
     let(:service_instance_guid) { service_instance.guid }
     let(:create_body) {
@@ -814,12 +821,76 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
 
+    describe 'a successful creation' do
+      before do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to have_key('guid')
+        @binding_guid = parsed_response['guid']
+      end
+
+      it 'creates a new service credential binding' do
+        binding_response = {
+          guid: @binding_guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'some-name',
+          type: 'app',
+          last_operation: {
+            type: 'create',
+            state: 'succeeded',
+            created_at: iso8601,
+            updated_at: iso8601,
+            description: nil,
+          },
+          relationships: {
+            service_instance: { data: { guid: service_instance_guid } },
+            app: { data: { guid: app_guid } }
+          },
+          links: {
+            self: {
+              href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}"
+            },
+            details: {
+              href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}/details"
+            },
+            service_instance: {
+              href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
+            },
+            app: {
+              href: "#{link_prefix}/v3/apps/#{app_guid}"
+            }
+          }
+        }
+        expect(parsed_response).to match_json_response(binding_response)
+
+        get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to match_json_response(binding_response)
+      end
+
+      it 'logs an audit event' do
+        event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
+        expect(event).to be
+        expect(event.actee).to eq(@binding_guid)
+      end
+
+      it 'sets the right details' do
+        get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to match_json_response({
+          credentials: { password: 'foo' },
+          syslog_drain_url: 'http://syslog.example.com/wow'
+        })
+      end
+    end
+
     describe 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 501 }
-            h['admin'] = { code: 501 }
+            h['space_developer'] = { code: 201 }
+            h['admin'] = { code: 201 }
             h['org_billing_manager'] = { code: 422 }
             h['org_auditor'] = { code: 422 }
             h['no_role'] = { code: 422 }
@@ -847,6 +918,18 @@ RSpec.describe 'v3 service credential bindings' do
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(include({
           'detail' => include("Relationships Service instance can't be blank"),
+          'title' => 'CF-UnprocessableEntity',
+          'code' => 10008,
+        }))
+      end
+
+      it 'returns 422 when the binding already exists' do
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(201)
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => include('The app is already bound to the service instance'),
           'title' => 'CF-UnprocessableEntity',
           'code' => 10008,
         }))

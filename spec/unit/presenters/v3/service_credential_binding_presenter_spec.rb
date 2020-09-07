@@ -4,7 +4,7 @@ require 'presenters/v3/service_credential_binding_presenter'
 module VCAP
   module CloudController
     RSpec.describe Presenters::V3::ServiceCredentialBindingPresenter do
-      let(:instance) { ServiceInstance.make(guid: 'instance-guid') }
+      let(:instance) { ManagedServiceInstance.make(guid: 'instance-guid') }
       let(:app) { AppModel.make(guid: 'app-guid', space: instance.space) }
 
       describe 'app bindings' do
@@ -118,6 +118,16 @@ module VCAP
               }
             }
           )
+        end
+      end
+
+      describe 'for user provided service instances' do
+        let(:instance) { UserProvidedServiceInstance.make(guid: 'instance-guid') }
+        let(:credential_binding) { ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance) }
+
+        it 'should not include links.parameters' do
+          presenter = described_class.new(credential_binding)
+          expect(presenter.to_hash[:links]).to_not have_key(:parameters)
         end
       end
 
