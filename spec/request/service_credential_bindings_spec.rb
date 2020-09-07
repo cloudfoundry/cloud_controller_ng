@@ -943,7 +943,7 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Service instance 'fake-instance' not found"),
+            'detail' => include("The service instance could not be found: 'fake-instance'"),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
@@ -979,7 +979,7 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call space_dev_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("Service instance '#{service_instance_guid}' not found"),
+              'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))

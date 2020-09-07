@@ -40,12 +40,12 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-    unprocessable!("Service instance '#{message.service_instance_guid}' not found") unless !service_instance.blank? && can_read_from_space?(service_instance.space)
+    unprocessable!("The service instance could not be found: '#{message.service_instance_guid}'") unless service_instance.present? && can_read_from_space?(service_instance.space)
     unprocessable!('Bindings for managed service instances are not supported') if service_instance.managed_instance?
     unprocessable!('Cannot create service keys from user-provided service instances') if message.type == 'key'
 
     app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
-    unprocessable!("App '#{message.app_guid}' not found") unless !app.blank? && can_read_from_space?(app.space)
+    unprocessable!("App '#{message.app_guid}' not found") unless app.present? && can_read_from_space?(app.space)
     unprocessable!('The service instance and the app are in different spaces') unless app.space.guid == service_instance.space.guid
 
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
