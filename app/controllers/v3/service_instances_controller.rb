@@ -154,8 +154,8 @@ class ServiceInstancesV3Controller < ApplicationController
     space_guid = hashed_params[:space_guid]
     target_space = Space.first(guid: space_guid)
 
-    unless target_space && service_instance.shared_spaces.include?(target_space)
-      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists and the service instance has been shared to this space.")
+    unless target_space
+      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists.")
     end
 
     unshare = ServiceInstanceUnshare.new
