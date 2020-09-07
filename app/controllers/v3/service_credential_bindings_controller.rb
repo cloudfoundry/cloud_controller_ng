@@ -2,14 +2,15 @@ require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'presenters/v3/service_credential_binding_presenter'
 require 'presenters/v3/service_credential_binding_details_presenter'
-require 'messages/service_credential_bindings_list_message'
-require 'messages/service_credential_bindings_show_message'
+require 'messages/service_credential_binding_list_message'
+require 'messages/service_credential_binding_show_message'
+require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
-    message = ServiceCredentialBindingsListMessage.from_params(query_params)
+    message = ServiceCredentialBindingListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     results = list_fetcher.fetch(space_guids: space_guids, message: message)
@@ -26,12 +27,30 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def show
-    message = ServiceCredentialBindingsShowMessage.from_params(query_params)
+    message = ServiceCredentialBindingShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     ensure_service_credential_binding_is_accessible!
 
     render status: :ok, json: serialized(message)
+  end
+
+  def create
+    message = ServiceCredentialBindingCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
+    unprocessable!("The service instance could not be found: '#{message.service_instance_guid}'") unless service_instance.present? && can_read_from_space?(service_instance.space)
+    unprocessable!('Bindings for managed service instances are not supported') if service_instance.managed_instance?
+    unprocessable!('Cannot create service keys from user-provided service instances') if message.type == 'key'
+
+    app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
+    unprocessable!("App '#{message.app_guid}' not found") unless app.present? && can_read_from_space?(app.space)
+    unprocessable!('The service instance and the app are in different spaces') unless app.space.guid == service_instance.space.guid
+
+    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
+
+    head :not_implemented
   end
 
   def details
@@ -136,6 +155,10 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def can_read_secrets_in_the_binding_space?
     permission_queryer.can_read_secrets_in_space?(binding_space.guid, binding_org.guid)
+  end
+
+  def can_read_from_space?(space)
+    permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def binding_space

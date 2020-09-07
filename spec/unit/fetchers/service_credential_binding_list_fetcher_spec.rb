@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'fetchers/service_credential_binding_list_fetcher'
-require 'messages/service_credential_bindings_list_message'
+require 'messages/service_credential_binding_list_message'
 
 module VCAP
   module CloudController
     RSpec.describe ServiceCredentialBindingListFetcher do
       let(:params) { {} }
-      let(:message) { ServiceCredentialBindingsListMessage.from_params(params) }
+      let(:message) { ServiceCredentialBindingListMessage.from_params(params) }
       let(:fetcher) { ServiceCredentialBindingListFetcher.new }
 
       describe 'no bindings' do
