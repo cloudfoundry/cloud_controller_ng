@@ -1,4 +1,5 @@
 require 'messages/service_route_binding_create_message'
+require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
 require 'jobs/v3/create_route_binding_job'
 require 'presenters/v3/service_route_binding_presenter'
@@ -42,8 +43,8 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def index
-    route_bindings = fetch_route_bindings
-    message = ListMessage.from_params(query_params, [])
+    message = VCAP::CloudController::ServiceRouteBindingsListMessage.from_params(query_params)
+    route_bindings = fetch_route_bindings(message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceRouteBindingPresenter,
       paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
@@ -54,12 +55,12 @@ class ServiceRouteBindingsController < ApplicationController
 
   private
 
-  def fetch_route_bindings
+  def fetch_route_bindings(message)
     fetcher = RouteBindingListFetcher.new
     if permission_queryer.can_read_globally?
-      fetcher.fetch_all
+      fetcher.fetch_all(message)
     else
-      fetcher.fetch_some(space_guids: space_guids)
+      fetcher.fetch_some(message, space_guids: space_guids)
     end
   end
 
