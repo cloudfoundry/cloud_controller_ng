@@ -12,10 +12,6 @@ module VCAP::CloudController
       !(route_service_url.nil? || route_service_url.empty?)
     end
 
-    def client
-      VCAP::Services::ServiceBrokers::UserProvided::Client.new
-    end
-
     def save_with_new_operation(_, _); end
 
     def validate
