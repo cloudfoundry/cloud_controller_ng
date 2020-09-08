@@ -100,7 +100,7 @@ class ServiceCredentialBindingsController < ApplicationController
   ].freeze
 
   def decorators(message)
-    AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }.reduce([]) { |decorators, d| decorators << d }
+    AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }
   end
 
   def config
