@@ -4,17 +4,16 @@ require 'actions/service_route_binding_create'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingCreate do
+      subject(:action) { described_class.new(user_audit_info) }
       let(:space) { Space.make }
       let(:app) { AppModel.make(space: space) }
       let(:binding_details) {}
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
 
       before do
         @service_binding_event_repository = Repositories::ServiceBindingEventRepository
         allow(@service_binding_event_repository).to receive(:record_create)
       end
-
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
-      subject(:action) { described_class.new(user_audit_info) }
 
       describe '#precursor' do
         RSpec.shared_examples '#precursor' do
@@ -25,8 +24,8 @@ module VCAP::CloudController
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.app).to eq(app)
             expect(binding.name).to eq(details[:name])
-            expect(binding.credentials).to eq(details[:credentials])
-            expect(binding.syslog_drain_url).to eq(details[:syslog_drain_url])
+            expect(binding.credentials).to be_empty
+            expect(binding.syslog_drain_url).to be_nil
             expect(binding.last_operation.type).to eq('create')
             expect(binding.last_operation.state).to eq('in progress')
           end
@@ -81,6 +80,8 @@ module VCAP::CloudController
 
             precursor.reload
             expect(precursor).to eq(ServiceBinding.first)
+            expect(precursor.credentials).to eq(details[:credentials])
+            expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
             expect(precursor.last_operation.type).to eq('create')
             expect(precursor.last_operation.state).to eq('succeeded')
           end
@@ -92,7 +93,7 @@ module VCAP::CloudController
 
           context 'when saving to the db fails' do
             it 'fails the binding operation' do
-              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'succeeded' }).and_raise(Sequel::ValidationFailed, 'Meh')
+              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'succeeded' }, attributes: anything).and_raise(Sequel::ValidationFailed, 'Meh')
               allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'failed', description: 'Meh' }).and_call_original
               expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
               precursor.reload
@@ -104,11 +105,12 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:details) { {
-            space: space,
-            credentials: { password: 'rennt', username: 'lola' },
-            syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
-          }
+          let(:details) {
+            {
+              space: space,
+              credentials: { 'password' => 'rennt', 'username' => 'lola' },
+              syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
+            }
           }
 
           let(:service_instance) { UserProvidedServiceInstance.make(**details) }

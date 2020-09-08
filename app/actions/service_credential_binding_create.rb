@@ -17,8 +17,7 @@ module VCAP::CloudController
           name: name,
           app: app,
           type: 'app',
-          credentials: service_instance.credentials,
-          syslog_drain_url: service_instance.syslog_drain_url
+          credentials: {}
         }
 
         ServiceBinding.new(**binding_details).tap do |b|
@@ -31,11 +30,15 @@ module VCAP::CloudController
         end
       rescue Sequel::ValidationFailed => e
         already_bound! if e.message =~ /The app is already bound to the service/
-        raise e
+        raise UnprocessableCreate(e.full_message)
       end
 
       def bind(binding)
-        binding.save_with_new_operation({ type: 'create', state: 'succeeded' })
+        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+        details = client.bind(binding, arbitrary_parameters: {}, accepts_incomplete: false)
+
+        binding.save_with_new_operation({ type: 'create', state: 'succeeded' }, attributes: details[:binding])
+
         event_repository.record_create(binding, @user_audit_info, manifest_triggered: false)
       rescue => e
         binding.save_with_new_operation({

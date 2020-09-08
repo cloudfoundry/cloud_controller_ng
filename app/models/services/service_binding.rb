@@ -144,9 +144,10 @@ module VCAP::CloudController
       false
     end
 
-    def save_with_new_operation(last_operation)
+    def save_with_new_operation(last_operation, attributes: {})
       ServiceBinding.db.transaction do
         self.lock!
+        set(attributes)
         save_changes
 
         if self.last_operation
