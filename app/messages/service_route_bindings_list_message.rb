@@ -5,6 +5,7 @@ module VCAP
     class ServiceRouteBindingsListMessage < ListMessage
       FILTERS = %w[
         service_instance_guids
+        service_instance_names
         route_guids
       ].freeze
 

@@ -27,12 +27,15 @@ module VCAP
         FILTERS.
           select { |filter_name| message.requested?(filter_name) }.
           values.
-          inject(bindings) { |dataset, filter| filter.call(dataset, message) }
+          reduce(bindings) { |dataset, filter| filter.call(dataset, message) }
       end
 
       FILTERS = {
         service_instance_guids: ->(dataset, message) do
           dataset.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
+        end,
+        service_instance_names: ->(dataset, message) do
+          dataset.where { Sequel[:service_instances][:name] =~ message.service_instance_names }
         end,
         route_guids: ->(dataset, message) do
           dataset.where { Sequel[:routes][:guid] =~ message.route_guids }
