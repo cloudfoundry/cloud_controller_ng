@@ -496,6 +496,25 @@ module VCAP::CloudController
           expect(ServiceBindingOperation.count).to eq(1)
         end
       end
+
+      context 'when attributes are passed in' do
+        it 'updates the attributes' do
+          last_operation = {
+            state: 'in progress',
+            type: 'create',
+            description: '10%'
+          }
+          attributes = { name: 'gohan', credentials: { password: 'rice' } }
+          binding.save_with_new_operation(last_operation, attributes: attributes)
+
+          expect(binding.last_operation.state).to eq 'in progress'
+          expect(binding.last_operation.description).to eq '10%'
+          expect(binding.last_operation.type).to eq 'create'
+          expect(binding.name).to eq 'gohan'
+          expect(binding.credentials).to eq({ 'password' => 'rice' })
+          expect(ServiceBinding.count).to eq(1)
+        end
+      end
     end
 
     describe '#terminal_state?' do

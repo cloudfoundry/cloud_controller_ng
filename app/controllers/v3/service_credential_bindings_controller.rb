@@ -1,3 +1,4 @@
+require 'actions/service_credential_binding_create'
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'presenters/v3/service_credential_binding_presenter'
@@ -50,7 +51,12 @@ class ServiceCredentialBindingsController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
-    head :not_implemented
+    action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
+    binding = action.precursor(service_instance, app: app, name: message.name)
+    action.bind(binding)
+    render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+  rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
+    unprocessable!(e.message)
   end
 
   def details
