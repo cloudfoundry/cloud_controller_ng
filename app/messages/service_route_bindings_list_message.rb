@@ -3,16 +3,17 @@ require 'messages/list_message'
 module VCAP
   module CloudController
     class ServiceRouteBindingsListMessage < ListMessage
-      FILTERS = %w[
+      QUERY_PARAMS = %w[
         service_instance_guids
         service_instance_names
         route_guids
+        include
       ].freeze
 
-      register_allowed_keys(FILTERS.map(&:to_sym))
+      register_allowed_keys QUERY_PARAMS.map(&:to_sym)
 
       def self.from_params(params)
-        super(params, FILTERS)
+        super(params, QUERY_PARAMS)
       end
     end
   end
