@@ -723,9 +723,9 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::RouteBinding.make
         filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
         service_instance_names = filtered_route_bindings.
-                      map(&:service_instance).
-                      map(&:name).
-                      join(',')
+                                 map(&:service_instance).
+                                 map(&:name).
+                                 join(',')
 
         get "/v3/service_route_bindings?service_instance_names=#{service_instance_names}", nil, admin_headers
 
