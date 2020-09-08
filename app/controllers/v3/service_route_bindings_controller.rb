@@ -50,10 +50,19 @@ class ServiceRouteBindingsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
       path: '/v3/service_route_bindings',
       message: message,
+      decorators: decorators(message)
     )
   end
 
   private
+
+  AVAILABLE_DECORATORS = [
+    IncludeBindingServiceInstanceDecorator
+  ].freeze
+
+  def decorators(message)
+    AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }
+  end
 
   def fetch_route_bindings(message)
     fetcher = RouteBindingListFetcher.new
