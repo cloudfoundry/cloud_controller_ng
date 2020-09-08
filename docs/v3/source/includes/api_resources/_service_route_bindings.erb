@@ -36,3 +36,84 @@
   }
 }
 <% end %>
+
+<% content_for :paginated_list_of_service_route_bindings do |base_url| %>
+  {
+    "pagination": {
+      "total_results": 3,
+      "total_pages": 2,
+      "first": {
+        "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+      },
+      "last": {
+        "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+      },
+      "next": {
+        "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+      },
+      "previous": null
+    },
+    "resources": [
+      {
+        "guid": "4ac1a475-0f4d-4e4b-8ff6-957c94f68211",
+        "route_service_url": "https://some-route-1.api.example.org",
+        "created_at": "2020-09-08T08:55:59Z",
+        "updated_at": "2020-09-08T08:55:59Z",
+        "last_operation": null,
+        "relationships": {
+          "service_instance": {
+            "data": {
+              "guid": "39903ed2-6476-4c78-843a-0195f5fc4ccd"
+            }
+          },
+          "route": {
+            "data": {
+              "guid": "15697508-cb68-4d88-9f19-85fc53851571"
+            }
+          }
+        },
+        "links": {
+          "self": {
+            "href": "https://api.example.org/v3/service_route_bindings/4ac1a475-0f4d-4e4b-8ff6-957c94f68211"
+          },
+          "service_instance": {
+            "href": "https://api.example.org/v3/service_instances/39903ed2-6476-4c78-843a-0195f5fc4ccd"
+          },
+          "route": {
+            "href": "https://api.example.org/v3/routes/15697508-cb68-4d88-9f19-85fc53851571"
+          }
+        }
+      },
+      {
+        "guid": "bdf63c4f-85af-4c20-bea9-e9def7d57dab",
+        "route_service_url": "https://some-route-2.api.example.org",
+        "created_at": "2020-09-08T09:13:51Z",
+        "updated_at": "2020-09-08T09:13:51Z",
+        "last_operation": null,
+        "relationships": {
+          "service_instance": {
+            "data": {
+              "guid": "f957dc7c-46d1-4a3f-973d-71ce5fdec788"
+            }
+          },
+          "route": {
+            "data": {
+              "guid": "75ebe2a1-04b0-407b-b33c-733388fc7aa4"
+            }
+          }
+        },
+        "links": {
+          "self": {
+            "href": "https://api.example.org/v3/service_route_bindings/bdf63c4f-85af-4c20-bea9-e9def7d57dab"
+          },
+          "service_instance": {
+            "href": "https://api.example.org/v3/service_instances/f957dc7c-46d1-4a3f-973d-71ce5fdec788"
+          },
+          "route": {
+            "href": "https://api.example.org/v3/routes/75ebe2a1-04b0-407b-b33c-733388fc7aa4"
+          }
+        }
+      }
+    ]
+  }
+<% end %>
