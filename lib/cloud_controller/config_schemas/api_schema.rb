@@ -161,16 +161,9 @@ module VCAP::CloudController
             app_package_directory_key: String,
             fog_connection: Hash,
             fog_aws_storage_options: Hash,
-            # for a full push, requires package_image_uploader
             optional(:image_registry) => {
               base_path: String
             }
-          },
-
-          # for a full push, requires packages.image_registry
-          optional(:package_image_uploader) => {
-            host: String,
-            port: Integer
           },
 
           droplets: {
@@ -178,6 +171,11 @@ module VCAP::CloudController
             max_staged_droplets_stored: Integer,
             fog_connection: Hash,
             fog_aws_storage_options: Hash,
+          },
+
+          optional(:package_image_uploader) => {
+            host: String,
+            port: Integer
           },
 
           db_encryption_key: enum(String, NilClass),

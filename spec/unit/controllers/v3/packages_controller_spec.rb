@@ -14,6 +14,7 @@ RSpec.describe PackagesController, type: :controller do
       @request.env.merge!(form_headers)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
+      allow(File).to receive(:rename)
     end
 
     it 'returns 200 and updates the package state' do

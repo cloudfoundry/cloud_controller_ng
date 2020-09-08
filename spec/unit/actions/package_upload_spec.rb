@@ -5,6 +5,10 @@ module VCAP::CloudController
   RSpec.describe PackageUpload do
     subject(:package_upload) { PackageUpload.new }
 
+    before do
+      allow(File).to receive(:rename)
+    end
+
     describe '#upload_async' do
       let(:package) { PackageModel.make(type: 'bits') }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
@@ -14,6 +18,8 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
       it 'enqueues and returns an upload job' do
+        expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
+
         returned_job = nil
         expect {
           returned_job = package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
@@ -23,6 +29,7 @@ module VCAP::CloudController
         expect(returned_job).to eq(job)
         expect(job.queue).to eq('cc-local-1')
         expect(job.handler).to include(package.guid)
+        expect(job.handler).to include('/tmp/path-S8baxMJnPl')
         expect(job.handler).to include('PackageBits')
       end
 
@@ -59,6 +66,8 @@ module VCAP::CloudController
       let(:config) { Config.new({ name: 'local', index: '1' }) }
 
       it 'enqueues and returns an upload job' do
+        expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
+
         returned_job = nil
         expect {
           returned_job = package_upload.upload_async_without_event(message: message, package: package, config: config)
@@ -68,6 +77,7 @@ module VCAP::CloudController
         expect(returned_job).to eq(job)
         expect(job.queue).to eq('cc-local-1')
         expect(job.handler).to include(package.guid)
+        expect(job.handler).to include('/tmp/path-S8baxMJnPl')
         expect(job.handler).to include('PackageBits')
       end
 

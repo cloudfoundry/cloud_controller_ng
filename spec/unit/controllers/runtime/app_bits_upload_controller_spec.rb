@@ -9,7 +9,8 @@ module VCAP::CloudController
       before do
         TestConfig.override(
           config_override.merge(
-            directories: { tmpdir: File.dirname(valid_zip.path) }
+            directories: { tmpdir: File.dirname(valid_zip.path) },
+            kubernetes: {}
           )
         )
       end

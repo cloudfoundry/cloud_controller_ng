@@ -41,7 +41,10 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   }
 
   before do
-    TestConfig.override(directories: { tmpdir: File.dirname(valid_zip.path) })
+    TestConfig.override(
+      directories: { tmpdir: File.dirname(valid_zip.path) },
+      kubernetes: {}
+    )
   end
 
   put '/v2/apps/:guid/bits' do

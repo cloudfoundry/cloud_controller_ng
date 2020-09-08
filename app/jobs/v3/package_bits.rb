@@ -12,6 +12,7 @@ module VCAP::CloudController
 
         def perform
           Steno.logger('cc.background').info("Packing the app bits for package '#{@package_guid}'")
+
           CloudController::Packager::PackageUploadHandler.new(@package_guid, @package_zip_path, @fingerprints).pack
         end
 

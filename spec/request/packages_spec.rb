@@ -686,18 +686,27 @@ RSpec.describe 'Packages' do
     let(:app_model) { VCAP::CloudController::AppModel.make(guid: 'woof', space_guid: space.guid, name: 'meow') }
     let(:guid) { package_model.guid }
     let(:tmpdir) { Dir.mktmpdir }
+    let(:test_config_overrides) do
+      { directories: { tmpdir: tmpdir } }
+    end
+    let!(:tmpfile) {
+      File.open(File.join(tmpdir, 'application.zip'), 'w+') do |f|
+        f.write('application code')
+        f
+      end
+    }
+
+    let(:packages_params) do
+      {
+        bits_name: File.basename(tmpfile.path),
+        bits_path: tmpfile.path,
+      }
+    end
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      TestConfig.override(directories: { tmpdir: tmpdir })
-    end
-
-    let(:packages_params) do
-      {
-        bits_name: 'application.zip',
-        bits_path: "#{tmpdir}/application.zip",
-      }
+      TestConfig.override(test_config_overrides)
     end
 
     shared_examples :upload_bits_successfully do
@@ -750,54 +759,6 @@ RSpec.describe 'Packages' do
       end
     end
 
-    it 'uploads the bits for the package' do
-      expect(Delayed::Job.count).to eq 0
-
-      post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
-
-      expect(Delayed::Job.count).to eq 1
-
-      expected_response = {
-        'type'       => package_model.type,
-        'guid'       => guid,
-        'data'       => {
-          'checksum' => { 'type' => 'sha256', 'value' => anything },
-          'error' => nil
-        },
-        'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
-        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-        'metadata' => { 'labels' => {}, 'annotations' => {} },
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'links' => {
-          'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
-          'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
-          'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-        }
-      }
-      parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-
-      expected_metadata = { package_guid: package_model.guid }.to_json
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type:              'audit.app.package.upload',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        email,
-        actor_username:    user_name,
-        actee:             'woof',
-        actee_type:        'app',
-        actee_name:        'meow',
-        metadata:          expected_metadata,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
-    end
-
     context 'with v2 resources' do
       let(:packages_params) do
         {
@@ -825,6 +786,7 @@ RSpec.describe 'Packages' do
 
       include_examples :upload_bits_successfully
     end
+
     context 'telemetry' do
       it 'should log the required fields when the package uploads' do
         Timecop.freeze do
@@ -869,7 +831,7 @@ RSpec.describe 'Packages' do
     end
 
     before do
-      TestConfig.override(directories: { tmpdir: File.dirname(temp_file) })
+      TestConfig.override(directories: { tmpdir: File.dirname(temp_file) }, kubernetes: {})
       space.organization.add_user(user)
       space.add_developer(user)
       post "/v3/packages/#{guid}/upload", upload_body.to_json, user_header

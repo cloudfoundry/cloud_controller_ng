@@ -46,7 +46,16 @@ module VCAP::CloudController
     end
 
     def build_job(message, package)
-      Jobs::V3::PackageBits.new(package.guid, message.bits_path, message.resources&.map(&:deep_stringify_keys) || [])
+      randomized_file_name = randomize_file_name(message.bits_path)
+      Jobs::V3::PackageBits.new(package.guid, randomized_file_name, message.resources&.map(&:deep_stringify_keys) || [])
+    end
+
+    def randomize_file_name(filepath)
+      return filepath if filepath.blank?
+
+      randomized_file_name = "#{filepath}-#{SecureRandom.alphanumeric(10)}"
+      File.rename(filepath, randomized_file_name)
+      randomized_file_name
     end
 
     def logger

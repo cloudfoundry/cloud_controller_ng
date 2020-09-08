@@ -129,7 +129,10 @@ module VCAP::CloudController
             max_package_size: Integer,
             app_package_directory_key: String,
             fog_connection: Hash,
-            fog_aws_storage_options: Hash
+            fog_aws_storage_options: Hash,
+            optional(:image_registry) => {
+              base_path: String
+            }
           },
 
           droplets: {
