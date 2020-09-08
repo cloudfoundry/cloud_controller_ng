@@ -84,6 +84,18 @@ module VCAP::CloudController
           job = PollableJobModel.make(resource_type: 'role', resource_guid: 'not-a-real-guid')
           expect(job.resource_exists?).to be(false)
         end
+
+        it 'returns true if the resource exists' do
+          route_binding = RouteBinding.make
+          job = PollableJobModel.make(resource_type: 'service_route_binding', resource_guid: route_binding.guid)
+          expect(job.resource_exists?).to be(true)
+        end
+
+        it 'returns false if the resource does NOT exist' do
+          job = PollableJobModel.make(resource_type: 'service_route_binding', resource_guid: 'not-a-real-guid')
+          expect(job.resource_exists?).to be(false)
+        end
+
       end
     end
 
