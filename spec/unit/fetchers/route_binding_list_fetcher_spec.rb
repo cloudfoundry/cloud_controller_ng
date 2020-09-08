@@ -15,7 +15,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           expected_route_binding_guids = route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(expected_route_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(expected_route_binding_guids)
         end
 
         it 'can be filtered by service_instance_guids' do
@@ -28,7 +28,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(expected_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
         end
 
         it 'can be filtered by route_guids' do
@@ -41,7 +41,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(expected_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
         end
       end
 
@@ -63,7 +63,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           target_space_route_binding_guids = route_bindings_in_target_space.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(target_space_route_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(target_space_route_binding_guids)
         end
 
         it 'can be filtered by service_instance_guids' do
@@ -82,7 +82,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(expected_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
         end
 
         it 'can be filtered by route_guids' do
@@ -101,7 +101,7 @@ module VCAP
 
           fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
           expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to eq(expected_binding_guids)
+          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
         end
 
         def make_other_route_bindings

@@ -716,7 +716,7 @@ RSpec.describe 'v3 service route bindings' do
 
         expected_route_binding_guids = filtered_route_bindings.map(&:guid)
         route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to eq(expected_route_binding_guids)
+        expect(route_binding_guids).to match_array(expected_route_binding_guids)
       end
 
       it 'can be filtered by route guids' do
@@ -733,7 +733,7 @@ RSpec.describe 'v3 service route bindings' do
 
         expected_route_binding_guids = filtered_route_bindings.map(&:guid)
         route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to eq(expected_route_binding_guids)
+        expect(route_binding_guids).to match_array(expected_route_binding_guids)
       end
     end
   end
