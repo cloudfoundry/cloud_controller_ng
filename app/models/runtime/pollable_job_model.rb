@@ -24,6 +24,8 @@ module VCAP::CloudController
                 QuotaDefinition
               when 'space_quota'
                 SpaceQuotaDefinition
+              when 'service_route_binding'
+                RouteBinding
               else
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end

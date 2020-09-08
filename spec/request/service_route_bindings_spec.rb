@@ -214,6 +214,11 @@ RSpec.describe 'v3 service route bindings' do
         expect(job.operation).to eq('service_route_bindings.create')
         expect(job.resource_guid).to eq(binding.guid)
         expect(job.resource_type).to eq('service_route_binding')
+
+        get "/v3/jobs/#{job.guid}", nil, space_dev_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['guid']). to eq(job.guid)
       end
 
       describe 'the pollable job' do
