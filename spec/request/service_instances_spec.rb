@@ -470,6 +470,14 @@ RSpec.describe 'V3 service instances' do
         end
       end
     end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::ServiceInstance }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/service_instances?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
   end
 
   describe 'GET /v3/service_instances/:guid/credentials' do

@@ -36,9 +36,9 @@ class ServiceInstancesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ServiceInstanceListFetcher.new.fetch(message, omniscient: true)
+                ServiceInstanceListFetcher.fetch(message, omniscient: true)
               else
-                ServiceInstanceListFetcher.new.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
+                ServiceInstanceListFetcher.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

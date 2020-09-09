@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe ServiceInstanceListFetcher do
     let(:filters) { {} }
     let(:message) { ServiceInstancesListMessage.from_params(filters) }
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { described_class }
 
     describe '#fetch' do
       let(:space_1) { Space.make }
