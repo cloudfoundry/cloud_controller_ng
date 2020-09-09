@@ -36,9 +36,10 @@ module CloudController::Packager
     end
 
     before do
-      allow(packer).to receive(:tmp_dir).and_return(local_tmp_dir)
-      allow(packer).to receive(:package_blobstore).and_return(package_blobstore)
-      allow(packer).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
+      TestConfig.override(directories: { tmpdir: local_tmp_dir })
+
+      allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
+      allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
       allow(packer).to receive(:max_package_size).and_return(max_package_size)
 
       FileUtils.cp(input_zip, local_tmp_dir)
