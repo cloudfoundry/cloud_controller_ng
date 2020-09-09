@@ -758,6 +758,14 @@ RSpec.describe 'V3 service offerings' do
         expect(parsed_response['included']['service_brokers'][1]['name']).to eq(service_2.service_broker.name)
       end
     end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Service }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/service_offerings?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
   end
 
   describe 'DELETE /v3/service_offerings/:guid' do

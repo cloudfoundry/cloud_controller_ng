@@ -21,11 +21,11 @@ class ServiceOfferingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if !current_user
-                ServiceOfferingListFetcher.new.fetch_public(message)
+                ServiceOfferingListFetcher.fetch_public(message)
               elsif permission_queryer.can_read_globally?
-                ServiceOfferingListFetcher.new.fetch(message)
+                ServiceOfferingListFetcher.fetch(message)
               else
-                ServiceOfferingListFetcher.new.fetch_visible(
+                ServiceOfferingListFetcher.fetch_visible(
                   message,
                   permission_queryer.readable_org_guids,
                   permission_queryer.readable_space_scoped_space_guids,

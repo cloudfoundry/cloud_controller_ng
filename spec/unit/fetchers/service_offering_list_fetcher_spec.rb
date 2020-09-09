@@ -197,7 +197,7 @@ module VCAP::CloudController
     describe '#fetch' do
       context 'when there are no service offerings' do
         it 'is empty' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
+          service_offerings = ServiceOfferingListFetcher.fetch(message).all
 
           expect(service_offerings).to be_empty
         end
@@ -212,13 +212,13 @@ module VCAP::CloudController
         let!(:space_scoped_service_offering) { Service.make(service_broker: space_scoped_service_broker) }
 
         it 'lists them all' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
+          service_offerings = ServiceOfferingListFetcher.fetch(message).all
           expect(service_offerings).to contain_exactly(public_service_offering, non_public_service_offering, space_scoped_service_offering)
         end
       end
 
       context 'when filters are provided' do
-        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch(message).all }
+        let(:service_offerings) { ServiceOfferingListFetcher.fetch(message).all }
 
         it_behaves_like 'filtered service offering fetcher', :fetch
 
@@ -233,7 +233,7 @@ module VCAP::CloudController
           end
 
           it 'de-duplicates service offerings' do
-            service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
+            service_offerings = ServiceOfferingListFetcher.fetch(message).all
             expect(service_offerings).to contain_exactly(service_offering)
           end
         end
@@ -246,7 +246,7 @@ module VCAP::CloudController
         let!(:service_offering_2) { ServicePlan.make(public: false, active: true).service }
 
         it 'is empty' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_public(message).all
+          service_offerings = ServiceOfferingListFetcher.fetch_public(message).all
 
           expect(service_offerings).to be_empty
         end
@@ -257,7 +257,7 @@ module VCAP::CloudController
         let!(:service_offering_2) { ServicePlan.make(public: true, active: true).service }
 
         it 'lists them all' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_public(message).all
+          service_offerings = ServiceOfferingListFetcher.fetch_public(message).all
 
           expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
         end
@@ -271,14 +271,14 @@ module VCAP::CloudController
         end
 
         it 'de-duplicates service offerings' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_public(message).all
+          service_offerings = ServiceOfferingListFetcher.fetch_public(message).all
 
           expect(service_offerings).to contain_exactly(service_offering)
         end
       end
 
       context 'when filters are provided' do
-        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_public(message).all }
+        let(:service_offerings) { ServiceOfferingListFetcher.fetch_public(message).all }
 
         it_behaves_like 'filtered service offering fetcher', :fetch_public
       end
@@ -287,7 +287,7 @@ module VCAP::CloudController
     describe '#fetch_visible' do
       context 'when there are no service offerings' do
         it 'is empty' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all
+          service_offerings = ServiceOfferingListFetcher.fetch_visible(message, [], []).all
 
           expect(service_offerings).to be_empty
         end
@@ -298,7 +298,7 @@ module VCAP::CloudController
         let!(:service_offering_2) { ServicePlan.make(public: true, active: true).service }
 
         it 'lists them all' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all
+          service_offerings = ServiceOfferingListFetcher.fetch_visible(message, [], []).all
 
           expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
         end
@@ -320,10 +320,10 @@ module VCAP::CloudController
         let!(:visibility_4) { ServicePlanVisibility.make(service_plan: service_plan_4, organization: organization_1) }
 
         it 'lists the ones that are visible in the specified orgs' do
-          service_offerings_1 = ServiceOfferingListFetcher.new.fetch_visible(message, [organization_1.guid], []).all
+          service_offerings_1 = ServiceOfferingListFetcher.fetch_visible(message, [organization_1.guid], []).all
           expect(service_offerings_1).to contain_exactly(service_offering_2, service_offering_4)
 
-          service_offerings_2 = ServiceOfferingListFetcher.new.fetch_visible(message, [organization_1.guid, organization_2.guid], []).all
+          service_offerings_2 = ServiceOfferingListFetcher.fetch_visible(message, [organization_1.guid, organization_2.guid], []).all
           expect(service_offerings_2).to contain_exactly(service_offering_2, service_offering_3, service_offering_4)
         end
       end
@@ -347,10 +347,10 @@ module VCAP::CloudController
         end
 
         it 'lists the ones visible in the specified spaces' do
-          service_offerings_1 = ServiceOfferingListFetcher.new.fetch_visible(message, [], [space_1.guid]).all
+          service_offerings_1 = ServiceOfferingListFetcher.fetch_visible(message, [], [space_1.guid]).all
           expect(service_offerings_1).to contain_exactly(service_offering_1, service_offering_2)
 
-          service_offerings_2 = ServiceOfferingListFetcher.new.fetch_visible(message, [], [space_1.guid, space_2.guid]).all
+          service_offerings_2 = ServiceOfferingListFetcher.fetch_visible(message, [], [space_1.guid, space_2.guid]).all
           expect(service_offerings_2).to contain_exactly(service_offering_1, service_offering_2, service_offering_3)
         end
       end
@@ -388,7 +388,7 @@ module VCAP::CloudController
         end
 
         it 'lists the visible ones' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [org_1.guid, org_2.guid], [space_1.guid, space_3.guid]).all
+          service_offerings = ServiceOfferingListFetcher.fetch_visible(message, [org_1.guid, org_2.guid], [space_1.guid, space_3.guid]).all
           expect(service_offerings).to contain_exactly(service_offering_1, service_offering_3, service_offering_5)
         end
       end
@@ -402,7 +402,7 @@ module VCAP::CloudController
         let!(:visibility_2) { ServicePlanVisibility.make(service_plan: service_plan, organization: organization_2) }
 
         it 'de-duplicates service offerings' do
-          service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [organization_1.guid, organization_2.guid], []).all
+          service_offerings = ServiceOfferingListFetcher.fetch_visible(message, [organization_1.guid, organization_2.guid], []).all
           expect(service_offerings).to contain_exactly(service_offering)
         end
       end
@@ -410,7 +410,7 @@ module VCAP::CloudController
       context 'when filters are provided' do
         let(:org_guids) { [] }
         let(:space_guids) { [] }
-        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_visible(message, org_guids, space_guids).all }
+        let(:service_offerings) { ServiceOfferingListFetcher.fetch_visible(message, org_guids, space_guids).all }
 
         it_behaves_like 'filtered service offering fetcher', :fetch_visible
       end
