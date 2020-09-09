@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     let(:params) {
       {
-        type: 'key',
+        type: 'app',
         name: 'some-name',
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } },
@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       it 'builds a valid ServiceCredentialBindingCreateMessage' do
         expect(message).to be_valid
-        expect(message.type).to eq('key')
+        expect(message.type).to eq('app')
         expect(message.name).to eq('some-name')
         expect(message.service_instance_guid).to eq('some-instance-guid')
         expect(message.app_guid).to eq('some-app-guid')
@@ -40,15 +40,15 @@ module VCAP::CloudController
       end
 
       context 'type' do
-        it 'accepts key and app' do
-          %w{app key}.each do |type|
+        it 'accepts app' do
+          %w{app}.each do |type|
             params[:type] = type
             expect(subject.new(params)).to be_valid
           end
         end
 
         it 'is invalid with any other value' do
-          params[:type] = 'route'
+          params[:type] = 'key'
           expect(subject.new(params)).not_to be_valid
         end
       end

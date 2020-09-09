@@ -16,7 +16,7 @@ module VCAP::CloudController
       end
 
       describe '#precursor' do
-        RSpec.shared_examples '#precursor' do
+        RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app: app, name: details[:name])
             expect(binding).to be
@@ -44,6 +44,15 @@ module VCAP::CloudController
               'The app is already bound to the service instance'
             )
           end
+
+          it 'raises an error when a the app and the instance are in different spaces' do
+            another_space = Space.make
+            another_app = AppModel.make(space: another_space)
+            expect { action.precursor(service_instance, app: another_app, name: details[:name]) }.to raise_error(
+              ServiceCredentialBindingCreate::UnprocessableCreate,
+              'The service instance and the app are in different spaces'
+            )
+          end
         end
 
         context 'user-provided service instance' do
@@ -56,7 +65,7 @@ module VCAP::CloudController
           }
           let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
-          it_behaves_like '#precursor'
+          it_behaves_like 'the credential binding precursor'
         end
 
         context 'managed service instance' do
@@ -74,7 +83,7 @@ module VCAP::CloudController
       describe '#bind' do
         let(:precursor) { action.precursor(service_instance, app: app) }
 
-        RSpec.shared_examples '#bind' do
+        RSpec.shared_examples 'the credential binding bind' do
           it 'creates and returns the credential binding' do
             action.bind(precursor)
 
@@ -115,7 +124,7 @@ module VCAP::CloudController
 
           let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
-          it_behaves_like '#bind'
+          it_behaves_like 'the credential binding bind'
         end
       end
     end

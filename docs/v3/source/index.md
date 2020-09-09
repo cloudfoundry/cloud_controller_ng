@@ -361,6 +361,7 @@ includes:
   - experimental_resources/service_credential_bindings/create
   - experimental_resources/service_credential_bindings/get
   - experimental_resources/service_credential_bindings/list
+  - experimental_resources/service_credential_bindings/delete
   - experimental_resources/service_credential_bindings/details
   - experimental_resources/service_route_bindings/header
   - experimental_resources/service_route_bindings/object
