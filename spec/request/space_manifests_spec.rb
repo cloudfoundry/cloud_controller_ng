@@ -571,6 +571,12 @@ RSpec.describe 'Space Manifests' do
         {
           diff: a_collection_containing_exactly(
             { op: 'replace', path: '/applications/0/stack', was: process1.stack.name, value: 'big brother' },
+            { op: 'add', path: '/applications/0/services', value: [
+              'service-without-name-label',
+              { name: 'service1',
+                parameters: { foo: 'bar' }
+              }
+            ] },
           )
         }
       end
@@ -578,6 +584,12 @@ RSpec.describe 'Space Manifests' do
       let(:yml_manifest) do
         default_manifest['applications'][0]['new-key'] = 'hoh'
         default_manifest['applications'][0]['stack'] = 'big brother'
+        default_manifest['applications'][0]['services'] = [
+          'service-without-name-label',
+          { 'name' => 'service1',
+            'parameters' => { 'foo' => 'bar' }
+          }
+        ]
         default_manifest.to_yaml
       end
 

@@ -91,6 +91,30 @@ module VCAP::CloudController
         end
       end
 
+      context 'services are added' do
+        before do
+          default_manifest['applications'][0]['services'] = [
+            'service-without-name-label',
+            {
+              'name' => 'foo',
+              'parameters' => { 'baz' => 'qux' }
+            }
+          ]
+        end
+
+        it 'returns the correct diff' do
+          expect(subject).to eq([
+            { 'op' => 'add', 'path' => '/applications/0/services', 'value' => [
+              'service-without-name-label',
+              {
+                'name' => 'foo',
+                'parameters' => { 'baz' => 'qux' }
+              }
+            ] },
+          ])
+        end
+      end
+
       context 'when there is a change inside of a nested hash' do
         before do
           default_manifest['applications'][0]['processes'][0].delete('memory')

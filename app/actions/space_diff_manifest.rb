@@ -34,10 +34,14 @@ module VCAP::CloudController
 
       if manifest_app_hash.key? 'services'
         manifest_app_hash['services'] = manifest_app_hash['services'].map do |hash|
-          hash.slice(
-            'name',
-            'parameters'
-          )
+          if hash.is_a? String
+            hash
+          else
+            hash.slice(
+              'name',
+              'parameters'
+            )
+          end
         end
         manifest_app_hash = manifest_app_hash.except('services') if manifest_app_hash['services'] == [{}]
       end
