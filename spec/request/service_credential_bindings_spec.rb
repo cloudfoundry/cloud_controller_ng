@@ -565,7 +565,7 @@ RSpec.describe 'v3 service credential bindings' do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{key_binding.credhub_reference}&current=true").
           with(headers: {
             'Authorization' => 'Bearer my-favourite-access-token',
-            'Content-Type'  => 'application/json'
+            'Content-Type' => 'application/json'
           }).to_return(status: credhub_response_status, body: credhub_response_body)
       }
 
@@ -1051,6 +1051,93 @@ RSpec.describe 'v3 service credential bindings' do
             'detail' => include('The service instance and the app are in different spaces'),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
+          }))
+        end
+      end
+    end
+  end
+
+  describe 'DELETE /v3/service_credential_bindings/:guid' do
+    let(:api_call) { ->(user_headers) { delete "/v3/service_credential_bindings/#{guid}", {}, user_headers } }
+    let(:guid) { binding.guid }
+    let(:binding_details) {
+      {
+        service_instance: service_instance,
+        app: bound_app
+      }
+    }
+    let(:service_instance_details) {
+      {
+        space: space,
+        syslog_drain_url: 'http://syslog.example.com/wow',
+        credentials: { password: 'foo' }
+      }
+    }
+    let(:bound_app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:binding) { VCAP::CloudController::ServiceBinding.make(**binding_details) }
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
+
+    context 'user provided services' do
+      context 'app bindings' do
+        it 'can successfully delete the record' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(204)
+
+          get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
+          expect(last_response).to have_status_code(404)
+        end
+      end
+
+      context 'key bindings' do
+        let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+        it 'can successfully delete the record' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(204)
+
+          get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
+          expect(last_response).to have_status_code(404)
+        end
+      end
+    end
+
+    context 'managed service instances' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+      it 'returns 501 when the binding belongs to a managed service instance' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(501)
+      end
+    end
+
+    context 'permissions' do
+      let(:db_check) {
+        lambda {
+          get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
+          expect(last_response).to have_status_code(404)
+        }
+      }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = h['space_developer'] = { code: 204 }
+          h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'invalid requests' do
+      context 'when the binding does not exist' do
+        let(:guid) { 'fake-binding' }
+
+        it 'returns 404' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(404)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('Service credential binding not found'),
+            'title' => 'CF-ResourceNotFound',
+            'code' => 10010,
           }))
         end
       end

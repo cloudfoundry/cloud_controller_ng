@@ -1,4 +1,5 @@
 require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_delete'
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'presenters/v3/service_credential_binding_presenter'
@@ -49,7 +50,7 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!("App '#{message.app_guid}' not found") unless app.present? && can_read_from_space?(app.space)
     unprocessable!('The service instance and the app are in different spaces') unless app.space.guid == service_instance.space.guid
 
-    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
+    unauthorized! unless can_write_to_space?(app.space)
 
     action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
     binding = action.precursor(service_instance, app: app, name: message.name)
@@ -57,6 +58,16 @@ class ServiceCredentialBindingsController < ApplicationController
     render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
+  end
+
+  def destroy
+    not_found! unless service_credential_binding.present?
+    unauthorized! unless can_write_to_space?(binding_space)
+
+    V3::ServiceCredentialBindingDelete.new.delete(service_credential_binding)
+    head :no_content
+  rescue V3::ServiceCredentialBindingDelete::NotImplementedError
+    head :not_implemented
   end
 
   def details
@@ -93,6 +104,10 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   private
+
+  def can_write_to_space?(space)
+    permission_queryer.can_write_to_space?(space.guid)
+  end
 
   AVAILABLE_DECORATORS = [
     IncludeBindingAppDecorator,
