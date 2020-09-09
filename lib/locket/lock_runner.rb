@@ -1,3 +1,4 @@
+require 'steno'
 require 'locket/locket_services_pb'
 
 module Locket

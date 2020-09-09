@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'support/paths'
 require 'locket/lock_runner'
+require 'rspec/wait'
 
 RSpec.describe Locket::LockRunner do
   let(:locket_service) { instance_double(Models::Locket::Stub) }
@@ -83,7 +84,6 @@ RSpec.describe Locket::LockRunner do
 
       before do
         allow(Steno).to receive(:logger).and_return(fake_logger)
-        allow(client).to receive(:sleep)
       end
 
       context 'when it does not acquire a lock' do
@@ -94,10 +94,8 @@ RSpec.describe Locket::LockRunner do
 
           client.start
 
-          with_wait(delay: 0.5) do
-            wait_for(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
-            wait_for(client.lock_acquired?).to be(false)
-          end
+          wait_for(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
+          wait_for(-> { client.lock_acquired? }).to be(false)
         end
       end
 
@@ -107,10 +105,8 @@ RSpec.describe Locket::LockRunner do
 
           client.start
 
-          with_wait(delay: 0.5) do
-            wait_for(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
-            wait_for(client.lock_acquired?).to be(true)
-          end
+          wait_for(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
+          wait_for(-> { client.lock_acquired? }).to be(true)
         end
       end
     end
