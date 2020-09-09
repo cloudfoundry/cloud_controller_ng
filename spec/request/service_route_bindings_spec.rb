@@ -386,65 +386,7 @@ RSpec.describe 'v3 service route bindings' do
             end
           end
 
-          context 'last operation response is 200 OK and indicates failure' do
-            let(:state) { 'failed' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq(state)
-              expect(binding.last_operation.description).to eq(description)
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 400 Bad Request' do
-            let(:last_operation_status_code) { 400 }
-            let(:state) { 'failed' }
-            let(:description) { 'a helpful description' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq(state)
-              expect(binding.last_operation.description).to eq(description)
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 404 Not Found' do
-            let(:last_operation_status_code) { 404 }
-            let(:last_operation_body) { 'cannot see it' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('failed')
-              expect(binding.last_operation.description).to eq('The service broker rejected the request. Status Code: 404 Not Found, Body: "cannot see it"')
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 500 Internal Server Error' do
-            let(:last_operation_status_code) { 500 }
-            let(:last_operation_body) { 'something awful' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('failed')
-              expect(binding.last_operation.description).to eq('The service broker returned an invalid response. Status Code: 500 Internal Server Error, Body: "something awful"')
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-            end
-          end
+          it_behaves_like 'last operation response handling'
 
           context 'binding not retrievable' do
             let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }

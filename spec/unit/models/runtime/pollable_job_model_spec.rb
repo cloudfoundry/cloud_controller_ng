@@ -95,7 +95,6 @@ module VCAP::CloudController
           job = PollableJobModel.make(resource_type: 'service_route_binding', resource_guid: 'not-a-real-guid')
           expect(job.resource_exists?).to be(false)
         end
-
       end
     end
 
