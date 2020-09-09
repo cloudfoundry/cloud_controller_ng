@@ -42,14 +42,10 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-    unprocessable!("The service instance could not be found: '#{message.service_instance_guid}'") unless service_instance.present? && can_read_from_space?(service_instance.space)
-    unprocessable!('Bindings for managed service instances are not supported') if service_instance.managed_instance?
-    unprocessable!('Cannot create service keys from user-provided service instances') if message.type == 'key'
+    resource_not_accessible!('service instance', message.service_instance_guid) unless can_access_resource?(service_instance)
 
     app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
-    unprocessable!("App '#{message.app_guid}' not found") unless app.present? && can_read_from_space?(app.space)
-    unprocessable!('The service instance and the app are in different spaces') unless app.space.guid == service_instance.space.guid
-
+    resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
     unauthorized! unless can_write_to_space?(app.space)
 
     action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
@@ -104,6 +100,14 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   private
+
+  def resource_not_accessible!(resource, guid)
+    unprocessable!("The #{resource} could not be found: '#{guid}'")
+  end
+
+  def can_access_resource?(resource)
+    resource.present? && can_read_from_space?(resource.space)
+  end
 
   def can_write_to_space?(space)
     permission_queryer.can_write_to_space?(space.guid)

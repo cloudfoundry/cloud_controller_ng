@@ -906,7 +906,7 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call admin_headers
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(include({
-          'detail' => include("Type must be one of 'key', 'app'"),
+          'detail' => include("Type must be 'app'"),
           'title' => 'CF-UnprocessableEntity',
           'code' => 10008,
         }))
@@ -938,11 +938,12 @@ RSpec.describe 'v3 service credential bindings' do
       context 'when attempting to create a key from a user-provided instance' do
         it 'returns a 422' do
           create_body[:type] = 'key'
+          create_body[:relationships].delete(:app)
 
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('Cannot create service keys from user-provided service instances'),
+            'detail' => include("Type must be 'app'"),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
@@ -970,7 +971,7 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("App 'fake-app' not found"),
+            'detail' => include("The app could not be found: 'fake-app'"),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
@@ -1006,7 +1007,7 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call space_dev_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("App '#{app_guid}' not found"),
+              'detail' => include("The app could not be found: '#{app_guid}'"),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
@@ -1035,7 +1036,7 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('Bindings for managed service instances are not supported'),
+            'detail' => include('Cannot create credential bindings for managed service instances'),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))

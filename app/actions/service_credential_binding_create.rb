@@ -11,6 +11,7 @@ module VCAP::CloudController
       def precursor(service_instance, app: nil, name: nil)
         not_supported! unless service_instance.user_provided_instance?
         app_is_required! unless app.present?
+        space_mismatch! unless app.space.guid == service_instance.space.guid
 
         binding_details = {
           service_instance: service_instance,
@@ -30,7 +31,7 @@ module VCAP::CloudController
         end
       rescue Sequel::ValidationFailed => e
         already_bound! if e.message =~ /The app is already bound to the service/
-        raise UnprocessableCreate(e.full_message)
+        raise UnprocessableCreate.new(e.full_message)
       end
 
       def bind(binding)
@@ -65,6 +66,10 @@ module VCAP::CloudController
 
       def already_bound!
         raise UnprocessableCreate.new('The app is already bound to the service instance')
+      end
+
+      def space_mismatch!
+        raise UnprocessableCreate.new('The service instance and the app are in different spaces')
       end
     end
   end

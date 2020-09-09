@@ -3,8 +3,8 @@ module VCAP::CloudController
     register_allowed_keys [:type, :name, :relationships]
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates :type, allow_blank: false, inclusion: {
-      in: %w(key app),
-      message: "must be one of 'key', 'app'"
+      in: %w(app),
+      message: "must be 'app'"
     }
 
     delegate :service_instance_guid, to: :relationships_message
