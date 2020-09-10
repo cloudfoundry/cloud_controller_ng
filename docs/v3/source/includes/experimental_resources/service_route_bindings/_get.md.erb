@@ -26,6 +26,12 @@ This endpoint retrieves the service route binding by GUID.
 #### Definition
 `GET /v3/service_service_route_bindings/:guid`
 
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**include** | _list of strings_ | Optionally include a list of unique related resources in the response. Valid values are: `route`, `service_instance`
+
 #### Permitted roles
  |
 --- | ---
