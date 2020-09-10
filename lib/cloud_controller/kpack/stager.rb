@@ -4,7 +4,7 @@ module Kpack
   class Stager
     CF_DEFAULT_BUILDER_REFERENCE = {
       name: 'cf-default-builder',
-      kind: 'CustomBuilder'
+      kind: 'Builder'
     }.freeze
     APP_GUID_LABEL_KEY = 'cloudfoundry.org/app_guid'.freeze
     BUILD_GUID_LABEL_KEY = 'cloudfoundry.org/build_guid'.freeze
@@ -111,33 +111,33 @@ module Kpack
     def find_or_create_builder_reference(staging_details)
       return CF_DEFAULT_BUILDER_REFERENCE unless staging_details.lifecycle.buildpack_infos.present?
 
-      custom_builder_name = "app-#{staging_details.package.app.guid}"
-      create_or_update_custom_builder(custom_builder_name, staging_details)
+      builder_name = "app-#{staging_details.package.app.guid}"
+      create_or_update_builder(builder_name, staging_details)
 
       {
-        name: custom_builder_name,
-        kind: 'CustomBuilder'
+        name: builder_name,
+        kind: 'Builder'
       }
     end
 
-    def create_or_update_custom_builder(name, staging_details)
-      desired_custom_builder = generate_custom_builder_from_default(name, staging_details)
+    def create_or_update_builder(name, staging_details)
+      desired_builder = generate_builder_from_default(name, staging_details)
 
-      unless client.get_custom_builder(name, builder_namespace).present?
-        return client.create_custom_builder(desired_custom_builder)
+      unless client.get_builder(name, builder_namespace).present?
+        return client.create_builder(desired_builder)
       end
 
-      reapply_client.apply_custom_builder_update(name, builder_namespace) do |existing_custom_builder|
-        desired_custom_builder.metadata.resourceVersion = existing_custom_builder.metadata.resourceVersion
-        desired_custom_builder.apiVersion = existing_custom_builder.apiVersion
-        desired_custom_builder
+      reapply_client.apply_builder_update(name, builder_namespace) do |existing_builder|
+        desired_builder.metadata.resourceVersion = existing_builder.metadata.resourceVersion
+        desired_builder.apiVersion = existing_builder.apiVersion
+        desired_builder
       end
     end
 
-    def generate_custom_builder_from_default(name, staging_details)
-      default_builder = client.get_custom_builder(CF_DEFAULT_BUILDER_REFERENCE[:name], builder_namespace)
+    def generate_builder_from_default(name, staging_details)
+      default_builder = client.get_builder(CF_DEFAULT_BUILDER_REFERENCE[:name], builder_namespace)
       Kubeclient::Resource.new({
-        kind: 'CustomBuilder',
+        kind: 'Builder',
         metadata: {
           name: name,
           namespace: builder_namespace,
@@ -151,7 +151,7 @@ module Kpack
           serviceAccount: default_builder.spec.serviceAccount,
           stack: default_builder.spec.stack,
           store: default_builder.spec.store,
-          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-custom-builder",
+          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-builder",
           order: [
             group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } }
           ]

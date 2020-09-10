@@ -374,14 +374,14 @@ module CloudController
     def k8s_api_client
       config = VCAP::CloudController::Config.config
       build_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/build.pivotal.io",
+        api_group_url: "#{config.kubernetes_host_url}/apis/kpack.io",
         version: 'v1alpha1',
         service_account_token: config.kubernetes_service_account_token,
         ca_crt: config.kubernetes_ca_cert,
       )
 
       kpack_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/experimental.kpack.pivotal.io",
+        api_group_url: "#{config.kubernetes_host_url}/apis/kpack.io",
         version: 'v1alpha1',
         service_account_token: config.kubernetes_service_account_token,
         ca_crt: config.kubernetes_ca_cert,

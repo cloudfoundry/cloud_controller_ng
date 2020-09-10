@@ -89,45 +89,45 @@ module Kubernetes
       raise error
     end
 
-    def update_custom_builder(resource_config)
-      @kpack_kube_client.update_custom_builder(resource_config)
+    def update_builder(resource_config)
+      @kpack_kube_client.update_builder(resource_config)
     rescue Kubeclient::HttpError => e
-      logger.error('update_custom_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
+      logger.error('update_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
 
       raise ConflictError.new("Conflict on update of #{resource_name(resource_config)}") if e.error_code == 409
 
-      error = CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'update', e.message)
+      error = CloudController::Errors::ApiError.new_from_details('KpackBuilderError', 'update', e.message)
       error.set_backtrace(e.backtrace)
       raise error
     end
 
-    def create_custom_builder(resource_config)
-      @kpack_kube_client.create_custom_builder(resource_config)
+    def create_builder(resource_config)
+      @kpack_kube_client.create_builder(resource_config)
     rescue Kubeclient::HttpError => e
-      logger.error('create_custom_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
-      error = CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'create', e.message)
+      logger.error('create_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
+      error = CloudController::Errors::ApiError.new_from_details('KpackBuilderError', 'create', e.message)
       error.set_backtrace(e.backtrace)
       raise error
     end
 
-    def delete_custom_builder(name, namespace)
-      @kpack_kube_client.delete_custom_builder(name, namespace)
+    def delete_builder(name, namespace)
+      @kpack_kube_client.delete_builder(name, namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
     rescue Kubeclient::HttpError => e
-      logger.error('delete_custom_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
-      error = CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'delete', e.message)
+      logger.error('delete_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
+      error = CloudController::Errors::ApiError.new_from_details('KpackBuilderError', 'delete', e.message)
       error.set_backtrace(e.backtrace)
       raise error
     end
 
-    def get_custom_builder(name, namespace)
-      @kpack_kube_client.get_custom_builder(name, namespace)
+    def get_builder(name, namespace)
+      @kpack_kube_client.get_builder(name, namespace)
     rescue Kubeclient::ResourceNotFoundError
       nil
     rescue Kubeclient::HttpError => e
-      logger.error('get_custom_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
-      error = CloudController::Errors::ApiError.new_from_details('KpackCustomBuilderError', 'get', e.message)
+      logger.error('get_builder', error: e.inspect, response: e.response, backtrace: e.backtrace)
+      error = CloudController::Errors::ApiError.new_from_details('KpackBuilderError', 'get', e.message)
       error.set_backtrace(e.backtrace)
       raise error
     end

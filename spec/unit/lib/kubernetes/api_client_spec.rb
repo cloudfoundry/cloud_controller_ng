@@ -338,116 +338,116 @@ RSpec.describe Kubernetes::ApiClient do
     end
   end
 
-  context 'custom builder resources' do
-    describe '#create_custom_builder' do
+  context 'builder resources' do
+    describe '#create_builder' do
       let(:resource_config) { { metadata: { name: 'resource-name' } } }
 
       it 'proxies call to kubernetes client with the same args' do
-        allow(kpack_kube_client).to receive(:create_custom_builder).with(resource_config)
+        allow(kpack_kube_client).to receive(:create_builder).with(resource_config)
 
-        subject.create_custom_builder(resource_config)
+        subject.create_builder(resource_config)
 
-        expect(kpack_kube_client).to have_received(:create_custom_builder).with(resource_config).once
+        expect(kpack_kube_client).to have_received(:create_builder).with(resource_config).once
       end
 
       context 'when there is an error' do
         it 'raises as an ApiError' do
-          allow(kpack_kube_client).to receive(:create_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(kpack_kube_client).to receive(:create_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
 
           expect {
-            subject.create_custom_builder(resource_config)
+            subject.create_builder(resource_config)
           }.to raise_error(CloudController::Errors::ApiError)
         end
       end
     end
 
-    describe '#delete_custom_builder' do
+    describe '#delete_builder' do
       it 'proxies calls to the k8s client with the same args' do
-        allow(kpack_kube_client).to receive(:delete_custom_builder).with('name', 'namespace')
+        allow(kpack_kube_client).to receive(:delete_builder).with('name', 'namespace')
 
-        subject.delete_custom_builder('name', 'namespace')
+        subject.delete_builder('name', 'namespace')
 
-        expect(kpack_kube_client).to have_received(:delete_custom_builder).with('name', 'namespace').once
+        expect(kpack_kube_client).to have_received(:delete_builder).with('name', 'namespace').once
       end
 
       context 'when there is an error' do
         it 'raises as an ApiError' do
-          allow(kpack_kube_client).to receive(:delete_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(kpack_kube_client).to receive(:delete_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
 
           expect {
-            subject.delete_custom_builder('name', 'namespace')
+            subject.delete_builder('name', 'namespace')
           }.to raise_error(CloudController::Errors::ApiError)
         end
       end
 
       context 'when it returns a 404' do
         it 'eats the error' do
-          allow(kpack_kube_client).to receive(:delete_custom_builder).
-            and_raise(Kubeclient::ResourceNotFoundError.new(404, 'custombuilders not found', '{"kind": "Status"}'))
+          allow(kpack_kube_client).to receive(:delete_builder).
+            and_raise(Kubeclient::ResourceNotFoundError.new(404, 'builders not found', '{"kind": "Status"}'))
 
           expect {
-            subject.delete_custom_builder('name', 'namespace')
+            subject.delete_builder('name', 'namespace')
           }.not_to raise_error
         end
       end
     end
 
-    describe '#get_custom_builder' do
+    describe '#get_builder' do
       let(:response) { double(Kubeclient::Resource) }
 
-      it 'fetches the custom builder from Kubernetes' do
-        allow(kpack_kube_client).to receive(:get_custom_builder).with('name', 'namespace').and_return(response)
+      it 'fetches the builder from Kubernetes' do
+        allow(kpack_kube_client).to receive(:get_builder).with('name', 'namespace').and_return(response)
 
-        custombuilder = subject.get_custom_builder('name', 'namespace')
-        expect(custombuilder).to eq(response)
+        builder = subject.get_builder('name', 'namespace')
+        expect(builder).to eq(response)
       end
 
-      context 'when the custombuilder is not present' do
+      context 'when the builder is not present' do
         it 'returns nil' do
-          allow(kpack_kube_client).to receive(:get_custom_builder).with('name', 'namespace').
-            and_raise(Kubeclient::ResourceNotFoundError.new(404, 'custombuilders not found', '{"kind": "Status"}'))
+          allow(kpack_kube_client).to receive(:get_builder).with('name', 'namespace').
+            and_raise(Kubeclient::ResourceNotFoundError.new(404, 'builders not found', '{"kind": "Status"}'))
 
-          custombuilder = subject.get_custom_builder('name', 'namespace')
-          expect(custombuilder).to be_nil
+          builder = subject.get_builder('name', 'namespace')
+          expect(builder).to be_nil
         end
       end
 
       context 'when there is an error' do
         it 'raises as an ApiError' do
-          allow(kpack_kube_client).to receive(:get_custom_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
+          allow(kpack_kube_client).to receive(:get_builder).and_raise(Kubeclient::HttpError.new(422, 'foo', 'bar'))
 
           expect {
-            subject.get_custom_builder('name', 'namespace')
+            subject.get_builder('name', 'namespace')
           }.to raise_error(CloudController::Errors::ApiError)
         end
       end
     end
 
-    describe '#update_custom_builder' do
+    describe '#update_builder' do
       let(:resource_config) { { metadata: { name: 'resource-name' } } }
       let(:response) { double(Kubeclient::Resource) }
 
       it 'proxies call to kubernetes client with the same args' do
-        allow(kpack_kube_client).to receive(:update_custom_builder).with(resource_config)
+        allow(kpack_kube_client).to receive(:update_builder).with(resource_config)
 
-        subject.update_custom_builder(resource_config)
+        subject.update_builder(resource_config)
 
-        expect(kpack_kube_client).to have_received(:update_custom_builder).with(resource_config).once
+        expect(kpack_kube_client).to have_received(:update_builder).with(resource_config).once
       end
 
       context 'when there is an error' do
         let(:error) { Kubeclient::HttpError.new(422, 'foo', 'bar') }
         let(:logger) { instance_double(Steno::Logger, error: nil) }
         before do
-          allow(kpack_kube_client).to receive(:update_custom_builder).and_raise(error)
+          allow(kpack_kube_client).to receive(:update_builder).and_raise(error)
           allow(Steno).to receive(:logger).and_return(logger)
         end
 
         it 'raises as an ApiError' do
-          allow(kpack_kube_client).to receive(:update_custom_builder).and_raise(error)
+          allow(kpack_kube_client).to receive(:update_builder).and_raise(error)
 
           expect {
-            subject.update_custom_builder(resource_config)
+            subject.update_builder(resource_config)
           }.to raise_error(CloudController::Errors::ApiError)
         end
 
@@ -456,9 +456,9 @@ RSpec.describe Kubernetes::ApiClient do
 
           it 'raises as an ApiError that includes the resource name' do
             expect {
-              subject.update_custom_builder(resource_config)
+              subject.update_builder(resource_config)
             }.to raise_error(Kubernetes::ApiClient::ConflictError)
-            expect(logger).to have_received(:error).with('update_custom_builder', error: /status code/, response: error.response, backtrace: error.backtrace)
+            expect(logger).to have_received(:error).with('update_builder', error: /status code/, response: error.response, backtrace: error.backtrace)
           end
         end
       end

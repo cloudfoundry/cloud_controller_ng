@@ -1310,6 +1310,6 @@
   message: "Failed to %s Image resource for staging: '%s'"
 
 400003:
-  name: KpackCustomBuilderError
+  name: KpackBuilderError
   http_code: 422
-  message: "Failed to %s CustomBuilder resource: '%s'"
+  message: "Failed to %s Builder resource: '%s'"

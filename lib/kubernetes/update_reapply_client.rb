@@ -27,11 +27,11 @@ module Kubernetes
       end
     end
 
-    def apply_custom_builder_update(name, namespace, &block)
+    def apply_builder_update(name, namespace, &block)
       raise MalformedBlockError if block.arity != 1
 
       retry_on_conflict do
-        @client.update_custom_builder(block.call(@client.get_custom_builder(name, namespace)))
+        @client.update_builder(block.call(@client.get_builder(name, namespace)))
       end
     end
 

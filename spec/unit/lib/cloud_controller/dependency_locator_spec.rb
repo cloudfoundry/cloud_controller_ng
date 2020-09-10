@@ -778,11 +778,11 @@ RSpec.describe CloudController::DependencyLocator do
 
       expect(build_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(build_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(build_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
+      expect(build_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
 
       expect(kpack_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(kpack_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/experimental.kpack.pivotal.io'
+      expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
 
       expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })

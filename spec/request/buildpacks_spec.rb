@@ -282,19 +282,19 @@ RSpec.describe 'buildpacks' do
       let(:kubernetes_api_url) { 'https://kube.example.com' }
 
       before do
-        stub_request(:get, "#{kubernetes_api_url}/apis/experimental.kpack.pivotal.io/v1alpha1").to_return(
+        stub_request(:get, "#{kubernetes_api_url}/apis/kpack.io/v1alpha1").to_return(
           status: 200,
           body: '
             {
               "kind": "APIResourceList",
               "apiVersion": "v1",
-              "groupVersion": "experimental.kpack.pivotal.io/v1alpha1",
+              "groupVersion": "kpack.io/v1alpha1",
               "resources": [
                 {
-                  "name": "custombuilders",
-                  "singularName": "custombuilder",
+                  "name": "builders",
+                  "singularName": "builder",
                   "namespaced": true,
-                  "kind": "CustomBuilder",
+                  "kind": "Builder",
                   "verbs": [
                     "delete",
                     "deletecollection",
@@ -314,10 +314,10 @@ RSpec.describe 'buildpacks' do
                   "storageVersionHash": "2afHeqawAfQ="
                 },
                 {
-                  "name": "custombuilders/status",
+                  "name": "builders/status",
                   "singularName": "",
                   "namespaced": true,
-                  "kind": "CustomBuilder",
+                  "kind": "Builder",
                   "verbs": [
                     "get",
                     "patch",
@@ -328,18 +328,18 @@ RSpec.describe 'buildpacks' do
   }
           '
         )
-        stub_request(:get, "#{kubernetes_api_url}/apis/experimental.kpack.pivotal.io/v1alpha1/namespaces/cf-workloads-staging/custombuilders/cf-default-builder").
+        stub_request(:get, "#{kubernetes_api_url}/apis/kpack.io/v1alpha1/namespaces/cf-workloads-staging/builders/cf-default-builder").
           to_return(
             status: 200,
             # rubocop:disable Layout/LineLength
             body: '
               {
-                "apiVersion": "experimental.kpack.pivotal.io/v1alpha1",
-                "kind": "CustomBuilder",
+                "apiVersion": "kpack.io/v1alpha1",
+                "kind": "Builder",
                 "metadata": {
                   "annotations": {
-                    "kapp.k14s.io/identity": "v1;cf-workloads-staging/experimental.kpack.pivotal.io/CustomBuilder/cf-default-builder;experimental.kpack.pivotal.io/v1alpha1",
-                    "kapp.k14s.io/original": "{\"apiVersion\":\"experimental.kpack.pivotal.io/v1alpha1\",\"kind\":\"CustomBuilder\",\"metadata\":{\"labels\":{\"kapp.k14s.io/app\":\"1593227539339407000\",\"kapp.k14s.io/association\":\"v1.b29251cc7bb0f9e1950aad9f9ea1d82a\"},\"name\":\"cf-default-builder\",\"namespace\":\"cf-workloads-staging\"},\"spec\":{\"order\":[{\"group\":[{\"id\":\"paketo-community/ruby\"}]},{\"group\":[{\"id\":\"paketo-community/python\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/java\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nodejs\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/go\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/dotnet-core\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/php\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/httpd\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nginx\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/procfile\"}]}],\"serviceAccount\":\"cc-kpack-registry-service-account\",\"stack\":\"cflinuxfs3-stack\",\"store\":\"cf-buildpack-store\",\"tag\":\"gcr.io/cf-capi-arya/cf-workloads/cf-default-builder\"}}",
+                    "kapp.k14s.io/identity": "v1;cf-workloads-staging/kpack.io/Builder/cf-default-builder;kpack.io/v1alpha1",
+                    "kapp.k14s.io/original": "{\"apiVersion\":\"kpack.io/v1alpha1\",\"kind\":\"Builder\",\"metadata\":{\"labels\":{\"kapp.k14s.io/app\":\"1593227539339407000\",\"kapp.k14s.io/association\":\"v1.b29251cc7bb0f9e1950aad9f9ea1d82a\"},\"name\":\"cf-default-builder\",\"namespace\":\"cf-workloads-staging\"},\"spec\":{\"order\":[{\"group\":[{\"id\":\"paketo-community/ruby\"}]},{\"group\":[{\"id\":\"paketo-community/python\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/java\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nodejs\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/go\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/dotnet-core\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/php\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/httpd\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nginx\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/procfile\"}]}],\"serviceAccount\":\"cc-kpack-registry-service-account\",\"stack\":\"cflinuxfs3-stack\",\"store\":\"cf-buildpack-store\",\"tag\":\"gcr.io/cf-capi-arya/cf-workloads/cf-default-builder\"}}",
                     "kapp.k14s.io/original-diff-md5": "c6e94dc94aed3401b5d0f26ed6c0bff3"
                   },
                   "creationTimestamp": "2020-06-27T03:13:07Z",
@@ -351,7 +351,7 @@ RSpec.describe 'buildpacks' do
                   "name": "cf-default-builder",
                   "namespace": "cf-workloads-staging",
                   "resourceVersion": "5467789",
-                  "selfLink": "/apis/experimental.kpack.pivotal.io/v1alpha1/namespaces/cf-workloads-staging/custombuilders/cf-default-builder",
+                  "selfLink": "/apis/kpack.io/v1alpha1/namespaces/cf-workloads-staging/builders/cf-default-builder",
                   "uid": "82ede34e-20ae-4d81-8813-ac57134d4062"
                 },
                 "spec": {

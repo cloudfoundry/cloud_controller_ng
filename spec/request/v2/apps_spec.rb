@@ -1127,7 +1127,7 @@ RSpec.describe 'Apps' do
 
   describe 'DELETE /v2/apps/:guid' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_custom_builder: nil) }
+    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)

@@ -1211,7 +1211,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(process.space) }
       let(:decoded_response) { MultiJson.load(last_response.body) }
       let(:parent_app) { process.app }
-      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_custom_builder: nil) }
+      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
       before do
         set_current_user(developer)

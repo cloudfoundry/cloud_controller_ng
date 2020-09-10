@@ -60,7 +60,7 @@ module VCAP::CloudController
             app.guid,
             VCAP::CloudController::Config.config.kpack_builder_namespace,
           )
-          k8s_api_client.delete_custom_builder(
+          k8s_api_client.delete_builder(
             "app-#{app.guid}",
             VCAP::CloudController::Config.config.kpack_builder_namespace,
           )

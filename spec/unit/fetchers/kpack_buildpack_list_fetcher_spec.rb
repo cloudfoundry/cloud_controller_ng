@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     let(:default_builder_obj) {
       Kubeclient::Resource.new(
-        kind: 'CustomBuilder',
+        kind: 'Builder',
         metadata: {
           creationTimestamp: default_builder_created_at_str,
         },
@@ -58,7 +58,7 @@ module VCAP::CloudController
         },
       )
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
-      allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
+      allow(client).to receive(:get_builder).and_return(default_builder_obj)
     end
 
     describe '#fetch_all' do
@@ -97,7 +97,7 @@ module VCAP::CloudController
         expect(buildpack2.labels).to(be_empty)
         expect(buildpack2.annotations).to(be_empty)
 
-        expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
+        expect(client).to have_received(:get_builder).with('cf-default-builder', builder_namespace)
       end
 
       context 'without a message' do
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
         it 'can be called without a message' do
           expect(result.length).to(eq(2))
-          expect(client).to have_received(:get_custom_builder).with('cf-default-builder', builder_namespace)
+          expect(client).to have_received(:get_builder).with('cf-default-builder', builder_namespace)
         end
       end
 

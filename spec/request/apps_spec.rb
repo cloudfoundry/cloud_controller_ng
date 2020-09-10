@@ -1519,7 +1519,7 @@ RSpec.describe 'Apps' do
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
     let(:user_email) { nil }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_custom_builder: nil) }
+    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
     before do
       space.organization.add_user(user)

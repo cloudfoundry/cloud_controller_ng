@@ -29,8 +29,14 @@ module Kpack
           creationTimestamp: '2020-06-27T03:13:07Z',
         },
         spec: {
-          stack: 'cflinuxfs3-stack',
-          store: 'cf-buildpack-store',
+          stack: {
+            name: 'cflinuxfs3-stack',
+            kind: 'ClusterStack',
+          },
+          store: {
+            name: 'cf-buildpack-store',
+            kind: 'ClusterStore',
+          },
           serviceAccount: 'gcr-service-account',
           order: [
             { group: [{ id: 'paketo-community/ruby' }] },
@@ -66,7 +72,7 @@ module Kpack
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
       allow(client).to receive(:get_image).and_return(nil)
-      allow(client).to receive(:get_custom_builder).and_return(default_builder_obj)
+      allow(client).to receive(:get_builder).and_return(default_builder_obj)
     end
 
     it_behaves_like 'a stager'
@@ -110,7 +116,7 @@ module Kpack
 
         it 'creates an image with an image path from a registry for the source code using the kpack client' do
           expect(client).to_not receive(:update_image)
-          expect(client).to_not receive(:create_custom_builder)
+          expect(client).to_not receive(:create_builder)
           expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
             metadata: {
               name: package.app.guid,
@@ -130,7 +136,7 @@ module Kpack
               serviceAccount: 'gcr-service-account',
               builder: {
                 name: 'cf-default-builder',
-                kind: 'CustomBuilder'
+                kind: 'Builder'
               },
               source: {
                 registry: {
@@ -157,7 +163,7 @@ module Kpack
 
         it 'creates an image with a blobstore url for the source code using the kpack client' do
           expect(client).to_not receive(:update_image)
-          expect(client).to_not receive(:create_custom_builder)
+          expect(client).to_not receive(:create_builder)
           expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
             metadata: {
               name: package.app.guid,
@@ -177,7 +183,7 @@ module Kpack
               serviceAccount: 'gcr-service-account',
               builder: {
                 name: 'cf-default-builder',
-                kind: 'CustomBuilder'
+                kind: 'Builder'
               },
               source: {
                 blob: {
@@ -200,7 +206,7 @@ module Kpack
 
       it 'creates an image with an image path from a registry for the source code using the kpack client' do
         expect(client).to_not receive(:update_image)
-        expect(client).to_not receive(:create_custom_builder)
+        expect(client).to_not receive(:create_builder)
         expect(client).to receive(:create_image).with(Kubeclient::Resource.new({
           metadata: {
             name: package.app.guid,
@@ -220,7 +226,7 @@ module Kpack
             serviceAccount: 'gcr-service-account',
             builder: {
               name: 'cf-default-builder',
-              kind: 'CustomBuilder'
+              kind: 'Builder'
             },
             source: {
               registry: {
@@ -249,14 +255,14 @@ module Kpack
         let(:package) { VCAP::CloudController::PackageModel.make(app: VCAP::CloudController::AppModel.make(:kpack)) }
 
         before do
-          allow(client).to receive(:get_custom_builder).
+          allow(client).to receive(:get_builder).
             with("app-#{package.app.guid}", 'namespace').
             and_return(nil)
         end
 
-        it 'creates a custom builder' do
-          expect(client).to receive(:create_custom_builder).with(Kubeclient::Resource.new({
-            kind: 'CustomBuilder',
+        it 'creates a builder' do
+          expect(client).to receive(:create_builder).with(Kubeclient::Resource.new({
+            kind: 'Builder',
             metadata: {
               name: "app-#{package.app.guid}",
               namespace: 'namespace',
@@ -267,10 +273,16 @@ module Kpack
               }
             },
             spec: {
-              tag: "gcr.io/capi-images/#{package.app.guid}-custom-builder",
+              tag: "gcr.io/capi-images/#{package.app.guid}-builder",
               serviceAccount: 'gcr-service-account',
-              stack: 'cflinuxfs3-stack',
-              store: 'cf-buildpack-store',
+              stack: Kubeclient::Resource.new({
+                name: 'cflinuxfs3-stack',
+                kind: 'ClusterStack',
+              }),
+              store: Kubeclient::Resource.new({
+                name: 'cf-buildpack-store',
+                kind: 'ClusterStore',
+              }),
               order: [
                 { group: [{ id: 'paketo-buildpacks/java' }] },
               ],
@@ -281,12 +293,12 @@ module Kpack
           stager.stage(staging_details)
         end
 
-        context 'when the custombuilder already exists' do
+        context 'when the Builder already exists' do
           before do
-            allow(client).to receive(:get_custom_builder).
+            allow(client).to receive(:get_builder).
               with("app-#{package.app.guid}", 'namespace').
               and_return(Kubeclient::Resource.new({
-                kind: 'CustomBuilder',
+                kind: 'Builder',
                 apiVersion: 'fake',
                 metadata: {
                   resourceVersion: 'bogus',
@@ -294,9 +306,9 @@ module Kpack
               }))
           end
 
-          it 'overrides the existing custombuilder' do
-            expect(client).to receive(:update_custom_builder).with(Kubeclient::Resource.new({
-              kind: 'CustomBuilder',
+          it 'overrides the existing Builder' do
+            expect(client).to receive(:update_builder).with(Kubeclient::Resource.new({
+              kind: 'Builder',
               apiVersion: 'fake',
               metadata: {
                 resourceVersion: 'bogus',
@@ -309,10 +321,16 @@ module Kpack
                 }
               },
               spec: {
-                tag: "gcr.io/capi-images/#{package.app.guid}-custom-builder",
+                tag: "gcr.io/capi-images/#{package.app.guid}-builder",
                 serviceAccount: 'gcr-service-account',
-                stack: 'cflinuxfs3-stack',
-                store: 'cf-buildpack-store',
+                stack: Kubeclient::Resource.new({
+                  name: 'cflinuxfs3-stack',
+                  kind: 'ClusterStack',
+                }),
+                store: Kubeclient::Resource.new({
+                  name: 'cf-buildpack-store',
+                  kind: 'ClusterStore',
+                }),
                 order: [
                   { group: [{ id: 'paketo-buildpacks/java' }] },
                 ],
@@ -366,7 +384,7 @@ module Kpack
               tag: "gcr.io/capi-images/#{package.app.guid}",
               serviceAccount: 'gcr-service-account',
               builder: {
-                name: 'cf-autodetect-builder', # legacy Builder to verify that image update includes new CustomBuilder
+                name: 'cf-autodetect-builder', # legacy Builder to verify that image update includes new Builder
                 kind: 'Builder'
               },
               source: { # here we test that blob sources can be upgraded to registry sources in-place
@@ -401,7 +419,7 @@ module Kpack
           updated_image.spec.build.env = [
             { name: 'FOO', value: 'BAR' }
           ]
-          updated_image.spec.builder.kind = 'CustomBuilder'
+          updated_image.spec.builder.kind = 'Builder'
           updated_image.spec.builder.name = 'cf-default-builder'
 
           expect(client).to_not receive(:create_image)

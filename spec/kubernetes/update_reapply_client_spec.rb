@@ -141,31 +141,32 @@ module Kubernetes
       end
     end
 
-    describe '#apply_custom_builder_update' do
-      let(:name) { 'custom_builder' }
-      let(:remote_custom_builder) { Kubeclient::Resource.new(
-        kind: 'CustomBuilder',
-        metadata: {
-          'cloudfoundry.org/bogus_guid' => 'bogus',
-        },
-        spec: {
-          host: 'internet',
-        },
-      )
-      }
+    describe '#apply_builder_update' do
+      let(:name) { 'builder' }
+      let(:remote_builder) do
+        Kubeclient::Resource.new(
+          kind: 'Builder',
+          metadata: {
+            'cloudfoundry.org/bogus_guid' => 'bogus',
+          },
+          spec: {
+            host: 'internet',
+          },
+        )
+      end
 
       before do
-        allow(api_client).to receive(:get_custom_builder).with(name, namespace).and_return(remote_custom_builder)
-        allow(api_client).to receive(:update_custom_builder)
+        allow(api_client).to receive(:get_builder).with(name, namespace).and_return(remote_builder)
+        allow(api_client).to receive(:update_builder)
       end
 
       it 'applies the update in the block' do
-        reapply_client.apply_custom_builder_update(name, namespace) do |remote_custom_builder|
-          remote_custom_builder.spec.domain = 'website.biz'
-          remote_custom_builder
+        reapply_client.apply_builder_update(name, namespace) do |remote_builder|
+          remote_builder.spec.domain = 'website.biz'
+          remote_builder
         end
 
-        expect(api_client).to have_received(:update_custom_builder) do |update|
+        expect(api_client).to have_received(:update_builder) do |update|
           expect(update.spec.domain).to eq('website.biz')
           expect(update.spec.host).to eq('internet')
         end
@@ -176,32 +177,32 @@ module Kubernetes
 
         before do
           # raise a 409 twice, then succeed
-          expect(api_client).to receive(:update_custom_builder).once.with(any_args).and_raise(error)
-          expect(api_client).to receive(:update_custom_builder).once.with(any_args).and_raise(error)
-          expect(api_client).to receive(:update_custom_builder).once.with(any_args)
+          expect(api_client).to receive(:update_builder).once.with(any_args).and_raise(error)
+          expect(api_client).to receive(:update_builder).once.with(any_args).and_raise(error)
+          expect(api_client).to receive(:update_builder).once.with(any_args)
         end
 
-        it 'retries 3 times, fetching the custom_builder to patch each time' do
+        it 'retries 3 times, fetching the builder to patch each time' do
           expect {
-            reapply_client.apply_custom_builder_update(name, namespace) do |custom_builder|
-              custom_builder.spec = {}
-              custom_builder
+            reapply_client.apply_builder_update(name, namespace) do |builder|
+              builder.spec = {}
+              builder
             end
           }.not_to raise_error
 
-          expect(api_client).to have_received(:get_custom_builder).exactly(3).times
+          expect(api_client).to have_received(:get_builder).exactly(3).times
         end
       end
 
       it 'errors when no block is provided' do
         expect do
-          reapply_client.apply_custom_builder_update(name, namespace)
+          reapply_client.apply_builder_update(name, namespace)
         end.to raise_error(NoMethodError)
       end
 
       it 'errors when the block provided doesnt take an arg' do
         expect do
-          reapply_client.apply_custom_builder_update(name, namespace) do
+          reapply_client.apply_builder_update(name, namespace) do
             puts 'lul'
           end
         end.to raise_error(UpdateReapplyClient::MalformedBlockError)
