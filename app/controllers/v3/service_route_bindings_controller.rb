@@ -39,7 +39,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def show
-    message = VCAP::CloudController::ServiceRouteBindingShowMessage.from_params(query_params)
+    message = show_message
     route_binding = RouteBinding.first(guid: hashed_params[:guid])
     route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
     presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
@@ -50,7 +50,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def index
-    message = VCAP::CloudController::ServiceRouteBindingsListMessage.from_params(query_params)
+    message = list_message
     route_bindings = fetch_route_bindings(message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceRouteBindingPresenter,
@@ -70,6 +70,20 @@ class ServiceRouteBindingsController < ApplicationController
 
   def decorators(message)
     AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }
+  end
+
+  def list_message
+    valid_message(message_type: VCAP::CloudController::ServiceRouteBindingsListMessage)
+  end
+
+  def show_message
+    valid_message(message_type: VCAP::CloudController::ServiceRouteBindingShowMessage)
+  end
+
+  def valid_message(message_type:)
+    message_type.from_params(query_params).tap do |message|
+      invalid_param!(message.errors.full_messages) unless message.valid?
+    end
   end
 
   def fetch_route_bindings(message)

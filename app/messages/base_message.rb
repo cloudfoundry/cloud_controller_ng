@@ -1,5 +1,6 @@
 require 'active_model'
 require 'messages/validators'
+require 'addressable/uri'
 
 module VCAP::CloudController
   class BaseMessage

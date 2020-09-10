@@ -12,6 +12,8 @@ module VCAP
 
       register_allowed_keys QUERY_PARAMS.map(&:to_sym)
 
+      validates_with IncludeParamValidator, valid_values: %w(route service_instance)
+
       def self.from_params(params)
         super(params, QUERY_PARAMS)
       end
