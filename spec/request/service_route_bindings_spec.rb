@@ -386,7 +386,7 @@ RSpec.describe 'v3 service route bindings' do
             end
           end
 
-          it_behaves_like 'last operation response handling'
+          it_behaves_like 'create binding last operation response handling'
 
           context 'binding not retrievable' do
             let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
