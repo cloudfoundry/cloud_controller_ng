@@ -1,4 +1,4 @@
-RSpec.shared_examples 'last operation response handling' do
+RSpec.shared_examples 'create binding last operation response handling' do
   context 'valid http codes' do
     valid_responses = [
       { code: 400, body: { description: 'helpful message' }, expected_description: 'helpful message' },
