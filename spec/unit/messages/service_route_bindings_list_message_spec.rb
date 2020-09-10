@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/service_route_bindings_list_message'
 
 module VCAP
@@ -35,6 +35,21 @@ module VCAP
           expect(message.requested?(:service_instance_guids)).to be_truthy
           expect(message.requested?(:service_instance_names)).to be_truthy
           expect(message.requested?(:route_guids)).to be_truthy
+        end
+      end
+
+      describe 'validations' do
+        context 'include' do
+          it 'returns false for arbitrary values' do
+            message = described_class.from_params({ 'include' => 'app' })
+            expect(message).not_to be_valid
+            expect(message.errors[:base]).to include(include("Invalid included resource: 'app'"))
+          end
+
+          it 'returns true for valid values' do
+            message = described_class.from_params({ 'include' => 'route, service_instance' })
+            expect(message).to be_valid
+          end
         end
       end
     end

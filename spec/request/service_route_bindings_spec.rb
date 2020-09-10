@@ -738,6 +738,11 @@ RSpec.describe 'v3 service route bindings' do
         guids = parsed_response['included']['routes'].map { |x| x['guid'] }
         expect(guids).to contain_exactly(route.guid, other_route.guid)
       end
+
+      it 'rejects requests with invalid associations' do
+        get '/v3/service_route_bindings?include=planet', nil, admin_headers
+        expect(last_response).to have_status_code(400)
+      end
     end
   end
 
@@ -816,6 +821,11 @@ RSpec.describe 'v3 service route bindings' do
         expect(parsed_response['included']['routes']).to have(1).items
         route_guid = parsed_response['included']['routes'][0]['guid']
         expect(route_guid).to eq(route.guid)
+      end
+
+      it 'rejects requests with invalid associations' do
+        get "/v3/service_route_bindings/#{guid}?include=planet", nil, admin_headers
+        expect(last_response).to have_status_code(400)
       end
     end
   end
