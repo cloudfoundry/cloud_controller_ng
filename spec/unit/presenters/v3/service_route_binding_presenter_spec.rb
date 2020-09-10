@@ -66,6 +66,24 @@ module VCAP
           }
         )
       end
+
+      describe 'decorators' do
+        let(:decorator1) { double('FakeDecorator', decorate: { foo: 'bar' }) }
+        let(:decorator2) { double('FakeDecorator', decorate: { xyzzy: 'omg' }) }
+        let(:decorators) { [decorator1, decorator2] }
+        let(:presenter) { described_class.new(binding, decorators: decorators) }
+        let!(:content) { presenter.to_hash }
+
+        it 'adds the decorated information' do
+          expect(content[:xyzzy]).to eq('omg')
+          expect(content[:foo]).to be_nil
+        end
+
+        it 'sends the route to the decorator' do
+          expect(decorator1).to have_received(:decorate).with({}, [binding])
+          expect(decorator2).to have_received(:decorate).with({ foo: 'bar' }, [binding])
+        end
+      end
     end
   end
 end

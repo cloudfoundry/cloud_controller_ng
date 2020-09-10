@@ -849,6 +849,28 @@ RSpec.describe 'v3 service route bindings' do
         )
       end
     end
+
+    describe 'include' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+
+      it 'can include `service_instance`' do
+        get "/v3/service_route_bindings/#{guid}?include=service_instance", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(1).items
+        service_instance_guid = parsed_response['included']['service_instances'][0]['guid']
+        expect(service_instance_guid).to eq(service_instance.guid)
+      end
+
+      it 'can include `route`' do
+        get "/v3/service_route_bindings/#{guid}?include=route", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['routes']).to have(1).items
+        route_guid = parsed_response['included']['routes'][0]['guid']
+        expect(route_guid).to eq(route.guid)
+      end
+    end
   end
 
   let(:user) { VCAP::CloudController::User.make }
