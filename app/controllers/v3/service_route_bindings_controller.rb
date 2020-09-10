@@ -1,4 +1,5 @@
 require 'messages/service_route_binding_create_message'
+require 'messages/service_route_binding_show_message'
 require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
 require 'jobs/v3/create_route_binding_job'
@@ -38,9 +39,14 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def show
+    message = VCAP::CloudController::ServiceRouteBindingShowMessage.from_params(query_params)
     route_binding = RouteBinding.first(guid: hashed_params[:guid])
     route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
-    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(route_binding)
+    presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
+      route_binding,
+      decorators: decorators(message)
+    )
+    render status: :ok, json: presenter
   end
 
   def index
