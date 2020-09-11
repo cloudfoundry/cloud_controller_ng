@@ -1,6 +1,6 @@
 module VCAP
   module CloudController
-    module IncludeRouteDecorator
+    module IncludeBindingRouteDecorator
       class << self
         def decorate(hash, route_bindings)
           extra = {

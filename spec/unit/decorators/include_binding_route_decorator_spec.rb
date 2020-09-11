@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'decorators/include_route_decorator'
+require 'decorators/include_binding_route_decorator'
 
 module VCAP
   module CloudController
-    RSpec.describe IncludeRouteDecorator do
+    RSpec.describe IncludeBindingRouteDecorator do
       subject(:decorator) { described_class }
       let(:bindings) { Array.new(3) { RouteBinding.make } }
       let(:routes) {
