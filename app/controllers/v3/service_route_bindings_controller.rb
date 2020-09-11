@@ -5,7 +5,7 @@ require 'actions/service_route_binding_create'
 require 'jobs/v3/create_route_binding_job'
 require 'presenters/v3/service_route_binding_presenter'
 require 'fetchers/route_binding_list_fetcher'
-require 'decorators/include_route_decorator'
+require 'decorators/include_binding_route_decorator'
 
 class ServiceRouteBindingsController < ApplicationController
   def create
@@ -65,7 +65,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   AVAILABLE_DECORATORS = [
     IncludeBindingServiceInstanceDecorator,
-    IncludeRouteDecorator
+    IncludeBindingRouteDecorator
   ].freeze
 
   def decorators(message)
