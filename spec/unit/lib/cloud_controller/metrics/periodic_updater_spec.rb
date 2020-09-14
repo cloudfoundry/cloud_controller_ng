@@ -241,6 +241,38 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_job_queue_length)
       end
 
+      context 'when local queue has pending jobs' do
+        it 'emits the correct count' do
+          Delayed::Job.enqueue(
+            VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1),
+            queue: VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config)
+          )
+          periodic_updater.update_job_queue_length
+
+          expected_pending_job_count_by_queue = {
+            'cc-api-0':   1
+          }
+          expected_total = 1
+
+          expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        end
+      end
+
+      context 'when local queue does not have pending jobs' do
+        it 'emits the local queue as 0 for discoverability' do
+          periodic_updater.update_job_queue_length
+
+          expected_pending_job_count_by_queue = {
+            'cc-api-0':   0
+          }
+          expected_total = 0
+
+          expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        end
+      end
+
       it 'should include the length of the delayed job queue and the total' do
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
@@ -250,7 +282,8 @@ module VCAP::CloudController::Metrics
 
         expected_pending_job_count_by_queue = {
           cc_local:   2,
-          cc_generic: 1
+          cc_generic: 1,
+          'cc-api-0':   0
         }
         expected_total = 3
 
@@ -266,7 +299,8 @@ module VCAP::CloudController::Metrics
 
         expected_pending_job_count_by_queue = {
           cc_local:   1,
-          cc_generic: 1
+          cc_generic: 1,
+          'cc-api-0':   0
         }
         expected_total = 2
 
@@ -280,8 +314,38 @@ module VCAP::CloudController::Metrics
 
         periodic_updater.update_job_queue_length
 
-        expected_pending_job_count_by_queue = {}
-        expected_total                      = 0
+        expected_pending_job_count_by_queue = {
+          'cc-api-0':   0
+        }
+        expected_total = 0
+
+        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+      end
+
+      it '"resets" pending job count to 0 after they have been emitted' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
+        periodic_updater.update_job_queue_length
+
+        expected_pending_job_count_by_queue = {
+          cc_local:   1,
+          cc_generic: 1,
+          'cc-api-0':   0
+        }
+        expected_total = 2
+
+        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+
+        Delayed::Job.dataset.delete
+        periodic_updater.update_job_queue_length
+        expected_pending_job_count_by_queue = {
+          cc_local:   0,
+          cc_generic: 0,
+          'cc-api-0':   0
+        }
+        expected_total = 0
 
         expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
@@ -292,6 +356,43 @@ module VCAP::CloudController::Metrics
       before do
         allow(updater1).to receive(:update_failed_job_count)
         allow(updater2).to receive(:update_failed_job_count)
+      end
+
+      context 'when local queue has failed jobs' do
+        it 'emits the correct count' do
+          Delayed::Job.enqueue(
+            VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1),
+            queue: VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config)
+          )
+          Delayed::Job.dataset.update(failed_at: Time.now.utc)
+          periodic_updater.update_failed_job_count
+
+          expected_failed_jobs_by_queue = {
+            'cc-api-0':   1
+          }
+          expected_total = 1
+
+          expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        end
+      end
+
+      context 'when local queue does not have failed jobs' do
+        it 'emits the local queue as 0 for discoverability' do
+          Delayed::Job.enqueue(
+            VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1),
+            queue: VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config)
+          )
+          periodic_updater.update_failed_job_count
+
+          expected_failed_jobs_by_queue = {
+            'cc-api-0':   0
+          }
+          expected_total = 0
+
+          expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        end
       end
 
       it 'includes the number of failed jobs in the delayed job queue with a total and sends it to all updaters' do
@@ -306,9 +407,39 @@ module VCAP::CloudController::Metrics
 
         expected_failed_jobs_by_queue = {
           cc_local:   2,
-          cc_generic: 1
+          cc_generic: 1,
+          'cc-api-0':   0
         }
         expected_total = 3
+
+        expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+      end
+
+      it '"resets" failed job count to 0 after they have been emitted' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
+        Delayed::Job.dataset.update(failed_at: Time.now.utc)
+        periodic_updater.update_failed_job_count
+
+        expected_failed_jobs_by_queue = {
+          cc_local:   1,
+          cc_generic: 1,
+          'cc-api-0':   0
+        }
+        expected_total = 2
+
+        expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+
+        Delayed::Job.dataset.delete
+        periodic_updater.update_failed_job_count
+        expected_failed_jobs_by_queue = {
+          cc_local:   0,
+          cc_generic: 0,
+          'cc-api-0':   0
+        }
+        expected_total = 0
 
         expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
         expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
