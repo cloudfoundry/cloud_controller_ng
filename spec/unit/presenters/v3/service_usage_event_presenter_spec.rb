@@ -1,7 +1,10 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'support/link_helpers'
 require 'presenters/v3/service_usage_event_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServiceUsageEventPresenter do
+  include LinkHelpers
+
   let(:usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
 
   describe '#to_hash' do

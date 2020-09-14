@@ -8,7 +8,7 @@ module VCAP::CloudController
   module SpecBootstrap
     @initialized = false
 
-    def self.init
+    def self.init(recreate_tables: true)
       return if @initialized
 
       @initialized = true
@@ -29,8 +29,10 @@ module VCAP::CloudController
 
       db_config = DbConfig.new
 
-      db_resetter = TableRecreator.new(db_config.connection)
-      db_resetter.recreate_tables
+      if recreate_tables
+        db_resetter = TableRecreator.new(db_config.connection)
+        db_resetter.recreate_tables
+      end
 
       DB.load_models(db_config.config, db_config.db_logger)
     end

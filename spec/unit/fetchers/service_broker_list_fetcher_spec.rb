@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/service_broker_list_fetcher'
 require 'messages/service_brokers_list_message'
 

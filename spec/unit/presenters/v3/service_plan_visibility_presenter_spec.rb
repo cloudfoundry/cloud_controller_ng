@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'presenters/v3/service_plan_visibility_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPresenter do

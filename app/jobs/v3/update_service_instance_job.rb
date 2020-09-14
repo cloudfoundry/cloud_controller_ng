@@ -1,4 +1,5 @@
 require 'jobs/v3/service_instance_async_job'
+require 'actions/metadata_update'
 
 module VCAP::CloudController
   module V3

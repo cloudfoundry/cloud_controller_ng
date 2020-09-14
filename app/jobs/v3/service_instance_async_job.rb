@@ -1,4 +1,5 @@
 require 'jobs/reoccurring_job'
+require 'services/service_brokers/service_client_provider'
 
 module VCAP::CloudController
   module V3

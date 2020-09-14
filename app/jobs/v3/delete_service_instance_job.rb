@@ -1,4 +1,5 @@
 require 'jobs/v3/service_instance_async_job'
+require 'services/service_brokers/v2/errors/service_broker_bad_response'
 
 module VCAP::CloudController
   module V3

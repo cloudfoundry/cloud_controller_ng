@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'messages/service_usage_events_list_message'
 require 'fetchers/service_usage_event_list_fetcher'
 

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'presenters/v3/service_route_binding_presenter'
 
 module VCAP
