@@ -158,19 +158,24 @@ module VCAP::CloudController::Validators
 
   class LifecycleValidator < ActiveModel::Validator
     def validate(record)
-      data_message = {
-        VCAP::CloudController::Lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        VCAP::CloudController::Lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
-        VCAP::CloudController::Lifecycles::KPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
+      lifecycles = VCAP::CloudController::Lifecycles
+      default_lifecycle = VCAP::CloudController::Config.config.get(:default_app_lifecycle)
+      lifecycle_type = record.lifecycle_type || default_lifecycle
+
+      if default_lifecycle == lifecycles::KPACK && lifecycle_type == lifecycles::BUILDPACK
+        record.errors[:lifecycle_type].concat ['this installation does not support the "buildpack" lifecycle, try "kpack" instead']
+        return
+      end
+
+      data_message_class_table = {
+        lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
+        lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
+        lifecycles::KPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
       }
 
-      lifecycle_data_message_class = if record.lifecycle_type.present?
-                                       data_message[record.lifecycle_type]
-                                     else
-                                       VCAP::CloudController::BuildpackLifecycleDataMessage
-                                     end
+      lifecycle_data_message_class = data_message_class_table[lifecycle_type]
       if lifecycle_data_message_class.nil?
-        record.errors[:lifecycle_type].concat ["is not included in the list: #{data_message.keys.join(', ')}"]
+        record.errors[:lifecycle_type].concat ["is not included in the list: #{data_message_class_table.keys.join(', ')}"]
         return
       end
 

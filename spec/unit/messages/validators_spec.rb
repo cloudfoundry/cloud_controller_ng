@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'lightweight_spec_helper'
 require 'messages/validators'
 require 'messages/base_message'
@@ -414,6 +415,19 @@ module VCAP::CloudController::Validators
           def lifecycle_type
             lifecycle[:type] || lifecycle['type']
           end
+        end
+      end
+
+      context 'when kpack is the default lifecycle' do
+        before do
+          TestConfig.override(default_app_lifecycle: 'kpack')
+        end
+
+        it 'considers type: buildpack to be invalid' do
+          message = lifecycle_class.new({ lifecycle: { type: 'buildpack', data: {} } })
+
+          expect(message).not_to be_valid
+          expect(message.errors_on(:lifecycle_type)).to include('this installation does not support the "buildpack" lifecycle, try "kpack" instead')
         end
       end
 
