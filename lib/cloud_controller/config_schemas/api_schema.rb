@@ -1,4 +1,5 @@
 require 'vcap/config'
+require 'cloud_controller/resource_pool'
 
 module VCAP::CloudController
   module ConfigSchemas

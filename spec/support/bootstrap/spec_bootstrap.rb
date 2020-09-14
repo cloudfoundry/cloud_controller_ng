@@ -1,10 +1,17 @@
 require 'support/bootstrap/test_config'
 require 'support/bootstrap/table_recreator'
 require 'cloud_controller/seeds'
+require 'cloud_controller/telemetry_logger'
+require 'cloud_controller/steno_configurer'
 
 module VCAP::CloudController
   module SpecBootstrap
+    @initialized = false
+
     def self.init
+      return if @initialized
+
+      @initialized = true
       ENV['CC_TEST'] = 'true'
       FileUtils.mkdir_p(Paths::ARTIFACTS)
 

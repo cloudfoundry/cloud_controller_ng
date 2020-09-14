@@ -1,3 +1,5 @@
+require 'models/helpers/role_types'
+
 module VCAP::CloudController
   SPACE_OR_ORGANIZATION_NOT_SPECIFIED = -1
 

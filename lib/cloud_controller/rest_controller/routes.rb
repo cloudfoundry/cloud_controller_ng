@@ -1,3 +1,5 @@
+require 'controllers/base/front_controller'
+
 module VCAP::CloudController::RestController
   module Routes
     def self.included(base)

@@ -1,3 +1,5 @@
+require 'allowy/access_control'
+
 module VCAP::CloudController
   class BaseAccess
     include Allowy::AccessControl

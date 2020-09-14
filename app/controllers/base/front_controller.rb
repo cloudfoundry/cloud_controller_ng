@@ -1,4 +1,6 @@
 require 'cloud_controller/security/security_context_configurer'
+require 'vcap/rest_api'
+require 'sinatra/vcap'
 
 module VCAP::CloudController
   include VCAP::RestAPI

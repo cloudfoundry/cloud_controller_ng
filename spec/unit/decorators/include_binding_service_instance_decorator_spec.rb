@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'decorators/include_binding_service_instance_decorator'
 
 module VCAP
