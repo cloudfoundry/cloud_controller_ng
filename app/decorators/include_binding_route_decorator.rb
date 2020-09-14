@@ -1,3 +1,5 @@
+require 'presenters/v3/route_presenter'
+
 module VCAP
   module CloudController
     module IncludeBindingRouteDecorator

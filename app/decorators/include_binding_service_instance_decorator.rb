@@ -1,3 +1,5 @@
+require 'presenters/v3/service_instance_presenter'
+
 module VCAP::CloudController
   class IncludeBindingServiceInstanceDecorator
     class << self
