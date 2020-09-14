@@ -703,6 +703,27 @@ RSpec.describe 'Space Manifests' do
           expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
         end
       end
+
+      context 'when there is a field with an invalid type' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => 'new-app',
+                'stack' => { 'hash' => 'but should be a string' }
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq("For application 'new-app': Stack must be a string")
+        end
+      end
     end
 
     context 'the space does not exist' do

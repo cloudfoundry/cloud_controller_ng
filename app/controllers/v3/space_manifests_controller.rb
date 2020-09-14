@@ -49,6 +49,10 @@ class SpaceManifestsController < ApplicationController
 
     parsed_manifests = parsed_app_manifests.map(&:to_hash)
 
+    messages = parsed_app_manifests.map(&:to_unsafe_h).map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
+    compound_error!(errors) unless errors.empty?
+
     diff = SpaceDiffManifest.generate_diff(parsed_manifests, space)
 
     render status: :created, json: { diff: diff }
