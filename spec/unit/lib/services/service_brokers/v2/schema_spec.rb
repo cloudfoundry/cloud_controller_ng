@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'services/service_brokers/v2/schema'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe Schema do
