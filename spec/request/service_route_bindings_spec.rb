@@ -319,11 +319,9 @@ RSpec.describe 'v3 service route bindings' do
 
           before do
             stub_request(:get, broker_binding_last_operation_url).
-              with(query: {
-                operation: operation,
-                service_id: service_instance.service_plan.service.unique_id,
-                plan_id: service_instance.service_plan.unique_id,
-              }).
+              with(query: hash_including({
+                operation: operation
+              })).
               to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
           end
 

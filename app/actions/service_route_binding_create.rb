@@ -103,7 +103,8 @@ module VCAP::CloudController
       def fetch_last_operation(client, binding)
         client.fetch_service_binding_last_operation(binding)
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
-             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected => e
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
+             HttpRequestError => e
         binding.save_with_new_operation({}, {
           type: 'create',
           state: 'in progress',
