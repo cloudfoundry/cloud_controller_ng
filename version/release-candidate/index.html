@@ -29237,6 +29237,11 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 <td>Comma-delimited list of service instance names to filter by</td>
 </tr>
 <tr>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
+<td>Optionally include a list of unique related resources in the response. Valid values are: <code class="prettyprint">route</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
 <td><strong>page</strong></td>
 <td><em>integer</em></td>
 <td>Page to display; valid values are integers &gt;= 1</td>
@@ -29338,6 +29343,22 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/service_service_route_bindings/:guid</code></p>
+
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
+<td>Optionally include a list of unique related resources in the response. Valid values are: <code class="prettyprint">route</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+</tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
