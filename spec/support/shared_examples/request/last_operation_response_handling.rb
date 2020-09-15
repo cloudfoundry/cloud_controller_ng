@@ -61,22 +61,22 @@ RSpec.shared_examples 'create binding last operation response handling' do
   end
 
   context 'connection errors' do
-     [SocketError, Errno::ECONNREFUSED, RuntimeError].each do |error|
-          before do
-            stub_request(:get, broker_binding_last_operation_url).
-             with(query: hash_including({
-                      operation: operation
-                    })).to_raise(error)
-          end
+    [SocketError, Errno::ECONNREFUSED, RuntimeError].each do |error|
+      before do
+        stub_request(:get, broker_binding_last_operation_url).
+          with(query: hash_including({
+                  operation: operation
+                })).to_raise(error)
+      end
 
-          it 'continues polling' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+      it 'continues polling' do
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-            expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq('in progress')
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('in progress')
 
-            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
-          end
-     end
+        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+      end
+    end
   end
 end
