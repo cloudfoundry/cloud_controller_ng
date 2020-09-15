@@ -9,7 +9,7 @@ module VCAP::CloudController
     describe '#fetch' do
       context 'when there are no plans' do
         it 'is empty' do
-          service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+          service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
           expect(service_plans).to be_empty
         end
       end
@@ -39,14 +39,14 @@ module VCAP::CloudController
 
         context 'when no authorization is specified' do
           it 'only fetches public plans' do
-            service_plans = ServicePlanListFetcher.new.fetch(message).all
+            service_plans = ServicePlanListFetcher.fetch(message).all
             expect(service_plans).to contain_exactly(public_plan_1, public_plan_2)
           end
         end
 
         context 'when the `omniscient` flag is true' do
           it 'fetches all plans' do
-            service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+            service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
             expect(service_plans).to contain_exactly(
               public_plan_1,
               public_plan_2,
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         context 'when `readable_org_guids` are specified' do
           it 'includes public plans and ones for those orgs' do
-            service_plans = ServicePlanListFetcher.new.fetch(
+            service_plans = ServicePlanListFetcher.fetch(
               message,
               readable_org_guids: [org_1.guid, org_3.guid],
               readable_space_guids: [],
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         context 'when both `readable_space_guids` and `readable_org_guids` are specified' do
           it 'includes public plans, ones for those spaces and ones for those orgs' do
-            service_plans = ServicePlanListFetcher.new.fetch(
+            service_plans = ServicePlanListFetcher.fetch(
               message,
               readable_space_guids: [space_3.guid],
               readable_org_guids: [org_3.guid],
@@ -127,7 +127,7 @@ module VCAP::CloudController
                 organization_guids: [org_1.guid, org_2.guid].join(',')
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
 
               expect(service_plans).to contain_exactly(org_restricted_plan_1, org_restricted_plan_2, public_plan, space_scoped_plan_1, space_scoped_plan_2)
             end
@@ -137,7 +137,7 @@ module VCAP::CloudController
                 organization_guids: 'non-matching-guid',
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
 
               expect(service_plans).to contain_exactly(public_plan)
             end
@@ -149,7 +149,7 @@ module VCAP::CloudController
                 organization_guids: [org_1.guid, org_2.guid].join(',')
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [org_1.guid],
                 readable_space_guids: [],
@@ -165,7 +165,7 @@ module VCAP::CloudController
                 organization_guids: [org_1.guid, org_2.guid].join(',')
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [],
                 readable_space_guids: [],
@@ -184,7 +184,7 @@ module VCAP::CloudController
                 organization_guids: [org_1.guid].join(',')
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [org_1.guid],
                 readable_space_guids: [space_1.guid],
@@ -201,7 +201,7 @@ module VCAP::CloudController
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
               expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, space_scoped_plan_2, org_restricted_plan_2, public_plan)
             end
 
@@ -209,7 +209,7 @@ module VCAP::CloudController
               message = ServicePlansListMessage.from_params({
                 space_guids: 'non-matching-guid'
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
               expect(service_plans).to contain_exactly(public_plan)
             end
           end
@@ -219,7 +219,7 @@ module VCAP::CloudController
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [org_1.guid],
                 readable_space_guids: [space_1.guid],
@@ -233,7 +233,7 @@ module VCAP::CloudController
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [org_1.guid, org_2.guid],
                 readable_space_guids: [space_1.guid],
@@ -248,7 +248,7 @@ module VCAP::CloudController
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
 
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [],
                 readable_space_guids: [],
@@ -266,7 +266,7 @@ module VCAP::CloudController
                 space_guids: [space_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
               expect(service_plans).to contain_exactly(space_scoped_plan_2, org_restricted_plan_2, public_plan)
             end
 
@@ -275,7 +275,7 @@ module VCAP::CloudController
                 space_guids: [space_1.guid].join(','),
                 organization_guids: [org_3.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(message, omniscient: true).all
+              service_plans = ServicePlanListFetcher.fetch(message, omniscient: true).all
               expect(service_plans).to contain_exactly(public_plan)
             end
           end
@@ -286,7 +286,7 @@ module VCAP::CloudController
                 space_guids: [space_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
-              service_plans = ServicePlanListFetcher.new.fetch(
+              service_plans = ServicePlanListFetcher.fetch(
                 message,
                 readable_org_guids: [org_1.guid, org_2.guid],
                 readable_space_guids: [space_1.guid],
@@ -442,7 +442,7 @@ module VCAP::CloudController
         end
 
         context 'when omniscient' do
-          let(:service_plans) { ServicePlanListFetcher.new.fetch(message, omniscient: true).all }
+          let(:service_plans) { ServicePlanListFetcher.fetch(message, omniscient: true).all }
 
           it_behaves_like 'filtered service plans fetcher'
         end
@@ -450,13 +450,13 @@ module VCAP::CloudController
         context 'when org user' do
           let(:org_1) { Organization.make }
           let(:space_1) { Space.make(organization: org_1) }
-          let(:service_plans) { ServicePlanListFetcher.new.fetch(message, omniscient: false, readable_space_guids: [space_1.guid], readable_org_guids: [org_1.guid]).all }
+          let(:service_plans) { ServicePlanListFetcher.fetch(message, omniscient: false, readable_space_guids: [space_1.guid], readable_org_guids: [org_1.guid]).all }
 
           it_behaves_like 'filtered service plans fetcher'
         end
 
         context 'when not logged in' do
-          let(:service_plans) { ServicePlanListFetcher.new.fetch(message, omniscient: false).all }
+          let(:service_plans) { ServicePlanListFetcher.fetch(message, omniscient: false).all }
 
           it_behaves_like 'filtered service plans fetcher'
         end
