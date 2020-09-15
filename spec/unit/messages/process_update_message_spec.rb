@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'messages/process_update_message'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessUpdateMessage do
@@ -85,6 +86,17 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors[:command]).to include('must be between 1 and 4096 characters')
+        end
+      end
+
+      context 'when endpoint is too long' do
+        let(:params) { { health_check: { type: 'http', data: { endpoint: 'a' * 256 } } } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_endpoint]).to include('is too long (maximum is 255 characters)')
         end
       end
 
@@ -180,6 +192,26 @@ module VCAP::CloudController
         end
       end
 
+      context 'when health_check timeout is > the the max value allowed in the database' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'port',
+              data: {
+                timeout: MetadataBaseMessage::MAX_DB_INT + 1
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_timeout]).to include('must be less than or equal to 2147483647')
+        end
+      end
+
       context 'when health_check invocation timeout is not an integer' do
         let(:params) do
           {
@@ -217,6 +249,26 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+        end
+      end
+
+      context 'when health_check invocation timeout is > the the max value allowed in the database' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'port',
+              data: {
+                invocation_timeout: MetadataBaseMessage::MAX_DB_INT + 1
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_invocation_timeout]).to include('must be less than or equal to 2147483647')
         end
       end
 
