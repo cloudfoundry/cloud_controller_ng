@@ -165,6 +165,10 @@ module VCAP::CloudController
                                             end
     end
 
+    def package_image_registry_configured?
+      !get(:packages, :image_registry).nil?
+    end
+
     private
 
     def ensure_k8s_api_configured!

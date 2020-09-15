@@ -92,7 +92,7 @@ module Kpack
     end
 
     def configure_source(staging_details)
-      if registry_configured?
+      if config.package_image_registry_configured?
         package_registry_base_path = config.get(:packages, :image_registry, :base_path)
         { registry: {
           image: "#{package_registry_base_path}/#{staging_details.package.guid}@sha256:#{staging_details.package.sha256_checksum}"
@@ -165,10 +165,6 @@ module Kpack
 
     def client
       ::CloudController::DependencyLocator.instance.k8s_api_client
-    end
-
-    def registry_configured?
-      !config.get(:packages, :image_registry).nil?
     end
 
     def config
