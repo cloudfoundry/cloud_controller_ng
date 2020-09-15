@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     let(:message) { SpacesListMessage.from_params({}) }
 
-    let(:fetcher) { SpaceListFetcher.new }
+    let(:fetcher) { SpaceListFetcher }
 
     describe '#fetch' do
       let(:permitted_space_guids) { [space1.guid, space3.guid, space4.guid] }

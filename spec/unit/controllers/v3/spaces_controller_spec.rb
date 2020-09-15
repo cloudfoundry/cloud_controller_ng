@@ -180,7 +180,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
 
       it 'eager loads associated resources that the presenter specifies' do
-        expect_any_instance_of(VCAP::CloudController::SpaceListFetcher).to receive(:fetch).with(
+        expect(VCAP::CloudController::SpaceListFetcher).to receive(:fetch).with(
           hash_including(eager_loaded_associations: [:labels, :annotations, :organization])
         ).and_call_original
 

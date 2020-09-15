@@ -401,6 +401,14 @@ RSpec.describe 'Spaces' do
         expect(parsed_response).to_not have_key('included')
       end
     end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::Space }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/spaces?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
   end
 
   describe 'GET /v3/spaces/:space_guid/staging_security_groups' do
