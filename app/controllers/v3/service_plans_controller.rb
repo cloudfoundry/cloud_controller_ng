@@ -40,11 +40,11 @@ class ServicePlansController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if !current_user
-                ServicePlanListFetcher.new.fetch(message)
+                ServicePlanListFetcher.fetch(message)
               elsif permission_queryer.can_read_globally?
-                ServicePlanListFetcher.new.fetch(message, omniscient: true)
+                ServicePlanListFetcher.fetch(message, omniscient: true)
               else
-                ServicePlanListFetcher.new.fetch(
+                ServicePlanListFetcher.fetch(
                   message,
                   readable_org_guids: permission_queryer.readable_org_guids,
                   readable_space_guids: permission_queryer.readable_space_scoped_space_guids,
