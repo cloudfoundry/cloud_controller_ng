@@ -30,7 +30,7 @@ module VCAP::CloudController
 
           uaa: {
             internal_url: String,
-            ca_file: String,
+            optional(:ca_file) => String,
             client_timeout: Integer,
           },
 

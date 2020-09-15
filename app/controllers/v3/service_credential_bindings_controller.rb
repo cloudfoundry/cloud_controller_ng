@@ -136,6 +136,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def credhub_client
+    # TODO: use the credhub client provided by `DependencyLocator`
     @credhub_client ||= Credhub::Client.new(config.get(:credhub_api, :internal_url), uaa_client)
   end
 

@@ -21,6 +21,18 @@ module VCAP::CloudController
       it 'uses default http timeout value' do
         expect(uaa_client.http_timeout).to eq(TestConfig.config_instance.get(:uaa, :client_timeout))
       end
+
+      context 'when no CA file is provided' do
+        subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: nil) }
+
+        it 'constructs without issue' do
+          expect(uaa_client).not_to eq(nil)
+          expect(uaa_client.uaa_target).to eq(url)
+          expect(uaa_client.client_id).to eq(client_id)
+          expect(uaa_client.secret).to eq(secret)
+          expect(uaa_client.ca_file).to eq(nil)
+        end
+      end
     end
 
     describe '#auth_header' do
