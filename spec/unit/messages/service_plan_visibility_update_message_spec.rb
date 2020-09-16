@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/service_plan_visibility_update_message'
 
 module VCAP::CloudController

@@ -111,6 +111,30 @@ module VCAP::CloudController
                 expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
               end
             end
+
+            context 'when no CA certificate is configured to use with the interal UAA URL' do
+              let(:uaa_config) do
+                {
+                  resource_id: 'resource-id',
+                  symmetric_secret: nil,
+                  url: 'http://localhost:8080/uaa',
+                  internal_url: 'https://uaa.service.cf.internal',
+                }
+              end
+
+              it 'communicates with the UAA over its internal URL without any issue' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
+                subject.decode_token("bearer #{token}")
+
+                expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+              end
+
+              it 'decodes the token' do
+                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
+
+                expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+              end
+            end
           end
 
           context "when the token issuer doesn't match the UAA" do

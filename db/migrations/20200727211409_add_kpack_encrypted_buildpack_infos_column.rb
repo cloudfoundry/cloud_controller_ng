@@ -1,3 +1,5 @@
+require 'multi_json'
+
 Sequel.migration do
   change do
     alter_table :kpack_lifecycle_data do

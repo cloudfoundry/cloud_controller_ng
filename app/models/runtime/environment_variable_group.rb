@@ -1,3 +1,5 @@
+require 'messages/validators'
+
 module VCAP::CloudController
   class EnvironmentVariableGroup < Sequel::Model(:env_groups)
     import_attributes :environment_json

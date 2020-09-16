@@ -353,11 +353,26 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#uaa_client' do
-    it 'returns a uaa client with credentials for looking up usernames' do
-      uaa_client = locator.uaa_client
-      expect(uaa_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
-      expect(uaa_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
-      expect(uaa_client.uaa_target).to eq(config.get(:uaa, :internal_url))
+    context 'when a CA file is not configured for the UAA' do
+      before do
+        TestConfig.override(uaa: { ca_file: nil, internal_url: TestConfig.config_instance.get(:uaa, :internal_url) })
+      end
+
+      it 'returns a uaa client with credentials for looking up usernames' do
+        uaa_client = locator.uaa_client
+        expect(uaa_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
+        expect(uaa_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
+        expect(uaa_client.uaa_target).to eq(config.get(:uaa, :internal_url))
+      end
+    end
+
+    context 'when a CA file is configured for the UAA' do
+      it 'returns a uaa client with credentials for looking up usernames' do
+        uaa_client = locator.uaa_client
+        expect(uaa_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
+        expect(uaa_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
+        expect(uaa_client.uaa_target).to eq(config.get(:uaa, :internal_url))
+      end
     end
   end
 

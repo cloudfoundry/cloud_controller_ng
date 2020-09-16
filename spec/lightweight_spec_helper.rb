@@ -30,3 +30,7 @@ class StubConfig
 
   attr_reader :data
 end
+
+RSpec.configure do |rspec_config|
+  rspec_config.expose_dsl_globally = false
+end

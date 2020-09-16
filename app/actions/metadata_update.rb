@@ -1,3 +1,6 @@
+require 'actions/labels_update'
+require 'actions/annotations_update'
+
 module VCAP::CloudController
   class MetadataUpdate
     class << self

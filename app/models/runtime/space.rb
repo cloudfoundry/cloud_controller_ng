@@ -1,4 +1,5 @@
 require 'models/helpers/process_types'
+require 'cloud_controller/errors/invalid_relation'
 
 module VCAP::CloudController
   class Space < Sequel::Model

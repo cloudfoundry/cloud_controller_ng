@@ -2,11 +2,8 @@ require 'messages/list_message'
 
 module VCAP
   module CloudController
-    class ServiceRouteBindingsListMessage < ListMessage
+    class ServiceRouteBindingShowMessage < BaseMessage
       QUERY_PARAMS = %w[
-        service_instance_guids
-        service_instance_names
-        route_guids
         include
       ].freeze
 

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/service_plan_visibility_fetcher'
 
 module VCAP::CloudController

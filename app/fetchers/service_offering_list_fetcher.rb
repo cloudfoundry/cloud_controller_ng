@@ -1,4 +1,5 @@
 require 'fetchers/base_list_fetcher'
+require 'fetchers/label_selector_query_generator'
 
 module VCAP::CloudController
   class ServiceOfferingListFetcher < BaseListFetcher

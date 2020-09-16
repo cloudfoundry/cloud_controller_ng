@@ -1,9 +1,14 @@
 require 'messages/service_route_binding_create_message'
+require 'messages/service_route_binding_show_message'
 require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
 require 'jobs/v3/create_route_binding_job'
+require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_route_binding_presenter'
 require 'fetchers/route_binding_list_fetcher'
+require 'decorators/include_binding_service_instance_decorator'
+require 'decorators/include_binding_route_decorator'
+require 'cloud_controller/paging/sequel_paginator'
 
 class ServiceRouteBindingsController < ApplicationController
   def create
@@ -37,23 +42,52 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def show
+    message = show_message
     route_binding = RouteBinding.first(guid: hashed_params[:guid])
     route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
-    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(route_binding)
+    presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
+      route_binding,
+      decorators: decorators(message)
+    )
+    render status: :ok, json: presenter
   end
 
   def index
-    message = VCAP::CloudController::ServiceRouteBindingsListMessage.from_params(query_params)
+    message = list_message
     route_bindings = fetch_route_bindings(message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceRouteBindingPresenter,
       paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
       path: '/v3/service_route_bindings',
       message: message,
+      decorators: decorators(message)
     )
   end
 
   private
+
+  AVAILABLE_DECORATORS = [
+    IncludeBindingServiceInstanceDecorator,
+    IncludeBindingRouteDecorator
+  ].freeze
+
+  def decorators(message)
+    AVAILABLE_DECORATORS.select { |d| d.match?(message.include) }
+  end
+
+  def list_message
+    valid_message(message_type: VCAP::CloudController::ServiceRouteBindingsListMessage)
+  end
+
+  def show_message
+    valid_message(message_type: VCAP::CloudController::ServiceRouteBindingShowMessage)
+  end
+
+  def valid_message(message_type:)
+    message_type.from_params(query_params).tap do |message|
+      invalid_param!(message.errors.full_messages) unless message.valid?
+    end
+  end
 
   def fetch_route_bindings(message)
     fetcher = RouteBindingListFetcher.new

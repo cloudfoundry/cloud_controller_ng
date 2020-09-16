@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/v3/service_broker_update'
+require 'messages/service_broker_update_message'
 
 module VCAP
   module CloudController

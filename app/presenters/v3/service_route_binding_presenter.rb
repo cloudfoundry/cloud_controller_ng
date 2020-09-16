@@ -6,6 +6,12 @@ module VCAP
       module V3
         class ServiceRouteBindingPresenter < BasePresenter
           def to_hash
+            base.merge(decorations)
+          end
+
+          private
+
+          def base
             {
               guid: binding.guid,
               route_service_url: binding.route_service_url,
@@ -17,7 +23,9 @@ module VCAP
             }
           end
 
-          private
+          def decorations
+            @decorators.reduce({}) { |memo, d| d.decorate(memo, [@resource]) }
+          end
 
           def binding
             @resource

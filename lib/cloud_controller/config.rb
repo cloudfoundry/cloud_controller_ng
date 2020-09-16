@@ -12,6 +12,8 @@ require 'cloud_controller/config_schemas/route_syncer_schema'
 require 'cloud_controller/config_schemas/worker_schema'
 require 'cloud_controller/config_schemas/deployment_updater_schema'
 require 'cloud_controller/config_schemas/rotatate_database_key_schema'
+require 'utils/hash_utils'
+require 'cloud_controller/internal_api'
 
 module VCAP::CloudController
   class Config
@@ -163,6 +165,10 @@ module VCAP::CloudController
                                               file = get(:kubernetes, :service_account, :token_file)
                                               File.read(file)
                                             end
+    end
+
+    def package_image_registry_configured?
+      !get(:packages, :image_registry).nil?
     end
 
     private

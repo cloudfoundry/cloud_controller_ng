@@ -458,38 +458,6 @@ RSpec.describe 'Space Manifests' do
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
       end
     end
-
-    # context 'when the app has kpack lifecyle' do
-    #   let(:buildpack) { nil }
-    #   let(:kpack_app_model) { VCAP::CloudController::AppModel.make(:kpack, space: space) }
-    #   let(:yml_manifest) do
-    #     {
-    #       'applications' => [
-    #         { 'name' => kpack_app_model.name,
-    #           'buildpacks' => [
-    #             'paketo/bogus',
-    #           ]
-    #         }
-    #       ]
-    #     }.to_yaml
-    #   end
-    #   before do
-    #     TestConfig.override(kubernetes: { host_url: 'kube.com' })
-    #   end
-    #
-    #   it 'applies the manifest' do
-    #     # TODO: how to request buildpack? is this the right place for this test?
-    #     # context:code does go to app_manifest_mesage:256 but the requested_buildpacks are empty.
-    #     # How do we set it when the only action is apply this yaml? There is a buildpack here but that is not the "requested buildpacks list"
-    #     post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-    #
-    #     kpack_app_model.reload
-    #
-    #     lifecycle_data = kpack_app_model.lifecycle_data
-    #     expect(lifecycle_data.buildpacks).to include('paketo/bogus')
-    #     expect(lifecycle_data.type).to eq(Lifecycles::KPACK)
-    #   end
-    # end
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
@@ -701,6 +669,27 @@ RSpec.describe 'Space Manifests' do
 
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+        end
+      end
+
+      context 'when there is a field with an invalid type' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => 'new-app',
+                'stack' => { 'hash' => 'but should be a string' }
+              },
+            ]
+          }.to_yaml
+        end
+
+        it 'returns an appropriate error' do
+          post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to eq("For application 'new-app': Stack must be a string")
         end
       end
     end

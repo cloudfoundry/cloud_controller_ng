@@ -1,4 +1,7 @@
 require 'jobs/v3/services/update_broker_job'
+require 'actions/metadata_update'
+require 'jobs/enqueuer'
+require 'jobs/queues'
 
 module VCAP::CloudController
   module V3

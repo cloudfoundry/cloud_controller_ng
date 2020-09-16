@@ -309,6 +309,19 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
+    context 'when the package is stored in an image registry' do
+      before do
+        TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+      end
+
+      it 'returns 422' do
+        get :download, params: { guid: package.guid }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('UnprocessableEntity')
+      end
+    end
+
     context 'when the package cannot be found' do
       it 'returns 404' do
         get :download, params: { guid: 'a-bogus-guid' }

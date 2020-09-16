@@ -214,6 +214,11 @@ RSpec.describe 'v3 service route bindings' do
         expect(job.operation).to eq('service_route_bindings.create')
         expect(job.resource_guid).to eq(binding.guid)
         expect(job.resource_type).to eq('service_route_binding')
+
+        get "/v3/jobs/#{job.guid}", nil, space_dev_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['guid']). to eq(job.guid)
       end
 
       describe 'the pollable job' do
@@ -314,11 +319,9 @@ RSpec.describe 'v3 service route bindings' do
 
           before do
             stub_request(:get, broker_binding_last_operation_url).
-              with(query: {
-                operation: operation,
-                service_id: service_instance.service_plan.service.unique_id,
-                plan_id: service_instance.service_plan.unique_id,
-              }).
+              with(query: hash_including({
+                operation: operation
+              })).
               to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
           end
 
@@ -381,65 +384,7 @@ RSpec.describe 'v3 service route bindings' do
             end
           end
 
-          context 'last operation response is 200 OK and indicates failure' do
-            let(:state) { 'failed' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq(state)
-              expect(binding.last_operation.description).to eq(description)
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 400 Bad Request' do
-            let(:last_operation_status_code) { 400 }
-            let(:state) { 'failed' }
-            let(:description) { 'a helpful description' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq(state)
-              expect(binding.last_operation.description).to eq(description)
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 404 Not Found' do
-            let(:last_operation_status_code) { 404 }
-            let(:last_operation_body) { 'cannot see it' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('failed')
-              expect(binding.last_operation.description).to eq('The service broker rejected the request. Status Code: 404 Not Found, Body: "cannot see it"')
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-            end
-          end
-
-          context 'last operation response is 500 Internal Server Error' do
-            let(:last_operation_status_code) { 500 }
-            let(:last_operation_body) { 'something awful' }
-
-            it 'updates the binding and job' do
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('failed')
-              expect(binding.last_operation.description).to eq('The service broker returned an invalid response. Status Code: 500 Internal Server Error, Body: "something awful"')
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-            end
-          end
+          it_behaves_like 'create binding last operation response handling'
 
           context 'binding not retrievable' do
             let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
@@ -753,6 +698,50 @@ RSpec.describe 'v3 service route bindings' do
         expect(route_binding_guids).to match_array(expected_route_binding_guids)
       end
     end
+
+    describe 'include' do
+      it 'can include `service_instance`' do
+        instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
+        other_instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
+
+        1.times { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
+        2.times { VCAP::CloudController::RouteBinding.make(service_instance: other_instance) }
+
+        get '/v3/service_route_bindings?include=service_instance', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(2).items
+        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+      end
+
+      it 'can include `route`' do
+        route = VCAP::CloudController::Route.make
+        other_route = VCAP::CloudController::Route.make
+
+        1.times do
+          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
+          VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
+        end
+
+        2.times do
+          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: other_route.space)
+          VCAP::CloudController::RouteBinding.make(route: other_route, service_instance: si)
+        end
+
+        get '/v3/service_route_bindings?include=route', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['routes']).to have(2).items
+        guids = parsed_response['included']['routes'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(route.guid, other_route.guid)
+      end
+
+      it 'rejects requests with invalid associations' do
+        get '/v3/service_route_bindings?include=planet', nil, admin_headers
+        expect(last_response).to have_status_code(400)
+      end
+    end
   end
 
   describe 'GET /v3/service_route_bindings/:guid' do
@@ -808,6 +797,33 @@ RSpec.describe 'v3 service route bindings' do
             'code' => 10010,
           })
         )
+      end
+    end
+
+    describe 'include' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+
+      it 'can include `service_instance`' do
+        get "/v3/service_route_bindings/#{guid}?include=service_instance", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(1).items
+        service_instance_guid = parsed_response['included']['service_instances'][0]['guid']
+        expect(service_instance_guid).to eq(service_instance.guid)
+      end
+
+      it 'can include `route`' do
+        get "/v3/service_route_bindings/#{guid}?include=route", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['routes']).to have(1).items
+        route_guid = parsed_response['included']['routes'][0]['guid']
+        expect(route_guid).to eq(route.guid)
+      end
+
+      it 'rejects requests with invalid associations' do
+        get "/v3/service_route_bindings/#{guid}?include=planet", nil, admin_headers
+        expect(last_response).to have_status_code(400)
       end
     end
   end

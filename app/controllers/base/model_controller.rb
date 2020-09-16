@@ -1,4 +1,6 @@
 require 'presenters/api/job_presenter'
+require 'controllers/base/base_controller'
+require 'cloud_controller/rest_controller/controller_dsl'
 
 module VCAP::CloudController::RestController
   # Wraps models and presents collection and per object rest end points

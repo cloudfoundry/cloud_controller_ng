@@ -1,4 +1,8 @@
+require 'steno'
 require 'steno/codec_rfc3339'
+require 'steno/config'
+require 'steno/context'
+
 module VCAP::CloudController
   class StenoConfigurer
     def initialize(logging_config)

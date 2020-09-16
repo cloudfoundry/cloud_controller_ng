@@ -8,6 +8,9 @@ module VCAP::CloudController::Metrics
       @updaters = updaters
       @log_counter = log_counter
       @logger = logger
+      @known_job_queues = {
+        VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config).to_sym => 0
+      }
     end
 
     def setup_updates
@@ -75,10 +78,12 @@ module VCAP::CloudController::Metrics
 
       total                      = 0
       pending_job_count_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
+        @known_job_queues[row[:queue].to_sym] = 0
         total += row[:count]
         hash[row[:queue].to_sym] = row[:count]
       end
 
+      pending_job_count_by_queue.reverse_merge!(@known_job_queues)
       @updaters.each { |u| u.update_job_queue_length(pending_job_count_by_queue, total) }
     end
 
@@ -93,10 +98,12 @@ module VCAP::CloudController::Metrics
 
       total                = 0
       failed_jobs_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
+        @known_job_queues[row[:queue].to_sym] = 0
         total += row[:count]
         hash[row[:queue].to_sym] = row[:count]
       end
 
+      failed_jobs_by_queue.reverse_merge!(@known_job_queues)
       @updaters.each { |u| u.update_failed_job_count(failed_jobs_by_queue, total) }
     end
 

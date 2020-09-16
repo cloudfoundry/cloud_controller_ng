@@ -7,6 +7,8 @@ require 'utils/uri_utils'
 require 'models/runtime/helpers/package_state_calculator.rb'
 require 'models/helpers/process_types'
 require 'models/helpers/health_check_types'
+require 'cloud_controller/serializer'
+require 'cloud_controller/integer_array_serializer'
 
 require_relative 'buildpack'
 

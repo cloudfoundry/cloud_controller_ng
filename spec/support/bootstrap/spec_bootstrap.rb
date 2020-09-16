@@ -1,10 +1,17 @@
 require 'support/bootstrap/test_config'
 require 'support/bootstrap/table_recreator'
 require 'cloud_controller/seeds'
+require 'cloud_controller/telemetry_logger'
+require 'cloud_controller/steno_configurer'
 
 module VCAP::CloudController
   module SpecBootstrap
-    def self.init
+    @initialized = false
+
+    def self.init(recreate_tables: true)
+      return if @initialized
+
+      @initialized = true
       ENV['CC_TEST'] = 'true'
       FileUtils.mkdir_p(Paths::ARTIFACTS)
 
@@ -22,8 +29,10 @@ module VCAP::CloudController
 
       db_config = DbConfig.new
 
-      db_resetter = TableRecreator.new(db_config.connection)
-      db_resetter.recreate_tables
+      if recreate_tables
+        db_resetter = TableRecreator.new(db_config.connection)
+        db_resetter.recreate_tables
+      end
 
       DB.load_models(db_config.config, db_config.db_logger)
     end

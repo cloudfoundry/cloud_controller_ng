@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/create_service_instance_job'
 require 'cloud_controller/errors/api_error'
 

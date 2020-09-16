@@ -1,3 +1,5 @@
+require 'fetchers/service_credential_binding_list_fetcher'
+
 module VCAP
   module CloudController
     class ServiceCredentialBindingFetcher

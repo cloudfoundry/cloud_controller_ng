@@ -1,4 +1,5 @@
 require 'vcap/config'
+require 'cloud_controller/resource_pool'
 
 module VCAP::CloudController
   module ConfigSchemas
@@ -49,7 +50,7 @@ module VCAP::CloudController
             :url => String,
             :resource_id => String,
             :internal_url => String,
-            :ca_file => String,
+            optional(:ca_file) => String,
             :client_timeout => Integer,
             optional(:symmetric_secret) => String,
             optional(:symmetric_secret2) => String,

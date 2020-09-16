@@ -39,9 +39,9 @@ def expect_filtered_resources(endpoint, filter, list)
   expect(last_response).to have_status_code(200)
   expect(parsed_response.fetch('resources').length).to eq(list.length)
 
-  list.each_with_index do |resource, index|
-    expect(parsed_response['resources'][index]['guid']).to eq(resource.guid)
-  end
+  returned_guids = parsed_response['resources'].map { |r| r['guid'] }
+  resources_guids = list.map(&:guid)
+  expect(returned_guids).to match_array(resources_guids)
 end
 
 RSpec.shared_examples 'paginated fields response' do |endpoint, resource, keys|

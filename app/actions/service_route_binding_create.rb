@@ -47,7 +47,10 @@ module VCAP::CloudController
 
       def poll(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.fetch_service_binding_last_operation(binding)
+
+        details = fetch_last_operation(client, binding)
+        return PollingNotComplete.new unless details
+
         attributes = {}
 
         complete = details[:last_operation][:state] == 'succeeded'
@@ -75,23 +78,12 @@ module VCAP::CloudController
         else
           PollingNotComplete.new(details[:retry_after])
         end
-      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
-             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed => e
-
-        binding.save_with_new_operation({}, {
-          type: 'create',
-          state: 'failed',
-          description: e.message,
-        })
-
-        raise e
       rescue => e
         binding.save_with_new_operation({}, {
           type: 'create',
           state: 'failed',
           description: e.message,
         })
-
         return PollingComplete.new
       end
 
@@ -107,6 +99,20 @@ module VCAP::CloudController
       private
 
       attr_reader :service_event_repository
+
+      def fetch_last_operation(client, binding)
+        client.fetch_service_binding_last_operation(binding)
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
+             HttpRequestError => e
+        binding.save_with_new_operation({}, {
+          type: 'create',
+          state: 'in progress',
+          description: e.message,
+        })
+
+        return nil
+      end
 
       def save_incomplete_binding(precursor, operation)
         precursor.save_with_new_operation({},

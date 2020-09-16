@@ -357,7 +357,7 @@ module CloudController
     end
 
     def packer
-      if config.get(:packages, :image_registry)
+      if config.package_image_registry_configured?
         Packager::RegistryBitsPacker.new
       elsif use_bits_service
         Packager::BitsServicePacker.new

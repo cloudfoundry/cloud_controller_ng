@@ -1,3 +1,5 @@
+require 'cloud_controller/paging/paginated_result'
+
 module VCAP::CloudController
   class SequelPaginator
     def get_page(sequel_dataset, pagination_options)
