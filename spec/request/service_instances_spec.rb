@@ -1309,12 +1309,6 @@ RSpec.describe 'V3 service instances' do
               expect(instance.last_operation.type).to eq('create')
               expect(instance.last_operation.state).to eq('failed')
             end
-
-            it 'fires an orphan mitigation job' do
-              jobs = Delayed::Job.where(failed_at: nil).all
-              expect(jobs).to have(1).jobs
-              expect(jobs.first).to be_a_fully_wrapped_job_of(VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance)
-            end
           end
         end
 
