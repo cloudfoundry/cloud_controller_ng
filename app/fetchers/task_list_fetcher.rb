@@ -73,7 +73,7 @@ module VCAP::CloudController
           )
         end
 
-        task_dataset
+        BaseListFetcher.filter(message, task_dataset, TaskModel)
       end
     end
   end

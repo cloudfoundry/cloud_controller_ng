@@ -711,6 +711,15 @@ RSpec.describe 'Tasks' do
           }
         )
       end
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::TaskModel }
+        let(:additional_resource_params) { { app: app_model } }
+        let(:headers) { admin_headers }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/tasks?#{filters}", nil, headers }
+        end
+      end
     end
   end
 
