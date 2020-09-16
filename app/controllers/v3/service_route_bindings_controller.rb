@@ -24,13 +24,8 @@ class ServiceRouteBindingsController < ApplicationController
 
     case service_instance
     when ManagedServiceInstance
-      bind_job = VCAP::CloudController::V3::CreateRouteBindingJob.new(
-        precursor.guid,
-        user_audit_info: user_audit_info,
-        parameters: message.parameters,
-      )
-      pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+      pollable_job_guid = enqueue_bind_job(precursor.guid, message.parameters)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
       action.bind(precursor)
       render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(precursor)
@@ -87,6 +82,16 @@ class ServiceRouteBindingsController < ApplicationController
     message_type.from_params(query_params).tap do |message|
       invalid_param!(message.errors.full_messages) unless message.valid?
     end
+  end
+
+  def enqueue_bind_job(binding_guid, parameters)
+    bind_job = VCAP::CloudController::V3::CreateRouteBindingJob.new(
+      binding_guid,
+      user_audit_info: user_audit_info,
+      parameters: parameters,
+    )
+    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job.guid
   end
 
   def fetch_route_bindings(message)
