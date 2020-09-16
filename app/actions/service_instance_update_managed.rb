@@ -19,6 +19,8 @@ module VCAP::CloudController
       updater.raise_if_cannot_proceed!
 
       begin
+        return updater.metadata_sync, nil unless is_deleting?(service_instance) || !updater.only_metadata?
+
         lock = UpdaterLock.new(service_instance)
         lock.lock!
 
@@ -35,11 +37,15 @@ module VCAP::CloudController
           return si, nil
         end
       ensure
-        lock.unlock_and_fail! if lock.needs_unlock?
+        lock.unlock_and_fail! if lock.present? && lock.needs_unlock?
       end
     end
 
     private
+
+    def is_deleting?(service_instance)
+      service_instance.operation_in_progress? && service_instance.last_operation[:type] == 'delete'
+    end
 
     attr_reader :service_event_repository
 
@@ -71,12 +77,21 @@ module VCAP::CloudController
         service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
       end
 
+      def only_metadata?
+        message.requested_keys.one? && message.requested?(:metadata)
+      end
+
+      def metadata_sync
+        MetadataUpdate.update(service_instance, message)
+        service_instance
+      end
+
       def update_sync
         logger = Steno.logger('cc.action.service_instance_update')
 
         service_instance.db.transaction do
           service_instance.update(message.updates) if message.updates.any?
-          MetadataUpdate.update(service_instance, message)
+          metadata_sync
         end
 
         logger.info("Finished updating service_instance #{service_instance.guid}")

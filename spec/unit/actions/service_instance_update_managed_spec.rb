@@ -372,16 +372,120 @@ module VCAP::CloudController
         end
       end
 
-      context 'when an operation is in progress' do
+      context 'when a delete is in progress' do
         let(:body) { {} }
 
         before do
           service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
         end
 
+        it 'raises with metadata only updates' do
+          msg = ServiceInstanceUpdateManagedMessage.new({
+                                                            metadata: {
+                                                                labels: {
+                                                                    foo: 'bar',
+                                                                    'pre.fix/to_delete': nil,
+                                                                },
+                                                                annotations: {
+                                                                    alpha: 'beta',
+                                                                    'pre.fix/to_delete': nil,
+                                                                }
+                                                            }
+                                                        })
+          expect {
+            action.update(service_instance, msg)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+          end
+        end
+
         it 'raises' do
           expect {
             action.update(service_instance, message)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+          end
+        end
+      end
+
+      context 'when an update is in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+        end
+
+        it 'allows metadata updates' do
+          msg = ServiceInstanceUpdateManagedMessage.new({
+                                                            metadata: {
+                                                                labels: {
+                                                                    foo: 'bar',
+                                                                    'pre.fix/to_delete': nil,
+                                                                },
+                                                                annotations: {
+                                                                    alpha: 'beta',
+                                                                    'pre.fix/to_delete': nil,
+                                                                }
+                                                            }
+                                                        })
+          expect { action.update(service_instance, msg) }.not_to raise_error
+
+          service_instance.reload
+
+          expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
+            { prefix: nil, key: 'foo', value: 'bar' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+          ])
+          expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
+            { prefix: nil, key: 'alpha', value: 'beta' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          ])
+        end
+
+        it 'raises with non metadata updates' do
+          msg = ServiceInstanceUpdateManagedMessage.new({ name: 'new-name' })
+          expect {
+            action.update(service_instance, msg)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+          end
+        end
+      end
+
+      context 'when a create is in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+        end
+
+        it 'allows metadata updates' do
+          msg = ServiceInstanceUpdateManagedMessage.new({
+                                                            metadata: {
+                                                                labels: {
+                                                                    foo: 'bar',
+                                                                    'pre.fix/to_delete': nil,
+                                                                },
+                                                                annotations: {
+                                                                    alpha: 'beta',
+                                                                    'pre.fix/to_delete': nil,
+                                                                }
+                                                            }
+                                                        })
+          expect { action.update(service_instance, msg) }.not_to raise_error
+
+          service_instance.reload
+
+          expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
+            { prefix: nil, key: 'foo', value: 'bar' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+          ])
+          expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
+            { prefix: nil, key: 'alpha', value: 'beta' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          ])
+        end
+
+        it 'raises with non metadata updates' do
+          msg = ServiceInstanceUpdateManagedMessage.new({ name: 'new-name' })
+          expect {
+            action.update(service_instance, msg)
           }.to raise_error CloudController::Errors::ApiError do |err|
             expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
           end
