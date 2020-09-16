@@ -263,10 +263,6 @@ module VCAP::Services::ServiceBrokers::V2
           }
       }
 
-      if result[:last_operation][:state] == 'failed' && instance.last_operation.type == 'create'
-        @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
-      end
-
       result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
       result[:retry_after] = response[HttpResponse::HEADER_RETRY_AFTER] if response[HttpResponse::HEADER_RETRY_AFTER]
       result.merge(parsed_response.symbolize_keys)
