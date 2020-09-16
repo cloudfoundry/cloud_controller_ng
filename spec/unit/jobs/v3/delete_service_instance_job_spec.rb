@@ -1,6 +1,9 @@
-require 'spec_helper'
-require 'jobs/v3/create_service_instance_job'
+require 'db_spec_helper'
+require 'support/shared_examples/jobs/delayed_job'
+require 'jobs/v3/delete_service_instance_job'
 require 'cloud_controller/errors/api_error'
+require 'cloud_controller/user_audit_info'
+require 'services/service_brokers/v2/http_response'
 
 module VCAP::CloudController
   module V3

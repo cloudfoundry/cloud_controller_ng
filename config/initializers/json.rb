@@ -1,3 +1,5 @@
+require 'active_support/json/encoding'
+
 module CCInitializers
   def self.json(_cc_config)
     ActiveSupport.json_encoder = Class.new do

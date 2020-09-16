@@ -1,3 +1,5 @@
+require 'cloud_controller/http_response_error'
+
 module VCAP::Services
   module ServiceBrokers
     module V2

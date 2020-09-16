@@ -1,3 +1,5 @@
+require 'cloud_controller/errors/details'
+
 module CloudController
   module Errors
     class ApiError < StandardError

@@ -1,4 +1,5 @@
 require 'fetchers/base_list_fetcher'
+require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   class ServiceUsageEventListFetcher < BaseListFetcher

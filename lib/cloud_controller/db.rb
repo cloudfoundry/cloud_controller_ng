@@ -1,3 +1,4 @@
+require 'sequel'
 require 'cloud_controller/db_migrator'
 require 'cloud_controller/db_connection/options_factory'
 require 'cloud_controller/db_connection/finalizer'

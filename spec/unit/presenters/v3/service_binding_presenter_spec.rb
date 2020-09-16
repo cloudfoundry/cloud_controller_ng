@@ -1,8 +1,11 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'support/link_helpers'
 require 'presenters/v3/service_binding_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ServiceBindingPresenter do
+    include LinkHelpers
+
     let(:presenter) { ServiceBindingPresenter.new(service_binding) }
     let(:credentials) { { 'very-secret' => 'password' }.to_json }
     let(:volume_mounts) { [{ 'container_dir' => '/a/reasonable/path', 'device' => { 'very-secret' => 'password' } }] }

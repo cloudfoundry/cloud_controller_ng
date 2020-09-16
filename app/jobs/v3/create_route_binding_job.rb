@@ -1,4 +1,6 @@
 require 'jobs/reoccurring_job'
+require 'actions/service_route_binding_create'
+require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   module V3

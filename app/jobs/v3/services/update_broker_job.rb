@@ -1,4 +1,5 @@
 require 'presenters/mixins/metadata_presentation_helpers'
+require 'jobs/cc_job'
 
 module VCAP::CloudController
   module V3

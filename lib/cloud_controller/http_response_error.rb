@@ -1,3 +1,5 @@
+require 'cloud_controller/structured_error'
+
 class HttpResponseError < StructuredError
   attr_reader :uri, :method, :status
 

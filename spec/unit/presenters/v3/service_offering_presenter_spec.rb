@@ -3,6 +3,8 @@ require 'support/link_helpers'
 require 'presenters/v3/service_offering_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter do
+  include LinkHelpers
+
   let(:guid) { 'some-offering-guid' }
   let(:name) { 'some-offering-name' }
   let(:description) { 'some offering description' }

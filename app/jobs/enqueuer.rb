@@ -1,5 +1,8 @@
 require 'clockwork'
 require 'cloud_controller/clock/job_timeout_calculator'
+require 'jobs/pollable_job_wrapper'
+require 'jobs/logging_context_job'
+require 'jobs/timeout_job'
 
 module VCAP::CloudController
   module Jobs

@@ -1,8 +1,11 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'support/link_helpers'
 require 'presenters/v3/service_instance_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ServiceInstancePresenter do
+    include LinkHelpers
+
     let(:presenter) { described_class.new(service_instance) }
     let(:result) { presenter.to_hash.deep_symbolize_keys }
 

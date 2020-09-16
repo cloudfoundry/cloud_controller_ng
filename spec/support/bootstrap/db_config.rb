@@ -1,3 +1,6 @@
+require 'cloud_controller/db'
+require 'cloud_controller/database_parts_parser'
+
 class DbConfig
   def initialize(connection_string: ENV['DB_CONNECTION_STRING'], db_type: ENV['DB'])
     @connection_string = connection_string || default_connection_string(db_type || 'postgres')

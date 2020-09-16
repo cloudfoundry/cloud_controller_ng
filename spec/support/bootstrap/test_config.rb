@@ -1,6 +1,8 @@
 require 'support/bootstrap/db_config'
 require 'support/paths'
 require 'cloud_controller/config'
+require 'fog/core/mock'
+require 'cloud_controller/dependency_locator'
 
 module TestConfig
   class << self

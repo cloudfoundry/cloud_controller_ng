@@ -1,3 +1,5 @@
+require 'allowy/context'
+
 module VCAP::CloudController
   module Security
     class AccessContext

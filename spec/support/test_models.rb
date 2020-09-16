@@ -1,3 +1,6 @@
+require 'access/base_access'
+require 'controllers/base/model_controller'
+
 module VCAP::CloudController
   class TestModelDestroyDep < Sequel::Model; end
   class TestModelNullifyDep < Sequel::Model; end
