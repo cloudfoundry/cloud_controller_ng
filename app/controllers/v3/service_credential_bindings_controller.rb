@@ -48,12 +48,14 @@ class ServiceCredentialBindingsController < ApplicationController
     resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
     unauthorized! unless can_write_to_space?(app.space)
 
-    action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
+    action = V3::ServiceCredentialBindingCreate.new(user_audit_info, volume_services_enabled?)
     binding = action.precursor(service_instance, app: app, name: message.name)
     action.bind(binding)
     render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
+  rescue V3::ServiceCredentialBindingCreate::Unimplemented
+    head :not_implemented
   end
 
   def destroy
@@ -124,6 +126,10 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def config
     @config ||= VCAP::CloudController::Config.config
+  end
+
+  def volume_services_enabled?
+    config.get(:volume_services_enabled)
   end
 
   def uaa_client

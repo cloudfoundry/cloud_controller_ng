@@ -802,12 +802,11 @@ RSpec.describe 'v3 service credential bindings' do
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
     let(:service_instance_details) {
       {
-        space: space,
         syslog_drain_url: 'http://syslog.example.com/wow',
         credentials: { password: 'foo' }
       }
     }
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
     let(:app_guid) { app_to_bind_to.guid }
     let(:service_instance_guid) { service_instance.guid }
     let(:create_body) {
@@ -821,67 +820,80 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
 
-    describe 'a successful creation' do
-      before do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(201)
-        expect(parsed_response).to have_key('guid')
-        @binding_guid = parsed_response['guid']
-      end
+    context 'user-provided service' do
+      describe 'a successful creation' do
+        before do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to have_key('guid')
+          @binding_guid = parsed_response['guid']
+        end
 
-      it 'creates a new service credential binding' do
-        binding_response = {
-          guid: @binding_guid,
-          created_at: iso8601,
-          updated_at: iso8601,
-          name: 'some-name',
-          type: 'app',
-          last_operation: {
-            type: 'create',
-            state: 'succeeded',
+        it 'creates a new service credential binding' do
+          binding_response = {
+            guid: @binding_guid,
             created_at: iso8601,
             updated_at: iso8601,
-            description: nil,
-          },
-          relationships: {
-            service_instance: { data: { guid: service_instance_guid } },
-            app: { data: { guid: app_guid } }
-          },
-          links: {
-            self: {
-              href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}"
+            name: 'some-name',
+            type: 'app',
+            last_operation: {
+              type: 'create',
+              state: 'succeeded',
+              created_at: iso8601,
+              updated_at: iso8601,
+              description: nil,
             },
-            details: {
-              href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}/details"
+            relationships: {
+              service_instance: { data: { guid: service_instance_guid } },
+              app: { data: { guid: app_guid } }
             },
-            service_instance: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
-            },
-            app: {
-              href: "#{link_prefix}/v3/apps/#{app_guid}"
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}"
+              },
+              details: {
+                href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}/details"
+              },
+              service_instance: {
+                href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
+              },
+              app: {
+                href: "#{link_prefix}/v3/apps/#{app_guid}"
+              }
             }
           }
-        }
-        expect(parsed_response).to match_json_response(binding_response)
+          expect(parsed_response).to match_json_response(binding_response)
 
-        get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response).to match_json_response(binding_response)
+          get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to match_json_response(binding_response)
+        end
+
+        it 'logs an audit event' do
+          event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
+          expect(event).to be
+          expect(event.actee).to eq(@binding_guid)
+        end
+
+        it 'sets the right details' do
+          get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to match_json_response({
+                                                           credentials: { password: 'foo' },
+                                                           syslog_drain_url: 'http://syslog.example.com/wow'
+                                                         })
+        end
       end
+    end
 
-      it 'logs an audit event' do
-        event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
-        expect(event).to be
-        expect(event.actee).to eq(@binding_guid)
-      end
+    context 'managed service' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 
-      it 'sets the right details' do
-        get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response).to match_json_response({
-          credentials: { password: 'foo' },
-          syslog_drain_url: 'http://syslog.example.com/wow'
-        })
+      describe 'a successful creation' do
+        it 'returns unimplemented' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(501)
+        end
       end
     end
 
@@ -1032,11 +1044,25 @@ RSpec.describe 'v3 service credential bindings' do
       context 'when the service instance is managed' do
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 
-        it 'returns a 422 when the service instance does not exist' do
+        it 'returns a 422 when the plan is not bindable' do
+          service_instance.service_plan.update(bindable: false)
+
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('Cannot create credential bindings for managed service instances'),
+            'detail' => include('Service plan does not allow bindings'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+
+        it 'returns a 422 when the plan is no longer available' do
+          service_instance.service_plan.update(active: false)
+
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('Service plan is not available'),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))

@@ -1,10 +1,18 @@
-require 'spec_helper'
-require 'actions/service_route_binding_create'
+require 'db_spec_helper'
+require 'actions/service_credential_binding_create'
+require 'cloud_controller/user_audit_info'
 
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingCreate do
-      subject(:action) { described_class.new(user_audit_info) }
+      subject(:action) do
+        described_class.new(
+          user_audit_info,
+          volume_mount_services_enabled
+        )
+      end
+
+      let(:volume_mount_services_enabled) { true }
       let(:space) { Space.make }
       let(:app) { AppModel.make(space: space) }
       let(:binding_details) {}
@@ -69,13 +77,75 @@ module VCAP::CloudController
         end
 
         context 'managed service instance' do
-          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:details) do
+            {
+              space: space
+            }
+          end
 
-          it 'raises an error' do
-            expect { action.precursor(service_instance, app: app) }.to raise_error(
-              ServiceCredentialBindingCreate::UnprocessableCreate,
-              'Cannot create credential bindings for managed service instances'
-            )
+          let(:service_instance) { ManagedServiceInstance.make(**details) }
+
+          context 'when plan is not bindable' do
+            before do
+              service_instance.service_plan.update(bindable: false)
+            end
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, app: app) }.to raise_error(
+                ServiceCredentialBindingCreate::UnprocessableCreate,
+                'Service plan does not allow bindings'
+              )
+            end
+          end
+
+          context 'when plan is not available' do
+            before do
+              service_instance.service_plan.update(active: false)
+            end
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, app: app) }.to raise_error(
+                ServiceCredentialBindingCreate::UnprocessableCreate,
+                'Service plan is not available'
+              )
+            end
+          end
+
+          context 'when the service is a volume service and service volume mounting is disabled' do
+            let(:volume_mount_services_enabled) { false }
+            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, app: app) }.to raise_error(
+                ServiceCredentialBindingCreate::UnprocessableCreate,
+                'Support for volume mount services is disabled'
+              )
+            end
+          end
+
+          context 'when binding from an app in a shared space' do
+            let(:other_space) { Space.make }
+            let(:service_instance) do
+              ManagedServiceInstance.make(space: other_space).tap do |si|
+                si.add_shared_space(space)
+              end
+            end
+
+            it 'raises an error that it is not implemented' do
+              expect { action.precursor(service_instance, app: app) }.to raise_error(
+                ServiceCredentialBindingCreate::Unimplemented,
+                'Cannot create credential bindings for managed service instances'
+              )
+            end
+          end
+
+          context 'when successful' do
+            it 'raises an error that it is not implemented' do
+              expect { action.precursor(service_instance, app: app) }.to raise_error(
+                ServiceCredentialBindingCreate::Unimplemented,
+                'Cannot create credential bindings for managed service instances'
+              )
+            end
           end
         end
       end
