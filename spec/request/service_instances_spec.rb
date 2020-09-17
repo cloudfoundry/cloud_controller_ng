@@ -1577,7 +1577,7 @@ RSpec.describe 'V3 service instances' do
           api_call.call(space_dev_headers)
 
           service_instance.reload
-          expect(service_instance.reload.tags).to eq(%w(baz quz))
+          expect(service_instance.tags).to eq(%w(baz quz))
 
           expect_metadata(
             service_instance,
@@ -1677,7 +1677,7 @@ RSpec.describe 'V3 service instances' do
           expect(service_instance.last_operation.state).to eq('in progress')
         end
 
-        it 'does not update the service instance' do
+        it 'does not immediately update the service instance' do
           api_call.call(space_dev_headers)
 
           service_instance.reload
@@ -2490,6 +2490,55 @@ RSpec.describe 'V3 service instances' do
               'code' => 10008,
             })
           )
+        end
+      end
+    end
+
+    context 'when an operation is in progress' do
+      let(:service_instance) {
+        si = VCAP::CloudController::ManagedServiceInstance.make(
+          space: space
+        )
+        si.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'almost there, I promise' })
+        si
+      }
+      let(:guid) { service_instance.guid }
+      let(:request_body) {
+        {
+            metadata: {
+                labels: { unit: 'metre', distance: '1003' },
+                annotations: { location: 'london' }
+            }
+        }
+      }
+
+      context 'and the update contains metadata only' do
+        it 'updates the metadata' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response.dig('metadata', 'labels')).to eq({ 'unit' => 'metre', 'distance' => '1003' })
+          expect(parsed_response.dig('metadata', 'annotations')).to eq({ 'location' => 'london' })
+        end
+
+        it 'does not update the service instance last operation' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['last_operation']).to include({
+                                                                   'type' => 'create',
+                                                                   'state' => 'in progress',
+                                                                   'description' => 'almost there, I promise'
+                                                               })
+        end
+      end
+
+      context 'and the update contains more than just metadata' do
+        it 'returns an error' do
+          request_body[:name] = 'new-name'
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(409)
+          response = parsed_response['errors'].first
+          expect(response).to include('title' => 'CF-AsyncServiceInstanceOperationInProgress')
+          expect(response).to include('detail' => include("An operation for service instance #{service_instance.name} is in progress"))
         end
       end
     end
