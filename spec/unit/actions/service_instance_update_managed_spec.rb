@@ -66,14 +66,17 @@ module VCAP::CloudController
 
           expect(service_instance.name).to eq('different-name')
           expect(service_instance.tags).to eq(%w(accounting couchbase nosql))
-          expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
-            { prefix: nil, key: 'foo', value: 'bar' },
-            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-          ])
-          expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
-            { prefix: nil, key: 'alpha', value: 'beta' },
-            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-          ])
+          expect_metadata(
+            service_instance,
+              annotations: [
+                { prefix: nil, key: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+              ],
+              labels: [
+                { prefix: nil, key: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+              ]
+          )
         end
 
         it 'does not update the maintenance_info when it is unchanged' do
@@ -430,14 +433,17 @@ module VCAP::CloudController
 
           service_instance.reload
 
-          expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
-            { prefix: nil, key: 'foo', value: 'bar' },
-            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-          ])
-          expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
-            { prefix: nil, key: 'alpha', value: 'beta' },
-            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-          ])
+          expect_metadata(
+            service_instance,
+              annotations: [
+                { prefix: nil, key: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+              ],
+              labels: [
+                { prefix: nil, key: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+              ]
+          )
         end
 
         it 'raises with non metadata updates' do
@@ -472,14 +478,17 @@ module VCAP::CloudController
 
           service_instance.reload
 
-          expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
-            { prefix: nil, key: 'foo', value: 'bar' },
-            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-          ])
-          expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
-            { prefix: nil, key: 'alpha', value: 'beta' },
-            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-          ])
+          expect_metadata(
+            service_instance,
+              annotations: [
+                { prefix: nil, key: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+              ],
+              labels: [
+                { prefix: nil, key: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+              ]
+          )
         end
 
         it 'raises with non metadata updates' do
@@ -753,5 +762,26 @@ module VCAP::CloudController
         end
       end
     end
+  end
+
+  def expect_metadata(instance, annotations: [], labels: [])
+    a = instance.annotations.map do |e|
+      {
+          prefix: e.key_prefix,
+          key: e.key_name,
+          value: e.value,
+      }
+    end
+
+    l = instance.labels.map do |e|
+      {
+          prefix: e.key_prefix,
+          key: e.key_name,
+          value: e.value,
+      }
+    end
+
+    expect(a).to match_array(annotations)
+    expect(l).to match_array(labels)
   end
 end
