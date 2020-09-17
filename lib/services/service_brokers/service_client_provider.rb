@@ -1,3 +1,6 @@
+require 'services/service_brokers/user_provided/client'
+require 'services/service_brokers/v2/client'
+
 module VCAP::Services
   class ServiceClientProvider
     def self.provide(opts={})

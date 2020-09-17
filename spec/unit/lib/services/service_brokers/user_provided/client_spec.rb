@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'services/service_brokers/user_provided/client'
 
 module VCAP::Services
   RSpec.describe ServiceBrokers::UserProvided::Client do

@@ -1,38 +1,42 @@
 module VCAP::Services
-  class ServiceBrokers::UserProvided::Client
-    def provision(_); end
+  module ServiceBrokers
+    module UserProvided
+      class Client
+        def provision(_); end
 
-    def bind(binding, arbitrary_parameters: nil, accepts_incomplete: nil)
-      if binding.class.name.demodulize == 'RouteBinding'
-        {
-          async: false,
-          binding: {
-            route_service_url: binding.service_instance.route_service_url,
+        def bind(binding, arbitrary_parameters: nil, accepts_incomplete: nil)
+          if binding.class.name.demodulize == 'RouteBinding'
+            {
+              async: false,
+              binding: {
+                route_service_url: binding.service_instance.route_service_url,
+              }
+            }
+          else
+            {
+              async: false,
+              binding: {
+                credentials: binding.service_instance.credentials,
+                syslog_drain_url: binding.service_instance.syslog_drain_url,
+              }
+            }
+          end
+        end
+
+        def unbind(*)
+          {
+            async: false
           }
-        }
-      else
-        {
-          async: false,
-          binding: {
-            credentials: binding.service_instance.credentials,
-            syslog_drain_url: binding.service_instance.syslog_drain_url,
+        end
+
+        def deprovision(_, _={})
+          {
+            last_operation: {
+              state: 'succeeded'
+            }
           }
-        }
+        end
       end
-    end
-
-    def unbind(*)
-      {
-        async: false
-      }
-    end
-
-    def deprovision(_, _={})
-      {
-        last_operation: {
-          state: 'succeeded'
-        }
-      }
     end
   end
 end
