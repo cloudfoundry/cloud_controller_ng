@@ -1,8 +1,9 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
-  class UserListFetcher
+  class UserListFetcher < BaseListFetcher
     class << self
       def fetch_all(message, readable_users_dataset)
         filter(message, readable_users_dataset)
@@ -29,7 +30,7 @@ module VCAP::CloudController
           )
         end
 
-        dataset
+        super(message, dataset, User)
       end
 
       def uaa_client

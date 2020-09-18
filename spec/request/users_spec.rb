@@ -362,6 +362,53 @@ RSpec.describe 'Users Request' do
         expect(last_response).to have_status_code(401)
       end
     end
+
+    # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
+    context 'filtering timestamps on creation' do
+      before do
+        allow(uaa_client).to receive(:users_for_ids).and_return({})
+      end
+
+      let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
+      let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
+      let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
+      let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+
+      it 'filters' do
+        get "/v3/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid, resource_2.guid)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_3.guid, resource_4.guid)
+      end
+    end
+
+    # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
+    context 'filtering timestamps on update' do
+      # before must occur before the let! otherwise the resources will be created with
+      # update_on_create: true
+      before do
+        VCAP::CloudController::User.plugin :timestamps, update_on_create: false
+        allow(uaa_client).to receive(:users_for_ids).and_return({})
+      end
+
+      let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
+      let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
+      let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
+      let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+
+      after do
+        VCAP::CloudController::User.plugin :timestamps, update_on_create: true
+      end
+
+      it 'filters' do
+        get "/v3/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid, resource_2.guid)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_3.guid, resource_4.guid)
+      end
+    end
   end
 
   describe 'GET /v3/users/:guid' do
