@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/space_fetcher'
 
 module VCAP::CloudController
@@ -13,7 +13,7 @@ module VCAP::CloudController
 
       context 'when the space is not found' do
         it 'returns nil' do
-          returned_space = AppFetcher.new.fetch('bogus-guid')
+          returned_space = SpaceFetcher.new.fetch('bogus-guid')
           expect(returned_space).to be_nil
         end
       end

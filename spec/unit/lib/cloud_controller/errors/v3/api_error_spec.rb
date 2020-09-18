@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/errors/v3/api_error'
 
 module CloudController::Errors::V3
   RSpec.describe ApiError do

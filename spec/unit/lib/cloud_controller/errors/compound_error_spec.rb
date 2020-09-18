@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/errors/compound_error'
+require 'cloud_controller/errors/api_error'
 
 module CloudController::Errors
   RSpec.describe CompoundError do

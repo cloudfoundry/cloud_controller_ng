@@ -1,4 +1,8 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'jobs/enqueuer'
+require 'jobs/delete_action_job'
+require 'jobs/runtime/model_deletion'
+require 'jobs/error_translator_job'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer, job_context: :api do

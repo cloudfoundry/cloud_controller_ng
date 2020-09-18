@@ -1,3 +1,4 @@
+SPEC_HELPER_LOADED = true
 require 'rubygems'
 
 begin

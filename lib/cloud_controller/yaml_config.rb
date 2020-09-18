@@ -1,3 +1,5 @@
+require 'yaml'
+
 module VCAP::CloudController
   class YAMLConfig
     class << self

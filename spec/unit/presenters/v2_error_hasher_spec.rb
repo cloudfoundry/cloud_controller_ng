@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'presenters/v2_error_hasher'
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/errors/not_authenticated'
 
 RSpec.describe V2ErrorHasher do
   subject(:error_hasher) { V2ErrorHasher.new(error) }

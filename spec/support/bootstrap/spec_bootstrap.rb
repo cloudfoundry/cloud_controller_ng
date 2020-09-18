@@ -9,7 +9,7 @@ module VCAP::CloudController
     @initialized = false
 
     def self.init(recreate_tables: true)
-      return if @initialized
+      return if @initialized && !recreate_tables
 
       @initialized = true
       ENV['CC_TEST'] = 'true'
