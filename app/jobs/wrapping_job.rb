@@ -1,3 +1,5 @@
+require 'jobs/cc_job'
+
 module VCAP::CloudController
   module Jobs
     class WrappingJob < VCAP::CloudController::Jobs::CCJob

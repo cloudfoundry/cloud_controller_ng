@@ -1,3 +1,5 @@
+require 'cloud_controller/structured_error'
+
 class BaseErrorHasher < Struct.new(:error)
   def sanitized_hash
     unsanitized_hash.keep_if { |k, _| allowed_keys.include? k }

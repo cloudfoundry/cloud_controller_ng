@@ -1,4 +1,8 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'presenters/v3_error_hasher'
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/errors/not_authenticated'
+require 'cloud_controller/errors/compound_error'
 
 RSpec.describe V3ErrorHasher do
   subject(:error_hasher) { V3ErrorHasher.new(error) }
