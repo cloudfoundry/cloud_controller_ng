@@ -357,7 +357,7 @@ RSpec.describe 'Users Request' do
 
       context 'when filtering by labels' do
         before do
-          allow(uaa_client).to receive(:users_for_ids).with(['1', '2']).and_return({})
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
         end
         it_behaves_like 'list_endpoint_with_common_filters' do
           let(:resource_klass) { VCAP::CloudController::User }
