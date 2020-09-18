@@ -1,3 +1,6 @@
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/errors/v3/details'
+
 module CloudController
   module Errors
     module V3

@@ -1,4 +1,5 @@
 require 'cloud_controller/yaml_config'
+require 'cloud_controller/errors/details'
 
 module CloudController
   module Errors

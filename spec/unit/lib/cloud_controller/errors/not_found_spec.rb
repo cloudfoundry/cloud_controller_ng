@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/errors/not_found'
 
 module CloudController::Errors
   RSpec.describe NotFound do
