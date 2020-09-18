@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'fetchers/app_revisions_fetcher'
+require 'fetchers/app_revisions_list_fetcher'
 
 module VCAP::CloudController
-  RSpec.describe AppRevisionsFetcher do
-    let(:fetcher) { AppRevisionsFetcher }
+  RSpec.describe AppRevisionsListFetcher do
+    let(:fetcher) { AppRevisionsListFetcher }
     let!(:app) { AppModel.make }
 
     let(:expired_droplet) { DropletModel.make(:droplet, app: app, state: DropletModel::EXPIRED_STATE) }

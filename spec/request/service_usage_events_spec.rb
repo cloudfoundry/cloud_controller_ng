@@ -122,7 +122,6 @@ RSpec.describe 'Service Usage Events' do
     end
 
     context 'filtering by timestamps' do
-      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
       let!(:event_1) { VCAP::CloudController::ServiceUsageEvent.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
       let!(:event_2) { VCAP::CloudController::ServiceUsageEvent.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
       let!(:event_3) { VCAP::CloudController::ServiceUsageEvent.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }

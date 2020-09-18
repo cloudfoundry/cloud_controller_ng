@@ -355,7 +355,7 @@ RSpec.describe 'Users Request' do
         end
       end
 
-      context 'when filtering by labels' do
+      context 'when filtering by created_ats and updated_ats' do
         before do
           allow(uaa_client).to receive(:users_for_ids).with(['1', '2']).and_return({})
         end

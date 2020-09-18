@@ -315,6 +315,62 @@ RSpec.describe 'Revisions' do
           expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(revisionB.guid, revisionC.guid)
         end
       end
+
+      context 'filtering by timestamps' do
+        before do
+          VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: false
+        end
+
+        let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model) }
+        # .make updates the resource after creating it, over writing our passed in updated_at timestamp
+        # Therefore we cannot use shared_examples as the updated_at will not be as written
+        let!(:resource_1) {
+          VCAP::CloudController::RevisionModel.create(
+            created_at: '2020-05-26T18:47:01Z',
+            updated_at: '2020-05-26T18:47:01Z',
+            droplet: droplet,
+            app: app_model)
+        }
+        let!(:resource_2) {
+          VCAP::CloudController::RevisionModel.create(
+            created_at: '2020-05-26T18:47:02Z',
+            updated_at: '2020-05-26T18:47:02Z',
+            droplet: droplet,
+            app: app_model)
+        }
+        let!(:resource_3) {
+          VCAP::CloudController::RevisionModel.create(
+            created_at: '2020-05-26T18:47:03Z',
+            updated_at: '2020-05-26T18:47:03Z',
+            droplet: droplet,
+            app: app_model)
+        }
+        let!(:resource_4) {
+          VCAP::CloudController::RevisionModel.create(
+            created_at: '2020-05-26T18:47:04Z',
+            updated_at: '2020-05-26T18:47:04Z',
+            droplet: droplet,
+            app: app_model)
+        }
+
+        after do
+          VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: true
+        end
+
+        it 'filters by the created at' do
+          get "/v3/apps/#{app_model.guid}/revisions?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+        end
+
+        it 'filters by the updated_at' do
+          get "/v3/apps/#{app_model.guid}/revisions?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+        end
+      end
     end
   end
 

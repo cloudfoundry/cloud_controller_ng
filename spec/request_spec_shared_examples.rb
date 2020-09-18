@@ -271,7 +271,7 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
     end
 
     it 'filters' do
-      api_call.call(headers, "updated_ats[lt]=#{resource_3.updated_at.iso8601}")
+      api_call.call(headers,)
 
       expect(last_response).to have_status_code(200)
       expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
