@@ -354,19 +354,6 @@ RSpec.describe 'Users Request' do
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
-
-      context 'when filtering by labels' do
-        before do
-          allow(uaa_client).to receive(:users_for_ids).and_return({})
-        end
-        it_behaves_like 'list_endpoint_with_common_filters' do
-          let(:resource_klass) { VCAP::CloudController::User }
-          let(:api_call) do
-            lambda { |headers, filters| get "/v3/users?#{filters}", nil, headers }
-          end
-          let(:headers) { admin_headers }
-        end
-      end
     end
 
     context 'when the user is not logged in' do
