@@ -1,5 +1,6 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/base_list_fetcher'
 
 module VCAP::CloudController
   class UserListFetcher < BaseListFetcher
