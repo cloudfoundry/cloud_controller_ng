@@ -329,6 +329,7 @@ RSpec.describe 'Revisions' do
             created_at: '2020-05-26T18:47:01Z',
             updated_at: '2020-05-26T18:47:01Z',
             droplet: droplet,
+            description: '',
             app: app_model)
         }
         let!(:resource_2) {
@@ -336,6 +337,7 @@ RSpec.describe 'Revisions' do
             created_at: '2020-05-26T18:47:02Z',
             updated_at: '2020-05-26T18:47:02Z',
             droplet: droplet,
+            description: '',
             app: app_model)
         }
         let!(:resource_3) {
@@ -343,6 +345,7 @@ RSpec.describe 'Revisions' do
             created_at: '2020-05-26T18:47:03Z',
             updated_at: '2020-05-26T18:47:03Z',
             droplet: droplet,
+            description: '',
             app: app_model)
         }
         let!(:resource_4) {
@@ -350,6 +353,7 @@ RSpec.describe 'Revisions' do
             created_at: '2020-05-26T18:47:04Z',
             updated_at: '2020-05-26T18:47:04Z',
             droplet: droplet,
+            description: '',
             app: app_model)
         }
 
