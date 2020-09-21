@@ -6,8 +6,8 @@ require 'presenters/v3/organization_presenter'
 RSpec.describe 'Routes Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:admin_header) { admin_headers_for(user) }
-  let!(:space) { VCAP::CloudController::Space.make(name: 'a-space') }
-  let!(:org) { space.organization }
+  let!(:org) { VCAP::CloudController::Organization.make(created_at: 1.hour.ago) }
+  let!(:space) { VCAP::CloudController::Space.make(name: 'a-space', created_at: 1.hour.ago, organization: org) }
 
   let(:space_json_generator) do
     lambda { |s|
