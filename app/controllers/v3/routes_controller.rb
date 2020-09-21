@@ -29,6 +29,8 @@ class RoutesController < ApplicationController
 
     decorators = []
     decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
+    decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
+    decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,
@@ -48,6 +50,8 @@ class RoutesController < ApplicationController
 
     decorators = []
     decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
+    decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
+    decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::RoutePresenter.new(
       route,

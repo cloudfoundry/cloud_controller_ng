@@ -29,8 +29,12 @@ module VCAP::CloudController
     end
 
     describe 'includes' do
-      it 'only allows domains to be included' do
+      it 'only allows domains, space, space.organization to be included' do
         message = RouteShowMessage.from_params({ 'guid' => 'some-guid', 'include' => 'domain' })
+        expect(message).to be_valid
+        message = RouteShowMessage.from_params({ 'guid' => 'some-guid', 'include' => 'space' })
+        expect(message).to be_valid
+        message = RouteShowMessage.from_params({ 'guid' => 'some-guid', 'include' => 'space.organization' })
         expect(message).to be_valid
         message = RouteShowMessage.from_params({ 'guid' => 'some-guid', 'include' => 'kube' })
         expect(message).not_to be_valid

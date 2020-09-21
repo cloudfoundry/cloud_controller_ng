@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe IncludeAppOrganizationDecorator do
-    subject(:decorator) { IncludeAppOrganizationDecorator }
+  RSpec.describe IncludeOrganizationDecorator do
+    subject(:decorator) { IncludeOrganizationDecorator }
     let(:organization1) { Organization.make(name: 'first-organization') }
     let(:organization2) { Organization.make(name: 'second-organization') }
     let(:space1) { Space.make(name: 'first-space', organization: organization1) }

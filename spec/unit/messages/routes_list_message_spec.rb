@@ -89,11 +89,13 @@ module VCAP::CloudController
         expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'app_guid'")
       end
 
-      it 'does not accept include that is not domain' do
+      it 'does accepts domain,space, and space.organization' do
         message = RoutesListMessage.from_params({ 'include' => 'domain' })
         expect(message).to be_valid
+        message = RoutesListMessage.from_params({ 'include' => 'space' })
+        expect(message).to be_valid
         message = RoutesListMessage.from_params({ 'include' => 'space.organization' })
-        expect(message).not_to be_valid
+        expect(message).to be_valid
         message = RoutesListMessage.from_params({ 'include' => 'eli\'s buildpack' })
         expect(message).not_to be_valid
       end

@@ -2,6 +2,8 @@ module VCAP::CloudController
   class IncludeRoleOrganizationDecorator
     class << self
       def match?(include_params)
+        # roles may be associated with an org without being associated with a space
+        # this is why this is not `space.organization`
         include_params&.include?('organization')
       end
 

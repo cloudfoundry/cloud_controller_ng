@@ -1,18 +1,38 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
+require 'presenters/v3/space_presenter'
+require 'presenters/v3/organization_presenter'
 
 RSpec.describe 'Routes Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:org) { space.organization }
+  let!(:space) { VCAP::CloudController::Space.make(name: 'a-space') }
+  let!(:org) { space.organization }
+
+  let(:space_json_generator) do
+    lambda { |s|
+      presented_space = VCAP::CloudController::Presenters::V3::SpacePresenter.new(s).to_hash
+      presented_space[:created_at] = iso8601
+      presented_space[:updated_at] = iso8601
+      presented_space
+    }
+  end
+
+  let(:org_json_generator) do
+    lambda { |o|
+      presented_space = VCAP::CloudController::Presenters::V3::OrganizationPresenter.new(o).to_hash
+      presented_space[:created_at] = iso8601
+      presented_space[:updated_at] = iso8601
+      presented_space
+    }
+  end
 
   before do
     TestConfig.override(kubernetes: {})
   end
 
   describe 'GET /v3/routes' do
-    let(:other_space) { VCAP::CloudController::Space.make }
+    let(:other_space) { VCAP::CloudController::Space.make(name: 'b-space') }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let!(:route_in_org) do
@@ -309,6 +329,29 @@ RSpec.describe 'Routes Request' do
           }).to match_json_response({
             resources: [route_in_org_json, route_in_other_org_json, route1_domain1_json],
             included: { 'domains' => [domain1_json, domain2_json] }
+          })
+        end
+      end
+
+      context 'when including spaces and orgs' do
+        it 'includes the unique spaces and organizations for the routes' do
+          get '/v3/routes?include=space,space.organization', nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect({
+            resources: parsed_response['resources'],
+            included: parsed_response['included']
+          }).to match_json_response({
+            resources: [route_in_org_json, route_in_other_org_json],
+            included: {
+              'spaces' => [
+                space_json_generator.call(space),
+                space_json_generator.call(other_space)
+              ],
+              'organizations' => [
+                org_json_generator.call(org),
+                org_json_generator.call(other_space.organization)
+              ]
+            }
           })
         end
       end
@@ -984,6 +1027,20 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes/#{route.guid}?include=domain", nil, admin_header
           expect(last_response).to have_status_code(200), last_response.body
           expect(parsed_response).to match_json_response(route_json)
+        end
+      end
+
+      context 'when including spaces and orgs' do
+        it 'includes the unique spaces and organizations for the routes' do
+          get "/v3/routes/#{route.guid}?include=space,space.organization", nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['included']).to match_json_response(
+            'spaces' => [
+              space_json_generator.call(space),
+            ],
+            'organizations' => [
+              org_json_generator.call(org),
+            ])
         end
       end
     end
