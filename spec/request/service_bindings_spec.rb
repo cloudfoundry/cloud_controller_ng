@@ -573,5 +573,13 @@ RSpec.describe 'v3 service bindings' do
         end
       end
     end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::ServiceBinding }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/service_bindings?#{filters}", nil, headers }
+      end
+      let(:headers) { admin_headers }
+    end
   end
 end

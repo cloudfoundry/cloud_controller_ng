@@ -56,9 +56,9 @@ class ServiceBindingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ServiceBindingListFetcher.new(message).fetch_all
+                ServiceBindingListFetcher.fetch_all(message: message)
               else
-                ServiceBindingListFetcher.new(message).fetch(space_guids: permission_queryer.readable_space_guids)
+                ServiceBindingListFetcher.fetch(space_guids: permission_queryer.readable_space_guids, message: message)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
