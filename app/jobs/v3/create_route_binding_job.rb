@@ -38,11 +38,12 @@ module VCAP::CloudController
       end
 
       def perform
-        precursor = RouteBinding.first(guid: @precursor_guid)
+        precursor = route_binding
         gone! unless precursor
 
         service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
         action = V3::ServiceRouteBindingCreate.new(service_event_repository)
+        compute_maximum_duration
 
         if @first_time
           @first_time = false
@@ -66,6 +67,15 @@ module VCAP::CloudController
       end
 
       private
+
+      def route_binding
+        RouteBinding.first(guid: @precursor_guid)
+      end
+
+      def compute_maximum_duration
+        max_poll_duration_on_plan = route_binding.service_instance.service_plan.try(:maximum_polling_duration)
+        self.maximum_duration_seconds = max_poll_duration_on_plan
+      end
 
       def gone!
         raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The binding could not be found: #{@precursor_guid}")

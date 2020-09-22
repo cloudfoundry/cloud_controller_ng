@@ -9,7 +9,8 @@ module VCAP::CloudController
 
       let(:space) { Space.make }
       let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-      let(:service_plan) { ServicePlan.make(service: service_offering) }
+      let(:maximum_polling_duration) { nil }
+      let(:service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
       let(:route) { Route.make(space: space) }
       let(:state) { 'in progress' }
@@ -66,6 +67,26 @@ module VCAP::CloudController
           end
 
           context 'asynchronous response' do
+            context 'computes the maximum duration' do
+              before do
+                TestConfig.override({
+                  broker_client_max_async_poll_duration_minutes: 90009
+                })
+                subject.perform
+              end
+
+              it 'sets to the default value' do
+                expect(subject.maximum_duration_seconds).to eq(90009.minutes)
+              end
+
+              context 'when the plan defines a duration' do
+                let(:maximum_polling_duration) { 7465 }
+
+                it 'sets to the plan value' do
+                  expect(subject.maximum_duration_seconds).to eq(7465)
+                end
+              end
+            end
             it 'calls bind and then poll' do
               subject.perform
 
@@ -127,6 +148,27 @@ module VCAP::CloudController
               subject.perform
 
               expect(subject.finished).to be_truthy
+            end
+          end
+
+          context 'the maximum duration' do
+            it 'recomputes the value' do
+              subject.maximum_duration_seconds = 90009
+              TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+              subject.perform
+              expect(subject.maximum_duration_seconds).to eq(8088.minutes)
+            end
+
+            context 'when the plan value changes between calls' do
+              before do
+                subject.maximum_duration_seconds = 90009
+                service_plan.update(maximum_polling_duration: 5000)
+                subject.perform
+              end
+
+              it 'sets to the new plan value' do
+                expect(subject.maximum_duration_seconds).to eq(5000)
+              end
             end
           end
         end
