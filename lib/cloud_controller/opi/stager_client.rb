@@ -118,7 +118,7 @@ module OPI
 
     def staging_completion_callback(staging_details)
       if config.kubernetes_api_configured?
-        port   = 80
+        port   = config.get(:internal_service_port)
         scheme = 'http'
       else
         port   = config.get(:tls_port)

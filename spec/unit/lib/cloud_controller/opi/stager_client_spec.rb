@@ -14,6 +14,7 @@ RSpec.describe(OPI::StagerClient) do
         auth_password: 'internal_password'
       },
       internal_service_hostname: 'api.internal.cf',
+      internal_service_port:     '9090',
       kubernetes: kubernetes_config,
     )
   end
@@ -21,7 +22,7 @@ RSpec.describe(OPI::StagerClient) do
   let(:staging_guid) { 'some_staging_guid' }
   let(:kubernetes_config) { {} }
 
-  let(:staging_details) { stub_staging_details(lifecycle_type) }
+  let(:staging_details) { stub_staging_details(lifecycle_type, staging_guid) }
   let(:lifecycle_data) { stub_lifecycle_data }
 
   let(:lifecycle_environment_variables) { [
@@ -72,7 +73,7 @@ RSpec.describe(OPI::StagerClient) do
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
-          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
           lifecycle: {
             buildpack_lifecycle: {
               droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
@@ -110,7 +111,7 @@ RSpec.describe(OPI::StagerClient) do
                           { name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                           { name: 'MEMORY_LIMIT', value: '256m' },
                           { name: 'VCAP_SERVICES', value: '{}' }],
-            completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+            completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
             lifecycle: {
               buildpack_lifecycle: {
                 droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
@@ -174,7 +175,7 @@ RSpec.describe(OPI::StagerClient) do
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
-          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
           lifecycle: {
             docker_lifecycle: {
               image: 'docker.io/some/image',
@@ -200,7 +201,7 @@ RSpec.describe(OPI::StagerClient) do
           stager_client.stage(staging_guid, staging_details)
           expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with { |req|
             parsed_json = JSON.parse(req.body)
-            parsed_json['completion_callback'] == 'http://internal_user:internal_password@api.internal.cf:80/internal/v3/staging//build_completed?start='
+            parsed_json['completion_callback'] == 'http://internal_user:internal_password@api.internal.cf:9090/internal/v3/staging/some_staging_guid/build_completed?start='
           }
         end
       end
@@ -217,7 +218,7 @@ RSpec.describe(OPI::StagerClient) do
     end
   end
 
-  def stub_staging_details(lifecycle_type)
+  def stub_staging_details(lifecycle_type, staging_guid)
     space = VCAP::CloudController::Space.make(
       name: 'outer',
       guid: 'outer-guid',
@@ -240,6 +241,7 @@ RSpec.describe(OPI::StagerClient) do
     staging_details.lifecycle                       = double(type: lifecycle_type)
     staging_details.staging_disk_in_mb              = 100
     staging_details.staging_memory_in_mb            = 200
+    staging_details.staging_guid                    = staging_guid
     staging_details
   end
 
