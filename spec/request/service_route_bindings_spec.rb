@@ -286,7 +286,7 @@ RSpec.describe 'v3 service route bindings' do
         end
 
         context 'when the bind completes synchronously' do
-          it 'updates the the binding' do
+          it 'updates the binding' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             binding.reload
@@ -299,6 +299,30 @@ RSpec.describe 'v3 service route bindings' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+          end
+
+          context 'orphan mitigation' do
+            it_behaves_like 'create binding orphan mitigation' do
+              let(:bind_url) { broker_bind_url }
+              let(:plan_id) { plan.unique_id }
+              let(:offering_id) { offering.unique_id }
+              let(:client_body) do
+                {
+                  context: {
+                    platform: 'cloudfoundry',
+                    organization_guid: org.guid,
+                    organization_name: org.name,
+                    space_guid: space.guid,
+                    space_name: space.name,
+                  },
+                  service_id: service_instance.service_plan.service.unique_id,
+                  plan_id: service_instance.service_plan.unique_id,
+                  bind_resource: {
+                    route: route.uri,
+                  },
+                }
+              end
+            end
           end
         end
 
@@ -365,7 +389,7 @@ RSpec.describe 'v3 service route bindings' do
                 to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
             end
 
-            it 'fetches the service instance' do
+            it 'fetches the binding' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(
