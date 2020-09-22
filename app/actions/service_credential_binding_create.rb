@@ -10,13 +10,12 @@ module VCAP::CloudController
       class Unimplemented < StandardError
       end
 
-      def initialize(user_audit_info, volume_mount_services_enabled)
+      def initialize(user_audit_info)
         @user_audit_info = user_audit_info
-        @volume_mount_services_enabled = volume_mount_services_enabled
       end
 
-      def precursor(service_instance, app: nil, name: nil)
-        validate!(service_instance, app)
+      def precursor(service_instance, app: nil, name: nil, volume_mount_services_enabled: false)
+        validate!(service_instance, app, volume_mount_services_enabled)
 
         binding_details = {
           service_instance: service_instance,
@@ -39,13 +38,16 @@ module VCAP::CloudController
         raise UnprocessableCreate.new(e.full_message)
       end
 
-      def bind(binding)
+      def bind(binding, parameters: {}, accepts_incomplete: false)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.bind(binding, arbitrary_parameters: {}, accepts_incomplete: false)
+        details = client.bind(binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
 
-        binding.save_with_new_operation({ type: 'create', state: 'succeeded' }, attributes: details[:binding])
-
-        event_repository.record_create(binding, @user_audit_info, manifest_triggered: false)
+        if details[:async]
+          save_incomplete_binding(binding, details[:operation])
+        else
+          binding.save_with_new_operation(operation_succeeded, attributes: details[:binding])
+          event_repository.record_create(binding, @user_audit_info, manifest_triggered: false)
+        end
       rescue => e
         binding.save_with_new_operation({
           type: 'create',
@@ -57,15 +59,26 @@ module VCAP::CloudController
 
       private
 
-      def validate!(service_instance, app)
+      def operation_succeeded
+        { type: 'create', state: 'succeeded' }
+      end
+
+      def save_incomplete_binding(binding, operation)
+        binding.save_with_new_operation({
+          type: 'create',
+          state: 'in progress',
+          broker_provided_operation: operation
+        })
+      end
+
+      def validate!(service_instance, app, volume_mount_services_enabled)
         app_is_required! unless app.present?
         space_mismatch! unless all_space_guids(service_instance).include? app.space.guid
 
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
-          volume_mount_not_enabled! if service_instance.volume_service? && !@volume_mount_services_enabled
-          not_supported!
+          volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
         end
       end
 

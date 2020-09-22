@@ -9,6 +9,10 @@ module VCAP::CloudController
       {
         type: 'app',
         name: 'some-name',
+        parameters: {
+            some_param: 'very important',
+            another_param: 'epa'
+        },
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } },
           app: { data: { guid: 'some-app-guid' } }
@@ -25,6 +29,7 @@ module VCAP::CloudController
         expect(message.name).to eq('some-name')
         expect(message.service_instance_guid).to eq('some-instance-guid')
         expect(message.app_guid).to eq('some-app-guid')
+        expect(message.parameters).to eq({ some_param: 'very important', another_param: 'epa' })
       end
 
       it 'converts requested keys to symbols' do
@@ -62,6 +67,13 @@ module VCAP::CloudController
         it 'accepts nil' do
           params.delete(:name)
           expect(subject.new(params)).to be_valid
+        end
+      end
+
+      context 'parameters' do
+        it 'is invalid when not a hash' do
+          params[:parameters] = 'aloha'
+          expect(subject.new(params)).not_to be_valid
         end
       end
 
