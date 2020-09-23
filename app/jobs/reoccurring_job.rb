@@ -30,7 +30,8 @@ module VCAP::CloudController
       end
 
       def polling_interval_seconds
-        @polling_interval || default_polling_interval_seconds
+        [@polling_interval || 0, default_polling_interval_seconds].max
+
       end
 
       def polling_interval_seconds=(interval)
@@ -51,7 +52,7 @@ module VCAP::CloudController
       end
 
       def default_maximum_duration_seconds
-        VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
+        Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
       end
 
       def default_polling_interval_seconds
