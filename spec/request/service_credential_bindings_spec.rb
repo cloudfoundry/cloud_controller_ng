@@ -1177,7 +1177,7 @@ RSpec.describe 'v3 service credential bindings' do
       created_at: iso8601,
       updated_at: iso8601,
       name: binding.name,
-      last_operation: nil,
+      last_operation: last_operation(binding),
       relationships: {
         service_instance: {
           data: {
@@ -1231,11 +1231,19 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   def last_operation(binding)
-    if binding.last_operation.present?
+    if binding.try(:last_operation)
       {
         type: binding.last_operation.type,
         state: binding.last_operation.state,
         description: binding.last_operation.description,
+        created_at: iso8601,
+        updated_at: iso8601
+      }
+    else
+      {
+        type: 'create',
+        state: 'succeeded',
+        description: '',
         created_at: iso8601,
         updated_at: iso8601
       }
