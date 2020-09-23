@@ -6,9 +6,10 @@ module VCAP
     class FakeJob < Jobs::ReoccurringJob
       attr_reader :calls, :expired, :expiry_time, :iterations, :warnings
 
-      def initialize(iterations: 10)
+      def initialize(iterations: 10, retry_after: [])
         @iterations = iterations
         @calls = 0
+        @retry_after = retry_after
         super()
       end
 
@@ -25,6 +26,7 @@ module VCAP
       end
 
       def perform
+        self.polling_interval_seconds = @retry_after[@calls] if @retry_after.length > @calls
         @calls += 1
         finish if @calls == iterations
       end
@@ -78,11 +80,11 @@ module VCAP
         Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        Timecop.freeze(enqueued_time + 94.second) do
+        Timecop.freeze(94.seconds.after enqueued_time) do
           execute_all_jobs(expected_successes: 0, expected_failures: 0)
         end
 
-        Timecop.freeze(enqueued_time + 96.seconds) do
+        Timecop.freeze(96.seconds.after enqueued_time) do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
       end
@@ -94,6 +96,92 @@ module VCAP
 
         job.polling_interval_seconds = 10.days
         expect(job.polling_interval_seconds).to eq(24.hours)
+      end
+
+      context 'updates the polling interval if config changes' do
+          it 'when changed from the job only' do
+            job = FakeJob.new(retry_after: [20, 30])
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(19.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(22.seconds.after enqueued_time) do
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            Timecop.freeze(29.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(32.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+          end
+
+          it 'when default changed after changing from the job' do
+            job = FakeJob.new(retry_after: [20])
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(19.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(21.seconds.after enqueued_time) do
+              TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 30
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            Timecop.freeze(29.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(31.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+
+          it 'when changing default only' do
+            job = FakeJob.new
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(9.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(11.seconds.after enqueued_time) do
+              TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 30
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            Timecop.freeze(29.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(31.seconds.after enqueued_time) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
       end
 
       it 'continues to run until finished' do
@@ -120,7 +208,7 @@ module VCAP
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
           expect(PollableJobModel.first.state).to eq('FAILED')
 
-          Timecop.freeze(Time.now + 61.seconds) do
+          Timecop.freeze(61.seconds.after Time.now) do
             execute_all_jobs(expected_successes: 0, expected_failures: 0)
           end
         end
@@ -163,7 +251,7 @@ module VCAP
 
           Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
 
-          Timecop.freeze(Time.now + 61.seconds) do
+          Timecop.freeze(61.seconds.after Time.now) do
             execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
             expect(PollableJobModel.first.state).to eq('FAILED')
           end
