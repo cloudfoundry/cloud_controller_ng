@@ -31,7 +31,6 @@ module VCAP::CloudController
 
       def polling_interval_seconds
         [@polling_interval || 0, default_polling_interval_seconds].max
-
       end
 
       def polling_interval_seconds=(interval)
