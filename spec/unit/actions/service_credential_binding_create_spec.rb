@@ -5,12 +5,7 @@ require 'cloud_controller/user_audit_info'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingCreate do
-      subject(:action) do
-        described_class.new(
-          user_audit_info,
-          volume_mount_services_enabled
-        )
-      end
+      subject(:action) { described_class.new(user_audit_info) }
 
       let(:volume_mount_services_enabled) { true }
       let(:space) { Space.make }
@@ -112,14 +107,25 @@ module VCAP::CloudController
           end
 
           context 'when the service is a volume service and service volume mounting is disabled' do
-            let(:volume_mount_services_enabled) { false }
             let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
 
             it 'raises an error' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
+              expect {
+                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+              }.to raise_error(
                 ServiceCredentialBindingCreate::UnprocessableCreate,
                 'Support for volume mount services is disabled'
               )
+            end
+          end
+
+          context 'when the service is a volume service and service volume mounting is enabled' do
+            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+            it 'does not raise an error' do
+              expect {
+                action.precursor(service_instance, app: app, volume_mount_services_enabled: true)
+              }.not_to raise_error
             end
           end
 
@@ -131,21 +137,11 @@ module VCAP::CloudController
               end
             end
 
-            it 'raises an error that it is not implemented' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingCreate::Unimplemented,
-                'Cannot create credential bindings for managed service instances'
-              )
-            end
+            it_behaves_like 'the credential binding precursor'
           end
 
           context 'when successful' do
-            it 'raises an error that it is not implemented' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingCreate::Unimplemented,
-                'Cannot create credential bindings for managed service instances'
-              )
-            end
+            it_behaves_like 'the credential binding precursor'
           end
         end
       end
@@ -195,6 +191,51 @@ module VCAP::CloudController
           let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
           it_behaves_like 'the credential binding bind'
+        end
+
+        context 'managed service instance' do
+          let(:details) { { credentials: { 'password' => 'orchestra' } } }
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:bind_response) { { binding: { credentials: details[:credentials] } } }
+          let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
+
+          before do
+            allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+          end
+
+          it_behaves_like 'the credential binding bind'
+
+          context 'parameters are specified' do
+            it 'sends the parameters to the broker client' do
+              action.bind(precursor, parameters: { foo: 'bar' })
+
+              expect(broker_client).to have_received(:bind).with(
+                precursor,
+                arbitrary_parameters: { foo: 'bar' },
+                accepts_incomplete: false,
+              )
+            end
+          end
+
+          context 'asynchronous binding' do
+            let(:broker_provided_operation) { Sham.guid }
+            let(:bind_response) { { async: true, operation: broker_provided_operation } }
+
+            it 'saves the operation ID' do
+              action.bind(precursor, accepts_incomplete: true)
+
+              expect(broker_client).to have_received(:bind).with(
+                precursor,
+                arbitrary_parameters: {},
+                accepts_incomplete: true,
+              )
+
+              binding = precursor.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+            end
+          end
         end
       end
     end

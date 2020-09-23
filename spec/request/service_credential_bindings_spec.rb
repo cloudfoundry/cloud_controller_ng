@@ -798,7 +798,7 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'POST /v3/service_credential_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
-
+    let(:request_extra) { {} }
     let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
     let(:service_instance_details) {
       {
@@ -817,7 +817,7 @@ RSpec.describe 'v3 service credential bindings' do
           service_instance: { data: { guid: service_instance_guid } },
           app: { data: { guid: app_guid } }
         }
-      }
+      }.merge(request_extra)
     }
 
     context 'user-provided service' do
@@ -879,9 +879,9 @@ RSpec.describe 'v3 service credential bindings' do
           get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to match_json_response({
-                                                           credentials: { password: 'foo' },
-                                                           syslog_drain_url: 'http://syslog.example.com/wow'
-                                                         })
+            credentials: { password: 'foo' },
+            syslog_drain_url: 'http://syslog.example.com/wow'
+          })
         end
       end
     end
@@ -890,9 +890,128 @@ RSpec.describe 'v3 service credential bindings' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 
       describe 'a successful creation' do
-        it 'returns unimplemented' do
+        let(:binding) { VCAP::CloudController::ServiceBinding.last }
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it 'creates a credential binding in the database' do
           api_call.call(admin_headers)
-          expect(last_response).to have_status_code(501)
+
+          expect(binding.service_instance).to eq(service_instance)
+          expect(binding.app).to eq(app_to_bind_to)
+          expect(binding.last_operation.state).to eq('in progress')
+          expect(binding.last_operation.type).to eq('create')
+        end
+
+        it 'responds with a job resource' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(202)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          expect(job.operation).to eq('service_bindings.create')
+          expect(job.resource_guid).to eq(binding.guid)
+          expect(job.resource_type).to eq('service_binding')
+
+          get "/v3/jobs/#{job.guid}", nil, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['guid']).to eq(job.guid)
+        end
+
+        describe 'the pollable job' do
+          let(:credentials) { { 'password' => 'special sauce' } }
+          let(:broker_base_url) { service_instance.service_broker.broker_url }
+          let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+          let(:broker_status_code) { 201 }
+          let(:broker_response) { { credentials: credentials } }
+          let(:client_body) do
+            {
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: org.guid,
+                organization_name: org.name,
+                space_guid: space.guid,
+                space_name: space.name,
+              },
+              app_guid: app_to_bind_to.guid,
+              service_id: service_instance.service_plan.service.unique_id,
+              plan_id: service_instance.service_plan.unique_id,
+              bind_resource: {
+                app_guid: app_to_bind_to.guid,
+                space_guid: service_instance.space.guid
+              },
+            }
+          end
+
+          before do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(202)
+
+            stub_request(:put, broker_bind_url).
+              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+          end
+
+          it 'sends a bind request with the right arguments to the service broker' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:put, broker_bind_url).
+                with(
+                  body: client_body,
+                )
+            ).to have_been_made.once
+          end
+
+          context 'parameters are specified' do
+            let(:request_extra) { { parameters: { foo: 'bar' } } }
+
+            it 'sends the parameters to the broker' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:put, broker_bind_url).
+                  with(
+                    body: client_body.deep_merge(request_extra)
+                  )
+              ).to have_been_made.once
+            end
+          end
+
+          context 'when the bind completes synchronously' do
+            it 'updates the the binding' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              binding.reload
+              expect(binding.credentials).to eq(credentials)
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('succeeded')
+            end
+
+            it 'completes the job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'when the broker fails to bind' do
+            let(:broker_status_code) { 422 }
+            let(:broker_response) { { error: 'RequiresApp' } }
+
+            it 'updates the the binding with a failure' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('failed')
+            end
+
+            it 'fails the job' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
         end
       end
     end

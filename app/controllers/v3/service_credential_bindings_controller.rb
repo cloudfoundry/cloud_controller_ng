@@ -9,6 +9,7 @@ require 'messages/service_credential_binding_show_message'
 require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
+require 'jobs/v3/create_service_credential_binding_job'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -48,10 +49,17 @@ class ServiceCredentialBindingsController < ApplicationController
     resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
     unauthorized! unless can_write_to_space?(app.space)
 
-    action = V3::ServiceCredentialBindingCreate.new(user_audit_info, volume_services_enabled?)
-    binding = action.precursor(service_instance, app: app, name: message.name)
-    action.bind(binding)
-    render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+    action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
+    binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
+
+    case service_instance
+    when ManagedServiceInstance
+      pollable_job_guid = enqueue_bind_job(binding.guid, message.parameters)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+    when UserProvidedServiceInstance
+      action.bind(binding)
+      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+    end
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
   rescue V3::ServiceCredentialBindingCreate::Unimplemented
@@ -102,6 +110,16 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   private
+
+  def enqueue_bind_job(binding_guid, parameters)
+    bind_job = VCAP::CloudController::V3::CreateServiceCredentialBindingJob.new(
+      binding_guid,
+      user_audit_info: user_audit_info,
+      parameters: parameters
+    )
+    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job.guid
+  end
 
   def resource_not_accessible!(resource, guid)
     unprocessable!("The #{resource} could not be found: '#{guid}'")
