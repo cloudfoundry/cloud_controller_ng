@@ -1,10 +1,13 @@
 require_relative 'base_presenter'
+require 'presenters/mixins/last_operation_helper'
 
 module VCAP
   module CloudController
     module Presenters
       module V3
         class ServiceRouteBindingPresenter < BasePresenter
+          include VCAP::CloudController::Presenters::Mixins::LastOperationHelper
+
           def to_hash
             base.merge(decorations)
           end
@@ -17,7 +20,7 @@ module VCAP
               route_service_url: binding.route_service_url,
               created_at: binding.created_at,
               updated_at: binding.updated_at,
-              last_operation: last_operation,
+              last_operation: last_operation(binding),
               relationships: relationships,
               links: links
             }
@@ -29,20 +32,6 @@ module VCAP
 
           def binding
             @resource
-          end
-
-          def last_operation
-            return nil if binding.last_operation.blank?
-
-            last_operation = binding.last_operation
-
-            {
-              type: last_operation.type,
-              state: last_operation.state,
-              description: last_operation.description,
-              created_at: last_operation.created_at,
-              updated_at: last_operation.updated_at
-            }
           end
 
           def links

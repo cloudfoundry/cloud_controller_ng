@@ -27,7 +27,7 @@ module VCAP
 
       it 'presents the correct object' do
         presenter = described_class.new(binding)
-        expect(presenter.to_hash).to match(
+        expect(presenter.to_hash.with_indifferent_access).to match(
           {
             guid: guid,
             created_at: binding.created_at,
@@ -65,6 +65,30 @@ module VCAP
             }
           }
         )
+      end
+
+      context 'no last_operation' do
+        let(:binding) do
+          RouteBinding.make(
+            guid: guid,
+            service_instance: service_instance,
+            route: route,
+            route_service_url: route_service_url,
+          )
+        end
+
+        it 'still displays the last operation' do
+          presenter = described_class.new(binding)
+          expect(presenter.to_hash[:last_operation]).to match(
+            {
+              type: 'create',
+              state: 'succeeded',
+              description: '',
+              updated_at: binding.updated_at,
+              created_at: binding.created_at
+            }
+          )
+        end
       end
 
       describe 'decorators' do
