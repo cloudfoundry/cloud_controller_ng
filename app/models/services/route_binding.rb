@@ -1,3 +1,5 @@
+require 'cloud_controller/process_route_handler'
+
 module VCAP::CloudController
   class RouteBinding < Sequel::Model
     plugin :after_initialize
