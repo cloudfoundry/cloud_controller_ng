@@ -120,6 +120,19 @@ module VCAP::CloudController
               )
             end
           end
+
+          context 'when there is an operation in progress for the service instance' do
+            it 'raises an error' do
+              service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
+
+              expect {
+                action.precursor(service_instance, route)
+              }.to raise_error(
+                ServiceRouteBindingCreate::UnprocessableCreate,
+                'There is an operation in progress for the service instance'
+              )
+            end
+          end
         end
 
         context 'user-provided service instance' do
