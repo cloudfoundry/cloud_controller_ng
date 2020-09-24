@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'actions/service_route_binding_create'
 
 module VCAP::CloudController
@@ -117,6 +117,19 @@ module VCAP::CloudController
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'This service instance does not support binding',
+              )
+            end
+          end
+
+          context 'when there is an operation in progress for the service instance' do
+            it 'raises an error' do
+              service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
+
+              expect {
+                action.precursor(service_instance, route)
+              }.to raise_error(
+                ServiceRouteBindingCreate::UnprocessableCreate,
+                'There is an operation in progress for the service instance'
               )
             end
           end

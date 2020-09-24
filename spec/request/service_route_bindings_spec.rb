@@ -504,6 +504,21 @@ RSpec.describe 'v3 service route bindings' do
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
         end
       end
+
+      context 'there is an operation in progress for the service instance' do
+        it 'responds with 422' do
+          service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
+
+          post '/v3/service_route_bindings', request.to_json, space_dev_headers
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('There is an operation in progress for the service instance'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
     end
 
     context 'user-provided service instance' do

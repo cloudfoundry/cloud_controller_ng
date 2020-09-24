@@ -22,7 +22,7 @@ module VCAP
 
         it 'should include the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
-          expect(presenter.to_hash).to match(
+          expect(presenter.to_hash.with_indifferent_access).to match(
             {
               guid: 'some-guid',
               type: 'app',
@@ -78,6 +78,25 @@ module VCAP
             expect(presenter.to_hash[:name]).to be_nil
           end
         end
+
+        context 'no last_operation' do
+          let(:credential_binding) do
+            ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
+          end
+
+          it 'still displays the last operation' do
+            presenter = described_class.new(credential_binding)
+            expect(presenter.to_hash[:last_operation]).to match(
+              {
+                type: 'create',
+                state: 'succeeded',
+                description: '',
+                updated_at: credential_binding.updated_at,
+                created_at: credential_binding.created_at
+              }
+            )
+          end
+        end
       end
 
       describe 'key bindings' do
@@ -94,7 +113,13 @@ module VCAP
               name: 'some-name',
               created_at: credential_binding.created_at,
               updated_at: credential_binding.updated_at,
-              last_operation: nil,
+              last_operation: {
+                type: 'create',
+                state: 'succeeded',
+                description: '',
+                updated_at: credential_binding.updated_at,
+                created_at: credential_binding.created_at
+              },
               relationships: {
                 service_instance: {
                   data: {
@@ -118,6 +143,25 @@ module VCAP
               }
             }
           )
+        end
+
+        context 'no last_operation' do
+          let(:credential_binding) do
+            ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance)
+          end
+
+          it 'still displays the last operation' do
+            presenter = described_class.new(credential_binding)
+            expect(presenter.to_hash[:last_operation]).to match(
+              {
+                type: 'create',
+                state: 'succeeded',
+                description: '',
+                updated_at: credential_binding.updated_at,
+                created_at: credential_binding.created_at
+              }
+            )
+          end
         end
       end
 

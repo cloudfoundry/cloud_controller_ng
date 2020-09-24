@@ -1,3 +1,5 @@
+require 'services/service_brokers/service_client_provider'
+
 module VCAP::CloudController
   module V3
     class ServiceRouteBindingCreate
@@ -6,12 +8,7 @@ module VCAP::CloudController
       end
 
       def precursor(service_instance, route)
-        not_supported! unless service_instance.route_service?
-        not_bindable! unless service_instance.bindable?
-        route_is_internal! if route.try(:internal?)
-        space_mismatch! unless route.space == service_instance.space
-        already_exists! if route.service_instance == service_instance
-        already_bound! if route.service_instance
+        validate!(service_instance, route)
 
         RouteBinding.new.save_with_new_operation(
           {
@@ -98,6 +95,16 @@ module VCAP::CloudController
 
       private
 
+      def validate!(service_instance, route)
+        not_supported! unless service_instance.route_service?
+        not_bindable! unless service_instance.bindable?
+        route_is_internal! if route.try(:internal?)
+        space_mismatch! unless route.space == service_instance.space
+        already_exists! if route.service_instance == service_instance
+        already_bound! if route.service_instance
+        operation_in_progress! if service_instance.operation_in_progress?
+      end
+
       attr_reader :service_event_repository
 
       def fetch_last_operation(client, binding)
@@ -152,6 +159,10 @@ module VCAP::CloudController
 
       def bindings_retrievable?(binding)
         binding.service_instance.service.bindings_retrievable
+      end
+
+      def operation_in_progress!
+        raise UnprocessableCreate.new('There is an operation in progress for the service instance')
       end
 
       def route_is_internal!
