@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'actions/service_route_binding_create'
 
 module VCAP::CloudController

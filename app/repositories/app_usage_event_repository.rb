@@ -1,4 +1,5 @@
 require 'database/old_record_cleanup'
+require 'cloud_controller/url_secret_obfuscator'
 
 module VCAP::CloudController
   module Repositories
