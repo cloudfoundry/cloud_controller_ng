@@ -6,20 +6,35 @@ require 'messages/sidecars_list_message'
 require 'actions/sidecar_create'
 require 'actions/sidecar_update'
 require 'presenters/v3/sidecar_presenter'
+require 'fetchers/sidecar_list_fetcher'
 
 class SidecarsController < ApplicationController
   include SubResource
 
   def index_by_app
-    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    validate_and_present_for_list(app.sidecars_dataset)
+    message = SidecarsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    app, dataset = SidecarListFetcher.fetch_for_app(message, hashed_params[:app_guid])
+    resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SidecarPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: base_url(resource: 'sidecars'),
+      )
   end
 
   def index_by_process
-    process, space, org = ProcessFetcher.fetch(process_guid: hashed_params[:process_guid])
-    resource_not_found!(:process) unless process && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    validate_and_present_for_list(process.sidecars_dataset)
+    message = SidecarsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    process, dataset = SidecarListFetcher.fetch_for_process(message, hashed_params[:process_guid])
+    resource_not_found!(:process) unless process && permission_queryer.can_read_from_space?(process.space.guid, process.organization.guid)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SidecarPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: base_url(resource: 'sidecars'),
+      )
   end
 
   def show
@@ -85,18 +100,5 @@ class SidecarsController < ApplicationController
 
     SidecarDelete.delete(sidecar)
     head :no_content
-  end
-
-  private
-
-  def validate_and_present_for_list(dataset)
-    message = SidecarsListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SidecarPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: base_url(resource: 'sidecars'),
-      )
   end
 end

@@ -426,6 +426,29 @@ RSpec.describe 'Sidecars' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    context 'filtering on created_ats and updated_ats' do
+      let(:app_model3) { VCAP::CloudController::AppModel.make }
+      let!(:process3) { VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model3,
+        type:       'web',
+        command:    'rackup',
+      )
+      }
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::SidecarModel }
+        let(:additional_resource_params) { { app: app_model3 } }
+        let(:headers) { admin_headers }
+        let(:api_call) do
+          app_model3.sidecars_dataset.each do |sidecar|
+            VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web')
+          end
+          lambda { |headers, filters| get "/v3/processes/#{process3.guid}/sidecars?#{filters}", nil, headers }
+        end
+      end
+    end
   end
 
   describe 'GET /v3/apps/:app_guid/sidecars' do
@@ -494,6 +517,16 @@ RSpec.describe 'Sidecars' do
           ]
         }
     )
+    end
+
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::SidecarModel }
+      let(:app_model2) { VCAP::CloudController::AppModel.make }
+      let(:additional_resource_params) { { app: app_model2 } }
+      let(:headers) { admin_headers }
+      let(:api_call) do
+        lambda { |headers, filters| get "/v3/apps/#{app_model2.guid}/sidecars?#{filters}", nil, headers }
+      end
     end
   end
 
