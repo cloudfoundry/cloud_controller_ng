@@ -1186,6 +1186,17 @@ RSpec.describe 'v3 service credential bindings' do
             'code' => 10008,
           }))
         end
+
+        it 'responds with 422 when there is an operation in progress for the service instance' do
+          service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('There is an operation in progress for the service instance'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
       end
 
       context 'when the service instance and the app are not in the same space' do

@@ -119,6 +119,19 @@ module VCAP::CloudController
             end
           end
 
+          context 'when there is an operation in progress for the service instance' do
+            it 'raises an error' do
+              service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
+
+              expect {
+                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+              }.to raise_error(
+                ServiceCredentialBindingCreate::UnprocessableCreate,
+                'There is an operation in progress for the service instance'
+              )
+            end
+          end
+
           context 'when the service is a volume service and service volume mounting is enabled' do
             let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
 
