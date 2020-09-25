@@ -35,6 +35,8 @@ Name | Type | Description
 **page** | _integer_ | Page to display; valid values are integers >= 1
 **per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
 **order_by** | _string_ | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`
+**created_ats** (*experimental*)| _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators-experimental)
+**updated_ats** (*experimental*)| _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators-experimental)
 
 #### Permitted roles
  |
