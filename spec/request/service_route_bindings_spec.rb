@@ -675,9 +675,9 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::RouteBinding.make
         filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
         service_instance_guids = filtered_route_bindings.
-          map(&:service_instance).
-          map(&:guid).
-          join(',')
+                                 map(&:service_instance).
+                                 map(&:guid).
+                                 join(',')
 
         get "/v3/service_route_bindings?service_instance_guids=#{service_instance_guids}", nil, admin_headers
 
@@ -692,9 +692,9 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::RouteBinding.make
         filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
         service_instance_names = filtered_route_bindings.
-          map(&:service_instance).
-          map(&:name).
-          join(',')
+                                 map(&:service_instance).
+                                 map(&:name).
+                                 join(',')
 
         get "/v3/service_route_bindings?service_instance_names=#{service_instance_names}", nil, admin_headers
 
@@ -709,9 +709,9 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::RouteBinding.make
         filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
         route_guids = filtered_route_bindings.
-          map(&:route).
-          map(&:guid).
-          join(',')
+                      map(&:route).
+                      map(&:guid).
+                      join(',')
 
         get "/v3/service_route_bindings?route_guids=#{route_guids}", nil, admin_headers
 
@@ -910,7 +910,7 @@ RSpec.describe 'v3 service route bindings' do
           let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
           let(:route_service_url) { 'https://route_service_url.com' }
           let(:broker_status_code) { 200 }
-          let(:broker_response) { { } }
+          let(:broker_response) { {} }
           let(:query) do
             {
               service_id: service_instance.service_plan.service.unique_id,
