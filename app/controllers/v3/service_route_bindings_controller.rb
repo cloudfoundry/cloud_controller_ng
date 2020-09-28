@@ -2,7 +2,9 @@ require 'messages/service_route_binding_create_message'
 require 'messages/service_route_binding_show_message'
 require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
+require 'actions/service_route_binding_delete'
 require 'jobs/v3/create_route_binding_job'
+require 'jobs/v3/delete_route_binding_job'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_route_binding_presenter'
 require 'fetchers/route_binding_list_fetcher'
@@ -59,6 +61,21 @@ class ServiceRouteBindingsController < ApplicationController
     )
   end
 
+  def destroy
+    route_binding = RouteBinding.first(guid: hashed_params[:guid])
+    route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
+
+    action = V3::ServiceRouteBindingDelete.new(service_event_repository)
+    result = action.delete(route_binding, async_allowed: false)
+
+    if result == V3::ServiceRouteBindingDelete::RequiresAsync
+      pollable_job_guid = enqueue_unbind_job(route_binding.guid)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+    else
+      head :no_content
+    end
+  end
+
   private
 
   AVAILABLE_DECORATORS = [
@@ -89,6 +106,15 @@ class ServiceRouteBindingsController < ApplicationController
       binding_guid,
       user_audit_info: user_audit_info,
       parameters: parameters,
+    )
+    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job.guid
+  end
+
+  def enqueue_unbind_job(binding_guid)
+    bind_job = VCAP::CloudController::V3::DeleteRouteBindingJob.new(
+      binding_guid,
+      user_audit_info: user_audit_info,
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid

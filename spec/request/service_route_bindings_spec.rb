@@ -218,7 +218,7 @@ RSpec.describe 'v3 service route bindings' do
         get "/v3/jobs/#{job.guid}", nil, space_dev_headers
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['guid']). to eq(job.guid)
+        expect(parsed_response['guid']).to eq(job.guid)
       end
 
       describe 'the pollable job' do
@@ -650,11 +650,11 @@ RSpec.describe 'v3 service route bindings' do
         [
           expected_json(
             binding_guid: route_binding_1.guid,
-              route_service_url: route_service_url,
-              service_instance_guid: service_instance_1.guid,
-              route_guid: route.guid,
-              last_operation_type: 'create',
-              last_operation_state: 'successful',
+            route_service_url: route_service_url,
+            service_instance_guid: service_instance_1.guid,
+            route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'successful',
           ),
           expected_json(
             binding_guid: route_binding_2.guid,
@@ -867,6 +867,149 @@ RSpec.describe 'v3 service route bindings' do
     end
   end
 
+  describe 'DELETE /v3/service_route_bindings/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_route_bindings/#{guid}", nil, user_headers } }
+
+    context 'route binding exists' do
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:binding) do
+        VCAP::CloudController::RouteBinding.new.save_with_new_operation(
+          { service_instance: service_instance, route: route, route_service_url: route_service_url },
+          { type: 'create', state: 'successful' }
+        )
+      end
+      let(:guid) { binding.guid }
+
+      context 'user-provided service instance' do
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
+        let(:db_check) {
+          lambda do
+            expect(VCAP::CloudController::RouteBinding.all).to be_empty
+          end
+        }
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'managed service instance' do
+        let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+        let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
+        let(:db_check) { lambda {} }
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        it 'responds with a job resource' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(202)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          expect(job.operation).to eq('service_route_bindings.delete')
+          expect(job.resource_guid).to eq(binding.guid)
+          expect(job.resource_type).to eq('service_route_binding')
+
+          get "/v3/jobs/#{job.guid}", nil, space_dev_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['guid']).to eq(job.guid)
+        end
+
+        describe 'the pollable job' do
+          let(:broker_base_url) { service_instance.service_broker.broker_url }
+          let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+          let(:route_service_url) { 'https://route_service_url.com' }
+          let(:broker_status_code) { 200 }
+          let(:broker_response) { {} }
+          let(:query) do
+            {
+              service_id: service_instance.service_plan.service.unique_id,
+              plan_id: service_instance.service_plan.unique_id,
+            }
+          end
+
+          before do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(202)
+
+            stub_request(:delete, broker_unbind_url).
+              with(query: query).
+              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+          end
+
+          it 'sends an unbind request with the right arguments to the service broker' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:delete, broker_unbind_url).
+                with(
+                  query: query,
+                )
+            ).to have_been_made.once
+          end
+
+          context 'when the unbind completes synchronously' do
+            it 'removes the binding' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(VCAP::CloudController::RouteBinding.all).to be_empty
+            end
+
+            it 'completes the job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'when the broker returns a failure' do
+            let(:broker_status_code) { 418 }
+            let(:broker_response) { 'nope' }
+
+            it 'does not remove the binding' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(VCAP::CloudController::RouteBinding.all).not_to be_empty
+            end
+
+            it 'puts the error details in the job' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              expect(job.cf_api_error).not_to be_nil
+              error = YAML.safe_load(job.cf_api_error)
+              expect(error['errors'].first['code']).to eq(10009)
+              expect(error['errors'].first['detail']).
+                to include('The service broker rejected the request. Status Code: 418 I\'m a Teapot, Body: "nope"')
+            end
+          end
+        end
+      end
+    end
+
+    context 'no route binding' do
+      let(:guid) { 'no-such-route-binding' }
+
+      it 'fails with the correct error' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(
+          include({
+            'detail' => 'Service route binding not found',
+            'title' => 'CF-ResourceNotFound',
+            'code' => 10010,
+          })
+        )
+      end
+    end
+  end
+
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -921,7 +1064,7 @@ RSpec.describe 'v3 service route bindings' do
     route_service_url = service_instance.route_service_url
     VCAP::CloudController::RouteBinding.new.save_with_new_operation(
       { service_instance: service_instance, route: route, route_service_url: route_service_url },
-        { type: 'create', state: 'successful' }
+      { type: 'create', state: 'successful' }
     )
   end
 end
