@@ -161,6 +161,8 @@ class PackagesController < ApplicationController
   end
 
   def create_copy
+    unprocessable!('Unable to copy package when an image registry is used to store packages') if VCAP::CloudController::Config.config.package_image_registry_configured?
+
     app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).first
     unprocessable_app! unless destination_app &&

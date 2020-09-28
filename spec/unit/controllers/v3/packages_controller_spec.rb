@@ -1297,6 +1297,19 @@ RSpec.describe PackagesController, type: :controller do
         allow_user_write_access(user, space: destination_space)
       end
 
+      context 'when the package is stored in an image registry' do
+        before do
+          TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+        end
+
+        it 'returns 422' do
+          post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+        end
+      end
+
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
