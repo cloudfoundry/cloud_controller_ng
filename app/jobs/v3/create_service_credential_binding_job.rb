@@ -1,5 +1,5 @@
 require 'jobs/reoccurring_job'
-require 'actions/service_credential_binding_create'
+require 'actions/v3/service_binding_create'
 require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
@@ -42,11 +42,11 @@ module VCAP::CloudController
         binding = ServiceBinding.first(guid: @binding_guid)
         gone! unless binding
 
-        action = V3::ServiceCredentialBindingCreate.new(@user_audit_info, @audit_hash)
+        action = V3::ServiceBindingCreate.new(binding_guid: @binding_guid, user_audit_info: @user_audit_info, audit_hash: @audit_hash)
 
         if @first_time
           @first_time = false
-          action.bind(binding, parameters: @parameters, accepts_incomplete: false)
+          action.bind(binding.service_instance, parameters: @parameters, accepts_incomplete: false)
           return finish if binding.reload.terminal_state?
         end
 

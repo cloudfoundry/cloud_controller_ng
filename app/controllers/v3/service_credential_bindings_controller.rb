@@ -1,4 +1,4 @@
-require 'actions/service_credential_binding_create'
+require 'actions/v3/service_binding_create'
 require 'actions/service_credential_binding_delete'
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
@@ -49,20 +49,18 @@ class ServiceCredentialBindingsController < ApplicationController
     resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
     unauthorized! unless can_write_to_space?(app.space)
 
-    action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
+    action = V3::ServiceBindingCreate.new(user_audit_info: user_audit_info, audit_hash: message.audit_hash)
+    binding_guid, needs_job = action.bind(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
 
-    case service_instance
-    when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(binding.guid, message)
+    if needs_job
+      pollable_job_guid = enqueue_bind_job(binding_guid, message)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-    when UserProvidedServiceInstance
-      action.bind(binding)
-      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+    else
+      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(ServiceBinding.first(guid: binding_guid)).to_hash
     end
-  rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
+  rescue V3::ServiceBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
-  rescue V3::ServiceCredentialBindingCreate::Unimplemented
+  rescue V3::ServiceBindingCreate::Unimplemented
     head :not_implemented
   end
 

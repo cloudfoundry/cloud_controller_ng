@@ -35,13 +35,13 @@ module VCAP::CloudController
 
       describe '#perform' do
         let(:action) do
-          instance_double(V3::ServiceCredentialBindingCreate, {
+          instance_double(V3::ServiceBindingCreate, {
             bind: nil,
           })
         end
 
         before do
-          allow(V3::ServiceCredentialBindingCreate).to receive(:new).and_return(action)
+          allow(V3::ServiceBindingCreate).to receive(:new).and_return(action)
         end
 
         context 'first time' do
@@ -52,7 +52,7 @@ module VCAP::CloudController
               subject.perform
 
               expect(action).to have_received(:bind).with(
-                binding,
+                binding.service_instance,
                 parameters: parameters,
                 accepts_incomplete: false,
               )
@@ -68,7 +68,7 @@ module VCAP::CloudController
               expect { subject.perform }.not_to raise_error
 
               expect(action).to have_received(:bind).with(
-                binding,
+                binding.service_instance,
                 parameters: parameters,
                 accepts_incomplete: false,
               )
