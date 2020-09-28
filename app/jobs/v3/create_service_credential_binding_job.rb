@@ -5,11 +5,12 @@ require 'cloud_controller/errors/api_error'
 module VCAP::CloudController
   module V3
     class CreateServiceCredentialBindingJob < Jobs::ReoccurringJob
-      def initialize(binding_guid, parameters:, user_audit_info:)
+      def initialize(binding_guid, parameters:, user_audit_info:, audit_hash:)
         super()
         @binding_guid = binding_guid
         @user_audit_info = user_audit_info
         @parameters = parameters
+        @audit_hash = audit_hash
         @first_time = true
       end
 
@@ -34,14 +35,14 @@ module VCAP::CloudController
       end
 
       def resource_type
-        'service_binding'
+        'service_credential_binding'
       end
 
       def perform
         binding = ServiceBinding.first(guid: @binding_guid)
         gone! unless binding
 
-        action = V3::ServiceCredentialBindingCreate.new(@user_audit_info)
+        action = V3::ServiceCredentialBindingCreate.new(@user_audit_info, @audit_hash)
 
         if @first_time
           @first_time = false

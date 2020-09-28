@@ -29,6 +29,7 @@ module VCAP::CloudController
           binding.guid,
           parameters: parameters,
           user_audit_info: user_info,
+          audit_hash: { some_key: 'some_info' }
         )
       end
 
@@ -123,7 +124,7 @@ module VCAP::CloudController
 
       describe '#resource_type' do
         it 'returns "service_binding"' do
-          expect(subject.resource_type).to eq('service_binding')
+          expect(subject.resource_type).to eq('service_credential_binding')
         end
       end
     end

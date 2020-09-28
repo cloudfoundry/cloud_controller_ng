@@ -49,12 +49,12 @@ class ServiceCredentialBindingsController < ApplicationController
     resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
     unauthorized! unless can_write_to_space?(app.space)
 
-    action = V3::ServiceCredentialBindingCreate.new(user_audit_info)
+    action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
     binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
 
     case service_instance
     when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(binding.guid, message.parameters)
+      pollable_job_guid = enqueue_bind_job(binding.guid, message)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
       action.bind(binding)
@@ -111,11 +111,12 @@ class ServiceCredentialBindingsController < ApplicationController
 
   private
 
-  def enqueue_bind_job(binding_guid, parameters)
+  def enqueue_bind_job(binding_guid, message)
     bind_job = VCAP::CloudController::V3::CreateServiceCredentialBindingJob.new(
       binding_guid,
       user_audit_info: user_audit_info,
-      parameters: parameters
+      audit_hash: message.audit_hash,
+      parameters: message.parameters
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid

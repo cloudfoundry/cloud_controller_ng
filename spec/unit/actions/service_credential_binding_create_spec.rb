@@ -5,8 +5,9 @@ require 'cloud_controller/user_audit_info'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingCreate do
-      subject(:action) { described_class.new(user_audit_info) }
+      subject(:action) { described_class.new(user_audit_info, audit_hash) }
 
+      let(:audit_hash) { { some_info: 'some_value' } }
       let(:volume_mount_services_enabled) { true }
       let(:space) { Space.make }
       let(:app) { AppModel.make(space: space) }
@@ -176,7 +177,12 @@ module VCAP::CloudController
 
           it 'creates an audit event' do
             action.bind(precursor)
-            expect(@service_binding_event_repository).to have_received(:record_create).with(precursor, user_audit_info, manifest_triggered: false)
+            expect(@service_binding_event_repository).to have_received(:record_create).with(
+              precursor,
+              user_audit_info,
+              audit_hash,
+              manifest_triggered: false,
+            )
           end
 
           context 'when saving to the db fails' do

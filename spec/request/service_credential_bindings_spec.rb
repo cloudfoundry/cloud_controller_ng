@@ -911,11 +911,13 @@ RSpec.describe 'v3 service credential bindings' do
           expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
           expect(job.operation).to eq('service_bindings.create')
           expect(job.resource_guid).to eq(binding.guid)
-          expect(job.resource_type).to eq('service_binding')
+          expect(job.resource_type).to eq('service_credential_binding')
 
           get "/v3/jobs/#{job.guid}", nil, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response['guid']).to eq(job.guid)
+          binding_link = parsed_response.dig('links', 'service_credential_binding', 'href')
+          expect(binding_link).to end_with("/v3/service_credential_bindings/#{binding.guid}")
         end
 
         describe 'the pollable job' do
@@ -991,6 +993,17 @@ RSpec.describe 'v3 service credential bindings' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => create_body.with_indifferent_access
+              })
             end
           end
 

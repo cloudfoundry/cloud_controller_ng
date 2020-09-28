@@ -10,8 +10,9 @@ module VCAP::CloudController
       class Unimplemented < StandardError
       end
 
-      def initialize(user_audit_info)
+      def initialize(user_audit_info, audit_hash)
         @user_audit_info = user_audit_info
+        @audit_hash = audit_hash
       end
 
       def precursor(service_instance, app: nil, name: nil, volume_mount_services_enabled: false)
@@ -46,7 +47,7 @@ module VCAP::CloudController
           save_incomplete_binding(binding, details[:operation])
         else
           binding.save_with_new_operation(operation_succeeded, attributes: details[:binding])
-          event_repository.record_create(binding, @user_audit_info, manifest_triggered: false)
+          event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
         end
       rescue => e
         binding.save_with_new_operation({
