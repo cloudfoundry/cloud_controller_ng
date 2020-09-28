@@ -233,6 +233,16 @@ module VCAP::CloudController
           expect(subject.operation_type).to eq('create')
         end
       end
+
+      describe '#handle_timeout' do
+        it 'updates the last operation to failed' do
+          subject.handle_timeout
+          binding.reload
+          expect(binding.last_operation.type).to eq('create')
+          expect(binding.last_operation.state).to eq('failed')
+          expect(binding.last_operation.description).to eq('Service Broker failed to bind within the required time.')
+        end
+      end
     end
   end
 end
