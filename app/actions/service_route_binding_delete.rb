@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
 
       def delete(binding, async_allowed:)
-        return RequiresAsync unless async_allowed || !binding.service_instance.managed_instance?
+        return RequiresAsync unless async_allowed || binding.service_instance.user_provided_instance?
 
         operation_in_progress! if binding.service_instance.operation_in_progress?
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
         binding.destroy
         binding.notify_diego
 
-        return DeleteComplete
+        DeleteComplete
       end
 
       private
