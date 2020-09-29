@@ -122,13 +122,17 @@ module VCAP::CloudController
                 dbl
               end
 
-              it 'fails with an appropriate error' do
+              it 'fails with an appropriate error and stores the message in the binding' do
                 expect {
                   action.delete(route_binding, async_allowed: async_allowed)
                 }.to raise_error(
                   described_class::UnprocessableDelete,
                   "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
                 )
+
+                expect(route_binding.last_operation.type).to eq('delete')
+                expect(route_binding.last_operation.state).to eq('failed')
+                expect(route_binding.last_operation.description).to eq("Service broker failed to delete service binding for instance #{service_instance.name}: awful thing")
               end
             end
           end

@@ -24,6 +24,15 @@ module VCAP::CloudController
         binding.notify_diego
 
         DeleteComplete
+
+      rescue => e
+        binding.save_with_new_operation({}, {
+          type: 'delete',
+          state: 'failed',
+          description: e.message,
+        })
+
+        raise e
       end
 
       private

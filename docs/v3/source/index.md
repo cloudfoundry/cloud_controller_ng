@@ -368,6 +368,7 @@ includes:
   - experimental_resources/service_route_bindings/create
   - experimental_resources/service_route_bindings/list
   - experimental_resources/service_route_bindings/get
+  - experimental_resources/service_route_bindings/delete
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get
