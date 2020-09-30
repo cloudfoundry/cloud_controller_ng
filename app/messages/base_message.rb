@@ -115,6 +115,14 @@ module VCAP::CloudController
       end
     end
 
+    class DisallowCreatedAtsParamValidator < ActiveModel::Validator
+      def validate(record)
+        if record.requested?(:created_ats)
+          record.errors[:base] << "Filtering by 'created_ats' is not allowed on this resource."
+        end
+      end
+    end
+
     class IncludeParamValidator < ActiveModel::Validator
       def validate(record)
         if record.requested?(:include)

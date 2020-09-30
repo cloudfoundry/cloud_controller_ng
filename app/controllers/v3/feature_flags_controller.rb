@@ -3,17 +3,14 @@ require 'messages/feature_flags_list_message'
 require 'messages/feature_flags_update_message'
 require 'actions/feature_flag_update'
 require 'cloud_controller/paging/list_paginator'
+require 'fetchers/feature_flag_list_fetcher'
 
 class FeatureFlagsController < ApplicationController
   def index
     message = FeatureFlagsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    db_feature_flags = FeatureFlag.all
-    dataset = FeatureFlag::DEFAULT_FLAGS.collect do |feature_flag_name, default_enabled_state|
-      db_flag = db_feature_flags.find { |feature_flag| feature_flag.name == feature_flag_name.to_s }
-      db_flag || FeatureFlag.new(name: feature_flag_name, enabled: default_enabled_state)
-    end
+    dataset = FeatureFlagListFetcher.fetch_all(message)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::FeatureFlagPresenter,

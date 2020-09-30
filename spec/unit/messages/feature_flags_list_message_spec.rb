@@ -61,6 +61,12 @@ module VCAP::CloudController
         expect(message).to be_invalid
         expect(message.errors[:order_by].length).to eq 1
       end
+
+      it 'validates that created_ats is invalid' do
+        message = FeatureFlagsListMessage.from_params({ created_ats: 'created_at' })
+        expect(message).to be_invalid
+        expect(message.errors[:base][0]).to eq "Filtering by 'created_ats' is not allowed on this resource."
+      end
     end
   end
 end

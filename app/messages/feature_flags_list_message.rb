@@ -3,6 +3,7 @@ require 'messages/list_message'
 module VCAP::CloudController
   class FeatureFlagsListMessage < ListMessage
     validates_with NoAdditionalParamsValidator
+    validates_with DisallowCreatedAtsParamValidator
 
     def self.from_params(params)
       super(params, [])

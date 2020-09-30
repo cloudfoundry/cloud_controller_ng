@@ -14,6 +14,39 @@ RSpec.describe 'Feature Flags Request' do
       flag_names_in_response = parsed_response['resources'].map { |flag| flag['name'] }
       expect(flag_names_in_response).to eq(flag_names_sorted.map(&:to_s))
     end
+
+    context 'filtering timestamps on update' do
+      # before must occur before the let! otherwise the resources will be created with
+      # update_on_create: true
+      before do
+        VCAP::CloudController::FeatureFlag.plugin :timestamps, update_on_create: false
+      end
+
+      let!(:resource_1) { VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username', updated_at: '2020-05-26T18:47:01Z') }
+      let!(:resource_2) { VCAP::CloudController::FeatureFlag.make(name: 'task_creation', updated_at: '2020-05-26T18:47:02Z') }
+      let!(:resource_3) { VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', updated_at: '2020-05-26T18:47:03Z') }
+      let!(:resource_4) { VCAP::CloudController::FeatureFlag.make(name: 'unset_roles_by_username', updated_at: '2020-05-26T18:47:04Z') }
+
+      after do
+        VCAP::CloudController::FeatureFlag.plugin :timestamps, update_on_create: true
+      end
+
+      it 'filters' do
+        get '/v3/feature_flags?updated_ats[gt]=2020-05-26T18:47:02Z', nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('user_org_creation', 'unset_roles_by_username')
+      end
+    end
+
+    context 'filtering timestamps on created_ats' do
+      it 'filters' do
+        get '/v3/feature_flags?created_ats[gt]=2020-05-26T18:47:04Z', nil, admin_headers
+
+        expect(last_response).to have_status_code(400)
+        expect(last_response).to have_error_message("The query parameter is invalid: Filtering by 'created_ats' is not allowed on this resource.")
+      end
+    end
   end
 
   describe 'GET /v3/feature_flags/:name' do
