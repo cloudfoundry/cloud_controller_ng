@@ -49,10 +49,13 @@ class AppsV3Controller < ApplicationController
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
     decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
 
+    page_results = SequelPaginator.new.get_page(dataset, message.try(:pagination_options))
+    handle_order_by_presented_value(page_results)
+
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
              presenter: Presenters::V3::AppPresenter,
-             paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+             paginated_result: page_results,
              path: '/v3/apps',
              message: message,
              decorators: decorators
@@ -351,6 +354,12 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def handle_order_by_presented_value(page_results)
+    if page_results.try(:pagination_options).try(:order_by) == 'desired_state'
+      page_results.pagination_options.order_by = 'state'
+    end
+  end
 
   def deployment_in_progress!
     unprocessable!(

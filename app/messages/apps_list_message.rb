@@ -23,11 +23,19 @@ module VCAP::CloudController
     validates :stacks, array: true, allow_nil: true
 
     def valid_order_by_values
-      super + [:name]
+      super + [:name, :state]
     end
 
     def self.from_params(params)
       super(params, %w(names guids organization_guids space_guids stacks include))
+    end
+
+    def pagination_options
+      super.tap do |po|
+        if po.order_by == 'state'
+          po.order_by = 'desired_state'
+        end
+      end
     end
   end
 end

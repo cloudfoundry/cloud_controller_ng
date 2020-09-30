@@ -780,6 +780,31 @@ RSpec.describe 'Apps' do
         expect(app_names).to eq(descending)
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-name')
       end
+
+      it 'can order by state' do
+        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STARTED')
+        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STOPPED')
+        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STARTED')
+        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STOPPED')
+        ascending = ['STARTED', 'STARTED', 'STOPPED', 'STOPPED']
+        descending = ascending.reverse
+
+        # ASCENDING
+        get '/v3/apps?order_by=state', nil, user_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        app_states = parsed_response['resources'].map { |i| i['state'] }
+        expect(app_states).to eq(ascending)
+        expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}state")
+
+        # DESCENDING
+        get '/v3/apps?order_by=-state', nil, user_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        app_states = parsed_response['resources'].map { |i| i['state'] }
+        expect(app_states).to eq(descending)
+        expect(parsed_response['pagination']['first']['href']).to include('order_by=-state')
+      end
     end
 
     context 'labels' do
