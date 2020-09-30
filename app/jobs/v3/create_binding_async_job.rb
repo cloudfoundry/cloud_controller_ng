@@ -1,5 +1,8 @@
 require 'jobs/reoccurring_job'
 require 'actions/service_route_binding_create'
+require 'actions/service_credential_binding_create'
+require 'jobs/v3/create_route_binding_job'
+require 'jobs/v3/create_service_credential_binding_job'
 require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
@@ -17,9 +20,9 @@ module VCAP::CloudController
 
       def actor
         @actor ||= if @type == :route
-          CreateRouteBindingJob.new(@resource_guid, parameters: @parameters, user_audit_info: @user_audit_info)
-        else
-          CreateServiceCredentialBindingJob.new(@resource_guid, parameters: @parameters, user_audit_info: @user_audit_info, audit_hash: @audit_hash)
+                     CreateRouteBindingJob.new(@resource_guid, parameters: @parameters, user_audit_info: @user_audit_info)
+                   else
+                     CreateServiceCredentialBindingJob.new(@resource_guid, parameters: @parameters, user_audit_info: @user_audit_info, audit_hash: @audit_hash)
         end
       end
 
