@@ -4,7 +4,6 @@ module VCAP::CloudController
   class AppsListMessage < MetadataListMessage
     register_allowed_keys [
       :names,
-      :guids,
       :organization_guids,
       :space_guids,
       :stacks,
@@ -17,7 +16,6 @@ module VCAP::CloudController
     validates_with LifecycleTypeParamValidator
 
     validates :names, array: true, allow_nil: true
-    validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :stacks, array: true, allow_nil: true
@@ -27,7 +25,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(names guids organization_guids space_guids stacks include))
+      super(params, %w(names organization_guids space_guids stacks include))
     end
 
     def pagination_options

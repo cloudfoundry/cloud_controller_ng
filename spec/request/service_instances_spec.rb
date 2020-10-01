@@ -165,6 +165,7 @@ RSpec.describe 'V3 service instances' do
           service_plan_guids: ['guid-1', 'guid-2'],
           service_plan_names: ['plan-1', 'plan-2'],
           fields: { 'space.organization' => 'name' },
+          guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }

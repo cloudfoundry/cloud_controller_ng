@@ -42,10 +42,6 @@ module VCAP::CloudController
           dataset = dataset.where(app_guid: message.app_guids)
         end
 
-        if message.requested?(:guids)
-          dataset = dataset.where(Sequel.qualify(:processes, :guid) => message.guids)
-        end
-
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ProcessLabelModel,

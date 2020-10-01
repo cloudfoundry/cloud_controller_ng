@@ -298,7 +298,7 @@ RSpec.describe 'v3 service credential bindings' do
       describe 'unknown filter' do
         let(:valid_query_params) do
           %w(
-            page per_page order_by created_ats updated_ats names service_instance_guids service_instance_names
+            page per_page order_by created_ats updated_ats guids names service_instance_guids service_instance_names
             service_plan_names service_plan_guids service_offering_names service_offering_guids app_guids app_names
             include type
           )

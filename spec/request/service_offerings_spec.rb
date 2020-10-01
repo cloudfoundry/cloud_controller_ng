@@ -221,6 +221,7 @@ RSpec.describe 'V3 service offerings' do
           order_by:   'updated_at',
           label_selector: 'foo==bar',
           fields: { 'service_broker' => 'name' },
+          guids: 'foo,bar',
           created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
@@ -544,6 +545,31 @@ RSpec.describe 'V3 service offerings' do
           end
 
           it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+        end
+      end
+
+      context 'when filtering by GUID' do
+        let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+
+        let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+        let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+        let(:space_3) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+        let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_service_offering) { public_plan.service }
+
+        let!(:guids) { [service_offering_1.guid, service_offering_2.guid] }
+
+        it 'returns the right offerings' do
+          expect_filtered_service_offerings(
+            "guids=#{guids.join(',')}",
+            [service_offering_1, service_offering_2]
+          )
         end
       end
 

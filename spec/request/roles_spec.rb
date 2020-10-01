@@ -924,19 +924,11 @@ RSpec.describe 'Roles Request' do
       }
     end
 
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::SpaceAuditor }
-      let(:additional_resource_params) { { user: user } }
-      let(:api_call) do
-        lambda { |headers, filters| get "/v3/roles?#{filters}", nil, headers }
-      end
-      let(:headers) { admin_headers }
-    end
-
     describe 'list query parameters' do
       before do
         allow(uaa_client).to receive(:users_for_ids).and_return([])
       end
+
       it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
         let(:request) { 'v3/roles' }
         let(:message) { VCAP::CloudController::RolesListMessage }
@@ -1049,7 +1041,14 @@ RSpec.describe 'Roles Request' do
     end
 
     context 'listing roles with filters' do
-      let(:api_call) { lambda { |user_headers| get "/v3/roles?user_guids=#{other_user.guid}&order_by=-created_at", nil, user_headers } }
+      let(:too_late_org_role) { OrganizationAuditor.make(user: other_user, organization: org, created_at: '2028-05-26T18:47:01Z') }
+      let(:api_call) { lambda { |user_headers|
+                         get "/v3/roles?user_guids=#{other_user.guid}&
+order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_auditor.guid},#{space_auditor.guid}",
+                                                 nil,
+                                                 user_headers
+                       }
+      }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: [org_auditor_response_object, space_auditor_response_object])

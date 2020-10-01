@@ -12,10 +12,6 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:guids)
-          dataset = dataset.where(guid: message.guids)
-        end
-
         if message.requested?(:usernames)
           guids = uaa_client.ids_for_usernames_and_origins(message.usernames, message.origins)
           dataset = dataset.where(guid: guids)

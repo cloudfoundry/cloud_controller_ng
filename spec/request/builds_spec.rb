@@ -331,6 +331,7 @@ RSpec.describe 'Builds' do
           per_page: '10',
           order_by: 'updated_at',
           states: 'foo',
+          guids: '123',
           app_guids: '123',
           package_guids: '123',
           label_selector: 'foo,bar',

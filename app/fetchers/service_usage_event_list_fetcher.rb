@@ -18,10 +18,6 @@ module VCAP::CloudController
           dataset = dataset.filter { id > last_event.id }
         end
 
-        if message.requested?(:guids)
-          dataset = dataset.where(guid: message.guids)
-        end
-
         if message.requested?(:service_instance_types)
           dataset = dataset.where(service_instance_type: message.service_instance_types)
         end

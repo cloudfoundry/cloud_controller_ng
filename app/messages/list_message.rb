@@ -10,8 +10,9 @@ module VCAP::CloudController
 
     ALLOWED_PAGINATION_KEYS = [:page, :per_page, :order_by].freeze
     ADVANCED_FILTERING_KEYS = [:created_ats, :updated_ats].freeze
+    COMMON_FILTERING_KEYS = [:guids].freeze
 
-    register_allowed_keys ALLOWED_PAGINATION_KEYS + ADVANCED_FILTERING_KEYS
+    register_allowed_keys ALLOWED_PAGINATION_KEYS + ADVANCED_FILTERING_KEYS + COMMON_FILTERING_KEYS
 
     # Disallow directly calling <any>ListMessage.new
     # All ListMessage classes should be instantiated via the from_params method
@@ -76,9 +77,10 @@ module VCAP::CloudController
 
     validates :created_ats, timestamp: true, allow_nil: true
     validates :updated_ats, timestamp: true, allow_nil: true
+    validates :guids, array: true, allow_nil: true
 
     def self.from_params(params, to_array_keys, fields: [])
-      message = super(params, to_array_keys + ADVANCED_FILTERING_KEYS, fields: fields)
+      message = super(params, (to_array_keys + ADVANCED_FILTERING_KEYS + COMMON_FILTERING_KEYS).map(&:to_s), fields: fields)
       message.requirements = parse_label_selector(params.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message

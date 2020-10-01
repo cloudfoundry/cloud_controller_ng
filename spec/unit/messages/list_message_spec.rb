@@ -238,18 +238,31 @@ module VCAP::CloudController
     describe 'timestamp validations' do
       context 'validates the created_ats filter' do
         it 'delegates to the TimestampValidator' do
-          message = ListMessage.from_params({ created_ats: 47 }, [])
+          message = ListMessage.from_params({ 'created_ats' => 47 }, [])
           expect(message).not_to be_valid
           expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+        end
+        it 'validates guids are in array format' do
+          message = ListMessage.from_params({ guids: 47 }, [])
+          expect(message).not_to be_valid
+          expect(message.errors[:guids]).to include('must be an array')
         end
       end
 
       context 'validates the updated_ats filter' do
         it 'delegates to the TimestampValidator' do
-          message = ListMessage.from_params({ updated_ats: 47 }, [])
+          message = ListMessage.from_params({ 'updated_ats' => 47 }, [])
           expect(message).not_to be_valid
           expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
+      end
+    end
+
+    context 'validates the guids filter' do
+      it 'validates guids are in array format' do
+        message = ListMessage.from_params({ 'guids' => { guid: 47 } }, [])
+        expect(message).not_to be_valid
+        expect(message.errors[:guids]).to include('must be an array')
       end
     end
   end

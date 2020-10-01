@@ -366,6 +366,7 @@ RSpec.describe 'Sidecars' do
           page:   '2',
           per_page:   '10',
           order_by:   'updated_at',
+          guids: "#{process1.guid},bogus",
           created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
