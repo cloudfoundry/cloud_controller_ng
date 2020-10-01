@@ -349,7 +349,7 @@ module VCAP::CloudController
 
           it 'returns true' do
             polling_status = action.poll(binding)
-            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingComplete)
+            expect(polling_status[:finished]).to be_truthy
           end
 
           it 'updates the last operation' do
@@ -422,7 +422,7 @@ module VCAP::CloudController
         context 'response says in progress' do
           it 'returns false' do
             polling_status = action.poll(binding)
-            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingNotComplete)
+            expect(polling_status[:finished]).to be_falsey
           end
 
           it 'updates the last operation' do
@@ -446,7 +446,7 @@ module VCAP::CloudController
 
           it 'returns true' do
             polling_status = action.poll(binding)
-            expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingComplete)
+            expect(polling_status[:finished]).to be_truthy
           end
 
           it 'updates the last operation' do
@@ -469,7 +469,7 @@ module VCAP::CloudController
           context 'no retry interval' do
             it 'returns nil' do
               polling_status = action.poll(binding)
-              expect(polling_status.retry_after).to be_nil
+              expect(polling_status[:retry_after]).to be_nil
             end
           end
 
@@ -486,8 +486,8 @@ module VCAP::CloudController
 
             it 'returns the value when there was a retry header' do
               polling_status = action.poll(binding)
-              expect(polling_status).to be_a_kind_of(ServiceRouteBindingCreate::PollingNotComplete)
-              expect(polling_status.retry_after).to eq(10)
+              expect(polling_status[:finished]).to be_falsey
+              expect(polling_status[:retry_after]).to eq(10)
             end
           end
         end

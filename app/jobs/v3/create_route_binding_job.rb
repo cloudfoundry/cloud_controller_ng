@@ -4,6 +4,25 @@ require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   module V3
+    class CreateRouteBindingJobActor
+      def display_name
+        'service_route_bindings.create'
+      end
+
+      def resource_type
+        'service_route_binding'
+      end
+
+      def get_resource(resource_id)
+        RouteBinding.first(guid: resource_id)
+      end
+
+      def new_action(user_audit_info, audit_hash)
+        service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+        V3::ServiceRouteBindingCreate.new(service_event_repository)
+      end
+    end
+
     class CreateRouteBindingJob < Jobs::ReoccurringJob
       def initialize(precursor_guid, parameters:, user_audit_info:)
         super()

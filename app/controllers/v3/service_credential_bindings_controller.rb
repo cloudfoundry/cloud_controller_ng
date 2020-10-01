@@ -112,7 +112,8 @@ class ServiceCredentialBindingsController < ApplicationController
   private
 
   def enqueue_bind_job(binding_guid, message)
-    bind_job = VCAP::CloudController::V3::CreateServiceCredentialBindingJob.new(
+    bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(
+    :credential,
       binding_guid,
       user_audit_info: user_audit_info,
       audit_hash: message.audit_hash,

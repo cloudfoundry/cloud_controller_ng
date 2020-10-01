@@ -58,6 +58,10 @@ module VCAP::CloudController
         raise e
       end
 
+      def poll(binding)
+        { finished: true }
+      end
+
       private
 
       def operation_succeeded

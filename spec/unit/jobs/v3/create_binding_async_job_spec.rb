@@ -2,14 +2,14 @@ require 'db_spec_helper'
 require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/create_binding_async_job'
 
-
 module VCAP::CloudController
   module V3
     RSpec.describe CreateBindingAsyncJob do
       it_behaves_like 'delayed job', described_class
+      let(:service_binding_type) { :route }
       let(:subject) do
         described_class.new(
-          :route,
+          service_binding_type,
           binding.guid,
           parameters: parameters,
           user_audit_info: user_info,
@@ -39,8 +39,22 @@ module VCAP::CloudController
       let(:user_info) { instance_double(Object) }
       let(:parameters) { { foo: 'bar' } }
 
+      describe '#actor' do
+        let(:actor) do
+          instance_double(V3::CreateServiceCredentialBindingJobActor)
+        end
+
+        before do
+          allow(V3::CreateServiceBindingFactory).to receive(:for).and_return(actor)
+        end
+
+        it 'returns the actor' do
+          expect(subject.actor).to be(actor)
+        end
+      end
+
       describe '#perform' do
-        let(:poll_response) { ServiceRouteBindingCreate::PollingNotComplete.new(nil) }
+        let(:poll_response) { { finished: false } }
         let(:action) do
           instance_double(V3::ServiceRouteBindingCreate, {
             bind: nil,
@@ -49,6 +63,7 @@ module VCAP::CloudController
         end
 
         before do
+          allow(V3::CreateRouteBindingJobActor).to receive(:new_action).and_return(action)
           allow(V3::ServiceRouteBindingCreate).to receive(:new).and_return(action)
         end
 
@@ -145,7 +160,7 @@ module VCAP::CloudController
           end
 
           context 'poll indicates binding complete' do
-            let(:poll_response) { ServiceRouteBindingCreate::PollingComplete.new }
+            let(:poll_response) { { finished: true } }
 
             it 'finishes the job' do
               subject.perform
@@ -178,7 +193,7 @@ module VCAP::CloudController
 
         context 'retry interval' do
           def test_retry_after(value, expected)
-            allow(action).to receive(:poll).and_return(ServiceRouteBindingCreate::PollingNotComplete.new(value.to_s))
+            allow(action).to receive(:poll).and_return({ finished: false, retry_after: value })
             subject.perform
             expect(subject.polling_interval_seconds).to eq(expected)
           end
@@ -239,13 +254,23 @@ module VCAP::CloudController
 
       describe '#display_name' do
         before do
-          allow_any_instance_of(CreateRouteBindingJob).to receive(:display_name).and_return('foo_binding')
+          allow_any_instance_of(V3::CreateRouteBindingJobActor).to receive(:display_name).and_return('foo_binding')
         end
+
         it 'returns the actor display name' do
           expect(subject.display_name).to eq('foo_binding')
         end
       end
 
+      describe '#resource_type' do
+        before do
+          allow_any_instance_of(V3::CreateRouteBindingJobActor).to receive(:resource_type).and_return('binding_type')
+        end
+
+        it 'returns the actor resource type' do
+          expect(subject.resource_type).to eq('binding_type')
+        end
+      end
 
       describe '#handle_timeout' do
         it 'updates the last operation to failed' do

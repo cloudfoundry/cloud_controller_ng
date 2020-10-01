@@ -46,7 +46,7 @@ module VCAP::CloudController
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
 
         details = fetch_last_operation(client, binding)
-        return PollingNotComplete.new unless details
+        return { finished: false } unless details
 
         attributes = {}
 
@@ -71,9 +71,9 @@ module VCAP::CloudController
         end
 
         if binding.reload.terminal_state?
-          PollingComplete.new
+          { finished: true }
         else
-          PollingNotComplete.new(details[:retry_after])
+          { finished: false, retry_after: details[:retry_after] }
         end
       rescue => e
         binding.save_with_new_operation({}, {
@@ -81,11 +81,11 @@ module VCAP::CloudController
           state: 'failed',
           description: e.message,
         })
-        return PollingComplete.new
+        { finished: true }
       end
 
-      PollingComplete = Class.new.freeze
-      PollingNotComplete = Struct.new(:retry_after).freeze
+      # PollingComplete = Class.new.freeze
+      # PollingNotComplete = Struct.new(:retry_after).freeze
 
       class UnprocessableCreate < StandardError; end
 
