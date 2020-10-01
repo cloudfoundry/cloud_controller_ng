@@ -19,10 +19,6 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:guids)
-          dataset = dataset.where(guid: message.guids)
-        end
-
         if message.requested?(:names)
           dataset = dataset.where(name: message.names)
         end

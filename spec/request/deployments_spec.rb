@@ -1214,6 +1214,7 @@ RSpec.describe 'Deployments' do
             status_reasons:   'foo',
             app_guids:   '123',
             label_selector:   'bar',
+            guids: 'foo,bar',
             created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
             updated_ats: { gt: Time.now.utc.iso8601 },
           }

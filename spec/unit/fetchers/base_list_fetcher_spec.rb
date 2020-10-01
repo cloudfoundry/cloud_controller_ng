@@ -18,6 +18,19 @@ module VCAP::CloudController
         expect(subject).to be_a(Sequel::Dataset)
       end
 
+      context 'filtering guids' do
+        let!(:event_1) { Event.make(guid: '1') }
+        let!(:event_2) { Event.make(guid: '2') }
+
+        let(:filters) do
+          { guids: ['1', '3'] }
+        end
+
+        it 'returns records with matching guids' do
+          expect(subject).to match_array([event_1])
+        end
+      end
+
       context 'filtering timestamps on creation' do
         let!(:event_1) { Event.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
         let!(:event_2) { Event.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }

@@ -88,6 +88,7 @@ RSpec.describe 'Revisions' do
           page:   '2',
           per_page:   '10',
           order_by:   'updated_at',
+          guids: app_model.guid.to_s,
           versions:   '1,2',
           label_selector:   'foo,bar',
           created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",

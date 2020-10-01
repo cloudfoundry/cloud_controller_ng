@@ -17,10 +17,6 @@ module VCAP::CloudController
           dataset = dataset.where(name: message.names)
         end
 
-        if message.requested? :guids
-          dataset = dataset.where(guid: message.guids)
-        end
-
         if message.requested? :organization_guids
           dataset = dataset.
                     join(:organizations, quota_definition_id: :id).

@@ -4,7 +4,6 @@ module VCAP::CloudController
   class AppUsageEventsListMessage < ListMessage
     register_allowed_keys [
       :after_guid,
-      :guids,
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -15,14 +14,12 @@ module VCAP::CloudController
       wrong_length: 'filter accepts only one guid'
     }
 
-    validates :guids, array: true, allow_nil: true
-
     def valid_order_by_values
       [:created_at]
     end
 
     def self.from_params(params)
-      super(params, %w(after_guid guids))
+      super(params, %w(after_guid))
     end
   end
 end

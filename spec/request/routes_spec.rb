@@ -154,6 +154,7 @@ RSpec.describe 'Routes Request' do
             organization_guids: ['foo', 'bar'],
             domain_guids: ['foo', 'bar'],
             app_guids: ['foo', 'bar'],
+            guids: ['foo', 'bar'],
             paths: ['foo', 'bar'],
             hosts: 'foo',
             ports: 636,

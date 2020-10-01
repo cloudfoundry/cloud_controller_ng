@@ -6,7 +6,6 @@ module VCAP::CloudController
       :app_guid,
       :app_guids,
       :current,
-      :guids,
       :organization_guids,
       :package_guid,
       :space_guids,
@@ -28,7 +27,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(space_guids states app_guids guids organization_guids))
+      super(params, %w(space_guids states app_guids organization_guids))
     end
 
     private

@@ -240,6 +240,18 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
   let(:headers) { fail 'Please define headers to use for the api call' }
   let(:additional_resource_params) { {} }
 
+  context 'filtering guids' do
+    let!(:resource_1) { resource_klass.make(guid: '1', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '2', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '3', **additional_resource_params) }
+
+    it 'filters on guid' do
+      api_call.call(headers, 'guids=1,2,4')
+      expect(last_response).to have_status_code(200)
+      expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly('1', '2')
+    end
+  end
+
   context 'filtering timestamps on creation' do
     let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
     let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }

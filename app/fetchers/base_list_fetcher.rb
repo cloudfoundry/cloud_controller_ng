@@ -1,9 +1,20 @@
 require 'models/helpers/relational_operators'
+require 'pry'
 
 module VCAP::CloudController
   class BaseListFetcher
     class << self
       def filter(message, dataset, klass)
+        dataset = advanced_filtering(message, dataset, klass)
+
+        if message.requested?(:guids)
+          dataset = dataset.where("#{klass.table_name}__guid": message.guids)
+        end
+
+        dataset
+      end
+
+      def advanced_filtering(message, dataset, klass)
         advanced_filters = {}
         advanced_filters['created_at'] = message.created_ats if message.requested?(:created_ats)
         advanced_filters['updated_at'] = message.updated_ats if message.requested?(:updated_ats)

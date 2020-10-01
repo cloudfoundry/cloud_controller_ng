@@ -4,7 +4,6 @@ module VCAP::CloudController
   class ServiceUsageEventsListMessage < ListMessage
     register_allowed_keys [
       :after_guid,
-      :guids,
       :service_instance_types,
       :service_offering_guids,
     ]
@@ -17,7 +16,6 @@ module VCAP::CloudController
       wrong_length: 'filter accepts only one guid'
     }
 
-    validates :guids, array: true, allow_nil: true
     validates :service_instance_types, array: true, allow_nil: true
     validates :service_offering_guids, array: true, allow_nil: true
 
@@ -26,7 +24,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(after_guid guids service_instance_types service_offering_guids))
+      super(params, %w(after_guid service_instance_types service_offering_guids))
     end
   end
 end

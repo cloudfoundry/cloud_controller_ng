@@ -252,5 +252,13 @@ module VCAP::CloudController
         end
       end
     end
+
+    context 'validates the guids filter' do
+      it 'validates guids are in array format' do
+        message = ListMessage.from_params({ guids: 47 }, [])
+        expect(message).not_to be_valid
+        expect(message.errors[:guids]).to include('must be an array')
+      end
+    end
   end
 end

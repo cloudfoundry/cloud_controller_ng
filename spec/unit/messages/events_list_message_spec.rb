@@ -23,6 +23,7 @@ module VCAP::CloudController
 
       it 'accepts a set of fields' do
         message = EventsListMessage.from_params({
+          guids: ['event_guid1'],
           types: ['audit.app.create'],
           target_guids: ['guid1', 'guid2'],
           space_guids: ['guid3', 'guid4'],
@@ -41,6 +42,12 @@ module VCAP::CloudController
       end
 
       context 'validations' do
+        it 'validates the guids filter' do
+          message = EventsListMessage.from_params({ guids: '123,456' })
+          expect(message).not_to be_valid
+          expect(message.errors[:guids]).to include('must be an array')
+        end
+
         it 'validates the types filter' do
           message = EventsListMessage.from_params({ types: 123 })
           expect(message).not_to be_valid

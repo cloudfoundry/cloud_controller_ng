@@ -17,10 +17,6 @@ module VCAP::CloudController
           dataset = dataset.filter { id > last_event.id }
         end
 
-        if message.requested?(:guids)
-          dataset = dataset.where(guid: message.guids)
-        end
-
         super(message, dataset, AppUsageEvent)
       end
 

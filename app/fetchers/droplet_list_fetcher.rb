@@ -46,9 +46,6 @@ module VCAP::CloudController
         end
 
         droplet_table_name = DropletModel.table_name
-        if message.requested?(:guids)
-          dataset = dataset.where("#{droplet_table_name}__guid".to_sym => message.guids)
-        end
 
         if message.requested?(:organization_guids)
           space_guids_from_orgs = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid)

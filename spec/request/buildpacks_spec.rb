@@ -29,6 +29,7 @@ RSpec.describe 'buildpacks' do
           names: 'foo',
           stacks: 'cf',
           label_selector: 'foo,bar',
+          guids: 'foo,bar',
           created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }

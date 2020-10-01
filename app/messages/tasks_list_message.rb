@@ -5,7 +5,6 @@ module VCAP::CloudController
     register_allowed_keys [
       :names,
       :states,
-      :guids,
       :app_guids,
       :organization_guids,
       :space_guids,
@@ -17,7 +16,6 @@ module VCAP::CloudController
 
     validates :names, array: true, allow_nil: true
     validates :states, array: true, allow_nil: true
-    validates :guids, array: true, allow_nil: true
     validates :app_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
@@ -30,7 +28,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(names states guids app_guids organization_guids space_guids sequence_ids))
+      super(params, %w(names states app_guids organization_guids space_guids sequence_ids))
     end
 
     private

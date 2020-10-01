@@ -5,7 +5,6 @@ module VCAP::CloudController
     register_allowed_keys [
       :states,
       :types,
-      :guids,
       :app_guids,
       :app_guid,
       :space_guids,
@@ -16,14 +15,13 @@ module VCAP::CloudController
 
     validates :states, array: true, allow_nil: true
     validates :types,  array: true, allow_nil: true
-    validates :guids,  array: true, allow_nil: true
     validates :app_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def self.from_params(params)
-      super(params, %w(types states guids app_guids space_guids organization_guids))
+      super(params, %w(types states app_guids space_guids organization_guids))
     end
 
     def to_param_hash

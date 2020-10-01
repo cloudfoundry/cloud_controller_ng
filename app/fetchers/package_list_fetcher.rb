@@ -44,10 +44,6 @@ module VCAP::CloudController
           dataset = dataset.where(table_column_name(PackageModel, :type) => message.types)
         end
 
-        if message.requested? :guids
-          dataset = dataset.where(table_column_name(PackageModel, :guid) => message.guids)
-        end
-
         if message.requested? :app_guids
           dataset = dataset.where(table_column_name(AppModel, :guid) => message.app_guids)
         end

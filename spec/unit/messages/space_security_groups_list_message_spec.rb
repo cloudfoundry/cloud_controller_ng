@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'messages/space_security_groups_list_message'
+require 'pry'
 
 module VCAP::CloudController
   RSpec.describe SpaceSecurityGroupsListMessage do

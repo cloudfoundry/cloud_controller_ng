@@ -38,10 +38,6 @@ module VCAP::CloudController
           dataset = dataset.where(name: message.names)
         end
 
-        if message.requested?(:guids)
-          dataset = dataset.where(guid: message.guids)
-        end
-
         if message.requested?(:organization_guids)
           dataset = dataset.where(owning_organization_id: Organization.where(guid: message.organization_guids).select(:id))
         end
