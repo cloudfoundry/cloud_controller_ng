@@ -182,9 +182,9 @@ module VCAP::CloudController
           db_encryption_key: enum(String, NilClass),
 
           optional(:database_encryption) => {
-              keys: Hash,
-              current_key_label: String,
-              optional(:pbkdf2_hmac_iterations) => Integer
+            keys: Hash,
+            current_key_label: String,
+            optional(:pbkdf2_hmac_iterations) => Integer
           },
 
           disable_custom_buildpacks: bool,
@@ -245,11 +245,11 @@ module VCAP::CloudController
           },
 
           log_cache: {
-              url: String
+            url: String
           },
 
           log_stream: {
-              url: String
+            url: String
           },
 
           request_timeout_in_seconds: Integer,
@@ -302,28 +302,30 @@ module VCAP::CloudController
           },
           shared_isolation_segment_name: String,
 
-          diego: {
-            bbs: {
-              url: String,
-              ca_file: String,
-              cert_file: String,
-              key_file: String,
-              connect_timeout: Integer,
-              send_timeout: Integer,
-              receive_timeout: Integer,
+          **VCAP::Config::Dsl.omit_on_k8s(
+            diego: {
+              bbs: {
+                url: String,
+                ca_file: String,
+                cert_file: String,
+                key_file: String,
+                connect_timeout: Integer,
+                send_timeout: Integer,
+                receive_timeout: Integer,
+              },
+              cc_uploader_url: String,
+              file_server_url: String,
+              lifecycle_bundles: Hash,
+              droplet_destinations: Hash,
+              pid_limit: Integer,
+              use_privileged_containers_for_running: bool,
+              use_privileged_containers_for_staging: bool,
+              insecure_docker_registry_list: [String],
+              docker_staging_stack: String,
+              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+              enable_declarative_asset_downloads: bool,
             },
-            cc_uploader_url: String,
-            file_server_url: String,
-            lifecycle_bundles: Hash,
-            droplet_destinations: Hash,
-            pid_limit: Integer,
-            use_privileged_containers_for_running: bool,
-            use_privileged_containers_for_staging: bool,
-            insecure_docker_registry_list: [String],
-            docker_staging_stack: String,
-            optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-            enable_declarative_asset_downloads: bool,
-          },
+          ),
 
           opi: {
             enabled: bool,

@@ -6,6 +6,18 @@ require 'active_support/core_ext'
 
 module VCAP
   class Config
+    module Dsl
+      class << self
+        def omit_on_k8s(**schema_section)
+          return {} if ENV.key?('KUBERNETES_SERVICE_HOST')
+
+          schema_section.each.with_object({}) do |(key, schema), result|
+            result[key] = schema
+          end
+        end
+      end
+    end
+
     class << self
       attr_reader :schema
 

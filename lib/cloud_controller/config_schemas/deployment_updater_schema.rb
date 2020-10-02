@@ -23,8 +23,8 @@ module VCAP::CloudController
             max_connections: Integer, # max connections in the connection pool
             pool_timeout: Integer, # timeout before raising an error when connection can't be established to the db
             log_level: String, # debug, info, etc.
-            log_db_queries:         bool,
-            ssl_verify_hostname:    bool,
+            log_db_queries: bool,
+            ssl_verify_hostname: bool,
             connection_validation_timeout: Integer,
             optional(:ca_cert_path) => String,
           },
@@ -49,26 +49,28 @@ module VCAP::CloudController
             optional(:pbkdf2_hmac_iterations) => Integer
           },
 
-          diego: {
-            bbs: {
-              url: String,
-              ca_file: String,
-              cert_file: String,
-              key_file: String,
-              connect_timeout: Integer,
-              send_timeout: Integer,
-              receive_timeout: Integer,
+          **VCAP::Config::Dsl.omit_on_k8s(
+            diego: {
+              bbs: {
+                url: String,
+                ca_file: String,
+                cert_file: String,
+                key_file: String,
+                connect_timeout: Integer,
+                send_timeout: Integer,
+                receive_timeout: Integer,
+              },
+              cc_uploader_url: String,
+              file_server_url: String,
+              lifecycle_bundles: Hash,
+              droplet_destinations: Hash,
+              pid_limit: Integer,
+              use_privileged_containers_for_running: bool,
+              use_privileged_containers_for_staging: bool,
+              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+              enable_declarative_asset_downloads: bool,
             },
-            cc_uploader_url: String,
-            file_server_url: String,
-            lifecycle_bundles: Hash,
-            droplet_destinations: Hash,
-            pid_limit: Integer,
-            use_privileged_containers_for_running: bool,
-            use_privileged_containers_for_staging: bool,
-            optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-            enable_declarative_asset_downloads: bool,
-          },
+          ),
 
           opi: {
             enabled: bool,
