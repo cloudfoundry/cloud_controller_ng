@@ -408,7 +408,22 @@ RSpec.describe 'v3 service route bindings' do
             end
           end
 
-          it_behaves_like 'create binding last operation response handling'
+          it_behaves_like 'binding last operation response handling', 'create'
+
+          context 'last operation response is 410 Gone' do
+            let(:last_operation_status_code) { 410 }
+            let(:last_operation_body) { {} }
+
+            it 'continues polling' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('in progress')
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+          end
 
           context 'binding not retrievable' do
             let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
@@ -930,6 +945,7 @@ RSpec.describe 'v3 service route bindings' do
             {
               service_id: service_instance.service_plan.service.unique_id,
               plan_id: service_instance.service_plan.unique_id,
+              accepts_incomplete: true,
             }
           end
 
@@ -965,6 +981,95 @@ RSpec.describe 'v3 service route bindings' do
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
             end
+          end
+
+          context 'when the unbind responds asynchronously' do
+            let(:broker_status_code) { 202 }
+            let(:operation) { Sham.guid }
+            let(:broker_response) { { operation: operation } }
+            let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
+            let(:last_operation_status_code) { 200 }
+            let(:description) { Sham.description }
+            let(:state) { 'in progress' }
+            let(:last_operation_body) do
+              {
+                description: description,
+                state: state,
+              }
+            end
+
+            before do
+              stub_request(:get, broker_binding_last_operation_url).
+                with(query: hash_including({
+                  operation: operation
+                })).
+                to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
+            end
+
+            it 'polls the last operation endpoint' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
+              ).to have_been_made.once
+            end
+
+            it 'updates the binding and job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('delete')
+              expect(binding.last_operation.state).to eq(state)
+              expect(binding.last_operation.description).to eq(description)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'enqueues the next fetch last operation job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+            end
+
+            context 'last operation response is 200 OK and indicates success' do
+              let(:state) { 'succeeded' }
+              let(:last_operation_status_code) { 200 }
+
+              it 'removes the binding' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(VCAP::CloudController::RouteBinding.all).to be_empty
+              end
+
+              it 'completes the job' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+            end
+
+            context 'last operation response is 410 Gone' do
+              let(:last_operation_status_code) { 410 }
+              let(:last_operation_body) { {} }
+
+              it 'removes the binding' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(VCAP::CloudController::RouteBinding.all).to be_empty
+              end
+
+              it 'completes the job' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+            end
+
+            it_behaves_like 'binding last operation response handling', 'delete'
           end
 
           context 'when the broker returns a failure' do
