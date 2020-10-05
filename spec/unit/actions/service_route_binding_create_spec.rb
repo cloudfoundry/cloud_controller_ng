@@ -281,7 +281,7 @@ module VCAP::CloudController
               it 'it raises a BindingNotRetrievable error' do
                 expect {
                   action.bind(precursor, accepts_incomplete: true)
-                }.to raise_error(ServiceRouteBindingCreate::BindingNotRetrievable)
+                }.to raise_error(ServiceBindingCreate::BindingNotRetrievable)
               end
             end
           end

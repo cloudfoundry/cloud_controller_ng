@@ -187,8 +187,8 @@ module VCAP::CloudController
 
           context 'when saving to the db fails' do
             it 'fails the binding operation' do
-              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'succeeded' }, attributes: anything).and_raise(Sequel::ValidationFailed, 'Meh')
-              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'failed', description: 'Meh' }).and_call_original
+              allow(precursor).to receive(:save_with_attributes_and_new_operation).with(anything, { type: 'create', state: 'succeeded' }).and_raise(Sequel::ValidationFailed, 'Meh')
+              allow(precursor).to receive(:save_with_attributes_and_new_operation).with({}, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
               expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
               precursor.reload
               expect(precursor.last_operation.type).to eq('create')
@@ -214,7 +214,9 @@ module VCAP::CloudController
 
         context 'managed service instance' do
           let(:details) { { credentials: { 'password' => 'orchestra' } } }
-          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:service_offering) { Service.make(bindings_retrievable: true) }
+          let(:service_plan) { ServicePlan.make(service: service_offering)}
+          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
           let(:bind_response) { { binding: { credentials: details[:credentials] } } }
           let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
@@ -253,6 +255,16 @@ module VCAP::CloudController
               expect(binding.last_operation.type).to eq('create')
               expect(binding.last_operation.state).to eq('in progress')
               expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+            end
+
+            context 'binding not retrievable' do
+              let(:service_offering) { Service.make(bindings_retrievable: false) }
+
+              it 'it raises a BindingNotRetrievable error' do
+                expect {
+                  action.bind(precursor, accepts_incomplete: true)
+                }.to raise_error(V3::ServiceBindingCreate::BindingNotRetrievable)
+              end
             end
           end
         end
