@@ -9,7 +9,7 @@ require 'messages/service_credential_binding_show_message'
 require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
-require 'jobs/v3/create_service_credential_binding_job'
+require 'jobs/v3/create_service_credential_binding_job_actor'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index

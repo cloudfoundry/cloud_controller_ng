@@ -2,6 +2,7 @@ require 'jobs/reoccurring_job'
 require 'actions/service_route_binding_create'
 require 'actions/service_credential_binding_create'
 require 'cloud_controller/errors/api_error'
+require 'jobs/v3/create_service_binding_job_factory'
 
 module VCAP::CloudController
   module V3
@@ -18,6 +19,10 @@ module VCAP::CloudController
 
       def actor
         @actor ||= CreateServiceBindingFactory.for(@type)
+      end
+
+      def action
+        @action ||= CreateServiceBindingFactory.action(@type, @user_audit_info, @audit_hash)
       end
 
       def operation
@@ -46,15 +51,10 @@ module VCAP::CloudController
 
       def perform
         ###
-        # TODO: use this in the controller - DONE
-        # TODO: implement #action in the jobs - DONE
-        # TODO: change poll to return the hash with {finished and retry_after} - DONE
-        # TODO: implement get_resource in the action - DONE
         # TODO: eventually move the errors being rescued into their own files
         ###
         gone! unless resource
 
-        action = actor.new_action(@user_audit_info, @audit_hash)
         compute_maximum_duration
 
         if @first_time
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       def handle_timeout
-        resource.save_with_new_operation(
+        resource.save_with_attributes_and_new_operation(
           {},
           {
             type: operation_type,
