@@ -762,6 +762,14 @@ RSpec.describe 'V3 service offerings' do
           expect(parsed_response['resources'][2]['name']).to eq('flopsy')
           expect(parsed_response['resources'][3]['name']).to eq('cottontail')
         end
+
+        it 'builds the right links' do
+          get('/v3/service_offerings?order_by=name&per_page=2', nil, admin_headers)
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['pagination']['first']['href']).to include('order_by=%2Bname')
+          expect(parsed_response['pagination']['last']['href']).to include('order_by=%2Bname')
+          expect(parsed_response['pagination']['next']['href']).to include('order_by=%2Bname')
+        end
       end
 
       it_behaves_like 'list endpoint order_by timestamps', '/v3/service_offerings' do

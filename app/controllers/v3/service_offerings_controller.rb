@@ -35,9 +35,12 @@ class ServiceOfferingsController < ApplicationController
     decorators = []
     decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
 
+    page_results = SequelPaginator.new.get_page(dataset, message.try(:pagination_options))
+    handle_order_by_presented_value(page_results)
+
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceOfferingPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      paginated_result: page_results,
       message: message,
       path: '/v3/service_offerings',
       decorators: decorators
@@ -119,5 +122,11 @@ class ServiceOfferingsController < ApplicationController
   def cannot_write!(service_offering)
     unauthorized! if visible_to_current_user?(service: service_offering)
     service_offering_not_found!
+  end
+
+  def handle_order_by_presented_value(page_results)
+    if page_results.try(:pagination_options).try(:order_by) == 'label'
+      page_results.pagination_options.order_by = 'name'
+    end
   end
 end
