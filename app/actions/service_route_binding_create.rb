@@ -42,14 +42,15 @@ module VCAP::CloudController
 
       attr_reader :service_event_repository
 
-      def complete_binding_and_save(binding, details)
-        binding.save_with_new_operation(
+      def complete_binding_and_save(binding, binding_details, last_operation)
+        binding.save_with_attributes_and_new_operation(
           {
-            route_service_url: details[:binding][:route_service_url]
+            route_service_url: binding_details[:route_service_url]
           },
           {
             type: 'create',
-            state: 'succeeded',
+            state: last_operation[:state],
+            description: last_operation[:description],
           }
         )
         binding.notify_diego

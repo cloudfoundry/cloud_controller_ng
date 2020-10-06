@@ -37,7 +37,6 @@ module VCAP::CloudController
           expect { CreateServiceBindingFactory.action(:key, {}, {}) }.to raise_error(CreateServiceBindingFactory::InvalidType)
         end
       end
-
     end
   end
 end

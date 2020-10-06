@@ -3,7 +3,6 @@ require 'services/service_brokers/service_client_provider'
 module VCAP::CloudController
   module V3
     class ServiceBindingCreate
-
       def bind(precursor, parameters: {}, accepts_incomplete: false)
         client = VCAP::Services::ServiceClientProvider.provide(instance: precursor.service_instance)
         details = client.bind(precursor, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
@@ -12,7 +11,7 @@ module VCAP::CloudController
           not_retrievable! unless bindings_retrievable?(precursor)
           save_incomplete_binding(precursor, details[:operation])
         else
-          complete_binding_and_save(precursor, details)
+          complete_binding_and_save(precursor, details[:binding], { state: 'succeeded' })
         end
       rescue => e
         precursor.save_with_attributes_and_new_operation(
@@ -31,26 +30,20 @@ module VCAP::CloudController
         details = fetch_last_operation(client, binding)
         return { finished: false } unless details
 
-        attributes = {}
-
         complete = details[:last_operation][:state] == 'succeeded'
         if complete
           params = client.fetch_service_binding(binding)
-          attributes[:route_service_url] = params[:route_service_url]
-        end
 
-        binding.save_with_new_operation(
-          attributes,
-          {
-            type: 'create',
-            state: details[:last_operation][:state],
-            description: details[:last_operation][:description],
-          }
-        )
-
-        if complete
-          binding.notify_diego
-          record_audit_event(binding)
+          complete_binding_and_save(binding, params, details[:last_operation])
+        else
+          binding.save_with_attributes_and_new_operation(
+            {},
+            {
+              type: 'create',
+              state: details[:last_operation][:state],
+              description: details[:last_operation][:description],
+            }
+          )
         end
 
         if binding.reload.terminal_state?
@@ -59,11 +52,14 @@ module VCAP::CloudController
           { finished: false, retry_after: details[:retry_after] }
         end
       rescue => e
-        binding.save_with_new_operation({}, {
-          type: 'create',
-          state: 'failed',
-          description: e.message,
-        })
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'failed',
+            description: e.message,
+          }
+        )
         { finished: true }
       end
 
@@ -71,8 +67,24 @@ module VCAP::CloudController
 
       private
 
+      #
+      # def save_completed_binding(binding, attributes, details, params)
+      #   attributes[:route_service_url] = params[:route_service_url]
+      #   binding.save_with_new_operation(
+      #     attributes,
+      #     {
+      #       type: 'create',
+      #       state: details[:last_operation][:state],
+      #       description: details[:last_operation][:description],
+      #     }
+      #   )
+      #   binding.notify_diego
+      #   record_audit_event(binding)
+      # end
+
       def save_incomplete_binding(precursor, operation)
-        precursor.save_with_new_operation({},
+        precursor.save_with_attributes_and_new_operation(
+          {},
           {
             type: 'create',
             state: 'in progress',
@@ -92,9 +104,11 @@ module VCAP::CloudController
       def fetch_last_operation(client, binding)
         client.fetch_service_binding_last_operation(binding)
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
-        VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
-        HttpRequestError => e
-        binding.save_with_new_operation({}, {
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
+             HttpRequestError => e
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
           type: 'create',
           state: 'in progress',
           description: e.message,

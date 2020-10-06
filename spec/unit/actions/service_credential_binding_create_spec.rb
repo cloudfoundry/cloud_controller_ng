@@ -5,7 +5,7 @@ require 'cloud_controller/user_audit_info'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingCreate do
-      subject(:action) { described_class.new(user_audit_info, audit_hash) }
+      subject(:action) { desicribed_class.new(user_audit_info, audit_hash) }
 
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:volume_mount_services_enabled) { true }
@@ -215,7 +215,7 @@ module VCAP::CloudController
         context 'managed service instance' do
           let(:details) { { credentials: { 'password' => 'orchestra' } } }
           let(:service_offering) { Service.make(bindings_retrievable: true) }
-          let(:service_plan) { ServicePlan.make(service: service_offering)}
+          let(:service_plan) { ServicePlan.make(service: service_offering) }
           let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
           let(:bind_response) { { binding: { credentials: details[:credentials] } } }
           let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }

@@ -144,7 +144,7 @@ module VCAP::CloudController
       false
     end
 
-    def save_with_attributes_and_new_operation( attributes, operation)
+    def save_with_attributes_and_new_operation(attributes, operation)
       save_with_new_operation(operation, attributes: attributes)
       self
     end

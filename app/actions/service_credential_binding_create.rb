@@ -47,21 +47,19 @@ module VCAP::CloudController
 
       private
 
-      def complete_binding_and_save(binding, details)
-        binding.save_with_attributes_and_new_operation(details[:binding], operation_succeeded)
+      def complete_binding_and_save(binding, binding_details, last_operation)
+        binding.save_with_attributes_and_new_operation(
+          binding_details,
+          {
+            type: 'create',
+            state: last_operation[:state]
+          }
+        )
         event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
       end
 
       def operation_succeeded
         { type: 'create', state: 'succeeded' }
-      end
-
-      def save_incomplete_binding(binding, operation)
-        binding.save_with_new_operation({
-          type: 'create',
-          state: 'in progress',
-          broker_provided_operation: operation
-        })
       end
 
       def validate!(service_instance, app, volume_mount_services_enabled)

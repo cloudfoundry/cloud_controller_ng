@@ -39,7 +39,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
     context 'first time' do
       context 'synchronous response' do
         before do
-          binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' } )
+          binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
         end
 
         it 'calls bind and then finishes' do

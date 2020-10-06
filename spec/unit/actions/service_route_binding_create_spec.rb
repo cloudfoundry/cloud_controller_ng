@@ -313,7 +313,7 @@ module VCAP::CloudController
             },
           }
         end
-        let(:fetch_binding_response) { {} }
+        let(:fetch_binding_response) { { route_service_url: route_service_url } }
         let(:broker_client) do
           instance_double(
             VCAP::Services::ServiceBrokers::V2::Client,
@@ -341,11 +341,6 @@ module VCAP::CloudController
         context 'response says complete' do
           let(:description) { Sham.description }
           let(:state) { 'succeeded' }
-          let(:fetch_binding_response) do
-            {
-              route_service_url: route_service_url
-            }
-          end
 
           it 'returns true' do
             polling_status = action.poll(binding)
