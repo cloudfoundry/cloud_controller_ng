@@ -379,13 +379,13 @@ module VCAP::CloudController
 
           it 'does not mark the app for staging' do
             expect(process.staged?).to be_falsey
-            expect(process.needs_staging?).to be_nil
+            expect(process.needs_staging?).to be false
 
             app_update.update(app, process, request_attrs)
             process.reload
 
             expect(process.staged?).to be_falsey
-            expect(process.needs_staging?).to be_nil
+            expect(process.needs_staging?).to be false
           end
         end
       end

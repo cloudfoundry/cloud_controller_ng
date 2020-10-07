@@ -89,17 +89,24 @@ module VCAP::CloudController
               state:   DropletModel::STAGED_STATE,
             )
           end
-          let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
+          let(:package) do
+            PackageModel.make(
+              app: app,
+              package_hash: 'some-sha1',
+              sha256_checksum: 'some-sha256',
+              state: PackageModel::READY_STATE
+            )
+          end
 
-          it 'sets the package hash correctly on the process' do
+          it 'the package_hash for each process refers to the latest package' do
             AppStart.start(app: app, user_audit_info: user_audit_info)
 
             process1.reload
-            expect(process1.package_hash).to eq(package.package_hash)
+            expect(process1.package_hash).to eq(package.sha256_checksum)
             expect(process1.package_state).to eq('STAGED')
 
             process2.reload
-            expect(process2.package_hash).to eq(package.package_hash)
+            expect(process2.package_hash).to eq(package.sha256_checksum)
             expect(process2.package_state).to eq('STAGED')
           end
         end
