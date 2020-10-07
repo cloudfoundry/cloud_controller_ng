@@ -686,5 +686,41 @@ module VCAP::CloudController::Validators
         end
       end
     end
+
+    describe 'TargetGuidsValidator' do
+      class TargetGuidsMessage < VCAP::CloudController::BaseMessage
+        register_allowed_keys [:target_guids]
+
+        validates_with TargetGuidsValidator
+      end
+
+      it 'does not allow non-array values' do
+        message = TargetGuidsMessage.new({ target_guids: 'not an array' })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:target_guids)).to contain_exactly('target_guids must be an array')
+      end
+
+      it 'is valid for an array' do
+        message = TargetGuidsMessage.new({ target_guids: ['guid1', 'guid2'] })
+        expect(message).to be_valid
+      end
+
+      it 'does not allow random operators' do
+        message = TargetGuidsMessage.new({ target_guids: { weyman: ['not a number'] } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:target_guids)).to contain_exactly('target_guids has an invalid operator')
+      end
+
+      it 'allows the not operator' do
+        message = TargetGuidsMessage.new({ target_guids: { not: ['guid1'] } })
+        expect(message).to be_valid
+      end
+
+      it 'does not allow non-array values in the "not" field' do
+        message = TargetGuidsMessage.new({ target_guids: { not: 'not an array' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:target_guids)).to contain_exactly('target_guids must be an array')
+      end
+    end
   end
 end

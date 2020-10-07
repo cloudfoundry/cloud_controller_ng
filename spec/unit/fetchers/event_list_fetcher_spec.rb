@@ -47,6 +47,16 @@ module VCAP::CloudController
           end
         end
 
+        context 'filtering AGAINST target guid' do
+          let(:filters) do
+            { target_guids: { not: [app_model.guid] } }
+          end
+
+          it 'returns filtered events' do
+            expect(subject).to match_array([unscoped_event, org_scoped_event])
+          end
+        end
+
         context 'filtering by space guid' do
           let(:filters) do
             { space_guids: [space.guid] }

@@ -54,10 +54,34 @@ module VCAP::CloudController
           expect(message.errors[:types]).to include('must be an array')
         end
 
-        it 'validates the target_guids filter' do
-          message = EventsListMessage.from_params({ target_guids: 123 })
-          expect(message).not_to be_valid
-          expect(message.errors[:target_guids]).to include('must be an array')
+        context 'target_guids' do
+          it 'does not allow non-array values' do
+            message = EventsListMessage.from_params({ target_guids: 'not an array' })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:target_guids)).to contain_exactly('target_guids must be an array')
+          end
+
+          it 'is valid for an array' do
+            message = EventsListMessage.from_params({ target_guids: ['guid1', 'guid2'] })
+            expect(message).to be_valid
+          end
+
+          it 'does not allow random operators' do
+            message = EventsListMessage.from_params({ target_guids: { weyman: ['not a number'] } })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:target_guids)).to contain_exactly('target_guids has an invalid operator')
+          end
+
+          it 'allows the not operator' do
+            message = EventsListMessage.from_params({ target_guids: { not: ['guid1'] } })
+            expect(message).to be_valid
+          end
+
+          it 'does not allow non-array values in the "not" field' do
+            message = EventsListMessage.from_params({ target_guids: { not: 'not an array' } })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:target_guids)).to contain_exactly('target_guids must be an array')
+          end
         end
 
         it 'validates the space_guids filter' do
@@ -71,6 +95,26 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors[:organization_guids]).to include('must be an array')
         end
+      end
+    end
+
+    context 'exclude target guids' do
+      it 'returns false for an array' do
+        message = EventsListMessage.from_params({ target_guids: ['an array'] })
+        expect(message).to be_valid
+        expect(message.exclude_target_guids?).to be false
+      end
+
+      it 'returns false for a hash with the wrong key' do
+        message = EventsListMessage.from_params({ target_guids: { mona: ['an array'] } })
+        expect(message).not_to be_valid
+        expect(message.exclude_target_guids?).to be false
+      end
+
+      it 'returns true for a hash with the right key' do
+        message = EventsListMessage.from_params({ target_guids: { not: ['an array'] } })
+        expect(message).to be_valid
+        expect(message.exclude_target_guids?).to be true
       end
     end
   end

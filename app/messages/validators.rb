@@ -346,4 +346,18 @@ module VCAP::CloudController::Validators
       end
     end
   end
+
+  class TargetGuidsValidator < ActiveModel::Validator
+    def validate(record)
+      if record.target_guids.is_a? Hash
+        if record.target_guids[:not].present?
+          record.errors[:target_guids].concat ['target_guids must be an array'] unless record.target_guids[:not].is_a? Array
+        else
+          record.errors[:target_guids].concat ['target_guids has an invalid operator']
+        end
+      elsif record.target_guids.present?
+        record.errors[:target_guids].concat ['target_guids must be an array'] unless record.target_guids.is_a? Array
+      end
+    end
+  end
 end

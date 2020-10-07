@@ -13,7 +13,7 @@ RSpec.describe 'Events' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
     let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
-    let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', organization_guid: org.guid) }
+    let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org.guid, organization_guid: org.guid) }
     let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space.guid, organization_guid: org.guid, actee: app_model.guid, type: 'audit.app.restart') }
 
     let(:unscoped_event_json) do
@@ -144,6 +144,28 @@ RSpec.describe 'Events' do
           resources: parsed_response['resources']
         }).to match_json_response({
           resources: [space_scoped_event_json]
+        })
+      end
+    end
+
+    context 'filtering out target_guids' do
+      it 'returns filtered events without the specified target guid' do
+        get "/v3/audit_events?target_guids[not]=#{app_model.guid}", nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [unscoped_event_json, org_scoped_event_json]
+        })
+      end
+
+      it 'works for multiple guids' do
+        get "/v3/audit_events?target_guids[not]=#{app_model.guid},#{org.guid}", nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [unscoped_event_json]
         })
       end
     end

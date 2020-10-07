@@ -18,7 +18,11 @@ module VCAP::CloudController
         end
 
         if message.requested?(:target_guids)
-          dataset = dataset.where(actee: message.target_guids)
+          dataset = if message.exclude_target_guids?
+                      dataset.exclude(actee: message.target_guids[:not])
+                    else
+                      dataset.where(actee: message.target_guids)
+                    end
         end
 
         if message.requested?(:space_guids)

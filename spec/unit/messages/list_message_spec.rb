@@ -251,6 +251,13 @@ module VCAP::CloudController
 
       context 'validates the updated_ats filter' do
         it 'delegates to the TimestampValidator' do
+          message = ListMessage.from_params({ 'updated_ats' => { gte: '2020-06-30T23:49:04Z' } }, [])
+          expect(message).to be_valid
+        end
+      end
+
+      context 'validates the updated_ats filter' do
+        it 'delegates to the TimestampValidator' do
           message = ListMessage.from_params({ 'updated_ats' => 47 }, [])
           expect(message).not_to be_valid
           expect(message.errors[:updated_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
