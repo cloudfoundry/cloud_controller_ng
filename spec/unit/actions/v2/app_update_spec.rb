@@ -568,6 +568,18 @@ module VCAP::CloudController
               app_update.update(app, process, request_attrs)
               expect(process.reload.desired_droplet).to be_nil
             end
+
+            context 'when temporary_disable_v2_staging is true' do
+              before do
+                TestConfig.override(temporary_disable_v2_staging: true)
+              end
+
+              it 'raises an error' do
+                expect {
+                  app_update.update(app, process, request_attrs)
+                }.to raise_error(/Staging through the v2 API is disabled/)
+              end
+            end
           end
 
           context 'when the app does not need staging' do
@@ -581,6 +593,18 @@ module VCAP::CloudController
               expect(process.desired_droplet).not_to be_nil
               app_update.update(app, process, request_attrs)
               expect(process.reload.desired_droplet).not_to be_nil
+            end
+
+            context 'when temporary_disable_v2_staging is true' do
+              before do
+                TestConfig.override(temporary_disable_v2_staging: true)
+              end
+
+              it 'does not raise an error' do
+                expect {
+                  app_update.update(app, process, request_attrs)
+                }.not_to raise_error
+              end
             end
           end
         end

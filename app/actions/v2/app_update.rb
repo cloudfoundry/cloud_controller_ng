@@ -110,6 +110,10 @@ module VCAP::CloudController
       end
 
       def prepare_to_stage(app)
+        if v2_api_staging_disabled?
+          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Staging through the v2 API is disabled')
+        end
+
         app.update(droplet_guid: nil)
       end
 
@@ -172,6 +176,10 @@ module VCAP::CloudController
 
       def staging_necessary?(process, request_attrs)
         request_attrs.key?('state') && process.needs_staging?
+      end
+
+      def v2_api_staging_disabled?
+        !!VCAP::CloudController::Config.config.get(:temporary_disable_v2_staging)
       end
     end
   end
