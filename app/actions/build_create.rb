@@ -113,8 +113,8 @@ module VCAP::CloudController
       space = package.space
       org   = space.organization
 
-      memory_limit          = get_memory_limit(lifecycle.staging_message.staging_memory_in_mb, space, org)
-      disk_limit            = get_disk_limit(lifecycle.staging_message.staging_disk_in_mb)
+      memory_limit          = get_memory_limit(lifecycle.staging_message.staging_memory_in_mb, app, space, org)
+      disk_limit            = get_disk_limit(lifecycle.staging_message.staging_disk_in_mb, app)
       environment_variables = @environment_builder.build(app,
         space,
         lifecycle,
@@ -133,14 +133,16 @@ module VCAP::CloudController
       staging_details
     end
 
-    def get_disk_limit(requested_limit)
-      @disk_limit_calculator.get_limit(requested_limit)
+    def get_disk_limit(requested_limit, app)
+      limit = requested_limit || app.newest_web_process&.disk_quota
+      @disk_limit_calculator.get_limit(limit)
     rescue StagingDiskCalculator::LimitExceeded
       raise DiskLimitExceeded
     end
 
-    def get_memory_limit(requested_limit, space, org)
-      @memory_limit_calculator.get_limit(requested_limit, space, org)
+    def get_memory_limit(requested_limit, app, space, org)
+      limit = requested_limit || app.newest_web_process&.memory
+      @memory_limit_calculator.get_limit(limit, space, org)
     rescue QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded => e
       raise SpaceQuotaExceeded.new e.message
     rescue QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded => e

@@ -22,11 +22,16 @@ module VCAP::CloudController
     let(:staging_message) { BuildCreateMessage.new(request) }
     let(:request) do
       {
-        lifecycle: {
-          type: 'buildpack',
-          data: lifecycle_data
-        },
+        staging_memory_in_mb: staging_memory_in_mb,
+        staging_disk_in_mb: staging_disk_in_mb,
+        lifecycle: request_lifecycle,
       }.deep_stringify_keys
+    end
+    let(:request_lifecycle) do
+      {
+        type: 'buildpack',
+        data: lifecycle_data
+      }
     end
     let(:metadata) do
       {
@@ -45,6 +50,7 @@ module VCAP::CloudController
     let(:space) { Space.make }
     let(:org) { space.organization }
     let(:app) { AppModel.make(space: space) }
+    let!(:process) { ProcessModel.make(app: app, memory: 8192, disk_quota: 512) }
 
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
@@ -60,8 +66,8 @@ module VCAP::CloudController
     let(:calculated_mem_limit) { 32 }
     let(:calculated_staging_disk_in_mb) { 64 }
 
-    let(:staging_memory_in_mb) { nil }
-    let(:staging_disk_in_mb) { nil }
+    let(:staging_memory_in_mb) { 1024 }
+    let(:staging_disk_in_mb) { 2048 }
     let(:environment_variables) { 'random string' }
 
     before do
@@ -170,6 +176,26 @@ module VCAP::CloudController
             expect(staging_details.isolation_segment).to be_nil
             expect(build.labels.size).to eq(0)
             expect(build.annotations.size).to eq(0)
+          end
+        end
+
+        context 'when staging memory is not specified in the message' do
+          let(:staging_memory_in_mb) { nil }
+
+          it 'uses the app web process memory for staging memory' do
+            expect(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org)
+
+            action.create_and_stage(package: package, lifecycle: lifecycle)
+          end
+        end
+
+        context 'when staging disk is not specified in the message' do
+          let(:staging_disk_in_mb) { nil }
+
+          it 'uses the app web process disk for staging disk' do
+            expect(disk_limit_calculator).to receive(:get_limit).with(process.disk_quota)
+
+            action.create_and_stage(package: package, lifecycle: lifecycle)
           end
         end
 
@@ -313,7 +339,7 @@ module VCAP::CloudController
           before { TestConfig.override(disable_custom_buildpacks: true) }
 
           context 'when the custom buildpack is inherited from the app' do
-            let(:request) do
+            let(:request_lifecycle) do
               {}
             end
 
