@@ -198,9 +198,6 @@ module VCAP::CloudController
           cloud_controller_username_lookup_client_name: String,
           cloud_controller_username_lookup_client_secret: String,
 
-          cc_service_key_client_name: String,
-          cc_service_key_client_secret: String,
-
           optional(:credhub_api) => {
             optional(:external_url) => String,
             internal_url: String,
@@ -302,31 +299,6 @@ module VCAP::CloudController
           },
           shared_isolation_segment_name: String,
 
-          **VCAP::Config::Dsl.omit_on_k8s(
-            diego: {
-              bbs: {
-                url: String,
-                ca_file: String,
-                cert_file: String,
-                key_file: String,
-                connect_timeout: Integer,
-                send_timeout: Integer,
-                receive_timeout: Integer,
-              },
-              cc_uploader_url: String,
-              file_server_url: String,
-              lifecycle_bundles: Hash,
-              droplet_destinations: Hash,
-              pid_limit: Integer,
-              use_privileged_containers_for_running: bool,
-              use_privileged_containers_for_staging: bool,
-              insecure_docker_registry_list: [String],
-              docker_staging_stack: String,
-              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-              enable_declarative_asset_downloads: bool,
-            },
-          ),
-
           opi: {
             enabled: bool,
             url: String,
@@ -390,6 +362,35 @@ module VCAP::CloudController
               registry_tag_base: String,
             }
           },
+
+          **VCAP::Config::Dsl.omit_on_k8s(
+            cc_service_key_client_name: String,
+            cc_service_key_client_secret: String,
+
+            diego: {
+              bbs: {
+                url: String,
+                ca_file: String,
+                cert_file: String,
+                key_file: String,
+                connect_timeout: Integer,
+                send_timeout: Integer,
+                receive_timeout: Integer,
+              },
+              cc_uploader_url: String,
+              file_server_url: String,
+              lifecycle_bundles: Hash,
+              droplet_destinations: Hash,
+              pid_limit: Integer,
+              use_privileged_containers_for_running: bool,
+              use_privileged_containers_for_staging: bool,
+              insecure_docker_registry_list: [String],
+              docker_staging_stack: String,
+              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+              enable_declarative_asset_downloads: bool,
+            },
+          ),
+
         }
       end
       # rubocop:enable Metrics/BlockLength
