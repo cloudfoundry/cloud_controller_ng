@@ -105,10 +105,13 @@ module VCAP::CloudController
             minimum_staging_memory_mb: Integer,
             minimum_staging_disk_mb: Integer,
             minimum_staging_file_descriptor_limit: Integer,
-            auth: {
-              user: String,
-              password: String,
-            }
+
+            **VCAP::Config::Dsl.omit_on_k8s(
+              auth: {
+                user: String,
+                password: String,
+              },
+            ),
           },
 
           index: Integer, # Component index (cc-0, cc-1, etc)

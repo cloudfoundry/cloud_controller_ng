@@ -84,10 +84,12 @@ module VCAP::CloudController
           },
           staging: {
             timeout_in_seconds: Integer,
-            auth: {
-              user: String,
-              password: String,
-            }
+            **VCAP::Config::Dsl.omit_on_k8s(
+              auth: {
+                user: String,
+                password: String,
+              },
+            ),
           },
 
           resource_pool: {

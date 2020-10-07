@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       def sanitize(config)
-        if config.key?(:staging)
+        if config.key?(:staging) && config[:staging].key?(:auth)
           auth = config[:staging][:auth]
           auth[:user] = escape_userinfo(auth[:user]) unless valid_in_userinfo?(auth[:user])
           auth[:password] = escape_password(auth[:password]) unless valid_in_userinfo?(auth[:password])

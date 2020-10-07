@@ -54,10 +54,12 @@ module VCAP::CloudController
 
           staging: {
             timeout_in_seconds: Integer,
-            auth: {
-              user: String,
-              password: String,
-            }
+            **VCAP::Config::Dsl.omit_on_k8s(
+              auth: {
+                user: String,
+                password: String,
+              },
+            ),
           },
 
           index: Integer, # Component index (cc-0, cc-1, etc)
