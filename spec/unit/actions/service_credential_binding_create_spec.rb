@@ -198,8 +198,10 @@ module VCAP::CloudController
 
             context 'when saving to the db fails' do
               it 'fails the binding operation' do
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).with(anything, { type: 'create', state: 'succeeded' }).and_raise(Sequel::ValidationFailed, 'Meh')
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).with({}, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
+                allow(precursor).to receive(:save_with_attributes_and_new_operation).
+                  with(anything, { type: 'create', state: 'succeeded' }).and_raise(Sequel::ValidationFailed, 'Meh')
+                allow(precursor).to receive(:save_with_attributes_and_new_operation).
+                  with({}, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
                 expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
                 precursor.reload
                 expect(precursor.last_operation.type).to eq('create')

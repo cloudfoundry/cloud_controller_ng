@@ -1,4 +1,7 @@
 require 'db_spec_helper'
+require 'services/service_brokers/v2/errors/service_broker_bad_response'
+require 'services/service_brokers/v2/errors/service_broker_request_rejected'
+require 'cloud_controller/http_request_error'
 
 RSpec.shared_examples 'service binding creation' do |binding_model|
   describe '#bind' do
@@ -115,14 +118,14 @@ RSpec.shared_examples 'polling service binding creation' do
         VCAP::Services::ServiceBrokers::V2::Client,
         {
           bind: bind_response,
-          fetch_service_binding_last_operation: fetch_last_operation_response,
-          fetch_service_binding: fetch_binding_response,
+          fetch_service_binding: fetch_binding_response
         }
       )
     end
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+      allow(broker_client).to receive(:fetch_service_binding_last_operation).and_return(fetch_last_operation_response)
 
       action.bind(binding, accepts_incomplete: true)
     end
@@ -134,41 +137,37 @@ RSpec.shared_examples 'polling service binding creation' do
     end
 
     context 'fetching last operations fails' do
-      let(:continue_polling_errors) {
-        [
-          VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
-          VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
-          HttpRequestError
-        ]
+      let(:response) {
+        double('resp', body: '{"description":"no no no"}', code: 422, message: 'failed')
       }
-
-      it 'should continue polling for specific cases' do
-        continue_polling_errors.each do |error|
-          allow(broker_client).to receive(fetch_service_binding_last_operation).and raise_error(
-            error, 'no no no'
-          )
+      it 'should continue polling for known errors' do
+        [
+          VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new('uri', 'PUT', response),
+          VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected.new('uri', 'PUT', response),
+          HttpRequestError.new('no no no', 'uri', 'PUT', nil)
+        ].each do |error|
+          allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(error)
 
           status = action.poll(binding)
-
           expect(status.finished).to be_falsey
 
           binding.reload
           expect(binding.last_operation.state).to eq('in progress')
-          expect(binding.last_operation.description).to eq('no no no')
+          expect(binding.last_operation.description).to include('no no no')
         end
       end
 
-      it 'should stop polling for other errors'do
-          allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(RuntimeError)
+      it 'should stop polling for other errors' do
+        allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(RuntimeError)
 
-          complete = action.poll(binding)
+        complete = action.poll(binding)
 
-          expect(complete).to be_truthy
+        expect(complete).to be_truthy
 
-          binding.reload
-          expect(binding.last_operation.type).to eq('create')
-          expect(binding.last_operation.state).to eq('failed')
-          expect(binding.last_operation.description).to eq('RuntimeError')
+        binding.reload
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('failed')
+        expect(binding.last_operation.description).to eq('RuntimeError')
       end
     end
 
