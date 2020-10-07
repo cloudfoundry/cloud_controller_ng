@@ -41,10 +41,6 @@ module VCAP::CloudController
         raise UnprocessableCreate.new(e.full_message)
       end
 
-      def poll(binding)
-        { finished: true }
-      end
-
       private
 
       def complete_binding_and_save(binding, binding_details, last_operation)
@@ -52,14 +48,11 @@ module VCAP::CloudController
           binding_details,
           {
             type: 'create',
-            state: last_operation[:state]
+            state: last_operation[:state],
+            description: last_operation[:description]
           }
         )
         event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
-      end
-
-      def operation_succeeded
-        { type: 'create', state: 'succeeded' }
       end
 
       def validate!(service_instance, app, volume_mount_services_enabled)

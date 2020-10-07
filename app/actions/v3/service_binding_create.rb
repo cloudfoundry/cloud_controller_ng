@@ -3,53 +3,19 @@ require 'services/service_brokers/service_client_provider'
 module VCAP::CloudController
   module V3
     class ServiceBindingCreate
-      def bind(precursor, parameters: {}, accepts_incomplete: false)
-        client = VCAP::Services::ServiceClientProvider.provide(instance: precursor.service_instance)
-        details = client.bind(precursor, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
+      PollingStatus = Struct.new(:finished, :retry_after).freeze
+      PollingFinished = PollingStatus.new(true, nil).freeze
+      ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
+
+      def bind(binding, parameters: {}, accepts_incomplete: false)
+        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+        details = client.bind(binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
 
         if details[:async]
-          not_retrievable! unless bindings_retrievable?(precursor)
-          save_incomplete_binding(precursor, details[:operation])
+          not_retrievable! unless bindings_retrievable?(binding)
+          save_incomplete_binding(binding, details[:operation])
         else
-          complete_binding_and_save(precursor, details[:binding], { state: 'succeeded' })
-        end
-      rescue => e
-        precursor.save_with_attributes_and_new_operation(
-          {},
-          {
-          type: 'create',
-          state: 'failed',
-          description: e.message,
-        })
-
-        raise e
-      end
-
-      def poll(binding)
-        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = fetch_last_operation(client, binding)
-        return { finished: false } unless details
-
-        complete = details[:last_operation][:state] == 'succeeded'
-        if complete
-          params = client.fetch_service_binding(binding)
-
-          complete_binding_and_save(binding, params, details[:last_operation])
-        else
-          binding.save_with_attributes_and_new_operation(
-            {},
-            {
-              type: 'create',
-              state: details[:last_operation][:state],
-              description: details[:last_operation][:description],
-            }
-          )
-        end
-
-        if binding.reload.terminal_state?
-          { finished: true }
-        else
-          { finished: false, retry_after: details[:retry_after] }
+          complete_binding_and_save(binding, details[:binding], { state: 'succeeded' })
         end
       rescue => e
         binding.save_with_attributes_and_new_operation(
@@ -60,27 +26,50 @@ module VCAP::CloudController
             description: e.message,
           }
         )
-        { finished: true }
+
+        raise e
+      end
+
+      def poll(binding)
+        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+        details = fetch_last_operation(client, binding)
+        return ContinuePolling.call(nil) unless details
+
+        if details[:last_operation][:state] == 'succeeded'
+          params = client.fetch_service_binding(binding)
+          complete_binding_and_save(binding, params, details[:last_operation])
+          return PollingFinished
+        end
+
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: details[:last_operation][:state],
+            description: details[:last_operation][:description],
+          }
+        )
+
+        if binding.reload.terminal_state?
+          PollingFinished
+        else
+          ContinuePolling.call(details[:retry_after])
+        end
+      rescue => e
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'failed',
+            description: e.message,
+          }
+        )
+        PollingFinished
       end
 
       class BindingNotRetrievable < StandardError; end
 
       private
-
-      #
-      # def save_completed_binding(binding, attributes, details, params)
-      #   attributes[:route_service_url] = params[:route_service_url]
-      #   binding.save_with_new_operation(
-      #     attributes,
-      #     {
-      #       type: 'create',
-      #       state: details[:last_operation][:state],
-      #       description: details[:last_operation][:description],
-      #     }
-      #   )
-      #   binding.notify_diego
-      #   record_audit_event(binding)
-      # end
 
       def save_incomplete_binding(precursor, operation)
         precursor.save_with_attributes_and_new_operation(

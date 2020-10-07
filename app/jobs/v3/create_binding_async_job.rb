@@ -50,9 +50,6 @@ module VCAP::CloudController
       end
 
       def perform
-        ###
-        # TODO: eventually move the errors being rescued into their own files
-        ###
         gone! unless resource
 
         compute_maximum_duration
@@ -73,7 +70,7 @@ module VCAP::CloudController
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
-      rescue ServiceRouteBindingCreate::BindingNotRetrievable
+      rescue ServiceBindingCreate::BindingNotRetrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
       rescue => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'bind', e.message)
