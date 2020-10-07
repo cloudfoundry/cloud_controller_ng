@@ -973,14 +973,14 @@ module VCAP::CloudController
 
           it 'does not mark the app for staging' do
             expect(process.staged?).to be_falsey
-            expect(process.needs_staging?).to be_nil
+            expect(process.needs_staging?).to be false
 
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
             expect(process.staged?).to be_falsey
-            expect(process.needs_staging?).to be_nil
+            expect(process.needs_staging?).to be false
           end
         end
       end

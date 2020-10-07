@@ -1066,8 +1066,8 @@ module VCAP::CloudController
           process.update(state: 'STARTED', instances: 1)
         end
 
-        it 'should return false if the package_hash is nil' do
-          process.latest_package.update(package_hash: nil)
+        it 'should return false if the latest package has not been uploaded (indicated by blank checksums)' do
+          process.latest_package.update(package_hash: nil, sha256_checksum: '')
           expect(process.needs_staging?).to be_falsey
         end
 

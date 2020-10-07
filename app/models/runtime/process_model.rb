@@ -184,7 +184,7 @@ module VCAP::CloudController
       return nil if package.nil?
 
       if package.bits?
-        package.package_hash
+        package.checksum_info[:value]
       elsif package.docker?
         package.image
       end
@@ -485,7 +485,7 @@ module VCAP::CloudController
     end
 
     def needs_staging?
-      package_hash && !staged? && started?
+      package_hash.present? && !staged? && started?
     end
 
     def staged?
