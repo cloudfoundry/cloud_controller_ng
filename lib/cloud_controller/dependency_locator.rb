@@ -366,6 +366,13 @@ module CloudController
       end
     end
 
+    def registry_buddy_client
+      PackageImageUploader::Client.new(
+        VCAP::CloudController::Config.config.get(:package_image_uploader, :host),
+        VCAP::CloudController::Config.config.get(:package_image_uploader, :port),
+      )
+    end
+
     def statsd_client
       @dependencies[:statsd_client] ||
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))

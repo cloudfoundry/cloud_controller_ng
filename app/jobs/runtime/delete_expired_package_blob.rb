@@ -1,3 +1,6 @@
+require 'jobs/kubernetes/registry_delete'
+require 'jobs/runtime/blobstore_delete'
+
 module VCAP::CloudController
   module Jobs
     module Runtime
@@ -14,8 +17,11 @@ module VCAP::CloudController
           package = PackageModel.find(guid: package_guid)
           return unless package
 
-          # TODO: skip this if we're using an image registry?
-          BlobstoreDelete.new(package_guid, :package_blobstore).perform
+          if VCAP::CloudController::Config.config.package_image_registry_configured?
+            VCAP::CloudController::Jobs::Kubernetes::RegistryDelete.new(package.bits_image_reference).perform
+          else
+            BlobstoreDelete.new(package_guid, :package_blobstore).perform
+          end
           package.update(package_hash: nil, sha256_checksum: nil)
         end
 

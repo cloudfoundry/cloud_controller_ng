@@ -40,6 +40,16 @@ module VCAP::CloudController
       docker_image
     end
 
+    def bits_image_reference
+      config = VCAP::CloudController::Config.config
+      raise 'Package Registry is not configured' unless config.package_image_registry_configured?
+      raise 'Package type must be bits' unless bits?
+
+      package_registry_base_path = config.get(:packages, :image_registry, :base_path)
+
+      "#{package_registry_base_path}/#{guid}@sha256:#{sha256_checksum}"
+    end
+
     def bits?
       type == BITS_TYPE
     end

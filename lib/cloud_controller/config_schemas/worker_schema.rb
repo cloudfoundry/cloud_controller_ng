@@ -101,6 +101,11 @@ module VCAP::CloudController
             fog_aws_storage_options: Hash
           },
 
+          optional(:package_image_uploader) => {
+            host: String,
+            port: Integer
+          },
+
           db_encryption_key: enum(String, NilClass),
 
           optional(:database_encryption) => {

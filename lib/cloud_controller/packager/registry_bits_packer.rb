@@ -11,11 +11,7 @@ module CloudController
       def send_package_to_blobstore(package_guid, uploaded_package_zip, cached_files_fingerprints)
         Dir.mktmpdir('registry_bits_packer', packages_tmp_dir) do |root_path|
           complete_package_path = match_resources_and_validate_package(root_path, uploaded_package_zip, cached_files_fingerprints)
-
-          client = PackageImageUploader::Client.new(
-            VCAP::CloudController::Config.config.get(:package_image_uploader, :host),
-            VCAP::CloudController::Config.config.get(:package_image_uploader, :port),
-          )
+          client = CloudController::DependencyLocator.instance.registry_buddy_client
 
           registry = VCAP::CloudController::Config.config.get(:packages, :image_registry, :base_path)
           response = client.post_package(package_guid, complete_package_path, registry)

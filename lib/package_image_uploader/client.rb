@@ -7,14 +7,28 @@ module PackageImageUploader
     end
 
     def post_package(package_guid, zip_file_path, registry)
-      response = with_request_error_handling do
+      response = with_request_error_handling 200 do
         client.post('/packages',
-          body: { 'package_zip_path' => zip_file_path,
+          body: {
             'package_guid' => package_guid,
-            'registry_base_path' => registry }
+            'package_zip_path' => zip_file_path,
+            'registry_base_path' => registry,
+          }
         )
       end
       JSON.parse(response.body)
+    end
+
+    def delete_image(image_reference)
+      with_request_error_handling 202 do
+        client.delete('/images',
+          body: {
+            image_reference: image_reference
+          }
+        )
+      end
+
+      nil
     end
 
     private
@@ -27,11 +41,11 @@ module PackageImageUploader
       @logger ||= Steno.logger('cc.package_image_uploader')
     end
 
-    def with_request_error_handling(&_block)
+    def with_request_error_handling(successful_status)
       response = yield
 
       case response.status
-      when 200
+      when successful_status
         response
       when 400
         logger.error("PackageImageUploader returned: #{response.status} with #{response.body}")

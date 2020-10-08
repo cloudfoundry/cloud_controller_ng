@@ -21,6 +21,40 @@ module VCAP::CloudController
       end
     end
 
+    describe 'bits_image_reference' do
+      let(:package_sha256_checksum) { 'sha256-checksum' }
+      let(:type) { PackageModel::BITS_TYPE }
+      let(:package) { PackageModel.make(sha256_checksum: package_sha256_checksum, type: type) }
+
+      context 'when using a package registry' do
+        before do
+          TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+        end
+
+        it 'returns the image reference for the package' do
+          expect(package.bits_image_reference).to eq("hub.example.com/user/#{package.guid}@sha256:#{package_sha256_checksum}")
+        end
+
+        context 'when the package is type DOCKER' do
+          let(:type) { PackageModel::DOCKER_TYPE }
+
+          it 'raises an error' do
+            expect {
+              package.bits_image_reference
+            }.to raise_error('Package type must be bits')
+          end
+        end
+      end
+
+      context 'when not using a package registry' do
+        it 'raises an error' do
+          expect {
+            package.bits_image_reference
+          }.to raise_error('Package Registry is not configured')
+        end
+      end
+    end
+
     describe 'checksum_info' do
       let(:package) { PackageModel.new(state: PackageModel::READY_STATE) }
       context 'when the package has a sha1 hash and not a sha256 hash' do

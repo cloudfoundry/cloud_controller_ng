@@ -1,4 +1,4 @@
-require 'jobs/runtime/blobstore_delete.rb'
+require 'jobs/runtime/blobstore_delete'
 require 'jobs/v3/buildpack_cache_delete'
 require 'actions/package_delete'
 require 'actions/task_delete'

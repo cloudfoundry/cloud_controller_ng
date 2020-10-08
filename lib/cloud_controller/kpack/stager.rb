@@ -93,9 +93,8 @@ module Kpack
 
     def configure_source(staging_details)
       if config.package_image_registry_configured?
-        package_registry_base_path = config.get(:packages, :image_registry, :base_path)
         { registry: {
-          image: "#{package_registry_base_path}/#{staging_details.package.guid}@sha256:#{staging_details.package.sha256_checksum}"
+          image: staging_details.package.bits_image_reference
         } }
       else
         { blob: { url: blobstore_url_generator.package_download_url(staging_details.package) } }
