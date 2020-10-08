@@ -49,6 +49,10 @@ module VCAP::CloudController
       %w(succeeded failed).include? last_operation.state
     end
 
+    def save_with_attributes_and_new_operation(attributes, operation)
+      save_with_new_operation(attributes, operation)
+    end
+
     def save_with_new_operation(attributes, new_operation)
       RouteBinding.db.transaction do
         self.lock!

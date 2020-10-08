@@ -1,9 +1,10 @@
 require 'repositories/service_binding_event_repository'
 require 'services/service_brokers/service_client_provider'
+require 'actions/v3/service_binding_create'
 
 module VCAP::CloudController
   module V3
-    class ServiceCredentialBindingCreate
+    class ServiceCredentialBindingCreate < V3::ServiceBindingCreate
       class UnprocessableCreate < StandardError
       end
 
@@ -11,6 +12,7 @@ module VCAP::CloudController
       end
 
       def initialize(user_audit_info, audit_hash)
+        super()
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
       end
@@ -39,37 +41,18 @@ module VCAP::CloudController
         raise UnprocessableCreate.new(e.full_message)
       end
 
-      def bind(binding, parameters: {}, accepts_incomplete: false)
-        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.bind(binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
-
-        if details[:async]
-          save_incomplete_binding(binding, details[:operation])
-        else
-          binding.save_with_new_operation(operation_succeeded, attributes: details[:binding])
-          event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
-        end
-      rescue => e
-        binding.save_with_new_operation({
-          type: 'create',
-          state: 'failed',
-          description: e.message,
-        })
-        raise e
-      end
-
       private
 
-      def operation_succeeded
-        { type: 'create', state: 'succeeded' }
-      end
-
-      def save_incomplete_binding(binding, operation)
-        binding.save_with_new_operation({
-          type: 'create',
-          state: 'in progress',
-          broker_provided_operation: operation
-        })
+      def complete_binding_and_save(binding, binding_details, last_operation)
+        binding.save_with_attributes_and_new_operation(
+          binding_details,
+          {
+            type: 'create',
+            state: last_operation[:state],
+            description: last_operation[:description]
+          }
+        )
+        event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
       end
 
       def validate!(service_instance, app, volume_mount_services_enabled)

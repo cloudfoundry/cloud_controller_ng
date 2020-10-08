@@ -1,5 +1,6 @@
 require 'db_spec_helper'
 require 'actions/service_credential_binding_create'
+require 'support/shared_examples/v3_service_binding_create'
 require 'cloud_controller/user_audit_info'
 
 module VCAP::CloudController
@@ -160,99 +161,164 @@ module VCAP::CloudController
         end
       end
 
-      describe '#bind' do
+      context '#bind' do
         let(:precursor) { action.precursor(service_instance, app: app) }
+        let(:details) {
+          {
+            credentials: { 'password' => 'rennt', 'username' => 'lola' },
+            syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
+          }
+        }
+        let(:bind_response) { { binding: details } }
 
-        RSpec.shared_examples 'the credential binding bind' do
-          it 'creates and returns the credential binding' do
-            action.bind(precursor)
+        it_behaves_like 'service binding creation', ServiceBinding
 
-            precursor.reload
-            expect(precursor).to eq(ServiceBinding.first)
-            expect(precursor.credentials).to eq(details[:credentials])
-            expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
-            expect(precursor.last_operation.type).to eq('create')
-            expect(precursor.last_operation.state).to eq('succeeded')
+        describe 'app specific behaviour' do
+          RSpec.shared_examples 'the credential binding bind' do
+            it 'creates and returns the credential binding' do
+              action.bind(precursor)
+
+              precursor.reload
+              expect(precursor).to eq(ServiceBinding.first)
+              expect(precursor.credentials).to eq(details[:credentials])
+              expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
+              expect(precursor.last_operation.type).to eq('create')
+              expect(precursor.last_operation.state).to eq('succeeded')
+            end
+
+            it 'creates an audit event' do
+              action.bind(precursor)
+              expect(@service_binding_event_repository).to have_received(:record_create).with(
+                precursor,
+                user_audit_info,
+                audit_hash,
+                manifest_triggered: false,
+              )
+            end
+
+            context 'when saving to the db fails' do
+              it 'fails the binding operation' do
+                allow(precursor).to receive(:save_with_attributes_and_new_operation).once.and_raise(Sequel::ValidationFailed, 'Meh')
+                allow(precursor).to receive(:save_with_attributes_and_new_operation).
+                  with(anything, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
+                expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
+                precursor.reload
+                expect(precursor.last_operation.type).to eq('create')
+                expect(precursor.last_operation.state).to eq('failed')
+                expect(precursor.last_operation.description).to eq('Meh')
+              end
+            end
           end
 
-          it 'creates an audit event' do
-            action.bind(precursor)
-            expect(@service_binding_event_repository).to have_received(:record_create).with(
-              precursor,
-              user_audit_info,
-              audit_hash,
-              manifest_triggered: false,
+          context 'managed service instance' do
+            let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
+            let(:service_plan) { ServicePlan.make(service: service_offering) }
+            let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+            let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
+
+            before do
+              allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+            end
+
+            it_behaves_like 'the credential binding bind'
+          end
+
+          context 'user-provided service instance' do
+            let(:details) {
+              {
+                space: space,
+                credentials: { 'password' => 'rennt', 'username' => 'lola' },
+                syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
+              }
+            }
+            let(:service_instance) { UserProvidedServiceInstance.make(**details) }
+
+            it_behaves_like 'the credential binding bind'
+          end
+        end
+      end
+
+      describe '#poll' do
+        let(:binding) { action.precursor(service_instance, app: app) }
+        let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
+        let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
+        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url } }
+
+        it_behaves_like 'polling service binding creation'
+
+        describe 'app specific behaviour' do
+          let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
+          let(:service_plan) { ServicePlan.make(service: service_offering) }
+          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+          let(:broker_provided_operation) { Sham.guid }
+          let(:bind_response) { { async: true, operation: broker_provided_operation } }
+          let(:description) { Sham.description }
+          let(:state) { 'in progress' }
+          let(:fetch_last_operation_response) do
+            {
+              last_operation: {
+                state: state,
+                description: description,
+              },
+            }
+          end
+          let(:broker_client) do
+            instance_double(
+              VCAP::Services::ServiceBrokers::V2::Client,
+              {
+                bind: bind_response,
+                fetch_service_binding_last_operation: fetch_last_operation_response,
+                fetch_service_binding: fetch_binding_response,
+              }
             )
           end
 
-          context 'when saving to the db fails' do
-            it 'fails the binding operation' do
-              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'succeeded' }, attributes: anything).and_raise(Sequel::ValidationFailed, 'Meh')
-              allow(precursor).to receive(:save_with_new_operation).with({ type: 'create', state: 'failed', description: 'Meh' }).and_call_original
-              expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
-              precursor.reload
-              expect(precursor.last_operation.type).to eq('create')
-              expect(precursor.last_operation.state).to eq('failed')
-              expect(precursor.last_operation.description).to eq('Meh')
-            end
-          end
-        end
-
-        context 'user-provided service instance' do
-          let(:details) {
-            {
-              space: space,
-              credentials: { 'password' => 'rennt', 'username' => 'lola' },
-              syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
-            }
-          }
-
-          let(:service_instance) { UserProvidedServiceInstance.make(**details) }
-
-          it_behaves_like 'the credential binding bind'
-        end
-
-        context 'managed service instance' do
-          let(:details) { { credentials: { 'password' => 'orchestra' } } }
-          let(:service_instance) { ManagedServiceInstance.make(space: space) }
-          let(:bind_response) { { binding: { credentials: details[:credentials] } } }
-          let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
-
           before do
             allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+
+            action.bind(binding, accepts_incomplete: true)
           end
 
-          it_behaves_like 'the credential binding bind'
+          context 'response says complete' do
+            let(:description) { Sham.description }
+            let(:state) { 'succeeded' }
 
-          context 'parameters are specified' do
-            it 'sends the parameters to the broker client' do
-              action.bind(precursor, parameters: { foo: 'bar' })
+            it 'fetches the service binding and updates the route_services_url' do
+              action.poll(binding)
 
-              expect(broker_client).to have_received(:bind).with(
-                precursor,
-                arbitrary_parameters: { foo: 'bar' },
-                accepts_incomplete: false,
+              expect(broker_client).to have_received(:fetch_service_binding).with(binding)
+
+              binding.reload
+              expect(binding.credentials).to eq(credentials)
+              expect(binding.syslog_drain_url).to eq(syslog_drain_url)
+            end
+
+            it 'creates an audit event' do
+              action.poll(binding)
+
+              expect(@service_binding_event_repository).to have_received(:record_create).with(
+                binding,
+                user_audit_info,
+                audit_hash,
+                manifest_triggered: false,
               )
             end
           end
 
-          context 'asynchronous binding' do
-            let(:broker_provided_operation) { Sham.guid }
-            let(:bind_response) { { async: true, operation: broker_provided_operation } }
+          context 'response says in progress' do
+            it 'does not create an audit event' do
+              action.poll(binding)
 
-            it 'saves the operation ID' do
-              action.bind(precursor, accepts_incomplete: true)
+              expect(@service_binding_event_repository).not_to have_received(:record_create)
+            end
+          end
 
-              expect(broker_client).to have_received(:bind).with(
-                precursor,
-                arbitrary_parameters: {},
-                accepts_incomplete: true,
-              )
+          context 'response says failed' do
+            let(:state) { 'failed' }
+            it 'does not notify diego or create an audit event' do
+              action.poll(binding)
 
-              binding = precursor.reload
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('in progress')
-              expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+              expect(@service_binding_event_repository).not_to have_received(:record_create)
             end
           end
         end

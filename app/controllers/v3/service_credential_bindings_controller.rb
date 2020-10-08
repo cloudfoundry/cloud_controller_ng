@@ -9,7 +9,7 @@ require 'messages/service_credential_binding_show_message'
 require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
-require 'jobs/v3/create_service_credential_binding_job'
+require 'jobs/v3/create_service_credential_binding_job_actor'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -112,7 +112,8 @@ class ServiceCredentialBindingsController < ApplicationController
   private
 
   def enqueue_bind_job(binding_guid, message)
-    bind_job = VCAP::CloudController::V3::CreateServiceCredentialBindingJob.new(
+    bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(
+      :credential,
       binding_guid,
       user_audit_info: user_audit_info,
       audit_hash: message.audit_hash,

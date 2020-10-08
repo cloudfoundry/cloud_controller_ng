@@ -3,7 +3,7 @@ require 'messages/service_route_binding_show_message'
 require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
 require 'actions/service_route_binding_delete'
-require 'jobs/v3/create_route_binding_job'
+require 'jobs/v3/create_binding_async_job'
 require 'jobs/v3/delete_route_binding_job'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_route_binding_presenter'
@@ -102,9 +102,11 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def enqueue_bind_job(binding_guid, parameters)
-    bind_job = VCAP::CloudController::V3::CreateRouteBindingJob.new(
+    bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(
+      :route,
       binding_guid,
       user_audit_info: user_audit_info,
+      audit_hash: {},
       parameters: parameters,
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable

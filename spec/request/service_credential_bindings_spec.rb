@@ -950,6 +950,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(202)
 
             stub_request(:put, broker_bind_url).
+              with(query: { accepts_incomplete: true }).
               to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
           end
 
@@ -960,6 +961,7 @@ RSpec.describe 'v3 service credential bindings' do
               a_request(:put, broker_bind_url).
                 with(
                   body: client_body,
+                  query: { accepts_incomplete: true }
                 )
             ).to have_been_made.once
           end
@@ -973,9 +975,10 @@ RSpec.describe 'v3 service credential bindings' do
               expect(
                 a_request(:put, broker_bind_url).
                   with(
-                    body: client_body.deep_merge(request_extra)
+                    body: client_body.deep_merge(request_extra),
+                    query: { accepts_incomplete: true }
                   )
-              ).to have_been_made.once
+                  ).to have_been_made.once
             end
           end
 
