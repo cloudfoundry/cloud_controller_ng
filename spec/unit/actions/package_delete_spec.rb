@@ -19,19 +19,41 @@ module VCAP::CloudController
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        it 'schedules a job to the delete the blobstore item' do
-          expect {
-            package_delete.delete(package)
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
+        context 'when using a package registry' do
+          before do
+            TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
+          end
 
-          job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
-          expect(job.handler).to include("key: #{package.guid}")
-          expect(job.handler).to include('package_blobstore')
-          expect(job.queue).to eq(Jobs::Queues.generic)
-          expect(job.guid).not_to be_nil
+          it 'schedules a job to the delete the blobstore item' do
+            expect {
+              package_delete.delete(package)
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            job = Delayed::Job.last
+            expect(job.handler).to include('VCAP::CloudController::Jobs::Kubernetes::RegistryDelete')
+            expect(job.handler).to include(package.bits_image_reference)
+            expect(job.queue).to eq(Jobs::Queues.generic)
+            expect(job.guid).not_to be_nil
+          end
+        end
+
+        context 'when not using a package registry' do
+          it 'schedules a job to the delete the blobstore item' do
+            expect {
+              package_delete.delete(package)
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            job = Delayed::Job.last
+            expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
+            expect(job.handler).to include("key: #{package.guid}")
+            expect(job.handler).to include('package_blobstore')
+            expect(job.queue).to eq(Jobs::Queues.generic)
+            expect(job.guid).not_to be_nil
+          end
         end
 
         it 'creates an v3 audit event' do

@@ -8,8 +8,12 @@ module VCAP::CloudController
       packages = Array(packages)
 
       packages.each do |package|
-        blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore)
-        Jobs::Enqueuer.new(blobstore_delete, queue: Jobs::Queues.generic).enqueue
+        package_delete = if VCAP::CloudController::Config.config.package_image_registry_configured?
+                           Jobs::Kubernetes::RegistryDelete.new(package.bits_image_reference)
+                         else
+                           Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore)
+                         end
+        Jobs::Enqueuer.new(package_delete, queue: Jobs::Queues.generic).enqueue
         package.destroy
 
         Repositories::PackageEventRepository.record_app_package_delete(
