@@ -23,7 +23,7 @@ class RoutesController < ApplicationController
 
     dataset = RouteFetcher.fetch(
       message,
-      permission_queryer.readable_route_guids,
+      permission_queryer.readable_route_dataset,
       eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
     )
 
@@ -198,7 +198,7 @@ class RoutesController < ApplicationController
 
     dataset = RouteFetcher.fetch(
       message,
-      permission_queryer.readable_route_guids,
+      permission_queryer.readable_route_dataset,
       eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
     )
 

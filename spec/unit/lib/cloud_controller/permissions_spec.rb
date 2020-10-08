@@ -805,6 +805,55 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_route_dataset' do
+      it 'returns all the routes for admins' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        route1 = Route.make(space: space1)
+        route2 = Route.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        route3 = Route.make(space: space2)
+
+        dataset = subject.readable_route_dataset
+
+        expect(dataset.first(guid: route1.guid)).to be_present
+        expect(dataset.first(guid: route2.guid)).to be_present
+        expect(dataset.first(guid: route3.guid)).to be_present
+      end
+
+      it 'returns routes where the user has an appropriate org membership' do
+        manager_org = Organization.make
+        manager_space = Space.make(organization: manager_org)
+        manager_route = Route.make(space: manager_space)
+        manager_org.add_manager(user)
+
+        auditor_org = Organization.make
+        auditor_space = Space.make(organization: auditor_org)
+        auditor_route = Route.make(space: auditor_space)
+        auditor_org.add_auditor(user)
+
+        billing_manager_org = Organization.make
+        billing_manager_space = Space.make(organization: billing_manager_org)
+        billing_manager_route = Route.make(space: billing_manager_space)
+        billing_manager_org.add_billing_manager(user)
+
+        member_org = Organization.make
+        member_space = Space.make(organization: member_org)
+        member_route = Route.make(space: member_space)
+        member_org.add_user(user)
+
+        dataset = permissions.readable_route_dataset
+
+        expect(dataset.first(guid: manager_route.guid)).to be_present
+        expect(dataset.first(guid: auditor_route.guid)).to be_present
+        expect(dataset.first(guid: billing_manager_route.guid)).to be_nil
+        expect(dataset.first(guid: member_route.guid)).to be_nil
+      end
+    end
     describe '#readable_route_guids' do
       it 'returns all the route guids for admins' do
         user = set_current_user_as_admin

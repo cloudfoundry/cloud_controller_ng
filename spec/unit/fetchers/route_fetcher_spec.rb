@@ -25,7 +25,7 @@ module VCAP::CloudController
         let(:routes_filter) { {} }
 
         it 'eager loads the specified resources for the routes' do
-          results = RouteFetcher.fetch(message, [route1.guid, route2.guid], eager_loaded_associations: [:labels, :domain]).all
+          results = RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route2.guid]), eager_loaded_associations: [:labels, :domain]).all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:domain)).to be true
@@ -38,7 +38,7 @@ module VCAP::CloudController
           let(:routes_filter) { { hosts: 'host2' } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route1.guid, route2.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route2.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route2.guid)
           end
@@ -48,7 +48,7 @@ module VCAP::CloudController
           let(:routes_filter) { { hosts: 'unknown-host' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route1.guid, route2.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route2.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -59,7 +59,7 @@ module VCAP::CloudController
           let(:routes_filter) { { paths: '/path1' } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route1.guid, route2.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route2.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route1.guid)
           end
@@ -69,7 +69,7 @@ module VCAP::CloudController
           let(:routes_filter) { { paths: 'unknown-path' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route1.guid, route2.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route2.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -80,7 +80,7 @@ module VCAP::CloudController
           let(:routes_filter) { { space_guids: space1.guid } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route2.guid)
           end
@@ -90,7 +90,7 @@ module VCAP::CloudController
           let(:routes_filter) { { space_guids: '???' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -101,7 +101,7 @@ module VCAP::CloudController
           let(:routes_filter) { { organization_guids: space1.organization.guid } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route2.guid)
           end
@@ -111,7 +111,7 @@ module VCAP::CloudController
           let(:routes_filter) { { organization_guids: '???' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -122,7 +122,7 @@ module VCAP::CloudController
           let(:routes_filter) { { domain_guids: domain2.guid } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route3.guid)
           end
@@ -132,7 +132,7 @@ module VCAP::CloudController
           let(:routes_filter) { { domain_guids: '???' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -157,7 +157,7 @@ module VCAP::CloudController
           let(:routes_filter) { { ports: '8888' } }
 
           it 'only returns the matching route' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid, route_with_ports.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid, route_with_ports.guid])).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq(route_with_ports.guid)
           end
@@ -167,7 +167,7 @@ module VCAP::CloudController
           let(:routes_filter) { { ports: '123' } }
 
           it 'returns no routes' do
-            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(0)
           end
         end
@@ -186,10 +186,10 @@ module VCAP::CloudController
           VCAP::CloudController::RouteLabelModel.make(resource_guid: route3.guid, key_name: 'dog', value: 'chihuahua')
         end
 
-        let(:results) { RouteFetcher.fetch(message, [route1.guid, route3.guid]).all }
+        let(:results) { RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route3.guid])).all }
 
         context 'only the label_selector is present' do
-          let(:results) { RouteFetcher.fetch(message, [route1.guid]).all }
+          let(:results) { RouteFetcher.fetch(message, Route.where(guid: [route1.guid])).all }
 
           let(:message) {
             RoutesListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
@@ -220,7 +220,7 @@ module VCAP::CloudController
         let(:routes_filter) { { app_guids: [app_model.guid, app_model2.guid] } }
 
         it 'only returns routes that are mapped to the app' do
-          results = RouteFetcher.fetch(message, Route.all.map(&:guid)).all
+          results = RouteFetcher.fetch(message, Route.dataset).all
           expect(results).to contain_exactly(route1, route2)
         end
       end
@@ -232,7 +232,7 @@ module VCAP::CloudController
         let(:routes_filter) { { app_guids: [app_model.guid] } }
 
         it 'only returns routes that are mapped to the app' do
-          results = RouteFetcher.fetch(message, Route.all.map(&:guid)).all
+          results = RouteFetcher.fetch(message, Route.dataset).all
           expect(results).to contain_exactly(route1, route2)
         end
       end

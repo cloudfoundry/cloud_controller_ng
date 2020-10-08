@@ -145,7 +145,15 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_route_guids
-    VCAP::CloudController::Route.user_visible(@user, can_read_globally?).map(&:guid)
+    readable_route_dataset.map(&:guid)
+  end
+
+  def readable_route_dataset
+    if can_read_globally?
+      VCAP::CloudController::Route.dataset
+    else
+      VCAP::CloudController::Route.user_visible(@user, can_read_globally?)
+    end
   end
 
   def readable_secret_space_guids

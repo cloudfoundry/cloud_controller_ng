@@ -180,6 +180,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def readable_route_dataset
+    db_permissions.readable_route_dataset
+  end
+
   def readable_route_guids
     science 'readable_route_guids' do |e|
       e.use { db_permissions.readable_route_guids }
