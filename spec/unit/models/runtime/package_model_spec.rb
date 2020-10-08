@@ -32,7 +32,13 @@ module VCAP::CloudController
         end
 
         it 'returns the image reference for the package' do
-          expect(package.bits_image_reference).to eq("hub.example.com/user/#{package.guid}@sha256:#{package_sha256_checksum}")
+          expect(package.bits_image_reference).to eq("hub.example.com/user/#{package.guid}")
+        end
+
+        context 'when digest: true is given' do
+          it 'returns the image reference for the package, including the digest' do
+            expect(package.bits_image_reference(digest: true)).to eq("hub.example.com/user/#{package.guid}@sha256:#{package_sha256_checksum}")
+          end
         end
 
         context 'when the package is type DOCKER' do

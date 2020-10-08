@@ -94,7 +94,7 @@ module Kpack
     def configure_source(staging_details)
       if config.package_image_registry_configured?
         { registry: {
-          image: staging_details.package.bits_image_reference
+          image: staging_details.package.bits_image_reference(digest: true)
         } }
       else
         { blob: { url: blobstore_url_generator.package_download_url(staging_details.package) } }

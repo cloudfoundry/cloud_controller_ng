@@ -33,7 +33,7 @@ module VCAP::CloudController
 
             job = Delayed::Job.last
             expect(job.handler).to include('VCAP::CloudController::Jobs::Kubernetes::RegistryDelete')
-            expect(job.handler).to include(package.bits_image_reference)
+            expect(job.handler).to include(package.bits_image_reference(digest: false))
             expect(job.queue).to eq(Jobs::Queues.generic)
             expect(job.guid).not_to be_nil
           end

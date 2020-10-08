@@ -20,7 +20,8 @@ module VCAP::CloudController
         it 'delegates to registry delete job' do
           job.perform
 
-          expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to have_received(:new).with(package.bits_image_reference)
+          expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to have_received(:new).
+            with(package.bits_image_reference(digest: false))
           expect(registry_delete).to have_received(:perform)
         end
 

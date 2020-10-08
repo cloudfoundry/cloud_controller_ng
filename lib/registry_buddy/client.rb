@@ -22,9 +22,7 @@ module RegistryBuddy
     def delete_image(image_reference)
       with_request_error_handling 202 do
         client.delete('/images',
-          body: {
-            image_reference: image_reference
-          }
+          body: JSON.dump(image_reference: image_reference)
         )
       end
 
