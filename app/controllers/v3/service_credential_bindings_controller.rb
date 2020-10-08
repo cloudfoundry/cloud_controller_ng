@@ -62,8 +62,6 @@ class ServiceCredentialBindingsController < ApplicationController
     end
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
-  rescue V3::ServiceCredentialBindingCreate::Unimplemented
-    head :not_implemented
   end
 
   def destroy
