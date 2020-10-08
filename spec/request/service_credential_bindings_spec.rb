@@ -1294,7 +1294,7 @@ RSpec.describe 'v3 service credential bindings' do
           context 'last operation response is 200 OK and indicates success' do
             let(:state) { 'succeeded' }
             let(:fetch_binding_status_code) { 200 }
-            let(:syslog_drain_url) {'http://syslog.example.com/wow'}
+            let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
             let(:credentials) { { password: 'foo' } }
             let(:fetch_binding_body) do
               {
