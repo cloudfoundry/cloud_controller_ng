@@ -9,7 +9,7 @@ module CloudController::Packager
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
     let(:blobstore_dir) { Dir.mktmpdir }
     let(:local_tmp_dir) { Dir.mktmpdir }
-    let(:package_image_uploader_client) { instance_double(PackageImageUploader::Client) }
+    let(:registry_buddy_client) { instance_double(RegistryBuddy::Client) }
     let(:package_guid) { 'im-a-package-guid' }
     let(:registry) { 'hub.example.com/user' }
     let(:min_size) { 4 }
@@ -38,8 +38,8 @@ module CloudController::Packager
       allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
       allow(packer).to receive(:max_package_size).and_return(max_package_size)
 
-      allow(PackageImageUploader::Client).to receive(:new).and_return(package_image_uploader_client)
-      allow(package_image_uploader_client).to receive(:post_package).and_return(
+      allow(RegistryBuddy::Client).to receive(:new).and_return(registry_buddy_client)
+      allow(registry_buddy_client).to receive(:post_package).and_return(
         'hash' => { 'algorithm' => 'sha256', 'hex' => 'sha-2-5-6-hex' }
       )
 
@@ -62,7 +62,7 @@ module CloudController::Packager
       let(:cached_files_fingerprints) { [] }
 
       it 'uploads to the registry and returns the uploaded file hash' do
-        expect(package_image_uploader_client).to receive(:post_package).
+        expect(registry_buddy_client).to receive(:post_package).
           with(package_guid, %r{#{local_tmp_dir}\/packages\/registry_bits_packer}, registry).
           and_return('hash' => { 'algorithm' => 'sha256', 'hex' => 'sha-2-5-6-hex' })
 
@@ -74,7 +74,7 @@ module CloudController::Packager
         let(:expected_exception) { StandardError.new('some error') }
 
         it 'raises the exception' do
-          allow(package_image_uploader_client).to receive(:post_package).and_raise(expected_exception)
+          allow(registry_buddy_client).to receive(:post_package).and_raise(expected_exception)
           expect {
             packer.send_package_to_blobstore(package_guid, uploaded_files_path, [])
           }.to raise_error(expected_exception)
@@ -98,7 +98,7 @@ module CloudController::Packager
           let(:cached_files_fingerprints) { fingerprints }
 
           it 'packs a zip with the cached files' do
-            expect(package_image_uploader_client).to receive(:post_package).
+            expect(registry_buddy_client).to receive(:post_package).
               with(package_guid, %r{#{local_tmp_dir}\/packages\/registry_bits_packer}, registry).
               and_return('hash' => { 'algorithm' => 'sha256', 'hex' => 'sha-2-5-6-hex' })
 
@@ -134,7 +134,7 @@ module CloudController::Packager
           let(:cached_files_fingerprints) { fingerprints }
 
           it 'packs a zip with the cached files' do
-            expect(package_image_uploader_client).to receive(:post_package).
+            expect(registry_buddy_client).to receive(:post_package).
               with(package_guid, %r{#{local_tmp_dir}\/packages\/registry_bits_packer}, registry).
               and_return('hash' => { 'algorithm' => 'sha256', 'hex' => 'sha-2-5-6-hex' })
             packer.send_package_to_blobstore(package_guid, uploaded_files_path, cached_files_fingerprints)

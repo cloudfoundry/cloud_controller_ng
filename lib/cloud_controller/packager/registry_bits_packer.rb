@@ -1,4 +1,4 @@
-require 'package_image_uploader/client'
+require 'registry_buddy/client'
 require 'cloud_controller/blobstore/fingerprints_collection'
 require 'cloud_controller/app_packager'
 require 'cloud_controller/packager/shared_bits_packer'

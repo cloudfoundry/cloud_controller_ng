@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Kubernetes
     RSpec.describe RegistryDelete, job_context: :worker do
       let(:image_reference) { 'path/to/image' }
-      let(:registry_buddy_client) { instance_double(PackageImageUploader::Client) }
+      let(:registry_buddy_client) { instance_double(RegistryBuddy::Client) }
 
       subject(:job) do
         RegistryDelete.new(image_reference)

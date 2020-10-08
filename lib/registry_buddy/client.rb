@@ -1,6 +1,6 @@
 require 'jsonclient'
 
-module PackageImageUploader
+module RegistryBuddy
   class Client
     def initialize(host, port)
       @url = "http://#{host}:#{port}"
@@ -38,7 +38,7 @@ module PackageImageUploader
     end
 
     def logger
-      @logger ||= Steno.logger('cc.package_image_uploader')
+      @logger ||= Steno.logger('cc.registry_buddy')
     end
 
     def with_request_error_handling(successful_status)
@@ -48,13 +48,13 @@ module PackageImageUploader
       when successful_status
         response
       when 400
-        logger.error("PackageImageUploader returned: #{response.status} with #{response.body}")
+        logger.error("RegistryBuddy returned: #{response.status} with #{response.body}")
         raise Error.new("Bad Request error, status: #{response.status}")
       when 422
-        logger.error("PackageImageUploader returned: #{response.status} with #{response.body}")
+        logger.error("RegistryBuddy returned: #{response.status} with #{response.body}")
         raise Error.new("Unprocessable Entity error, status: #{response.status}")
       else
-        logger.error("PackageImageUploader returned: #{response.status} with #{response.body}")
+        logger.error("RegistryBuddy returned: #{response.status} with #{response.body}")
         raise Error.new("Server error, status: #{response.status}")
       end
     end
