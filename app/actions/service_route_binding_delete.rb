@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       def delete(binding, async_allowed:)
-        return RequiresAsync unless async_allowed || binding.service_instance.user_provided_instance?
+        return RequiresAsync.new unless async_allowed || binding.service_instance.user_provided_instance?
 
         operation_in_progress! if binding.service_instance.operation_in_progress?
 

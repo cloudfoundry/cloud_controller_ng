@@ -5,13 +5,13 @@ module VCAP::CloudController
   module V3
     RSpec.shared_examples 'successful delete' do
       it 'deletes the binding' do
-        subject
+        perform_action
 
         expect(RouteBinding.all).to be_empty
       end
 
       it 'creates an audit event' do
-        subject
+        perform_action
 
         expect(event_repository).to have_received(:record_service_instance_event).with(
           :unbind_route,
@@ -21,12 +21,12 @@ module VCAP::CloudController
       end
 
       it 'says the the delete is complete' do
-        expect(subject).to be_a(described_class::DeleteComplete)
+        expect(perform_action).to be_a(described_class::DeleteComplete)
       end
 
       context 'route does not have app' do
         it 'does not notify diego' do
-          subject
+          perform_action
 
           expect(messenger).not_to have_received(:send_desire_request)
         end
@@ -38,7 +38,7 @@ module VCAP::CloudController
         it 'notifies diego' do
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
-          subject
+          perform_action
 
           expect(messenger).to have_received(:send_desire_request).with(process)
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
       end
 
       describe '#delete' do
-        subject { action.delete(route_binding, async_allowed: async_allowed) }
+        subject(:delete_binding) { action.delete(route_binding, async_allowed: async_allowed) }
 
         context 'managed service instance' do
           let(:service_offering) { Service.make(requires: ['route_forwarding']) }
@@ -87,7 +87,7 @@ module VCAP::CloudController
             let(:async_allowed) { false }
 
             it 'reports that a async is required' do
-              expect(subject).to be(described_class::RequiresAsync)
+              expect(delete_binding).to be_a(described_class::RequiresAsync)
               expect(RouteBinding.first).to eq(route_binding)
             end
           end
@@ -96,12 +96,14 @@ module VCAP::CloudController
             let(:async_allowed) { true }
 
             it 'makes the right call to the broker client' do
-              subject
+              delete_binding
 
               expect(broker_client).to have_received(:unbind).with(route_binding, nil, true)
             end
 
             context 'broker returns delete complete' do
+              let(:perform_action) { delete_binding }
+
               it_behaves_like 'successful delete'
             end
 
@@ -110,11 +112,11 @@ module VCAP::CloudController
               let(:unbind_response) { { async: true, operation: operation } }
 
               it 'says the the delete is in progress' do
-                expect(subject).to eq(described_class::DeleteStarted.new(operation))
+                expect(delete_binding).to eq(described_class::DeleteStarted.new(operation))
               end
 
               it 'updates the last operation' do
-                subject
+                delete_binding
 
                 expect(route_binding.last_operation.type).to eq('delete')
                 expect(route_binding.last_operation.state).to eq('in progress')
@@ -123,7 +125,7 @@ module VCAP::CloudController
               end
 
               it 'does not remove the binding or log an audit event' do
-                subject
+                delete_binding
 
                 expect(RouteBinding.first).to eq(route_binding)
                 expect(event_repository).not_to have_received(:record_service_instance_event)
@@ -140,7 +142,7 @@ module VCAP::CloudController
 
               it 'fails with an appropriate error' do
                 expect {
-                  subject
+                  delete_binding
                 }.to raise_error(
                   described_class::UnprocessableDelete,
                   'There is an operation in progress for the service instance',
@@ -157,7 +159,7 @@ module VCAP::CloudController
 
               it 'fails with an appropriate error and stores the message in the binding' do
                 expect {
-                  subject
+                  delete_binding
                 }.to raise_error(
                   described_class::UnprocessableDelete,
                   "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
@@ -173,6 +175,7 @@ module VCAP::CloudController
 
         context 'user-provided service instance' do
           let(:service_instance) { UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+          let(:perform_action) { delete_binding }
 
           context 'async response not allowed' do
             let(:async_allowed) { false }
@@ -208,17 +211,17 @@ module VCAP::CloudController
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
         end
 
-        subject { action.poll(route_binding) }
+        subject(:poll_binding) { action.poll(route_binding) }
 
         context 'broker client says in progress' do
           let(:state) { 'in progress' }
 
           it 'returns delete in progress' do
-            expect(subject).to be_a(described_class::DeleteInProgress)
+            expect(poll_binding).to be_a(described_class::DeleteInProgress)
           end
 
           it 'updates the last operation' do
-            subject
+            poll_binding
             route_binding.reload
 
             expect(route_binding.last_operation.type).to eq('delete')
@@ -227,7 +230,7 @@ module VCAP::CloudController
           end
 
           it 'does not remove the binding or log an audit event' do
-            subject
+            poll_binding
 
             expect(RouteBinding.first).to eq(route_binding)
             expect(event_repository).not_to have_received(:record_service_instance_event)
@@ -236,7 +239,7 @@ module VCAP::CloudController
           context 'retry interval' do
             context 'no retry interval' do
               it 'returns nil' do
-                expect(subject.retry_after).to be_nil
+                expect(poll_binding.retry_after).to be_nil
               end
             end
 
@@ -252,7 +255,7 @@ module VCAP::CloudController
               end
 
               it 'returns the value' do
-                expect(subject.retry_after).to eq(10)
+                expect(poll_binding.retry_after).to eq(10)
               end
             end
           end
@@ -260,6 +263,7 @@ module VCAP::CloudController
 
         context 'broker client says finished' do
           let(:state) { 'succeeded' }
+          let(:perform_action) { poll_binding }
 
           it_behaves_like 'successful delete'
         end
@@ -268,11 +272,11 @@ module VCAP::CloudController
           let(:state) { 'failed' }
 
           it 'returns complete' do
-            expect(subject).to be_a(described_class::DeleteComplete)
+            expect(poll_binding).to be_a(described_class::DeleteComplete)
           end
 
           it 'updates the last operation' do
-            subject
+            poll_binding
 
             route_binding.reload
             expect(route_binding.last_operation.state).to eq('failed')
@@ -280,7 +284,7 @@ module VCAP::CloudController
           end
 
           it 'does not notify diego or create an audit event' do
-            subject
+            poll_binding
 
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
@@ -295,7 +299,7 @@ module VCAP::CloudController
           end
 
           it 'saves the error in the last operation' do
-            subject
+            poll_binding
 
             route_binding.reload
             expect(route_binding.last_operation.state).to eq('in progress')
