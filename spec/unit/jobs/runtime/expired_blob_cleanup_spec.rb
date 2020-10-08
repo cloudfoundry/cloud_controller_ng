@@ -61,8 +61,15 @@ module VCAP::CloudController
             expect(Delayed::Job.last.handler).to include('DeleteExpiredPackageBlob')
           end
 
-          it 'does nothing when package_hash is nil' do
+          it 'enqueues a deletion job when only package_hash is nil' do
             expired_package.update(package_hash: nil)
+
+            expect { job.perform }.to change { Delayed::Job.count }.by(1)
+            expect(Delayed::Job.last.handler).to include('DeleteExpiredPackageBlob')
+          end
+
+          it 'does nothing when both package_hash and sha256_checksum are blank' do
+            expired_package.update(package_hash: nil, sha256_checksum: '')
 
             expect { job.perform }.not_to change { Delayed::Job.count }.from(0)
           end

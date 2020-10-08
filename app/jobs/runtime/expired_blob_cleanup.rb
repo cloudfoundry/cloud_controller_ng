@@ -9,7 +9,7 @@ module VCAP::CloudController
             enqueue_droplet_delete_job(droplet.guid)
           end
 
-          PackageModel.where(state: PackageModel::EXPIRED_STATE).exclude(package_hash: nil).each do |package|
+          PackageModel.where(state: PackageModel::EXPIRED_STATE).exclude(package_hash: nil, sha256_checksum: '').each do |package|
             enqueue_package_delete_job(package.guid)
           end
         end
