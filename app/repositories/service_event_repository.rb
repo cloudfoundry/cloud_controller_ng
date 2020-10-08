@@ -17,6 +17,8 @@ module VCAP::CloudController
 
       delegate(
         :record_service_plan_visibility_event,
+        :record_service_plan_update_visibility_event,
+        :record_service_plan_delete_visibility_event,
         :record_broker_event,
         :record_broker_event_with_request,
         :record_service_instance_event,
@@ -78,20 +80,23 @@ module VCAP::CloudController
         end
 
         def record_service_plan_visibility_event(type, visibility, params)
-          actee = {
-            actee:      visibility.guid,
-            actee_type: 'service_plan_visibility',
-            actee_name: ''
-          }
-
-          metadata = { request: params }
-
           space_data = {
             space_guid:        '',
             organization_guid: visibility.organization_guid
           }
+          record_plan_visibility_event(type, visibility.guid, params, space_data)
+        end
 
-          create_event("audit.service_plan_visibility.#{type}", user_actor, actee, metadata, space_data)
+        def record_service_plan_update_visibility_event(plan, params)
+          record_plan_visibility_event(:update, plan.guid, params)
+        end
+
+        def record_service_plan_delete_visibility_event(plan, org)
+          space_data = {
+            space_guid: '',
+            organization_guid: org.guid
+          }
+          record_plan_visibility_event(:delete, plan.guid, {}, space_data)
         end
 
         def record_broker_event(type, broker, params)
@@ -190,6 +195,18 @@ module VCAP::CloudController
         private
 
         attr_reader :user_audit_info
+
+        def record_plan_visibility_event(type, actee_guid, params, space_data=nil)
+          actee = {
+            actee:      actee_guid,
+            actee_type: 'service_plan_visibility',
+            actee_name: ''
+          }
+
+          metadata = { request: params }
+
+          create_event("audit.service_plan_visibility.#{type}", user_actor, actee, metadata, space_data)
+        end
 
         def with_parameters_redacted(request_data)
           redact(request_data, for_key: 'parameters', with: Presenters::Censorship::PRIVATE_DATA_HIDDEN)

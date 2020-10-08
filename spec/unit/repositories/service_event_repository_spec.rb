@@ -38,6 +38,53 @@ module VCAP::CloudController
         end
       end
 
+      describe 'record_service_plan_update_visibility_event' do
+        let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+
+        it 'creates the event' do
+          params = {
+            type: 'organization',
+            organizations: [
+              { guid: '9c246656-830f-4c47-968f-f92c2d659560' },
+              { guid: 'c01fdfc3-ffe4-4ec1-a294-e5a84ef425f1' }
+            ]
+          }
+          repository.record_service_plan_update_visibility_event(service_plan, params)
+
+          event = Event.find(type: 'audit.service_plan_visibility.update')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(service_plan.guid)
+          expect(event.actee_type).to eq('service_plan_visibility')
+          expect(event.actee_name).to eq('')
+          expect(event.metadata).to eq({ 'request' => params.with_indifferent_access })
+        end
+      end
+
+      describe 'record_service_plan_delete_visibility_event' do
+        let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+        let(:org) { VCAP::CloudController::Organization.make }
+
+        it 'creates the event' do
+          repository.record_service_plan_delete_visibility_event(service_plan, org)
+
+          event = Event.find(type: 'audit.service_plan_visibility.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(service_plan.guid)
+          expect(event.actee_type).to eq('service_plan_visibility')
+          expect(event.actee_name).to eq('')
+          expect(event.metadata).to eq({ 'request' => {} })
+          expect(event.organization_guid).to eq(org.guid)
+        end
+      end
+
       describe '#record_broker_event' do
         let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
         let(:params) do
