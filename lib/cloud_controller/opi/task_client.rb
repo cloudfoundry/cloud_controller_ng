@@ -21,12 +21,33 @@ module OPI
       end
     end
 
-    def fetch_task(_)
-      Diego::Bbs::Models::Task.new
+    def fetch_task(guid)
+      resp = client.get("/tasks/#{guid}")
+
+      return nil if resp.status_code == 404
+
+      if resp.status_code != 200
+        raise CloudController::Errors::ApiError.new_from_details('TaskError', "response status code: #{resp.status_code}")
+      end
+
+      task = JSON.parse(resp.body)
+      task[:task_guid] = task.delete('guid')
+      OPI.recursive_ostruct(task)
     end
 
     def fetch_tasks
-      []
+      resp = client.get('/tasks')
+
+      if resp.status_code != 200
+        raise CloudController::Errors::ApiError.new_from_details('TaskError', "response status code: #{resp.status_code}")
+      end
+
+      tasks = JSON.parse(resp.body)
+      tasks.each do |task|
+        task['task_guid'] = task.delete('guid')
+      end
+
+      tasks.map { |t| OPI.recursive_ostruct(t) }
     end
 
     def cancel_task(guid)
