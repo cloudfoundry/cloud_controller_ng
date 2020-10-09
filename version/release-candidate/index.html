@@ -686,6 +686,10 @@ will return all audit events occurring on New Year&rsquo;s Day.</p>
 <td><strong>gte</strong></td>
 <td>Return resources greater than or equal to the given value for the filtered attribute</td>
 </tr>
+<tr>
+<td><strong>not</strong></td>
+<td>Return resources NOT in the given list of values. Only supported for the <code class="prettyprint">target_guids</code> filter for <a href="#list-audit-events">audit events</a></td>
+</tr>
 </tbody></table>
 <h2 id="include">Include</h2>
 
@@ -4247,7 +4251,7 @@ to three instances), and stopping an application.</p>
 <tr>
 <td><strong>target_guids</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of target guids to filter by</td>
+<td>Comma-delimited list of target guids to filter by. Also supports filtering by exclusion with <code class="prettyprint">not</code> as a <a href="#relational-operators-experimental">relational operator</a></td>
 </tr>
 <tr>
 <td><strong>space_guids</strong></td>
@@ -4560,6 +4564,18 @@ resource can be created to initiate the staging process. A successful build resu
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
 <td>Lifecycle information for a build</td>
 <td>lifecycle on the app</td>
+</tr>
+<tr>
+<td><strong>staging_memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Memory in MB allocated for staging of the build</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>staging_disk_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Disk space in MB allocated for staging of the build</td>
+<td></td>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong></td>
