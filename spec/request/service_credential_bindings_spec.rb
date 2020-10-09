@@ -1327,7 +1327,7 @@ RSpec.describe 'v3 service credential bindings' do
             end
           end
 
-          it_behaves_like 'create binding last operation response handling'
+          it_behaves_like 'binding last operation response handling', 'create'
 
           context 'binding not retrievable' do
             let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
