@@ -68,7 +68,7 @@ class ServiceRouteBindingsController < ApplicationController
     action = V3::ServiceRouteBindingDelete.new(service_event_repository)
     result = action.delete(route_binding, async_allowed: false)
 
-    if result == V3::ServiceRouteBindingDelete::RequiresAsync
+    if result.is_a? V3::ServiceRouteBindingDelete::RequiresAsync
       pollable_job_guid = enqueue_unbind_job(route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     else
