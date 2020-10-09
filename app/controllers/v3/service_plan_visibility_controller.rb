@@ -42,11 +42,15 @@ class ServicePlanVisibilityController < ApplicationController
     resource_not_found!(:service_plan_visibility) unless to_delete.present?
 
     ServicePlanVisibilityDelete.delete(to_delete)
-
+    event_repository.record_service_plan_delete_visibility_event(service_plan, org)
     head :no_content
   end
 
   private
+
+  def event_repository
+    VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+  end
 
   def update_visibility(opts={})
     service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
@@ -57,6 +61,7 @@ class ServicePlanVisibilityController < ApplicationController
     bad_request!(message.errors.full_messages) unless message.valid?
 
     updated_service_plan = V3::ServicePlanVisibilityUpdate.new.update(service_plan, message, opts)
+    event_repository.record_service_plan_update_visibility_event(service_plan, message.audit_hash)
 
     visible_in_orgs = ServicePlanVisibilityFetcher.new(permission_queryer).fetch_orgs(
       service_plan_guids: [service_plan.guid]
