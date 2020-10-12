@@ -368,8 +368,8 @@ module CloudController
 
     def registry_buddy_client
       RegistryBuddy::Client.new(
-        VCAP::CloudController::Config.config.get(:package_image_uploader, :host),
-        VCAP::CloudController::Config.config.get(:package_image_uploader, :port),
+        VCAP::CloudController::Config.config.get(:registry_buddy, :host),
+        VCAP::CloudController::Config.config.get(:registry_buddy, :port),
       )
     end
 

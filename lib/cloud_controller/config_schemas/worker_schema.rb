@@ -101,7 +101,7 @@ module VCAP::CloudController
             fog_aws_storage_options: Hash
           },
 
-          optional(:package_image_uploader) => {
+          optional(:registry_buddy) => {
             host: String,
             port: Integer
           },

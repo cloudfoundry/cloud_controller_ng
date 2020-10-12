@@ -196,7 +196,7 @@ buildpacks:
     provider: "Local"
   fog_aws_storage_options: {}
 
-package_image_uploader:
+registry_buddy:
   host: "127.0.0.1"
   port: 8080
 
