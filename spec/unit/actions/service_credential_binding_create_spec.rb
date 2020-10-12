@@ -18,6 +18,7 @@ module VCAP::CloudController
       before do
         @service_binding_event_repository = Repositories::ServiceBindingEventRepository
         allow(@service_binding_event_repository).to receive(:record_create)
+        allow(@service_binding_event_repository).to receive(:record_start_create)
       end
 
       describe '#precursor' do
@@ -174,7 +175,7 @@ module VCAP::CloudController
         it_behaves_like 'service binding creation', ServiceBinding
 
         describe 'app specific behaviour' do
-          RSpec.shared_examples 'the credential binding bind' do
+          RSpec.shared_examples 'the sync credential binding' do
             it 'creates and returns the credential binding' do
               action.bind(precursor)
 
@@ -220,7 +221,23 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it_behaves_like 'the credential binding bind'
+            it_behaves_like 'the sync credential binding'
+
+            context 'asynchronous binding' do
+              let(:broker_provided_operation) { Sham.guid }
+              let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
+              let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_async_response) }
+
+              it 'should log audit start_create' do
+                action.bind(precursor)
+                expect(@service_binding_event_repository).to have_received(:record_start_create).with(
+                  precursor,
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: false,
+                )
+              end
+            end
           end
 
           context 'user-provided service instance' do
@@ -233,7 +250,7 @@ module VCAP::CloudController
             }
             let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
-            it_behaves_like 'the credential binding bind'
+            it_behaves_like 'the sync credential binding'
           end
         end
       end

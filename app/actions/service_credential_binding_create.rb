@@ -55,6 +55,18 @@ module VCAP::CloudController
         event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
       end
 
+      def save_incomplete_binding(binding, broker_operation)
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: broker_operation
+          }
+        )
+        event_repository.record_start_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
+      end
+
       def validate!(service_instance, app, volume_mount_services_enabled)
         app_is_required! unless app.present?
         space_mismatch! unless all_space_guids(service_instance).include? app.space.guid
