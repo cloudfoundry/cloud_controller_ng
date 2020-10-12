@@ -96,7 +96,6 @@ module VCAP::CloudController
             auth_password: String,
           },
 
-
           staging: {
             timeout_in_seconds: Integer,
             minimum_staging_memory_mb: Integer,
