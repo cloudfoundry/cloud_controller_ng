@@ -95,6 +95,12 @@ module VCAP::CloudController::Presenters::V3
             },
             parameters: {
               href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/parameters"
+            },
+            service_credential_bindings: {
+              href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
+            },
+            service_route_bindings: {
+              href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
             }
           }
         })
@@ -204,6 +210,12 @@ module VCAP::CloudController::Presenters::V3
             },
             credentials: {
               href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/credentials"
+            },
+            service_credential_bindings: {
+              href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
+            },
+            service_route_bindings: {
+              href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
             }
           }
         })

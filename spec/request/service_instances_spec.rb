@@ -3815,6 +3815,12 @@ RSpec.describe 'V3 service instances' do
         parameters: {
           href: "#{link_prefix}/v3/service_instances/#{instance.guid}/parameters"
         },
+        service_credential_bindings: {
+          href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{instance.guid}"
+        },
+        service_route_bindings: {
+          href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{instance.guid}"
+        }
       },
     }
   end
@@ -3849,6 +3855,12 @@ RSpec.describe 'V3 service instances' do
         },
         credentials: {
           href: "#{link_prefix}/v3/service_instances/#{instance.guid}/credentials"
+        },
+        service_credential_bindings: {
+          href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{instance.guid}"
+        },
+        service_route_bindings: {
+          href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{instance.guid}"
         }
       },
     }
