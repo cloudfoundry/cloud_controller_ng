@@ -160,7 +160,7 @@ RSpec.shared_examples 'polling service binding creation' do
       it 'should stop polling for other errors' do
         allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(RuntimeError)
 
-        expect{ action.poll(binding) }.to raise_error(RuntimeError)
+        expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload
         expect(binding.last_operation.type).to eq('create')
@@ -201,7 +201,7 @@ RSpec.shared_examples 'polling service binding creation' do
         end
 
         it 'marks the binding as failed' do
-          expect{ action.poll(binding) }.to raise_error(BadError)
+          expect { action.poll(binding) }.to raise_error(BadError)
 
           binding.reload
           expect(binding.last_operation.type).to eq('create')
@@ -229,8 +229,13 @@ RSpec.shared_examples 'polling service binding creation' do
     context 'response says failed' do
       let(:state) { 'failed' }
 
+      it 'returns true' do
+        polling_status = action.poll(binding)
+        expect(polling_status[:finished]).to be_truthy
+      end
+
       it 'updates the last operation' do
-        expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+        action.poll(binding)
 
         binding.reload
         expect(binding.last_operation.state).to eq('failed')
