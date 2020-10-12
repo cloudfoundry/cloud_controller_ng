@@ -47,11 +47,6 @@ module VCAP::CloudController
             optional(:ca_cert_path) => String,
           },
 
-          internal_api: {
-            auth_user: String,
-            auth_password: String,
-          },
-
           staging: {
             timeout_in_seconds: Integer,
             **VCAP::Config::Dsl.omit_on_k8s(
@@ -220,6 +215,11 @@ module VCAP::CloudController
               use_privileged_containers_for_staging: bool,
               optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
               enable_declarative_asset_downloads: bool,
+            },
+
+            internal_api: {
+              auth_user: String,
+              auth_password: String,
             },
           ),
         }

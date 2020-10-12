@@ -96,10 +96,6 @@ module VCAP::CloudController
             auth_password: String,
           },
 
-          internal_api: {
-            auth_user: String,
-            auth_password: String,
-          },
 
           staging: {
             timeout_in_seconds: Integer,
@@ -392,6 +388,11 @@ module VCAP::CloudController
               docker_staging_stack: String,
               optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
               enable_declarative_asset_downloads: bool,
+            },
+
+            internal_api: {
+              auth_user: String,
+              auth_password: String,
             },
           ),
 
