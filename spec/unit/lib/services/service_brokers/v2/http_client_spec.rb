@@ -311,6 +311,26 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    shared_examples 'client that follows redirects' do
+      let(:another_url) { "http://another-broker.example.com#{path}" }
+
+      before do
+        stub_request(http_method, full_url).
+          with(basic_auth: basic_auth).
+          to_return(status: 301, body: {}.to_json, headers: { Location: another_url })
+
+        stub_request(http_method, another_url).
+          with(basic_auth: basic_auth).
+          to_return(status: 200, body: '')
+      end
+
+      it 'should follow redirects' do
+        request
+
+        expect(a_request(http_method, another_url)).to have_been_made
+      end
+    end
+
     describe '#get' do
       let(:http_method) { :get }
 
@@ -366,6 +386,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it_behaves_like 'client that maps status codes to status code messages' do
+        let(:request) { client.get(path) }
+      end
+
+      it_behaves_like 'client that follows redirects' do
         let(:request) { client.get(path) }
       end
     end
