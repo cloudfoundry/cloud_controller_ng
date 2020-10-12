@@ -1,0 +1,29 @@
+### V3 API Root
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :v3_root %>
+```
+
+This endpoint returns links to all the resources available on the v3 API.
+
+#### Definition
+`GET /v3`
+
+#### Authentication
+
+No authentication required.

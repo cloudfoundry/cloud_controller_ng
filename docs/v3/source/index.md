@@ -24,6 +24,7 @@ includes:
   - api_resources/resource_matches
   - api_resources/revisions
   - api_resources/roles
+  - api_resources/root
   - api_resources/routes
   - api_resources/security_groups
   - api_resources/service_bindings
@@ -224,6 +225,9 @@ includes:
   - resources/roles/get
   - resources/roles/list
   - resources/roles/delete
+  - resources/root/header
+  - resources/root/global_root
+  - resources/root/v3_root
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object

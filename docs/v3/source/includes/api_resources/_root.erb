@@ -1,0 +1,155 @@
+<% content_for :v3_root do %>
+{
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3"
+    },
+    "app_usage_events": {
+      "href": "https://api.example.org/v3/app_usage_events"
+    },
+    "apps": {
+      "href": "https://api.example.org/v3/apps"
+    },
+    "audit_events": {
+      "href": "https://api.example.org/v3/audit_events"
+    },
+    "buildpacks": {
+      "href": "https://api.example.org/v3/buildpacks"
+    },
+    "builds": {
+      "href": "https://api.example.org/v3/builds"
+    },
+    "deployments": {
+      "href": "https://api.example.org/v3/deployments"
+    },
+    "domains": {
+      "href": "https://api.example.org/v3/domains"
+    },
+    "droplets": {
+      "href": "https://api.example.org/v3/droplets"
+    },
+    "environment_variable_groups": {
+      "href": "https://api.example.org/v3/environment_variable_groups"
+    },
+    "feature_flags": {
+      "href": "https://api.example.org/v3/feature_flags"
+    },
+    "info": {
+      "href": "https://api.example.org/v3/info"
+    },
+    "isolation_segments": {
+      "href": "https://api.example.org/v3/isolation_segments"
+    },
+    "organizations": {
+      "href": "https://api.example.org/v3/organizations"
+    },
+    "organization_quotas": {
+      "href": "https://api.example.org/v3/organization_quotas"
+    },
+    "packages": {
+      "href": "https://api.example.org/v3/packages"
+    },
+    "processes": {
+      "href": "https://api.example.org/v3/processes"
+    },
+    "resource_matches": {
+      "href": "https://api.example.org/v3/resource_matches"
+    },
+    "roles": {
+      "href": "https://api.example.org/v3/roles"
+    },
+    "routes": {
+      "href": "https://api.example.org/v3/routes"
+    },
+    "security_groups": {
+      "href": "https://api.example.org/v3/security_groups"
+    },
+    "service_brokers": {
+      "href": "https://api.example.org/v3/service_brokers"
+    },
+    "service_instances": {
+      "href": "https://api.example.org/v3/service_instances",
+      "experimental": true
+    },
+    "service_offerings": {
+      "href": "https://api.example.org/v3/service_offerings"
+    },
+    "service_plans": {
+      "href": "https://api.example.org/v3/service_plans"
+    },
+    "service_usage_events": {
+      "href": "https://api.example.org/v3/service_usage_events"
+    },
+    "spaces": {
+      "href": "https://api.example.org/v3/spaces"
+    },
+    "space_quotas": {
+      "href": "https://api.example.org/v3/space_quotas"
+    },
+    "stacks": {
+      "href": "https://api.example.org/v3/stacks"
+    },
+    "tasks": {
+      "href": "https://api.example.org/v3/tasks"
+    },
+    "users": {
+      "href": "https://api.example.org/v3/users"
+    }
+  }
+}
+<% end %>
+
+<% content_for :global_root do %>
+{
+  "links": {
+    "self": {
+      "href": "https://api.example.org"
+    },
+    "bits_service": null,
+    "cloud_controller_v2": {
+      "href": "https://api.example.org/v2",
+      "meta": {
+        "version": "2.155.0"
+      }
+    },
+    "cloud_controller_v3": {
+      "href": "https://api.example.org/v3",
+      "meta": {
+        "version": "3.90.0"
+      }
+    },
+    "network_policy_v0": {
+      "href": "https://api.example.org/networking/v0/external"
+    },
+    "network_policy_v1": {
+      "href": "https://api.example.org/networking/v1/external"
+    },
+    "login": {
+      "href": "https://login.example.org"
+    },
+    "uaa": {
+      "href": "https://uaa.example.org"
+    },
+    "credhub": null,
+    "routing": {
+      "href": "https://api.example.org/routing"
+    },
+    "logging": {
+      "href": "wss://doppler.example.org:443"
+    },
+    "log_cache": {
+      "href": "https://log-cache.example.org"
+    },
+    "log_stream": {
+      "href": "https://log-stream.example.org"
+    },
+    "app_ssh": {
+      "href": "ssh.example.org:2222",
+      "meta": {
+        "host_key_fingerprint": "Y411oivJwZCUQnXHq83mdM5SKCK4ftyoSXI31RRe4Zs",
+        "oauth_client": "ssh-proxy"
+      }
+    }
+  }
+}
+<% end %>

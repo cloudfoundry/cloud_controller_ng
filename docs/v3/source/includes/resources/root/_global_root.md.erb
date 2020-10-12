@@ -1,0 +1,29 @@
+### Global API Root
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :global_root %>
+```
+
+This endpoint returns links to the APIs available on a given Cloud Foundry deployment.
+
+#### Definition
+`GET /`
+
+#### Authentication
+
+No authentication required.
