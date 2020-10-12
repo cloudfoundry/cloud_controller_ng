@@ -47,6 +47,18 @@ module VCAP::CloudController
               },
               space: {
                 href: url_builder.build_url(path: "/v3/spaces/#{service_instance.space.guid}")
+              },
+              service_credential_bindings: {
+                href: url_builder.build_url(
+                  path: '/v3/service_credential_bindings',
+                  query: "service_instance_guids=#{service_instance.guid}"
+                )
+              },
+              service_route_bindings: {
+                href: url_builder.build_url(
+                  path: '/v3/service_route_bindings',
+                  query: "service_instance_guids=#{service_instance.guid}"
+                )
               }
             }
           }
