@@ -1337,6 +1337,28 @@ RSpec.describe 'v3 service credential bindings' do
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
             end
+
+            context 'fetching binding fails ' do
+              let(:fetch_binding_status_code) { 404 }
+              let(:fetch_binding_body) {}
+
+              it 'fails the job' do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+                expect(binding.last_operation.type).to eq('create')
+                expect(binding.last_operation.state).to eq('failed')
+                expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+                expect(job.cf_api_error).not_to be_nil
+                error = YAML.safe_load(job.cf_api_error)
+                expect(error['errors'].first).to include({
+                  'code' => 10009,
+                  'title' => 'CF-UnableToPerform',
+                  'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
+                })
+              end
+            end
           end
 
           it_behaves_like 'binding last operation response handling', 'create'
