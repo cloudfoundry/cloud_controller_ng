@@ -229,13 +229,8 @@ RSpec.shared_examples 'polling service binding creation' do
     context 'response says failed' do
       let(:state) { 'failed' }
 
-      it 'returns true' do
-        polling_status = action.poll(binding)
-        expect(polling_status[:finished]).to be_truthy
-      end
-
       it 'updates the last operation' do
-        action.poll(binding)
+        expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
         binding.reload
         expect(binding.last_operation.state).to eq('failed')

@@ -332,8 +332,8 @@ module VCAP::CloudController
 
           context 'response says failed' do
             let(:state) { 'failed' }
-            it 'does not notify diego or create an audit event' do
-              action.poll(binding)
+            it 'does not create an audit event' do
+              expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
               expect(@service_binding_event_repository).not_to have_received(:record_create)
             end
