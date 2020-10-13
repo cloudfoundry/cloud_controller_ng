@@ -1,8 +1,8 @@
-RSpec.shared_examples 'binding last operation response handling' do |type|
-  context 'valid http codes' do
+RSpec.shared_examples 'binding last operation response handling' do |operation_type|
+  context 'failure http codes' do
     valid_responses = [
-      { code: 400, body: { description: 'helpful message' }, expected_description: 'helpful message' },
-      { code: 200, body: { state: 'failed', description: 'something went wrong' }, expected_description: 'something went wrong' }
+      { code: 400, body: { description: 'helpful message' } },
+      { code: 200, body: { state: 'failed', description: 'something went wrong' } }
     ]
 
     valid_responses.each do |response|
@@ -11,21 +11,21 @@ RSpec.shared_examples 'binding last operation response handling' do |type|
         let(:last_operation_status_code) { response[:code] }
         let(:last_operation_body) { response[:body] }
 
-        it 'updates the binding and job' do
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        it 'updates the binding and job to failed' do
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
           binding.reload
-          expect(binding.last_operation.type).to eq(type)
+          expect(binding.last_operation.type).to eq(operation_type)
           expect(binding.last_operation.state).to eq('failed')
           expect(binding.last_operation.description).to eq(response[:body][:description])
 
-          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
         end
       end
     end
   end
 
-  context 'invalid http codes' do
+  context 'keep polling http codes' do
     [404, 500].each do |code|
       context "last operation response is #{code}" do
         let(:last_operation_status_code) { code }
@@ -35,7 +35,7 @@ RSpec.shared_examples 'binding last operation response handling' do |type|
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           binding.reload
-          expect(binding.last_operation.type).to eq(type)
+          expect(binding.last_operation.type).to eq(operation_type)
           expect(binding.last_operation.state).to eq('in progress')
           expect(binding.last_operation.description).to include("Status Code: #{code}")
 
@@ -57,7 +57,7 @@ RSpec.shared_examples 'binding last operation response handling' do |type|
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
       binding.reload
-      expect(binding.last_operation.type).to eq(type)
+      expect(binding.last_operation.type).to eq(operation_type)
       expect(binding.last_operation.state).to eq('in progress')
 
       expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
@@ -77,7 +77,7 @@ RSpec.shared_examples 'binding last operation response handling' do |type|
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
         binding.reload
-        expect(binding.last_operation.type).to eq(type)
+        expect(binding.last_operation.type).to eq(operation_type)
         expect(binding.last_operation.state).to eq('in progress')
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)

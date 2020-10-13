@@ -2,6 +2,9 @@ require 'services/service_brokers/service_client_provider'
 
 module VCAP::CloudController
   module V3
+    class LastOperationFailedState < StandardError
+    end
+
     class ServiceBindingCreate
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze
@@ -49,6 +52,10 @@ module VCAP::CloudController
             description: details[:last_operation][:description],
           }
         )
+
+        if details[:last_operation][:state] == 'failed'
+          raise LastOperationFailedState.new(details[:last_operation][:description])
+        end
 
         if binding.reload.terminal_state?
           PollingFinished
