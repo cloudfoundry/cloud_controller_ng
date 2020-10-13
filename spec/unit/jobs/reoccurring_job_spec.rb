@@ -100,7 +100,7 @@ module VCAP
 
       context 'updates the polling interval if config changes' do
         it 'when changed from the job only' do
-          job = FakeJob.new(retry_after: [20, 30])
+          job = FakeJob.new(retry_after: ['20', '30'])
           TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
 
           enqueued_time = Time.now

@@ -34,6 +34,7 @@ module VCAP::CloudController
       end
 
       def polling_interval_seconds=(interval)
+        interval = interval.to_i if interval.is_a? String
         @polling_interval = if interval < default_polling_interval_seconds
                               default_polling_interval_seconds
                             elsif interval > 24.hours
