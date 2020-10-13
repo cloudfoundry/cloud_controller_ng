@@ -42,10 +42,6 @@ instance_file_descriptor_limit: 16384
 
 request_timeout_in_seconds: 900
 
-bulk_api:
-  auth_user: bulk_api
-  auth_password: "bulk-password"
-
 internal_api:
   auth_user: internal_user
   auth_password: "internal-password"

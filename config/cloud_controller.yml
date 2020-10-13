@@ -136,10 +136,6 @@ route_services_enabled: true
 volume_services_enabled: true
 disable_private_domain_cross_space_context_path_route_sharing: false
 
-bulk_api:
-  auth_user: bulk_user
-  auth_password: bulk_password
-
 internal_api:
   auth_user: internal_user
   auth_password: internal_password

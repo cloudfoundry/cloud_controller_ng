@@ -91,11 +91,6 @@ module VCAP::CloudController
             optional(:ca_cert_path) => String,
           },
 
-          bulk_api: {
-            auth_user: String,
-            auth_password: String,
-          },
-
           staging: {
             timeout_in_seconds: Integer,
             minimum_staging_memory_mb: Integer,

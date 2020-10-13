@@ -25,7 +25,6 @@ module VCAP::CloudController
           fog_connection: {},
           resource_directory_key: 'resource_key',
         },
-        bulk_api: {},
         external_domain: 'host',
         tls_port: 1234,
         staging: {
@@ -258,7 +257,6 @@ module VCAP::CloudController
             fog_connection: {},
             resource_directory_key: 'resource_key',
           },
-          bulk_api: {},
           external_host: 'host',
           tls_port: 1234,
           staging: {
