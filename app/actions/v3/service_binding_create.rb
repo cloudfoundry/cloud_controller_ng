@@ -64,7 +64,7 @@ module VCAP::CloudController
             description: e.message,
           }
         )
-        PollingFinished
+        raise e
       end
 
       class BindingNotRetrievable < StandardError; end

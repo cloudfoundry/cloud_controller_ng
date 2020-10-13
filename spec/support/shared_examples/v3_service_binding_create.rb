@@ -160,9 +160,7 @@ RSpec.shared_examples 'polling service binding creation' do
       it 'should stop polling for other errors' do
         allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(RuntimeError)
 
-        complete = action.poll(binding)
-
-        expect(complete).to be_truthy
+        expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload
         expect(binding.last_operation.type).to eq('create')
@@ -203,9 +201,7 @@ RSpec.shared_examples 'polling service binding creation' do
         end
 
         it 'marks the binding as failed' do
-          complete = action.poll(binding)
-
-          expect(complete).to be_truthy
+          expect { action.poll(binding) }.to raise_error(BadError)
 
           binding.reload
           expect(binding.last_operation.type).to eq('create')

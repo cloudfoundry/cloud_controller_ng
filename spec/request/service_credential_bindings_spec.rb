@@ -1049,6 +1049,7 @@ RSpec.describe 'v3 service credential bindings' do
       let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
       let(:binding) { VCAP::CloudController::ServiceBinding.last }
+      let(:audit) { VCAP::CloudController::Event.last }
       let(:job) { VCAP::CloudController::PollableJobModel.last }
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
@@ -1286,6 +1287,17 @@ RSpec.describe 'v3 service credential bindings' do
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
           end
 
+          it 'logs an audit event' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.service_binding.start_create')
+            expect(event).to be
+            expect(event.actee).to eq(binding.guid)
+            expect(event.data).to include({
+              'request' => create_body.with_indifferent_access
+            })
+          end
+
           it 'enqueues the next fetch last operation job' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(Delayed::Job.count).to eq(1)
@@ -1324,6 +1336,28 @@ RSpec.describe 'v3 service credential bindings' do
               expect(binding.last_operation.description).to eq(description)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            context 'fetching binding fails ' do
+              let(:fetch_binding_status_code) { 404 }
+              let(:fetch_binding_body) {}
+
+              it 'fails the job' do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+                expect(binding.last_operation.type).to eq('create')
+                expect(binding.last_operation.state).to eq('failed')
+                expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+                expect(job.cf_api_error).not_to be_nil
+                error = YAML.safe_load(job.cf_api_error)
+                expect(error['errors'].first).to include({
+                  'code' => 10009,
+                  'title' => 'CF-UnableToPerform',
+                  'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
+                })
+              end
             end
           end
 
