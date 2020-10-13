@@ -86,7 +86,7 @@ RSpec.shared_examples 'binding last operation response handling' do |operation_t
   end
 end
 
-#TODO: Merge these two shared examples into one in https://www.pivotaltracker.com/story/show/174748133
+# TODO: Merge these two shared examples into one in https://www.pivotaltracker.com/story/show/174748133
 RSpec.shared_examples 'unbinding last operation response handling' do |operation_type|
   context 'failure http codes' do
     valid_responses = [
@@ -174,4 +174,3 @@ RSpec.shared_examples 'unbinding last operation response handling' do |operation
     end
   end
 end
-
