@@ -180,7 +180,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
         binding.destroy
 
         expect { subject.perform }.to raise_error(
-          CloudController::Errors::ApiError,
+          VCAP::CloudController::V3::CreateBindingAsyncJob::BindingGone,
           /The binding could not be found/,
         )
       end
@@ -194,6 +194,10 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           CloudController::Errors::ApiError,
           'bind could not be completed: StandardError',
         )
+
+        binding.reload
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('failed')
       end
     end
 
@@ -205,6 +209,10 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           CloudController::Errors::ApiError,
           'bind could not be completed: StandardError',
         )
+
+        binding.reload
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('failed')
       end
     end
   end
@@ -212,6 +220,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
   describe '#handle_timeout' do
     it 'updates the last operation to failed' do
       subject.handle_timeout
+
       binding.reload
       expect(binding.last_operation.type).to eq('create')
       expect(binding.last_operation.state).to eq('failed')
