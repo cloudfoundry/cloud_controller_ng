@@ -13,6 +13,8 @@ require 'decorators/include_binding_route_decorator'
 require 'cloud_controller/paging/sequel_paginator'
 
 class ServiceRouteBindingsController < ApplicationController
+  before_action :set_route_binding, only: [:show, :parameters, :destroy]
+
   def create
     route_services_disabled! unless route_services_enabled?
     message = parse_create_request
@@ -40,10 +42,9 @@ class ServiceRouteBindingsController < ApplicationController
 
   def show
     message = show_message
-    route_binding = RouteBinding.first(guid: hashed_params[:guid])
-    route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
+    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
     presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
-      route_binding,
+      @route_binding,
       decorators: decorators(message)
     )
     render status: :ok, json: presenter
@@ -62,18 +63,32 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def destroy
-    route_binding = RouteBinding.first(guid: hashed_params[:guid])
-    route_binding_not_found! unless route_binding && can_read_space?(route_binding.route.space)
+    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
 
     action = V3::ServiceRouteBindingDelete.new(service_event_repository)
-    result = action.delete(route_binding, async_allowed: false)
+    result = action.delete(@route_binding, async_allowed: false)
 
     if result.is_a? V3::ServiceRouteBindingDelete::RequiresAsync
-      pollable_job_guid = enqueue_unbind_job(route_binding.guid)
+      pollable_job_guid = enqueue_unbind_job(@route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     else
       head :no_content
     end
+  end
+
+  def parameters
+    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
+    unauthorized! unless can_write_space?(@route_binding.route.space)
+
+    fetcher = ServiceBindingRead.new
+    parameters = fetcher.fetch_parameters(@route_binding)
+
+    render status: :ok, json: parameters
+  rescue ServiceBindingRead::NotSupportedError
+    bad_request!('user provided service instances do not support fetching route bindings parameters.') if @route_binding.service_instance.user_provided_instance?
+    bad_request!('this service does not support fetching route bindings parameters.')
+  rescue LockCheck::ServiceBindingLockedError
+    unprocessable!('There is an operation in progress for the service route binding.')
   end
 
   private
@@ -205,5 +220,9 @@ class ServiceRouteBindingsController < ApplicationController
 
   def already_exists!
     raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute').with_response_code(422)
+  end
+
+  def set_route_binding
+    @route_binding = RouteBinding.first(guid: hashed_params[:guid])
   end
 end

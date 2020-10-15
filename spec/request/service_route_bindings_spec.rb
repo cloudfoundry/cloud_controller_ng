@@ -558,6 +558,7 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'succeeded',
+            include_params_link: service_instance.managed_instance?
           )
         )
       end
@@ -670,6 +671,7 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'successful',
+            include_params_link: service_instance_1.managed_instance?
           ),
           expected_json(
             binding_guid: route_binding_2.guid,
@@ -678,6 +680,7 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'successful',
+            include_params_link: service_instance_2.managed_instance?
           )
         ]
       end
@@ -816,6 +819,7 @@ RSpec.describe 'v3 service route bindings' do
         route_guid: route.guid,
         last_operation_type: 'create',
         last_operation_state: 'successful',
+        include_params_link: service_instance.managed_instance?
       )
     end
 
@@ -1115,6 +1119,113 @@ RSpec.describe 'v3 service route bindings' do
     end
   end
 
+  describe 'GET /v3/service_route_bindings/:guid/parameters' do
+    let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
+    let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:binding) { bind_service_to_route(service_instance, route) }
+
+    let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{binding.guid}/parameters", nil, user_headers } }
+
+    context 'managed service instances' do
+      let(:broker_base_url) { service_instance.service_broker.broker_url }
+      let(:broker_fetch_binding_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+      let(:broker_status_code) { 200 }
+      let(:broker_response) { { parameters: { abra: 'kadabra', kadabra: 'alakazan' } } }
+      let(:parameters_response) { { code: 200, response_object: broker_response[:parameters] } }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = parameters_response
+          h['admin_readonly'] = parameters_response
+          h['space_developer'] = parameters_response
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+        end
+      end
+
+      before do
+        stub_request(:get, broker_fetch_binding_url).
+          to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when bindings are not retrievable' do
+        let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+
+        it 'returns the appropriate error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(400)
+          expect(parsed_response['errors']).to include(
+            include({
+              'detail' => 'Bad request: this service does not support fetching route bindings parameters.',
+              'title' => 'CF-BadRequest',
+              'code' => 1004,
+            })
+          )
+        end
+      end
+
+      context 'when there is an operation in progress' do
+        before do
+          binding.save_with_new_operation({}, {
+            type: 'create',
+            state: 'in progress'
+          })
+        end
+
+        it 'returns the appropriate error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({
+              'detail' => 'There is an operation in progress for the service route binding.',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
+          )
+        end
+      end
+    end
+
+    context 'user provided service instances' do
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://route.example.com') }
+      let(:error_response) { {
+        code: 'CF-BadRequest',
+        error: 'User provided service instances do not support fetching service binding parameters.'
+      }
+      }
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = { code: 400, response_object: error_response }
+          h['admin_readonly'] = { code: 400, response_object: error_response }
+          h['space_developer'] = { code: 400, response_object: error_response }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+        end
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      it 'returns the appropriate error' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(
+          include({
+            'detail' => 'Bad request: user provided service instances do not support fetching route bindings parameters.',
+            'title' => 'CF-BadRequest',
+            'code' => 1004,
+          })
+        )
+      end
+    end
+  end
+
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -1126,7 +1237,7 @@ RSpec.describe 'v3 service route bindings' do
     headers_for(user)
   end
 
-  def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:)
+  def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:, include_params_link:)
     {
       guid: binding_guid,
       created_at: iso8601,
@@ -1160,8 +1271,14 @@ RSpec.describe 'v3 service route bindings' do
         },
         route: {
           href: "#{link_prefix}/v3/routes/#{route_guid}"
-        }
-      }
+        },
+      }.tap do |ls|
+        if include_params_link
+          ls[:parameters] = {
+            href: "#{link_prefix}/v3/service_route_bindings/#{binding_guid}/parameters"
+          }
+        end
+      end
     }
   end
 
