@@ -45,7 +45,11 @@ module VCAP
               route: {
                 href: url_builder.build_url(path: "/v3/routes/#{binding.route.guid}")
               }
-            }
+            }.tap do |l|
+              if binding.service_instance.managed_instance?
+                l[:parameters] = { href: url_builder.build_url(path: "/v3/service_route_bindings/#{binding.guid}/parameters") }
+              end
+            end
           end
 
           def relationships

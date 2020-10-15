@@ -61,7 +61,8 @@ module VCAP
               },
               service_instance: {
                 href: %r{.*/v3/service_instances/#{service_instance.guid}}
-              }
+              },
+
             }
           }
         )
@@ -106,6 +107,19 @@ module VCAP
         it 'sends the route to the decorator' do
           expect(decorator1).to have_received(:decorate).with({}, [binding])
           expect(decorator2).to have_received(:decorate).with({ foo: 'bar' }, [binding])
+        end
+      end
+
+      describe 'links' do
+        let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+        let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+
+        it 'include parameters for managed service instance bindings' do
+          presenter = described_class.new(binding)
+          expect(presenter.to_hash.dig(:links, :parameters)).to match({
+            href: %r{.*/v3/service_route_bindings/#{guid}/parameters}
+          })
         end
       end
     end
