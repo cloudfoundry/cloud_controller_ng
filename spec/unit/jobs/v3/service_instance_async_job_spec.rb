@@ -68,10 +68,10 @@ module VCAP::CloudController
 
         it 'returns if gone! is defined' do
           service_instance.destroy
-          allow(job).to receive(:not_found!).and_return(true)
+          allow(job).to receive(:gone!).and_return(true)
 
           expect { job.perform }.not_to raise_error
-          expect(job).to have_received(:not_found!)
+          expect(job).to have_received(:gone!)
         end
 
         context 'when there is another operation in progress' do
