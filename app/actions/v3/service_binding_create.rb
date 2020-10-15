@@ -28,40 +28,6 @@ module VCAP::CloudController
 
       def poll(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = fetch_last_operation(client, binding)
-        return ContinuePolling.call(nil) unless details
-
-        if details[:last_operation][:state] == 'succeeded'
-          params = client.fetch_service_binding(binding)
-          complete_binding_and_save(binding, params, details[:last_operation])
-          return PollingFinished
-        end
-
-        binding.save_with_attributes_and_new_operation(
-          {},
-          {
-            type: 'create',
-            state: details[:last_operation][:state],
-            description: details[:last_operation][:description],
-          }
-        )
-
-        if details[:last_operation][:state] == 'failed'
-          raise LastOperationFailedState.new(details[:last_operation][:description])
-        end
-
-        if binding.reload.terminal_state?
-          PollingFinished
-        else
-          ContinuePolling.call(details[:retry_after])
-        end
-      rescue => e
-        save_failed_state(binding, e)
-        raise e
-      end
-
-      def poll_2(binding)
-        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.fetch_and_handle_service_binding_last_operation(binding)
 
         case details[:last_operation][:state]

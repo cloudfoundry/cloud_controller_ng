@@ -37,7 +37,7 @@ RSpec.shared_examples 'binding last operation response handling' do |operation_t
           binding.reload
           expect(binding.last_operation.type).to eq(operation_type)
           expect(binding.last_operation.state).to eq('in progress')
-          expect(binding.last_operation.description).to include("Status Code: #{code}")
+          expect(binding.last_operation.description).to be_nil
 
           expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
         end

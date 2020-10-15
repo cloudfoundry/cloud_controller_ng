@@ -284,7 +284,7 @@ module VCAP::CloudController
               VCAP::Services::ServiceBrokers::V2::Client,
               {
                 bind: bind_response,
-                fetch_service_binding_last_operation: fetch_last_operation_response,
+                fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
                 fetch_service_binding: fetch_binding_response,
               }
             )
@@ -339,15 +339,6 @@ module VCAP::CloudController
             end
           end
         end
-      end
-
-      describe '#poll' do
-        let(:binding) { action.precursor(service_instance, app: app) }
-        let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
-        let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
-        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url } }
-
-        it_behaves_like '2 polling service binding creation'
       end
     end
   end
