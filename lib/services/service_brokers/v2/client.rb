@@ -282,23 +282,20 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    def fetch_service_binding_create_last_operation(service_binding)
+    def fetch_and_handle_service_binding_last_operation(service_binding)
       fetch_service_binding_last_operation(service_binding)
-    rescue HttpResponseError,
-      HttpRequestError
-     #  Sequel::Error,
-     #  VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout,
-     #  VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout => e
-      # Errors::ServiceBrokerRequestRejected, ServiceBrokerBadResponse
-      #     HttpRequestError => e
+    rescue Errors::HttpClientTimeout,
+      Errors::ServiceBrokerApiUnreachable,
+      HttpRequestError,
+      Errors::ServiceBrokerBadResponse,
+      Errors::ServiceBrokerRequestRejected,
+      Errors::ServiceBrokerApiAuthenticationFailed,
+      Errors::ServiceBrokerResponseMalformed,
+      HttpResponseError => e
       result = {}
       result[:last_operation] = {}
       result[:last_operation][:state] = 'in progress'
       result
-    # rescue CreateFailedError => e
-    #   e
-    # rescue 'fatal errors' => e
-    #   raise CloudController::Errors::ApiError.new_from_details('LastOperationPollingFailed', service_binding.guid)
     rescue => e
       raise e.exception("Service binding polling #{service_binding.guid}: #{e.message}")
     end

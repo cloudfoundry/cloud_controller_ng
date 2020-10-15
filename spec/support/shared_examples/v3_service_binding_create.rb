@@ -296,7 +296,7 @@ RSpec.shared_examples '2 polling service binding creation' do
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
-      allow(broker_client).to receive(:fetch_service_binding_create_last_operation).and_return(fetch_last_operation_response)
+      allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(fetch_last_operation_response)
 
       action.bind(binding, accepts_incomplete: true)
     end
@@ -304,7 +304,7 @@ RSpec.shared_examples '2 polling service binding creation' do
     it 'fetches the last operation' do
       action.poll_2(binding)
 
-      expect(broker_client).to have_received(:fetch_service_binding_create_last_operation).with(binding)
+      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding)
     end
 
     context 'last operation state is complete' do
@@ -380,7 +380,7 @@ RSpec.shared_examples '2 polling service binding creation' do
 
     context 'fetching last operations fails' do
       before do
-        allow(broker_client).to receive(:fetch_service_binding_create_last_operation).and_raise(RuntimeError.new('some error'))
+        allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
 
       it 'should stop polling for other errors' do

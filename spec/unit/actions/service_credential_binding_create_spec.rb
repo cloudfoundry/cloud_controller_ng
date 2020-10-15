@@ -341,7 +341,7 @@ module VCAP::CloudController
         end
       end
 
-      describe '#poll_2' do
+      describe '#poll' do
         let(:binding) { action.precursor(service_instance, app: app) }
         let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
         let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }

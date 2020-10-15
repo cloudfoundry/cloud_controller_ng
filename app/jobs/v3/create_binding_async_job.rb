@@ -61,7 +61,7 @@ module VCAP::CloudController
           return finish if resource.reload.terminal_state?
         end
 
-        polling_status = action.poll(resource)
+        polling_status = action.poll_2(resource)
 
         if polling_status[:finished]
           finish

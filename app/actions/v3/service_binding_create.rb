@@ -62,7 +62,7 @@ module VCAP::CloudController
 
       def poll_2(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.fetch_service_binding_create_last_operation(binding)
+        details = client.fetch_and_handle_service_binding_last_operation(binding)
 
         case details[:last_operation][:state]
         when 'succeeded'
@@ -72,7 +72,7 @@ module VCAP::CloudController
         when 'in progress'
           save_last_operation(binding, details)
           ContinuePolling.call(details[:retry_after])
-        when'failed'
+        when 'failed'
           save_last_operation(binding, details)
           raise LastOperationFailedState
         end

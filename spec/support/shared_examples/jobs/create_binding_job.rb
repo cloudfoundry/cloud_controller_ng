@@ -28,7 +28,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
     let(:action) do
       double('BindingAction', {
         bind: nil,
-        poll: poll_response,
+        poll: poll_response
       })
     end
 
