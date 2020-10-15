@@ -180,7 +180,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
         binding.destroy
 
         expect { subject.perform }.to raise_error(
-          VCAP::CloudController::V3::CreateBindingAsyncJob::BindingGone,
+          VCAP::CloudController::V3::CreateBindingAsyncJob::BindingNotFound,
           /The binding could not be found/,
         )
       end

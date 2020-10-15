@@ -7,7 +7,7 @@ require 'jobs/v3/create_service_binding_job_factory'
 module VCAP::CloudController
   module V3
     class CreateBindingAsyncJob < Jobs::ReoccurringJob
-      class BindingGone < CloudController::Errors::ApiError; end
+      class BindingNotFound < CloudController::Errors::ApiError; end
 
       def initialize(type, precursor_guid, parameters:, user_audit_info:, audit_hash:)
         super()
@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
 
       def perform
-        gone! unless resource
+        not_found! unless resource
 
         compute_maximum_duration
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
-      rescue BindingGone => e
+      rescue BindingNotFound => e
         raise e
       rescue ServiceBindingCreate::BindingNotRetrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
@@ -92,19 +92,6 @@ module VCAP::CloudController
         )
       end
 
-      def save_failure(error_message)
-        if resource.reload.last_operation.state != 'failed'
-          resource.save_with_attributes_and_new_operation(
-            {},
-            {
-              type: operation_type,
-              state: 'failed',
-              description: error_message,
-            }
-          )
-        end
-      end
-
       private
 
       def resource
@@ -116,8 +103,21 @@ module VCAP::CloudController
         self.maximum_duration_seconds = max_poll_duration_on_plan
       end
 
-      def gone!
-        raise BindingGone.new_from_details('ResourceNotFound', "The binding could not be found: #{@resource_guid}")
+      def not_found!
+        raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{@resource_guid}")
+      end
+
+      def save_failure(error_message)
+        if resource.reload.last_operation.state != 'failed'
+          resource.save_with_attributes_and_new_operation(
+            {},
+            {
+              type: operation_type,
+              state: 'failed',
+              description: error_message,
+            }
+          )
+        end
       end
     end
   end
