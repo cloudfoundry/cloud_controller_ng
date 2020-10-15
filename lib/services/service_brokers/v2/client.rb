@@ -285,13 +285,13 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_and_handle_service_binding_last_operation(service_binding)
       fetch_service_binding_last_operation(service_binding)
     rescue Errors::HttpClientTimeout,
-      Errors::ServiceBrokerApiUnreachable,
-      HttpRequestError,
-      Errors::ServiceBrokerBadResponse,
-      Errors::ServiceBrokerRequestRejected,
-      Errors::ServiceBrokerApiAuthenticationFailed,
-      Errors::ServiceBrokerResponseMalformed,
-      HttpResponseError => e
+           Errors::ServiceBrokerApiUnreachable,
+           HttpRequestError,
+           Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerRequestRejected,
+           Errors::ServiceBrokerApiAuthenticationFailed,
+           Errors::ServiceBrokerResponseMalformed,
+           HttpResponseError
       result = {}
       result[:last_operation] = {}
       result[:last_operation][:state] = 'in progress'
