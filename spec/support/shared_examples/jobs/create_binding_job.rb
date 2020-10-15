@@ -194,6 +194,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           CloudController::Errors::ApiError,
           'bind could not be completed: StandardError',
         )
+
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('failed')
       end
     end
 
@@ -205,6 +208,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           CloudController::Errors::ApiError,
           'bind could not be completed: StandardError',
         )
+
+        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.state).to eq('failed')
       end
     end
   end

@@ -340,6 +340,15 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#poll_2' do
+        let(:binding) { action.precursor(service_instance, app: app) }
+        let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
+        let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
+        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url } }
+
+        it_behaves_like '2 polling service binding creation'
+      end
     end
   end
 end

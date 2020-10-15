@@ -1852,6 +1852,165 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe '#fetch_service_binding_create_last_operation' do
+      let(:response_data) do
+        {
+          'state'       => 'in progress',
+          'description' => '10%'
+        }
+      end
+      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
+
+      let(:code) { 200 }
+      let(:response_body) { response_data.to_json }
+      let(:broker_response) { HttpResponse.new(code: code, body: response_body) }
+
+      before do
+        service_binding.service_binding_operation = binding_operation
+        allow(http_client).to receive(:get).and_return(broker_response)
+      end
+
+      it 'returns the broker response' do
+        response = client.fetch_service_binding_create_last_operation(service_binding)
+
+        expect(response).to eq({ last_operation: { state: 'in progress', description: '10%' } })
+      end
+
+      context 'making get request with the correct path' do
+        context 'when the broker does not provide operation data' do
+          it 'does not pass operation data' do
+            client.fetch_service_binding_create_last_operation(service_binding)
+
+            service_id = service_binding.service_instance.service_plan.service.broker_provided_id
+            plan_id = service_binding.service_instance.service_plan.broker_provided_id
+            query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
+            expect(http_client).to have_received(:get).
+              with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+          end
+        end
+
+        context 'when the broker provides operation data' do
+          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(broker_provided_operation: '123') }
+
+          it 'passes operation data in query params' do
+            client.fetch_service_binding_create_last_operation(service_binding)
+
+            service_id = service_binding.service_instance.service_plan.service.broker_provided_id
+            plan_id = service_binding.service_instance.service_plan.broker_provided_id
+            query_params = "?operation=#{binding_operation.broker_provided_operation}&plan_id=#{plan_id}&service_id=#{service_id}"
+
+            expect(http_client).to have_received(:get).
+              with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+          end
+        end
+      end
+
+      context 'when the broker response means the platform should keep polling' do
+        responses = [
+          { code: 410, body: { description: 'helpful message' } },
+          { code: 502, body: { description: 'service broker returned an invalid response' } }
+        ]
+
+        responses.each do |response|
+          context "last operation response is #{response[:code]}" do
+            let(:code) { response[:code] }
+            let(:response_body) { response[:body] }
+
+            it 'should return state in progress' do
+              lo_response = client.fetch_service_binding_create_last_operation(service_binding)
+
+              expect(lo_response[:last_operation][:state]).to eq('in progress')
+              expect(lo_response[:last_operation][:description]).to be_nil
+            end
+          end
+        end
+
+        context 'timeout' do
+          let(:uri) { 'some-uri.com/v2/service_instances/some-guid/service_binding/other-guid/last_operation' }
+          let(:error) { Errors::HttpClientTimeout.new(uri, :get, Timeout::Error.new) }
+
+          before do
+            allow(http_client).to receive(:get).and_raise(error)
+          end
+
+          it 'should return state in progress' do
+            response = client.fetch_service_binding_create_last_operation(service_binding)
+
+            expect(response[:last_operation][:state]).to eq('in progress')
+            expect(response[:last_operation][:description]).to be_nil
+          end
+        end
+      end
+
+      context 'when the broker response means the create binding failed' do
+        responses = [
+          { code: 400, body: { error: 'BadRequest', description: 'helpful message' } },
+        ]
+
+        responses.each do |response|
+          context "last operation response is #{response[:code]}" do
+            let(:code) { response[:code] }
+            let(:response_body) { response[:body] }
+
+            it 'should return state in progress' do
+              lo_response = client.fetch_service_binding_create_last_operation(service_binding)
+
+              expect(lo_response[:last_operation][:state]).to eq('failed')
+              expect(lo_response[:last_operation][:description]).to eq('Bad request')
+            end
+          end
+        end
+      end
+
+      context 'when the broker returns 410' do
+        let(:code) { 410 }
+        let(:response_data) { {} }
+
+        context 'when the last operation type is `delete`' do
+          before do
+            service_binding.save_with_new_operation({ type: 'delete', state: 'in progress' })
+          end
+
+          it 'returns attributes to indicate the service instance was deleted' do
+            attrs = client.fetch_service_binding_create_last_operation(service_binding)
+
+            expect(attrs).to include(
+              last_operation: {
+                state: 'succeeded'
+              }
+            )
+          end
+        end
+
+        context 'when the last operation type is `in progress`' do
+          before do
+            service_binding.save_with_new_operation({ type: 'create', state: 'in progress' })
+          end
+
+          it 'returns attributes to indicate the service binding operation is in progress' do
+            attrs = client.fetch_service_binding_create_last_operation(service_binding)
+
+            expect(attrs).to include(
+              last_operation: {
+                state: 'in progress'
+              }
+            )
+          end
+        end
+      end
+
+      context 'when the broker returns headers' do
+        let(:broker_response) { HttpResponse.new(code: 200, body: response_body, headers: { 'Retry-After' => 10 }) }
+
+        it 'returns the retry after header in the result' do
+          attrs = client.fetch_service_binding_create_last_operation(service_binding)
+          expect(attrs).to include(retry_after: 10)
+        end
+      end
+    end
+
     def unwrap_delayed_job(job)
       job.payload_object.handler.handler.handler
     end
