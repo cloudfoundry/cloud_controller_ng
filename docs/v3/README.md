@@ -37,3 +37,13 @@ Style Rules
 - Every request should have a "Permitted Roles"
   - Use "All Roles" to define any set of permissions that do not apply to org/space managers, developers, etc.
 - Optional params should be omitted from request examples.
+
+
+To Push the docs as a cf app:
+---
+
+From this directory:
+```bash
+bundle exec middleman build
+cf push docs -b staticfile_buildpack -p ./build
+```
