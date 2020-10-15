@@ -1307,11 +1307,15 @@ RSpec.describe 'v3 service credential bindings' do
             let(:state) { 'succeeded' }
             let(:fetch_binding_status_code) { 200 }
             let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
+            let(:route_service_url) { 'http://route.example.com/wow' }
             let(:credentials) { { password: 'foo' } }
+            let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
+
             let(:fetch_binding_body) do
               {
                 syslog_drain_url: syslog_drain_url,
-                credentials: credentials
+                credentials: credentials,
+                parameters: parameters
               }
             end
 
@@ -1336,6 +1340,13 @@ RSpec.describe 'v3 service credential bindings' do
               expect(binding.last_operation.description).to eq(description)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'updates the binding details with the fetch binding response' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(binding.reload.syslog_drain_url).to eq(syslog_drain_url)
+              expect(binding.credentials).to eq(credentials.with_indifferent_access)
             end
 
             context 'fetching binding fails ' do

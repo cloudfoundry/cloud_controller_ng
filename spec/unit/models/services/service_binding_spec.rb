@@ -498,21 +498,53 @@ module VCAP::CloudController
       end
 
       context 'when attributes are passed in' do
-        it 'updates the attributes' do
-          last_operation = {
-            state: 'in progress',
-            type: 'create',
-            description: '10%'
+        let(:credentials) { { password: 'rice' } }
+        let(:syslog_drain_url) { 'http://foo.example.com/bar' }
+        let(:volume_mounts) { [{
+          container_dir: '/var/vcap/data/153e3c4b-1151-4cf7-b311-948dd77fce64',
+          device_type: 'shared',
+          mode: 'rw'
+        }.with_indifferent_access]
+        }
+        let(:attributes) {
+          {
+            name: 'gohan',
+            credentials: credentials,
+            syslog_drain_url: syslog_drain_url,
+            volume_mounts: volume_mounts
           }
-          attributes = { name: 'gohan', credentials: { password: 'rice' } }
-          binding.save_with_new_operation(last_operation, attributes: attributes)
+        }
+        let(:last_operation) { {
+          state: 'in progress',
+          type: 'create',
+          description: '10%'
+        }
+        }
 
+        it 'updates the attributes' do
+          binding.save_with_new_operation(last_operation, attributes: attributes)
+          binding.reload
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.description).to eq '10%'
           expect(binding.last_operation.type).to eq 'create'
           expect(binding.name).to eq 'gohan'
-          expect(binding.credentials).to eq({ 'password' => 'rice' })
+          expect(binding.credentials).to eq(credentials.with_indifferent_access)
+          expect(binding.syslog_drain_url).to eq('http://foo.example.com/bar')
+          expect(binding.volume_mounts).to eq(volume_mounts)
           expect(ServiceBinding.count).to eq(1)
+        end
+
+        it 'only saves permitted attributes' do
+          expect {
+            binding.save_with_new_operation(last_operation, attributes: attributes.merge(
+              parameters: {
+                foo: 'bar',
+                ding: 'dong'
+              },
+              endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
+              route_services_url: 'http://route.example.com'
+          ))
+          } .not_to raise_error
         end
       end
     end
