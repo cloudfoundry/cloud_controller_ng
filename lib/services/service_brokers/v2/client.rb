@@ -282,6 +282,24 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    def fetch_and_handle_service_binding_last_operation(service_binding)
+      fetch_service_binding_last_operation(service_binding)
+    rescue Errors::HttpClientTimeout,
+           Errors::ServiceBrokerApiUnreachable,
+           HttpRequestError,
+           Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerRequestRejected,
+           Errors::ServiceBrokerApiAuthenticationFailed,
+           Errors::ServiceBrokerResponseMalformed,
+           HttpResponseError
+      result = {}
+      result[:last_operation] = {}
+      result[:last_operation][:state] = 'in progress'
+      result
+    rescue => e
+      raise e.exception("Service binding polling #{service_binding.guid}: #{e.message}")
+    end
+
     def fetch_service_instance(instance)
       path = service_instance_resource_path(instance)
       response = @http_client.get(path)

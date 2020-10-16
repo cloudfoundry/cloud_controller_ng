@@ -256,7 +256,7 @@ module VCAP::CloudController
               VCAP::Services::ServiceBrokers::V2::Client,
               {
                 bind: bind_response,
-                fetch_service_binding_last_operation: fetch_last_operation_response,
+                fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
                 fetch_service_binding: fetch_binding_response,
               }
             )
