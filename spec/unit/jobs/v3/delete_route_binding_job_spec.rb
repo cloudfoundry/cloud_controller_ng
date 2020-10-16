@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       describe '#perform' do
         let(:delete_response) { nil }
-        let(:poll_response) { nil }
+        let(:poll_response) { { finished: false } }
         let(:action) do
           instance_double(V3::ServiceRouteBindingDelete, {
             delete: delete_response,
@@ -133,7 +133,7 @@ module VCAP::CloudController
           end
 
           context 'poll indicates delete complete' do
-            let(:poll_response) { ServiceRouteBindingDelete::DeleteComplete.new }
+            let(:poll_response) { { finished: true } }
 
             it 'finishes the job' do
               subject.perform
@@ -177,7 +177,7 @@ module VCAP::CloudController
 
         context 'retry interval' do
           def test_retry_after(value, expected)
-            allow(action).to receive(:poll).and_return(ServiceRouteBindingDelete::DeleteInProgress.new(value.to_s))
+            allow(action).to receive(:poll).and_return({ finished: false, retry_after: value.to_s })
             subject.perform
             expect(subject.polling_interval_seconds).to eq(expected)
           end

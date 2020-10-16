@@ -1073,7 +1073,7 @@ RSpec.describe 'v3 service route bindings' do
               end
             end
 
-            it_behaves_like 'unbinding last operation response handling', 'delete'
+            it_behaves_like 'binding last operation response handling', 'delete'
           end
 
           context 'when the broker returns a failure' do

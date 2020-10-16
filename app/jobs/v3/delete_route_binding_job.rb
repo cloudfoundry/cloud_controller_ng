@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       def perform
         binding = route_binding
-        gone! unless binding
+        not_found! unless binding
 
         service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
         action = V3::ServiceRouteBindingDelete.new(service_event_repository)
@@ -51,13 +51,12 @@ module VCAP::CloudController
         end
 
         polling_status = action.poll(binding)
-        case polling_status
-        when V3::ServiceRouteBindingDelete::DeleteComplete
+        if polling_status[:finished]
           finish
-        when V3::ServiceRouteBindingDelete::DeleteInProgress
-          unless polling_status.retry_after.nil?
-            self.polling_interval_seconds = polling_status.retry_after.to_i
-          end
+        end
+
+        if polling_status[:retry_after].present?
+          self.polling_interval_seconds = polling_status[:retry_after]
         end
       rescue => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)
@@ -74,7 +73,7 @@ module VCAP::CloudController
         self.maximum_duration_seconds = max_poll_duration_on_plan
       end
 
-      def gone!
+      def not_found!
         raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
       end
     end
