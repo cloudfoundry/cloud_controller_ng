@@ -17,11 +17,7 @@ module VCAP::CloudController
           package = PackageModel.find(guid: package_guid)
           return unless package
 
-          if VCAP::CloudController::Config.config.package_image_registry_configured?
-            VCAP::CloudController::Jobs::Kubernetes::RegistryDelete.new(package.bits_image_reference).perform
-          else
-            BlobstoreDelete.new(package_guid, :package_blobstore).perform
-          end
+          create_package_source_deletion_job(package)&.perform
           package.update(package_hash: nil, sha256_checksum: nil)
         end
 
@@ -35,6 +31,18 @@ module VCAP::CloudController
 
         def logger
           @logger ||= Steno.logger('cc.background')
+        end
+
+        private
+
+        def package_registry_configured?
+          VCAP::CloudController::Config.config.package_image_registry_configured?
+        end
+
+        def create_package_source_deletion_job(package)
+          return Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore) unless package_registry_configured?
+
+          package.bits? ? Jobs::Kubernetes::RegistryDelete.new(package.bits_image_reference) : nil
         end
       end
     end

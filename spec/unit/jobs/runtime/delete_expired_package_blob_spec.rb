@@ -4,7 +4,8 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredPackageBlob, job_context: :worker do
       subject(:job) { DeleteExpiredPackageBlob.new(package.guid) }
-      let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
+      let(:type) { PackageModel::BITS_TYPE }
+      let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum', type: type) }
 
       it { is_expected.to be_a_valid_job }
 
@@ -17,12 +18,25 @@ module VCAP::CloudController
           allow(registry_delete).to receive(:perform)
         end
 
-        it 'delegates to registry delete job' do
-          job.perform
+        context 'when the package type is bits' do
+          it 'delegates to registry delete job' do
+            job.perform
 
-          expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to have_received(:new).
-            with(package.bits_image_reference(digest: false))
-          expect(registry_delete).to have_received(:perform)
+            expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to have_received(:new).
+              with(package.bits_image_reference(digest: false))
+            expect(registry_delete).to have_received(:perform)
+          end
+        end
+
+        context 'when the package type is docker' do
+          let(:type) { PackageModel::DOCKER_TYPE }
+
+          it 'does not perform registry deletion' do
+            job.perform
+
+            expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).not_to have_received(:new)
+            expect(registry_delete).not_to have_received(:perform)
+          end
         end
 
         it 'nils the package_hash and sha256_checksum values' do
