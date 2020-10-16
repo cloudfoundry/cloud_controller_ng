@@ -201,7 +201,7 @@ RSpec.describe(OPI::StagerClient) do
           stager_client.stage(staging_guid, staging_details)
           expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with { |req|
             parsed_json = JSON.parse(req.body)
-            parsed_json['completion_callback'] == 'http://internal_user:internal_password@api.internal.cf:9090/internal/v3/staging/some_staging_guid/build_completed?start='
+            parsed_json['completion_callback'] == 'http://api.internal.cf:9090/internal/v3/staging/some_staging_guid/build_completed?start='
           }
         end
       end

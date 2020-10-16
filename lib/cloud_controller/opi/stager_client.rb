@@ -118,17 +118,18 @@ module OPI
 
     def staging_completion_callback(staging_details)
       if config.kubernetes_api_configured?
-        port   = config.get(:internal_service_port)
+        port = config.get(:internal_service_port)
+        auth = '' # on Kubernetes we are relying on NetworkPolicy and Istio AuthorizationPolicy for authz
         scheme = 'http'
       else
-        port   = config.get(:tls_port)
+        port = config.get(:tls_port)
+        auth = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}@"
         scheme = 'https'
       end
 
-      auth      = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}"
       host_port = "#{config.get(:internal_service_hostname)}:#{port}"
       path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
-      "#{scheme}://#{auth}@#{host_port}#{path}"
+      "#{scheme}://#{auth}#{host_port}#{path}"
     end
 
     def build_env(environment)
