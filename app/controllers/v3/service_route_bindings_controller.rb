@@ -15,6 +15,28 @@ require 'cloud_controller/paging/sequel_paginator'
 class ServiceRouteBindingsController < ApplicationController
   before_action :set_route_binding, only: [:show, :parameters, :destroy]
 
+  def index
+    message = list_message
+    route_bindings = fetch_route_bindings(message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::ServiceRouteBindingPresenter,
+      paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
+      path: '/v3/service_route_bindings',
+      message: message,
+      decorators: decorators(message)
+    )
+  end
+
+  def show
+    message = show_message
+    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
+    presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
+      @route_binding,
+      decorators: decorators(message)
+    )
+    render status: :ok, json: presenter
+  end
+
   def create
     route_services_disabled! unless route_services_enabled?
     message = parse_create_request
@@ -38,28 +60,6 @@ class ServiceRouteBindingsController < ApplicationController
     unprocessable!(e.message)
   rescue V3::ServiceRouteBindingCreate::RouteBindingAlreadyExists
     already_exists!
-  end
-
-  def show
-    message = show_message
-    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
-    presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
-      @route_binding,
-      decorators: decorators(message)
-    )
-    render status: :ok, json: presenter
-  end
-
-  def index
-    message = list_message
-    route_bindings = fetch_route_bindings(message)
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::ServiceRouteBindingPresenter,
-      paginated_result: SequelPaginator.new.get_page(route_bindings, message.try(:pagination_options)),
-      path: '/v3/service_route_bindings',
-      message: message,
-      decorators: decorators(message)
-    )
   end
 
   def destroy

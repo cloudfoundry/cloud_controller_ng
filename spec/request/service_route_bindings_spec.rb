@@ -2,6 +2,251 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'v3 service route bindings' do
+  describe 'GET /v3/service_route_bindings' do
+    describe 'no bindings to list' do
+      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 200, response_objects: [])
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'a mix of bindings' do
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
+      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
+      let(:route_binding_1) do
+        bind_service_to_route(service_instance_1, route)
+      end
+      let(:route_binding_2) do
+        bind_service_to_route(service_instance_2, route)
+      end
+      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
+      let(:response_objects) do
+        [
+          expected_json(
+            binding_guid: route_binding_1.guid,
+            route_service_url: route_service_url,
+            service_instance_guid: service_instance_1.guid,
+            route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'successful',
+            include_params_link: service_instance_1.managed_instance?
+          ),
+          expected_json(
+            binding_guid: route_binding_2.guid,
+            route_service_url: route_service_url,
+            service_instance_guid: service_instance_2.guid,
+            route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'successful',
+            include_params_link: service_instance_2.managed_instance?
+          )
+        ]
+      end
+      let(:bindings_response_body) do
+        { code: 200, response_objects: response_objects }
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 200, response_objects: []).tap do |h|
+          h['admin'] = bindings_response_body
+          h['admin_read_only'] = bindings_response_body
+          h['global_auditor'] = bindings_response_body
+          h['space_developer'] = bindings_response_body
+          h['space_manager'] = bindings_response_body
+          h['space_auditor'] = bindings_response_body
+          h['org_manager'] = bindings_response_body
+        end
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'filtering' do
+      it 'can be filtered by service instance guids' do
+        VCAP::CloudController::RouteBinding.make
+        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        service_instance_guids = filtered_route_bindings.
+                                 map(&:service_instance).
+                                 map(&:guid).
+                                 join(',')
+
+        get "/v3/service_route_bindings?service_instance_guids=#{service_instance_guids}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+
+        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
+        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
+        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+      end
+
+      it 'can be filtered by service instance names' do
+        VCAP::CloudController::RouteBinding.make
+        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        service_instance_names = filtered_route_bindings.
+                                 map(&:service_instance).
+                                 map(&:name).
+                                 join(',')
+
+        get "/v3/service_route_bindings?service_instance_names=#{service_instance_names}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+
+        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
+        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
+        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+      end
+
+      it 'can be filtered by route guids' do
+        VCAP::CloudController::RouteBinding.make
+        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        route_guids = filtered_route_bindings.
+                      map(&:route).
+                      map(&:guid).
+                      join(',')
+
+        get "/v3/service_route_bindings?route_guids=#{route_guids}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+
+        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
+        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
+        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+      end
+    end
+
+    describe 'include' do
+      it 'can include `service_instance`' do
+        instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
+        other_instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
+
+        1.times { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
+        2.times { VCAP::CloudController::RouteBinding.make(service_instance: other_instance) }
+
+        get '/v3/service_route_bindings?include=service_instance', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(2).items
+        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+      end
+
+      it 'can include `route`' do
+        route = VCAP::CloudController::Route.make
+        other_route = VCAP::CloudController::Route.make
+
+        1.times do
+          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
+          VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
+        end
+
+        2.times do
+          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: other_route.space)
+          VCAP::CloudController::RouteBinding.make(route: other_route, service_instance: si)
+        end
+
+        get '/v3/service_route_bindings?include=route', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['routes']).to have(2).items
+        guids = parsed_response['included']['routes'].map { |x| x['guid'] }
+        expect(guids).to contain_exactly(route.guid, other_route.guid)
+      end
+
+      it 'rejects requests with invalid associations' do
+        get '/v3/service_route_bindings?include=planet', nil, admin_headers
+        expect(last_response).to have_status_code(400)
+      end
+    end
+  end
+
+  describe 'GET /v3/service_route_bindings/:guid' do
+    let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{guid}", nil, user_headers } }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route_binding) do
+      VCAP::CloudController::RouteBinding.new.save_with_new_operation(
+        { service_instance: service_instance, route: route, route_service_url: route_service_url },
+        { type: 'create', state: 'successful' }
+      )
+    end
+    let(:guid) { route_binding.guid }
+    let(:expected_body) do
+      expected_json(
+        binding_guid: guid,
+        route_service_url: route_service_url,
+        service_instance_guid: service_instance.guid,
+        route_guid: route.guid,
+        last_operation_type: 'create',
+        last_operation_state: 'successful',
+        include_params_link: service_instance.managed_instance?
+      )
+    end
+
+    let(:expected_codes_and_responses) do
+      responses_for_space_restricted_single_endpoint(expected_body)
+    end
+
+    context 'user-provided service instance' do
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'managed service instance' do
+      let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'does not exist' do
+      let(:guid) { 'no-such-route-binding' }
+
+      it 'fails with the correct error' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(
+          include({
+            'detail' => 'Service route binding not found',
+            'title' => 'CF-ResourceNotFound',
+            'code' => 10010,
+          })
+        )
+      end
+    end
+
+    describe 'include' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+
+      it 'can include `service_instance`' do
+        get "/v3/service_route_bindings/#{guid}?include=service_instance", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['service_instances']).to have(1).items
+        service_instance_guid = parsed_response['included']['service_instances'][0]['guid']
+        expect(service_instance_guid).to eq(service_instance.guid)
+      end
+
+      it 'can include `route`' do
+        get "/v3/service_route_bindings/#{guid}?include=route", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['routes']).to have(1).items
+        route_guid = parsed_response['included']['routes'][0]['guid']
+        expect(route_guid).to eq(route.guid)
+      end
+
+      it 'rejects requests with invalid associations' do
+        get "/v3/service_route_bindings/#{guid}?include=planet", nil, admin_headers
+        expect(last_response).to have_status_code(400)
+      end
+    end
+  end
+
   describe 'POST /v3/service_route_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_route_bindings', request.to_json, user_headers } }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
@@ -637,251 +882,6 @@ RSpec.describe 'v3 service route bindings' do
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
         end
-      end
-    end
-  end
-
-  describe 'GET /v3/service_route_bindings' do
-    describe 'no bindings to list' do
-      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_objects: [])
-      end
-
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-    end
-
-    describe 'a mix of bindings' do
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
-      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
-      let(:route_binding_1) do
-        bind_service_to_route(service_instance_1, route)
-      end
-      let(:route_binding_2) do
-        bind_service_to_route(service_instance_2, route)
-      end
-      let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
-      let(:response_objects) do
-        [
-          expected_json(
-            binding_guid: route_binding_1.guid,
-            route_service_url: route_service_url,
-            service_instance_guid: service_instance_1.guid,
-            route_guid: route.guid,
-            last_operation_type: 'create',
-            last_operation_state: 'successful',
-            include_params_link: service_instance_1.managed_instance?
-          ),
-          expected_json(
-            binding_guid: route_binding_2.guid,
-            route_service_url: route_service_url,
-            service_instance_guid: service_instance_2.guid,
-            route_guid: route.guid,
-            last_operation_type: 'create',
-            last_operation_state: 'successful',
-            include_params_link: service_instance_2.managed_instance?
-          )
-        ]
-      end
-      let(:bindings_response_body) do
-        { code: 200, response_objects: response_objects }
-      end
-
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_objects: []).tap do |h|
-          h['admin'] = bindings_response_body
-          h['admin_read_only'] = bindings_response_body
-          h['global_auditor'] = bindings_response_body
-          h['space_developer'] = bindings_response_body
-          h['space_manager'] = bindings_response_body
-          h['space_auditor'] = bindings_response_body
-          h['org_manager'] = bindings_response_body
-        end
-      end
-
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-    end
-
-    describe 'filtering' do
-      it 'can be filtered by service instance guids' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
-        service_instance_guids = filtered_route_bindings.
-                                 map(&:service_instance).
-                                 map(&:guid).
-                                 join(',')
-
-        get "/v3/service_route_bindings?service_instance_guids=#{service_instance_guids}", nil, admin_headers
-
-        expect(last_response).to have_status_code(200)
-
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
-      end
-
-      it 'can be filtered by service instance names' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
-        service_instance_names = filtered_route_bindings.
-                                 map(&:service_instance).
-                                 map(&:name).
-                                 join(',')
-
-        get "/v3/service_route_bindings?service_instance_names=#{service_instance_names}", nil, admin_headers
-
-        expect(last_response).to have_status_code(200)
-
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
-      end
-
-      it 'can be filtered by route guids' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
-        route_guids = filtered_route_bindings.
-                      map(&:route).
-                      map(&:guid).
-                      join(',')
-
-        get "/v3/service_route_bindings?route_guids=#{route_guids}", nil, admin_headers
-
-        expect(last_response).to have_status_code(200)
-
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
-      end
-    end
-
-    describe 'include' do
-      it 'can include `service_instance`' do
-        instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
-        other_instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
-
-        1.times { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
-        2.times { VCAP::CloudController::RouteBinding.make(service_instance: other_instance) }
-
-        get '/v3/service_route_bindings?include=service_instance', nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['service_instances']).to have(2).items
-        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(instance.guid, other_instance.guid)
-      end
-
-      it 'can include `route`' do
-        route = VCAP::CloudController::Route.make
-        other_route = VCAP::CloudController::Route.make
-
-        1.times do
-          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
-          VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
-        end
-
-        2.times do
-          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: other_route.space)
-          VCAP::CloudController::RouteBinding.make(route: other_route, service_instance: si)
-        end
-
-        get '/v3/service_route_bindings?include=route', nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['routes']).to have(2).items
-        guids = parsed_response['included']['routes'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(route.guid, other_route.guid)
-      end
-
-      it 'rejects requests with invalid associations' do
-        get '/v3/service_route_bindings?include=planet', nil, admin_headers
-        expect(last_response).to have_status_code(400)
-      end
-    end
-  end
-
-  describe 'GET /v3/service_route_bindings/:guid' do
-    let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{guid}", nil, user_headers } }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:route_binding) do
-      VCAP::CloudController::RouteBinding.new.save_with_new_operation(
-        { service_instance: service_instance, route: route, route_service_url: route_service_url },
-        { type: 'create', state: 'successful' }
-      )
-    end
-    let(:guid) { route_binding.guid }
-    let(:expected_body) do
-      expected_json(
-        binding_guid: guid,
-        route_service_url: route_service_url,
-        service_instance_guid: service_instance.guid,
-        route_guid: route.guid,
-        last_operation_type: 'create',
-        last_operation_state: 'successful',
-        include_params_link: service_instance.managed_instance?
-      )
-    end
-
-    let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(expected_body)
-    end
-
-    context 'user-provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    context 'managed service instance' do
-      let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    context 'does not exist' do
-      let(:guid) { 'no-such-route-binding' }
-
-      it 'fails with the correct error' do
-        api_call.call(space_dev_headers)
-
-        expect(last_response).to have_status_code(404)
-        expect(parsed_response['errors']).to include(
-          include({
-            'detail' => 'Service route binding not found',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          })
-        )
-      end
-    end
-
-    describe 'include' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
-
-      it 'can include `service_instance`' do
-        get "/v3/service_route_bindings/#{guid}?include=service_instance", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['service_instances']).to have(1).items
-        service_instance_guid = parsed_response['included']['service_instances'][0]['guid']
-        expect(service_instance_guid).to eq(service_instance.guid)
-      end
-
-      it 'can include `route`' do
-        get "/v3/service_route_bindings/#{guid}?include=route", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['routes']).to have(1).items
-        route_guid = parsed_response['included']['routes'][0]['guid']
-        expect(route_guid).to eq(route.guid)
-      end
-
-      it 'rejects requests with invalid associations' do
-        get "/v3/service_route_bindings/#{guid}?include=planet", nil, admin_headers
-        expect(last_response).to have_status_code(400)
       end
     end
   end
