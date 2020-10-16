@@ -75,6 +75,12 @@ module VCAP::CloudController
           existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
           web_process_hash = existing_app_hash['processes'].find { |p| p['type'] == 'web' }
           existing_app_hash = existing_app_hash.merge(web_process_hash) if web_process_hash
+
+          # Account for the fact that older manifests may have a hyphen for disk-quota
+          if manifest_app_hash.key?('disk-quota')
+            existing_app_hash['disk-quota'] = existing_app_hash['disk_quota']
+            recognized_top_level_keys << 'disk-quota'
+          end
         end
 
         manifest_app_hash.each do |key, value|

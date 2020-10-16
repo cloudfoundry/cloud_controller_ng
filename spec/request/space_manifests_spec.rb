@@ -516,6 +516,7 @@ RSpec.describe 'Space Manifests' do
         {
           diff: a_collection_containing_exactly(
             { op: 'replace', path: '/applications/0/memory', was: '1024M', value: '256M' },
+            { op: 'replace', path: '/applications/0/disk-quota', was: '1024M', value: '2G' },
           )
         }
       end
@@ -525,7 +526,8 @@ RSpec.describe 'Space Manifests' do
           'applications' => [
             {
               'name' => app1_model.name,
-              'memory' => '256M'
+              'memory' => '256M',
+              'disk-quota' => '2G',
             }
           ]
         }.to_yaml
