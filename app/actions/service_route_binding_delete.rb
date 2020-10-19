@@ -4,8 +4,10 @@ module VCAP::CloudController
       class UnprocessableDelete < StandardError; end
 
       RequiresAsync = Class.new.freeze
-      DeleteComplete = Class.new.freeze
-      DeleteStarted = Struct.new(:operation).freeze
+
+      DeleteStatus = Struct.new(:finished, :operation).freeze
+      DeleteStarted = ->(operation) { DeleteStatus.new(false, operation) }
+      DeleteComplete = DeleteStatus.new(true, nil).freeze
 
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze
@@ -21,13 +23,12 @@ module VCAP::CloudController
         operation_in_progress! if binding.service_instance.operation_in_progress?
 
         result = send_unbind_to_broker(binding)
-        case result
-        when DeleteStarted
-          update_last_operation(binding, operation: result[:operation])
-        when DeleteComplete
+        if result[:finished]
           perform_delete_actions(binding)
+          return result
         end
 
+        update_last_operation(binding, operation: result[:operation])
         result
       rescue => e
         update_last_operation(binding, state: 'failed', description: e.message)
@@ -63,7 +64,7 @@ module VCAP::CloudController
       def send_unbind_to_broker(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
-        details[:async] ? DeleteStarted.new(details[:operation]) : DeleteComplete.new
+        details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue => err
         raise UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
       end

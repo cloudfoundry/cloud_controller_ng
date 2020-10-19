@@ -37,7 +37,7 @@ module VCAP::CloudController
       it_behaves_like 'delayed job', described_class
 
       describe '#perform' do
-        let(:delete_response) { nil }
+        let(:delete_response) { { finished: false } }
         let(:poll_response) { { finished: false } }
         let(:action) do
           instance_double(V3::ServiceRouteBindingDelete, {
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         context 'first time' do
           context 'synchronous response' do
-            let(:delete_response) { V3::ServiceRouteBindingDelete::DeleteComplete.new }
+            let(:delete_response) { { finished: true } }
 
             it 'calls delete and then finishes' do
               subject.perform
@@ -71,7 +71,7 @@ module VCAP::CloudController
           end
 
           context 'asynchronous response' do
-            let(:delete_response) { V3::ServiceRouteBindingDelete::DeleteStarted }
+            let(:delete_response) { { finished: false } }
 
             context 'computes the maximum duration' do
               before do
@@ -112,7 +112,7 @@ module VCAP::CloudController
         context 'subsequent times' do
           let(:new_action) do
             instance_double(V3::ServiceRouteBindingDelete, {
-              delete: nil,
+              delete: delete_response,
               poll: poll_response,
             })
           end
@@ -165,13 +165,14 @@ module VCAP::CloudController
         end
 
         context 'binding not found' do
-          it 'raises an API error' do
+          before do
             binding.destroy
+          end
 
-            expect { subject.perform }.to raise_error(
-              CloudController::Errors::ApiError,
-              /The binding could not be found/,
-            )
+          it 'finishes the job' do
+            subject.perform
+
+            expect(subject.finished).to be_truthy
           end
         end
 

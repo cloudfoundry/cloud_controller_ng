@@ -5,8 +5,6 @@ require 'cloud_controller/errors/api_error'
 module VCAP::CloudController
   module V3
     class DeleteRouteBindingJob < Jobs::ReoccurringJob
-      class BindingNotFound < CloudController::Errors::ApiError; end
-
       def initialize(binding_guid, user_audit_info:)
         super()
         @first_time = true
@@ -40,7 +38,9 @@ module VCAP::CloudController
 
       def perform
         binding = route_binding
-        not_found! unless binding
+        if binding.nil?
+          return finish
+        end
 
         service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
         action = V3::ServiceRouteBindingDelete.new(service_event_repository)
@@ -49,7 +49,9 @@ module VCAP::CloudController
         if @first_time
           @first_time = false
           delete_result = action.delete(binding, async_allowed: true)
-          return finish if delete_result.is_a? V3::ServiceRouteBindingDelete::DeleteComplete
+          if delete_result[:finished]
+            finish
+          end
         end
 
         polling_status = action.poll(binding)
@@ -60,8 +62,6 @@ module VCAP::CloudController
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
-      rescue BindingNotFound => e
-        raise e
       rescue => e
         if route_binding.reload.last_operation.state != 'failed'
           save_failure(e.message)
@@ -93,10 +93,6 @@ module VCAP::CloudController
       def compute_maximum_duration
         max_poll_duration_on_plan = route_binding.service_instance.service_plan.try(:maximum_polling_duration)
         self.maximum_duration_seconds = max_poll_duration_on_plan
-      end
-
-      def not_found!
-        raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
       end
     end
   end

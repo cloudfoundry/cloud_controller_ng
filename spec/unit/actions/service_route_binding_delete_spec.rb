@@ -112,7 +112,8 @@ module VCAP::CloudController
               let(:unbind_response) { { async: true, operation: operation } }
 
               it 'says the the delete is in progress' do
-                expect(delete_binding).to eq(described_class::DeleteStarted.new(operation))
+                expect(delete_binding[:finished]).to be_falsey
+                expect(delete_binding[:operation]).to eq(operation)
               end
 
               it 'updates the last operation' do
