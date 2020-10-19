@@ -25,11 +25,11 @@ module VCAP::CloudController
         result = send_unbind_to_broker(binding)
         if result[:finished]
           perform_delete_actions(binding)
-          return result
+        else
+          update_last_operation(binding, operation: result[:operation])
         end
 
-        update_last_operation(binding, operation: result[:operation])
-        result
+        return result
       rescue => e
         update_last_operation(binding, state: 'failed', description: e.message)
 
