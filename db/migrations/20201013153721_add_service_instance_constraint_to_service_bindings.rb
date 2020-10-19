@@ -1,10 +1,10 @@
 Sequel.migration do
   up do
     # We are assuming with this DB migration that the service_bindings table currently
-    # has no duplicate rows, according to the unique constraint of 
+    # has no duplicate rows, according to the unique constraint of
     # (service_instance_guid, app_guid). This migration will fail otherwise.
-    # 
-    # Please manually remove duplicate entries from the database if 
+    #
+    # Please manually remove duplicate entries from the database if
     # this migration is failing.
 
     alter_table :service_bindings do
