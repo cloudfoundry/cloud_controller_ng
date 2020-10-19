@@ -62,6 +62,17 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)
       end
 
+      def handle_timeout
+        route_binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: operation_type,
+            state: 'failed',
+            description: "Service Broker failed to #{operation} within the required time.",
+          }
+        )
+      end
+
       private
 
       def route_binding

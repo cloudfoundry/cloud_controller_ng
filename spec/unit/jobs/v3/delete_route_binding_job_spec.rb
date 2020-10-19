@@ -213,6 +213,17 @@ module VCAP::CloudController
         end
       end
 
+      describe '#handle_timeout' do
+        it 'updates the last operation to failed' do
+          subject.handle_timeout
+
+          binding.reload
+          expect(binding.last_operation.type).to eq('delete')
+          expect(binding.last_operation.state).to eq('failed')
+          expect(binding.last_operation.description).to eq('Service Broker failed to unbind within the required time.')
+        end
+      end
+
       describe '#operation' do
         it 'returns "unbind"' do
           expect(subject.operation).to eq(:unbind)
