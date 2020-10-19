@@ -66,6 +66,8 @@ module VCAP::CloudController
             end
 
             it 'does not poll' do
+              subject.perform
+
               expect(action).not_to have_received(:poll)
             end
           end
