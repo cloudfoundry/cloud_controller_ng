@@ -5,6 +5,8 @@ require 'cloud_controller/errors/api_error'
 module VCAP::CloudController
   module V3
     class DeleteRouteBindingJob < Jobs::ReoccurringJob
+      class BindingNotFound < CloudController::Errors::ApiError; end
+
       def initialize(binding_guid, user_audit_info:)
         super()
         @first_time = true
@@ -58,22 +60,31 @@ module VCAP::CloudController
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
+      rescue BindingNotFound => e
+        raise e
       rescue => e
+        if route_binding.reload.last_operation.state != 'failed'
+          save_failure(e.message)
+        end
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)
       end
 
       def handle_timeout
+        save_failure("Service Broker failed to #{operation} within the required time.")
+      end
+
+      private
+
+      def save_failure(description)
         route_binding.save_with_attributes_and_new_operation(
           {},
           {
             type: operation_type,
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time.",
+            description: description,
           }
         )
       end
-
-      private
 
       def route_binding
         RouteBinding.first(guid: resource_guid)
@@ -85,7 +96,7 @@ module VCAP::CloudController
       end
 
       def not_found!
-        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
+        raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
       end
     end
   end

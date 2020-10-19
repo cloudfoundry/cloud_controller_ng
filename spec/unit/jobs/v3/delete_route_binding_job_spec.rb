@@ -198,6 +198,10 @@ module VCAP::CloudController
               CloudController::Errors::ApiError,
               'unbind could not be completed: bad thing',
             )
+
+            binding.reload
+            expect(binding.last_operation.type).to eq('delete')
+            expect(binding.last_operation.state).to eq('failed')
           end
         end
 
@@ -209,6 +213,10 @@ module VCAP::CloudController
               CloudController::Errors::ApiError,
               'unbind could not be completed: horrible',
             )
+
+            binding.reload
+            expect(binding.last_operation.type).to eq('delete')
+            expect(binding.last_operation.state).to eq('failed')
           end
         end
       end

@@ -943,7 +943,7 @@ RSpec.describe 'v3 service route bindings' do
           let(:broker_base_url) { service_instance.service_broker.broker_url }
           let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
           let(:route_service_url) { 'https://route_service_url.com' }
-          let(:broker_status_code) { 200 }
+          let(:broker_unbind_status_code) { 200 }
           let(:broker_response) { {} }
           let(:query) do
             {
@@ -959,7 +959,7 @@ RSpec.describe 'v3 service route bindings' do
 
             stub_request(:delete, broker_unbind_url).
               with(query: query).
-              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
+              to_return(status: broker_unbind_status_code, body: broker_response.to_json, headers: {})
           end
 
           it 'sends an unbind request with the right arguments to the service broker' do
@@ -988,7 +988,7 @@ RSpec.describe 'v3 service route bindings' do
           end
 
           context 'when the unbind responds asynchronously' do
-            let(:broker_status_code) { 202 }
+            let(:broker_unbind_status_code) { 202 }
             let(:operation) { Sham.guid }
             let(:broker_response) { { operation: operation } }
             let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
@@ -1077,7 +1077,7 @@ RSpec.describe 'v3 service route bindings' do
           end
 
           context 'when the broker returns a failure' do
-            let(:broker_status_code) { 418 }
+            let(:broker_unbind_status_code) { 418 }
             let(:broker_response) { 'nope' }
 
             it 'does not remove the binding' do
