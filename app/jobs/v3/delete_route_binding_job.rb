@@ -38,9 +38,7 @@ module VCAP::CloudController
 
       def perform
         binding = route_binding
-        if binding.nil?
-          return finish
-        end
+        return finish if binding.nil?
 
         service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
         action = V3::ServiceRouteBindingDelete.new(service_event_repository)
@@ -50,13 +48,13 @@ module VCAP::CloudController
           @first_time = false
           delete_result = action.delete(binding, async_allowed: true)
           if delete_result[:finished]
-            finish
+            return finish
           end
         end
 
         polling_status = action.poll(binding)
         if polling_status[:finished]
-          finish
+          return finish
         end
 
         if polling_status[:retry_after].present?
