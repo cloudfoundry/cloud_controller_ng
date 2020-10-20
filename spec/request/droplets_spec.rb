@@ -1703,7 +1703,7 @@ RSpec.describe 'Droplets' do
         )
       end
 
-      context 'when updating the image (on a docker droplet)' do
+      context 'when updating the image (on a kpack droplet)' do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
         let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
         let(:rebased_image_reference) { 'rebased-image-reference' }

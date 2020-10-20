@@ -93,10 +93,6 @@ module VCAP::CloudController
       lifecycle_type == KpackLifecycleDataModel::LIFECYCLE_TYPE
     end
 
-    def has_docker_image?
-      docker? || kpack?
-    end
-
     def docker_ports
       exposed_ports = []
       if self.execution_metadata.present?

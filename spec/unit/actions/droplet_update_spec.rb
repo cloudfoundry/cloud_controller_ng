@@ -94,7 +94,7 @@ module VCAP::CloudController
           it 'returns an error saying that a buildpack droplet image cannot be updated' do
             expect(message).to be_valid
             expect { droplet_update.update(droplet, message)
-            }.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for docker droplets')
+            }.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for kpack droplets')
           end
         end
 
@@ -109,16 +109,10 @@ module VCAP::CloudController
             })
           end
 
-          context 'the image of a staged docker droplet is requested to be updated' do
-            before do
-              docker_droplet.update(docker_receipt_image: 'some-image-reference')
-            end
-
-            it 'updates the droplet record with new image reference' do
-              expect(message).to be_valid
-              updated_droplet = droplet_update.update(docker_droplet, message)
-              expect(updated_droplet.docker_receipt_image).to eq 'new-image-reference'
-            end
+          it 'returns an error saying that a buildpack droplet image cannot be updated' do
+            expect(message).to be_valid
+            expect { droplet_update.update(docker_droplet, message)
+            }.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for kpack droplets')
           end
         end
 
