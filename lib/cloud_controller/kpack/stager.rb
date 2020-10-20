@@ -180,7 +180,7 @@ module Kpack
 
     def create_droplet_and_get_guid(staging_details)
       build = VCAP::CloudController::BuildModel.find(guid: staging_details.staging_guid)
-      droplet = VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
+      droplet = VCAP::CloudController::DropletCreate.new.create_kpack_droplet(build)
       droplet.guid
     end
   end

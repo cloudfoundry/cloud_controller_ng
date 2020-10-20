@@ -64,62 +64,119 @@ module VCAP::CloudController
     end
 
     describe '#lifecycle_type' do
-      let(:droplet_model) { DropletModel.make }
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+      context 'when there is buildpack_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
-      before do
-        droplet_model.buildpack_lifecycle_data = lifecycle_data
-        droplet_model.save
+        before do
+          droplet_model.buildpack_lifecycle_data = lifecycle_data
+          droplet_model.save
+        end
+
+        it 'returns the string "buildpack"' do
+          expect(droplet_model.lifecycle_type).to eq('buildpack')
+        end
       end
 
-      it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
-        expect(droplet_model.lifecycle_type).to eq('buildpack')
+      context 'when there is kpack_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:kpack) }
+        let!(:lifecycle_data) { KpackLifecycleDataModel.make(droplet: droplet_model) }
+
+        before do
+          droplet_model.kpack_lifecycle_data = lifecycle_data
+          droplet_model.save
+        end
+
+        it 'returns the string "kpack"' do
+          expect(droplet_model.lifecycle_type).to eq('kpack')
+        end
       end
 
-      it 'returns the string "docker" if there is no buildpack_lifecycle_data is on the model' do
-        droplet_model.buildpack_lifecycle_data = nil
-        droplet_model.save
+      context 'when there is no lifecycle data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:docker) }
 
-        expect(droplet_model.lifecycle_type).to eq('docker')
+        before do
+          droplet_model.buildpack_lifecycle_data = nil
+          droplet_model.kpack_lifecycle_data = nil
+          droplet_model.save
+        end
+
+        it 'returns the string "docker"' do
+          expect(droplet_model.lifecycle_type).to eq('docker')
+        end
       end
     end
 
     describe '#lifecycle_data' do
-      let(:droplet_model) { DropletModel.make }
-      let!(:lifecycle_data) do
-        BuildpackLifecycleDataModel.make(
-          droplet: droplet_model,
-          buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-        )
-      end
+      context 'when there is buildpack_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let!(:lifecycle_data) do
+          BuildpackLifecycleDataModel.make(
+            droplet: droplet_model,
+            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
+          )
+        end
 
-      before do
-        droplet_model.buildpack_lifecycle_data = lifecycle_data
-        droplet_model.save
-      end
+        before do
+          droplet_model.buildpack_lifecycle_data = lifecycle_data
+          droplet_model.save
+        end
 
-      it 'returns buildpack_lifecycle_data if it is on the model' do
-        expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
-      end
+        it 'returns buildpack_lifecycle_data if it is on the model' do
+          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
+        end
 
-      it 'is a persistable hash' do
-        expect(droplet_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
-        expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
-      end
+        it 'is a persistable hash' do
+          expect(droplet_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
+          expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+        end
 
-      it 'returns a docker lifecycle model if there is no buildpack_lifecycle_model' do
-        droplet_model.buildpack_lifecycle_data = nil
-        droplet_model.save
-
-        expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
-      end
-
-      context 'buildpack dependencies' do
-        it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
+        it 'deletes the dependent buildpack_lifecycle_data_models when a droplet is deleted' do
           expect {
             droplet_model.destroy
           }.to change { BuildpackLifecycleDataModel.count }.by(-1).
             and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+        end
+      end
+
+      context 'when there is kpack_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:kpack) }
+        let!(:lifecycle_data) do
+          KpackLifecycleDataModel.make(droplet: droplet_model)
+        end
+
+        before do
+          droplet_model.kpack_lifecycle_data = lifecycle_data
+          droplet_model.save
+        end
+
+        it 'returns kpack_lifecycle_data if it is on the model' do
+          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
+        end
+
+        it 'is a persistable hash' do
+          expect(droplet_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
+          expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+        end
+
+        it 'deletes the dependent kpack_lifecycle_data_models when a droplet is deleted' do
+          expect {
+            droplet_model.destroy
+          }.to change { KpackLifecycleDataModel.count }.by(-1)
+        end
+      end
+
+      context 'when there is no lifecycle data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:docker) }
+
+        before do
+          droplet_model.kpack_lifecycle_data = nil
+          droplet_model.buildpack_lifecycle_data = nil
+          droplet_model.save
+        end
+
+        it 'returns a docker lifecycle model' do
+          expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
         end
       end
     end

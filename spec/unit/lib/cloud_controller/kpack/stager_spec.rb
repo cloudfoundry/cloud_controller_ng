@@ -98,10 +98,10 @@ module Kpack
       end
 
       let!(:build) { VCAP::CloudController::BuildModel.make(:kpack) }
-      let!(:droplet) { VCAP::CloudController::DropletModel.make(:docker, app: package.app) }
+      let!(:droplet) { VCAP::CloudController::DropletModel.make(:kpack, app: package.app) }
 
       before do
-        allow_any_instance_of(VCAP::CloudController::DropletCreate).to receive(:create_docker_droplet).with(build).and_return(droplet)
+        allow_any_instance_of(VCAP::CloudController::DropletCreate).to receive(:create_kpack_droplet).with(build).and_return(droplet)
       end
 
       it 'checks if the image exists' do
