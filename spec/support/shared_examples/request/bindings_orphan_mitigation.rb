@@ -38,7 +38,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
       let(:broker_status_code) { 200 }
       let(:response_body) { nil }
 
-      it 'performs orphan mitigation' do
+      it 'does not perform orphan mitigation' do
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
         assert_failed_job(binding, job)
