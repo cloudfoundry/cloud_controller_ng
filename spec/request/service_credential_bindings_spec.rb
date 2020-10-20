@@ -970,6 +970,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(201)
           expect(parsed_response).to have_key('guid')
           @binding_guid = parsed_response['guid']
+          @binding_name = parsed_response['name']
         end
 
         it 'creates a new service credential binding' do
@@ -1016,6 +1017,7 @@ RSpec.describe 'v3 service credential bindings' do
           event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
           expect(event).to be
           expect(event.actee).to eq(@binding_guid)
+          expect(event.actee_name).to eq(@binding_name)
         end
 
         it 'sets the right details' do
@@ -1216,6 +1218,7 @@ RSpec.describe 'v3 service credential bindings' do
             event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
             expect(event).to be
             expect(event.actee).to eq(binding.guid)
+            expect(event.actee_name).to eq(binding.name)
             expect(event.data).to include({
               'request' => create_body.with_indifferent_access
             })

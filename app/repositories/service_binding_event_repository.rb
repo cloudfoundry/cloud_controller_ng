@@ -73,7 +73,7 @@ module VCAP::CloudController
             actor_username:    user_audit_info.user_name,
             actee:             service_binding.guid,
             actee_type:        'service_binding',
-            actee_name:        '',
+            actee_name:        service_binding.name || '',
             space_guid:        service_binding.space.guid,
             organization_guid: service_binding.space.organization.guid,
             timestamp:         Sequel::CURRENT_TIMESTAMP,
