@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:user_email) { 'some-email' }
       let(:user_name) { 'some-username' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_name: user_name, user_email: user_email) }
-      let(:service_binding) { ServiceBinding.make }
+      let(:service_binding) { ServiceBinding.make(name: 'some-binding-name') }
 
       describe '.record_start_create' do
         it 'creates an audit.service_binding.start_create event' do
@@ -22,7 +22,7 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.actee).to eq(service_binding.guid)
           expect(event.actee_type).to eq('service_binding')
-          expect(event.actee_name).to eq('')
+          expect(event.actee_name).to eq('some-binding-name')
           expect(event.space_guid).to eq(service_binding.space.guid)
           expect(event.organization_guid).to eq(service_binding.space.organization.guid)
           expect(event.metadata[:request]).to eq(
@@ -53,6 +53,15 @@ module VCAP::CloudController
             expect(event.metadata[:manifest_triggered]).to eq(true)
           end
         end
+
+        context 'when binding name is not set' do
+          let(:service_binding) { ServiceBinding.make(name: nil) }
+
+          it 'records actee_name as empty' do
+            event = ServiceBindingEventRepository.record_start_create(service_binding, user_audit_info, {})
+            expect(event.actee_name).to eq('')
+          end
+        end
       end
 
       describe '.record_create' do
@@ -67,7 +76,7 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.actee).to eq(service_binding.guid)
           expect(event.actee_type).to eq('service_binding')
-          expect(event.actee_name).to eq('')
+          expect(event.actee_name).to eq('some-binding-name')
           expect(event.space_guid).to eq(service_binding.space.guid)
           expect(event.organization_guid).to eq(service_binding.space.organization.guid)
           expect(event.metadata[:request]).to eq(
@@ -98,6 +107,15 @@ module VCAP::CloudController
             expect(event.metadata[:manifest_triggered]).to eq(true)
           end
         end
+
+        context 'when binding name is not set' do
+          let(:service_binding) { ServiceBinding.make(name: nil) }
+
+          it 'records actee_name as empty' do
+            event = ServiceBindingEventRepository.record_create(service_binding, user_audit_info, {})
+            expect(event.actee_name).to eq('')
+          end
+        end
       end
 
       describe '.record_start_delete' do
@@ -111,7 +129,7 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.actee).to eq(service_binding.guid)
           expect(event.actee_type).to eq('service_binding')
-          expect(event.actee_name).to eq('')
+          expect(event.actee_name).to eq('some-binding-name')
           expect(event.space_guid).to eq(service_binding.space.guid)
           expect(event.organization_guid).to eq(service_binding.space.organization.guid)
           expect(event.metadata).to eq(
@@ -120,6 +138,15 @@ module VCAP::CloudController
               service_instance_guid: service_binding.service_instance_guid,
             },
           )
+        end
+
+        context 'when binding name is not set' do
+          let(:service_binding) { ServiceBinding.make(name: nil) }
+
+          it 'records actee_name as empty' do
+            event = ServiceBindingEventRepository.record_start_delete(service_binding, user_audit_info)
+            expect(event.actee_name).to eq('')
+          end
         end
       end
 
@@ -134,7 +161,7 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.actee).to eq(service_binding.guid)
           expect(event.actee_type).to eq('service_binding')
-          expect(event.actee_name).to eq('')
+          expect(event.actee_name).to eq('some-binding-name')
           expect(event.space_guid).to eq(service_binding.space.guid)
           expect(event.organization_guid).to eq(service_binding.space.organization.guid)
           expect(event.metadata).to eq(
@@ -143,6 +170,15 @@ module VCAP::CloudController
               service_instance_guid: service_binding.service_instance_guid,
             },
           )
+        end
+
+        context 'when binding name is not set' do
+          let(:service_binding) { ServiceBinding.make(name: nil) }
+
+          it 'records actee_name as empty' do
+            event = ServiceBindingEventRepository.record_delete(service_binding, user_audit_info)
+            expect(event.actee_name).to eq('')
+          end
         end
       end
     end
