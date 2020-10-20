@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       it 'says the the delete is complete' do
-        expect(perform_action).to be_a(described_class::DeleteComplete)
+        expect(perform_action[:finished]).to be_truthy
       end
 
       context 'route does not have app' do
@@ -112,7 +112,8 @@ module VCAP::CloudController
               let(:unbind_response) { { async: true, operation: operation } }
 
               it 'says the the delete is in progress' do
-                expect(delete_binding).to eq(described_class::DeleteStarted.new(operation))
+                expect(delete_binding[:finished]).to be_falsey
+                expect(delete_binding[:operation]).to eq(operation)
               end
 
               it 'updates the last operation' do
@@ -197,6 +198,7 @@ module VCAP::CloudController
         let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
 
         let(:description) { Sham.description }
+        let(:state) { 'in progress' }
         let(:last_operation_response) do
           {
             last_operation: {
@@ -205,26 +207,40 @@ module VCAP::CloudController
             },
           }
         end
-        let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, fetch_service_binding_last_operation: last_operation_response) }
+        let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
         before do
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+          allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(last_operation_response)
         end
 
         subject(:poll_binding) { action.poll(route_binding) }
 
-        context 'broker client says in progress' do
+        it 'fetches the last operation' do
+          poll_binding
+
+          expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(route_binding)
+        end
+
+        context 'last operation state is complete' do
+          let(:description) { Sham.description }
+          let(:state) { 'succeeded' }
+          let(:perform_action) { poll_binding }
+
+          it_behaves_like 'successful delete'
+        end
+
+        context 'last operation state is in progress' do
           let(:state) { 'in progress' }
 
-          it 'returns delete in progress' do
-            expect(poll_binding).to be_a(described_class::DeleteInProgress)
+          it 'returns false' do
+            expect(poll_binding.finished).to be_falsey
           end
 
           it 'updates the last operation' do
             poll_binding
-            route_binding.reload
 
-            expect(route_binding.last_operation.type).to eq('delete')
+            route_binding.reload
             expect(route_binding.last_operation.state).to eq('in progress')
             expect(route_binding.last_operation.description).to eq(description)
           end
@@ -261,22 +277,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'broker client says finished' do
-          let(:state) { 'succeeded' }
-          let(:perform_action) { poll_binding }
-
-          it_behaves_like 'successful delete'
-        end
-
-        context 'broker client says failed' do
+        context 'last operation state is failed' do
           let(:state) { 'failed' }
 
-          it 'returns complete' do
-            expect(poll_binding).to be_a(described_class::DeleteComplete)
-          end
-
           it 'updates the last operation' do
-            poll_binding
+            expect { action.poll(route_binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
             route_binding.reload
             expect(route_binding.last_operation.state).to eq('failed')
@@ -284,7 +289,7 @@ module VCAP::CloudController
           end
 
           it 'does not notify diego or create an audit event' do
-            poll_binding
+            expect { action.poll(route_binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
@@ -292,17 +297,13 @@ module VCAP::CloudController
         end
 
         context 'broker client raises' do
-          let(:broker_client) do
-            dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
-            allow(dbl).to receive(:fetch_service_binding_last_operation).and_raise(StandardError, 'awful thing')
-            dbl
-          end
-
           it 'saves the error in the last operation' do
-            poll_binding
+            allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(StandardError, 'awful thing')
+
+            expect { action.poll(route_binding) }.to raise_error(StandardError)
 
             route_binding.reload
-            expect(route_binding.last_operation.state).to eq('in progress')
+            expect(route_binding.last_operation.state).to eq('failed')
             expect(route_binding.last_operation.description).to eq('awful thing')
 
             expect(messenger).not_to have_received(:send_desire_request)

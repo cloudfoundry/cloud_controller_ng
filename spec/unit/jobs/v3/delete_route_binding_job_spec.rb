@@ -37,8 +37,8 @@ module VCAP::CloudController
       it_behaves_like 'delayed job', described_class
 
       describe '#perform' do
-        let(:delete_response) { nil }
-        let(:poll_response) { nil }
+        let(:delete_response) { { finished: false } }
+        let(:poll_response) { { finished: false } }
         let(:action) do
           instance_double(V3::ServiceRouteBindingDelete, {
             delete: delete_response,
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         context 'first time' do
           context 'synchronous response' do
-            let(:delete_response) { V3::ServiceRouteBindingDelete::DeleteComplete.new }
+            let(:delete_response) { { finished: true } }
 
             it 'calls delete and then finishes' do
               subject.perform
@@ -66,12 +66,14 @@ module VCAP::CloudController
             end
 
             it 'does not poll' do
+              subject.perform
+
               expect(action).not_to have_received(:poll)
             end
           end
 
           context 'asynchronous response' do
-            let(:delete_response) { V3::ServiceRouteBindingDelete::DeleteStarted }
+            let(:delete_response) { { finished: false } }
 
             context 'computes the maximum duration' do
               before do
@@ -112,7 +114,7 @@ module VCAP::CloudController
         context 'subsequent times' do
           let(:new_action) do
             instance_double(V3::ServiceRouteBindingDelete, {
-              delete: nil,
+              delete: delete_response,
               poll: poll_response,
             })
           end
@@ -133,7 +135,7 @@ module VCAP::CloudController
           end
 
           context 'poll indicates delete complete' do
-            let(:poll_response) { ServiceRouteBindingDelete::DeleteComplete.new }
+            let(:poll_response) { { finished: true } }
 
             it 'finishes the job' do
               subject.perform
@@ -165,19 +167,20 @@ module VCAP::CloudController
         end
 
         context 'binding not found' do
-          it 'raises an API error' do
+          before do
             binding.destroy
+          end
 
-            expect { subject.perform }.to raise_error(
-              CloudController::Errors::ApiError,
-              /The binding could not be found/,
-            )
+          it 'finishes the job' do
+            subject.perform
+
+            expect(subject.finished).to be_truthy
           end
         end
 
         context 'retry interval' do
           def test_retry_after(value, expected)
-            allow(action).to receive(:poll).and_return(ServiceRouteBindingDelete::DeleteInProgress.new(value.to_s))
+            allow(action).to receive(:poll).and_return({ finished: false, retry_after: value.to_s })
             subject.perform
             expect(subject.polling_interval_seconds).to eq(expected)
           end
@@ -198,6 +201,10 @@ module VCAP::CloudController
               CloudController::Errors::ApiError,
               'unbind could not be completed: bad thing',
             )
+
+            binding.reload
+            expect(binding.last_operation.type).to eq('delete')
+            expect(binding.last_operation.state).to eq('failed')
           end
         end
 
@@ -209,7 +216,22 @@ module VCAP::CloudController
               CloudController::Errors::ApiError,
               'unbind could not be completed: horrible',
             )
+
+            binding.reload
+            expect(binding.last_operation.type).to eq('delete')
+            expect(binding.last_operation.state).to eq('failed')
           end
+        end
+      end
+
+      describe '#handle_timeout' do
+        it 'updates the last operation to failed' do
+          subject.handle_timeout
+
+          binding.reload
+          expect(binding.last_operation.type).to eq('delete')
+          expect(binding.last_operation.state).to eq('failed')
+          expect(binding.last_operation.description).to eq('Service Broker failed to unbind within the required time.')
         end
       end
 

@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       def perform
         binding = route_binding
-        gone! unless binding
+        return finish if binding.nil?
 
         service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(@user_audit_info)
         action = V3::ServiceRouteBindingDelete.new(service_event_repository)
@@ -47,23 +47,42 @@ module VCAP::CloudController
         if @first_time
           @first_time = false
           delete_result = action.delete(binding, async_allowed: true)
-          return finish if delete_result.is_a? V3::ServiceRouteBindingDelete::DeleteComplete
+          if delete_result[:finished]
+            return finish
+          end
         end
 
         polling_status = action.poll(binding)
-        case polling_status
-        when V3::ServiceRouteBindingDelete::DeleteComplete
-          finish
-        when V3::ServiceRouteBindingDelete::DeleteInProgress
-          unless polling_status.retry_after.nil?
-            self.polling_interval_seconds = polling_status.retry_after.to_i
-          end
+        if polling_status[:finished]
+          return finish
+        end
+
+        if polling_status[:retry_after].present?
+          self.polling_interval_seconds = polling_status[:retry_after]
         end
       rescue => e
+        if route_binding.reload.last_operation.state != 'failed'
+          save_failure(e.message)
+        end
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)
       end
 
+      def handle_timeout
+        save_failure("Service Broker failed to #{operation} within the required time.")
+      end
+
       private
+
+      def save_failure(description)
+        route_binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: operation_type,
+            state: 'failed',
+            description: description,
+          }
+        )
+      end
 
       def route_binding
         RouteBinding.first(guid: resource_guid)
@@ -72,10 +91,6 @@ module VCAP::CloudController
       def compute_maximum_duration
         max_poll_duration_on_plan = route_binding.service_instance.service_plan.try(:maximum_polling_duration)
         self.maximum_duration_seconds = max_poll_duration_on_plan
-      end
-
-      def gone!
-        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
       end
     end
   end

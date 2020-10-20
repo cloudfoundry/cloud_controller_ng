@@ -4,9 +4,14 @@ module VCAP::CloudController
       class UnprocessableDelete < StandardError; end
 
       RequiresAsync = Class.new.freeze
-      DeleteComplete = Class.new.freeze
-      DeleteStarted = Struct.new(:operation).freeze
-      DeleteInProgress = Struct.new(:retry_after).freeze
+
+      DeleteStatus = Struct.new(:finished, :operation).freeze
+      DeleteStarted = ->(operation) { DeleteStatus.new(false, operation) }
+      DeleteComplete = DeleteStatus.new(true, nil).freeze
+
+      PollingStatus = Struct.new(:finished, :retry_after).freeze
+      PollingFinished = PollingStatus.new(true, nil).freeze
+      ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
       def initialize(service_event_repository)
         @service_event_repository = service_event_repository
@@ -18,14 +23,13 @@ module VCAP::CloudController
         operation_in_progress! if binding.service_instance.operation_in_progress?
 
         result = send_unbind_to_broker(binding)
-        case result
-        when DeleteStarted
-          update_last_operation(binding, operation: result[:operation])
-        when DeleteComplete
+        if result[:finished]
           perform_delete_actions(binding)
+        else
+          update_last_operation(binding, operation: result[:operation])
         end
 
-        result
+        return result
       rescue => e
         update_last_operation(binding, state: 'failed', description: e.message)
 
@@ -34,22 +38,23 @@ module VCAP::CloudController
 
       def poll(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.fetch_service_binding_last_operation(binding)
+        details = client.fetch_and_handle_service_binding_last_operation(binding)
         case details[:last_operation][:state]
         when 'in progress'
           update_last_operation(binding, description: details[:last_operation][:description])
-          DeleteInProgress.new(details[:retry_after])
+          return ContinuePolling.call(details[:retry_after])
         when 'succeeded'
           perform_delete_actions(binding)
-          DeleteComplete.new
+          return PollingFinished
         when 'failed'
           update_last_operation(binding, state: 'failed', description: details[:last_operation][:description])
-          DeleteComplete.new
+          raise LastOperationFailedState
         end
+      rescue LastOperationFailedState => e
+        raise e
       rescue => e
-        update_last_operation(binding, description: e.message)
-
-        DeleteInProgress.new(nil)
+        update_last_operation(binding, state: 'failed', description: e.message)
+        raise e
       end
 
       private
@@ -59,7 +64,7 @@ module VCAP::CloudController
       def send_unbind_to_broker(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
-        details[:async] ? DeleteStarted.new(details[:operation]) : DeleteComplete.new
+        details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue => err
         raise UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
       end
