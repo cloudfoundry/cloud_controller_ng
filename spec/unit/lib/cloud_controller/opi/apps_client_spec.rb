@@ -394,7 +394,7 @@ RSpec.describe(OPI::Client) do
             expected_body_with_lifecycle = expected_body.merge(lifecycle: {
               docker_lifecycle: {
                 image: 'http://example.org/image1234',
-                command: ['/bin/sh', '-c', '/cnb/lifecycle/launcher', 'ls -la']
+                command: ['/bin/sh', '-c', '/cnb/lifecycle/launcher ls -la']
               }
             })
             actual_body == expected_body_with_lifecycle
