@@ -47,7 +47,7 @@ module VCAP::CloudController
           }.tap do |links|
             links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
             links[:upload] = { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}/upload"), method: 'POST' } if droplet.state == DropletModel::AWAITING_UPLOAD_STATE
-            if droplet.state == DropletModel::STAGED_STATE && !droplet.docker?
+            if droplet.state == DropletModel::STAGED_STATE && droplet.buildpack?
               links[:download] = { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}/download") }
             end
           end

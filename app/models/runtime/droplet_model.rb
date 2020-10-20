@@ -31,10 +31,15 @@ module VCAP::CloudController
       class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
       key: :droplet_guid,
       primary_key: :guid
+    one_to_one :kpack_lifecycle_data,
+      class: 'VCAP::CloudController::KpackLifecycleDataModel',
+      key: :droplet_guid,
+      primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::DropletLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies kpack_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
@@ -82,6 +87,14 @@ module VCAP::CloudController
 
     def docker?
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def kpack?
+      lifecycle_type == KpackLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def has_docker_image?
+      docker? || kpack?
     end
 
     def docker_ports
@@ -137,14 +150,13 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
+      return KpackLifecycleDataModel::LIFECYCLE_TYPE if kpack_lifecycle_data
 
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if buildpack_lifecycle_data
-
-      DockerLifecycleDataModel.new
+      buildpack_lifecycle_data || kpack_lifecycle_data || DockerLifecycleDataModel.new
     end
 
     def in_final_state?

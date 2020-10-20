@@ -239,7 +239,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet belongs to buildpack lifecycle' do
+      context 'when droplet has a buildpack lifecycle' do
         let(:lifecycle_type) { :buildpack }
         let(:buildpack_lifecycle) {
           {
@@ -362,7 +362,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet belongs to docker lifecycle' do
+      context 'when droplet has a docker lifecycle' do
         let(:lifecycle_type) { :docker }
         it 'sends a PUT request' do
           response = client.desire_app(lrp)
@@ -376,6 +376,25 @@ RSpec.describe(OPI::Client) do
                 registry_username: 'docker-user',
                 registry_password: 'docker-password',
                 command: ['/bin/sh', '-c', 'ls -la']
+              }
+            })
+            actual_body == expected_body_with_lifecycle
+          }
+        end
+      end
+
+      context 'when droplet has a kpack lifecycle' do
+        let(:lifecycle_type) { :kpack }
+        it 'sends a PUT request' do
+          response = client.desire_app(lrp)
+
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            expected_body_with_lifecycle = expected_body.merge(lifecycle: {
+              docker_lifecycle: {
+                image: 'http://example.org/image1234',
+                command: ['/bin/sh', '-c', '/cnb/lifecycle/launcher ls -la']
               }
             })
             actual_body == expected_body_with_lifecycle

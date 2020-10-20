@@ -121,9 +121,10 @@ module VCAP::CloudController
     guid { Sham.guid }
     droplet_hash { nil }
     sha256_checksum { nil }
-    state { VCAP::CloudController::DropletModel::STAGING_STATE }
+    state { VCAP::CloudController::DropletModel::STAGED_STATE }
     app { AppModel.make(droplet_guid: guid) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    kpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
   DropletModel.blueprint(:kpack) do
@@ -134,6 +135,7 @@ module VCAP::CloudController
     app { AppModel.make(:kpack, droplet_guid: guid) }
     state { VCAP::CloudController::DropletModel::STAGED_STATE }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(droplet: object.save) }
   end
 
   DeploymentModel.blueprint do
