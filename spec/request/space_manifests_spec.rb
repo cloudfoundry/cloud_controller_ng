@@ -458,6 +458,28 @@ RSpec.describe 'Space Manifests' do
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
       end
     end
+
+    context 'yaml anchors' do
+      let(:yml_manifest) do
+        <<~YML
+          ---
+          applications:
+          - name: blah
+            processes:
+            - type: web
+              memory: &default_value 321M
+              disk_quota: *default_value
+        YML
+      end
+
+      it 'does NOT accept yaml with anchors' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(400)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
+      end
+    end
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
@@ -711,6 +733,33 @@ RSpec.describe 'Space Manifests' do
         post '/v3/spaces/not-space-guid/manifest_diff', yml_manifest, yml_headers(user_header)
 
         expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'yaml anchors' do
+      let(:yml_manifest) do
+        <<~YML
+          ---
+          applications:
+          - name: blah
+            processes:
+            - type: web
+              memory: &default_value 321M
+              disk_quota: *default_value
+        YML
+      end
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'does NOT accept yaml with anchors' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(400)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end
   end

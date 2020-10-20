@@ -244,19 +244,12 @@ RSpec.describe 'App Manifests' do
         YML
       end
 
-      it 'accepts yaml with anchors' do
+      it 'does NOT accept yaml with anchors' do
         post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-        expect(last_response.status).to eq(202)
-        job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-        Delayed::Worker.new.work_off
-        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
-
-        web_process = app_model.web_processes.first
-        expect(web_process.memory).to eq(321)
-        expect(web_process.disk_quota).to eq(321)
+        expect(last_response.status).to eq(400)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end
 

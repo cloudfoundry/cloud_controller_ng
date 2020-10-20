@@ -26,7 +26,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'raises an ApiError with a 404 code' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -39,7 +39,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -70,7 +70,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
                 scopes: %w(cloud_controller.read cloud_controller.write)
               )
 
-              post :apply_manifest, params: { guid: 'non-existent' }.merge(request_body), as: :yaml
+              post :apply_manifest, params: { guid: 'non-existent' }, body: request_body.to_yaml, as: :yaml
 
               expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             end
@@ -102,7 +102,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
                 scopes: %w(cloud_controller.read cloud_controller.write)
               )
 
-              post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+              post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
               expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             end
@@ -116,7 +116,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:request_body) { { 'name' => 'blah', 'instances' => 4 } }
 
         it 'returns a 422' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response.status).to eq(422)
         end
       end
@@ -125,7 +125,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:request_body) { { 'applications' => [] } }
 
         it 'returns a 422' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response.status).to eq(422)
         end
       end
@@ -144,7 +144,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns a 422 and validation errors' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(10)
@@ -202,7 +202,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns a 400' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body)
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml
           expect(response.status).to eq(400)
           # Verify we're getting the InvalidError we're expecting
           expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('InvalidRequest', 'Content-Type must be yaml').exactly :once
@@ -215,7 +215,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns a 422' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response.status).to eq(422)
           parsed_response = MultiJson.load(response.body)
           expect(parsed_response['errors'][0]['detail']).to match(/For application at index 0:/)
@@ -231,7 +231,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the buildpack' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -251,7 +251,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'should autodetect the buildpack' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(202)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -271,7 +271,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns an error' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
@@ -295,7 +295,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the buildpacks' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -316,7 +316,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns an error' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
@@ -338,7 +338,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'returns a 422 and a useful error to the user' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(422)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -371,7 +371,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'blah') }
 
         it 'sets the docker image' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(202)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -389,7 +389,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:app_model) { VCAP::CloudController::AppModel.make(:buildppack, name: 'blah') }
 
         it 'returns an error' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
@@ -412,7 +412,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the stack' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -433,7 +433,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -454,7 +454,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -475,7 +475,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -496,7 +496,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -517,7 +517,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -562,7 +562,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'applies the metadata' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -598,7 +598,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the environment' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -619,7 +619,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'sets the route' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(response.status).to eq(202)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -634,7 +634,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
     end
 
     it 'successfully scales the app in a background job' do
-      post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+      post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
       expect(response.status).to eq(202)
       space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -651,7 +651,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
 
       expect {
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
       }.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
@@ -681,7 +681,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       it 'emits an "App Apply Manifest" audit event' do
-        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
         expect(app_event_repository).to have_received(:record_app_apply_manifest).
           with(app_model, app_model.space, instance_of(VCAP::CloudController::UserAuditInfo), request_body.to_yaml)
@@ -708,7 +708,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           end
 
           it 'returns manifest errors associated with their apps' do
-            post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+            post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
             expect(response.status).to eq(422)
             errors = parsed_body['errors']
             expect(errors.size).to eq(2)
@@ -728,7 +728,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'successfully scales all apps in a single background job' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           expect(response.status).to eq(202)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
@@ -743,7 +743,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         end
 
         it 'emits an "App Apply Manifest" audit event for each app' do
-          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
           app_events = VCAP::CloudController::Event.where(actee_type: 'app')
           expect(app_events.count).to eq(2)

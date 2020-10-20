@@ -2,18 +2,6 @@ require 'action_controller/railtie'
 
 class Application < ::Rails::Application
   config.exceptions_app = self.routes
-
-  # For Rails 5 / Rack 2 - this is how to add a new parser
-  original_parsers = ActionDispatch::Request.parameter_parsers
-
-  allow_yaml_aliases = true
-  yaml_parser = lambda { |body| YAML.safe_load(body, [], [], allow_yaml_aliases).with_indifferent_access }
-  new_parsers = original_parsers.merge({
-    Mime::Type.lookup('application/x-yaml') => yaml_parser,
-    Mime::Type.lookup('text/yaml') => yaml_parser,
-  })
-  ActionDispatch::Request.parameter_parsers = new_parsers
-
   config.middleware.delete ActionDispatch::Session::CookieStore
   config.middleware.delete ActionDispatch::Cookies
   config.middleware.delete ActionDispatch::Flash

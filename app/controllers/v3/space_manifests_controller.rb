@@ -15,7 +15,7 @@ class SpaceManifestsController < ApplicationController
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    messages = parsed_app_manifests.map(&:to_unsafe_h).map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
@@ -49,7 +49,7 @@ class SpaceManifestsController < ApplicationController
 
     parsed_manifests = parsed_app_manifests.map(&:to_hash)
 
-    messages = parsed_app_manifests.map(&:to_unsafe_h).map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
@@ -92,13 +92,13 @@ class SpaceManifestsController < ApplicationController
   end
 
   def check_version_is_supported!
-    version = params[:body]['version']
+    version = parsed_yaml['version']
     raise unprocessable!('Unsupported manifest schema version. Currently supported versions: [1].') unless !version || version == 1
   end
 
   def parsed_app_manifests
     check_version_is_supported!
-    parsed_applications = params[:body].permit!['applications']
+    parsed_applications = parsed_yaml['applications']
     raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
 
     parsed_applications

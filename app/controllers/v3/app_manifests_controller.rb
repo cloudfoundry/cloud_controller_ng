@@ -79,10 +79,10 @@ class AppManifestsController < ApplicationController
   end
 
   def parsed_app_manifest_params
-    parsed_application = params[:body]['applications'] && params[:body]['applications'].first
+    parsed_application = parsed_yaml['applications'] && parsed_yaml['applications'].first
 
     raise invalid_request!('Invalid app manifest') unless parsed_application.present?
 
-    parsed_application.to_unsafe_h
+    parsed_application
   end
 end

@@ -30,6 +30,10 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('BadRequest', message)
   end
 
+  def message_parse_error!(message)
+    raise CloudController::Errors::ApiError.new_from_details('MessageParseError', message)
+  end
+
   def service_unavailable!(message)
     raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', message)
   end
@@ -78,6 +82,17 @@ class ApplicationController < ActionController::Base
 
   def unmunged_body
     JSON.parse(request.body.string)
+  end
+
+  def parsed_yaml
+    return @parsed_yaml if @parsed_yaml
+
+    allow_yaml_aliases = false
+    yaml = YAML.safe_load(request.body.string, [], [], allow_yaml_aliases)
+    message_parse_error!('invalid request body') if !yaml.is_a? Hash
+    @parsed_yaml = yaml
+  rescue Psych::BadAlias
+    bad_request!('Manifest does not support Anchors and Aliases')
   end
 
   def roles
