@@ -36,8 +36,8 @@ module VCAP::CloudController
             }
           )
         end
-      rescue Sequel::ValidationFailed => e
-        already_bound! if e.message =~ /The app is already bound to the service/
+      rescue Sequel::ValidationFailed, Sequel::UniqueConstraintViolation => e
+        already_bound! if e.message =~ /The app is already bound to the service|unique_service_binding_service_instance_guid_app_guid/
         raise UnprocessableCreate.new(e.full_message)
       end
 

@@ -19,7 +19,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
         action.bind(precursor)
 
         binding = precursor.reload
-        expect(binding).to eq(binding_model.first)
+        expect(binding).to eq(binding_model.where(guid: binding.guid).first)
         expect(binding.service_instance).to eq(service_instance)
         expect(binding.last_operation.type).to eq('create')
         expect(binding.last_operation.state).to eq('succeeded')
