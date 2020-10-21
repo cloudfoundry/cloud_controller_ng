@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'actions/service_credential_binding_create'
 require 'support/shared_examples/v3_service_binding_create'
 require 'cloud_controller/user_audit_info'
@@ -26,7 +26,7 @@ module VCAP::CloudController
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app: app, name: details[:name])
             expect(binding).to be
-            expect(binding).to eq(ServiceBinding.first)
+            expect(binding).to eq(ServiceBinding.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.app).to eq(app)
             expect(binding.name).to eq(details[:name])
@@ -49,6 +49,20 @@ module VCAP::CloudController
               ServiceCredentialBindingCreate::UnprocessableCreate,
               'The app is already bound to the service instance'
             )
+          end
+
+          it 'only creates one binding when creating bindings in parallel' do
+            errors = []
+            threads = 3.times.map do |i|
+              Thread.new do
+                action.precursor(service_instance, app: app, name: "binding-#{i}")
+              rescue => e
+                errors << e
+              end
+            end
+            threads.each(&:join)
+            expect(errors).to have(2).items
+            expect(errors.map(&:message).uniq).to contain_exactly('The app is already bound to the service instance')
           end
 
           it 'raises an error when a the app and the instance are in different spaces' do
@@ -180,7 +194,7 @@ module VCAP::CloudController
               action.bind(precursor)
 
               precursor.reload
-              expect(precursor).to eq(ServiceBinding.first)
+              expect(precursor).to eq(ServiceBinding.where(guid: precursor.guid).first)
               expect(precursor.credentials).to eq(details[:credentials])
               expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
               expect(precursor.last_operation.type).to eq('create')
