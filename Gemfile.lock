@@ -57,7 +57,7 @@ GEM
       tzinfo (~> 1.1)
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
-    aliyun-sdk (0.7.3)
+    aliyun-sdk (0.8.0)
       nokogiri (~> 1.6)
       rest-client (~> 2.0)
     allowy (2.1.0)
@@ -146,7 +146,7 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.9.0)
     eventmachine (1.0.9.1)
-    excon (0.76.0)
+    excon (0.78.0)
     faraday (0.15.4)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
@@ -160,8 +160,8 @@ GEM
       rake
     fluent-logger (0.9.0)
       msgpack (>= 1.0.0, < 2)
-    fog-aliyun (0.3.17)
-      aliyun-sdk (~> 0.7.3)
+    fog-aliyun (0.3.19)
+      aliyun-sdk (~> 0.8.0)
       fog-core
       fog-json
       ipaddress (~> 0.8)
