@@ -71,6 +71,7 @@ module VCAP::CloudController
             type: 'create',
             state: details[:last_operation][:state],
             description: details[:last_operation][:description],
+            broker_provided_operation: binding.last_operation.broker_provided_operation
           }
         )
       end
