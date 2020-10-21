@@ -1398,6 +1398,14 @@ RSpec.describe 'v3 service credential bindings' do
             end
           end
         end
+
+        context 'orphan mitigation' do
+          it_behaves_like 'create binding orphan mitigation' do
+            let(:bind_url) { broker_bind_url }
+            let(:plan_id) { plan.unique_id }
+            let(:offering_id) { offering.unique_id }
+          end
+        end
       end
     end
   end
