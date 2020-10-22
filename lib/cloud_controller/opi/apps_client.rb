@@ -104,10 +104,35 @@ module OPI
       end
     end
 
+    class KpackLifecycle
+      CNB_LAUNCHER_PATH = '/cnb/lifecycle/launcher'.freeze
+
+      def initialize(process)
+        @process = process
+      end
+
+      def to_hash
+        command = if @process.started_command.presence
+                    ['/bin/sh', '-c', "#{CNB_LAUNCHER_PATH} #{@process.started_command}"]
+                  else
+                    []
+                  end
+        {
+          docker_lifecycle: {
+            command: command,
+            image: @process.desired_droplet.docker_receipt_image,
+          }
+        }
+      end
+    end
+
     def lifecycle_for(process)
-      if process.app.droplet.lifecycle_type == VCAP::CloudController::Lifecycles::DOCKER
+      case process.app.droplet.lifecycle_type
+      when VCAP::CloudController::Lifecycles::DOCKER
         DockerLifecycle.new(process)
-      elsif process.app.droplet.lifecycle_type == VCAP::CloudController::Lifecycles::BUILDPACK
+      when VCAP::CloudController::Lifecycles::KPACK
+        KpackLifecycle.new(process)
+      when VCAP::CloudController::Lifecycles::BUILDPACK
         BuildpackLifecycle.new(process)
       else
         raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")

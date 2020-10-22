@@ -239,7 +239,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet belongs to buildpack lifecycle' do
+      context 'when droplet has a buildpack lifecycle' do
         let(:lifecycle_type) { :buildpack }
         let(:buildpack_lifecycle) {
           {
@@ -362,7 +362,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet belongs to docker lifecycle' do
+      context 'when droplet has a docker lifecycle' do
         let(:lifecycle_type) { :docker }
         it 'sends a PUT request' do
           response = client.desire_app(lrp)
@@ -380,6 +380,65 @@ RSpec.describe(OPI::Client) do
             })
             actual_body == expected_body_with_lifecycle
           }
+        end
+      end
+
+      context 'when droplet has a kpack lifecycle' do
+        let(:lifecycle_type) { :kpack }
+
+        context 'when the process has a specified start command' do
+          it 'sends a PUT request with the specified command' do
+            response = client.desire_app(lrp)
+
+            expect(response.status_code).to equal(201)
+            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+              actual_body = MultiJson.load(request.body, symbolize_keys: true)
+              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
+                docker_lifecycle: {
+                  image: 'http://example.org/image1234',
+                  command: ['/bin/sh', '-c', '/cnb/lifecycle/launcher ls -la']
+                }
+              })
+              actual_body == expected_body_with_lifecycle
+            }
+          end
+        end
+
+        context 'when the process has a detected start command' do
+          let(:lrp) do
+            lrp = ::VCAP::CloudController::ProcessModel.make(:process,
+              app:                  app_model,
+              state:                'STARTED',
+              diego:                false,
+              guid:                 'process-guid',
+              type:                 'web',
+              health_check_timeout: 12,
+              instances:            21,
+              memory:               128,
+              disk_quota:           256,
+              file_descriptors:     32,
+              health_check_type:    'port',
+              enable_ssh:           false,
+            )
+            lrp.this.update(updated_at: Time.at(2))
+            lrp.reload
+          end
+
+          it 'sends a PUT request with the detected command' do
+            response = client.desire_app(lrp)
+
+            expect(response.status_code).to equal(201)
+            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+              actual_body = MultiJson.load(request.body, symbolize_keys: true)
+              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
+                docker_lifecycle: {
+                  image: 'http://example.org/image1234',
+                  command: ['/bin/sh', '-c', '/cnb/lifecycle/launcher $HOME/boot.sh']
+                }
+              })
+              actual_body == expected_body_with_lifecycle
+            }
+          end
         end
       end
     end

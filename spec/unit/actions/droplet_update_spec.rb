@@ -54,7 +54,28 @@ module VCAP::CloudController
           expect(Hash[updated_droplet.annotations.map { |a| [a.key, a.value] }]).
             to eq({ 'University' => 'Toronto', 'reason' => 'add some more annotations' })
         end
-        context 'trying to update a buildpack droplet image' do
+      end
+
+      context 'image updates' do
+        context 'when the droplet is not STAGED' do
+          let!(:droplet) { DropletModel.make(:kpack, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
+
+          let(:message) do
+            VCAP::CloudController::DropletUpdateMessage.new({
+              image: 'new-image-reference'
+            })
+          end
+
+          it 'returns an error saying that a droplet update cannot occur during staging' do
+            expect(message).to be_valid
+            expect { droplet_update.update(droplet, message)
+            }.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image can only be updated on staged droplets')
+          end
+        end
+
+        context 'when the droplet type is buildpack' do
+          let!(:droplet) { DropletModel.make(:buildpack) }
+
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
               image: 'some-image-reference',
@@ -69,42 +90,59 @@ module VCAP::CloudController
               },
             })
           end
+
           it 'returns an error saying that a buildpack droplet image cannot be updated' do
             expect(message).to be_valid
             expect { droplet_update.update(droplet, message)
             }.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for docker droplets')
           end
         end
-      end
-      context 'docker droplet update' do
-        let!(:docker_droplet) do
-          VCAP::CloudController::DropletModel.make(:kpack)
-        end
 
-        let(:message) do
-          VCAP::CloudController::DropletUpdateMessage.new({
-            image: 'new-image-reference'
-          })
-        end
-        context 'the image of a staged docker droplet is requested to be updated' do
-          before do
-            docker_droplet.update(docker_receipt_image: 'some-image-reference')
-          end
-          it 'updates the droplet record with new image reference' do
-            expect(message).to be_valid
-            updated_droplet = droplet_update.update(docker_droplet, message)
-            expect(updated_droplet.docker_receipt_image).to eq 'new-image-reference'
-          end
-        end
-        context 'the image of a staging docker droplet is requested to be updated' do
-          before do
-            docker_droplet.update(state: VCAP::CloudController::DropletModel::STAGING_STATE)
+        context 'when the droplet type is docker' do
+          let!(:docker_droplet) do
+            VCAP::CloudController::DropletModel.make(:docker)
           end
 
-          it 'returns an error saying that a droplet update cannot occur during staging' do
-            expect(message).to be_valid
-            expect { droplet_update.update(docker_droplet, message)
-            }.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image can only be updated on staged droplets')
+          let(:message) do
+            VCAP::CloudController::DropletUpdateMessage.new({
+              image: 'new-image-reference'
+            })
+          end
+
+          context 'the image of a staged docker droplet is requested to be updated' do
+            before do
+              docker_droplet.update(docker_receipt_image: 'some-image-reference')
+            end
+
+            it 'updates the droplet record with new image reference' do
+              expect(message).to be_valid
+              updated_droplet = droplet_update.update(docker_droplet, message)
+              expect(updated_droplet.docker_receipt_image).to eq 'new-image-reference'
+            end
+          end
+        end
+
+        context 'when the droplet type is kpack' do
+          let!(:docker_droplet) do
+            VCAP::CloudController::DropletModel.make(:kpack)
+          end
+
+          let(:message) do
+            VCAP::CloudController::DropletUpdateMessage.new({
+              image: 'new-image-reference'
+            })
+          end
+
+          context 'the image of a staged kpack droplet is requested to be updated' do
+            before do
+              docker_droplet.update(docker_receipt_image: 'some-image-reference')
+            end
+
+            it 'updates the droplet record with new image reference' do
+              expect(message).to be_valid
+              updated_droplet = droplet_update.update(docker_droplet, message)
+              expect(updated_droplet.docker_receipt_image).to eq 'new-image-reference'
+            end
           end
         end
       end
