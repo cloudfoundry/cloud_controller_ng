@@ -54,7 +54,7 @@ RSpec.describe 'Routes Request' do
         url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: [
+        destinations: match_array([
           {
             guid: route_in_org_dest_web.guid,
             app: {
@@ -77,7 +77,7 @@ RSpec.describe 'Routes Request' do
             weight: route_in_org_dest_worker.weight,
             port: route_in_org_dest_worker.presented_port
           }
-        ],
+        ]),
         relationships: {
           space: {
             data: { guid: route_in_org.space.guid }
@@ -2554,7 +2554,7 @@ RSpec.describe 'Routes Request' do
         url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: [
+        destinations: match_array([
           {
             guid: route_mapping1.guid,
             app: {
@@ -2566,7 +2566,7 @@ RSpec.describe 'Routes Request' do
             weight: route_mapping1.weight,
             port: route_mapping1.presented_port
           },
-        ],
+        ]),
         relationships: {
           space: {
             data: { guid: route1.space.guid }
@@ -2598,7 +2598,7 @@ RSpec.describe 'Routes Request' do
         url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: [
+        destinations: match_array([
           {
             guid: route_mapping2.guid,
             app: {
@@ -2610,7 +2610,7 @@ RSpec.describe 'Routes Request' do
             weight: route_mapping2.weight,
             port: route_mapping2.presented_port
           },
-        ],
+        ]),
         relationships: {
           space: {
             data: { guid: route2.space.guid }
