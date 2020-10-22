@@ -70,7 +70,7 @@ class AppManifestsController < ApplicationController
   def validate_content_type!
     if !request_content_type_is_yaml?
       logger.error("Context-type isn't yaml: #{request.content_type}")
-      invalid_request!('Content-Type must be yaml')
+      bad_request!('Content-Type must be yaml')
     end
   end
 
@@ -81,7 +81,7 @@ class AppManifestsController < ApplicationController
   def parsed_app_manifest_params
     parsed_application = parsed_yaml['applications'] && parsed_yaml['applications'].first
 
-    raise invalid_request!('Invalid app manifest') unless parsed_application.present?
+    raise bad_request!('Invalid app manifest') unless parsed_application.present?
 
     parsed_application
   end

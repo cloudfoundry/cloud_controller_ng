@@ -83,7 +83,7 @@ class SpaceManifestsController < ApplicationController
   def validate_content_type!
     if !request_content_type_is_yaml?
       logger.error("Content-type isn't yaml: #{request.content_type}")
-      invalid_request!('Content-Type must be yaml')
+      bad_request!('Content-Type must be yaml')
     end
   end
 

@@ -148,7 +148,7 @@ RSpec.describe AppManifestsController, type: :controller do
           post :apply_manifest, params: { guid: app_model.guid }, body: request_body.to_yaml
           expect(response.status).to eq(400)
           # Verify we're getting the InvalidError we're expecting
-          expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('InvalidRequest', 'Content-Type must be yaml').exactly :once
+          expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('BadRequest', 'Content-Type must be yaml').exactly :once
         end
       end
     end

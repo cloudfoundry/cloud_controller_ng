@@ -669,7 +669,7 @@ RSpec.describe 'Space Manifests' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response).to have_status_code(400)
-          expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+          expect(parsed_response['errors'].first['detail']).to eq('Bad request: Content-Type must be yaml')
         end
       end
 
@@ -692,7 +692,7 @@ RSpec.describe 'Space Manifests' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response).to have_status_code(400)
-          expect(parsed_response['errors'].first['detail']).to eq('The request is invalid')
+          expect(parsed_response['errors'].first['detail']).to eq('Bad request: Content-Type must be yaml')
         end
       end
 
