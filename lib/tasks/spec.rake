@@ -32,7 +32,7 @@ namespace :spec do
   end
 
   def run_specs_parallel(path)
-    sh "bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ -- #{path}"
+    sh "bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ --single spec/acceptance/ -- #{path}"
   end
 
   def run_failed_specs
