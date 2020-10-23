@@ -544,7 +544,7 @@ module VCAP::CloudController
               endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
               route_services_url: 'http://route.example.com'
           ))
-          } .not_to raise_error
+          }.not_to raise_error
         end
       end
     end

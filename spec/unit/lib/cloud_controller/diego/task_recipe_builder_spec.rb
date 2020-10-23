@@ -269,7 +269,7 @@ module VCAP::CloudController
 
           it 'sets the network information' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
-            expect(result.network). to eq(expected_network)
+            expect(result.network).to eq(expected_network)
           end
 
           it 'sets the egress rules' do
@@ -472,7 +472,7 @@ module VCAP::CloudController
             expect(result.legacy_download_user).to eq('vcap')
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.completion_callback_url).to eq(expected_callback_url)
-            expect(result.network). to eq(expected_network)
+            expect(result.network).to eq(expected_network)
             expect(result.privileged).to be(false)
             expect(result.volume_mounts).to eq([])
             expect(result.egress_rules).to eq([

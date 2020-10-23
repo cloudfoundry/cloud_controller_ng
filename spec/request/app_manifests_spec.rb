@@ -588,7 +588,7 @@ RSpec.describe 'App Manifests' do
     let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key: 'style', value: 'mashed') }
 
     let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app_model) }
-    let!(:sidecar2) { VCAP::CloudController:: SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app_model) }
+    let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app_model) }
 
     let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app_model.guid) }
     let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app_model.guid) }

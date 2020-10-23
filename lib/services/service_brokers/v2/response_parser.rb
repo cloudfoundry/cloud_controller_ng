@@ -659,7 +659,7 @@ module VCAP::Services
             parameters = parsed_response['parameters']
 
             if parameters && !parameters.is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed. new(uri, method, response,
+              raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
                 'The service broker response contained a parameters field that was not a JSON object.')
             end
 

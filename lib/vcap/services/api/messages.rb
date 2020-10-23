@@ -18,12 +18,12 @@ module VCAP
       #
       class ServiceOfferingRequest < JsonMessage
         required :label,        SERVICE_LABEL_REGEX
-        required :url,          URI.regexp(%w(http https))
+        required :url,          URI::DEFAULT_PARSER.make_regexp(%w(http https))
         required :supported_versions, [String]
         required :version_aliases, Hash
 
         optional :description,  String
-        optional :info_url,     URI.regexp(%w(http https))
+        optional :info_url,     URI::DEFAULT_PARSER.make_regexp(%w(http https))
         optional :tags,         [String]
         optional :plan_details do
           [
@@ -197,7 +197,7 @@ module VCAP
       end
 
       class SerializedURL < JsonMessage
-        required :url, URI.regexp(%w(http https))
+        required :url, URI::DEFAULT_PARSER.make_regexp(%w(http https))
       end
 
       class SerializedData < JsonMessage

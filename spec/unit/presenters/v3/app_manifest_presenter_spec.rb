@@ -93,7 +93,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app.guid, key: 'style', value: 'mashed') }
 
         let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app) }
-        let!(:sidecar2) { VCAP::CloudController:: SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app) }
+        let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app) }
 
         let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app.guid) }
         let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app.guid) }

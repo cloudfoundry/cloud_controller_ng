@@ -163,7 +163,7 @@ module VCAP::CloudController
         it 'is not valid if guids is not an array' do
           message = PackagesListMessage.from_params guids: 'tricked you, not an array'
           expect(message).to be_invalid
-          expect(message.errors[:guids]). to include('must be an array')
+          expect(message.errors[:guids]).to include('must be an array')
         end
 
         it 'allows guids to be nil' do
