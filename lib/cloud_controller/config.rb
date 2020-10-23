@@ -153,18 +153,18 @@ module VCAP::CloudController
 
     def kubernetes_ca_cert
       @kubernetes_ca_cert ||= begin
-                                ensure_k8s_api_configured!
-                                file = get(:kubernetes, :ca_file)
-                                File.read(file)
-                              end
+        ensure_k8s_api_configured!
+        file = get(:kubernetes, :ca_file)
+        File.read(file)
+      end
     end
 
     def kubernetes_service_account_token
       @kubernetes_service_account_token ||= begin
-                                              ensure_k8s_api_configured!
-                                              file = get(:kubernetes, :service_account, :token_file)
-                                              File.read(file)
-                                            end
+        ensure_k8s_api_configured!
+        file = get(:kubernetes, :service_account, :token_file)
+        File.read(file)
+      end
     end
 
     def package_image_registry_configured?

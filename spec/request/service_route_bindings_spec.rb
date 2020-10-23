@@ -122,7 +122,7 @@ RSpec.describe 'v3 service route bindings' do
         instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
         other_instance = VCAP::CloudController::UserProvidedServiceInstance.make(:routing)
 
-        1.times { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
+        VCAP::CloudController::RouteBinding.make(service_instance: instance)
         2.times { VCAP::CloudController::RouteBinding.make(service_instance: other_instance) }
 
         get '/v3/service_route_bindings?include=service_instance', nil, admin_headers
@@ -137,10 +137,8 @@ RSpec.describe 'v3 service route bindings' do
         route = VCAP::CloudController::Route.make
         other_route = VCAP::CloudController::Route.make
 
-        1.times do
-          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
-          VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
-        end
+        si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
+        VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
 
         2.times do
           si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: other_route.space)

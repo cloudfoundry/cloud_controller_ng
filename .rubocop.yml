@@ -435,3 +435,16 @@ Style/RedundantSelfAssignment:
 
 Style/SoleNestedConditional:
   Enabled: false
+
+Layout/BeginEndAlignment:
+  Enabled: true
+
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+Lint/IdentityComparison:
+  Enabled: true
+
+Lint/UselessTimes:
+  Enabled: true
+

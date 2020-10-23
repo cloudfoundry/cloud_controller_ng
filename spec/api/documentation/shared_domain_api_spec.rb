@@ -5,7 +5,7 @@ RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::SharedDomain.first.guid }
   let!(:domains) { 3.times { VCAP::CloudController::SharedDomain.make } }
-  let!(:tcp_domains) { 1.times { VCAP::CloudController::SharedDomain.make router_group_guid: 'my-random-guid' } }
+  let!(:tcp_domains) { VCAP::CloudController::SharedDomain.make router_group_guid: 'my-random-guid' }
 
   authenticated_request
 
