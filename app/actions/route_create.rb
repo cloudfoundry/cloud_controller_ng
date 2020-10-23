@@ -113,6 +113,7 @@ module VCAP::CloudController
       end
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def validation_error_host!(error, host, domain)
       if error.errors.on(:host)&.include?(:domain_conflict)
         error!("Route conflicts with domain '#{host}.#{domain.name}'.")
@@ -154,7 +155,9 @@ module VCAP::CloudController
         error!('Paths are not supported for TCP routes.')
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def validation_error_path!(error, host, path, domain)
       if error.errors.on(:path)&.include?(:path_not_supported_for_internal_domain)
         error!('Paths are not supported for internal domains.')
@@ -187,6 +190,7 @@ module VCAP::CloudController
         end
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def validation_error_port!(error, host, port, domain)
       if error.errors.on(:port)&.include?(:port_required)

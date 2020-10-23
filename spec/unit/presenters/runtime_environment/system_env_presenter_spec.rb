@@ -62,9 +62,9 @@ module VCAP::CloudController
             end
 
             it 'includes only the public volume information' do
-              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq(['container_dir' => '/data/images',
+              expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq([{ 'container_dir' => '/data/images',
                                                                                                                               'mode' => 'r',
-                                                                                                                              'device_type' => 'shared'])
+                                                                                                                              'device_type' => 'shared' }])
             end
           end
 

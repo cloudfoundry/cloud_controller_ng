@@ -83,7 +83,7 @@ module TestConfig
       Fog.mock! unless
         context == :route_syncer ||
         context == :deployment_updater ||
-        config.get(:packages).dig(:image_registry) ||
+        config.get(:packages)[:image_registry] ||
         is_using_local_blobstore?(config)
 
       # reset dependency locator

@@ -560,7 +560,7 @@ RSpec.describe 'v3 service credential bindings' do
       let(:uaa_url) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
       let(:credentials) { { 'username' => 'cinnamon', 'password' => 'roll' } }
       let(:credhub_response_status) { 200 }
-      let(:credhub_response_body) { { data: [value: credentials] }.to_json }
+      let(:credhub_response_body) { { data: [{ value: credentials }] }.to_json }
       let!(:credhub_server_stub) {
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{key_binding.credhub_reference}&current=true").
           with(headers: {

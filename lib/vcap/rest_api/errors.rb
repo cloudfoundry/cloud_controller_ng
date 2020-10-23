@@ -5,8 +5,7 @@ module VCAP::RestAPI
     HTTP = VCAP::RestAPI::HTTP
 
     class Error < StandardError
-      attr_reader :response_code
-      attr_reader :error_code
+      attr_reader :response_code, :error_code
 
       # Initialize a rest api error (not for direct use by callers)
       #

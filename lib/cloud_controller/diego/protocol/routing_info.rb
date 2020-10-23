@@ -8,6 +8,7 @@ module VCAP::CloudController
           @process = process
         end
 
+        # rubocop:todo Metrics/CyclomaticComplexity
         def routing_info
           route_app_port_map = route_id_app_ports_map
 
@@ -55,6 +56,7 @@ module VCAP::CloudController
         rescue RoutingApi::UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         end
+        # rubocop:enable Metrics/CyclomaticComplexity
 
         private
 

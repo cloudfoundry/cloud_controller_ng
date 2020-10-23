@@ -24,7 +24,7 @@ module VCAP::CloudController
           allow(environment).to receive(:as_json).and_return(environment_variables)
         end
 
-        let(:environment_variables) { ['name' => 'KEY', 'value' => 'running_value'] }
+        let(:environment_variables) { [{ 'name' => 'KEY', 'value' => 'running_value' }] }
         let(:port_environment_variables) do
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),

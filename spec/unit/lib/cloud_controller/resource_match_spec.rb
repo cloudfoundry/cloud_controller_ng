@@ -26,8 +26,8 @@ module VCAP::CloudController
 
       it 'does not break when the sha1 is not long enough to generate a key' do
         expect do
-          ResourceMatch.new(['sha1' => 0, 'size' => 123]).match_resources
-          ResourceMatch.new(['sha1' => 'abc', 'size' => 234]).match_resources
+          ResourceMatch.new([{ 'sha1' => 0, 'size' => 123 }]).match_resources
+          ResourceMatch.new([{ 'sha1' => 'abc', 'size' => 234 }]).match_resources
         end.not_to raise_error
       end
 

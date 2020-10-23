@@ -52,7 +52,7 @@ module VCAP::CloudController
               TestZip.create(zip_name, 1, 1024) do |zipfile|
                 if valid_zip_manifest_stack
                   zipfile.get_output_stream('manifest.yml') do |f|
-                    alphachars = [*'A'..'Z']
+                    alphachars = Array('A'..'Z')
                     megabyte_string = (0...(1024 * 1024)).map { alphachars.sample }.join
                     f.write("---\nstack: cflinuxfs3\nabsurdly_long_value: " + megabyte_string)
                   end

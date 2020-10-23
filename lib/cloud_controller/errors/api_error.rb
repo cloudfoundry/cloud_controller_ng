@@ -3,9 +3,7 @@ require 'cloud_controller/errors/details'
 module CloudController
   module Errors
     class ApiError < StandardError
-      attr_accessor :args
-      attr_accessor :details
-      attr_accessor :error_prefix
+      attr_accessor :args, :details, :error_prefix
 
       def self.new_from_details(name, *args)
         details = Details.new(name)

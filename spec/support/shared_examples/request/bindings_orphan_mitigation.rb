@@ -111,7 +111,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
     end
 
     context 'broker returns a 5xx code' do
-      [*500..511].each do |code|
+      Array(500..511).each do |code|
         context "response is #{code}" do
           let(:broker_bind_status_code) { code }
 

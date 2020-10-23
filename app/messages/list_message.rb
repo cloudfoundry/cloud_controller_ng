@@ -18,7 +18,7 @@ module VCAP::CloudController
     # All ListMessage classes should be instantiated via the from_params method
     private_class_method :new
 
-    attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params)
+    attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params, :requirements)
     attr_reader :pagination_options
 
     def initialize(params={})
@@ -85,8 +85,6 @@ module VCAP::CloudController
 
       message
     end
-
-    attr_accessor :requirements
 
     def self.parse_label_selector(label_selector)
       return [] unless label_selector

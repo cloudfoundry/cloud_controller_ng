@@ -2,9 +2,8 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class LifecycleData
-        attr_accessor :app_bits_download_uri, :build_artifacts_cache_download_uri
-        attr_accessor :build_artifacts_cache_upload_uri, :buildpacks, :app_bits_checksum
-        attr_accessor :droplet_upload_uri, :stack, :buildpack_cache_checksum
+        attr_accessor :app_bits_download_uri, :build_artifacts_cache_download_uri, :build_artifacts_cache_upload_uri,
+          :buildpacks, :app_bits_checksum, :droplet_upload_uri, :stack, :buildpack_cache_checksum
 
         def message
           message = {

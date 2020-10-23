@@ -1,11 +1,5 @@
 class FakeServiceBrokerV2Client
-  attr_accessor :credentials
-  attr_accessor :syslog_drain_url
-  attr_accessor :volume_mounts
-  attr_accessor :service_name
-  attr_accessor :plan_name
-  attr_accessor :plan_schemas
-  attr_accessor :parameters
+  attr_accessor :credentials, :syslog_drain_url, :volume_mounts, :service_name, :plan_name, :plan_schemas, :parameters
 
   def initialize(_attrs={})
     @credentials = { 'username' => 'cool_user' }

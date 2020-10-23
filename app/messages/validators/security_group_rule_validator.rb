@@ -83,6 +83,7 @@ class RulesValidator < ActiveModel::Validator
     field.is_a?(Integer) && field >= -1 && field <= 255
   end
 
+  # rubocop:todo Metrics/CyclomaticComplexity
   def valid_ports(ports)
     return false unless ports&.is_a?(String)
     return false if /[^\d\s\-,]/.match?(ports)
@@ -108,6 +109,7 @@ class RulesValidator < ActiveModel::Validator
 
     false
   end
+  # rubocop:enable Metrics/CyclomaticComplexity
 
   def port_in_range(port)
     port > 0 && port < 65536

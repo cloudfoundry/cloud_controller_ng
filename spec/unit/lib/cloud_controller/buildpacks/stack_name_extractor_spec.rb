@@ -68,7 +68,7 @@ module VCAP::CloudController::Buildpacks
 
       context 'buildpack zip contains manifest but it is too large (>1mb)' do
         before do
-          alphachars = [*'A'..'Z']
+          alphachars = Array('A'..'Z')
           megabyte_string = (0...(1024 * 1024)).map { alphachars.sample }.join
           zip_with_manifest_content("---\nstack: cflinuxfs3\nabsurdly_long_value: " + megabyte_string)
         end

@@ -218,7 +218,7 @@ RSpec.describe 'Environment group variables' do
         let(:big_params) do
           {
             var: {
-              too_big: (0...(1024 * 64 + 1)).map { [*'A'..'Z'].sample }.join
+              too_big: (0...(1024 * 64 + 1)).map { Array('A'..'Z').sample }.join
             }
           }
         end

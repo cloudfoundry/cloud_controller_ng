@@ -13,14 +13,14 @@ module VCAP::CloudController
     end
 
     def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      roles = [roles] unless roles.is_a?(Array)
+      roles = Array(roles)
 
       member_guids = member_guids(roles: roles)
       member_guids.include?(space_guid) || member_guids.include?(org_guid)
     end
 
     def org_guids_for_roles(roles)
-      roles = [roles] unless roles.is_a?(Array)
+      roles = Array(roles)
 
       roles.map do |role|
         case role
@@ -36,8 +36,9 @@ module VCAP::CloudController
       end.flatten.compact.uniq
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def space_guids_for_roles(roles)
-      roles = [roles] unless roles.is_a?(Array)
+      roles = Array(roles)
 
       roles.map do |role|
         case role
@@ -66,9 +67,11 @@ module VCAP::CloudController
         end
       end.flatten.compact.uniq
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def member_guids(roles: [])
       roles.map do |role|
         case role
@@ -99,5 +102,6 @@ module VCAP::CloudController
         end
       end.flatten.compact
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
   end
 end

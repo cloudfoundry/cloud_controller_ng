@@ -29,7 +29,7 @@ if ENV['CLOUD_CONTROLLER_NG_SECRETS']
 end
 
 @config = VCAP::CloudController::Config.load_from_file(@config_file, config_kwargs)
-logger = Logger.new(STDOUT)
+logger = Logger.new($stdout)
 
 db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
 if defined? DbConfig

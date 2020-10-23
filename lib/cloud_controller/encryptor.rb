@@ -59,8 +59,7 @@ module VCAP::CloudController
         @encrypted_classes ||= []
       end
 
-      attr_writer :db_encryption_key
-      attr_writer :database_encryption_keys
+      attr_writer :db_encryption_key, :database_encryption_keys
       attr_accessor :current_encryption_key_label
 
       private
@@ -84,7 +83,7 @@ module VCAP::CloudController
         if deprecated_short_salt?(salt)
           cipher.pkcs5_keyivgen(key, salt)
         else
-          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest::SHA256.new)
+          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest.new('SHA256'))
           cipher.iv = salt
         end
         cipher.update(input) << cipher.final

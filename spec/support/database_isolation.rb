@@ -33,10 +33,8 @@ module DatabaseIsolation
   end
 
   class RollbackTransaction
-    def cleanly
-      Sequel::Model.db.transaction(rollback: :always, auto_savepoint: true) do
-        yield
-      end
+    def cleanly(&block)
+      Sequel::Model.db.transaction(rollback: :always, auto_savepoint: true, &block)
     end
   end
 end

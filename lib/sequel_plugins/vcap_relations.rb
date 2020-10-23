@@ -130,6 +130,7 @@ module Sequel::Plugins::VcapRelations
       "#{name}_guid"
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def define_to_many_methods(name, singular_name, ids_attr, guids_attr)
       diff_collections = proc do |a, b|
         cur_set = Set.new(a)
@@ -196,5 +197,6 @@ module Sequel::Plugins::VcapRelations
         end
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
   end
 end

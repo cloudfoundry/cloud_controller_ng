@@ -18,11 +18,7 @@ module OPI
     end
 
     class ActualLRP
-      attr_reader :actual_lrp_key
-      attr_reader :state
-      attr_reader :since
-      attr_reader :placement_error
-      attr_reader :actual_lrp_net_info
+      attr_reader :actual_lrp_key, :state, :since, :placement_error, :actual_lrp_net_info
 
       def initialize(instance, process_guid)
         @actual_lrp_key = ActualLRPKey.new(instance['index'], process_guid)

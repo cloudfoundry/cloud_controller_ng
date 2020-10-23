@@ -331,9 +331,7 @@ module VCAP::CloudController::RestController
     class << self
       include VCAP::CloudController
 
-      attr_accessor :attributes
-      attr_accessor :to_many_relationships
-      attr_accessor :to_one_relationships
+      attr_accessor :attributes, :to_many_relationships, :to_one_relationships
 
       # path_guid
       #

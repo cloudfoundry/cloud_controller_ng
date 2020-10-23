@@ -48,7 +48,7 @@ module VCAP::CloudController
         end
 
         def factory_for(adapter)
-          FACTORIES[adapter] or raise UnknownSchemeError.new(adapter) # rubocop:disable Style/AndOr
+          FACTORIES[adapter] or raise UnknownSchemeError.new(adapter)
         end
       end
     end

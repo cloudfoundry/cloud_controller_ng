@@ -1,5 +1,6 @@
 # Copyright (c) 2009-2012 VMware, Inc.
 # rubocop:disable Lint/ShadowingOuterLocalVariable
+# rubocop:disable Style/ArrayCoercion
 
 def rename_foreign_key_internal(db, alter_table, table, current_name, new_name, &block)
   processed = false
@@ -148,5 +149,6 @@ Sequel.migration do
     raise Sequel::Error.new("This migration cannot be reversed since we don't know if 'timestamp' and the fks were renamed originally.")
   end
 end
-# rubocop:enable Layout/LineLength
+
 # rubocop:enable Lint/ShadowingOuterLocalVariable
+# rubocop:enable Style/ArrayCoercion

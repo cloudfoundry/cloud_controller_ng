@@ -135,7 +135,7 @@ module VCAP::CloudController
         last_operation_result = client.fetch_service_instance_last_operation(service_instance)
         self.polling_interval_seconds = last_operation_result[:retry_after].to_i if last_operation_result[:retry_after]
 
-        operation_failed!(last_operation_result.dig(:last_operation)[:description]) if last_operation_result[:http_status_code] == HTTP::Status::BAD_REQUEST
+        operation_failed!(last_operation_result[:last_operation][:description]) if last_operation_result[:http_status_code] == HTTP::Status::BAD_REQUEST
 
         lo = last_operation_result[:last_operation]
         if lo[:state] == 'failed'

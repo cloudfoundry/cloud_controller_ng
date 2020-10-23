@@ -100,7 +100,7 @@ module VCAP::CloudController
       end
 
       def docker_data_changed(process, request_attrs)
-        requested_docker_image = request_attrs.dig('docker_image') || ''
+        requested_docker_image = request_attrs['docker_image'] || ''
         requested_docker_username = request_attrs.dig('docker_credentials', 'username')
         requested_docker_password = request_attrs.dig('docker_credentials', 'password')
 

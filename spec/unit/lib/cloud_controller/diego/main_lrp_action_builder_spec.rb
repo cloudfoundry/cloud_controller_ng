@@ -21,8 +21,8 @@ module VCAP::CloudController
         end
 
         let(:ssh_key) { SSHKey.new }
-        let(:environment_variables) { ['name' => 'KEY', 'value' => 'running_value'] }
-        let(:sidecar_environment_variables) { ['name' => 'KEY', 'value' => 'running_sidecar_value'] }
+        let(:environment_variables) { [{ 'name' => 'KEY', 'value' => 'running_value' }] }
+        let(:sidecar_environment_variables) { [{ 'name' => 'KEY', 'value' => 'running_sidecar_value' }] }
         let(:port_environment_variables) do
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),

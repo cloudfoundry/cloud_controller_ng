@@ -3,6 +3,7 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def create(message)
       org_quota = nil
 
@@ -36,6 +37,7 @@ module VCAP::CloudController
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 

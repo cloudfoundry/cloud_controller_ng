@@ -2,8 +2,7 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class BlobstoreUpload < VCAP::CloudController::Jobs::CCJob
-        attr_reader :local_path, :blobstore_key, :blobstore_name
-        attr_reader :max_attempts
+        attr_reader :local_path, :blobstore_key, :blobstore_name, :max_attempts
 
         def initialize(local_path, blobstore_key, blobstore_name)
           @local_path = local_path

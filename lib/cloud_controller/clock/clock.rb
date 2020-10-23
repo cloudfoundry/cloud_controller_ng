@@ -54,8 +54,8 @@ module VCAP::CloudController
 
     private
 
-    def schedule_job(job_opts)
-      DistributedScheduler.new.schedule_periodic_job(job_opts) { yield }
+    def schedule_job(job_opts, &block)
+      DistributedScheduler.new.schedule_periodic_job(job_opts, &block)
     end
   end
 end

@@ -12,6 +12,7 @@ module VCAP::CloudController
       @fields = fields[:'service_plan.service_offering'].to_set.intersection(self.class.allowed)
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def decorate(hash, service_instances)
       managed_service_instances = service_instances.select(&:managed_instance?)
       return hash if managed_service_instances.empty?
@@ -42,6 +43,7 @@ module VCAP::CloudController
 
       hash
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 

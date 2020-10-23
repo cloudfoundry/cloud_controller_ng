@@ -34,8 +34,7 @@ module CloudController
     end
 
     class Details
-      attr_accessor :name
-      attr_accessor :details_hash
+      attr_accessor :name, :details_hash
 
       def hard_coded_details
         V2::HardCodedDetails.details

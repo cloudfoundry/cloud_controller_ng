@@ -152,7 +152,7 @@ module Kpack
           store: default_builder.spec.store,
           tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-builder",
           order: [
-            group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } }
+            { group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } } }
           ]
         }
       })

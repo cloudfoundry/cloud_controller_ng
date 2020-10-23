@@ -7,7 +7,7 @@ require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
 require 'credhub/config_helpers'
 require 'models/helpers/health_check_types'
-require 'cloud_controller/diego/main_lrp_action_builder.rb'
+require 'cloud_controller/diego/main_lrp_action_builder'
 
 module VCAP::CloudController
   module Diego

@@ -812,10 +812,10 @@ module VCAP::CloudController
 
           context 'valid request with services that have parameters' do
             let(:message) { AppManifestMessage.create_from_yml({ services: [
-              'name' => 'si-name',
+              { 'name' => 'si-name',
               'parameters' => {
                 'gud' => 'service'
-              }
+              } }
             ] })
             }
             let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }

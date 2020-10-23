@@ -3,6 +3,7 @@ require 'json-diff'
 
 module VCAP::CloudController
   class SpaceDiffManifest
+    # rubocop:todo Metrics/CyclomaticComplexity
     def self.filter_manifest_app_hash(manifest_app_hash)
       if manifest_app_hash.key? 'sidecars'
         manifest_app_hash['sidecars'] = manifest_app_hash['sidecars'].map do |hash|
@@ -56,7 +57,9 @@ module VCAP::CloudController
 
       manifest_app_hash
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def self.generate_diff(app_manifests, space)
       json_diff = []
       recognized_top_level_keys = NamedAppManifestMessage.allowed_keys.map(&:to_s)
@@ -105,6 +108,7 @@ module VCAP::CloudController
           end
         end
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       json_diff
     end

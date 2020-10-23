@@ -37,13 +37,11 @@ module VCAP::CloudController
 
     private
 
-    def with_transaction
+    def with_transaction(&block)
       if @process.db.in_transaction?
         yield
       else
-        @process.db.transaction do
-          yield
-        end
+        @process.db.transaction(&block)
       end
     end
 

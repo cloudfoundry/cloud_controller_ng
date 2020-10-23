@@ -89,7 +89,7 @@ module CloudController::Presenters::V2
 
         hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 2), 0, [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
-          'metadata' => {
+          { 'metadata' => {
             'guid' => test_model_many_to_many.guid,
             'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
             'created_at' => test_model_many_to_many.created_at,
@@ -107,7 +107,7 @@ module CloudController::Presenters::V2
                 'entity' => {}
               }
             ]
-          }
+          } }
         ])
       end
 
@@ -180,14 +180,14 @@ module CloudController::Presenters::V2
 
         hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 2, exclude_relations: 'test_model_second_levels'), 0, [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
-          'metadata' => {
+          { 'metadata' => {
             'guid' => test_model_many_to_many.guid,
             'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
             'created_at' => test_model_many_to_many.created_at,
           },
           'entity' => {
             'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
-          }
+          } }
         ])
       end
 
@@ -204,14 +204,14 @@ module CloudController::Presenters::V2
           0,
           [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
-          'metadata' => {
+          { 'metadata' => {
             'guid' => test_model_many_to_many.guid,
             'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
             'created_at' => test_model_many_to_many.created_at,
           },
           'entity' => {
             'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
-          }
+          } }
         ])
       end
     end

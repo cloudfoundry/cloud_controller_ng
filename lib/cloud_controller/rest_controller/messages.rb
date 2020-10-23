@@ -14,6 +14,7 @@ module VCAP::CloudController::RestController
 
       private
 
+      # rubocop:todo Metrics/CyclomaticComplexity
       def define_message(type)
         attrs   = Array(attributes)
         to_one  = @to_one_relationships ||= []
@@ -52,6 +53,7 @@ module VCAP::CloudController::RestController
         # grep-friendly location where CreateMessage and UpdateMessage are declared
         self.const_set "#{type.to_s.camelize}Message", klass
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
     end
   end
 end

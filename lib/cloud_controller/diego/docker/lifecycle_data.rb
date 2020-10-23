@@ -2,11 +2,7 @@ module VCAP::CloudController
   module Diego
     module Docker
       class LifecycleData
-        attr_accessor :docker_image
-        attr_accessor :docker_login_server
-        attr_accessor :docker_user
-        attr_accessor :docker_password
-        attr_accessor :docker_email
+        attr_accessor :docker_image, :docker_login_server, :docker_user, :docker_password, :docker_email
 
         def message
           message = {

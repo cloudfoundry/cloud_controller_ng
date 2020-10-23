@@ -4,8 +4,8 @@ module VCAP::Services::ServiceBrokers::V2
 
     ALLOWED_MAINTENANCE_INFO_KEYS = ['version', 'description'].freeze
 
-    attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info
-    attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
+    attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info,
+      :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service

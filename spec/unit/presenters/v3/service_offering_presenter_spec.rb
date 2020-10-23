@@ -123,7 +123,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       let(:available) { true }
 
       it 'displays `true``' do
-        expect(result.dig(:available)).to be(true)
+        expect(result[:available]).to be(true)
       end
     end
 

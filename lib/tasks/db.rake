@@ -123,7 +123,7 @@ namespace :db do
   task :ensure_migrations_are_current do
     RakeConfig.context = :migrate
 
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
     VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
@@ -238,13 +238,13 @@ namespace :db do
   end
 
   def migrate
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
     DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
   def rollback(number_to_rollback)
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end

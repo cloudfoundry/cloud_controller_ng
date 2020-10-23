@@ -1,8 +1,8 @@
 module VCAP::CloudController
   module Diego
     class StagingRequest
-      attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment, :isolation_segment
-      attr_accessor :egress_rules, :timeout, :log_guid, :lifecycle, :lifecycle_data, :completion_callback
+      attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment, :isolation_segment, :egress_rules,
+        :timeout, :log_guid, :lifecycle, :lifecycle_data, :completion_callback
 
       def message
         message = {
