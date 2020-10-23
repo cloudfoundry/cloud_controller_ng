@@ -192,6 +192,7 @@ RSpec.shared_examples 'polling service binding creation' do
         binding.reload
         expect(binding.last_operation.state).to eq('in progress')
         expect(binding.last_operation.description).to eq(description)
+        expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
       end
     end
 
