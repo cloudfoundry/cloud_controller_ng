@@ -24,7 +24,7 @@ module OPI
     def fetch_task(guid)
       resp = client.get("/tasks/#{guid}")
 
-      return nil if resp.status_code == 404
+      return if resp.status_code == 404
 
       if resp.status_code != 200
         raise CloudController::Errors::ApiError.new_from_details('TaskError', "response status code: #{resp.status_code}")
