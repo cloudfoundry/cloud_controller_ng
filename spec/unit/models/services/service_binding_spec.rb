@@ -531,7 +531,7 @@ module VCAP::CloudController
           expect(binding.credentials).to eq(credentials.with_indifferent_access)
           expect(binding.syslog_drain_url).to eq('http://foo.example.com/bar')
           expect(binding.volume_mounts).to eq(volume_mounts)
-          expect(ServiceBinding.count).to eq(1)
+          expect(ServiceBinding.where(guid: binding.guid).count).to eq(1)
         end
 
         it 'only saves permitted attributes' do
