@@ -470,7 +470,7 @@ module VCAP::CloudController
         expect(binding.last_operation.state).to eq 'in progress'
         expect(binding.last_operation.description).to eq '10%'
         expect(binding.last_operation.type).to eq 'create'
-        expect(ServiceBinding.count).to eq(1)
+        expect(ServiceBinding.where(guid: binding.guid).count).to eq(1)
       end
 
       context 'when saving the binding operation fails' do
@@ -480,7 +480,7 @@ module VCAP::CloudController
 
         it 'should rollback the binding' do
           expect { binding.save_with_new_operation({ state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
-          expect(ServiceBinding.count).to eq(0)
+          expect(ServiceBinding.where(guid: binding.guid).count).to eq(0)
         end
       end
 
@@ -492,8 +492,8 @@ module VCAP::CloudController
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.type).to eq 'delete'
           expect(binding.last_operation.description).to eq nil
-          expect(ServiceBinding.count).to eq(1)
-          expect(ServiceBindingOperation.count).to eq(1)
+          expect(ServiceBinding.where(guid: binding.guid).count).to eq(1)
+          expect(ServiceBindingOperation.where(service_binding_id: binding.id).count).to eq(1)
         end
       end
 
