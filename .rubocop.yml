@@ -193,9 +193,6 @@ Style/Alias:
 Style/BlockDelimiters:
   Enabled: false
 
-Style/BracesAroundHashParameters:
-  Enabled: false
-
 Style/ClassAndModuleChildren:
   Enabled: false
 
@@ -300,3 +297,12 @@ Style/TrivialAccessors:
 
 Style/WordArray:
   Enabled: false
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true

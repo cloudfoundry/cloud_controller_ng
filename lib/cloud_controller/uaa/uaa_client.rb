@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     def usernames_for_ids(user_ids)
-      fetch_users(user_ids).map { |id, user| [id, user['username']] }.to_h
+      fetch_users(user_ids).transform_values { |user| user['username'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
       {}

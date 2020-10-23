@@ -57,7 +57,7 @@ module VCAP::CloudController
         end
 
         def processes
-          revision.commands_by_process_type.map { |k, v| [k, { 'command' => v }] }.to_h
+          revision.commands_by_process_type.transform_values { |v| { 'command' => v } }
         end
 
         def sidecars

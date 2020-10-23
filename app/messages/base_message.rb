@@ -68,7 +68,7 @@ module VCAP::CloudController
 
       fields.each do |key|
         if opts[key].is_a?(Hash)
-          opts[key].keys.each do |attribute|
+          opts[key].each_key do |attribute|
             to_array! opts[key], attribute
           end
         end
