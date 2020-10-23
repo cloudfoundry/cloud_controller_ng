@@ -300,7 +300,7 @@ module VCAP::CloudController
     end
 
     def self.url_for_guid(guid, object=nil)
-      if object.class == UserProvidedServiceInstance
+      if object.instance_of?(UserProvidedServiceInstance)
         user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
         "#{user_provided_path}/#{guid}"
       else

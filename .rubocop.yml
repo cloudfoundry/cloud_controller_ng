@@ -448,3 +448,11 @@ Lint/IdentityComparison:
 Lint/UselessTimes:
   Enabled: true
 
+Lint/HashCompareByIdentity:
+  Enabled: true
+
+Lint/RedundantSafeNavigation:
+  Enabled: true
+
+Style/ClassEqualityComparison:
+  Enabled: true

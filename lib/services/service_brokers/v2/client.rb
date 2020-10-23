@@ -139,7 +139,7 @@ module VCAP::Services::ServiceBrokers::V2
            Errors::ServiceBrokerInvalidVolumeMounts,
            Errors::ServiceBrokerInvalidSyslogDrainUrl,
            Errors::ServiceBrokerResponseMalformed => e
-      unless e.class == Errors::ServiceBrokerResponseMalformed && e.status == 200
+      unless e.instance_of?(Errors::ServiceBrokerResponseMalformed) && e.status == 200
         @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       end
 

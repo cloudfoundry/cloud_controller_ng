@@ -10,7 +10,7 @@ module VCAP::CloudController
         def to_hash
           hash = correct_order(
             hash_common.deep_merge(
-              if service_instance.class == ManagedServiceInstance
+              if service_instance.instance_of?(ManagedServiceInstance)
                 hash_additions_managed
               else
                 hash_additions_user_provided

@@ -68,9 +68,9 @@ module CloudController
         end
 
         def buildpack_name_or_url(buildpack)
-          if buildpack.class == VCAP::CloudController::CustomBuildpack
+          if buildpack.instance_of?(VCAP::CloudController::CustomBuildpack)
             CloudController::UrlSecretObfuscator.obfuscate(buildpack.url)
-          elsif buildpack.class == VCAP::CloudController::Buildpack
+          elsif buildpack.instance_of?(VCAP::CloudController::Buildpack)
             buildpack.name
           end
         end

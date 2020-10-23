@@ -47,7 +47,7 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def valid_protocol(protocol)
-    protocol&.is_a?(String) && %w(tcp udp icmp all).include?(protocol)
+    protocol.is_a?(String) && %w(tcp udp icmp all).include?(protocol)
   end
 
   def validate_allowed_keys(rule, record, index)
@@ -83,9 +83,8 @@ class RulesValidator < ActiveModel::Validator
     field.is_a?(Integer) && field >= -1 && field <= 255
   end
 
-  # rubocop:todo Metrics/CyclomaticComplexity
   def valid_ports(ports)
-    return false unless ports&.is_a?(String)
+    return false unless ports.is_a?(String)
     return false if /[^\d\s\-,]/.match?(ports)
 
     port_range = /\A\s*(\d+)\s*-\s*(\d+)\s*\z/.match(ports)
@@ -109,7 +108,6 @@ class RulesValidator < ActiveModel::Validator
 
     false
   end
-  # rubocop:enable Metrics/CyclomaticComplexity
 
   def port_in_range(port)
     port > 0 && port < 65536

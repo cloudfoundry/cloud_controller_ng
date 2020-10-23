@@ -58,7 +58,7 @@ module Diego
       private
 
       def action_already_wrapped?(action)
-        action.class == Bbs::Models::Action
+        action.instance_of?(Bbs::Models::Action)
       end
     end
 
