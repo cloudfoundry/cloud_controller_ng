@@ -319,3 +319,9 @@ Layout/SpaceAroundMethodCallOperator:
 Style/ExponentialNotation:
   Enabled: true
 
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: false
+
+Style/SlicingWithRange:
+  Enabled: true
+
