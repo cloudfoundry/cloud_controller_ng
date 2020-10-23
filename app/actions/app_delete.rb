@@ -11,7 +11,6 @@ require 'actions/revision_delete'
 require 'actions/process_delete'
 require 'actions/sidecar_delete'
 require 'actions/route_mapping_delete'
-require 'actions/sidecar_delete'
 require 'actions/staging_cancel'
 
 module VCAP::CloudController

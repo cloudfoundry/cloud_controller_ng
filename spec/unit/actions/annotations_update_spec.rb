@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AnnotationsUpdate do
