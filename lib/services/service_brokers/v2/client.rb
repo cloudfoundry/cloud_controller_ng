@@ -162,8 +162,12 @@ module VCAP::Services::ServiceBrokers::V2
         async: async_response?(response),
         operation: parsed_response['operation']
       }
-    rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
-      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
+    rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError => e
+      if service_binding.is_a? VCAP::CloudController::ServiceBinding
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
+      end
+
+      raise e
     end
 
     def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil, name: instance.name)

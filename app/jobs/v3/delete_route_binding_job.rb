@@ -61,7 +61,7 @@ module VCAP::CloudController
           self.polling_interval_seconds = polling_status[:retry_after]
         end
       rescue => e
-        if route_binding.reload.last_operation.state != 'failed'
+        if route_binding.reload.last_operation.state != 'failed' && !e.is_a?(V3::ServiceRouteBindingDelete::ConcurrencyError)
           save_failure(e.message)
         end
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)

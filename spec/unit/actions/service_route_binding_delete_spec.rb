@@ -151,7 +151,7 @@ module VCAP::CloudController
               end
             end
 
-            context 'broker returns an error' do
+            context 'broker returns a generic error' do
               let(:broker_client) do
                 dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
                 allow(dbl).to receive(:unbind).and_raise(StandardError, 'awful thing')
@@ -169,6 +169,38 @@ module VCAP::CloudController
                 expect(route_binding.last_operation.type).to eq('delete')
                 expect(route_binding.last_operation.state).to eq('failed')
                 expect(route_binding.last_operation.description).to eq("Service broker failed to delete service binding for instance #{service_instance.name}: awful thing")
+              end
+            end
+
+            context 'broker returns a concurrency error' do
+              let(:broker_client) do
+                dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
+                allow(dbl).to receive(:unbind).and_raise(
+                  VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
+                    'foo',
+                    :delete,
+                    double(code: '500', reason: '', body: '')
+                  )
+                )
+                dbl
+              end
+
+              before do
+                route_binding.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'doing stuff' })
+              end
+
+              it 'fails with an appropriate error and does not alter the binding' do
+                expect {
+                  delete_binding
+                }.to raise_error(
+                  described_class::ConcurrencyError,
+                  'The service broker rejected the request due to an operation being in progress for the service route binding',
+                )
+
+                route_binding.reload
+                expect(route_binding.last_operation.type).to eq('create')
+                expect(route_binding.last_operation.state).to eq('in progress')
+                expect(route_binding.last_operation.description).to eq('doing stuff')
               end
             end
           end
