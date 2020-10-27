@@ -1148,7 +1148,7 @@ RSpec.describe 'v3 service route bindings' do
                               to_return(status: 200, body: '{"state": "in progress"}', headers: {})
             end
 
-            it 'starts the the route binding deletion' do
+            it 'starts the route binding deletion' do
               api_call.call(admin_headers)
               expect(last_response).to have_status_code(202)
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
