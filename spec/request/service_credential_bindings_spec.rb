@@ -347,94 +347,9 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  describe 'GET /v3/service_credential_bindings/:missing_key' do
-    let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings/no-binding', nil, user_headers } }
-
-    let(:expected_codes_and_responses) do
-      Hash.new(code: 404)
-    end
-
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-  end
-
-  describe 'GET /v3/service_credential_bindings/:key_guid' do
-    let(:key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-    let(:expected_object) { expected_json(key) }
-
-    describe 'permissions' do
-      let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(expected_object)
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    describe 'query params' do
-      describe 'include' do
-        it 'can include `app`' do
-          get "/v3/service_credential_bindings/#{key.guid}?include=app", nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['included']['apps']).to have(0).items
-        end
-
-        it 'can include `service_instance`' do
-          get "/v3/service_credential_bindings/#{key.guid}?include=service_instance", nil, admin_headers
-          expect(last_response).to have_status_code(200)
-
-          expect(parsed_response['included']['service_instances']).to have(1).items
-          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
-          expect(guids).to contain_exactly(instance.guid)
-        end
-      end
-    end
-  end
-
-  describe 'GET /v3/service_credential_bindings/:app_binding_guid' do
-    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:app_binding) do
-      VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
-        operate_on(binding)
-      end
-    end
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
-    let(:expected_object) { expected_json(app_binding) }
-
-    describe 'permissions' do
-      let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(expected_object)
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
-    describe 'include' do
-      it 'can include `app`' do
-        get "/v3/service_credential_bindings/#{app_binding.guid}?include=app", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['apps']).to have(1).items
-        guids = parsed_response['included']['apps'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(app_to_bind_to.guid)
-      end
-
-      it 'can include `service_instance`' do
-        get "/v3/service_credential_bindings/#{app_binding.guid}?include=service_instance", nil, admin_headers
-        expect(last_response).to have_status_code(200)
-
-        expect(parsed_response['included']['service_instances']).to have(1).items
-        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
-        expect(guids).to contain_exactly(instance.guid)
-      end
-    end
-  end
-
   describe 'GET /v3/service_credential_bindings/:guid' do
-    let(:binding) { VCAP::CloudController::ServiceBinding.make }
-
     describe 'query params' do
+      let(:binding) { VCAP::CloudController::ServiceBinding.make }
       it 'returns 400 for invalid query params' do
         get "/v3/service_credential_bindings/#{binding.guid}?bahamas=yes-please", nil, admin_headers
 
@@ -456,6 +371,90 @@ RSpec.describe 'v3 service credential bindings' do
             'title' => 'CF-BadQueryParameter',
             'code' => 10005,
           }))
+        end
+      end
+    end
+
+    describe 'missing binding' do
+      let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings/no-binding', nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'key credential binding' do
+      let(:key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
+      let(:expected_object) { expected_json(key) }
+
+      describe 'permissions' do
+        let(:expected_codes_and_responses) do
+          responses_for_space_restricted_single_endpoint(expected_object)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'query params' do
+        describe 'include' do
+          it 'can include `app`' do
+            get "/v3/service_credential_bindings/#{key.guid}?include=app", nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['included']['apps']).to have(0).items
+          end
+
+          it 'can include `service_instance`' do
+            get "/v3/service_credential_bindings/#{key.guid}?include=service_instance", nil, admin_headers
+            expect(last_response).to have_status_code(200)
+
+            expect(parsed_response['included']['service_instances']).to have(1).items
+            guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+            expect(guids).to contain_exactly(instance.guid)
+          end
+        end
+      end
+    end
+
+    describe 'app credential binding ' do
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_binding) do
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
+          operate_on(binding)
+        end
+      end
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
+      let(:expected_object) { expected_json(app_binding) }
+
+      describe 'permissions' do
+        let(:expected_codes_and_responses) do
+          responses_for_space_restricted_single_endpoint(expected_object)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'include' do
+        it 'can include `app`' do
+          get "/v3/service_credential_bindings/#{app_binding.guid}?include=app", nil, admin_headers
+          expect(last_response).to have_status_code(200)
+
+          expect(parsed_response['included']['apps']).to have(1).items
+          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          expect(guids).to contain_exactly(app_to_bind_to.guid)
+        end
+
+        it 'can include `service_instance`' do
+          get "/v3/service_credential_bindings/#{app_binding.guid}?include=service_instance", nil, admin_headers
+          expect(last_response).to have_status_code(200)
+
+          expect(parsed_response['included']['service_instances']).to have(1).items
+          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          expect(guids).to contain_exactly(instance.guid)
         end
       end
     end
