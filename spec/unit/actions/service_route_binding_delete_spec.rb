@@ -240,8 +240,12 @@ module VCAP::CloudController
           }
         end
         let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+        let(:broker_provided_operation) { Sham.guid }
 
         before do
+          route_binding.last_operation.broker_provided_operation = broker_provided_operation
+          route_binding.save
+
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
           allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(last_operation_response)
         end
@@ -275,6 +279,7 @@ module VCAP::CloudController
             route_binding.reload
             expect(route_binding.last_operation.state).to eq('in progress')
             expect(route_binding.last_operation.description).to eq(description)
+            expect(route_binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
           end
 
           it 'does not remove the binding or log an audit event' do

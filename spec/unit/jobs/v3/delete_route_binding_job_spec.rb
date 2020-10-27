@@ -37,7 +37,7 @@ module VCAP::CloudController
       it_behaves_like 'delayed job', described_class
 
       describe '#perform' do
-        let(:delete_response) { { finished: false } }
+        let(:delete_response) { { finished: false, operation: 'test-operation' } }
         let(:poll_response) { { finished: false } }
         let(:action) do
           instance_double(V3::ServiceRouteBindingDelete, {

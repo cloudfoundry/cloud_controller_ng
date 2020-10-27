@@ -44,7 +44,10 @@ module VCAP::CloudController
         details = client.fetch_and_handle_service_binding_last_operation(binding)
         case details[:last_operation][:state]
         when 'in progress'
-          update_last_operation(binding, description: details[:last_operation][:description])
+          update_last_operation(
+            binding,
+            description: details[:last_operation][:description],
+            operation: binding.last_operation.broker_provided_operation)
           return ContinuePolling.call(details[:retry_after])
         when 'succeeded'
           perform_delete_actions(binding)
