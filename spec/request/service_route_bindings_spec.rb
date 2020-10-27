@@ -1054,6 +1054,23 @@ RSpec.describe 'v3 service route bindings' do
               expect(Delayed::Job.count).to eq(1)
             end
 
+            it 'keeps track of the broker operation' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+
+              Timecop.travel(Time.now + 1.minute)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
+              ).to have_been_made.twice
+            end
+
             context 'last operation response is 200 OK and indicates success' do
               let(:state) { 'succeeded' }
               let(:last_operation_status_code) { 200 }
