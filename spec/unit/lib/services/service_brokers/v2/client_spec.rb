@@ -1541,6 +1541,25 @@ module VCAP::Services::ServiceBrokers::V2
           end
         end
       end
+
+      context 'ConcurrencyError error' do
+        let(:code) { 422 }
+        let(:response_body) { '{"error":"ConcurrencyError"}' }
+
+        context 'for app bindings' do
+          it 'propagates the error as an API error' do
+            expect { client.unbind(binding) }.to raise_error(CloudController::Errors::ApiError, /An operation for the service binding between app/)
+          end
+        end
+
+        context 'for a route binding' do
+          let(:binding) { VCAP::CloudController::RouteBinding.make }
+
+          it 'propagates the error as a ConcurrencyError' do
+            expect { client.unbind(binding) }.to raise_error(Errors::ConcurrencyError)
+          end
+        end
+      end
     end
 
     describe '#deprovision' do

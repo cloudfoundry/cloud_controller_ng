@@ -3,6 +3,8 @@ module VCAP::CloudController
     class ServiceRouteBindingDelete
       class UnprocessableDelete < StandardError; end
 
+      class ConcurrencyError < StandardError; end
+
       RequiresAsync = Class.new.freeze
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
@@ -18,9 +20,8 @@ module VCAP::CloudController
       end
 
       def delete(binding, async_allowed:)
-        return RequiresAsync.new unless async_allowed || binding.service_instance.user_provided_instance?
-
         operation_in_progress! if binding.service_instance.operation_in_progress?
+        return RequiresAsync.new unless async_allowed || binding.service_instance.user_provided_instance?
 
         result = send_unbind_to_broker(binding)
         if result[:finished]
@@ -31,7 +32,9 @@ module VCAP::CloudController
 
         return result
       rescue => e
-        update_last_operation(binding, state: 'failed', description: e.message)
+        unless e.is_a? ConcurrencyError
+          update_last_operation(binding, state: 'failed', description: e.message)
+        end
 
         raise e
       end
@@ -65,6 +68,10 @@ module VCAP::CloudController
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
+        raise ConcurrencyError.new(
+          'The service broker rejected the request due to an operation being in progress for the service route binding'
+        )
       rescue => err
         raise UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
       end
@@ -88,7 +95,7 @@ module VCAP::CloudController
           type: 'delete',
           state: state,
           description: description,
-          broker_provided_operation: operation
+          broker_provided_operation: operation || binding.last_operation.broker_provided_operation
         })
       end
 

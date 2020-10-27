@@ -74,6 +74,8 @@ class ServiceRouteBindingsController < ApplicationController
     else
       head :no_content
     end
+  rescue V3::ServiceRouteBindingDelete::UnprocessableDelete => e
+    unprocessable!(e.message)
   end
 
   def parameters

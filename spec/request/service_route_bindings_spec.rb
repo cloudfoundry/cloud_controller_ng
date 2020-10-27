@@ -935,6 +935,18 @@ RSpec.describe 'v3 service route bindings' do
         let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
         let(:db_check) { lambda {} }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
+        let(:broker_base_url) { service_instance.service_broker.broker_url }
+        let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+        let(:route_service_url) { 'https://route_service_url.com' }
+        let(:broker_unbind_status_code) { 200 }
+        let(:broker_response) { {} }
+        let(:query) do
+          {
+            service_id: service_instance.service_plan.service.unique_id,
+            plan_id: service_instance.service_plan.unique_id,
+            accepts_incomplete: true,
+          }
+        end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
 
@@ -955,19 +967,6 @@ RSpec.describe 'v3 service route bindings' do
         end
 
         describe 'the pollable job' do
-          let(:broker_base_url) { service_instance.service_broker.broker_url }
-          let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
-          let(:route_service_url) { 'https://route_service_url.com' }
-          let(:broker_unbind_status_code) { 200 }
-          let(:broker_response) { {} }
-          let(:query) do
-            {
-              service_id: service_instance.service_plan.service.unique_id,
-              plan_id: service_instance.service_plan.unique_id,
-              accepts_incomplete: true,
-            }
-          end
-
           before do
             api_call.call(space_dev_headers)
             expect(last_response).to have_status_code(202)
@@ -1110,6 +1109,75 @@ RSpec.describe 'v3 service route bindings' do
               expect(error['errors'].first['code']).to eq(10009)
               expect(error['errors'].first['detail']).
                 to include('The service broker rejected the request. Status Code: 418 I\'m a Teapot, Body: "nope"')
+            end
+          end
+        end
+
+        context 'when the service instance has an operation in progress' do
+          it 'responds with 422' do
+            service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
+
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('There is an operation in progress for the service instance'),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the route binding is still creating' do
+          before do
+            binding.save_with_new_operation(
+              {},
+              { type: 'create', state: 'in progress', broker_provided_operation: 'very important info' }
+            )
+          end
+
+          context 'but the broker accepts the delete request' do
+            before do
+              @delete_stub = stub_request(:delete, broker_unbind_url).
+                             with(query: query).
+                             to_return(status: 202, body: '{"operation": "very important delete info"}', headers: {})
+
+              @last_op_stub = stub_request(:get, "#{broker_unbind_url}/last_operation").
+                              with(query: hash_including({
+                  operation: 'very important delete info'
+                })).
+                              to_return(status: 200, body: '{"state": "in progress"}', headers: {})
+            end
+
+            it 'starts the route binding deletion' do
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(202)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(@delete_stub).to have_been_requested.once
+              expect(@last_op_stub).to have_been_requested
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('delete')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq('very important delete info')
+            end
+          end
+
+          context 'and the broker rejects the delete request' do
+            before do
+              stub_request(:delete, broker_unbind_url).
+                with(query: query).
+                to_return(status: 422, body: '{"error": "ConcurrencyError"}', headers: {})
+
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              binding.reload
+            end
+
+            it 'leaves the route binding in its current state' do
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq('very important info')
             end
           end
         end
