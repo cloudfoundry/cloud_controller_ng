@@ -1,95 +1,64 @@
-require 'fetchers/base_list_fetcher'
-require 'fetchers/label_selector_query_generator'
+require 'fetchers/base_service_list_fetcher'
 
 module VCAP::CloudController
-  class ServiceOfferingListFetcher < BaseListFetcher
+  class ServiceOfferingListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message)
-        dataset = Service.dataset.
-                  join(:service_brokers, id: Sequel[:services][:service_broker_id]).
-                  left_join(:service_plans, service_id: Sequel[:services][:id]).
-                  left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
-                  left_join(:organizations, id: Sequel[:spaces][:organization_id]).
-                  group(Sequel[:services][:id]).
-                  select_all(:services)
+      def fetch(message, omniscient: false, readable_space_guids: [], readable_org_guids: [])
+        dataset = Service.dataset
+
+        dataset = join_tables(dataset, message, omniscient)
+
+        dataset = select_readable(
+          dataset,
+          omniscient: omniscient,
+          readable_org_guids: readable_org_guids,
+          readable_space_guids: readable_space_guids,
+        )
+
+        if message.requested?(:space_guids)
+          dataset = filter_spaces(
+            dataset,
+            filtered_space_guids: message.space_guids,
+            readable_space_guids: readable_space_guids,
+            omniscient: omniscient,
+          )
+        end
+
+        dataset = filter_orgs(dataset, message.organization_guids) if message.requested?(:organization_guids)
 
         dataset = filter(message, dataset)
 
-        return dataset unless message.requested?(:organization_guids)
-
-        dataset_with_visibilities(dataset, message)
+        dataset.
+          select_all(:services).
+          distinct
       end
 
-      def fetch_public(message)
-        dataset = Service.dataset.
-                  join(:service_plans, service_id: Sequel[:services][:id]).
-                  join(:service_brokers, id: Sequel[:services][:service_broker_id]).
-                  left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
-                  left_join(:organizations, id: Sequel[:spaces][:organization_id]).
-                  where { Sequel[:service_plans][:public] =~ true }.
-                  group(Sequel[:services][:id]).
-                  select_all(:services)
+      def join_tables(dataset, message, omniscient)
+        need_all_parent_tables = !omniscient || visibility_filter?(message)
 
-        filter(message, dataset)
-      end
+        filter_properties = [
+          :service_broker_guids,
+          :service_broker_names,
+        ]
 
-      def fetch_visible(message, org_guids, space_guids)
-        dataset = Service.dataset.
-                  left_join(:service_plans, service_id: Sequel[:services][:id]).
-                  join(:service_brokers, id: Sequel[:services][:service_broker_id]).
-                  left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
-                  left_join(:service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id]).
-                  left_join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
-                  where do
-          (Sequel[:organizations][:guid] =~ org_guids) |
-            (Sequel[:service_plans][:public] =~ true) |
-            (Sequel[:spaces][:guid] =~ space_guids)
-        end.
-                  group(Sequel[:services][:id]).
-                  select_all(:services)
+        need_broker_tables = filter_properties.any? { |filter| message.requested?(filter) }
 
-        filter(message, dataset)
-      end
+        if need_all_parent_tables
+          dataset = join_all_parent_tables(dataset.left_join(:service_plans, service_id: Sequel[:services][:id]))
+        elsif need_broker_tables
+          dataset = dataset.join(:service_brokers, id: Sequel[:services][:service_broker_id])
+        end
 
-      private
-
-      def dataset_with_visibilities(dataset, message)
-        dataset_with_visibilities = Service.dataset.
-                                    join(:service_brokers, id: Sequel[:services][:service_broker_id]).
-                                    join(:service_plans, service_id: Sequel[:services][:id]).
-                                    left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
-                                    join(:service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id]).
-                                    join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
-                                    select_all(:services)
-
-        dataset_with_visibilities = filter(message, dataset_with_visibilities)
-
-        dataset.union(dataset_with_visibilities, alias: :services)
+        dataset
       end
 
       def filter(message, dataset)
-        if message.requested?(:available)
-          dataset = dataset.where(Sequel[:services][:active] =~ string_to_boolean(message.available))
-        end
-
-        if message.requested?(:service_broker_guids)
-          dataset = dataset.where(Sequel[:service_brokers][:guid] =~ message.service_broker_guids)
-        end
-
-        if message.requested?(:service_broker_names)
-          dataset = dataset.where(Sequel[:service_brokers][:name] =~ message.service_broker_names)
-        end
-
         if message.requested?(:names)
           dataset = dataset.where(Sequel[:services][:label] =~ message.names)
         end
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where((Sequel[:spaces][:guid] =~ message.space_guids) | (Sequel[:service_plans][:public] =~ true))
-        end
-
-        if message.requested?(:organization_guids)
-          dataset = dataset.where((Sequel[:organizations][:guid] =~ message.organization_guids) | (Sequel[:service_plans][:public] =~ true))
+        if message.requested?(:available)
+          dataset = dataset.where { Sequel[:services][:active] =~ message.available? }
         end
 
         if message.requested?(:label_selector)
@@ -102,10 +71,6 @@ module VCAP::CloudController
         end
 
         super(message, dataset, Service)
-      end
-
-      def string_to_boolean(value)
-        value == 'true'
       end
     end
   end
