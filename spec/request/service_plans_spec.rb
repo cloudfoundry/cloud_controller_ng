@@ -338,35 +338,54 @@ RSpec.describe 'V3 service plans' do
       describe 'organization_guids' do
         let(:org_1) { VCAP::CloudController::Organization.make }
         let(:org_2) { VCAP::CloudController::Organization.make }
-        let(:plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
-        let(:plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:org_plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:org_plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
+
+        let(:space_1){VCAP::CloudController::Space.make(organization: org_1)}
+        let(:space_2){VCAP::CloudController::Space.make(organization: org_2)}
+        let!(:space_plan_1) {generate_space_scoped_plan(space_1)}
+        let!(:space_plan_2) {generate_space_scoped_plan(space_2)}
+
+        let!(:public_plan){VCAP::CloudController::ServicePlan.make(public: true)}
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_1, organization: org_1)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_2, organization: org_2)
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_1, organization: org_1)
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_2, organization: org_2)
         end
 
-        it 'selects on org guid' do
+        it 'selects on org plans, space plans and public plans' do
           get "/v3/service_plans?organization_guids=#{org_1.guid}", {}, admin_headers
-          check_filtered_plans(plan_1)
+          check_filtered_plans(org_plan_1, space_plan_1, public_plan)
+
+          get "/v3/service_plans?organization_guids=#{org_1.guid},#{org_2.guid}", {}, admin_headers
+          check_filtered_plans(org_plan_1, org_plan_2, space_plan_1,  space_plan_2, public_plan)
         end
       end
 
       describe 'space_guids' do
         let(:org_1) { VCAP::CloudController::Organization.make }
         let(:org_2) { VCAP::CloudController::Organization.make }
-        let(:plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
-        let(:plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
-        let(:space_1) { VCAP::CloudController::Space.make(organization: org_1) }
+        let!(:org_plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:org_plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
+
+        let(:space_1){VCAP::CloudController::Space.make(organization: org_1)}
+        let(:space_2){VCAP::CloudController::Space.make(organization: org_2)}
+        let!(:space_plan_1) {generate_space_scoped_plan(space_1)}
+        let!(:space_plan_2) {generate_space_scoped_plan(space_2)}
+
+        let!(:public_plan){VCAP::CloudController::ServicePlan.make(public: true)}
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_1, organization: org_1)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_2, organization: org_2)
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_1, organization: org_1)
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_2, organization: org_2)
         end
 
-        it 'selects on org guid' do
+        it 'selects on org plans, space plans and public plans' do
           get "/v3/service_plans?space_guids=#{space_1.guid}", {}, admin_headers
-          check_filtered_plans(plan_1)
+          check_filtered_plans(org_plan_1, space_plan_1, public_plan)
+
+          get "/v3/service_plans?space_guids=#{space_1.guid},#{space_2.guid}", {}, admin_headers
+          check_filtered_plans(org_plan_1, org_plan_2, space_plan_1,  space_plan_2, public_plan)
         end
       end
 
