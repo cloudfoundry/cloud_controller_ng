@@ -46,5 +46,9 @@ module VCAP::CloudController
         end
       end
     end
+
+    def available?
+      requested?(:available) && available == 'true'
+    end
   end
 end
