@@ -343,6 +343,11 @@ module VCAP::CloudController
           default_app_lifecycle: String,
           custom_metric_tag_prefix_list: Array,
 
+          optional(:honeycomb) => {
+              write_key: String,
+              dataset: String,
+          },
+
           optional(:kubernetes) => {
             host_url: String,
             service_account: {
@@ -388,7 +393,7 @@ module VCAP::CloudController
               auth_user: String,
               auth_password: String,
             },
-          ),
+            ),
 
         }
       end
