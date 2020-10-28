@@ -133,24 +133,6 @@ module VCAP::CloudController
               end
             end
 
-            context 'service instance operation in progress' do
-              before do
-                service_instance.save_with_new_operation({}, {
-                  type: 'create',
-                  state: 'in progress',
-                })
-              end
-
-              it 'fails with an appropriate error' do
-                expect {
-                  delete_binding
-                }.to raise_error(
-                  described_class::UnprocessableDelete,
-                  'There is an operation in progress for the service instance',
-                )
-              end
-            end
-
             context 'broker returns a generic error' do
               let(:broker_client) do
                 dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
