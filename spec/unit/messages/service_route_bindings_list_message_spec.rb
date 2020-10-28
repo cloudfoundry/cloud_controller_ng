@@ -4,18 +4,18 @@ require 'messages/service_route_bindings_list_message'
 module VCAP
   module CloudController
     RSpec.describe ServiceRouteBindingsListMessage do
-      describe '.from_params' do
-        let(:params) do
-          {
-            'page'      => 1,
-            'per_page'  => 5,
-            'service_instance_guids' => 'guid-1,guid-2,guid-3',
-            'service_instance_names' => 'name-1,name-2,name-3',
-            'route_guids' => 'guid-4,guid-5,guid-6',
-            'include' => 'service_instance'
-          }
-        end
+      let(:params) do
+        {
+          'page'      => 1,
+          'per_page'  => 5,
+          'service_instance_guids' => 'guid-1,guid-2,guid-3',
+          'service_instance_names' => 'name-1,name-2,name-3',
+          'route_guids' => 'guid-4,guid-5,guid-6',
+          'include' => 'service_instance'
+        }
+      end
 
+      describe '.from_params' do
         let(:message) { ServiceRouteBindingsListMessage.from_params(params) }
 
         it 'returns the correct ServiceBrokersListMessage' do
@@ -38,7 +38,23 @@ module VCAP
         end
       end
 
-      describe 'validations' do
+      describe '#valid?' do
+        it 'returns true for valid fields' do
+          message = described_class.from_params(params)
+          expect(message).to be_valid
+        end
+
+        it 'returns true for empty fields' do
+          message = described_class.from_params({})
+          expect(message).to be_valid
+        end
+
+        it 'returns false for invalid fields' do
+          message = described_class.from_params({ 'foobar' => 'pants' })
+          expect(message).not_to be_valid
+          expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
+        end
+
         context 'include' do
           it 'returns false for arbitrary values' do
             message = described_class.from_params({ 'include' => 'app' })
