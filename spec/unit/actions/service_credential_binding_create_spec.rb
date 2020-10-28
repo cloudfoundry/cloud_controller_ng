@@ -51,20 +51,6 @@ module VCAP::CloudController
             )
           end
 
-          it 'only creates one binding when creating bindings in parallel' do
-            errors = []
-            threads = 3.times.map do |i|
-              Thread.new do
-                action.precursor(service_instance, app: app, name: "binding-#{i}")
-              rescue => e
-                errors << e
-              end
-            end
-            threads.each(&:join)
-            expect(errors).to have(2).items
-            expect(errors.map(&:message).uniq).to contain_exactly('The app is already bound to the service instance')
-          end
-
           it 'raises an error when a the app and the instance are in different spaces' do
             another_space = Space.make
             another_app = AppModel.make(space: another_space)
