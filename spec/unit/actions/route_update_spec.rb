@@ -63,14 +63,14 @@ module VCAP::CloudController
             subject.update(route: route, message: message)
 
             route.reload
-            expect(route.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to contain_exactly(
-                { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'fruit', value: 'strawberries' },
-                { prefix: nil, key: 'cuisine', value: 'thai' },
-              )
-            expect(route.annotations.map { |a| { key: a.key, value: a.value } }).
-              to contain_exactly({ key: 'potato', value: 'idaho' })
+            expect(route).to have_labels(
+              { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
+              { prefix: nil, key: 'fruit', value: 'strawberries' },
+              { prefix: nil, key: 'cuisine', value: 'thai' },
+            )
+            expect(route).to have_annotations(
+              { key: 'potato', value: 'idaho' }
+            )
           end
         end
       end
@@ -90,45 +90,42 @@ module VCAP::CloudController
             expect(message).to be_valid
             subject.update(route: route, message: message)
             route.reload
-            expect(route.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to contain_exactly(
-                { prefix: nil, key: 'fruit', value: 'peach' },
-                { prefix: nil, key: 'clothing', value: 'blouse' },
-              )
-            expect(route.annotations.map { |a| { key: a.key, value: a.value } }).
-              to contain_exactly(
-                { key: 'potato', value: 'celandine' },
-                { key: 'beet', value: 'formanova' },
-              )
+            expect(route).to have_labels(
+              { prefix: nil, key: 'fruit', value: 'peach' },
+              { prefix: nil, key: 'clothing', value: 'blouse' },
+            )
+            expect(route).to have_annotations(
+              { key: 'potato', value: 'celandine' },
+              { key: 'beet', value: 'formanova' },
+            )
           end
         end
 
         context 'when metadata is specified' do
-          let(:body) { {
+          let(:body) do
+            {
               metadata: {
                 labels: new_labels.merge(fruit: nil, newstuff: 'here'),
                 annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy'),
               },
             }
-          }
+          end
 
           it 'updates some, deletes nils, leaves unspecified fields alone' do
             expect(message).to be_valid
             subject.update(route: route, message: message)
             route.reload
 
-            expect(route.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to contain_exactly(
-                { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'clothing', value: 'blouse' },
-                { prefix: nil, key: 'newstuff', value: 'here' },
-                { prefix: nil, key: 'cuisine', value: 'thai' },
-              )
-            expect(route.annotations.map { |a| { key: a.key, value: a.value } }).
-              to contain_exactly(
-                { key: 'potato', value: 'idaho' },
-                { key: 'asparagus', value: 'crunchy' },
-              )
+            expect(route).to have_labels(
+              { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
+              { prefix: nil, key: 'clothing', value: 'blouse' },
+              { prefix: nil, key: 'newstuff', value: 'here' },
+              { prefix: nil, key: 'cuisine', value: 'thai' },
+            )
+            expect(route).to have_annotations(
+              { key: 'potato', value: 'idaho' },
+              { key: 'asparagus', value: 'crunchy' },
+            )
           end
         end
       end

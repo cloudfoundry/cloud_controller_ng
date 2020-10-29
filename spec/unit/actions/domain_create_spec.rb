@@ -78,12 +78,13 @@ module VCAP::CloudController
             expect(domain.name).to eq(name)
             expect(domain.internal).to eq(internal)
             expect(domain.guid).to_not be_nil
-            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+            expect(domain).to have_labels(
+              { prefix: nil, key: 'release', value: 'stable' },
                               { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-              ])
-            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([{ key: 'anno', value: 'tations' }])
+              )
+            expect(domain).to have_annotations(
+              { key: 'anno', value: 'tations' }
+            )
           end
         end
       end
@@ -120,12 +121,13 @@ module VCAP::CloudController
           expect(domain.name).to eq name
           expect(domain.owning_organization_guid).to eq organization.guid
           expect(domain.shared_organizations).to contain_exactly(shared_org1, shared_org2)
-          expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-            to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+          expect(domain).to have_labels(
+            { prefix: nil, key: 'release', value: 'stable' },
                             { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-            ])
-          expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-            to match_array([{ key: 'anno', value: 'tations' }])
+            )
+          expect(domain).to have_annotations(
+            { key: 'anno', value: 'tations' }
+          )
         end
       end
 
@@ -151,12 +153,13 @@ module VCAP::CloudController
             expect(domain.name).to eq(name)
             expect(domain.router_group_guid).to eq(router_group_guid[:guid])
             expect(domain.guid).to_not be_nil
-            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([{ prefix: nil, key: 'release', value: 'stable' },
-                              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-              ])
-            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([{ key: 'anno', value: 'tations' }])
+            expect(domain).to have_labels(
+              { prefix: nil, key: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            )
+            expect(domain).to have_annotations(
+              { key: 'anno', value: 'tations' }
+            )
           end
         end
       end

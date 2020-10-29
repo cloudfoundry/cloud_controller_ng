@@ -48,13 +48,11 @@ module VCAP::CloudController
             }.to change { User.count }.by(1)
 
             expect(created_user.guid).to eq guid
-            expect(created_user.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+            expect(created_user).to have_labels(
+              { prefix: nil, key: 'release', value: 'stable' },
                               { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-              ])
-            expect(created_user.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([{ key: 'anno', value: 'tations' }])
-            # expect(created_user.labels).to eq metadata[:labels]
+              )
+            expect(created_user).to have_annotations({ key: 'anno', value: 'tations' })
           end
         end
 

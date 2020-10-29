@@ -56,9 +56,8 @@ module VCAP::CloudController
         process_update.update(process, message, NonManifestStrategy)
 
         process.reload
-        expect(process.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'freaky', value: 'wednesday' }])
-        expect(process.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'tokyo', value: 'grapes' }])
+        expect(process).to have_labels({ key: 'freaky', value: 'wednesday' })
+        expect(process).to have_annotations({ key: 'tokyo', value: 'grapes' })
       end
 
       context 'when the new healthcheck is http' do

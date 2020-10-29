@@ -66,16 +66,13 @@ module VCAP::CloudController
 
           expect(service_instance.name).to eq('different-name')
           expect(service_instance.tags).to eq(%w(accounting couchbase nosql))
-          expect_metadata(
-            service_instance,
-              annotations: [
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-              ],
-              labels: [
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-              ]
+          expect(service_instance).to have_annotations(
+            { prefix: nil, key: 'alpha', value: 'beta' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          )
+          expect(service_instance).to have_labels(
+            { prefix: nil, key: 'foo', value: 'bar' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
           )
         end
 
@@ -241,7 +238,7 @@ module VCAP::CloudController
             let(:service_plan) { ServicePlan.make(
               service: service_offering,
               maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-              )
+            )
             }
 
             let!(:service_instance) {
@@ -384,17 +381,17 @@ module VCAP::CloudController
 
         it 'raises with metadata only updates' do
           msg = ServiceInstanceUpdateManagedMessage.new({
-                                                            metadata: {
-                                                                labels: {
-                                                                    foo: 'bar',
-                                                                    'pre.fix/to_delete': nil,
-                                                                },
-                                                                annotations: {
-                                                                    alpha: 'beta',
-                                                                    'pre.fix/to_delete': nil,
-                                                                }
-                                                            }
-                                                        })
+            metadata: {
+              labels: {
+                foo: 'bar',
+                'pre.fix/to_delete': nil,
+              },
+              annotations: {
+                alpha: 'beta',
+                'pre.fix/to_delete': nil,
+              }
+            }
+          })
           expect {
             action.update(service_instance, msg)
           }.to raise_error CloudController::Errors::ApiError do |err|
@@ -418,31 +415,28 @@ module VCAP::CloudController
 
         it 'allows metadata updates' do
           msg = ServiceInstanceUpdateManagedMessage.new({
-                                                            metadata: {
-                                                                labels: {
-                                                                    foo: 'bar',
-                                                                    'pre.fix/to_delete': nil,
-                                                                },
-                                                                annotations: {
-                                                                    alpha: 'beta',
-                                                                    'pre.fix/to_delete': nil,
-                                                                }
-                                                            }
-                                                        })
+            metadata: {
+              labels: {
+                foo: 'bar',
+                'pre.fix/to_delete': nil,
+              },
+              annotations: {
+                alpha: 'beta',
+                'pre.fix/to_delete': nil,
+              }
+            }
+          })
           expect { action.update(service_instance, msg) }.not_to raise_error
 
           service_instance.reload
 
-          expect_metadata(
-            service_instance,
-              annotations: [
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-              ],
-              labels: [
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-              ]
+          expect(service_instance).to have_annotations(
+            { prefix: nil, key: 'alpha', value: 'beta' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          )
+          expect(service_instance).to have_labels(
+            { prefix: nil, key: 'foo', value: 'bar' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
           )
         end
 
@@ -463,31 +457,28 @@ module VCAP::CloudController
 
         it 'allows metadata updates' do
           msg = ServiceInstanceUpdateManagedMessage.new({
-                                                            metadata: {
-                                                                labels: {
-                                                                    foo: 'bar',
-                                                                    'pre.fix/to_delete': nil,
-                                                                },
-                                                                annotations: {
-                                                                    alpha: 'beta',
-                                                                    'pre.fix/to_delete': nil,
-                                                                }
-                                                            }
-                                                        })
+            metadata: {
+              labels: {
+                foo: 'bar',
+                'pre.fix/to_delete': nil,
+              },
+              annotations: {
+                alpha: 'beta',
+                'pre.fix/to_delete': nil,
+              }
+            }
+          })
           expect { action.update(service_instance, msg) }.not_to raise_error
 
           service_instance.reload
 
-          expect_metadata(
-            service_instance,
-              annotations: [
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-              ],
-              labels: [
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-              ]
+          expect(service_instance).to have_annotations(
+            { prefix: nil, key: 'alpha', value: 'beta' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          )
+          expect(service_instance).to have_labels(
+            { prefix: nil, key: 'foo', value: 'bar' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
           )
         end
 
@@ -751,7 +742,7 @@ module VCAP::CloudController
         let(:service_plan) { ServicePlan.make(
           service: service_offering,
           maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-          )
+        )
         }
 
         it 'returns the current instance unchanged instance and a nil job' do
@@ -762,26 +753,5 @@ module VCAP::CloudController
         end
       end
     end
-  end
-
-  def expect_metadata(instance, annotations: [], labels: [])
-    a = instance.annotations.map do |e|
-      {
-          prefix: e.key_prefix,
-          key: e.key_name,
-          value: e.value,
-      }
-    end
-
-    l = instance.labels.map do |e|
-      {
-          prefix: e.key_prefix,
-          key: e.key_name,
-          value: e.value,
-      }
-    end
-
-    expect(a).to match_array(annotations)
-    expect(l).to match_array(labels)
   end
 end

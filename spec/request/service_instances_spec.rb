@@ -847,12 +847,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.credentials).to match({ 'foo' => 'bar', 'baz' => 'qux' })
         expect(instance.space).to eq(space)
-
-        expect_metadata(
-          instance,
-          annotations: [{ prefix: nil, key: 'foo', value: 'bar' }],
-          labels: [{ prefix: nil, key: 'baz', value: 'qux' }]
-        )
+        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
       end
 
       context 'when the name has already been taken' do
@@ -946,11 +942,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.service_plan).to eq(service_plan)
 
-        expect_metadata(
-          instance,
-          annotations: [{ prefix: nil, key: 'foo', value: 'bar' }],
-          labels: [{ prefix: nil, key: 'baz', value: 'qux' }]
-        )
+        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
 
         expect(instance.last_operation.type).to eq('create')
         expect(instance.last_operation.state).to eq('in progress')
@@ -1580,18 +1573,15 @@ RSpec.describe 'V3 service instances' do
           service_instance.reload
           expect(service_instance.tags).to eq(%w(baz quz))
 
-          expect_metadata(
-            service_instance,
-            annotations: [
-              { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-              { prefix: nil, key: 'potato', value: 'idaho' },
-              { prefix: nil, key: 'style', value: 'mashed' },
-            ],
-            labels: [
-              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-              { prefix: nil, key: 'potato', value: 'yam' },
-              { prefix: nil, key: 'style', value: 'baked' }
-            ]
+          expect(service_instance).to have_annotations(
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+            { prefix: nil, key: 'potato', value: 'idaho' },
+            { prefix: nil, key: 'style', value: 'mashed' },
+          )
+          expect(service_instance).to have_labels(
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+            { prefix: nil, key: 'potato', value: 'yam' },
+            { prefix: nil, key: 'style', value: 'baked' }
           )
 
           expect(service_instance.last_operation.type).to eq('update')
@@ -1684,16 +1674,13 @@ RSpec.describe 'V3 service instances' do
           service_instance.reload
           expect(service_instance.reload.tags).to eq(%w(foo bar))
 
-          expect_metadata(
-            service_instance,
-            annotations: [
-              { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-              { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-            ],
-            labels: [
-              { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
-            ]
+          expect(service_instance).to have_annotations(
+            { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          )
+          expect(service_instance).to have_labels(
+            { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
           )
         end
 
@@ -1921,16 +1908,13 @@ RSpec.describe 'V3 service instances' do
                 service_instance.reload
                 expect(service_instance.reload.tags).to eq(%w(foo bar))
                 expect(service_instance.service_plan).to eq(original_service_plan)
-                expect_metadata(
-                  service_instance,
-                  annotations: [
-                    { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-                    { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-                  ],
-                  labels: [
-                    { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-                    { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
-                  ]
+                expect(service_instance).to have_annotations(
+                  { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+                  { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                )
+                expect(service_instance).to have_labels(
+                  { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
+                  { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
                 )
               end
 
@@ -2506,10 +2490,10 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { service_instance.guid }
       let(:request_body) {
         {
-            metadata: {
-                labels: { unit: 'metre', distance: '1003' },
-                annotations: { location: 'london' }
-            }
+          metadata: {
+            labels: { unit: 'metre', distance: '1003' },
+            annotations: { location: 'london' }
+          }
         }
       }
 
@@ -2525,10 +2509,10 @@ RSpec.describe 'V3 service instances' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(200)
           expect(parsed_response['last_operation']).to include({
-                                                                   'type' => 'create',
-                                                                   'state' => 'in progress',
-                                                                   'description' => 'almost there, I promise'
-                                                               })
+            'type' => 'create',
+            'state' => 'in progress',
+            'description' => 'almost there, I promise'
+          })
         end
       end
 
@@ -3864,27 +3848,6 @@ RSpec.describe 'V3 service instances' do
         }
       },
     }
-  end
-
-  def expect_metadata(instance, annotations: [], labels: [])
-    a = instance.annotations.map do |e|
-      {
-        prefix: e.key_prefix,
-        key: e.key_name,
-        value: e.value,
-      }
-    end
-
-    l = instance.labels.map do |e|
-      {
-        prefix: e.key_prefix,
-        key: e.key_name,
-        value: e.value,
-      }
-    end
-
-    expect(a).to match_array(annotations)
-    expect(l).to match_array(labels)
   end
 
   def share_service_instance(instance, target_space)

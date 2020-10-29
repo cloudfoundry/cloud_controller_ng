@@ -25,12 +25,14 @@ module VCAP::CloudController
         expect(stack.name).to eq('the-name')
         expect(stack.description).to eq('the-description')
 
-        expect(stack.labels.map(&:key_name)).to contain_exactly('potato', 'release')
-        expect(stack.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
-        expect(stack.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-
-        expect(stack.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
-        expect(stack.annotations.map(&:value)).to contain_exactly('land', 'boys')
+        expect(stack).to have_labels(
+          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+          { prefix: nil, key: 'release', value: 'stable' }
+        )
+        expect(stack).to have_annotations(
+          { key: 'tomorrow', value: 'land' },
+          { key: 'backstreet', value: 'boys' }
+        )
       end
 
       context 'when a model validation fails' do

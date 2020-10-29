@@ -95,12 +95,13 @@ module VCAP::CloudController
           expect(build.created_by_user_guid).to eq('1234')
           expect(build.created_by_user_name).to eq('charles')
           expect(build.created_by_user_email).to eq('charles@las.gym')
-          expect(build.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-            to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+          expect(build).to have_labels(
+            { prefix: nil, key: 'release', value: 'stable' },
                             { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-            ])
-          expect(build.annotations.map { |a| { key: a.key, value: a.value } }).
-            to match_array([{ key: 'anno', value: 'tations' }])
+            )
+          expect(build).to have_annotations(
+            { key: 'anno', value: 'tations' }
+          )
         end
 
         it 'creates an app usage event for STAGING_STARTED' do

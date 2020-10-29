@@ -193,9 +193,9 @@ module VCAP::CloudController
 
         it 'updates the annotations' do
           app_update.update(app_model, message, lifecycle)
-          expect(app_model.annotations.map(&:value)).to contain_exactly(
-            'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-            'new-value'
+          expect(app_model).to have_annotations(
+            { key: 'contacts', value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' },
+            { key: 'existing_anno', value: 'new-value' },
           )
           expect(AppAnnotationModel.find(resource_guid: app_model.guid, key: 'please')).to be_nil
         end

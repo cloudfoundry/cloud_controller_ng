@@ -32,12 +32,15 @@ module VCAP::CloudController
 
           expect(organization.name).to eq('my-organization')
 
-          expect(organization.labels.map(&:key_name)).to contain_exactly('potato', 'release')
-          expect(organization.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
-          expect(organization.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+          expect(organization).to have_labels(
+            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            { prefix: nil, key: 'release', value: 'stable' }
+          )
 
-          expect(organization.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
-          expect(organization.annotations.map(&:value)).to contain_exactly('land', 'boys')
+          expect(organization).to have_annotations(
+            { key: 'tomorrow', value: 'land' },
+            { key: 'backstreet', value: 'boys' }
+          )
         end
 
         it 'creates an audit event' do

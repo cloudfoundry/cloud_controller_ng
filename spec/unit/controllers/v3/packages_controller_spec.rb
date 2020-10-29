@@ -519,10 +519,14 @@ RSpec.describe PackagesController, type: :controller do
         expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'adora', 'beet' => 'formanova' })
 
         package.reload
-        expect(package.labels.map { |label| { key: label.key_name, value: label.value } }).
-          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'hino' }])
-        expect(package.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'potato', value: 'adora' }, { key: 'beet', value: 'formanova' }])
+        expect(package).to have_labels(
+          { key: 'fruit', value: 'passionfruit' },
+          { key: 'truck', value: 'hino' }
+        )
+        expect(package).to have_annotations(
+          { key: 'potato', value: 'adora' },
+          { key: 'beet', value: 'formanova' }
+        )
       end
 
       context 'when a label is deleted' do
@@ -541,7 +545,7 @@ RSpec.describe PackagesController, type: :controller do
 
           expect(response.status).to eq(200)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'hino' })
-          expect(package.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'hino' }])
+          expect(package).to have_labels({ key: 'truck', value: 'hino' })
         end
       end
       context 'when an empty request is sent' do
@@ -654,7 +658,7 @@ RSpec.describe PackagesController, type: :controller do
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'formanova' })
 
           package.reload
-          expect(package.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'beet', value: 'formanova' }])
+          expect(package).to have_annotations({ key: 'beet', value: 'formanova' })
         end
       end
     end
