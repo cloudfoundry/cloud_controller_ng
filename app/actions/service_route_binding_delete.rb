@@ -1,11 +1,11 @@
+require 'services/service_brokers/service_client_provider'
+
 module VCAP::CloudController
   module V3
     class ServiceRouteBindingDelete
       class UnprocessableDelete < StandardError; end
 
       class ConcurrencyError < StandardError; end
-
-      RequiresAsync = Class.new.freeze
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
       DeleteStarted = ->(operation) { DeleteStatus.new(false, operation) }
@@ -19,11 +19,8 @@ module VCAP::CloudController
         @service_event_repository = service_event_repository
       end
 
-      def delete(binding, async_allowed:)
-
-        return RequiresAsync.new unless async_allowed || binding.service_instance.user_provided_instance?
-
-        result = send_unbind_to_broker(binding)
+      def delete(binding)
+        result = send_unbind_to_client(binding)
         if result[:finished]
           perform_delete_actions(binding)
         else
@@ -67,7 +64,7 @@ module VCAP::CloudController
 
       attr_reader :service_event_repository
 
-      def send_unbind_to_broker(binding)
+      def send_unbind_to_client(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete

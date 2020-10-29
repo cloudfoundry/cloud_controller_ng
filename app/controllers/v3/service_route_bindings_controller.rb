@@ -4,7 +4,7 @@ require 'messages/service_route_bindings_list_message'
 require 'actions/service_route_binding_create'
 require 'actions/service_route_binding_delete'
 require 'jobs/v3/create_binding_async_job'
-require 'jobs/v3/delete_route_binding_job'
+require 'jobs/v3/delete_binding_job'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_route_binding_presenter'
 require 'fetchers/route_binding_list_fetcher'
@@ -72,7 +72,7 @@ class ServiceRouteBindingsController < ApplicationController
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
       action = V3::ServiceRouteBindingDelete.new(service_event_repository)
-      action.delete(@route_binding, async_allowed: false)
+      action.delete(@route_binding)
       head :no_content
     end
   rescue V3::ServiceRouteBindingDelete::UnprocessableDelete => e
@@ -132,7 +132,8 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def enqueue_unbind_job(binding_guid)
-    bind_job = VCAP::CloudController::V3::DeleteRouteBindingJob.new(
+    bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
+    :route,
       binding_guid,
       user_audit_info: user_audit_info,
     )

@@ -69,7 +69,7 @@ module VCAP::CloudController
       end
 
       describe '#delete' do
-        subject(:delete_binding) { action.delete(route_binding, async_allowed: async_allowed) }
+        subject(:delete_binding) { action.delete(route_binding) }
 
         context 'managed service instance' do
           let(:service_offering) { Service.make(requires: ['route_forwarding']) }
@@ -83,107 +83,94 @@ module VCAP::CloudController
             allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
           end
 
-          context 'async response not allowed' do
-            let(:async_allowed) { false }
+          it 'makes the right call to the broker client' do
+            delete_binding
 
-            it 'reports that a async is required' do
-              expect(delete_binding).to be_a(described_class::RequiresAsync)
+            expect(broker_client).to have_received(:unbind).with(route_binding, nil, true)
+          end
+
+          context 'broker returns delete complete' do
+            let(:perform_action) { delete_binding }
+
+            it_behaves_like 'successful delete'
+          end
+
+          context 'broker returns delete in progress' do
+            let(:operation) { Sham.guid }
+            let(:unbind_response) { { async: true, operation: operation } }
+
+            it 'says the the delete is in progress' do
+              expect(delete_binding[:finished]).to be_falsey
+              expect(delete_binding[:operation]).to eq(operation)
+            end
+
+            it 'updates the last operation' do
+              delete_binding
+
+              expect(route_binding.last_operation.type).to eq('delete')
+              expect(route_binding.last_operation.state).to eq('in progress')
+              expect(route_binding.last_operation.broker_provided_operation).to eq(operation)
+              expect(route_binding.last_operation.description).to be_nil
+            end
+
+            it 'does not remove the binding or log an audit event' do
+              delete_binding
+
               expect(RouteBinding.first).to eq(route_binding)
+              expect(event_repository).not_to have_received(:record_service_instance_event)
             end
           end
 
-          context 'async response allowed' do
-            let(:async_allowed) { true }
-
-            it 'makes the right call to the broker client' do
-              delete_binding
-
-              expect(broker_client).to have_received(:unbind).with(route_binding, nil, true)
+          context 'broker returns a generic error' do
+            let(:broker_client) do
+              dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
+              allow(dbl).to receive(:unbind).and_raise(StandardError, 'awful thing')
+              dbl
             end
 
-            context 'broker returns delete complete' do
-              let(:perform_action) { delete_binding }
-
-              it_behaves_like 'successful delete'
-            end
-
-            context 'broker returns delete in progress' do
-              let(:operation) { Sham.guid }
-              let(:unbind_response) { { async: true, operation: operation } }
-
-              it 'says the the delete is in progress' do
-                expect(delete_binding[:finished]).to be_falsey
-                expect(delete_binding[:operation]).to eq(operation)
-              end
-
-              it 'updates the last operation' do
+            it 'fails with an appropriate error and stores the message in the binding' do
+              expect {
                 delete_binding
+              }.to raise_error(
+                described_class::UnprocessableDelete,
+                "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
+              )
 
-                expect(route_binding.last_operation.type).to eq('delete')
-                expect(route_binding.last_operation.state).to eq('in progress')
-                expect(route_binding.last_operation.broker_provided_operation).to eq(operation)
-                expect(route_binding.last_operation.description).to be_nil
-              end
+              expect(route_binding.last_operation.type).to eq('delete')
+              expect(route_binding.last_operation.state).to eq('failed')
+              expect(route_binding.last_operation.description).to eq("Service broker failed to delete service binding for instance #{service_instance.name}: awful thing")
+            end
+          end
 
-              it 'does not remove the binding or log an audit event' do
+          context 'broker returns a concurrency error' do
+            let(:broker_client) do
+              dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
+              allow(dbl).to receive(:unbind).and_raise(
+                VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
+                  'foo',
+                  :delete,
+                  double(code: '500', reason: '', body: '')
+                )
+              )
+              dbl
+            end
+
+            before do
+              route_binding.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'doing stuff' })
+            end
+
+            it 'fails with an appropriate error and does not alter the binding' do
+              expect {
                 delete_binding
+              }.to raise_error(
+                described_class::ConcurrencyError,
+                'The service broker rejected the request due to an operation being in progress for the service route binding',
+              )
 
-                expect(RouteBinding.first).to eq(route_binding)
-                expect(event_repository).not_to have_received(:record_service_instance_event)
-              end
-            end
-
-            context 'broker returns a generic error' do
-              let(:broker_client) do
-                dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
-                allow(dbl).to receive(:unbind).and_raise(StandardError, 'awful thing')
-                dbl
-              end
-
-              it 'fails with an appropriate error and stores the message in the binding' do
-                expect {
-                  delete_binding
-                }.to raise_error(
-                  described_class::UnprocessableDelete,
-                  "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
-                )
-
-                expect(route_binding.last_operation.type).to eq('delete')
-                expect(route_binding.last_operation.state).to eq('failed')
-                expect(route_binding.last_operation.description).to eq("Service broker failed to delete service binding for instance #{service_instance.name}: awful thing")
-              end
-            end
-
-            context 'broker returns a concurrency error' do
-              let(:broker_client) do
-                dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
-                allow(dbl).to receive(:unbind).and_raise(
-                  VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
-                    'foo',
-                    :delete,
-                    double(code: '500', reason: '', body: '')
-                  )
-                )
-                dbl
-              end
-
-              before do
-                route_binding.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'doing stuff' })
-              end
-
-              it 'fails with an appropriate error and does not alter the binding' do
-                expect {
-                  delete_binding
-                }.to raise_error(
-                  described_class::ConcurrencyError,
-                  'The service broker rejected the request due to an operation being in progress for the service route binding',
-                )
-
-                route_binding.reload
-                expect(route_binding.last_operation.type).to eq('create')
-                expect(route_binding.last_operation.state).to eq('in progress')
-                expect(route_binding.last_operation.description).to eq('doing stuff')
-              end
+              route_binding.reload
+              expect(route_binding.last_operation.type).to eq('create')
+              expect(route_binding.last_operation.state).to eq('in progress')
+              expect(route_binding.last_operation.description).to eq('doing stuff')
             end
           end
         end
@@ -192,17 +179,7 @@ module VCAP::CloudController
           let(:service_instance) { UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
           let(:perform_action) { delete_binding }
 
-          context 'async response not allowed' do
-            let(:async_allowed) { false }
-
-            it_behaves_like 'successful delete'
-          end
-
-          context 'async response allowed' do
-            let(:async_allowed) { true }
-
-            it_behaves_like 'successful delete'
-          end
+          it_behaves_like 'successful delete'
         end
       end
 
