@@ -27,7 +27,10 @@ module VCAP::CloudController
         it 'creates a space' do
           expect(space.organization).to eq(org)
           expect(space.name).to eq('my-space')
-          expect(space.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+          expect(space).to have_labels(
+            { prefix: nil, key: 'release', value: 'stable' },
+            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' }
+          )
         end
 
         it 'creates an audit event' do

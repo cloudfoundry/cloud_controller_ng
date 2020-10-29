@@ -51,9 +51,8 @@ module VCAP::CloudController
           deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
           deploying_web_process = deployment.deploying_web_process
 
-          expect(deploying_web_process.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'freaky', value: 'wednesday' }])
-          expect(deploying_web_process.annotations.map { |a| { key: a.key, value: a.value } }).
-            to match_array([{ key: 'tokyo', value: 'grapes' }])
+          expect(deploying_web_process).to have_labels({ key: 'freaky', value: 'wednesday' })
+          expect(deploying_web_process).to have_annotations({ key: 'tokyo', value: 'grapes' })
         end
       end
 
@@ -434,8 +433,14 @@ module VCAP::CloudController
             it 'saves the metadata to the new deployment' do
               deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-              expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-              expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+              expect(deployment).to have_labels(
+                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+                { prefix: nil, key: 'release', value: 'stable' }
+              )
+              expect(deployment).to have_annotations(
+                { key: 'superhero', value: 'Bummer-boy' },
+                { key: 'superpower', value: 'Bums you out' }
+              )
             end
           end
 
@@ -517,8 +522,14 @@ module VCAP::CloudController
               it 'saves the metadata to the new deployment' do
                 deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-                expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-                expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+                expect(deployment).to have_labels(
+                  { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+                  { prefix: nil, key: 'release', value: 'stable' }
+                )
+                expect(deployment).to have_annotations(
+                  { key: 'superhero', value: 'Bummer-boy' },
+                  { key: 'superpower', value: 'Bums you out' }
+                )
               end
             end
           end
@@ -670,9 +681,14 @@ module VCAP::CloudController
 
               it 'saves the metadata to the new deployment' do
                 deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-
-                expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-                expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+                expect(deployment).to have_labels(
+                  { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+                  { prefix: nil, key: 'release', value: 'stable' }
+                )
+                expect(deployment).to have_annotations(
+                  { key: 'superhero', value: 'Bummer-boy' },
+                  { key: 'superpower', value: 'Bums you out' }
+                )
               end
             end
           end
@@ -924,9 +940,14 @@ module VCAP::CloudController
 
             it 'saves the metadata to the new deployment' do
               deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-
-              expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-              expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+              expect(deployment).to have_labels(
+                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+                { prefix: nil, key: 'release', value: 'stable' }
+              )
+              expect(deployment).to have_annotations(
+                { key: 'superhero', value: 'Bummer-boy' },
+                { key: 'superpower', value: 'Bums you out' }
+              )
             end
           end
         end

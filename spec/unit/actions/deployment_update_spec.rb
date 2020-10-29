@@ -45,12 +45,11 @@ module VCAP::CloudController
         expect(message).to be_valid
         updated_deployment = DeploymentUpdate.update(deployment, message)
 
-        expect(updated_deployment.labels.first.key_name).to eq 'freaky'
-        expect(updated_deployment.labels.first.value).to eq 'wednesday'
-        expect(updated_deployment.labels.size).to eq 1
-        expect(updated_deployment.annotations.size).to eq(2)
-        expect(Hash[updated_deployment.annotations.map { |a| [a.key, a.value] }]).
-          to eq({ 'University' => 'Toronto', 'reason' => 'add some more annotations' })
+        expect(updated_deployment).to have_labels({ key: 'freaky', value: 'wednesday' })
+        expect(updated_deployment).to have_annotations(
+          { key: 'University', value: 'Toronto' },
+          { key: 'reason', value: 'add some more annotations' }
+        )
       end
     end
   end

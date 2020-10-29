@@ -26,9 +26,8 @@ module VCAP::CloudController
         task_update.update(task, message)
 
         task.reload
-        expect(task.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'freaky', value: 'wednesday' }])
-        expect(task.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'tokyo', value: 'grapes' }])
+        expect(task).to have_labels({ key: 'freaky', value: 'wednesday' })
+        expect(task).to have_annotations({ key: 'tokyo', value: 'grapes' })
       end
     end
   end

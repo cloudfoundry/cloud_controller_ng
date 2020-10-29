@@ -294,8 +294,13 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(201)
 
         deployment = VCAP::CloudController::DeploymentModel.last
-        expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-        expect(deployment.annotations.map(&:value)).to contain_exactly('idaho')
+        expect(deployment).to have_labels(
+          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+          { prefix: nil, key: 'release', value: 'stable' }
+        )
+        expect(deployment).to have_annotations(
+          { key: 'potato', value: 'idaho' },
+        )
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,

@@ -63,14 +63,14 @@ module VCAP::CloudController
             domain_update.update(domain: domain, message: message)
 
             domain.reload
-            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            expect(domain).to have_labels(
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
                 { prefix: nil, key: 'fruit', value: 'strawberries' },
                 { prefix: nil, key: 'release', value: 'stable' },
-              ])
-            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([{ key: 'potato', value: 'idaho' }])
+              )
+            expect(domain).to have_annotations(
+              { key: 'potato', value: 'idaho' }
+            )
           end
         end
       end
@@ -90,16 +90,14 @@ module VCAP::CloudController
             expect(message).to be_valid
             domain_update.update(domain: domain, message: message)
             domain.reload
-            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: nil, key: 'fruit', value: 'pears' },
+            expect(domain).to have_labels(
+              { prefix: nil, key: 'fruit', value: 'pears' },
                 { prefix: nil, key: 'truck', value: 'hino' },
-              ])
-            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([
-                { key: 'potato', value: 'celandine' },
+              )
+            expect(domain).to have_annotations(
+              { key: 'potato', value: 'celandine' },
                 { key: 'beet', value: 'formanova' },
-              ])
+              )
           end
         end
 
@@ -117,18 +115,16 @@ module VCAP::CloudController
             expect(message).to be_valid
             domain_update.update(domain: domain, message: message)
             domain.reload
-            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            expect(domain).to have_labels(
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
                 { prefix: nil, key: 'release', value: 'stable' },
                 { prefix: nil, key: 'truck', value: 'hino' },
                 { prefix: nil, key: 'newstuff', value: 'here' },
-              ])
-            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([
-                { key: 'potato', value: 'idaho' },
+              )
+            expect(domain).to have_annotations(
+              { key: 'potato', value: 'idaho' },
                 { key: 'asparagus', value: 'crunchy' },
-              ])
+              )
           end
         end
       end

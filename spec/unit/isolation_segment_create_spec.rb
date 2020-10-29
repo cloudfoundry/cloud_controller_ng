@@ -21,13 +21,14 @@ module VCAP::CloudController
         iso_seg = IsolationSegmentCreate.create(message)
 
         expect(iso_seg.name).to eq('my-iso-seg')
-
-        expect(iso_seg.labels.map(&:key_name)).to contain_exactly('potato', 'release')
-        expect(iso_seg.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
-        expect(iso_seg.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-
-        expect(iso_seg.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
-        expect(iso_seg.annotations.map(&:value)).to contain_exactly('land', 'boys')
+        expect(iso_seg).to have_labels(
+          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+          { prefix: nil, key: 'release', value: 'stable' }
+        )
+        expect(iso_seg).to have_annotations(
+          { key: 'tomorrow', value: 'land' },
+          { key: 'backstreet', value: 'boys' }
+        )
       end
 
       context 'when a model validation fails' do

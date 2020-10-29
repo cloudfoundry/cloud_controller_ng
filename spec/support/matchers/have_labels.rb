@@ -20,16 +20,20 @@ RSpec::Matchers.define :have_labels do |*expected|
       end
 
       expect(actual_labels).to match_array(expected)
-    else
+    else # Situation: expect(thing).to have_labels
       expect(actual_labels).not_to be_empty
     end
   end
 
   failure_message do
     if expected.any?
-      "Labels don't match: Expected #{expected} got #{actual_labels}"
+      [
+        "Labels don't match!",
+        "Expected #{expected}",
+        "     got #{actual_labels}",
+      ].join("\n")
     else
-      "Labels not expected: got #{actual_labels}"
+      'Expected labels but found none!'
     end
   end
 
@@ -37,7 +41,7 @@ RSpec::Matchers.define :have_labels do |*expected|
     if expected.any?
       "Labels unexpectedly match: got #{actual_labels}"
     else
-      "Labels found when not expected: got #{actual_labels}"
+      "Expected no labels but got #{actual_labels}"
     end
   end
 end

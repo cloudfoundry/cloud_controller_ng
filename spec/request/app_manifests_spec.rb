@@ -107,10 +107,14 @@ RSpec.describe 'App Manifests' do
 
       expect(app_model.service_bindings.length).to eq 1
       expect(app_model.service_bindings.first.service_instance).to eq service_instance
-      expect(app_model.labels.map { |label| { key: label.key_name, value: label.value } }).
-        to match_array([{ key: 'potato', value: 'yam' }, { key: 'songs', value: 'missing' }])
-      expect(app_model.annotations.map { |a| { key: a.key, value: a.value } }).
-        to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' }])
+      expect(app_model).to have_labels(
+        { key: 'potato', value: 'yam' },
+        { prefix: 'myspace.com', key: 'songs', value: 'missing' },
+      )
+      expect(app_model).to have_annotations(
+        { key: 'potato', value: 'idaho' },
+        { key: 'juice', value: 'newton' },
+      )
     end
 
     context 'sidecars' do

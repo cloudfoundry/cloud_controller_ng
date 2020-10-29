@@ -47,12 +47,11 @@ module VCAP::CloudController
           expect(message).to be_valid
           updated_droplet = droplet_update.update(droplet, message)
 
-          expect(updated_droplet.labels.first.key_name).to eq 'freaky'
-          expect(updated_droplet.labels.first.value).to eq 'wednesday'
-          expect(updated_droplet.labels.size).to eq 1
-          expect(updated_droplet.annotations.size).to eq(2)
-          expect(Hash[updated_droplet.annotations.map { |a| [a.key, a.value] }]).
-            to eq({ 'University' => 'Toronto', 'reason' => 'add some more annotations' })
+          expect(updated_droplet).to have_labels({ key: 'freaky', value: 'wednesday' })
+          expect(updated_droplet).to have_annotations(
+            { key: 'University', value: 'Toronto' },
+            { key: 'reason', value: 'add some more annotations' }
+          )
         end
       end
 

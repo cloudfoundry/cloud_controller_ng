@@ -66,14 +66,14 @@ module VCAP::CloudController
         expect(service_instance.syslog_drain_url).to eq('https://foo2.com')
         expect(service_instance.route_service_url).to eq('https://bar2.com')
         expect(service_instance.tags).to eq(%w(accounting couchbase nosql))
-        expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
+        expect(service_instance).to have_labels(
           { prefix: nil, key: 'foo', value: 'bar' },
           { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-        ])
-        expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
+        )
+        expect(service_instance).to have_annotations(
           { prefix: nil, key: 'alpha', value: 'beta' },
           { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-        ])
+        )
       end
 
       it 'returns the updated service instance' do

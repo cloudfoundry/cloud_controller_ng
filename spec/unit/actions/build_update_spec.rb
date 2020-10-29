@@ -62,14 +62,12 @@ module VCAP::CloudController
             build_update.update(build, message)
 
             build.reload
-            expect(build.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            expect(build).to have_labels(
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
                 { prefix: nil, key: 'fruit', value: 'strawberries' },
                 { prefix: nil, key: 'release', value: 'stable' },
-              ])
-            expect(build.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([{ key: 'potato', value: 'idaho' }])
+              )
+            expect(build).to have_annotations({ key: 'potato', value: 'idaho' })
           end
         end
       end
@@ -89,16 +87,14 @@ module VCAP::CloudController
             expect(message).to be_valid
             build_update.update(build, message)
             build.reload
-            expect(build.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: nil, key: 'fruit', value: 'pears' },
+            expect(build).to have_labels(
+              { prefix: nil, key: 'fruit', value: 'pears' },
                 { prefix: nil, key: 'truck', value: 'hino' },
-              ])
-            expect(build.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([
-                { key: 'potato', value: 'celandine' },
+              )
+            expect(build).to have_annotations(
+              { key: 'potato', value: 'celandine' },
                 { key: 'beet', value: 'formanova' },
-              ])
+              )
           end
         end
 
@@ -115,18 +111,16 @@ module VCAP::CloudController
             expect(message).to be_valid
             build_update.update(build, message)
             build.reload
-            expect(build.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
-              to match_array([
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            expect(build).to have_labels(
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
                 { prefix: nil, key: 'release', value: 'stable' },
                 { prefix: nil, key: 'truck', value: 'hino' },
                 { prefix: nil, key: 'newstuff', value: 'here' },
-              ])
-            expect(build.annotations.map { |a| { key: a.key, value: a.value } }).
-              to match_array([
-                { key: 'potato', value: 'idaho' },
+              )
+            expect(build).to have_annotations(
+              { key: 'potato', value: 'idaho' },
                 { key: 'asparagus', value: 'crunchy' },
-              ])
+              )
           end
         end
       end
