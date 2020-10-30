@@ -197,7 +197,7 @@ Rails.application.routes.draw do
   # service_route_bindings
   resources :service_route_bindings,
     param: :guid,
-    only: [:show, :create, :index, :destroy] do
+    only: [:show, :create, :index, :update, :destroy] do
     member do
       get :parameters
     end
