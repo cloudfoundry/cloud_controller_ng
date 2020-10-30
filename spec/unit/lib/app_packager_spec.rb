@@ -32,39 +32,6 @@ RSpec.describe AppPackager do
       expect(Dir["#{@tmpdir}/subdir/*"].size).to eq 1
     end
 
-    context 'when the zip contains files with weird permissions' do
-      context 'when there are unreadable dirs' do
-        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'unreadable_dir.zip') }
-
-        it 'makes all files/dirs readable to cc' do
-          app_packager.unzip(@tmpdir)
-
-          expect(File.readable?("#{@tmpdir}/unreadable")).to be true
-        end
-      end
-
-      context 'when there are unwritable dirs' do
-        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'undeletable_dir.zip') }
-
-        it 'makes all files/dirs writable to cc' do
-          app_packager.unzip(@tmpdir)
-
-          expect(File.writable?("#{@tmpdir}/undeletable")).to be true
-        end
-      end
-
-      context 'when there are untraversable dirs' do
-        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'untraversable_dir.zip') }
-
-        it 'makes all dirs traversable to cc' do
-          app_packager.unzip(@tmpdir)
-
-          expect(File.executable?("#{@tmpdir}/untraversable")).to be true
-          expect(File.executable?("#{@tmpdir}/untraversable/file.txt")).to be false
-        end
-      end
-    end
-
     context 'when the zip contains broken symlinks' do
       let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'broken-file-symlink.zip') }
 
@@ -121,21 +88,6 @@ RSpec.describe AppPackager do
       end
 
       it 'raises an exception' do
-        expect {
-          app_packager.unzip(@tmpdir)
-        }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
-      end
-    end
-
-    context 'when there is an error adjusting permissions' do
-      before do
-        allow(Open3).to receive(:capture3).with(/unzip/).and_return(['output', 'error', double(success?: true)])
-        allow(Open3).to receive(:capture3).with(/chmod/).and_return(['output', 'error', double(success?: false)])
-      end
-
-      it 'raises an exception' do
-        expect(logger).to receive(:error).with /Fixing zip file permissions error.*\n.*output.*\n.*error.*/
-
         expect {
           app_packager.unzip(@tmpdir)
         }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
@@ -215,7 +167,7 @@ RSpec.describe AppPackager do
       before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'bad_directory_permissions.zip'), input_zip) }
 
       it 'deletes all directories from the archive' do
-        app_packager.fix_subdir_permissions
+        app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
 
         has_dirs = Zip::File.open(input_zip) do |in_zip|
           in_zip.any?(&:directory?)
@@ -231,7 +183,7 @@ RSpec.describe AppPackager do
       before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'special_character_names.zip'), input_zip) }
 
       it 'successfully removes and re-adds them' do
-        app_packager.fix_subdir_permissions
+        app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
         expect(`zipinfo #{input_zip}`).to match %r(special_character_names/&&hello::\?\?/)
       end
     end
@@ -241,12 +193,12 @@ RSpec.describe AppPackager do
 
       before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'many_dirs.zip'), input_zip) }
 
-      it 'batches the directory deletes so it does not exceed the max command length' do
+      it 'fixes the directory permissions and batches the directory deletes so it does not exceed the max command length' do
         allow(Open3).to receive(:capture3).and_call_original
         batch_size = 10
         stub_const('AppPackager::DIRECTORY_DELETE_BATCH_SIZE', batch_size)
 
-        app_packager.fix_subdir_permissions
+        app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
 
         output = `zipinfo #{input_zip}`
 
@@ -257,7 +209,7 @@ RSpec.describe AppPackager do
 
         number_of_batches = (21.0 / batch_size).ceil
         expect(number_of_batches).to eq(3)
-        expect(Open3).to have_received(:capture3).exactly(number_of_batches).times
+        expect(Open3).to have_received(:capture3).exactly(number_of_batches + 1).times
       end
     end
 
@@ -268,7 +220,7 @@ RSpec.describe AppPackager do
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
         expect {
-          app_packager.fix_subdir_permissions
+          app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
         }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error removing zip directories./)
       end
     end
@@ -279,7 +231,7 @@ RSpec.describe AppPackager do
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
         expect {
-          app_packager.fix_subdir_permissions
+          app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
         }.to raise_error(CloudController::Errors::ApiError, /The app upload is invalid: Invalid zip archive./)
       end
     end

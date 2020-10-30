@@ -25,8 +25,6 @@ class AppPackager
       logger.error("Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
       invalid_zip!
     end
-
-    fix_unzipped_permissions(destination_dir)
   end
 
   def append_dir_contents(additional_contents_dir)
@@ -43,8 +41,8 @@ class AppPackager
     end
   end
 
-  def fix_subdir_permissions
-    remove_dirs_from_zip(@path, get_dirs_from_zip(@path))
+  def fix_subdir_permissions(root_path, app_contents_path)
+    remove_dirs_from_zip(@path, get_dirs_from_zip(@path), root_path, app_contents_path)
   rescue Zip::Error
     invalid_zip!
   end
@@ -69,7 +67,10 @@ class AppPackager
     @logger ||= Steno.logger('app_packager')
   end
 
-  def remove_dirs_from_zip(zip_path, dirs_from_zip)
+  def remove_dirs_from_zip(zip_path, dirs_from_zip, root_path, app_contents_path)
+    unless empty_directory?(root_path)
+      fix_permissions_for_file_deletion(app_contents_path)
+    end
     dirs_from_zip.each_slice(DIRECTORY_DELETE_BATCH_SIZE) do |directory_slice|
       remove_dir(zip_path, directory_slice)
     end
@@ -87,11 +88,10 @@ class AppPackager
     end
   end
 
-  def fix_unzipped_permissions(destination_dir)
+  def fix_permissions_for_file_deletion(destination_dir)
     stdout, error, status = Open3.capture3(%(chmod -R u+rwX #{Shellwords.escape(destination_dir)}))
     unless status.success?
-      logger.error("Fixing zip file permissions error\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
-      invalid_zip!
+      logger.error("Cleanup of some files may have failed, error fixing zip file permissions\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
     end
   end
 
