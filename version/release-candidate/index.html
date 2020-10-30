@@ -29448,6 +29448,14 @@ This endpoint is not available for User-Provided Service Instances.</p>
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29503,6 +29511,16 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <td>The URL for the route service</td>
 </tr>
 <tr>
+<td><strong>metadata.labels</strong> (<em>experimental</em>)</td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service route binding</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> (<em>experimental</em>)</td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service route binding</td>
+</tr>
+<tr>
 <td><strong>relationships.service_instance</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The service instance that the route is bound to</td>
@@ -29526,6 +29544,14 @@ This endpoint is not available for User-Provided Service Instances.</p>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
+    "metadata": {
+      "annotations": {
+        "foo": "bar"
+      },
+      "labels": {
+        "baz": "qux"
+      }
+    },
     "relationships": {
       "route": {
         "data": {
@@ -29566,6 +29592,14 @@ This endpoint is not available for User-Provided Service Instances.</p>
     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29642,6 +29676,16 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 <td><em>object</em></td>
 <td>A JSON object that is passed to the service broker</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service route binding</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service route binding</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
@@ -29692,6 +29736,14 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
         </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-09-08T08:55:59Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-09-08T08:55:59Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
         </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29722,6 +29774,14 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
         </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-09-08T09:13:51Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-09-08T09:13:51Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
         </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29855,6 +29915,14 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
