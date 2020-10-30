@@ -22,6 +22,8 @@ RSpec.describe 'v3 service route bindings' do
       let(:route_binding_2) do
         bind_service_to_route(service_instance_2, route)
       end
+      let(:route_binding_1_metadata) { { labels: { peanut: 'butter' }, annotations: {} } }
+      let(:route_binding_2_metadata) { { labels: {}, annotations: { pastry: 'choux' } } }
       let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
       let(:response_objects) do
         [
@@ -32,7 +34,8 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'successful',
-            include_params_link: service_instance_1.managed_instance?
+            include_params_link: service_instance_1.managed_instance?,
+            metadata: route_binding_1_metadata
           ),
           expected_json(
             binding_guid: route_binding_2.guid,
@@ -41,7 +44,8 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'successful',
-            include_params_link: service_instance_2.managed_instance?
+            include_params_link: service_instance_2.managed_instance?,
+            metadata: route_binding_2_metadata
           )
         ]
       end
@@ -59,6 +63,11 @@ RSpec.describe 'v3 service route bindings' do
           h['space_auditor'] = bindings_response_body
           h['org_manager'] = bindings_response_body
         end
+      end
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(route_binding_1, route_binding_1_metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(route_binding_2, route_binding_2_metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -170,6 +179,12 @@ RSpec.describe 'v3 service route bindings' do
       )
     end
     let(:guid) { route_binding.guid }
+    let(:metadata) {
+      {
+        labels: { peanut: 'butter' },
+        annotations: { butter: 'yes' }
+      }
+    }
     let(:expected_body) do
       expected_json(
         binding_guid: guid,
@@ -178,16 +193,21 @@ RSpec.describe 'v3 service route bindings' do
         route_guid: route.guid,
         last_operation_type: 'create',
         last_operation_state: 'successful',
-        include_params_link: service_instance.managed_instance?
+        include_params_link: service_instance.managed_instance?,
+        metadata: metadata
       )
     end
-
     let(:expected_codes_and_responses) do
       responses_for_space_restricted_single_endpoint(expected_body)
     end
 
     context 'user-provided service instance' do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -196,6 +216,11 @@ RSpec.describe 'v3 service route bindings' do
       let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -219,6 +244,11 @@ RSpec.describe 'v3 service route bindings' do
 
     describe 'include' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
+      end
 
       it 'can include `service_instance`' do
         get "/v3/service_route_bindings/#{guid}?include=service_instance", nil, admin_headers
@@ -850,7 +880,8 @@ RSpec.describe 'v3 service route bindings' do
             route_guid: route.guid,
             last_operation_type: 'create',
             last_operation_state: 'succeeded',
-            include_params_link: service_instance.managed_instance?
+            include_params_link: service_instance.managed_instance?,
+            metadata: metadata
           )
         )
       end
@@ -1369,7 +1400,7 @@ RSpec.describe 'v3 service route bindings' do
     headers_for(user)
   end
 
-  def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:, include_params_link:)
+  def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:, include_params_link:, metadata: {})
     {
       guid: binding_guid,
       created_at: iso8601,
@@ -1382,6 +1413,7 @@ RSpec.describe 'v3 service route bindings' do
         state: last_operation_state,
         type: last_operation_type,
       },
+      metadata: metadata,
       relationships: {
         service_instance: {
           data: {
