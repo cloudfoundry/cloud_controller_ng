@@ -1,18 +1,12 @@
+require 'actions/v3/service_binding_delete'
+
 module VCAP::CloudController
   module V3
-    class ServiceCredentialBindingDelete
-      class NotImplementedError < StandardError
-      end
-
-      def delete(binding)
-        not_implemented! if binding.service_instance.managed_instance?
-        binding.destroy
-      end
-
+    class ServiceCredentialBindingDelete < V3::ServiceBindingDelete
       private
 
-      def not_implemented!
-        raise NotImplementedError.new
+      def perform_delete_actions(binding)
+        binding.destroy
       end
     end
   end

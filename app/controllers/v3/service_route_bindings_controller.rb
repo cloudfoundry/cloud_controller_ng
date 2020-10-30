@@ -133,7 +133,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   def enqueue_unbind_job(binding_guid)
     bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
-    :route,
+      :route,
       binding_guid,
       user_audit_info: user_audit_info,
     )

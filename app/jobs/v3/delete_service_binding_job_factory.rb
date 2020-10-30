@@ -1,5 +1,7 @@
 require 'jobs/v3/delete_service_route_binding_job_actor'
 require 'jobs/v3/delete_service_credential_binding_job_actor'
+require 'actions/service_route_binding_delete'
+require 'actions/service_credential_binding_delete'
 
 module VCAP::CloudController
   module V3
@@ -24,8 +26,7 @@ module VCAP::CloudController
           service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
           V3::ServiceRouteBindingDelete.new(service_event_repository)
         when :credential
-          raise InvalidType
-          # V3::ServiceCredentialBindingCreate.new(user_audit_info, audit_hash)
+          V3::ServiceCredentialBindingDelete.new
         else
           raise InvalidType
         end

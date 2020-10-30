@@ -21,6 +21,22 @@ module VCAP::CloudController
           expect { DeleteServiceBindingFactory.for(:key) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
         end
       end
+
+      describe '#action' do
+        it 'should return route action when type is route' do
+          actor = DeleteServiceBindingFactory.action(:route, {})
+          expect(actor).to be_an_instance_of(ServiceRouteBindingDelete)
+        end
+
+        it 'should return credential binding action when type is credential' do
+          actor = DeleteServiceBindingFactory.action(:credential, {})
+          expect(actor).to be_an_instance_of(V3::ServiceCredentialBindingDelete)
+        end
+
+        it 'raise for unknown types' do
+          expect { DeleteServiceBindingFactory.action(:key, {}) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
+        end
+      end
     end
   end
 end

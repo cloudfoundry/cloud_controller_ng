@@ -226,7 +226,7 @@ module VCAP::CloudController
           end
 
           context 'managed service instance' do
-            let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
+            let(:service_offering) { Service.make(bindings_retrievable: true) }
             let(:service_plan) { ServicePlan.make(service: service_offering) }
             let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }

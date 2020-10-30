@@ -2,7 +2,6 @@ require 'db_spec_helper'
 require 'support/shared_examples/jobs/delete_binding_job'
 require 'jobs/v3/delete_binding_job'
 
-
 module VCAP::CloudController
   module V3
     RSpec.describe DeleteBindingJob do
@@ -24,24 +23,26 @@ module VCAP::CloudController
         it_behaves_like 'delete binding job', :route
       end
 
-      # context 'credential bindings' do
-      #   let(:binding) do
-      #     ServiceBinding.new.save_with_attributes_and_new_operation(
-      #       {
-      #         type: 'app',
-      #         service_instance: service_instance,
-      #         app: AppModel.make(space: service_instance.space),
-      #         credentials: {},
-      #       },
-      #       {
-      #         type: 'create',
-      #         state: 'in progress'
-      #       },
-      #     )
-      #   end
-      #
-      #   it_behaves_like 'delete binding job', :credential
-      # end
+      context 'credential bindings' do
+        let(:binding) do
+          ServiceBinding.new.save_with_attributes_and_new_operation(
+            {
+              type: 'app',
+              service_instance: service_instance,
+              app: AppModel.make(space: service_instance.space),
+              credentials: {
+                test: 'secretPassword'
+              },
+            },
+            {
+              type: 'create',
+              state: 'in progress'
+            },
+          )
+        end
+
+        it_behaves_like 'delete binding job', :credential
+      end
 
       let(:subject) do
         described_class.new(
