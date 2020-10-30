@@ -23,6 +23,7 @@ module VCAP::CloudController
       expect(message).to be_valid
       expect(message.requested?(:relationships)).to be_truthy
       expect(message.requested?(:parameters)).to be_falsey
+      expect(message.requested?(:metadata)).to be_falsey
     end
 
     it 'builds the right message' do
@@ -43,6 +44,26 @@ module VCAP::CloudController
 
       it 'builds the right message' do
         expect(message.parameters).to eq({ foo: 'bar' })
+      end
+    end
+
+    context 'when the request has metadata' do
+      let(:body_extra) do
+        {
+          metadata: {
+            labels: { foo: 'bar' },
+            annotations: { foz: 'baz' }
+          }
+        }
+      end
+
+      it 'accepts the metadata key' do
+        expect(message).to be_valid
+        expect(message.requested?(:metadata)).to be_truthy
+      end
+
+      it 'builds the right message' do
+        expect(message.metadata).to eq({ labels: { foo: 'bar' }, annotations: { foz: 'baz' } })
       end
     end
 
@@ -83,6 +104,20 @@ module VCAP::CloudController
           body[:parameters] = 'hello'
           expect(message).to_not be_valid
           expect(message.errors[:parameters]).to include('must be an object')
+        end
+      end
+
+      describe 'metadata' do
+        let(:body_extra) {
+          { metadata: { labels: 1, annotations: { '' => 'stop', '*this*' => 'stuff' } } }
+        }
+        it 'fails when not in the right format' do
+          expect(message).to be_invalid
+          expect(message.errors[:metadata]).to contain_exactly(
+            "'labels' is not an object",
+            'annotation key error: key cannot be empty string',
+            "annotation key error: '*this*' contains invalid characters"
+          )
         end
       end
     end

@@ -46,7 +46,7 @@ class ServiceRouteBindingsController < ApplicationController
 
     check_parameters_support(service_instance, message)
     action = V3::ServiceRouteBindingCreate.new(service_event_repository)
-    precursor = action.precursor(service_instance, route)
+    precursor = action.precursor(service_instance, route, message: message)
 
     case service_instance
     when ManagedServiceInstance

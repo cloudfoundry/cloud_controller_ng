@@ -1,5 +1,6 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'actions/service_route_binding_create'
+require 'messages/service_route_binding_create_message'
 require 'support/shared_examples/v3_service_binding_create'
 
 module VCAP::CloudController
@@ -15,16 +16,31 @@ module VCAP::CloudController
         dbl
       end
 
+      let(:message) {
+        VCAP::CloudController::ServiceRouteBindingCreateMessage.new(
+          metadata: {
+            labels: {
+              release: 'stable',
+              'seriouseats.com/potato': 'mashed'
+            }
+          }
+        )
+      }
+
       subject(:action) { described_class.new(event_repository) }
 
       describe '#precursor' do
         RSpec.shared_examples '#precursor' do
           it 'returns a route binding precursor' do
-            precursor = action.precursor(service_instance, route)
+            precursor = action.precursor(service_instance, route, message: message)
             expect(precursor).to be_a(RouteBinding)
             expect(precursor).to eq(RouteBinding.first)
             expect(precursor.service_instance).to eq(service_instance)
             expect(precursor.route).to eq(route)
+            expect(precursor).to have_labels(
+              { prefix: nil, key: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            )
             expect(precursor.route_service_url).to be_nil
             expect(precursor.last_operation.type).to eq('create')
             expect(precursor.last_operation.state).to eq('in progress')
@@ -36,7 +52,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'Route services cannot be bound to internal routes',
@@ -49,7 +65,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'The service instance and the route are in different spaces',
@@ -62,7 +78,7 @@ module VCAP::CloudController
               RouteBinding.make(service_instance: service_instance, route: route)
 
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::RouteBindingAlreadyExists,
                 'The route and service instance are already bound',
@@ -76,7 +92,7 @@ module VCAP::CloudController
               RouteBinding.make(service_instance: other_instance, route: route)
 
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'A route may only be bound to a single service instance',
@@ -88,7 +104,7 @@ module VCAP::CloudController
         RSpec.shared_examples '#precursor for non-route service instance' do
           it 'raises an error' do
             expect {
-              action.precursor(service_instance, route)
+              action.precursor(service_instance, route, message: message)
             }.to raise_error(
               ServiceRouteBindingCreate::UnprocessableCreate,
               'This service instance does not support route binding',
@@ -114,7 +130,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'This service instance does not support binding',
@@ -127,7 +143,7 @@ module VCAP::CloudController
               service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
 
               expect {
-                action.precursor(service_instance, route)
+                action.precursor(service_instance, route, message: message)
               }.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'There is an operation in progress for the service instance'
@@ -150,7 +166,7 @@ module VCAP::CloudController
       end
 
       context '#bind' do
-        let(:precursor) { action.precursor(service_instance, route) }
+        let(:precursor) { action.precursor(service_instance, route, message: message) }
         let(:binding_model) { RouteBinding }
         let(:bind_response) { { binding: { route_service_url: route_service_url } } }
 
@@ -229,7 +245,7 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        let(:binding) { action.precursor(service_instance, route) }
+        let(:binding) { action.precursor(service_instance, route, message: message) }
         let(:fetch_binding_response) { { route_service_url: route_service_url } }
 
         it_behaves_like 'polling service binding creation'

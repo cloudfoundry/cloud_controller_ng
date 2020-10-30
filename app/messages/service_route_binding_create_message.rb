@@ -1,8 +1,8 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
-  class ServiceRouteBindingCreateMessage < BaseMessage
+  class ServiceRouteBindingCreateMessage < MetadataBaseMessage
     register_allowed_keys [:relationships, :parameters]
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator

@@ -1,5 +1,7 @@
 require 'db_spec_helper'
 require 'presenters/v3/service_route_binding_presenter'
+require 'actions/labels_update'
+require 'actions/annotations_update'
 
 module VCAP
   module CloudController
@@ -25,6 +27,11 @@ module VCAP
         )
       end
 
+      before do
+        LabelsUpdate.update(binding, { ruby: 'lang' }, RouteBindingLabelModel)
+        AnnotationsUpdate.update(binding, { 'prefix/key' => 'bar' }, RouteBindingAnnotationModel)
+      end
+
       it 'presents the correct object' do
         presenter = described_class.new(binding)
         expect(presenter.to_hash.with_indifferent_access).to match(
@@ -39,6 +46,14 @@ module VCAP
               description: 'fake description',
               updated_at: binding.last_operation.updated_at,
               created_at: binding.last_operation.created_at
+            },
+            metadata: {
+              labels: {
+                ruby: 'lang',
+              },
+              annotations: {
+                'prefix/key' => 'bar'
+              }
             },
             relationships: {
               route: {
