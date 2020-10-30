@@ -1,4 +1,5 @@
 require 'services/service_brokers/service_client_provider'
+require 'actions/metadata_update'
 require 'actions/v3/service_binding_create'
 
 module VCAP::CloudController
@@ -9,19 +10,23 @@ module VCAP::CloudController
         @service_event_repository = service_event_repository
       end
 
-      def precursor(service_instance, route)
+      def precursor(service_instance, route, message:)
         validate!(service_instance, route)
 
-        RouteBinding.new.save_with_new_operation(
-          {
-            service_instance: service_instance,
-            route: route,
-          },
-          {
-            type: 'create',
-            state: 'in progress',
-          }
-        )
+        RouteBinding.db.transaction do
+          b = RouteBinding.new.save_with_new_operation(
+            {
+              service_instance: service_instance,
+              route: route,
+            },
+            {
+              type: 'create',
+              state: 'in progress',
+            }
+          )
+          MetadataUpdate.update(b, message)
+          b
+        end
       end
 
       class UnprocessableCreate < StandardError; end

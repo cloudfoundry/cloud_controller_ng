@@ -248,8 +248,14 @@ RSpec.describe 'v3 service route bindings' do
   describe 'POST /v3/service_route_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_route_bindings', request.to_json, user_headers } }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:metadata) { {
+      labels: { peanut: 'butter' },
+      annotations: { number: 'eight' }
+    }
+    }
     let(:request) do
       {
+        metadata: metadata,
         relationships: {
           service_instance: {
             data: {
@@ -279,6 +285,27 @@ RSpec.describe 'v3 service route bindings' do
           expect(parsed_response['errors']).to include(
             include({
               'detail' => "Unknown field(s): 'foo', Relationships 'relationships' is not an object",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            })
+          )
+
+          expect(VCAP::CloudController::RouteBinding.all).to be_empty
+        end
+      end
+
+      context 'invalid metadata' do
+        let(:metadata) do
+          { foo: 'bar' }
+        end
+
+        it 'fails with a 422 unprocessable' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(
+            include({
+              'detail' => "Metadata has unexpected field(s): 'foo'",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             })
@@ -446,6 +473,9 @@ RSpec.describe 'v3 service route bindings' do
         expect(binding.service_instance).to eq(service_instance)
         expect(binding.route).to eq(route)
         expect(binding.route_service_url).to be_nil
+
+        expect(binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
+        expect(binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
       end
 
       it 'responds with a job resource' do
@@ -809,6 +839,8 @@ RSpec.describe 'v3 service route bindings' do
         expect(binding.service_instance).to eq(service_instance)
         expect(binding.route).to eq(route)
         expect(binding.route_service_url).to eq(route_service_url)
+        expect(binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
+        expect(binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
 
         expect(parsed_response).to match_json_response(
           expected_json(
