@@ -976,6 +976,13 @@ RSpec.describe 'v3 service route bindings' do
         )
       end
       let(:guid) { binding.guid }
+      let(:labels) { { name: 'foo' } }
+      let(:annotations) { { contact: 'foo@example.com' } }
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(binding, labels, VCAP::CloudController::RouteBindingLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(binding, annotations, VCAP::CloudController::RouteBindingAnnotationModel)
+      end
 
       context 'user-provided service instance' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
@@ -984,6 +991,8 @@ RSpec.describe 'v3 service route bindings' do
         let(:db_check) {
           lambda do
             expect(VCAP::CloudController::RouteBinding.all).to be_empty
+            expect(VCAP::CloudController::RouteBindingLabelModel.all).to be_empty
+            expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
           end
         }
 
@@ -1051,10 +1060,12 @@ RSpec.describe 'v3 service route bindings' do
           end
 
           context 'when the unbind completes synchronously' do
-            it 'removes the binding' do
+            it 'removes the binding the associated metadata' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(VCAP::CloudController::RouteBinding.all).to be_empty
+              expect(VCAP::CloudController::RouteBindingLabelModel.all).to be_empty
+              expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
             end
 
             it 'completes the job' do
@@ -1137,10 +1148,12 @@ RSpec.describe 'v3 service route bindings' do
               let(:state) { 'succeeded' }
               let(:last_operation_status_code) { 200 }
 
-              it 'removes the binding' do
+              it 'removes the binding and its associated metadata' do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
                 expect(VCAP::CloudController::RouteBinding.all).to be_empty
+                expect(VCAP::CloudController::RouteBindingLabelModel.all).to be_empty
+                expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
               end
 
               it 'completes the job' do
@@ -1154,10 +1167,12 @@ RSpec.describe 'v3 service route bindings' do
               let(:last_operation_status_code) { 410 }
               let(:last_operation_body) { {} }
 
-              it 'removes the binding' do
+              it 'removes the binding and its associated metadata' do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
                 expect(VCAP::CloudController::RouteBinding.all).to be_empty
+                expect(VCAP::CloudController::RouteBindingLabelModel.all).to be_empty
+                expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
               end
 
               it 'completes the job' do
@@ -1178,6 +1193,8 @@ RSpec.describe 'v3 service route bindings' do
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
               expect(VCAP::CloudController::RouteBinding.all).not_to be_empty
+              expect(VCAP::CloudController::RouteBindingLabelModel.all).not_to be_empty
+              expect(VCAP::CloudController::RouteBindingAnnotationModel.all).not_to be_empty
             end
 
             it 'puts the error details in the job' do
