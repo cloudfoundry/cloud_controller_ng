@@ -1,8 +1,6 @@
 @charset "utf-8";
 @import 'normalize';
-@import 'compass';
 @import 'variables';
-@import 'syntax';
 @import 'icon-font';
 @import 'version-dropdown';
 
@@ -601,4 +599,12 @@ nav {
   %right-col + %left-col {
     margin-top: $main-padding;
   }
+}
+
+.highlight .c, .highlight .cm, .highlight .c1, .highlight .cs {
+  color: #909090;
+}
+
+.highlight, .highlight .w {
+  background-color: $code-background-color;
 }

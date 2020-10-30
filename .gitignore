@@ -47,6 +47,7 @@ docs/v3/node_modules
 docs/v3/node_modules/**/*
 docs/v3/source/version
 docs/v3/.rakeTasks
+docs/v3/.sass-cache
 
 # YARD artifacts
 docs/v3/.yardoc
