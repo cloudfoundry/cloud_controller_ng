@@ -6,6 +6,7 @@ module VCAP::CloudController
       class UnprocessableDelete < StandardError; end
 
       class ConcurrencyError < StandardError; end
+      class OperationCancelled < StandardError; end
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
       DeleteStarted = ->(operation) { DeleteStatus.new(false, operation) }
@@ -20,6 +21,7 @@ module VCAP::CloudController
         if result[:finished]
           perform_delete_actions(binding)
         else
+          perform_start_delete_actions(binding)
           update_last_operation(binding, operation: result[:operation])
         end
 
@@ -61,6 +63,8 @@ module VCAP::CloudController
 
       private
 
+      def perform_start_delete_actions(binding); end
+
       def send_unbind_to_client(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
@@ -69,8 +73,19 @@ module VCAP::CloudController
         raise ConcurrencyError.new(
           'The service broker rejected the request due to an operation being in progress for the service route binding'
         )
+      rescue CloudController::Errors::ApiError => err
+        if err.name == 'AsyncServiceBindingOperationInProgress'
+          raise ConcurrencyError.new(
+            'The service broker rejected the request due to an operation being in progress for the service route binding'
+          )
+        end
+        raise unprocessable!(binding, err)
       rescue => err
-        raise UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
+        raise unprocessable!(binding, err)
+      end
+
+      def unprocessable!(binding, err)
+        UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
       end
 
       def update_last_operation(binding, description: nil, state: 'in progress', operation: nil)

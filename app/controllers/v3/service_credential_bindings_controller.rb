@@ -10,7 +10,7 @@ require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
 require 'jobs/v3/create_service_credential_binding_job_actor'
-require 'jobs/v3/delete_credential_binding_job'
+require 'jobs/v3/delete_binding_job'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -68,6 +68,12 @@ class ServiceCredentialBindingsController < ApplicationController
   def destroy
     not_found! unless service_credential_binding.present?
     unauthorized! unless can_write_to_space?(binding_space)
+
+    if service_credential_binding.is_a?(ServiceKey)
+      head :not_implemented
+      return
+    end
+
     operation_in_progress! if service_credential_binding.service_instance.operation_in_progress?
 
     case service_credential_binding.service_instance
@@ -75,7 +81,8 @@ class ServiceCredentialBindingsController < ApplicationController
       pollable_job_guid = enqueue_unbind_job(service_credential_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      V3::ServiceCredentialBindingDelete.new.delete(service_credential_binding)
+      action = V3::ServiceCredentialBindingDelete.new(user_audit_info)
+      action.delete(service_credential_binding)
       head :no_content
     end
   end

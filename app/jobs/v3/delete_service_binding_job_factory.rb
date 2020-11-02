@@ -26,7 +26,7 @@ module VCAP::CloudController
           service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
           V3::ServiceRouteBindingDelete.new(service_event_repository)
         when :credential
-          V3::ServiceCredentialBindingDelete.new
+          V3::ServiceCredentialBindingDelete.new(user_audit_info)
         else
           raise InvalidType
         end
