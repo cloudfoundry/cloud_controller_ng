@@ -28874,6 +28874,10 @@ Deployed revisions are revisions that are linked to started processes in the app
           "guid": "e0e4417c-74ee-11ea-a604-48bf6bec2d78"
         }
       }
+    },
+    "parameters": {
+      "key1": "value1",
+      "key2": "value2"
     }
   }'</span>
 </code></pre>
@@ -28927,6 +28931,11 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app to be bound. Required when type is <code class="prettyprint">app</code></td>
+</tr>
+<tr>
+<td><strong>parameters</strong></td>
+<td><em>object</em></td>
+<td>A JSON object that is passed to the service broker</td>
 </tr>
 </tbody></table>
 
