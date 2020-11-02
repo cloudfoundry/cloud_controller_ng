@@ -39,6 +39,14 @@ module VCAP
         end,
         route_guids: ->(dataset, message) do
           dataset.where { Sequel[:routes][:guid] =~ message.route_guids }
+        end,
+        label_selector: ->(dataset, message) do
+          LabelSelectorQueryGenerator.add_selector_queries(
+            label_klass: RouteBindingLabelModel,
+            resource_dataset: dataset,
+            requirements: message.requirements,
+            resource_klass: RouteBinding
+          )
         end
       }.freeze
     end

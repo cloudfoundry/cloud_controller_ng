@@ -1,8 +1,8 @@
-require 'messages/list_message'
+require 'messages/metadata_list_message'
 
 module VCAP
   module CloudController
-    class ServiceRouteBindingsListMessage < ListMessage
+    class ServiceRouteBindingsListMessage < MetadataListMessage
       QUERY_PARAMS = %w[
         service_instance_guids
         service_instance_names

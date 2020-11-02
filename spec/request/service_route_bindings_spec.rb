@@ -86,9 +86,7 @@ RSpec.describe 'v3 service route bindings' do
 
         expect(last_response).to have_status_code(200)
 
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+        expect_route_bindings(filtered_route_bindings)
       end
 
       it 'can be filtered by service instance names' do
@@ -103,9 +101,7 @@ RSpec.describe 'v3 service route bindings' do
 
         expect(last_response).to have_status_code(200)
 
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+        expect_route_bindings(filtered_route_bindings)
       end
 
       it 'can be filtered by route guids' do
@@ -120,9 +116,29 @@ RSpec.describe 'v3 service route bindings' do
 
         expect(last_response).to have_status_code(200)
 
-        expected_route_binding_guids = filtered_route_bindings.map(&:guid)
-        route_binding_guids = parsed_response['resources'].map { |x| x['guid'] }
-        expect(route_binding_guids).to match_array(expected_route_binding_guids)
+        expect_route_bindings(filtered_route_bindings)
+      end
+
+      it 'filters by label' do
+        rb1 = VCAP::CloudController::RouteBinding.make
+        rb2 = VCAP::CloudController::RouteBinding.make
+        rb3 = VCAP::CloudController::RouteBinding.make
+        rb4 = VCAP::CloudController::RouteBinding.make
+        rb5 = VCAP::CloudController::RouteBinding.make
+        filtered_route_bindings = [rb2, rb3]
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: rb1)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'horse', route_binding: rb1)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb2)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'dog', route_binding: rb2)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb3)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'horse', route_binding: rb3)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb4)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'staging', route_binding: rb5)
+        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'dog', route_binding: rb5)
+
+        get '/v3/service_route_bindings?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
+
+        expect_route_bindings(filtered_route_bindings)
       end
     end
 
@@ -1606,5 +1622,10 @@ RSpec.describe 'v3 service route bindings' do
       { service_instance: service_instance, route: route, route_service_url: route_service_url },
       { type: 'create', state: 'successful' }
     )
+  end
+
+  def expect_route_bindings(route_bindings)
+    response_guids = parsed_response['resources'].map { |x| x['guid'] }
+    expect(response_guids).to match_array(route_bindings.map(&:guid))
   end
 end
