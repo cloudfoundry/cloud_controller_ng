@@ -12,6 +12,7 @@ module VCAP
             'service_instance_guids' => 'guid-1,guid-2,guid-3',
             'service_instance_names' => 'name-1,name-2,name-3',
             'route_guids' => 'guid-4,guid-5,guid-6',
+            'label_selector' => 'key=value',
             'include' => 'service_instance'
           }
         end
@@ -27,6 +28,7 @@ module VCAP
           expect(message.service_instance_names).to eq(%w[name-1 name-2 name-3])
           expect(message.route_guids).to eq(%w[guid-4 guid-5 guid-6])
           expect(message.include).to eq(%w[service_instance])
+          expect(message.label_selector).to eq('key=value')
         end
 
         it 'converts requested keys to symbols' do
@@ -35,6 +37,7 @@ module VCAP
           expect(message.requested?(:service_instance_guids)).to be_truthy
           expect(message.requested?(:service_instance_names)).to be_truthy
           expect(message.requested?(:route_guids)).to be_truthy
+          expect(message.requested?(:label_selector)).to be_truthy
         end
       end
 
@@ -50,6 +53,16 @@ module VCAP
             message = described_class.from_params({ 'include' => 'route, service_instance' })
             expect(message).to be_valid
           end
+        end
+
+        it 'validates metadata requirements' do
+          message = described_class.from_params({ 'label_selector' => '' }.with_indifferent_access)
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+            to receive(:validate).
+            with(message).
+            and_call_original
+          message.valid?
         end
       end
     end
