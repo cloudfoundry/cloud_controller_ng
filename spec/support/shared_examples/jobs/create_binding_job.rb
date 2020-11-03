@@ -158,6 +158,23 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           end
         end
       end
+
+      context 'when the operation changes' do
+        before do
+          binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'raises an error' do
+          expect { subject.perform }.to raise_error(
+            CloudController::Errors::ApiError,
+              /create could not be completed: delete in progress/
+          )
+
+          binding.reload
+          expect(binding.last_operation.state).to eq('in progress')
+          expect(binding.last_operation.type).to eq('delete')
+        end
+      end
     end
 
     context 'retry interval' do

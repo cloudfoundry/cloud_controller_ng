@@ -7,6 +7,8 @@ require 'jobs/v3/create_service_binding_job_factory'
 module VCAP::CloudController
   module V3
     class CreateBindingAsyncJob < Jobs::ReoccurringJob
+      class OperationCancelled < StandardError; end
+
       class BindingNotFound < CloudController::Errors::ApiError; end
 
       def initialize(type, precursor_guid, parameters:, user_audit_info:, audit_hash:)
@@ -54,6 +56,8 @@ module VCAP::CloudController
       def perform
         not_found! unless resource
 
+        cancelled! if delete_in_progress?
+
         compute_maximum_duration
 
         if @first_time
@@ -72,6 +76,8 @@ module VCAP::CloudController
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
+      rescue OperationCancelled => e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
       rescue BindingNotFound => e
         raise e
       rescue ServiceBindingCreate::BindingNotRetrievable
@@ -105,6 +111,14 @@ module VCAP::CloudController
 
       def not_found!
         raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{@resource_guid}")
+      end
+
+      def delete_in_progress?
+        resource.operation_in_progress? && resource.last_operation&.type == 'delete'
+      end
+
+      def cancelled!
+        raise OperationCancelled.new("#{resource.last_operation.type} in progress")
       end
 
       def save_failure(error_message)
