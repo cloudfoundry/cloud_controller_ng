@@ -10,6 +10,7 @@ module VCAP::CloudController::Presenters::V3
         guid: deployment.guid,
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,
+        state: deployment.state,
         status: {
           value: deployment.status_value,
           reason: deployment.status_reason,
