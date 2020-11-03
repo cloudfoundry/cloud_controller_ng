@@ -1248,7 +1248,7 @@ RSpec.describe 'v3 service route bindings' do
             )
           end
 
-          context 'but the broker accepts the delete request' do
+          context 'and the broker accepts the delete request' do
             before do
               @delete_stub = stub_request(:delete, broker_unbind_url).
                              with(query: query).

@@ -6,6 +6,11 @@ RSpec.describe 'v3 service credential bindings' do
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:other_space) { VCAP::CloudController::Space.make }
+  let(:space_dev_headers) do
+    org.add_user(user)
+    space.add_developer(user)
+    headers_for(user)
+  end
 
   describe 'GET /v3/service_credential_bindings' do
     describe 'order_by' do
@@ -1459,12 +1464,9 @@ RSpec.describe 'v3 service credential bindings' do
 
       context 'key bindings' do
         let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
-        it 'can successfully delete the record' do
+        it 'is not implemented' do
           api_call.call(admin_headers)
-          expect(last_response).to have_status_code(204)
-
-          get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
-          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_status_code(501)
         end
       end
     end
@@ -1472,9 +1474,276 @@ RSpec.describe 'v3 service credential bindings' do
     context 'managed service instances' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 
-      it 'returns 501 when the binding belongs to a managed service instance' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(501)
+      let(:broker_base_url) { service_instance.service_broker.broker_url }
+      let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+
+      let(:job) { VCAP::CloudController::PollableJobModel.last }
+      let(:broker_unbind_status_code) { 200 }
+      let(:broker_response) { {} }
+      let(:query) do
+        {
+          service_id: service_instance.service_plan.service.unique_id,
+          plan_id: service_instance.service_plan.unique_id,
+          accepts_incomplete: true,
+        }
+      end
+
+      context 'app binding' do
+        it 'responds with a job resource' do
+          api_call.call(space_dev_headers)
+          expect(last_response).to have_status_code(202)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          expect(job.operation).to eq('service_bindings.delete')
+          expect(job.resource_guid).to eq(binding.guid)
+          expect(job.resource_type).to eq('service_credential_binding')
+
+          get "/v3/jobs/#{job.guid}", nil, space_dev_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['guid']).to eq(job.guid)
+        end
+
+        context 'when the service instance has an operation in progress' do
+          it 'responds with 422' do
+            service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
+
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('There is an operation in progress for the service instance'),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the service credential binding is still creating' do
+          before do
+            binding.save_with_attributes_and_new_operation(
+              {},
+              { type: 'create', state: 'in progress', broker_provided_operation: 'very important info' }
+            )
+          end
+
+          context 'and the broker accepts the delete request' do
+            before do
+              @delete_stub = stub_request(:delete, broker_unbind_url).
+                             with(query: query).
+                             to_return(status: 202, body: '{"operation": "very important delete info"}', headers: {})
+
+              @last_op_stub = stub_request(:get, "#{broker_unbind_url}/last_operation").
+                              with(query: hash_including({
+                  operation: 'very important delete info'
+                })).
+                              to_return(status: 200, body: '{"state": "in progress"}', headers: {})
+            end
+
+            it 'starts the route binding deletion' do
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(202)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(@delete_stub).to have_been_requested.once
+              expect(@last_op_stub).to have_been_requested
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('delete')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq('very important delete info')
+            end
+          end
+
+          context 'and the broker rejects the delete request' do
+            before do
+              stub_request(:delete, broker_unbind_url).
+                with(query: query).
+                to_return(status: 422, body: '{"error": "ConcurrencyError"}', headers: {})
+
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+              binding.reload
+            end
+
+            it 'leaves the route binding in its current state' do
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('in progress')
+              expect(binding.last_operation.broker_provided_operation).to eq('very important info')
+            end
+          end
+        end
+
+        describe 'the pollable job' do
+          before do
+            api_call.call(space_dev_headers)
+            expect(last_response).to have_status_code(202)
+
+            stub_request(:delete, broker_unbind_url).
+              with(query: query).
+              to_return(status: broker_unbind_status_code, body: broker_response.to_json, headers: {})
+          end
+
+          it 'sends an unbind request with the right arguments to the service broker' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:delete, broker_unbind_url).
+                with(
+                  query: query,
+                )
+            ).to have_been_made.once
+          end
+
+          context 'when the unbind completes synchronously' do
+            it 'removes the binding' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+            end
+
+            it 'completes the job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'when the unbind completes asynchronously' do
+            let(:broker_unbind_status_code) { 202 }
+            let(:operation) { Sham.guid }
+            let(:broker_response) { { operation: operation } }
+            let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
+            let(:last_operation_status_code) { 200 }
+            let(:description) { Sham.description }
+            let(:state) { 'in progress' }
+            let(:last_operation_body) do
+              {
+                description: description,
+                state: state,
+              }
+            end
+
+            before do
+              stub_request(:get, broker_binding_last_operation_url).
+                with(query: hash_including({
+                  operation: operation
+                })).
+                to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
+            end
+
+            it 'polls the last operation endpoint' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
+              ).to have_been_made.once
+            end
+
+            it 'updates the binding and job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('delete')
+              expect(binding.last_operation.state).to eq(state)
+              expect(binding.last_operation.description).to eq(description)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'enqueues the next fetch last operation job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+            end
+
+            it 'keeps track of the broker operation' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+
+              Timecop.travel(Time.now + 1.minute)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
+              ).to have_been_made.twice
+            end
+
+            context 'last operation response is 200 OK and indicates success' do
+              let(:state) { 'succeeded' }
+              let(:last_operation_status_code) { 200 }
+
+              it 'removes the binding' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+              end
+
+              it 'completes the job' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+            end
+
+            context 'last operation response is 410 Gone' do
+              let(:last_operation_status_code) { 410 }
+              let(:last_operation_body) { {} }
+
+              it 'removes the binding' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+              end
+
+              it 'completes the job' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+            end
+          end
+
+          context 'when the broker returns a failure' do
+            let(:broker_unbind_status_code) { 418 }
+            let(:broker_response) { 'nope' }
+
+            it 'does not remove the binding' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(VCAP::CloudController::ServiceBinding.all).not_to be_empty
+            end
+
+            it 'puts the error details in the job' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              expect(job.cf_api_error).not_to be_nil
+              error = YAML.safe_load(job.cf_api_error)
+              expect(error['errors'].first['code']).to eq(10009)
+              expect(error['errors'].first['detail']).
+                to include('The service broker rejected the request. Status Code: 418 I\'m a Teapot, Body: "nope"')
+            end
+          end
+        end
+      end
+
+      context 'key bindings' do
+        let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+
+        it 'is not implemented' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(501)
+        end
       end
     end
 

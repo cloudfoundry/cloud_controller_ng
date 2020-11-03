@@ -94,22 +94,6 @@ module VCAP::CloudController
       def not_retrievable!
         raise BindingNotRetrievable.new('The broker responded asynchronously but does not support fetching binding data')
       end
-
-      def fetch_last_operation(client, binding)
-        client.fetch_service_binding_last_operation(binding)
-      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
-             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected,
-             HttpRequestError => e
-        binding.save_with_attributes_and_new_operation(
-          {},
-          {
-          type: 'create',
-          state: 'in progress',
-          description: e.message,
-        })
-
-        return nil
-      end
     end
   end
 end

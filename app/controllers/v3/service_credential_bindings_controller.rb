@@ -10,6 +10,7 @@ require 'messages/service_credential_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
 require 'jobs/v3/create_service_credential_binding_job_actor'
+require 'jobs/v3/delete_binding_job'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -68,10 +69,22 @@ class ServiceCredentialBindingsController < ApplicationController
     not_found! unless service_credential_binding.present?
     unauthorized! unless can_write_to_space?(binding_space)
 
-    V3::ServiceCredentialBindingDelete.new.delete(service_credential_binding)
-    head :no_content
-  rescue V3::ServiceCredentialBindingDelete::NotImplementedError
-    head :not_implemented
+    if service_credential_binding.is_a?(ServiceKey)
+      head :not_implemented
+      return
+    end
+
+    operation_in_progress! if service_credential_binding.service_instance.operation_in_progress?
+
+    case service_credential_binding.service_instance
+    when ManagedServiceInstance
+      pollable_job_guid = enqueue_unbind_job(service_credential_binding.guid)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+    when UserProvidedServiceInstance
+      action = V3::ServiceCredentialBindingDelete.new(user_audit_info)
+      action.delete(service_credential_binding)
+      head :no_content
+    end
   end
 
   def details
@@ -116,6 +129,16 @@ class ServiceCredentialBindingsController < ApplicationController
       user_audit_info: user_audit_info,
       audit_hash: message.audit_hash,
       parameters: message.parameters
+    )
+    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job.guid
+  end
+
+  def enqueue_unbind_job(binding_guid)
+    bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
+      :credential,
+      binding_guid,
+      user_audit_info: user_audit_info,
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -195,10 +218,6 @@ class ServiceCredentialBindingsController < ApplicationController
     not_found! unless service_credential_binding_exists?
   end
 
-  def not_found!
-    resource_not_found!(:service_credential_binding)
-  end
-
   def service_credential_binding_exists?
     !!service_credential_binding
   end
@@ -229,5 +248,13 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def query_params
     request.query_parameters.with_indifferent_access
+  end
+
+  def operation_in_progress!
+    unprocessable!('There is an operation in progress for the service instance.')
+  end
+
+  def not_found!
+    resource_not_found!(:service_credential_binding)
   end
 end
