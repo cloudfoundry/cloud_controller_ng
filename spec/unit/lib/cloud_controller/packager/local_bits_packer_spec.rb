@@ -294,34 +294,6 @@ module CloudController::Packager
               `unzip #{local_tmp_dir}/package.zip path/to/content.txt -d #{local_tmp_dir}`
               expect(sprintf('%<mode>o', mode: File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100653')
             end
-
-            describe 'bad file permissions' do
-              context 'when the write permissions are too-restrictive' do
-                let(:mode) { '344' }
-
-                it 'errors' do
-                  expect {
-                    packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-                  }.to raise_error do |error|
-                    expect(error.name).to eq 'AppResourcesFileModeInvalid'
-                    expect(error.response_code).to eq 400
-                  end
-                end
-              end
-
-              context 'when the permissions are nonsense' do
-                let(:mode) { 'banana' }
-
-                it 'errors' do
-                  expect {
-                    packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-                  }.to raise_error do |error|
-                    expect(error.name).to eq 'AppResourcesFileModeInvalid'
-                    expect(error.response_code).to eq 400
-                  end
-                end
-              end
-            end
           end
         end
       end

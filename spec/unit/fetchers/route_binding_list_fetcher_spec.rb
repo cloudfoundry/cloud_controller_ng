@@ -13,9 +13,7 @@ module VCAP
             ServiceRouteBindingsListMessage.from_params({})
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_route_binding_guids = route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_route_binding_guids)
+          expect_binding_guids(fetched_route_bindings, route_bindings)
         end
 
         it 'can be filtered by service_instance_guids' do
@@ -26,9 +24,7 @@ module VCAP
             ServiceRouteBindingsListMessage.from_params({ 'service_instance_guids' => service_instance_guids })
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
         it 'can be filtered by service_instance_names' do
@@ -39,9 +35,7 @@ module VCAP
             ServiceRouteBindingsListMessage.from_params({ 'service_instance_names' => service_instance_names })
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
         it 'can be filtered by route_guids' do
@@ -52,9 +46,25 @@ module VCAP
             ServiceRouteBindingsListMessage.from_params({ 'route_guids' => route_guids })
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
+        end
+
+        context 'can be filtered by label selector' do
+          before do
+            RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[0])
+            RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[1])
+            RouteBindingLabelModel.make(key_name: 'fruit', value: 'lemon', route_binding: route_bindings[2])
+          end
+
+          it 'returns instances with matching labels' do
+            filtered_route_bindings = route_bindings[0..1]
+
+            fetched_route_bindings = fetcher.fetch_all(
+              ServiceRouteBindingsListMessage.from_params({ 'label_selector' => 'fruit=strawberry' })
+            )
+
+            expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
+          end
         end
       end
 
@@ -74,9 +84,7 @@ module VCAP
             space_guids: [target_space.guid]
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          target_space_route_binding_guids = route_bindings_in_target_space.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(target_space_route_binding_guids)
+          expect_binding_guids(fetched_route_bindings, route_bindings_in_target_space)
         end
 
         it 'can be filtered by service_instance_guids' do
@@ -93,9 +101,7 @@ module VCAP
             space_guids: [target_space.guid]
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
         it 'can be filtered by service_instance_names' do
@@ -112,9 +118,7 @@ module VCAP
             space_guids: [target_space.guid]
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
         it 'can be filtered by route_guids' do
@@ -131,14 +135,16 @@ module VCAP
             space_guids: [target_space.guid]
           )
 
-          fetched_route_binding_guids = fetched_route_bindings.map(&:guid)
-          expected_binding_guids = filtered_route_bindings.map(&:guid)
-          expect(fetched_route_binding_guids).to match_array(expected_binding_guids)
+          expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
         def make_other_route_bindings
           Array.new(3) { RouteBinding.make }
         end
+      end
+
+      def expect_binding_guids(fetched_route_bindings, expected_route_bindings)
+        expect(fetched_route_bindings.map(&:guid)).to match_array(expected_route_bindings.map(&:guid))
       end
     end
   end

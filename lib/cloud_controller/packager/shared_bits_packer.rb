@@ -22,8 +22,7 @@ module CloudController
         FileUtils.cp(uploaded_package_zip, app_packager.path)
       end
 
-      def populate_resource_cache(app_packager, root_path)
-        app_contents_path = File.join(root_path, 'application_contents')
+      def populate_resource_cache(app_packager, app_contents_path)
         FileUtils.mkdir(app_contents_path)
         app_packager.unzip(app_contents_path)
 
@@ -51,17 +50,18 @@ module CloudController
 
       def match_resources_and_validate_package(root_path, uploaded_package_zip, cached_files_fingerprints)
         app_packager = AppPackager.new(File.join(root_path, 'copied_app_package.zip'))
+        app_contents_path = File.join(root_path, 'application_contents')
 
         if package_zip_exists?(uploaded_package_zip)
           copy_uploaded_package(uploaded_package_zip, app_packager)
           validate_size!(app_packager)
-          populate_resource_cache(app_packager, root_path)
+          populate_resource_cache(app_packager, app_contents_path)
         end
 
         append_matched_resources(app_packager, cached_files_fingerprints, root_path)
 
         validate_size!(app_packager)
-        app_packager.fix_subdir_permissions
+        app_packager.fix_subdir_permissions(root_path, app_contents_path)
         app_packager.path
       end
 

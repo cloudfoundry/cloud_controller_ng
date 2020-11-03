@@ -389,6 +389,48 @@ module CloudController
           end
         end
 
+        describe 'file permissions' do
+          context 'sufficient file permissions' do
+            let!(:sufficiently_permissioned_file) do
+              Tempfile.open('', source_dir) do |tmpfile|
+                File.chmod(0600, tmpfile)
+                tmpfile
+              end
+            end
+            let(:sufficient_perm_file_sha) { Digester.new.digest_path(sufficiently_permissioned_file.path) }
+
+            it 'copies files above the maximum size limit' do
+              allow(response).to receive_messages(status: 201, content: '')
+              allow(httpclient).to receive(:put).and_return(response)
+
+              client.cp_r_to_blobstore(source_dir)
+
+              expect(httpclient).to have_received(:put).with(
+                "http://localhost/admin/droplets/#{sufficient_perm_file_sha[0..1]}/#{sufficient_perm_file_sha[2..3]}/#{sufficient_perm_file_sha}", a_kind_of(File), {})
+            end
+          end
+
+          context 'insufficient file permissions' do
+            let!(:insufficiently_permissioned_file) do
+              Tempfile.open('', source_dir) do |tmpfile|
+                File.chmod(0444, tmpfile)
+                tmpfile
+              end
+            end
+            let(:insufficient_perm_file_sha) { Digester.new.digest_path(insufficiently_permissioned_file.path) }
+
+            it 'does not copy files above the maximum size limit' do
+              allow(response).to receive_messages(status: 201, content: '')
+              allow(httpclient).to receive(:put).and_return(response)
+
+              client.cp_r_to_blobstore(source_dir)
+
+              expect(httpclient).not_to have_received(:put).with(
+                "http://localhost/admin/droplets/#{insufficient_perm_file_sha[0..1]}/#{insufficient_perm_file_sha[2..3]}/#{insufficient_perm_file_sha}", a_kind_of(File), {})
+            end
+          end
+        end
+
         context 'when an OpenSSL::SSL::SSLError is raised' do
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)

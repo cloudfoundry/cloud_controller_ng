@@ -57,12 +57,16 @@ module VCAP::CloudController
         expect(task.name).to eq(name)
         expect(task.disk_in_mb).to eq(2048)
         expect(task.memory_in_mb).to eq(1024)
-        expect(task.labels.map(&:key_name)).to contain_exactly('potato', 'release')
-        expect(task.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
-        expect(task.labels.map(&:value)).to contain_exactly('stable', 'mashed')
 
-        expect(task.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
-        expect(task.annotations.map(&:value)).to contain_exactly('land', 'boys')
+        expect(task).to have_labels(
+          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+          { prefix: nil, key: 'release', value: 'stable' }
+        )
+        expect(task).to have_annotations(
+          { key: 'tomorrow', value: 'land' },
+          { key: 'backstreet', value: 'boys' }
+        )
+
         expect(TaskModel.count).to eq(1)
       end
 

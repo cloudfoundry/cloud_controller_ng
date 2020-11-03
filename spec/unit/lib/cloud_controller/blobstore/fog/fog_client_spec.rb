@@ -185,6 +185,33 @@ module CloudController
               client.cp_r_to_blobstore(path)
             end
           end
+
+          context 'limit the file mode to those with sufficient permissions' do
+            subject(:client) do
+              FogClient.new(connection_config: connection_config,
+                            directory_key: directory_key)
+            end
+
+            it 'copies files with mode >= 0600' do
+              path = File.join(local_dir, 'file_with_sufficient_permissions')
+              FileUtils.touch(path)
+              File.chmod(0600, path)
+
+              expect(client).to receive(:exists?)
+              expect(client).to receive(:cp_to_blobstore)
+              client.cp_r_to_blobstore(path)
+            end
+
+            it 'does not copy files below the minimum file mode' do
+              path = File.join(local_dir, 'file_with_insufficient_permissions')
+              FileUtils.touch(path)
+              File.chmod(0444, path)
+
+              expect(client).not_to receive(:exists?)
+              expect(client).not_to receive(:cp_to_blobstore)
+              client.cp_r_to_blobstore(path)
+            end
+          end
         end
 
         describe '#download_from_blobstore' do

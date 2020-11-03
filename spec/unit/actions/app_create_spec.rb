@@ -49,8 +49,15 @@ module VCAP::CloudController
           expect(app.name).to eq('my-app')
           expect(app.space).to eq(space)
           expect(app.environment_variables).to eq(environment_variables.stringify_keys)
-          expect(app.labels.map(&:value)).to contain_exactly('stable', 'mashed')
-          expect(app.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+
+          expect(app).to have_labels(
+            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            { prefix: nil, key: 'release', value: 'stable' }
+          )
+          expect(app).to have_annotations(
+            { key: 'superhero', value: 'Bummer-boy' },
+            { key: 'superpower', value: 'Bums you out' }
+          )
         end
 
         describe 'created process' do

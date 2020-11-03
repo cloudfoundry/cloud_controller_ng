@@ -10,6 +10,14 @@ curl "https://api.example.org/v3/service_route_bindings" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
+    "metadata": {
+      "annotations": {
+        "foo": "bar"
+      },
+      "labels": {
+        "baz": "qux"
+      }
+    },
     "relationships": {
       "route": {
         "data": {
@@ -74,6 +82,8 @@ Name | Type | Description
 Name | Type | Description |
 ---- | ---- | ----------- |
 **parameters** | _object_ | A JSON object that is passed to the service broker
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service route binding
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service route binding
 
 
 #### Permitted roles

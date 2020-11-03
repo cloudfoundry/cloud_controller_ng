@@ -10,6 +10,10 @@
 * [V3 API Docs](http://v3-apidocs.cloudfoundry.org)
 * [V2 API Docs](http://apidocs.cloudfoundry.org)
 * [Continuous Integration Pipelines](https://capi.ci.cf-app.com)
+* [Notes on V3 Architecture](https://github.com/cloudfoundry/cloud_controller_ng/wiki/Notes-on-V3-Architecture)
+* [capi-release](https://github.com/cloudfoundry/capi-release) - The bosh release used to deploy cloud controller
+* [cf-for-k8s](https://github.com/cloudfoundry/cf-for-k8s) - How Cloud Foundry (including Cloud Controller) is deployed against Kubernetes
+* [capi-k8s-release](https://github.com/cloudfoundry/capi-k8s-release) - The parts of cf-for-k8s that are specific to CF API (including Cloud Controller)
 
 ## Components
 
@@ -25,7 +29,10 @@ The Cloud Controller supports Postgres and Mysql.
 
 The Cloud Controller manages a blobstore for:
 
+All Platforms:
 * Resource cache: During package upload resource matching, Cloud Controller will only upload files it doesn't already have in this cache.
+
+When deployed via capi-release only:
 * App packages: Unstaged files for an application
 * Droplets: An executable containing an app and its runtime dependencies
 * Buildpacks: Set of programs that transform packages into droplets
@@ -42,9 +49,14 @@ Cloud Controller currently supports [webdav](http://www.webdav.org/) and the fol
 
 ### Runtime
 
-The Cloud Controller uses [Diego](https://github.com/cloudfoundry/diego-release) to stage and run apps and tasks.
-
+The Cloud Controller on VMs uses [Diego](https://github.com/cloudfoundry/diego-release) to stage and run apps and tasks.
 See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for more details.
+
+When deployed on Kubernetes, Cloud Controller uses
+[kpack](https://github.com/pivotal/kpack) to build images from source with
+[Cloud Native Buildpacks](https://buildpacks.io) and
+[Eirini](https://github.com/cloudfoundry-incubator/eirini) to run apps directly on the Kubernetes cluster.
+
 
 ## Contributing
 
@@ -132,35 +144,6 @@ To be able to run the unit tests in parallel and still use custom connection str
 By default, `bundle exec rake` will run the unit tests first, and then `rubocop` if they pass. To run `rubocop` first, run:
 
     RUBOCOP_FIRST=1 bundle exec rake
-
-### CF Acceptance Tests (CATs)
-
-To ensure our changes to the Cloud Controller correctly integrate with the rest of the Cloud Foundry components like Diego,
-we run the [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests) against a running CF deployment.
-This test suite uses the CF CLI to ensure end-user actions like `cf push` function end-to-end.
-
-For more substantial code changes and PRs, please deploy your changes and ensure that at least the core CATs suite passes.
-Follow the instructions [here](https://github.com/cloudfoundry/cf-acceptance-tests#test-setup) for setting up the CATs suite.
-The following will run the core test suites against a local bosh-lite:
-
-```bash
-cd ~/go/src/github.com/cloudfoundry/cf-acceptance-tests
-cat > integration_config.json <<EOF
-{
-  "api": "api.bosh-lite.com",
-  "apps_domain": "bosh-lite.com",
-  "admin_user": "admin",
-  "admin_password": "admin",
-  "skip_ssl_validation": true
-}
-EOF
-export CONFIG=$PWD/integration_config.json
-./bin/test -nodes=3
-```
-
-If your change touches a more specialized part of the code such as Isolation Segments or Tasks,
-please opt into the corresponding test suites.
-The full list of optional test suites can be found [here](https://github.com/cloudfoundry/cf-acceptance-tests#test-configuration).
 
 ## Logs
 

@@ -717,10 +717,8 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         org.reload
         expect(org.name).to eq('Fire')
-        expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).
-          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
-        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'potato', value: 'idaho' }, { key: 'beet', value: 'golden' }])
+        expect(org).to have_labels({ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' })
+        expect(org).to have_annotations({ key: 'potato', value: 'idaho' }, { key: 'beet', value: 'golden' })
       end
 
       it 'deletes annotations' do
@@ -738,8 +736,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
 
         org.reload
-        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'beet', value: 'golden' }])
+        expect(org).to have_annotations({ key: 'beet', value: 'golden' })
       end
 
       context 'when a label is deleted' do
@@ -760,7 +757,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
 
           org.reload
-          expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'mazda5' }])
+          expect(org).to have_labels({ key: 'truck', value: 'mazda5' })
         end
       end
 

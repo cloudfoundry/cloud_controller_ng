@@ -31,15 +31,16 @@ module VCAP::CloudController
             resource.reload
 
             expect(resource).to eq(updated_resource)
-            expect(updated_resource.labels).to be_empty
-            expect(updated_resource.annotations).to be_empty
+            expect(updated_resource).not_to have_labels
+            expect(updated_resource).not_to have_annotations
           end
         end
 
         it 'adds metadata to a resource' do
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
-          expect(updated_resource).to contain_metadata(new_metadata)
+          expect(updated_resource).to have_labels({ key: 'freaky', value: 'wednesday' })
+          expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'grapes' })
 
           resource.reload
           expect(resource).to eq(updated_resource)
@@ -47,19 +48,6 @@ module VCAP::CloudController
       end
 
       context 'when the resource has existing metadata' do
-        let(:old_metadata) {
-          {
-            metadata: {
-              labels: {
-                freaky: 'tuesday'
-              },
-              annotations: {
-                tokyo: 'apples'
-              }
-            }
-          }
-        }
-
         before do
           VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: resource.guid, key_name: 'freaky', value: 'tuesday')
           VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: resource.guid, key: 'tokyo', value: 'apples')
@@ -75,26 +63,42 @@ module VCAP::CloudController
             resource.reload
 
             expect(resource).to eq(updated_resource)
-            expect(updated_resource).to contain_metadata(old_metadata)
+            expect(updated_resource).to have_labels({ key: 'freaky', value: 'tuesday' })
+            expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'apples' })
           end
         end
 
         it 'can add new values' do
-          new_metadata = old_metadata.tap do |m|
-            m[:metadata][:labels][:another_label] = 'new-label'
-            m[:metadata][:labels][:another_annotation] = 'new-annotation'
-          end
-          message = MetadataUpdateMessage.new(new_metadata)
+          message = MetadataUpdateMessage.new({
+            metadata: {
+              labels: {
+                freaky: 'tuesday',
+                another_label: 'new-label',
+              },
+              annotations: {
+                tokyo: 'apples',
+                another_annotation: 'new-annotation',
+              }
+            }
+          })
 
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
-          expect(updated_resource).to contain_metadata(new_metadata)
+          expect(updated_resource).to have_labels(
+            { key: 'freaky', value: 'tuesday' },
+            { key: 'another_label', value: 'new-label' },
+          )
+          expect(updated_resource).to have_annotations(
+            { key: 'tokyo', value: 'apples' },
+            { key: 'another_annotation', value: 'new-annotation' }
+          )
         end
 
         it 'can update existing values' do
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
-          expect(updated_resource).to contain_metadata(new_metadata)
+          expect(updated_resource).to have_labels({ key: 'freaky', value: 'wednesday' })
+          expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'grapes' })
         end
 
         it 'can delete existing values' do
@@ -113,8 +117,8 @@ module VCAP::CloudController
           expect(new_message).to be_valid
 
           updated_resource = TransactionalMetadataUpdate.update(resource, new_message)
-          expect(updated_resource.labels).to be_empty
-          expect(updated_resource.annotations).to be_empty
+          expect(updated_resource).not_to have_labels
+          expect(updated_resource).not_to have_annotations
         end
       end
     end

@@ -13,7 +13,7 @@ require 'decorators/include_binding_route_decorator'
 require 'cloud_controller/paging/sequel_paginator'
 
 class ServiceRouteBindingsController < ApplicationController
-  before_action :set_route_binding, only: [:show, :parameters, :destroy]
+  before_action :set_route_binding, except: [:create]
 
   def index
     message = list_message
@@ -46,7 +46,7 @@ class ServiceRouteBindingsController < ApplicationController
 
     check_parameters_support(service_instance, message)
     action = V3::ServiceRouteBindingCreate.new(service_event_repository)
-    precursor = action.precursor(service_instance, route)
+    precursor = action.precursor(service_instance, route, message: message)
 
     case service_instance
     when ManagedServiceInstance
@@ -92,6 +92,19 @@ class ServiceRouteBindingsController < ApplicationController
     bad_request!('this service does not support fetching route bindings parameters.')
   rescue LockCheck::ServiceBindingLockedError
     unprocessable!('There is an operation in progress for the service route binding.')
+  end
+
+  def update
+    route_binding_not_found! unless @route_binding.present? && can_read_space?(@route_binding.route.space)
+    unauthorized! unless can_write_space?(@route_binding.route.space)
+
+    unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
+
+    message = MetadataUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
+    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
   end
 
   private
@@ -232,5 +245,9 @@ class ServiceRouteBindingsController < ApplicationController
 
   def set_route_binding
     @route_binding = RouteBinding.first(guid: hashed_params[:guid])
+  end
+
+  def delete_in_progress?(binding)
+    binding.operation_in_progress? && binding.last_operation.type == 'delete'
   end
 end

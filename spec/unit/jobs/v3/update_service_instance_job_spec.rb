@@ -273,15 +273,14 @@ module VCAP
             expect(service_instance.name).to eq('new name')
             expect(service_instance.tags).to eq(%w(foo bar))
             expect(service_instance.service_plan).to eq(service_plan)
-
-            expect(service_instance.labels.map { |l| { prefix: l.key_prefix, key: l.key_name, value: l.value } }).to match_array([
+            expect(service_instance).to have_labels(
               { prefix: nil, key: 'foo', value: 'bar' },
               { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
-            ])
-            expect(service_instance.annotations.map { |a| { prefix: a.key_prefix, key: a.key, value: a.value } }).to match_array([
+            )
+            expect(service_instance).to have_annotations(
               { prefix: nil, key: 'baz', value: 'quz' },
               { prefix: 'pre.fix', key: 'fox', value: 'bushy' }
-            ])
+            )
           end
 
           it 'logs an audit event with the original service instance as the target' do

@@ -640,10 +640,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         space.reload
         expect(space.name).to eq('Sheep')
-        expect(space.labels.map { |label| { key: label.key_name, value: label.value } }).
-          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
-        expect(space.annotations.map { |a| { key: a.key, value: a.value } }).
-          to match_array([{ key: 'potato', value: 'purple' }, { key: 'beet', value: 'golden' }])
+        expect(space).to have_labels({ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' })
+        expect(space).to have_annotations({ key: 'potato', value: 'purple' }, { key: 'beet', value: 'golden' })
       end
 
       context 'when a label is deleted' do
@@ -664,7 +662,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
 
           space.reload
-          expect(space.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'mazda5' }])
+          expect(space).to have_labels({ key: 'truck', value: 'mazda5' })
         end
       end
       context 'when an empty request is sent' do
@@ -801,7 +799,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
 
           space.reload
-          expect(space.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'beet', value: 'golden' }])
+          expect(space).to have_annotations({ key: 'beet', value: 'golden' })
         end
       end
     end

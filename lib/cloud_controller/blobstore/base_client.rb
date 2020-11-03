@@ -8,6 +8,7 @@ module CloudController
         Find.find(source_dir).each do |path|
           next unless File.file?(path)
           next unless within_limits?(File.size(path))
+          next unless File.stat(path).mode.to_s(8)[3..5].to_i(8) >= 0600
 
           sha1 = Digester.new.digest_path(path)
           next if exists?(sha1)
