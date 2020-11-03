@@ -31,7 +31,7 @@ Retrieve revisions for an app the user has access to.
 Name | Type | Description
 ---- | ---- | ------------
 **versions** | _list of strings_ | Comma-delimited list of revision versions to filter by
-**label_selector** (*experimental*)| _string_ | A query string containing a list of [label selector](#labels-and-selectors) requirements
+**label_selector** | _string_ | A query string containing a list of [label selector](#labels-and-selectors) requirements
 **page** | _integer_ | Page to display; valid values are integers >= 1
 **per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
 **order_by** | _string_ | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`
