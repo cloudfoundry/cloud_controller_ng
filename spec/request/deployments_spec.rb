@@ -80,6 +80,10 @@ RSpec.describe 'Deployments' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'method' => 'POST'
             }
           }
         })
@@ -151,6 +155,10 @@ RSpec.describe 'Deployments' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'method' => 'POST'
             }
           }
         })
@@ -229,6 +237,10 @@ RSpec.describe 'Deployments' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'method' => 'POST'
             }
           }
         })
@@ -343,6 +355,10 @@ RSpec.describe 'Deployments' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'method' => 'POST'
             }
           }
         })
@@ -416,6 +432,10 @@ RSpec.describe 'Deployments' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'method' => 'POST'
             }
           }
         })
@@ -657,6 +677,10 @@ RSpec.describe 'Deployments' do
               },
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                'method' => 'POST'
               }
             }
           })
@@ -713,6 +737,10 @@ RSpec.describe 'Deployments' do
               },
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                'method' => 'POST'
               }
             }
           })
@@ -823,6 +851,10 @@ RSpec.describe 'Deployments' do
           },
           'app' => {
             'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          'cancel' => {
+            'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+            'method' => 'POST'
           }
         }
       })
@@ -881,6 +913,10 @@ RSpec.describe 'Deployments' do
           },
           'app' => {
             'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          'cancel' => {
+            'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+            'method' => 'POST'
           }
         }
       })
@@ -950,7 +986,7 @@ RSpec.describe 'Deployments' do
         status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
       }
 
-      def json_for_deployment(deployment, app_model, droplet, state, status_value, status_reason)
+      def json_for_deployment(deployment, app_model, droplet, state, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
           state: state,
@@ -995,7 +1031,14 @@ RSpec.describe 'Deployments' do
               href: "#{link_prefix}/v3/apps/#{app_model.guid}"
             }
           }
-        }
+        }.tap do |json|
+          if cancel_link
+            json[:links][:cancel] = {
+              href: "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              method: 'POST'
+            }
+          end
+        end
       end
 
       it 'should list all deployments' do
@@ -1045,15 +1088,21 @@ RSpec.describe 'Deployments' do
                 json_for_deployment(deployment3, app3, droplet3,
                   VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
                   VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON),
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
+                false
+                ),
                 json_for_deployment(deployment4, app4, droplet4,
                   VCAP::CloudController::DeploymentModel::CANCELED_STATE,
                   VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                  VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON),
+                  VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON,
+                false
+                ),
                 json_for_deployment(deployment5, app5, droplet5,
                   VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
                   VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON),
+                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
+                false
+                ),
               ]
             )
             # because the user is a manager in the shared org, they have access to see the domain
@@ -1096,11 +1145,15 @@ RSpec.describe 'Deployments' do
                 json_for_deployment(deployment3, app3, droplet3,
                   VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
                   VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON),
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
+                  false
+                ),
                 json_for_deployment(deployment5, app5, droplet5,
                   VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
                   VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON),
+                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
+                  false
+                )
               ]
             )
             # because the user is a manager in the shared org, they have access to see the domain
@@ -1283,6 +1336,10 @@ RSpec.describe 'Deployments' do
                 },
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                },
+                'cancel' => {
+                  'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                  'method' => 'POST'
                 }
               }
             },

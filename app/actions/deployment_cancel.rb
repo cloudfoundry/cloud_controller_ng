@@ -11,7 +11,7 @@ module VCAP::CloudController
       def cancel(deployment:, user_audit_info:)
         deployment.db.transaction do
           deployment.lock!
-          reject_invalid_state!(deployment) unless valid_state?(deployment)
+          reject_invalid_state!(deployment) unless deployment.cancelable?
 
           begin
             AppAssignDroplet.new(user_audit_info).assign(deployment.app, deployment.previous_droplet)
@@ -28,12 +28,6 @@ module VCAP::CloudController
       end
 
       private
-
-      def valid_state?(deployment)
-        valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
-                                   DeploymentModel::CANCELING_STATE]
-        valid_states_for_cancel.include?(deployment.state)
-      end
 
       def reject_invalid_state!(deployment)
         raise InvalidStatus.new("Cannot cancel a deployment with status: #{deployment.status_value} and reason: #{deployment.status_reason}")

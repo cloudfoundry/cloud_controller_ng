@@ -70,5 +70,11 @@ module VCAP::CloudController
     def deploying?
       state == DEPLOYING_STATE
     end
+
+    def cancelable?
+      valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
+                                 DeploymentModel::CANCELING_STATE]
+      valid_states_for_cancel.include?(state)
+    end
   end
 end
