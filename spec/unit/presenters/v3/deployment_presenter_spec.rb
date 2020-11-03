@@ -26,7 +26,6 @@ module VCAP::CloudController::Presenters::V3
         result = DeploymentPresenter.new(deployment).to_hash
         expect(result[:guid]).to eq(deployment.guid)
 
-        expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
         expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
         expect(result[:status][:reason]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
         expect(result[:status][:details][:last_successful_healthcheck]).to eq('2019-07-12 19:01:54')
@@ -71,7 +70,6 @@ module VCAP::CloudController::Presenters::V3
           result = DeploymentPresenter.new(deployment).to_hash
           expect(result[:guid]).to eq(deployment.guid)
 
-          expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
           expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
           expect(result[:status][:reason]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
 

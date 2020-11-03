@@ -12,7 +12,6 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the deployment
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
-**state** | _string_ | **(deprecated)** This field will be removed in the future; use the `status` fields to determine deployment state instead
 **status.value** | _string_ | The current status of the deployment; valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not)
 **status.reason** | _string_ | The reason for the status of the deployment;<br>following list represents valid values:<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>- `DEGENERATE` (the deployment was created incorrectly by the system)
 **status.details** | _object_ | The details for the status of the deployment shows a timestamp of the last successful healthcheck
