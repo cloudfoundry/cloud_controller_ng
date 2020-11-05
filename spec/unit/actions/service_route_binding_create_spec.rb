@@ -21,12 +21,6 @@ module VCAP::CloudController
         )
       }
 
-      let(:event_repository) do
-        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
-        allow(dbl).to receive(:record_service_instance_event)
-        dbl
-      end
-
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
@@ -37,7 +31,7 @@ module VCAP::CloudController
         allow(binding_event_repo).to receive(:record_start_create)
       end
 
-      subject(:action) { described_class.new(event_repository, user_audit_info, audit_hash) }
+      subject(:action) { described_class.new(user_audit_info, audit_hash) }
 
       describe '#precursor' do
         RSpec.shared_examples '#precursor' do
@@ -205,12 +199,6 @@ module VCAP::CloudController
             it 'creates an audit event' do
               action.bind(precursor)
 
-              expect(event_repository).to have_received(:record_service_instance_event).with(
-                :bind_route,
-                service_instance,
-                { route_guid: route.guid },
-              )
-
               expect(binding_event_repo).to have_received(:record_create).with(
                 precursor,
                 user_audit_info,
@@ -334,12 +322,6 @@ module VCAP::CloudController
             it 'creates an audit event' do
               action.poll(binding)
 
-              expect(event_repository).to have_received(:record_service_instance_event).with(
-                :bind_route,
-                service_instance,
-                { route_guid: route.guid },
-              )
-
               expect(binding_event_repo).to have_received(:record_create).with(
                 binding,
                 user_audit_info,
@@ -373,7 +355,6 @@ module VCAP::CloudController
               action.poll(binding)
 
               expect(messenger).not_to have_received(:send_desire_request)
-              expect(event_repository).not_to have_received(:record_service_instance_event)
               expect(binding_event_repo).not_to have_received(:record_create)
             end
           end
@@ -384,7 +365,6 @@ module VCAP::CloudController
               expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
               expect(messenger).not_to have_received(:send_desire_request)
-              expect(event_repository).not_to have_received(:record_service_instance_event)
               expect(binding_event_repo).not_to have_received(:record_create)
             end
           end

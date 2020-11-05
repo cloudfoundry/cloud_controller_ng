@@ -5,9 +5,8 @@ require 'actions/v3/service_binding_create'
 module VCAP::CloudController
   module V3
     class ServiceRouteBindingCreate < V3::ServiceBindingCreate
-      def initialize(service_event_repository, user_audit_info, audit_hash)
+      def initialize(user_audit_info, audit_hash)
         super()
-        @service_event_repository = service_event_repository
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
       end
@@ -51,8 +50,6 @@ module VCAP::CloudController
         operation_in_progress! if service_instance.operation_in_progress?
       end
 
-      attr_reader :service_event_repository
-
       def complete_binding_and_save(binding, binding_details, last_operation)
         binding.save_with_attributes_and_new_operation(
           {
@@ -64,8 +61,15 @@ module VCAP::CloudController
             description: last_operation[:description],
           }
         )
+
         binding.notify_diego
-        record_audit_event(binding)
+
+        event_repository.record_create(
+          binding,
+          @user_audit_info,
+          @audit_hash,
+          manifest_triggered: false
+        )
       end
 
       def save_incomplete_binding(precursor, operation)
@@ -79,21 +83,6 @@ module VCAP::CloudController
         )
 
         event_repository.record_start_create(
-          precursor,
-          @user_audit_info,
-          @audit_hash,
-          manifest_triggered: false
-        )
-      end
-
-      def record_audit_event(precursor)
-        service_event_repository.record_service_instance_event(
-          :bind_route,
-          precursor.service_instance,
-          { route_guid: precursor.route.guid },
-        )
-
-        event_repository.record_create(
           precursor,
           @user_audit_info,
           @audit_hash,

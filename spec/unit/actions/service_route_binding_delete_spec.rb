@@ -14,12 +14,6 @@ module VCAP::CloudController
       it 'creates an audit event' do
         perform_action
 
-        expect(event_repository).to have_received(:record_service_instance_event).with(
-          :unbind_route,
-          service_instance,
-          { route_guid: route.guid },
-        )
-
         expect(binding_event_repo).to have_received(:record_delete).with(
           binding,
           user_audit_info,
@@ -62,16 +56,10 @@ module VCAP::CloudController
         )
       end
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
-
-      let(:event_repository) do
-        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
-        allow(dbl).to receive(:record_service_instance_event)
-        dbl
-      end
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
       let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
-      let(:action) { described_class.new(event_repository, user_audit_info) }
+      let(:action) { described_class.new(user_audit_info) }
 
       before do
         allow(Diego::Messenger).to receive(:new).and_return(messenger)
@@ -175,7 +163,6 @@ module VCAP::CloudController
 
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
-            expect(event_repository).not_to have_received(:record_service_instance_event)
             expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
@@ -188,7 +175,6 @@ module VCAP::CloudController
 
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
-            expect(event_repository).not_to have_received(:record_service_instance_event)
             expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
@@ -201,7 +187,6 @@ module VCAP::CloudController
 
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
-            expect(event_repository).not_to have_received(:record_service_instance_event)
             expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end

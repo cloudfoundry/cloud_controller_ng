@@ -45,7 +45,7 @@ class ServiceRouteBindingsController < ApplicationController
     route = fetch_route(message.route_guid)
 
     check_parameters_support(service_instance, message)
-    action = V3::ServiceRouteBindingCreate.new(service_event_repository, user_audit_info, message.audit_hash)
+    action = V3::ServiceRouteBindingCreate.new(user_audit_info, message.audit_hash)
     precursor = action.precursor(service_instance, route, message: message)
 
     case service_instance
@@ -71,7 +71,7 @@ class ServiceRouteBindingsController < ApplicationController
       pollable_job_guid = enqueue_unbind_job(@route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceRouteBindingDelete.new(service_event_repository, user_audit_info)
+      action = V3::ServiceRouteBindingDelete.new(user_audit_info)
       action.delete(@route_binding)
       head :no_content
     end
