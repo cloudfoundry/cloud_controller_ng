@@ -1,4 +1,4 @@
-require 'repositories/service_binding_event_repository'
+require 'repositories/service_generic_binding_event_repository'
 require 'services/service_brokers/service_client_provider'
 require 'actions/v3/service_binding_create'
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
       end
 
       def event_repository
-        Repositories::ServiceBindingEventRepository
+        Repositories::ServiceGenericBindingEventRepository.new('service_binding')
       end
 
       def operation_in_progress!

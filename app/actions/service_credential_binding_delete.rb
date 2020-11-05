@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       def event_repository
-        Repositories::ServiceBindingEventRepository
+        Repositories::ServiceGenericBindingEventRepository.new('service_binding')
       end
     end
   end
