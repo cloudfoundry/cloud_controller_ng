@@ -2121,8 +2121,8 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
-<td><em>string</em></td>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
 <td>Optionally include additional related resources in the response; valid values are <code class="prettyprint">space</code> and <code class="prettyprint">space.organization</code></td>
 </tr>
 </tbody></table>
@@ -2381,7 +2381,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">name</code>, <code class="prettyprint">state</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -2391,8 +2391,8 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td><a href="#lifecycles">Lifecycle</a> type to filter by; valid values are <code class="prettyprint">buildpack</code>, <code class="prettyprint">docker</code></td>
 </tr>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
-<td><em>string</em></td>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
 <td>Optionally include a list of unique related resources in the response; valid values are <code class="prettyprint">space</code> and <code class="prettyprint">spaceorganization</code></td>
 </tr>
 <tr>
@@ -4835,7 +4835,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -4971,7 +4971,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -5532,7 +5532,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">position</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -5790,7 +5790,6 @@ applications without incurring downtime. This is different from the traditional 
 <pre class="highlight json"><code><span class="w">
 </span><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
@@ -5834,6 +5833,10 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"cancel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -5861,11 +5864,6 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>updated_at</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
-</tr>
-<tr>
-<td><strong>state</strong></td>
-<td><em>string</em></td>
-<td><strong>(deprecated)</strong> This field will be removed in the future; use the <code class="prettyprint">status</code> fields to determine deployment state instead</td>
 </tr>
 <tr>
 <td><strong>status.value</strong></td>
@@ -5977,7 +5975,6 @@ applications without incurring downtime. This is different from the traditional 
 <span class="w">
 </span><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
@@ -6021,6 +6018,10 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"cancel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -6122,7 +6123,6 @@ applications without incurring downtime. This is different from the traditional 
 <span class="w">
 </span><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
@@ -6166,6 +6166,10 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"cancel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -6233,7 +6237,6 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FINALIZED"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="w">
@@ -6333,7 +6336,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -6399,7 +6402,6 @@ applications without incurring downtime. This is different from the traditional 
 <span class="w">
 </span><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
@@ -6443,6 +6445,10 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"cancel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -6992,7 +6998,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -7134,7 +7140,7 @@ organization), and domains that have been shared with the organization.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -8059,7 +8065,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -8261,7 +8267,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -8476,7 +8482,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -9923,7 +9929,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -11324,7 +11330,7 @@ specification</a>.</p>
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -13471,7 +13477,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -14700,7 +14706,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -14897,7 +14903,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -15719,7 +15725,7 @@ spaces, and assign &amp; unassign roles to users.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
+<td><strong>include</strong></td>
 <td><em>list of strings</em></td>
 <td>Optionally include a list of unique related resources in the response; <br>valid values are <code class="prettyprint">user</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code></td>
 </tr>
@@ -15924,7 +15930,7 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
+<td><strong>include</strong></td>
 <td><em>list of strings</em></td>
 <td>Optionally include a list of unique related resources in the response; <br>valid values are <code class="prettyprint">user</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code></td>
 </tr>
@@ -16667,7 +16673,7 @@ spaces, and assign &amp; unassign roles to users.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
+<td><strong>include</strong></td>
 <td><em>string</em></td>
 <td>Optionally include additional related resources in the response <br>Valid values are <code class="prettyprint">domain</code>, <code class="prettyprint">space.organization</code>, <code class="prettyprint">space</code></td>
 </tr>
@@ -16876,12 +16882,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
+<td><strong>include</strong></td>
 <td><em>string</em></td>
 <td>Optionally include a list of unique related resources in the response <br>Valid values are <code class="prettyprint">domain</code>, <code class="prettyprint">space.organization</code>, <code class="prettyprint">space</code></td>
 </tr>
@@ -17065,7 +17071,7 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -19608,7 +19614,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -20274,7 +20280,7 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -21406,7 +21412,7 @@ They are only visible to members of that space.</p>
 <td>Comma-delimited list of organization GUIDs to filter by</td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -22328,7 +22334,7 @@ Service offerings and service plans are created and updated when a service broke
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -23533,8 +23539,8 @@ question and the associated space, service broker, and service offering.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
-<td><em>string</em></td>
+<td><strong>include</strong></td>
+<td><em>list of strings</em></td>
 <td>Optionally include additional related resources in the response; <br>valid value is <code class="prettyprint">organization</code></td>
 </tr>
 </tbody></table>
@@ -23720,12 +23726,12 @@ question and the associated space, service broker, and service offering.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>include</strong> (<em>experimental</em>)</td>
+<td><strong>include</strong></td>
 <td><em>string</em></td>
 <td>Optionally include a list of unique related resources in the response; <br>valid value is <code class="prettyprint">organization</code></td>
 </tr>
@@ -25516,7 +25522,7 @@ An application will automatically use buildpacks associated with the application
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -26205,7 +26211,7 @@ in the response based on the user&rsquo;s role.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -26397,7 +26403,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -26989,7 +26995,7 @@ UAA database, though this is not required.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -27970,7 +27976,7 @@ Each object contains the command that the given process type was running at this
 <td>Comma-delimited list of revision versions to filter by</td>
 </tr>
 <tr>
-<td><strong>label_selector</strong> (<em>experimental</em>)</td>
+<td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
@@ -29793,6 +29799,11 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <td><strong>service_instance_names</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of service instance names to filter by</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
 <td><strong>include</strong></td>
