@@ -620,6 +620,18 @@ RSpec.describe 'v3 service route bindings' do
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
           end
 
+          it 'logs an audit event' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.create')
+            expect(event).to be
+            expect(event.actee).to eq(binding.guid)
+            expect(event.actee_name).to eq('')
+            expect(event.data).to include({
+              'request' => request.with_indifferent_access
+            })
+          end
+
           context 'orphan mitigation' do
             it_behaves_like 'create binding orphan mitigation' do
               let(:bind_url) { broker_bind_url }
@@ -689,6 +701,17 @@ RSpec.describe 'v3 service route bindings' do
             expect(binding.last_operation.description).to eq(description)
 
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+          end
+
+          it 'logs an audit event' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.start_create')
+            expect(event).to be
+            expect(event.actee).to eq(binding.guid)
+            expect(event.data).to include({
+              'request' => request.with_indifferent_access
+            })
           end
 
           it 'enqueues the next fetch last operation job' do
@@ -877,43 +900,54 @@ RSpec.describe 'v3 service route bindings' do
 
       it_behaves_like 'create route binding'
 
-      it 'creates a service route binding' do
-        api_call.call(space_dev_headers)
-        expect(last_response).to have_status_code(201)
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = { code: 201 }
+            h['space_developer'] = { code: 201 }
 
-        binding = VCAP::CloudController::RouteBinding.last
-        expect(binding.service_instance).to eq(service_instance)
-        expect(binding.route).to eq(route)
-        expect(binding.route_service_url).to eq(route_service_url)
-        expect(binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
-        expect(binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
-
-        expect(parsed_response).to match_json_response(
-          expected_json(
-            binding_guid: binding.guid,
-            route_service_url: route_service_url,
-            service_instance_guid: service_instance.guid,
-            route_guid: route.guid,
-            last_operation_type: 'create',
-            last_operation_state: 'succeeded',
-            include_params_link: service_instance.managed_instance?,
-            metadata: metadata
-          )
-        )
+            h['no_role'] = { code: 422 }
+            h['org_auditor'] = { code: 422 }
+            h['org_billing_manager'] = { code: 422 }
+          end
+        end
       end
 
-      describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) do
-            Hash.new(code: 403).tap do |h|
-              h['admin'] = { code: 201 }
-              h['space_developer'] = { code: 201 }
+      describe 'a successful creation' do
+        before do
+          api_call.call(space_dev_headers)
 
-              h['no_role'] = { code: 422 }
-              h['org_auditor'] = { code: 422 }
-              h['org_billing_manager'] = { code: 422 }
-            end
-          end
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to have_key('guid')
+          @binding = VCAP::CloudController::RouteBinding.last
+        end
+
+        it 'creates a service route binding' do
+          expect(@binding.service_instance).to eq(service_instance)
+          expect(@binding.route).to eq(route)
+          expect(@binding.route_service_url).to eq(route_service_url)
+          expect(@binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
+          expect(@binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
+
+          expect(parsed_response).to match_json_response(
+            expected_json(
+              binding_guid: @binding.guid,
+              route_service_url: route_service_url,
+              service_instance_guid: service_instance.guid,
+              route_guid: route.guid,
+              last_operation_type: 'create',
+              last_operation_state: 'succeeded',
+              include_params_link: service_instance.managed_instance?,
+              metadata: metadata
+            )
+          )
+        end
+
+        it 'logs an audit event' do
+          event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.create')
+          expect(event).to be
+          expect(event.actee).to eq(@binding.guid)
+          expect(event.actee_name).to eq('')
         end
       end
 

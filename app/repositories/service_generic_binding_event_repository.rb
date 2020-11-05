@@ -70,6 +70,14 @@ module VCAP::CloudController
         end
 
         def record_event(type:, service_binding:, user_audit_info:, metadata: {})
+          space_guid = service_binding.service_instance.space.guid
+          org_guid = service_binding.service_instance.space.organization.guid
+
+          if service_binding.try(:space)
+            space_guid = service_binding.space.guid
+            org_guid = service_binding.space.organization.guid
+          end
+
           Event.create(
             type:              type,
             actor:             user_audit_info.user_guid,
@@ -79,8 +87,8 @@ module VCAP::CloudController
             actee:             service_binding.guid,
             actee_type:        @actee_name,
             actee_name:        service_binding.try(:name) || '',
-            space_guid:        service_binding.space&.guid || service_binding.service_instance.space.guid,
-            organization_guid: service_binding.space&.organization.guid || service_binding.service_instance.space.organization.guid,
+            space_guid:        space_guid,
+            organization_guid: org_guid,
             timestamp:         Sequel::CURRENT_TIMESTAMP,
             metadata:          metadata
           )

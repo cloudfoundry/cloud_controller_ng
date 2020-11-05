@@ -10,12 +10,6 @@ module VCAP::CloudController
       let(:route) { Route.make(space: space) }
       let(:route_service_url) { 'https://route_service_url.com' }
 
-      let(:event_repository) do
-        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
-        allow(dbl).to receive(:record_service_instance_event)
-        dbl
-      end
-
       let(:message) {
         VCAP::CloudController::ServiceRouteBindingCreateMessage.new(
           metadata: {
@@ -27,7 +21,23 @@ module VCAP::CloudController
         )
       }
 
-      subject(:action) { described_class.new(event_repository) }
+      let(:event_repository) do
+        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
+        allow(dbl).to receive(:record_service_instance_event)
+        dbl
+      end
+
+      let(:audit_hash) { { some_info: 'some_value' } }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
+
+      before do
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_route_binding').and_return(binding_event_repo)
+        allow(binding_event_repo).to receive(:record_create)
+        allow(binding_event_repo).to receive(:record_start_create)
+      end
+
+      subject(:action) { described_class.new(event_repository, user_audit_info, audit_hash) }
 
       describe '#precursor' do
         RSpec.shared_examples '#precursor' do
@@ -200,6 +210,13 @@ module VCAP::CloudController
                 service_instance,
                 { route_guid: route.guid },
               )
+
+              expect(binding_event_repo).to have_received(:record_create).with(
+                precursor,
+                user_audit_info,
+                audit_hash,
+                manifest_triggered: false,
+              )
             end
 
             context 'route does not have app' do
@@ -233,6 +250,22 @@ module VCAP::CloudController
             end
 
             it_behaves_like '#route bind'
+
+            context 'asynchronous binding' do
+              let(:broker_provided_operation) { Sham.guid }
+              let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
+              let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_async_response) }
+
+              it 'should log audit start_create' do
+                action.bind(precursor)
+                expect(binding_event_repo).to have_received(:record_start_create).with(
+                  precursor,
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: false,
+                )
+              end
+            end
           end
 
           context 'user-provided service instance' do
@@ -306,6 +339,13 @@ module VCAP::CloudController
                 service_instance,
                 { route_guid: route.guid },
               )
+
+              expect(binding_event_repo).to have_received(:record_create).with(
+                binding,
+                user_audit_info,
+                audit_hash,
+                manifest_triggered: false,
+              )
             end
 
             context 'route does not have app' do
@@ -334,6 +374,7 @@ module VCAP::CloudController
 
               expect(messenger).not_to have_received(:send_desire_request)
               expect(event_repository).not_to have_received(:record_service_instance_event)
+              expect(binding_event_repo).not_to have_received(:record_create)
             end
           end
 
@@ -344,6 +385,7 @@ module VCAP::CloudController
 
               expect(messenger).not_to have_received(:send_desire_request)
               expect(event_repository).not_to have_received(:record_service_instance_event)
+              expect(binding_event_repo).not_to have_received(:record_create)
             end
           end
         end
