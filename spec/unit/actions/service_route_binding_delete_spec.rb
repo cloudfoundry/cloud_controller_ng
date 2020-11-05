@@ -19,6 +19,11 @@ module VCAP::CloudController
           service_instance,
           { route_guid: route.guid },
         )
+
+        expect(binding_event_repo).to have_received(:record_delete).with(
+          binding,
+          user_audit_info,
+        )
       end
 
       it 'says the the delete is complete' do
@@ -56,28 +61,35 @@ module VCAP::CloudController
           { type: 'create', state: 'successful' }
         )
       end
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
 
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
         allow(dbl).to receive(:record_service_instance_event)
         dbl
       end
+      let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
+
       let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
-      let(:action) { described_class.new(event_repository) }
+      let(:action) { described_class.new(event_repository, user_audit_info) }
 
       before do
         allow(Diego::Messenger).to receive(:new).and_return(messenger)
+
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_route_binding').and_return(binding_event_repo)
+        allow(binding_event_repo).to receive(:record_delete)
+        allow(binding_event_repo).to receive(:record_start_delete)
       end
 
       describe '#delete' do
         context 'managed service instance' do
+          let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+          let(:service_plan) { ServicePlan.make(service: service_offering) }
+          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
           it_behaves_like 'service binding deletion', RouteBinding
 
           context 'broker returns delete complete' do
-            let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-            let(:service_plan) { ServicePlan.make(service: service_offering) }
-            let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-
             let(:unbind_response) { { async: false } }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: unbind_response) }
             let(:perform_action) { action.delete(binding) }
@@ -87,6 +99,25 @@ module VCAP::CloudController
             end
 
             it_behaves_like 'successful route binding delete'
+          end
+
+          context 'async unbinding' do
+            let(:broker_provided_operation) { Sham.guid }
+            let(:async_unbind_response) { { async: true, operation: broker_provided_operation } }
+            let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: async_unbind_response) }
+
+            before do
+              allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+            end
+
+            it 'should log audit start_create' do
+              action.delete(binding)
+
+              expect(binding_event_repo).to have_received(:record_start_delete).with(
+                binding,
+                user_audit_info,
+              )
+            end
           end
         end
 
@@ -145,6 +176,7 @@ module VCAP::CloudController
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
 
@@ -157,6 +189,7 @@ module VCAP::CloudController
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
 
@@ -169,6 +202,7 @@ module VCAP::CloudController
             expect(RouteBinding.first).to eq(binding)
             expect(messenger).not_to have_received(:send_desire_request)
             expect(event_repository).not_to have_received(:record_service_instance_event)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
       end

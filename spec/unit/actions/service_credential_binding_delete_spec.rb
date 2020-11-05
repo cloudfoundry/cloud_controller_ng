@@ -18,9 +18,8 @@ module VCAP::CloudController
       end
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
-
       before do
-        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).and_return(binding_event_repo)
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_delete)
         allow(binding_event_repo).to receive(:record_start_delete)
       end

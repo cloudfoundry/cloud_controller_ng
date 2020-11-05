@@ -1047,6 +1047,22 @@ RSpec.describe 'v3 service route bindings' do
         }
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        it 'creates an audit log' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(204)
+
+          event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.delete')
+          expect(event).to be
+          expect(event.actee).to eq(binding.guid)
+          expect(event.data).to include({
+            'request' => {
+              'app_guid' => nil,
+              'route_guid' => route.guid,
+              'service_instance_guid' => service_instance.guid
+            }
+          })
+        end
       end
 
       context 'managed service instance' do
@@ -1123,6 +1139,21 @@ RSpec.describe 'v3 service route bindings' do
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
             end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.delete')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => nil,
+                  'route_guid' => route.guid,
+                  'service_instance_guid' => service_instance.guid
+                }
+              })
+            end
           end
 
           context 'when the unbind responds asynchronously' do
@@ -1170,6 +1201,21 @@ RSpec.describe 'v3 service route bindings' do
               expect(binding.last_operation.description).to eq(description)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_route_binding.start_delete')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => nil,
+                  'route_guid' => route.guid,
+                  'service_instance_guid' => service_instance.guid
+                }
+              })
             end
 
             it 'enqueues the next fetch last operation job' do

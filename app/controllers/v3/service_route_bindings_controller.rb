@@ -71,7 +71,7 @@ class ServiceRouteBindingsController < ApplicationController
       pollable_job_guid = enqueue_unbind_job(@route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceRouteBindingDelete.new(service_event_repository)
+      action = V3::ServiceRouteBindingDelete.new(service_event_repository, user_audit_info)
       action.delete(@route_binding)
       head :no_content
     end
