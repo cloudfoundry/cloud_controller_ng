@@ -16,11 +16,12 @@ module VCAP::CloudController
           { type: 'create', state: 'successful' }
         )
       end
+      let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
       before do
-        @service_binding_event_repository = Repositories::ServiceBindingEventRepository
-        allow(@service_binding_event_repository).to receive(:record_delete)
-        allow(@service_binding_event_repository).to receive(:record_start_delete)
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
+        allow(binding_event_repo).to receive(:record_delete)
+        allow(binding_event_repo).to receive(:record_start_delete)
       end
 
       RSpec.shared_examples 'successful credential binding delete' do
@@ -33,7 +34,7 @@ module VCAP::CloudController
         it 'creates an audit event' do
           action.delete(binding)
 
-          expect(@service_binding_event_repository).to have_received(:record_delete).with(
+          expect(binding_event_repo).to have_received(:record_delete).with(
             binding,
             user_audit_info,
           )
@@ -75,7 +76,7 @@ module VCAP::CloudController
             it 'should log audit start_create' do
               action.delete(binding)
 
-              expect(@service_binding_event_repository).to have_received(:record_start_delete).with(
+              expect(binding_event_repo).to have_received(:record_start_delete).with(
                 binding,
                 user_audit_info,
               )
@@ -122,7 +123,7 @@ module VCAP::CloudController
             result = action.poll(binding)
 
             expect(ServiceBinding.all).to be_empty
-            expect(@service_binding_event_repository).to have_received(:record_delete).with(
+            expect(binding_event_repo).to have_received(:record_delete).with(
               binding,
               user_audit_info,
             )
@@ -137,7 +138,7 @@ module VCAP::CloudController
             action.poll(binding)
 
             expect(ServiceBinding.first).to eq(binding)
-            expect(@service_binding_event_repository).not_to have_received(:record_delete)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
 
@@ -148,7 +149,7 @@ module VCAP::CloudController
             expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
             expect(ServiceBinding.first).to eq(binding)
-            expect(@service_binding_event_repository).not_to have_received(:record_delete)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
 
@@ -159,7 +160,7 @@ module VCAP::CloudController
             expect { action.poll(binding) }.to raise_error(StandardError)
 
             expect(ServiceBinding.first).to eq(binding)
-            expect(@service_binding_event_repository).not_to have_received(:record_delete)
+            expect(binding_event_repo).not_to have_received(:record_delete)
           end
         end
       end

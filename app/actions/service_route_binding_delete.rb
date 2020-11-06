@@ -4,27 +4,30 @@ require 'actions/v3/service_binding_delete'
 module VCAP::CloudController
   module V3
     class ServiceRouteBindingDelete < V3::ServiceBindingDelete
-      def initialize(service_event_repository)
+      def initialize(user_audit_info)
         super()
-        @service_event_repository = service_event_repository
+        @user_audit_info = user_audit_info
       end
 
       private
 
-      attr_reader :service_event_repository
+      def event_repository
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
+      end
 
       def perform_delete_actions(binding)
-        record_audit_event(binding)
+        event_repository.record_delete(
+          binding,
+          @user_audit_info
+        )
+
         binding.destroy
         binding.notify_diego
       end
 
-      def record_audit_event(binding)
-        service_event_repository.record_service_instance_event(
-          :unbind_route,
-          binding.service_instance,
-          { route_guid: binding.route.guid },
-        )
+      def perform_start_delete_actions(binding)
+        event_repository.record_start_delete(binding, @user_audit_info)
       end
     end
   end

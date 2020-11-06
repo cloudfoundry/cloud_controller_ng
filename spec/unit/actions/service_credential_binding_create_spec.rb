@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'actions/service_credential_binding_create'
 require 'support/shared_examples/v3_service_binding_create'
 require 'cloud_controller/user_audit_info'
+require 'repositories/service_generic_binding_event_repository'
 
 module VCAP::CloudController
   module V3
@@ -14,11 +15,12 @@ module VCAP::CloudController
       let(:app) { AppModel.make(space: space) }
       let(:binding_details) {}
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
       before do
-        @service_binding_event_repository = Repositories::ServiceBindingEventRepository
-        allow(@service_binding_event_repository).to receive(:record_create)
-        allow(@service_binding_event_repository).to receive(:record_start_create)
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
+        allow(binding_event_repo).to receive(:record_create)
+        allow(binding_event_repo).to receive(:record_start_create)
       end
 
       describe '#precursor' do
@@ -189,7 +191,7 @@ module VCAP::CloudController
 
             it 'creates an audit event' do
               action.bind(precursor)
-              expect(@service_binding_event_repository).to have_received(:record_create).with(
+              expect(binding_event_repo).to have_received(:record_create).with(
                 precursor,
                 user_audit_info,
                 audit_hash,
@@ -230,7 +232,7 @@ module VCAP::CloudController
 
               it 'should log audit start_create' do
                 action.bind(precursor)
-                expect(@service_binding_event_repository).to have_received(:record_start_create).with(
+                expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
                   user_audit_info,
                   audit_hash,
@@ -313,7 +315,7 @@ module VCAP::CloudController
             it 'creates an audit event' do
               action.poll(binding)
 
-              expect(@service_binding_event_repository).to have_received(:record_create).with(
+              expect(binding_event_repo).to have_received(:record_create).with(
                 binding,
                 user_audit_info,
                 audit_hash,
@@ -326,7 +328,7 @@ module VCAP::CloudController
             it 'does not create an audit event' do
               action.poll(binding)
 
-              expect(@service_binding_event_repository).not_to have_received(:record_create)
+              expect(binding_event_repo).not_to have_received(:record_create)
             end
           end
 
@@ -335,7 +337,7 @@ module VCAP::CloudController
             it 'does not create an audit event' do
               expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 
-              expect(@service_binding_event_repository).not_to have_received(:record_create)
+              expect(binding_event_repo).not_to have_received(:record_create)
             end
           end
         end

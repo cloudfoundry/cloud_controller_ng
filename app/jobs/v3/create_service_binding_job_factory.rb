@@ -21,8 +21,7 @@ module VCAP::CloudController
       def self.action(type, user_audit_info, audit_hash)
         case type
         when :route
-          service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-          V3::ServiceRouteBindingCreate.new(service_event_repository)
+          V3::ServiceRouteBindingCreate.new(user_audit_info, audit_hash)
         when :credential
           V3::ServiceCredentialBindingCreate.new(user_audit_info, audit_hash)
         else

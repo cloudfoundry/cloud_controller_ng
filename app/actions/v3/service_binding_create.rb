@@ -76,17 +76,6 @@ module VCAP::CloudController
         )
       end
 
-      def save_incomplete_binding(precursor, operation)
-        precursor.save_with_attributes_and_new_operation(
-          {},
-          {
-            type: 'create',
-            state: 'in progress',
-            broker_provided_operation: operation
-          }
-        )
-      end
-
       def bindings_retrievable?(binding)
         binding.service_instance.service.bindings_retrievable
       end

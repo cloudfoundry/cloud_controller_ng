@@ -45,12 +45,12 @@ class ServiceRouteBindingsController < ApplicationController
     route = fetch_route(message.route_guid)
 
     check_parameters_support(service_instance, message)
-    action = V3::ServiceRouteBindingCreate.new(service_event_repository)
+    action = V3::ServiceRouteBindingCreate.new(user_audit_info, message.audit_hash)
     precursor = action.precursor(service_instance, route, message: message)
 
     case service_instance
     when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(precursor.guid, message.parameters)
+      pollable_job_guid = enqueue_bind_job(precursor.guid, message)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
       action.bind(precursor)
@@ -71,7 +71,7 @@ class ServiceRouteBindingsController < ApplicationController
       pollable_job_guid = enqueue_unbind_job(@route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceRouteBindingDelete.new(service_event_repository)
+      action = V3::ServiceRouteBindingDelete.new(user_audit_info)
       action.delete(@route_binding)
       head :no_content
     end
@@ -132,13 +132,13 @@ class ServiceRouteBindingsController < ApplicationController
     end
   end
 
-  def enqueue_bind_job(binding_guid, parameters)
+  def enqueue_bind_job(binding_guid, message)
     bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(
       :route,
       binding_guid,
       user_audit_info: user_audit_info,
-      audit_hash: {},
-      parameters: parameters,
+      audit_hash: message.audit_hash,
+      parameters: message.parameters,
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid

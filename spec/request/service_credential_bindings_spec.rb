@@ -1459,6 +1459,17 @@ RSpec.describe 'v3 service credential bindings' do
 
           get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
           expect(last_response).to have_status_code(404)
+
+          event = VCAP::CloudController::Event.find(type: 'audit.service_binding.delete')
+          expect(event).to be
+          expect(event.actee).to eq(binding.guid)
+          expect(event.data).to include({
+            'request' => {
+              'app_guid' => bound_app.guid,
+              'route_guid' => nil,
+              'service_instance_guid' => service_instance.guid
+            }
+          })
         end
       end
 
@@ -1607,6 +1618,21 @@ RSpec.describe 'v3 service credential bindings' do
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
             end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_binding.delete')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => bound_app.guid,
+                  'route_guid' => nil,
+                  'service_instance_guid' => service_instance.guid
+                }
+              })
+            end
           end
 
           context 'when the unbind completes asynchronously' do
@@ -1654,6 +1680,21 @@ RSpec.describe 'v3 service credential bindings' do
               expect(binding.last_operation.description).to eq(description)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+            end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_binding.start_delete')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => bound_app.guid,
+                  'route_guid' => nil,
+              'service_instance_guid' => service_instance.guid
+                }
+              })
             end
 
             it 'enqueues the next fetch last operation job' do

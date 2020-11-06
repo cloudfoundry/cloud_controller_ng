@@ -63,8 +63,6 @@ module VCAP::CloudController
 
       private
 
-      def perform_start_delete_actions(binding); end
-
       def send_unbind_to_client(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
         details = client.unbind(binding, nil, true)
