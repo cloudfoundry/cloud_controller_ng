@@ -5,6 +5,10 @@ module VCAP::CloudController
     class ServiceGenericBindingEventRepository
       include AppManifestEventMixins
 
+      SERVICE_APP_CREDENTIAL_BINDING = 'service_binding'.freeze
+      SERVICE_KEY_CREDENTIAL_BINDING = 'service_key'.freeze
+      SERVICE_ROUTE_BINDING = 'service_route_binding'.freeze
+
       def initialize(actee_name)
         @actee_name = actee_name
       end

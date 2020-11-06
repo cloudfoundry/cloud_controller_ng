@@ -11,12 +11,13 @@ module VCAP::CloudController
 
       private
 
-      def binding_event_repository
-        Repositories::ServiceGenericBindingEventRepository.new('service_route_binding')
+      def event_repository
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
       end
 
       def perform_delete_actions(binding)
-        binding_event_repository.record_delete(
+        event_repository.record_delete(
           binding,
           @user_audit_info
         )
@@ -26,7 +27,7 @@ module VCAP::CloudController
       end
 
       def perform_start_delete_actions(binding)
-        binding_event_repository.record_start_delete(binding, @user_audit_info)
+        event_repository.record_start_delete(binding, @user_audit_info)
       end
     end
   end

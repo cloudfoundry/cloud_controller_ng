@@ -37,7 +37,8 @@ module VCAP::CloudController
       private
 
       def event_repository
-        Repositories::ServiceGenericBindingEventRepository.new('service_route_binding')
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
       end
 
       def validate!(service_instance, route)
