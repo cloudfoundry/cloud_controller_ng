@@ -152,14 +152,14 @@ class ServiceCredentialBindingsController < ApplicationController
     resource.present? && can_read_from_space?(resource.space)
   end
 
-   def can_read_service_instance?(service_instance)
-     if service_instance.present?
-       readable_spaces = service_instance.shared_spaces + [service_instance.space]
+  def can_read_service_instance?(service_instance)
+    if service_instance.present?
+      readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
-       readable_spaces.any? do |space|
-         permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
-       end
-     end
+      readable_spaces.any? do |space|
+        permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      end
+    end
   end
 
   def can_write_to_space?(space)
