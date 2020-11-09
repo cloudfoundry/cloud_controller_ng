@@ -44,7 +44,7 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-    resource_not_accessible!('service instance', message.service_instance_guid) unless can_access_resource?(service_instance)
+    resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
 
     app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
     resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
@@ -150,6 +150,16 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def can_access_resource?(resource)
     resource.present? && can_read_from_space?(resource.space)
+  end
+
+   def can_read_service_instance?(service_instance)
+     if service_instance.present?
+       readable_spaces = service_instance.shared_spaces + [service_instance.space]
+
+       readable_spaces.any? do |space|
+         permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+       end
+     end
   end
 
   def can_write_to_space?(space)
