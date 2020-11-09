@@ -69,12 +69,12 @@ module VCAP::CloudController
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
         raise ConcurrencyError.new(
-          'The service broker rejected the request due to an operation being in progress for the service route binding'
+          'The service broker rejected the request due to an operation being in progress for the binding'
         )
       rescue CloudController::Errors::ApiError => err
         if err.name == 'AsyncServiceBindingOperationInProgress'
           raise ConcurrencyError.new(
-            'The service broker rejected the request due to an operation being in progress for the service route binding'
+            'The service broker rejected the request due to an operation being in progress for the binding'
           )
         end
         raise unprocessable!(binding, err)

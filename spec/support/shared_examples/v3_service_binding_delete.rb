@@ -70,7 +70,7 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
           action.delete(binding)
         }.to raise_error(
           described_class::ConcurrencyError,
-          'The service broker rejected the request due to an operation being in progress for the service route binding',
+          'The service broker rejected the request due to an operation being in progress for the binding',
         )
 
         binding.reload
