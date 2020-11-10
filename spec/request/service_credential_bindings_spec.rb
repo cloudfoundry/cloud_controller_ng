@@ -1058,14 +1058,40 @@ RSpec.describe 'v3 service credential bindings' do
       let(:audit) { VCAP::CloudController::Event.last }
       let(:job) { VCAP::CloudController::PollableJobModel.last }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 202 }
-            h['admin'] = { code: 202 }
-            h['org_billing_manager'] = { code: 422 }
-            h['org_auditor'] = { code: 422 }
-            h['no_role'] = { code: 422 }
+      context 'permissions' do
+        context 'users in the originating service instance space' do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['space_developer'] = { code: 202 }
+                h['admin'] = { code: 202 }
+                h['org_billing_manager'] = { code: 422 }
+                h['org_auditor'] = { code: 422 }
+                h['no_role'] = { code: 422 }
+              end
+            end
+          end
+        end
+
+        context 'users in the space where the SI has been shared to' do
+          let(:orginal_org) { VCAP::CloudController::Organization.make }
+          let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space, service_plan: plan) }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['space_developer'] = { code: 202 }
+                h['admin'] = { code: 202 }
+                h['org_billing_manager'] = { code: 422 }
+                h['org_auditor'] = { code: 422 }
+                h['no_role'] = { code: 422 }
+              end
+            end
           end
         end
       end
@@ -1452,6 +1478,24 @@ RSpec.describe 'v3 service credential bindings' do
     let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
 
     context 'user provided services' do
+      context 'permissions' do
+        let(:db_check) {
+          lambda {
+            get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
+            expect(last_response).to have_status_code(404)
+          }
+        }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = h['space_developer'] = { code: 204 }
+            h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
       context 'app bindings' do
         it 'can successfully delete the record' do
           api_call.call(admin_headers)
@@ -1497,6 +1541,44 @@ RSpec.describe 'v3 service credential bindings' do
           plan_id: service_instance.service_plan.unique_id,
           accepts_incomplete: true,
         }
+      end
+
+      context 'permissions' do
+        let(:db_check) {
+          lambda {
+            expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          }
+        }
+
+        context 'users in the originating service instance space' do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['admin'] = h['space_developer'] = { code: 202 }
+                h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+              end
+            end
+          end
+        end
+
+        context 'users in the space where the SI has been shared to' do
+          let(:orginal_org) { VCAP::CloudController::Organization.make }
+          let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['admin'] = h['space_developer'] = { code: 202 }
+                h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+              end
+            end
+          end
+        end
       end
 
       context 'app binding' do
@@ -1786,24 +1868,6 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(501)
         end
       end
-    end
-
-    context 'permissions' do
-      let(:db_check) {
-        lambda {
-          get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
-          expect(last_response).to have_status_code(404)
-        }
-      }
-
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['admin'] = h['space_developer'] = { code: 204 }
-          h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
-        end
-      end
-
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
     describe 'invalid requests' do
