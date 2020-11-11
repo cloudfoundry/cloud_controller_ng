@@ -3,6 +3,55 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'v3 service route bindings' do
   describe 'GET /v3/service_route_bindings' do
+    # Because route bindings don't have names, we can't use the 'paginated response' shared example
+    describe 'behaving like a paginated resource' do
+      let!(:resources) { Array.new(2) { VCAP::CloudController::RouteBinding.make } }
+
+      it 'returns pagination information' do
+        get '/v3/service_route_bindings?per_page=1', nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect_route_bindings([resources[0]])
+
+        expect(parsed_response['pagination']['total_results']).to eq(resources.length)
+        expect(parsed_response['pagination']['total_pages']).to eq(resources.length)
+        expect(parsed_response['pagination']['first']['href']).to include('/v3/service_route_bindings?page=1&per_page=1')
+        expect(parsed_response['pagination']['next']['href']).to include('/v3/service_route_bindings?page=2&per_page=1')
+        expect(parsed_response['pagination']['last']['href']).to include("/v3/service_route_bindings?page=#{resources.length}&per_page=1")
+      end
+
+      it 'keeps filtering information in links' do
+        resources_guids = resources.map(&:guid)
+        get "/v3/service_route_bindings?per_page=1&guids=#{resources_guids.join(',')}", nil, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect_route_bindings([resources[0]])
+
+        expect(parsed_response['pagination']['next']['href']).to include("guids=#{resources_guids.join('%2C')}")
+      end
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_route_bindings' }
+      let(:message) { VCAP::CloudController::ServiceRouteBindingsListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          include: 'route,service_instance',
+          route_guids: %w(foo bar),
+          service_instance_names: %w(foo bar),
+          service_instance_guids: %w(foo bar),
+          per_page: '10',
+          page: 2,
+          order_by: 'updated_at',
+          label_selector: 'foo==bar',
+          guids: 'foo,bar',
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
+        }
+      end
+    end
+
     describe 'no bindings to list' do
       let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
       let(:expected_codes_and_responses) do
@@ -181,6 +230,12 @@ RSpec.describe 'v3 service route bindings' do
       it 'rejects requests with invalid associations' do
         get '/v3/service_route_bindings?include=planet', nil, admin_headers
         expect(last_response).to have_status_code(400)
+      end
+    end
+
+    describe 'order_by' do
+      it_behaves_like 'list endpoint order_by timestamps', '/v3/service_route_bindings' do
+        let(:resource_klass) { VCAP::CloudController::RouteBinding }
       end
     end
   end
