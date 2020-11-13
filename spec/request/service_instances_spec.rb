@@ -472,6 +472,18 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::ServiceInstanceListFetcher).to receive(:fetch).with(
+          an_instance_of(VCAP::CloudController::ServiceInstancesListMessage),
+          hash_including(eager_loaded_associations: [:labels, :annotations, :space, :service_instance_operation, :service_plan_sti_eager_load])
+        ).and_call_original
+
+        get "/v3/service_instances", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::ServiceInstance }
       let(:api_call) do

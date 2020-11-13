@@ -7,6 +7,18 @@ module VCAP::CloudController
       class ServiceInstancePresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super + [
+              :space,
+              :service_instance_operation,
+              :service_plan_sti_eager_load,
+            ]
+          end
+        end
+
+
         def to_hash
           hash = correct_order(
             hash_common.deep_merge(
