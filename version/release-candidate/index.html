@@ -11,6 +11,86 @@
 
     <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
     <link href="stylesheets/print.css" rel="stylesheet" media="print" />
+    <style>
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #f8f8f2;
+  background-color: #272822;
+}
+.highlight .err {
+  color: #272822;
+  background-color: #f92672;
+}
+.highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #f4bf75;
+}
+.highlight .nt {
+  color: #f4bf75;
+}
+.highlight .o, .highlight .ow {
+  color: #f8f8f2;
+}
+.highlight .p, .highlight .pi {
+  color: #f8f8f2;
+}
+.highlight .gi {
+  color: #a6e22e;
+}
+.highlight .gd {
+  color: #f92672;
+}
+.highlight .gh {
+  color: #66d9ef;
+  background-color: #272822;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #ae81ff;
+}
+.highlight .kc {
+  color: #fd971f;
+}
+.highlight .kt {
+  color: #fd971f;
+}
+.highlight .kd {
+  color: #fd971f;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #a6e22e;
+}
+.highlight .sr {
+  color: #a1efe4;
+}
+.highlight .si {
+  color: #cc6633;
+}
+.highlight .se {
+  color: #cc6633;
+}
+.highlight .nn {
+  color: #f4bf75;
+}
+.highlight .nc {
+  color: #f4bf75;
+}
+.highlight .no {
+  color: #f4bf75;
+}
+.highlight .na {
+  color: #66d9ef;
+}
+.highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx {
+  color: #a6e22e;
+}
+.highlight .ss {
+  color: #a6e22e;
+}
+    </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
     <script src="javascripts/all.js"></script>
@@ -20,12 +100,12 @@
     <a href="#" id="nav-button">
       <span>
         NAV
-        <img src="images/navbar.png" alt="Navbar" />
+        <img src="images/navbar.png" alt="" />
       </span>
     </a>
 
     <nav class="toc-wrapper">
-      <img src="images/logo.png" alt="Logo" />
+      <img src="images/logo.png" alt="" />
 
       <div class="dropdown version-dropdown">
         <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Release Candidate<span class="caret">&#x25BE;</span></button>
@@ -31652,7 +31732,7 @@ it will be visible to the V2 API, and vice-versa.</p>
 
 <p>To reproduce the V2 start behavior in V3:</p>
 
-<p><img alt="Start Diagram" src="images/start_diagram.png" /></p>
+<p><img src="images/start_diagram.png" alt="Start Diagram" /></p>
 
 <ol>
 <li><a href="#list-packages">List packages</a> and filter on package state with value <code class="prettyprint">READY</code> and order by recency.</li>
@@ -31665,7 +31745,7 @@ it will be visible to the V2 API, and vice-versa.</p>
 <p>This gives V3 users more flexibility when managing applications. The following
 diagram shows many different flows for starting an app.</p>
 
-<p><img alt="Start Flow" src="images/start_flows.png" /></p>
+<p><img src="images/start_flows.png" alt="Start Flow" /></p>
 
 <p>Apps can upload multiple packages, stage multiple droplets, roll back to older droplets, and other complicated workflows.</p>
 <h3 id="asynchronous-operations">Asynchronous Operations</h3>
