@@ -78,7 +78,7 @@ class ServiceCredentialBindingsController < ApplicationController
       return
     end
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate,
-    V3::ServiceCredentialBindingKeyCreate::UnprocessableCreate => e
+         V3::ServiceCredentialBindingKeyCreate::UnprocessableCreate => e
     unprocessable!(e.message)
   end
 
@@ -294,7 +294,6 @@ class ServiceCredentialBindingsController < ApplicationController
   def operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
   end
-
 
   def not_found!
     resource_not_found!(:service_credential_binding)
