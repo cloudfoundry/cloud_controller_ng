@@ -1,4 +1,5 @@
 require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_key_create'
 require 'actions/service_credential_binding_delete'
 require 'fetchers/service_credential_binding_fetcher'
 require 'fetchers/service_credential_binding_list_fetcher'
@@ -44,12 +45,14 @@ class ServiceCredentialBindingsController < ApplicationController
   def create
     message = build_create_message(hashed_params[:body])
 
-    if message.type == 'app'
-      service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-      resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
+    service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
+    resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
 
+    case message.type
+    when 'app'
       app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
       resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
+
       unauthorized! unless can_write_to_space?(app.space)
 
       action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
@@ -63,11 +66,19 @@ class ServiceCredentialBindingsController < ApplicationController
         action.bind(binding)
         render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
       end
-    else
+    when 'key'
+      unauthorized! unless can_write_to_space?(service_instance.space)
+
+      V3::ServiceCredentialBindingKeyCreate.new.precursor(
+        service_instance,
+        volume_mount_services_enabled: volume_services_enabled?
+      )
+
       head :not_implemented
       return
     end
-  rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
+  rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate,
+    V3::ServiceCredentialBindingKeyCreate::UnprocessableCreate => e
     unprocessable!(e.message)
   end
 
@@ -283,6 +294,7 @@ class ServiceCredentialBindingsController < ApplicationController
   def operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
   end
+
 
   def not_found!
     resource_not_found!(:service_credential_binding)

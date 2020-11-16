@@ -836,7 +836,6 @@ RSpec.describe 'v3 service credential bindings' do
         credentials: { password: 'foo' }
       }
     }
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
     let(:service_instance_guid) { service_instance.guid }
 
     context 'creating a credential binding to an app' do
@@ -983,6 +982,8 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'user-provided service' do
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
+
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
@@ -1472,6 +1473,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'creating a credential binding as a key' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, **service_instance_details) }
       let(:create_body) {
         {
           type: 'key',
@@ -1482,16 +1484,148 @@ RSpec.describe 'v3 service credential bindings' do
         }.merge(request_extra)
       }
 
-      it 'returns 422 when type is missing' do
-        create_body.delete(:type)
+      context 'permissions' do
+        context 'users in the originating service instance space' do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['space_developer'] = { code: 501 }
+                h['admin'] = { code: 501 }
+                h['org_billing_manager'] = { code: 422 }
+                h['org_auditor'] = { code: 422 }
+                h['no_role'] = { code: 422 }
+              end
+            end
+          end
+        end
 
-        api_call.call admin_headers
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => include("Type must be 'app' or 'key'"),
-          'title' => 'CF-UnprocessableEntity',
-          'code' => 10008,
-        }))
+        context 'users in the space where the SI has been shared to' do
+          let(:orginal_org) { VCAP::CloudController::Organization.make }
+          let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              Hash.new(code: 403).tap do |h|
+                h['admin'] = { code: 501 }
+                h['org_billing_manager'] = { code: 422 }
+                h['org_auditor'] = { code: 422 }
+                h['no_role'] = { code: 422 }
+              end
+            end
+          end
+        end
+      end
+
+      context 'request validation' do
+        it 'returns 422 when type is missing' do
+          create_body.delete(:type)
+
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Type must be 'app' or 'key'"),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+
+        it 'returns 422 when service instance relationship is not included' do
+          create_body[:relationships].delete(:service_instance)
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include("Relationships 'relationships' must include one or more valid relationships"),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+          end
+
+        context 'when the service instance does not exist' do
+          let(:service_instance_guid) { 'fake-instance' }
+
+          it 'returns a 422 when the service instance does not exist' do
+            api_call.call admin_headers
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("The service instance could not be found: 'fake-instance'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the user has no access to the service instance' do
+          let(:space_user) do
+            u = VCAP::CloudController::User.make
+            other_space.organization.add_user(u)
+            other_space.add_developer(u)
+            u
+          end
+          let(:space_dev_headers) { headers_for(space_user) }
+
+          it 'returns a 422' do
+              api_call.call space_dev_headers
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(include({
+                'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              }))
+            end
+        end
+
+        context 'when the service instance is user-provided' do
+          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
+
+          it 'returns a 422' do
+            api_call.call admin_headers
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("Service credential bindings of type 'key' are not supported for user-provided service instances."),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the service instance is not bindable' do
+          let(:plan) { VCAP::CloudController::ServicePlan.make(bindable: false) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+
+          it 'returns a 422' do
+            api_call.call admin_headers
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("Service plan does not allow bindings."),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the service instance is from unavailable plan' do
+          let(:plan) { VCAP::CloudController::ServicePlan.make(active: false) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+
+          it 'returns a 422' do
+            api_call.call admin_headers
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("Service plan is not available."),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
       end
 
       it 'should return 501' do
