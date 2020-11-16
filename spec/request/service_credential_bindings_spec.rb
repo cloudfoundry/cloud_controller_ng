@@ -830,7 +830,6 @@ RSpec.describe 'v3 service credential bindings' do
   describe 'POST /v3/service_credential_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
     let(:request_extra) { {} }
-    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
     let(:service_instance_details) {
       {
         syslog_drain_url: 'http://syslog.example.com/wow',
@@ -838,113 +837,144 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
     let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
-    let(:app_guid) { app_to_bind_to.guid }
     let(:service_instance_guid) { service_instance.guid }
-    let(:create_body) {
-      {
-        type: 'app',
-        name: 'some-name',
-        relationships: {
-          service_instance: { data: { guid: service_instance_guid } },
-          app: { data: { guid: app_guid } }
-        }
-      }.merge(request_extra)
-    }
 
-    RSpec.shared_examples 'validation of credential binding' do
-      it 'returns 422 when type is missing' do
-        create_body.delete(:type)
+    context 'creating a credential binding to an app' do
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_guid) { app_to_bind_to.guid }
+      let(:create_body) {
+        {
+          type: 'app',
+          name: 'some-name',
+          relationships: {
+            service_instance: { data: { guid: service_instance_guid } },
+            app: { data: { guid: app_guid } }
+          }
+        }.merge(request_extra)
+      }
 
-        api_call.call admin_headers
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => include("Type must be 'app'"),
-          'title' => 'CF-UnprocessableEntity',
-          'code' => 10008,
-        }))
-      end
+      RSpec.shared_examples 'validation of credential binding' do
+        it 'returns 422 when type is missing' do
+          create_body.delete(:type)
 
-      it 'returns 422 when service instance relationship is not included' do
-        create_body[:relationships].delete(:service_instance)
-        api_call.call admin_headers
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => include("Relationships Service instance can't be blank"),
-          'title' => 'CF-UnprocessableEntity',
-          'code' => 10008,
-        }))
-      end
-
-      it 'returns 422 when the binding already exists' do
-        api_call.call admin_headers
-        expect(last_response.status).to eq(201).or eq(202)
-        api_call.call admin_headers
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors']).to include(include({
-          'detail' => include('The app is already bound to the service instance'),
-          'title' => 'CF-UnprocessableEntity',
-          'code' => 10008,
-        }))
-      end
-
-      context 'when the service instance does not exist' do
-        let(:service_instance_guid) { 'fake-instance' }
-
-        it 'returns a 422 when the service instance does not exist' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("The service instance could not be found: 'fake-instance'"),
+            'detail' => include("Type must be 'app' or 'key'"),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
         end
-      end
 
-      context 'when the app does not exist' do
-        let(:app_guid) { 'fake-app' }
-
-        it 'returns a 422 when the service instance does not exist' do
+        it 'returns 422 when service instance relationship is not included' do
+          create_body[:relationships].delete(:service_instance)
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("The app could not be found: 'fake-app'"),
+            'detail' => include("Relationships Service instance can't be blank"),
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
         end
-      end
 
-      context 'when the user has no access to the related resources' do
-        let(:space_user) do
-          u = VCAP::CloudController::User.make
-          other_space.organization.add_user(u)
-          other_space.add_developer(u)
-          u
+        it 'returns 422 when the binding already exists' do
+          api_call.call admin_headers
+          expect(last_response.status).to eq(201).or eq(202)
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('The app is already bound to the service instance'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
         end
 
-        let(:space_dev_headers) { headers_for(space_user) }
+        context 'when the service instance does not exist' do
+          let(:service_instance_guid) { 'fake-instance' }
 
-        context 'service instance' do
-          it 'returns a 422' do
-            api_call.call space_dev_headers
+          it 'returns a 422 when the service instance does not exist' do
+            api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+              'detail' => include("The service instance could not be found: 'fake-instance'"),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
           end
         end
 
-        context 'app' do
-          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: other_space) }
+        context 'when the app does not exist' do
+          let(:app_guid) { 'fake-app' }
 
-          it 'returns a 422' do
-            api_call.call space_dev_headers
+          it 'returns a 422 when the service instance does not exist' do
+            api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The app could not be found: '#{app_guid}'"),
+              'detail' => include("The app could not be found: 'fake-app'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the user has no access to the related resources' do
+          let(:space_user) do
+            u = VCAP::CloudController::User.make
+            other_space.organization.add_user(u)
+            other_space.add_developer(u)
+            u
+          end
+
+          let(:space_dev_headers) { headers_for(space_user) }
+
+          context 'service instance' do
+            it 'returns a 422' do
+              api_call.call space_dev_headers
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(include({
+                'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              }))
+            end
+          end
+
+          context 'app' do
+            let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: other_space) }
+
+            it 'returns a 422' do
+              api_call.call space_dev_headers
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(include({
+                'detail' => include("The app could not be found: '#{app_guid}'"),
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              }))
+            end
+          end
+        end
+
+        context 'when creating an app binding without app relationship' do
+          it 'returns a 422' do
+            create_body[:relationships].delete(:app)
+
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("Relationships App can't be blank"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when the service instance and the app are not in the same space' do
+          let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
+          it 'returns a 422 error' do
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('The service instance and the app are in different spaces'),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
@@ -952,460 +982,345 @@ RSpec.describe 'v3 service credential bindings' do
         end
       end
 
-      context 'when creating an app binding without app relationship' do
-        it 'returns a 422' do
-          create_body[:relationships].delete(:app)
-
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include("Relationships App can't be blank"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
-        end
-      end
-
-      context 'when the service instance and the app are not in the same space' do
-        let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
-        it 'returns a 422 error' do
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include('The service instance and the app are in different spaces'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
-        end
-      end
-    end
-
-    context 'user-provided service' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 201 }
-            h['admin'] = { code: 201 }
-            h['org_billing_manager'] = { code: 422 }
-            h['org_auditor'] = { code: 422 }
-            h['no_role'] = { code: 422 }
+      context 'user-provided service' do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) do
+            Hash.new(code: 403).tap do |h|
+              h['space_developer'] = { code: 201 }
+              h['admin'] = { code: 201 }
+              h['org_billing_manager'] = { code: 422 }
+              h['org_auditor'] = { code: 422 }
+              h['no_role'] = { code: 422 }
+            end
           end
         end
-      end
 
-      it_behaves_like 'validation of credential binding'
+        it_behaves_like 'validation of credential binding'
 
-      describe 'a successful creation' do
-        before do
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(201)
-          expect(parsed_response).to have_key('guid')
-          @binding_guid = parsed_response['guid']
-          @binding_name = parsed_response['name']
-        end
+        describe 'a successful creation' do
+          before do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to have_key('guid')
+            @binding_guid = parsed_response['guid']
+            @binding_name = parsed_response['name']
+          end
 
-        it 'creates a new service credential binding' do
-          binding_response = {
-            guid: @binding_guid,
-            created_at: iso8601,
-            updated_at: iso8601,
-            name: 'some-name',
-            type: 'app',
-            last_operation: {
-              type: 'create',
-              state: 'succeeded',
+          it 'creates a new service credential binding' do
+            binding_response = {
+              guid: @binding_guid,
               created_at: iso8601,
               updated_at: iso8601,
-              description: nil,
-            },
-            relationships: {
-              service_instance: { data: { guid: service_instance_guid } },
-              app: { data: { guid: app_guid } }
-            },
-            links: {
-              self: {
-                href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}"
+              name: 'some-name',
+              type: 'app',
+              last_operation: {
+                type: 'create',
+                state: 'succeeded',
+                created_at: iso8601,
+                updated_at: iso8601,
+                description: nil,
               },
-              details: {
-                href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}/details"
+              relationships: {
+                service_instance: { data: { guid: service_instance_guid } },
+                app: { data: { guid: app_guid } }
               },
-              service_instance: {
-                href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
-              },
-              app: {
-                href: "#{link_prefix}/v3/apps/#{app_guid}"
+              links: {
+                self: {
+                  href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}"
+                },
+                details: {
+                  href: "#{link_prefix}/v3/service_credential_bindings/#{@binding_guid}/details"
+                },
+                service_instance: {
+                  href: "#{link_prefix}/v3/service_instances/#{service_instance_guid}"
+                },
+                app: {
+                  href: "#{link_prefix}/v3/apps/#{app_guid}"
+                }
               }
             }
-          }
-          expect(parsed_response).to match_json_response(binding_response)
+            expect(parsed_response).to match_json_response(binding_response)
 
-          get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response).to match_json_response(binding_response)
-        end
+            get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to match_json_response(binding_response)
+          end
 
-        it 'logs an audit event' do
-          event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
-          expect(event).to be
-          expect(event.actee).to eq(@binding_guid)
-          expect(event.actee_name).to eq(@binding_name)
-        end
+          it 'logs an audit event' do
+            event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
+            expect(event).to be
+            expect(event.actee).to eq(@binding_guid)
+            expect(event.actee_name).to eq(@binding_name)
+          end
 
-        it 'sets the right details' do
-          get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response).to match_json_response({
-            credentials: { password: 'foo' },
-            syslog_drain_url: 'http://syslog.example.com/wow'
-          })
-        end
-      end
-
-      context 'when attempting to create a key from a user-provided instance' do
-        it 'returns a 422' do
-          create_body[:type] = 'key'
-          create_body[:relationships].delete(:app)
-
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include("Type must be 'app'"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+          it 'sets the right details' do
+            get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to match_json_response({
+              credentials: { password: 'foo' },
+              syslog_drain_url: 'http://syslog.example.com/wow'
+            })
+          end
         end
       end
-    end
 
-    context 'managed service' do
-      let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-      let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
-      let(:binding) { VCAP::CloudController::ServiceBinding.last }
-      let(:audit) { VCAP::CloudController::Event.last }
-      let(:job) { VCAP::CloudController::PollableJobModel.last }
+      context 'managed service' do
+        let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
+        let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+        let(:binding) { VCAP::CloudController::ServiceBinding.last }
+        let(:audit) { VCAP::CloudController::Event.last }
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
 
-      context 'permissions' do
-        context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-            let(:expected_codes_and_responses) do
-              Hash.new(code: 403).tap do |h|
-                h['space_developer'] = { code: 202 }
-                h['admin'] = { code: 202 }
-                h['org_billing_manager'] = { code: 422 }
-                h['org_auditor'] = { code: 422 }
-                h['no_role'] = { code: 422 }
+        context 'permissions' do
+          context 'users in the originating service instance space' do
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+              let(:expected_codes_and_responses) do
+                Hash.new(code: 403).tap do |h|
+                  h['space_developer'] = { code: 202 }
+                  h['admin'] = { code: 202 }
+                  h['org_billing_manager'] = { code: 422 }
+                  h['org_auditor'] = { code: 422 }
+                  h['no_role'] = { code: 422 }
+                end
+              end
+            end
+          end
+
+          context 'users in the space where the SI has been shared to' do
+            let(:orginal_org) { VCAP::CloudController::Organization.make }
+            let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
+            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space, service_plan: plan) }
+
+            before do
+              service_instance.add_shared_space(space)
+            end
+
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+              let(:expected_codes_and_responses) do
+                Hash.new(code: 403).tap do |h|
+                  h['space_developer'] = { code: 202 }
+                  h['admin'] = { code: 202 }
+                  h['org_billing_manager'] = { code: 422 }
+                  h['org_auditor'] = { code: 422 }
+                  h['no_role'] = { code: 422 }
+                end
               end
             end
           end
         end
 
-        context 'users in the space where the SI has been shared to' do
-          let(:orginal_org) { VCAP::CloudController::Organization.make }
-          let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space, service_plan: plan) }
+        it_behaves_like 'validation of credential binding'
+
+        context 'managed instance specific validations' do
+          it 'returns a 422 when the plan is not bindable' do
+            service_instance.service_plan.update(bindable: false)
+
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('Service plan does not allow bindings'),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+
+          it 'returns a 422 when the plan is no longer available' do
+            service_instance.service_plan.update(active: false)
+
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('Service plan is not available'),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+
+          it 'responds with 422 when there is an operation in progress for the service instance' do
+            service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
+            api_call.call admin_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include('There is an operation in progress for the service instance'),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        describe 'a successful creation' do
+          it 'creates a credential binding in the database' do
+            api_call.call(admin_headers)
+
+            expect(binding.service_instance).to eq(service_instance)
+            expect(binding.app).to eq(app_to_bind_to)
+            expect(binding.last_operation.state).to eq('in progress')
+            expect(binding.last_operation.type).to eq('create')
+          end
+
+          it 'responds with a job resource' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(202)
+            expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+            expect(job.operation).to eq('service_bindings.create')
+            expect(job.resource_guid).to eq(binding.guid)
+            expect(job.resource_type).to eq('service_credential_binding')
+
+            get "/v3/jobs/#{job.guid}", nil, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['guid']).to eq(job.guid)
+            binding_link = parsed_response.dig('links', 'service_credential_binding', 'href')
+            expect(binding_link).to end_with("/v3/service_credential_bindings/#{binding.guid}")
+          end
+        end
+
+        describe 'the pollable job' do
+          let(:credentials) { { 'password' => 'special sauce' } }
+          let(:broker_base_url) { service_instance.service_broker.broker_url }
+          let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+          let(:broker_status_code) { 201 }
+          let(:broker_response) { { credentials: credentials } }
+          let(:client_body) do
+            {
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: org.guid,
+                organization_name: org.name,
+                space_guid: space.guid,
+                space_name: space.name,
+              },
+              app_guid: app_to_bind_to.guid,
+              service_id: service_instance.service_plan.service.unique_id,
+              plan_id: service_instance.service_plan.unique_id,
+              bind_resource: {
+                app_guid: app_to_bind_to.guid,
+                space_guid: service_instance.space.guid
+              },
+            }
+          end
 
           before do
-            service_instance.add_shared_space(space)
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(202)
+
+            stub_request(:put, broker_bind_url).
+              with(query: { accepts_incomplete: true }).
+              to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-            let(:expected_codes_and_responses) do
-              Hash.new(code: 403).tap do |h|
-                h['space_developer'] = { code: 202 }
-                h['admin'] = { code: 202 }
-                h['org_billing_manager'] = { code: 422 }
-                h['org_auditor'] = { code: 422 }
-                h['no_role'] = { code: 422 }
-              end
-            end
-          end
-        end
-      end
-
-      it_behaves_like 'validation of credential binding'
-
-      context 'managed instance specific validations' do
-        it 'returns a 422 when the plan is not bindable' do
-          service_instance.service_plan.update(bindable: false)
-
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include('Service plan does not allow bindings'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
-        end
-
-        it 'returns a 422 when the plan is no longer available' do
-          service_instance.service_plan.update(active: false)
-
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include('Service plan is not available'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
-        end
-
-        it 'responds with 422 when there is an operation in progress for the service instance' do
-          service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
-          api_call.call admin_headers
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service instance'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
-        end
-      end
-
-      describe 'a successful creation' do
-        it 'creates a credential binding in the database' do
-          api_call.call(admin_headers)
-
-          expect(binding.service_instance).to eq(service_instance)
-          expect(binding.app).to eq(app_to_bind_to)
-          expect(binding.last_operation.state).to eq('in progress')
-          expect(binding.last_operation.type).to eq('create')
-        end
-
-        it 'responds with a job resource' do
-          api_call.call(admin_headers)
-
-          expect(last_response).to have_status_code(202)
-          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
-
-          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
-          expect(job.operation).to eq('service_bindings.create')
-          expect(job.resource_guid).to eq(binding.guid)
-          expect(job.resource_type).to eq('service_credential_binding')
-
-          get "/v3/jobs/#{job.guid}", nil, admin_headers
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['guid']).to eq(job.guid)
-          binding_link = parsed_response.dig('links', 'service_credential_binding', 'href')
-          expect(binding_link).to end_with("/v3/service_credential_bindings/#{binding.guid}")
-        end
-      end
-
-      describe 'the pollable job' do
-        let(:credentials) { { 'password' => 'special sauce' } }
-        let(:broker_base_url) { service_instance.service_broker.broker_url }
-        let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
-        let(:broker_status_code) { 201 }
-        let(:broker_response) { { credentials: credentials } }
-        let(:client_body) do
-          {
-            context: {
-              platform: 'cloudfoundry',
-              organization_guid: org.guid,
-              organization_name: org.name,
-              space_guid: space.guid,
-              space_name: space.name,
-            },
-            app_guid: app_to_bind_to.guid,
-            service_id: service_instance.service_plan.service.unique_id,
-            plan_id: service_instance.service_plan.unique_id,
-            bind_resource: {
-              app_guid: app_to_bind_to.guid,
-              space_guid: service_instance.space.guid
-            },
-          }
-        end
-
-        before do
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(202)
-
-          stub_request(:put, broker_bind_url).
-            with(query: { accepts_incomplete: true }).
-            to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
-        end
-
-        it 'sends a bind request with the right arguments to the service broker' do
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-          expect(
-            a_request(:put, broker_bind_url).
-              with(
-                body: client_body,
-                query: { accepts_incomplete: true }
-              )
-          ).to have_been_made.once
-        end
-
-        context 'parameters are specified' do
-          let(:request_extra) { { parameters: { foo: 'bar' } } }
-
-          it 'sends the parameters to the broker' do
+          it 'sends a bind request with the right arguments to the service broker' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(
               a_request(:put, broker_bind_url).
                 with(
-                  body: client_body.deep_merge(request_extra),
+                  body: client_body,
                   query: { accepts_incomplete: true }
                 )
-                ).to have_been_made.once
-          end
-        end
-
-        context 'when the bind completes synchronously' do
-          it 'updates the the binding' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-            binding.reload
-            expect(binding.credentials).to eq(credentials)
-            expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq('succeeded')
-          end
-
-          it 'completes the job' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-          end
-
-          it 'logs an audit event' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-            event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
-            expect(event).to be
-            expect(event.actee).to eq(binding.guid)
-            expect(event.actee_name).to eq(binding.name)
-            expect(event.data).to include({
-              'request' => create_body.with_indifferent_access
-            })
-          end
-        end
-
-        context 'when the broker fails to bind' do
-          let(:broker_status_code) { 422 }
-          let(:broker_response) { { error: 'RequiresApp' } }
-
-          it 'updates the the binding with a failure' do
-            execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-            binding.reload
-            expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq('failed')
-          end
-
-          it 'fails the job' do
-            execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-          end
-        end
-
-        context 'when the binding completes asynchronously' do
-          let(:broker_status_code) { 202 }
-          let(:operation) { Sham.guid }
-          let(:broker_response) { { operation: operation } }
-          let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
-          let(:last_operation_status_code) { 200 }
-          let(:description) { Sham.description }
-          let(:state) { 'in progress' }
-          let(:last_operation_body) do
-            {
-              description: description,
-              state: state,
-            }
-          end
-
-          before do
-            stub_request(:get, broker_binding_last_operation_url).
-              with(query: hash_including({
-                operation: operation
-              })).
-              to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
-          end
-
-          it 'polls the last operation endpoint' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-            expect(
-              a_request(:get, broker_binding_last_operation_url).
-                with(query: {
-                  operation: operation,
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                })
             ).to have_been_made.once
           end
 
-          it 'updates the binding and job' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          context 'parameters are specified' do
+            let(:request_extra) { { parameters: { foo: 'bar' } } }
 
-            expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq(state)
-            expect(binding.last_operation.description).to eq(description)
+            it 'sends the parameters to the broker' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+              expect(
+                a_request(:put, broker_bind_url).
+                  with(
+                    body: client_body.deep_merge(request_extra),
+                    query: { accepts_incomplete: true }
+                  )
+              ).to have_been_made.once
+            end
           end
 
-          it 'logs an audit event' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          context 'when the bind completes synchronously' do
+            it 'updates the the binding' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-            event = VCAP::CloudController::Event.find(type: 'audit.service_binding.start_create')
-            expect(event).to be
-            expect(event.actee).to eq(binding.guid)
-            expect(event.data).to include({
-              'request' => create_body.with_indifferent_access
-            })
+              binding.reload
+              expect(binding.credentials).to eq(credentials)
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('succeeded')
+            end
+
+            it 'completes the job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+            end
+
+            it 'logs an audit event' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.service_binding.create')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.actee_name).to eq(binding.name)
+              expect(event.data).to include({
+                'request' => create_body.with_indifferent_access
+              })
+            end
           end
 
-          it 'enqueues the next fetch last operation job' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            expect(Delayed::Job.count).to eq(1)
+          context 'when the broker fails to bind' do
+            let(:broker_status_code) { 422 }
+            let(:broker_response) { { error: 'RequiresApp' } }
+
+            it 'updates the the binding with a failure' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              binding.reload
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('failed')
+            end
+
+            it 'fails the job' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
           end
 
-          it 'keeps track of the broker operation' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            expect(Delayed::Job.count).to eq(1)
-
-            Timecop.travel(Time.now + 1.minute)
-            execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
-            expect(
-              a_request(:get, broker_binding_last_operation_url).
-                with(query: {
-                  operation: operation,
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                })
-            ).to have_been_made.twice
-          end
-
-          context 'last operation response is 200 OK and indicates success' do
-            let(:state) { 'succeeded' }
-            let(:fetch_binding_status_code) { 200 }
-            let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
-            let(:route_service_url) { 'http://route.example.com/wow' }
-            let(:credentials) { { password: 'foo' } }
-            let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
-
-            let(:fetch_binding_body) do
+          context 'when the binding completes asynchronously' do
+            let(:broker_status_code) { 202 }
+            let(:operation) { Sham.guid }
+            let(:broker_response) { { operation: operation } }
+            let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
+            let(:last_operation_status_code) { 200 }
+            let(:description) { Sham.description }
+            let(:state) { 'in progress' }
+            let(:last_operation_body) do
               {
-                syslog_drain_url: syslog_drain_url,
-                credentials: credentials,
-                parameters: parameters
+                description: description,
+                state: state,
               }
             end
 
             before do
-              stub_request(:get, broker_bind_url).
-                to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
+              stub_request(:get, broker_binding_last_operation_url).
+                with(query: hash_including({
+                  operation: operation
+                })).
+                to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
             end
 
-            it 'fetches the binding' do
+            it 'polls the last operation endpoint' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(
-                a_request(:get, broker_bind_url)
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
               ).to have_been_made.once
             end
 
@@ -1416,70 +1331,172 @@ RSpec.describe 'v3 service credential bindings' do
               expect(binding.last_operation.state).to eq(state)
               expect(binding.last_operation.description).to eq(description)
 
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
             end
 
-            it 'updates the binding details with the fetch binding response' do
+            it 'logs an audit event' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-              expect(binding.reload.syslog_drain_url).to eq(syslog_drain_url)
-              expect(binding.credentials).to eq(credentials.with_indifferent_access)
+              event = VCAP::CloudController::Event.find(type: 'audit.service_binding.start_create')
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => create_body.with_indifferent_access
+              })
             end
 
-            context 'fetching binding fails ' do
-              let(:fetch_binding_status_code) { 404 }
-              let(:fetch_binding_body) {}
+            it 'enqueues the next fetch last operation job' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+            end
 
-              it 'fails the job' do
+            it 'keeps track of the broker operation' do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+
+              Timecop.travel(Time.now + 1.minute)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(
+                a_request(:get, broker_binding_last_operation_url).
+                  with(query: {
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id,
+                  })
+              ).to have_been_made.twice
+            end
+
+            context 'last operation response is 200 OK and indicates success' do
+              let(:state) { 'succeeded' }
+              let(:fetch_binding_status_code) { 200 }
+              let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
+              let(:route_service_url) { 'http://route.example.com/wow' }
+              let(:credentials) { { password: 'foo' } }
+              let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
+
+              let(:fetch_binding_body) do
+                {
+                  syslog_drain_url: syslog_drain_url,
+                  credentials: credentials,
+                  parameters: parameters
+                }
+              end
+
+              before do
+                stub_request(:get, broker_bind_url).
+                  to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
+              end
+
+              it 'fetches the binding' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(
+                  a_request(:get, broker_bind_url)
+                ).to have_been_made.once
+              end
+
+              it 'updates the binding and job' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(binding.last_operation.type).to eq('create')
+                expect(binding.last_operation.state).to eq(state)
+                expect(binding.last_operation.description).to eq(description)
+
+                expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+              end
+
+              it 'updates the binding details with the fetch binding response' do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+                expect(binding.reload.syslog_drain_url).to eq(syslog_drain_url)
+                expect(binding.credentials).to eq(credentials.with_indifferent_access)
+              end
+
+              context 'fetching binding fails ' do
+                let(:fetch_binding_status_code) { 404 }
+                let(:fetch_binding_body) {}
+
+                it 'fails the job' do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+                  expect(binding.last_operation.type).to eq('create')
+                  expect(binding.last_operation.state).to eq('failed')
+                  expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
+
+                  expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+                  expect(job.cf_api_error).not_to be_nil
+                  error = YAML.safe_load(job.cf_api_error)
+                  expect(error['errors'].first).to include({
+                    'code' => 10009,
+                    'title' => 'CF-UnableToPerform',
+                    'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
+                  })
+                end
+              end
+            end
+
+            it_behaves_like 'binding last operation response handling', 'create'
+
+            context 'binding not retrievable' do
+              let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
+
+              it 'fails the job with an appropriate error' do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
                 expect(binding.last_operation.type).to eq('create')
                 expect(binding.last_operation.state).to eq('failed')
-                expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
+                expect(binding.last_operation.description).to eq('The broker responded asynchronously but does not support fetching binding data')
 
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
                 expect(job.cf_api_error).not_to be_nil
                 error = YAML.safe_load(job.cf_api_error)
                 expect(error['errors'].first).to include({
-                  'code' => 10009,
-                  'title' => 'CF-UnableToPerform',
-                  'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
+                  'code' => 90001,
+                  'title' => 'CF-ServiceBindingInvalid',
+                  'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
                 })
               end
             end
           end
 
-          it_behaves_like 'binding last operation response handling', 'create'
-
-          context 'binding not retrievable' do
-            let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
-
-            it 'fails the job with an appropriate error' do
-              execute_all_jobs(expected_successes: 0, expected_failures: 1)
-
-              expect(binding.last_operation.type).to eq('create')
-              expect(binding.last_operation.state).to eq('failed')
-              expect(binding.last_operation.description).to eq('The broker responded asynchronously but does not support fetching binding data')
-
-              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-              expect(job.cf_api_error).not_to be_nil
-              error = YAML.safe_load(job.cf_api_error)
-              expect(error['errors'].first).to include({
-                'code' => 90001,
-                'title' => 'CF-ServiceBindingInvalid',
-                'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
-              })
+          context 'orphan mitigation' do
+            it_behaves_like 'create binding orphan mitigation' do
+              let(:bind_url) { broker_bind_url }
+              let(:plan_id) { plan.unique_id }
+              let(:offering_id) { offering.unique_id }
             end
           end
         end
+      end
+    end
 
-        context 'orphan mitigation' do
-          it_behaves_like 'create binding orphan mitigation' do
-            let(:bind_url) { broker_bind_url }
-            let(:plan_id) { plan.unique_id }
-            let(:offering_id) { offering.unique_id }
-          end
-        end
+    context 'creating a credential binding as a key' do
+      let(:create_body) {
+        {
+          type: 'key',
+          name: 'some-key-name',
+          relationships: {
+            service_instance: { data: { guid: service_instance_guid } },
+          }
+        }.merge(request_extra)
+      }
+
+      it 'returns 422 when type is missing' do
+        create_body.delete(:type)
+
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => include("Type must be 'app' or 'key'"),
+          'title' => 'CF-UnprocessableEntity',
+          'code' => 10008,
+        }))
+      end
+
+      it 'should return 501' do
+        api_call.call admin_headers
+        expect(last_response).to have_status_code(501)
       end
     end
   end
