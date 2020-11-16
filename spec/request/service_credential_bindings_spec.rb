@@ -13,6 +13,33 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   describe 'GET /v3/service_credential_bindings' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_credential_bindings' }
+      let(:message) { VCAP::CloudController::ServiceCredentialBindingListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          names: 'foo bar',
+          include: 'app,service_instance',
+          service_instance_names: %w(foo bar),
+          service_instance_guids: %w(foo bar),
+          service_plan_names: %w(foo bar),
+          service_plan_guids: %w(foo bar),
+          service_offering_names: %w(foo bar),
+          service_offering_guids: %w(foo bar),
+          app_names: %w(foo bar),
+          app_guids: %w(foo bar),
+          type: 'app',
+          per_page: '10',
+          page: 2,
+          order_by: 'updated_at',
+          guids: 'foo,bar',
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 },
+        }
+      end
+    end
+
     describe 'order_by' do
       it_behaves_like 'list endpoint order_by name', '/v3/service_credential_bindings' do
         let(:resource_klass) { VCAP::CloudController::ServiceBinding }
