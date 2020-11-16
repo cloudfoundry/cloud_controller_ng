@@ -7,6 +7,8 @@ require 'presenters/v3/service_credential_binding_details_presenter'
 require 'messages/service_credential_binding_list_message'
 require 'messages/service_credential_binding_show_message'
 require 'messages/service_credential_binding_create_message'
+require 'messages/service_credential_app_binding_create_message'
+require 'messages/service_credential_key_binding_create_message'
 require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
 require 'jobs/v3/create_service_credential_binding_job_actor'
@@ -40,26 +42,30 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def create
-    message = ServiceCredentialBindingCreateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    message = build_create_message(hashed_params[:body])
 
-    service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-    resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
+    if message.type == 'app'
+      service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
+      resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
 
-    app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
-    resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
-    unauthorized! unless can_write_to_space?(app.space)
+      app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
+      resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
+      unauthorized! unless can_write_to_space?(app.space)
 
-    action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
+      action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
+      binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
 
-    case service_instance
-    when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(binding.guid, message)
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-    when UserProvidedServiceInstance
-      action.bind(binding)
-      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+      case service_instance
+      when ManagedServiceInstance
+        pollable_job_guid = enqueue_bind_job(binding.guid, message)
+        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+      when UserProvidedServiceInstance
+        action.bind(binding)
+        render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+      end
+    else
+      head :not_implemented
+      return
     end
   rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
@@ -121,6 +127,20 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   private
+
+  def build_create_message(params)
+    generic_message = ServiceCredentialBindingCreateMessage.new(params)
+    unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
+
+    specific_message = if generic_message.type == 'app'
+                         ServiceCredentialAppBindingCreateMessage.new(params)
+                       else
+                         ServiceCredentialKeyBindingCreateMessage.new(params)
+                       end
+
+    unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
+    specific_message
+  end
 
   def enqueue_bind_job(binding_guid, message)
     bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(

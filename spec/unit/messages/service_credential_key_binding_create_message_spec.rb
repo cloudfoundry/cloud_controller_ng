@@ -1,20 +1,20 @@
 require 'spec_helper'
-require 'messages/service_credential_binding_create_message'
+require 'messages/service_credential_key_binding_create_message'
 
 module VCAP::CloudController
-  RSpec.describe ServiceCredentialBindingCreateMessage do
-    subject { ServiceCredentialBindingCreateMessage }
+  RSpec.describe ServiceCredentialKeyBindingCreateMessage do
+    subject { ServiceCredentialKeyBindingCreateMessage }
 
     let(:params) {
       {
-        type: 'app',
+        type: 'key',
         name: 'some-name',
         parameters: {
             some_param: 'very important',
             another_param: 'epa'
         },
         relationships: {
-          service_instance: { data: { guid: 'some-instance-guid' } }
+          service_instance: { data: { guid: 'some-instance-guid' } },
         }
       }
     }
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       it 'builds a valid ServiceCredentialBindingCreateMessage' do
         expect(message).to be_valid
-        expect(message.type).to eq('app')
+        expect(message.type).to eq('key')
         expect(message.name).to eq('some-name')
         expect(message.service_instance_guid).to eq('some-instance-guid')
         expect(message.parameters).to eq({ some_param: 'very important', another_param: 'epa' })
@@ -57,14 +57,14 @@ module VCAP::CloudController
       end
 
       context 'name' do
-        it 'accepts empty' do
+        it 'does not accept empty' do
           params[:name] = ''
-          expect(subject.new(params)).to be_valid
+          expect(subject.new(params)).not_to be_valid
         end
 
-        it 'accepts nil' do
+        it 'does not accept nil' do
           params.delete(:name)
-          expect(subject.new(params)).to be_valid
+          expect(subject.new(params)).not_to be_valid
         end
       end
 
@@ -77,18 +77,17 @@ module VCAP::CloudController
 
       describe 'relationships' do
         it 'returns an invalid message when there is no service instance relationship' do
-          params[:relationships][:foo] = {}
-          params[:relationships].delete(:service_instance)
-
-          expect(message).to_not be_valid
-          expect(message.errors.full_messages).to include("Relationships Service instance can't be blank")
-        end
-
-        it 'returns an invalid message when there is relationship object is empty' do
           params[:relationships].delete(:service_instance)
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include("Relationships 'relationships' must include one or more valid relationships")
+        end
+
+        it 'returns an invalid message when there is invalid relationships' do
+          params[:relationships][:app] = {}
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'app'")
         end
       end
     end
