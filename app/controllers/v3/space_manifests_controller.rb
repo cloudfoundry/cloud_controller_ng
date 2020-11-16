@@ -1,6 +1,6 @@
 require 'presenters/v3/app_manifest_presenter'
 require 'repositories/app_event_repository'
-require 'messages/named_app_manifest_message'
+require 'messages/app_manifest_message'
 require 'actions/app_find_or_create_skeleton'
 require 'actions/app_create'
 require 'actions/space_diff_manifest'
@@ -15,7 +15,7 @@ class SpaceManifestsController < ApplicationController
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    messages = parsed_app_manifests.map { |app_manifest| AppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
@@ -49,7 +49,7 @@ class SpaceManifestsController < ApplicationController
 
     parsed_manifests = parsed_app_manifests.map(&:to_hash)
 
-    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    messages = parsed_app_manifests.map { |app_manifest| AppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 

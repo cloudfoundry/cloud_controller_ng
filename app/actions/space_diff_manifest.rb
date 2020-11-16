@@ -1,4 +1,5 @@
 require 'presenters/v3/app_manifest_presenter'
+require 'messages/app_manifest_message'
 require 'json-diff'
 
 module VCAP::CloudController
@@ -62,7 +63,7 @@ module VCAP::CloudController
     # rubocop:todo Metrics/CyclomaticComplexity
     def self.generate_diff(app_manifests, space)
       json_diff = []
-      recognized_top_level_keys = NamedAppManifestMessage.allowed_keys.map(&:to_s)
+      recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s)
       app_manifests.each_with_index do |manifest_app_hash, index|
         manifest_app_hash = SpaceDiffManifest.filter_manifest_app_hash(manifest_app_hash)
         existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] }

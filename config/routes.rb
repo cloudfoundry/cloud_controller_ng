@@ -27,7 +27,6 @@ Rails.application.routes.draw do
   get '/apps/:guid/ssh_enabled', to: 'app_features#ssh_enabled'
 
   # app manifests
-  post '/apps/:guid/actions/apply_manifest', to: 'app_manifests#apply_manifest'
   get '/apps/:guid/manifest', to: 'app_manifests#show'
 
   # app revisions
