@@ -1543,7 +1543,7 @@ RSpec.describe 'v3 service credential bindings' do
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008,
           }))
-          end
+        end
 
         context 'when the service instance does not exist' do
           let(:service_instance_guid) { 'fake-instance' }
@@ -1570,14 +1570,14 @@ RSpec.describe 'v3 service credential bindings' do
           let(:space_dev_headers) { headers_for(space_user) }
 
           it 'returns a 422' do
-              api_call.call space_dev_headers
-              expect(last_response).to have_status_code(422)
-              expect(parsed_response['errors']).to include(include({
-                'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              }))
-            end
+            api_call.call space_dev_headers
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
         end
 
         context 'when the service instance is user-provided' do
@@ -1604,7 +1604,7 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("Service plan does not allow bindings."),
+              'detail' => include('Service plan does not allow bindings.'),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
@@ -1620,7 +1620,7 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("Service plan is not available."),
+              'detail' => include('Service plan is not available.'),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
