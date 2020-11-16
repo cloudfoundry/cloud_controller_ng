@@ -479,7 +479,7 @@ RSpec.describe 'V3 service instances' do
           hash_including(eager_loaded_associations: [:labels, :annotations, :space, :service_instance_operation, :service_plan_sti_eager_load])
         ).and_call_original
 
-        get "/v3/service_instances", nil, admin_headers
+        get '/v3/service_instances', nil, admin_headers
         expect(last_response).to have_status_code(200)
       end
     end

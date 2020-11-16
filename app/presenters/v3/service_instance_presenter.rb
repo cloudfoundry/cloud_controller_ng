@@ -18,7 +18,6 @@ module VCAP::CloudController
           end
         end
 
-
         def to_hash
           hash = correct_order(
             hash_common.deep_merge(
