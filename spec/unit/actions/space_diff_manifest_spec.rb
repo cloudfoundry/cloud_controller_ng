@@ -147,6 +147,33 @@ module VCAP::CloudController
         end
       end
 
+      context 'when changing sidecar properties on an existing sidecar' do
+        let!(:sidecar) { SidecarModel.make(app: app1_model, memory: 500, name: 'sidecar1') }
+        let!(:sidecar_process_type_model) { SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar) }
+
+        before do
+          default_manifest['applications'][0]['sidecars'] = [
+            {
+              'name' => 'sidecar1',
+              'command' => 'bundle exec rake lol',
+              'process_types' => ['web'],
+              'memory' => '500M',
+            }
+          ]
+        end
+
+        it 'returns the correct diff' do
+          expect(subject).to eq([
+            {
+              'op' => 'replace',
+              'path' => '/applications/0/sidecars/0/command',
+              'value' => 'bundle exec rake lol',
+              'was' => 'bundle exec rackup',
+            },
+          ])
+        end
+      end
+
       context 'when there is an unrecognized field in a nested hash' do
         before do
           default_manifest['applications'][0]['processes'][0]['foo'] = 'bar'

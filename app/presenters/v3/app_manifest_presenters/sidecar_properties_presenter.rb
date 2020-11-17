@@ -9,11 +9,17 @@ module VCAP::CloudController
           end
 
           def sidecar_hash(sidecar)
-            {
+            hash = {
               'name' => sidecar.name,
               'process_types' => sidecar.process_types,
               'command' => sidecar.command,
             }
+
+            if sidecar.memory.present?
+              hash['memory'] = "#{sidecar.memory}M"
+            end
+
+            hash
           end
         end
       end
