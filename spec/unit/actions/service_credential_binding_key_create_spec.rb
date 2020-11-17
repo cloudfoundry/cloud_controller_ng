@@ -5,11 +5,11 @@ require 'support/shared_examples/v3_service_binding_create'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingKeyCreate do
-      subject(:action) { described_class.new() }
+      subject(:action) { described_class.new }
 
       let(:space) { Space.make }
       let(:binding_details) {}
-      let(:name) { 'test-key'}
+      let(:name) { 'test-key' }
 
       describe '#precursor' do
         RSpec.shared_examples 'the credential binding precursor' do
@@ -33,7 +33,7 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make() }
+          let(:service_instance) { UserProvidedServiceInstance.make }
 
           it 'raises error' do
             expect { action.precursor(service_instance, name) }.to raise_error(

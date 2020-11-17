@@ -51,7 +51,7 @@ class ServiceCredentialBindingsController < ApplicationController
     case message.type
     when 'app'
       app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
-      # TODO create two unprocessable_app/si methods
+      # TODO: create two unprocessable_app/si methods
       resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
 
       unauthorized! unless can_write_to_space?(app.space)

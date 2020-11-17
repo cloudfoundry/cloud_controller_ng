@@ -23,7 +23,6 @@ module VCAP::CloudController
       private
 
       def validate!(service_instance)
-
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?

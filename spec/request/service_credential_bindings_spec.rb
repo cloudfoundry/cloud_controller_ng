@@ -1575,7 +1575,8 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{service_cred_binding.name}'."),
+              'detail' => include(
+                "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{service_cred_binding.name}'."),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
