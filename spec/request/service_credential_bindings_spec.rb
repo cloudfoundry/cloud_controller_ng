@@ -879,7 +879,9 @@ RSpec.describe 'v3 service credential bindings' do
         it 'returns 422 when the binding already exists' do
           api_call.call admin_headers
           expect(last_response.status).to eq(201).or eq(202)
+
           api_call.call admin_headers
+
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
             'detail' => include('The app is already bound to the service instance'),
@@ -1474,10 +1476,11 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'creating a credential binding as a key' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, **service_instance_details) }
+      let(:binding_name) { 'some-key-name' }
       let(:create_body) {
         {
           type: 'key',
-          name: 'some-key-name',
+          name: binding_name,
           relationships: {
             service_instance: { data: { guid: service_instance_guid } },
           }
@@ -1574,6 +1577,32 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
               'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008,
+            }))
+          end
+        end
+
+        context 'when a key with the same name exists for that SI' do
+          let(:service_cred_binding) {
+            VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
+          }
+          let(:create_body) {
+            {
+              type: 'key',
+              name: service_cred_binding.name,
+              relationships: {
+                service_instance: { data: { guid: service_instance_guid } },
+              }
+            }.merge(request_extra)
+          }
+
+          it 'returns a 422' do
+            api_call.call space_dev_headers
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(include({
+              'detail' => include("The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{service_cred_binding.name}'."),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))

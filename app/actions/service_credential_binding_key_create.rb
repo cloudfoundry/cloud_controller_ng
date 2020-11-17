@@ -4,18 +4,34 @@ module VCAP::CloudController
       class UnprocessableCreate < StandardError
       end
 
-      def precursor(service_instance, volume_mount_services_enabled: false)
+      def precursor(service_instance, name)
+        validate!(service_instance)
+
+        binding_details = {
+          service_instance: service_instance,
+          name: name,
+          credentials: {}
+        }
+
+        ServiceKey.db.transaction do
+          ServiceKey.create(**binding_details)
+        end
+      rescue Sequel::ValidationFailed => e
+        raise UnprocessableCreate.new(e.message)
+      end
+
+      private
+
+      def validate!(service_instance)
+
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
-          volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
           operation_in_progress! if service_instance.operation_in_progress?
         else
           key_not_supported_for_user_provided_service!
         end
       end
-
-      private
 
       def key_not_supported_for_user_provided_service!
         raise UnprocessableCreate.new("Service credential bindings of type 'key' are not supported for user-provided service instances.")
