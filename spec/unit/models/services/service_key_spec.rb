@@ -19,6 +19,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_db_presence :service_instance_id }
       it { is_expected.to validate_db_presence :credentials }
+      it { is_expected.to validate_uniqueness [:name, :service_instance_id] }
 
       context 'MaxServiceKeysPolicy' do
         let(:service_key) { ServiceKey.make }
