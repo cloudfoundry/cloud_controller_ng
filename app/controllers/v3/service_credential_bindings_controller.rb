@@ -134,10 +134,10 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
 
     specific_message = if generic_message.type == 'app'
-      ServiceCredentialAppBindingCreateMessage.new(params)
-    else
-      ServiceCredentialKeyBindingCreateMessage.new(params)
-    end
+                         ServiceCredentialAppBindingCreateMessage.new(params)
+                       else
+                         ServiceCredentialKeyBindingCreateMessage.new(params)
+                       end
 
     unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
     specific_message
