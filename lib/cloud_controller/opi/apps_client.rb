@@ -81,6 +81,7 @@ module OPI
           docker_lifecycle: {
             command: command,
             image: @process.desired_droplet.docker_receipt_image,
+            user: @process.desired_droplet.docker_user,
             registry_username: @process.desired_droplet.docker_receipt_username,
             registry_password: @process.desired_droplet.docker_receipt_password,
           }

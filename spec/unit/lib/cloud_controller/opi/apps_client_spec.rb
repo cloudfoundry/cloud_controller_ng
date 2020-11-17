@@ -22,6 +22,7 @@ RSpec.describe(OPI::Client) do
       docker_receipt_password: 'docker-password',
       droplet_hash: 'd_haash',
       guid: 'some-droplet-guid',
+      execution_metadata: { 'user': 2000 }.to_json
     )
     }
     let(:routing_info) {
@@ -373,6 +374,7 @@ RSpec.describe(OPI::Client) do
             expected_body_with_lifecycle = expected_body.merge(lifecycle: {
               docker_lifecycle: {
                 image: 'http://example.org/image1234',
+                user: 2000,
                 registry_username: 'docker-user',
                 registry_password: 'docker-password',
                 command: ['/bin/sh', '-c', 'ls -la']

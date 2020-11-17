@@ -115,6 +115,19 @@ module VCAP::CloudController
       exposed_ports
     end
 
+    def docker_user
+      if self.execution_metadata.present?
+        begin
+          metadata = JSON.parse(self.execution_metadata)
+          unless metadata['user'].nil?
+            return metadata['user']
+          end
+        rescue JSON::ParserError
+        end
+      end
+      return ''
+    end
+
     def staging?
       self.state == STAGING_STATE
     end
