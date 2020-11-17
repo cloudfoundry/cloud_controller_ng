@@ -33,8 +33,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :service_instance
-      validates_unique [:name, :service_instance_id], message: Sequel.lit(
-        "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{name}'.")
+      validates_unique [:name, :service_instance_id]
 
       if service_instance
         MaxServiceKeysPolicy.new(

@@ -17,6 +17,7 @@ module VCAP::CloudController
           ServiceKey.create(**binding_details)
         end
       rescue Sequel::ValidationFailed => e
+        key_already_exists!(name) if e.message == 'name and service_instance_id unique'
         raise UnprocessableCreate.new(e.message)
       end
 
@@ -34,6 +35,10 @@ module VCAP::CloudController
 
       def key_not_supported_for_user_provided_service!
         raise UnprocessableCreate.new("Service credential bindings of type 'key' are not supported for user-provided service instances.")
+      end
+
+      def key_already_exists!(key_name)
+        raise UnprocessableCreate.new("The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{key_name}'.")
       end
 
       def operation_in_progress!
