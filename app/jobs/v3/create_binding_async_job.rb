@@ -1,6 +1,6 @@
 require 'jobs/reoccurring_job'
 require 'actions/service_route_binding_create'
-require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_app_create'
 require 'cloud_controller/errors/api_error'
 require 'jobs/v3/create_service_binding_job_factory'
 

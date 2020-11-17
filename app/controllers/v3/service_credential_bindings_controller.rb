@@ -1,4 +1,4 @@
-require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_app_create'
 require 'actions/service_credential_binding_key_create'
 require 'actions/service_credential_binding_delete'
 require 'fetchers/service_credential_binding_fetcher'
@@ -56,7 +56,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
       unauthorized! unless can_write_to_space?(app.space)
 
-      action = V3::ServiceCredentialBindingCreate.new(user_audit_info, message.audit_hash)
+      action = V3::ServiceCredentialBindingAppCreate.new(user_audit_info, message.audit_hash)
       binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
 
       case service_instance
@@ -78,7 +78,7 @@ class ServiceCredentialBindingsController < ApplicationController
       head :not_implemented
       return
     end
-  rescue V3::ServiceCredentialBindingCreate::UnprocessableCreate,
+  rescue V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
          V3::ServiceCredentialBindingKeyCreate::UnprocessableCreate => e
     unprocessable!(e.message)
   end

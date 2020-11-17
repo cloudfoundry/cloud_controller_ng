@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_app_create'
 require 'support/shared_examples/v3_service_binding_create'
 require 'cloud_controller/user_audit_info'
 require 'repositories/service_generic_binding_event_repository'
 
 module VCAP::CloudController
   module V3
-    RSpec.describe ServiceCredentialBindingCreate do
+    RSpec.describe ServiceCredentialBindingAppCreate do
       subject(:action) { described_class.new(user_audit_info, audit_hash) }
 
       let(:audit_hash) { { some_info: 'some_value' } }
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
           it 'raises an error when no app is specified' do
             expect { action.precursor(service_instance) }.to raise_error(
-              ServiceCredentialBindingCreate::UnprocessableCreate,
+              ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'No app was specified'
             )
           end
@@ -48,7 +48,7 @@ module VCAP::CloudController
           it 'raises an error when a binding already exists' do
             ServiceBinding.make(service_instance: service_instance, app: app)
             expect { action.precursor(service_instance, app: app, name: details[:name]) }.to raise_error(
-              ServiceCredentialBindingCreate::UnprocessableCreate,
+              ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'The app is already bound to the service instance'
             )
           end
@@ -57,7 +57,7 @@ module VCAP::CloudController
             another_space = Space.make
             another_app = AppModel.make(space: another_space)
             expect { action.precursor(service_instance, app: another_app, name: details[:name]) }.to raise_error(
-              ServiceCredentialBindingCreate::UnprocessableCreate,
+              ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'The service instance and the app are in different spaces'
             )
           end
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingCreate::UnprocessableCreate,
+                ServiceCredentialBindingAppCreate::UnprocessableCreate,
                 'Service plan does not allow bindings'
               )
             end
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingCreate::UnprocessableCreate,
+                ServiceCredentialBindingAppCreate::UnprocessableCreate,
                 'Service plan is not available'
               )
             end
@@ -118,7 +118,7 @@ module VCAP::CloudController
               expect {
                 action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
               }.to raise_error(
-                ServiceCredentialBindingCreate::UnprocessableCreate,
+                ServiceCredentialBindingAppCreate::UnprocessableCreate,
                 'Support for volume mount services is disabled'
               )
             end
@@ -131,7 +131,7 @@ module VCAP::CloudController
               expect {
                 action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
               }.to raise_error(
-                ServiceCredentialBindingCreate::UnprocessableCreate,
+                ServiceCredentialBindingAppCreate::UnprocessableCreate,
                 'There is an operation in progress for the service instance'
               )
             end

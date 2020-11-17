@@ -4,7 +4,7 @@ require 'actions/v3/service_binding_create'
 
 module VCAP::CloudController
   module V3
-    class ServiceCredentialBindingCreate < V3::ServiceBindingCreate
+    class ServiceCredentialBindingAppCreate < V3::ServiceBindingCreate
       class UnprocessableCreate < StandardError
       end
 
