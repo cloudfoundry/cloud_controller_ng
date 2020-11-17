@@ -30,7 +30,7 @@ module VCAP::CloudController
 
         it 'should return credential binding action when type is credential' do
           actor = CreateServiceBindingFactory.action(:credential, {}, {})
-          expect(actor).to be_an_instance_of(ServiceCredentialBindingCreate)
+          expect(actor).to be_an_instance_of(ServiceCredentialBindingAppCreate)
         end
 
         it 'raise for unknown types' do

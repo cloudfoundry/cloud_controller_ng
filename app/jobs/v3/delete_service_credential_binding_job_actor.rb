@@ -1,5 +1,5 @@
 require 'jobs/reoccurring_job'
-require 'actions/service_credential_binding_create'
+require 'actions/service_credential_binding_app_create'
 require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController

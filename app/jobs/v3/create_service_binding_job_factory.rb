@@ -23,7 +23,7 @@ module VCAP::CloudController
         when :route
           V3::ServiceRouteBindingCreate.new(user_audit_info, audit_hash)
         when :credential
-          V3::ServiceCredentialBindingCreate.new(user_audit_info, audit_hash)
+          V3::ServiceCredentialBindingAppCreate.new(user_audit_info, audit_hash)
         else
           raise InvalidType
         end
