@@ -46,12 +46,12 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | string | Type of the service credential binding. Valid values are `key` and `app`
 **relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance to be bound
+**name** | string | Name of the service credential binding. `name` is optional when the type is `app`
 
 #### Optional parameters
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**name** | string | Name of the service credential binding.
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app to be bound. Required when type is `app`
 **parameters** | _object_ | A JSON object that is passed to the service broker
 
