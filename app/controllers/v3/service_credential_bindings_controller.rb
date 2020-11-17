@@ -44,39 +44,18 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create
     message = build_create_message(hashed_params[:body])
-
-    service_instance = VCAP::CloudController::ServiceInstance.first(guid: message.service_instance_guid)
-    resource_not_accessible!('service instance', message.service_instance_guid) unless can_read_service_instance?(service_instance)
+    service_instance = get_service_instance!(message.service_instance_guid)
 
     case message.type
     when 'app'
-      app = VCAP::CloudController::AppModel.first(guid: message.app_guid)
-      # TODO: create two unprocessable_app/si methods
-      resource_not_accessible!('app', message.app_guid) unless can_access_resource?(app)
-
+      app = get_app!(message.app_guid)
       unauthorized! unless can_write_to_space?(app.space)
 
-      action = V3::ServiceCredentialBindingAppCreate.new(user_audit_info, message.audit_hash)
-      binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
-
-      case service_instance
-      when ManagedServiceInstance
-        pollable_job_guid = enqueue_bind_job(binding.guid, message)
-        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-      when UserProvidedServiceInstance
-        action.bind(binding)
-        render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
-      end
+      create_app_binding(message, service_instance, app)
     when 'key'
       unauthorized! unless can_write_to_space?(service_instance.space)
 
-      V3::ServiceCredentialBindingKeyCreate.new.precursor(
-        service_instance,
-        message.name
-      )
-
-      head :not_implemented
-      return
+      create_key_binding(message, service_instance)
     end
   rescue V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
          V3::ServiceCredentialBindingKeyCreate::UnprocessableCreate => e
@@ -140,18 +119,54 @@ class ServiceCredentialBindingsController < ApplicationController
 
   private
 
+  def create_key_binding(message, service_instance)
+    V3::ServiceCredentialBindingKeyCreate.new.precursor(
+      service_instance,
+      message.name
+    )
+
+    head :not_implemented
+    return
+  end
+
   def build_create_message(params)
     generic_message = ServiceCredentialBindingCreateMessage.new(params)
     unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
 
     specific_message = if generic_message.type == 'app'
-                         ServiceCredentialAppBindingCreateMessage.new(params)
-                       else
-                         ServiceCredentialKeyBindingCreateMessage.new(params)
-                       end
+      ServiceCredentialAppBindingCreateMessage.new(params)
+    else
+      ServiceCredentialKeyBindingCreateMessage.new(params)
+    end
 
     unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
     specific_message
+  end
+
+  def get_app!(app_guid)
+    app = VCAP::CloudController::AppModel.first(guid: app_guid)
+    unprocessable_resource!('app', app_guid) unless can_access_resource?(app)
+    app
+  end
+
+  def get_service_instance!(service_instance_guid)
+    service_instance = VCAP::CloudController::ServiceInstance.first(guid: service_instance_guid)
+    unprocessable_resource!('service instance', service_instance_guid) unless can_read_service_instance?(service_instance)
+    service_instance
+  end
+
+  def create_app_binding(message, service_instance, app)
+    action = V3::ServiceCredentialBindingAppCreate.new(user_audit_info, message.audit_hash)
+    binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
+
+    case service_instance
+    when ManagedServiceInstance
+      pollable_job_guid = enqueue_bind_job(binding.guid, message)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+    when UserProvidedServiceInstance
+      action.bind(binding)
+      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+    end
   end
 
   def enqueue_bind_job(binding_guid, message)
@@ -176,7 +191,7 @@ class ServiceCredentialBindingsController < ApplicationController
     pollable_job.guid
   end
 
-  def resource_not_accessible!(resource, guid)
+  def unprocessable_resource!(resource, guid)
     unprocessable!("The #{resource} could not be found: '#{guid}'")
   end
 
