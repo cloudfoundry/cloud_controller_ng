@@ -258,10 +258,23 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        let(:binding) { action.precursor(service_instance, app: app) }
+        let(:binding) { action.precursor(service_instance, app: app, name: 'original-name') }
         let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
+        let(:volume_mounts) { [{
+            'driver' => 'cephdriver',
+            'container_dir' => '/data/images',
+            'mode' => 'r',
+            'device_type' => 'shared',
+            'device' => {
+              'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+              'mount_config' => {
+                'key' => 'value'
+              }
+            }
+          }]
+        }
         let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
-        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url } }
+        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url, volume_mounts: volume_mounts, name: 'updated-name' } }
 
         it_behaves_like 'polling service binding creation'
 
@@ -302,7 +315,7 @@ module VCAP::CloudController
             let(:description) { Sham.description }
             let(:state) { 'succeeded' }
 
-            it 'fetches the service binding and updates the route_services_url' do
+            it 'fetches the service binding and updates only the credentials, volume_mounts and syslog_drain_url' do
               action.poll(binding)
 
               expect(broker_client).to have_received(:fetch_service_binding).with(binding)
@@ -310,6 +323,8 @@ module VCAP::CloudController
               binding.reload
               expect(binding.credentials).to eq(credentials)
               expect(binding.syslog_drain_url).to eq(syslog_drain_url)
+              expect(binding.volume_mounts).to eq(volume_mounts)
+              expect(binding.name).to eq('original-name')
             end
 
             it 'creates an audit event' do

@@ -1382,7 +1382,18 @@ RSpec.describe 'v3 service credential bindings' do
                 {
                   syslog_drain_url: syslog_drain_url,
                   credentials: credentials,
-                  parameters: parameters
+                  parameters: parameters,
+                  service_id:'extra-field-service_id',
+                  plan_id:'extra-field-plan_id',
+                  name: 'extra-field-name',
+                  bind_resource:{
+                    app_guid:'extra-field',
+                    space_guid:'extra-field'
+                  },
+                  context:
+                    {
+                      platform:'extra-field',
+                    }
                 }
               end
 
@@ -1409,11 +1420,12 @@ RSpec.describe 'v3 service credential bindings' do
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
               end
 
-              it 'updates the binding details with the fetch binding response' do
+              it 'updates the binding details with the fetch binding response ignoring extra fields' do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
                 expect(binding.reload.syslog_drain_url).to eq(syslog_drain_url)
                 expect(binding.credentials).to eq(credentials.with_indifferent_access)
+                expect(binding.name).to eq('some-name')
               end
 
               context 'fetching binding fails ' do
