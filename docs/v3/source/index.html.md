@@ -80,6 +80,7 @@ includes:
   - resources/apps/ssh_enabled
   - resources/apps/start
   - resources/apps/stop
+  - resources/apps/restart
   - resources/apps/update_environment_variables
   - resources/app_features/header
   - resources/app_features/object
@@ -342,8 +343,6 @@ includes:
   - resources/users/update
   - resources/users/delete
   - experimental_resources/header
-  - experimental_resources/app_restart/header
-  - experimental_resources/app_restart/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

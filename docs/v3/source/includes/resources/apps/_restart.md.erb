@@ -6,8 +6,8 @@ Example Request
 
 ```shell
 curl "https://api.example.org/v3/apps/[guid]/actions/restart" \
--X POST \
--H "Authorization: bearer [token]"
+  -X POST \
+  -H "Authorization: bearer [token]"
 ```
 
 ```
@@ -20,6 +20,13 @@ Content-Type: application/json
 
 <%= yield_content :app_with_state, 'STARTED' %>
 ```
+
+This endpoint will synchronously stop and start an application.
+Unlike the [start](#start-an-app) and [stop](#stop-an-app) actions,
+this endpoint will error if the app is not successfully stopped
+in the runtime.
+
+For restarting applications without downtime, see the [deployments](#deployments) resource.
 
 #### Definition
 `POST /v3/apps/:guid/actions/restart`
