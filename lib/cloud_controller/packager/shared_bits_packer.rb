@@ -55,7 +55,7 @@ module CloudController
         if package_zip_exists?(uploaded_package_zip)
           copy_uploaded_package(uploaded_package_zip, app_packager)
           validate_size!(app_packager)
-          populate_resource_cache(app_packager, app_contents_path)
+          populate_resource_cache(app_packager, app_contents_path) unless VCAP::CloudController::FeatureFlag.disabled?(:resource_matching)
         end
 
         append_matched_resources(app_packager, cached_files_fingerprints, root_path)

@@ -176,6 +176,18 @@ module CloudController::Packager
           packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
         end
 
+        context 'when the resource_matching feature flag is disabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'resource_matching', enabled: false)
+          end
+
+          it 'does not upload any app bits to the app bit cache' do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'
+            expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be false
+          end
+        end
+
         context 'when there is an unreadable directory in the zip' do
           let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'unreadable_dir.zip') }
           let(:input_zip_file_path) { File.join(local_tmp_dir, 'unreadable_dir.zip') }
