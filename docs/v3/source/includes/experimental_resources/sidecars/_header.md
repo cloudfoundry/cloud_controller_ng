@@ -12,7 +12,7 @@ Sidecars are useful for any app processes that need to communicate with another 
 
 
 #### Steps to create a sidecar
-The recommended way to create sidecars for your app is with an [app manifest](#app-manifest).
+The recommended way to create sidecars for your app is with a [manifest](#manifests).
 
 ```yaml
  sidecars:

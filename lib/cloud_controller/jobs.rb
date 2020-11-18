@@ -1,6 +1,5 @@
 require 'jobs/cc_job'
 require 'jobs/delete_action_job'
-require 'jobs/app_apply_manifest_action_job'
 require 'jobs/space_apply_manifest_action_job'
 require 'jobs/enqueuer'
 require 'jobs/queues'

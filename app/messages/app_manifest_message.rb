@@ -25,6 +25,7 @@ module VCAP::CloudController
       :instances,
       :metadata,
       :memory,
+      :name,
       :no_route,
       :processes,
       :random_route,
@@ -53,6 +54,7 @@ module VCAP::CloudController
       end
     end
 
+    validates :name, presence: { message: 'must not be empty' }, string: true
     validate :validate_top_level_web_process!
     validate :validate_processes!, if: ->(record) { record.requested?(:processes) }
     validate :validate_sidecars!,  if: ->(record) { record.requested?(:sidecars) }

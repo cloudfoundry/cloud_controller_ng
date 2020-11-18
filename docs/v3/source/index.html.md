@@ -342,9 +342,6 @@ includes:
   - resources/users/update
   - resources/users/delete
   - experimental_resources/header
-  - experimental_resources/app_manifest/header
-  - experimental_resources/app_manifest/object
-  - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
   - experimental_resources/revisions/header
