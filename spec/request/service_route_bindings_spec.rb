@@ -686,30 +686,6 @@ RSpec.describe 'v3 service route bindings' do
               'request' => request.with_indifferent_access
             })
           end
-
-          context 'orphan mitigation' do
-            it_behaves_like 'create binding orphan mitigation' do
-              let(:bind_url) { broker_bind_url }
-              let(:plan_id) { plan.unique_id }
-              let(:offering_id) { offering.unique_id }
-              let(:client_body) do
-                {
-                  context: {
-                    platform: 'cloudfoundry',
-                    organization_guid: org.guid,
-                    organization_name: org.name,
-                    space_guid: space.guid,
-                    space_name: space.name,
-                  },
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                  bind_resource: {
-                    route: route.uri,
-                  },
-                }
-              end
-            end
-          end
         end
 
         context 'when the binding completes asynchronously' do
@@ -857,6 +833,30 @@ RSpec.describe 'v3 service route bindings' do
                 'title' => 'CF-ServiceBindingInvalid',
                 'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
               })
+            end
+          end
+        end
+
+        context 'orphan mitigation' do
+          it_behaves_like 'create binding orphan mitigation' do
+            let(:bind_url) { broker_bind_url }
+            let(:plan_id) { plan.unique_id }
+            let(:offering_id) { offering.unique_id }
+            let(:client_body) do
+              {
+                context: {
+                  platform: 'cloudfoundry',
+                  organization_guid: org.guid,
+                  organization_name: org.name,
+                  space_guid: space.guid,
+                  space_name: space.name,
+                },
+                service_id: service_instance.service_plan.service.unique_id,
+                plan_id: service_instance.service_plan.unique_id,
+                bind_resource: {
+                  route: route.uri,
+                },
+              }
             end
           end
         end
