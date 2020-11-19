@@ -1383,17 +1383,8 @@ RSpec.describe 'v3 service credential bindings' do
                   syslog_drain_url: syslog_drain_url,
                   credentials: credentials,
                   parameters: parameters,
-                  service_id:'extra-field-service_id',
-                  plan_id:'extra-field-plan_id',
-                  name: 'extra-field-name',
-                  bind_resource:{
-                    app_guid:'extra-field',
-                    space_guid:'extra-field'
-                  },
-                  context:
-                    {
-                      platform:'extra-field',
-                    }
+                  service_id:'extra-field-service_id-should-ignore',
+                  name: 'extra-field-name-should-not-update',
                 }
               end
 
