@@ -47,7 +47,7 @@ module VCAP::CloudController
 
       def complete_binding_and_save(binding, binding_details, last_operation)
         binding.save_with_attributes_and_new_operation(
-          binding_details.symbolize_keys().slice(*PERMITTED_BINDING_ATTRIBUTES),
+          binding_details.symbolize_keys.slice(*PERMITTED_BINDING_ATTRIBUTES),
           {
             type: 'create',
             state: last_operation[:state],
