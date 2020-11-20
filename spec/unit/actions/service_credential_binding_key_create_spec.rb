@@ -7,7 +7,8 @@ module VCAP::CloudController
     RSpec.describe ServiceCredentialBindingKeyCreate do
       subject(:action) { described_class.new }
 
-      let(:space) { Space.make }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
       let(:binding_details) {}
       let(:name) { 'test-key' }
 
@@ -85,8 +86,53 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the name is taken' do
+            let(:existing_service_key) { ServiceKey.make(service_instance: service_instance) }
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, existing_service_key.name) }.to raise_error(
+                ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{existing_service_key.name}'."
+              )
+            end
+          end
+
           context 'when successful' do
             it_behaves_like 'the credential binding precursor'
+          end
+        end
+
+        context 'quotas' do
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+          context 'when service key limit has been reached for the space' do
+            before do
+              quota = SpaceQuotaDefinition.make(total_service_keys: 1, organization: org)
+              quota.add_space(space)
+              ServiceKey.make(service_instance: service_instance)
+            end
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, name) }.to raise_error(
+                ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                "You have exceeded your space's limit for service binding of type key."
+              )
+            end
+          end
+
+          context 'when service key limit has been reached for the org' do
+            before do
+              quotas = QuotaDefinition.make(total_service_keys: 1)
+              quotas.add_organization(org)
+              ServiceKey.make(service_instance: service_instance)
+            end
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, name) }.to raise_error(
+                ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                "You have exceeded your organization's limit for service binding of type key."
+              )
+            end
           end
         end
       end

@@ -1659,6 +1659,53 @@ RSpec.describe 'v3 service credential bindings' do
             }))
           end
         end
+
+        context 'quotas restrictions' do
+          describe 'space quotas' do
+            context 'when the total service key quota has been reached' do
+              before do
+                quota = VCAP::CloudController::SpaceQuotaDefinition.make(total_service_keys: 1, organization: org)
+                quota.add_space(space)
+
+                VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
+              end
+
+              it 'returns an error' do
+                api_call.call(space_dev_headers)
+                expect(last_response).to have_status_code(422)
+                expect(parsed_response['errors']).to include(
+                  include({
+                    'detail' => "You have exceeded your space's limit for service binding of type key.",
+                    'title' => 'CF-UnprocessableEntity',
+                    'code' => 10008,
+                  })
+                )
+              end
+            end
+          end
+
+          describe 'organization quotas' do
+            context 'when the total service key quota has been reached' do
+              before do
+                quota = VCAP::CloudController::QuotaDefinition.make(total_service_keys: 1)
+                quota.add_organization(org)
+                VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
+              end
+
+              it 'returns an error' do
+                api_call.call(space_dev_headers)
+                expect(last_response).to have_status_code(422)
+                expect(parsed_response['errors']).to include(
+                  include({
+                    'detail' => "You have exceeded your organization's limit for service binding of type key.",
+                    'title' => 'CF-UnprocessableEntity',
+                    'code' => 10008,
+                  })
+                )
+              end
+            end
+          end
+        end
       end
 
       it 'should return 501' do
