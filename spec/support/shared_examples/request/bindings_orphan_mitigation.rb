@@ -105,9 +105,10 @@ RSpec.shared_examples 'create binding orphan mitigation' do
             to_return(status: 200, body: 'this is not json')
         end
 
-        it 'fails the job and does not perform orphan mitigation' do
+        it 'retries the job and does not perform orphan mitigation' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          assert_polling_job(binding, job)
           assert_no_orphan_mitigation_performed(plan_id, offering_id)
         end
       end
@@ -121,9 +122,10 @@ RSpec.shared_examples 'create binding orphan mitigation' do
             to_return(status: 410, body: '{}')
         end
 
-        it 'retries and does not perform orphan mitigation' do
+        it 'retries the job does not perform orphan mitigation' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          assert_polling_job(binding, job)
           assert_no_orphan_mitigation_performed(plan_id, offering_id)
         end
       end
@@ -139,6 +141,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
         it 'retries and does not perform orphan mitigation' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          assert_polling_job(binding, job)
           assert_no_orphan_mitigation_performed(plan_id, offering_id)
         end
       end
@@ -151,9 +154,10 @@ RSpec.shared_examples 'create binding orphan mitigation' do
             to_return(status: 400, body: '{}')
         end
 
-        it 'retries and does not perform orphan mitigation' do
+        it 'fails the job and does not perform orphan mitigation' do
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
+          assert_failed_job(binding, job)
           assert_no_orphan_mitigation_performed(plan_id, offering_id)
         end
       end
@@ -263,6 +267,13 @@ def assert_failed_job(binding, job)
   expect(binding.last_operation.type).to eq('create')
   expect(binding.last_operation.state).to eq('failed')
   expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+end
+
+def assert_polling_job(binding, job)
+  binding.reload
+  expect(binding.last_operation.type).to eq('create')
+  expect(binding.last_operation.state).to eq('in progress')
+  expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 end
 
 def assert_orphan_mitigation_performed(plan_id, offering_id)
