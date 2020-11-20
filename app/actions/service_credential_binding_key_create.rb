@@ -1,6 +1,10 @@
+require 'actions/mixins/service_credential_binding_validation_create'
+
 module VCAP::CloudController
   module V3
     class ServiceCredentialBindingKeyCreate
+      include ServiceCredentialBindingCreateMixin
+
       class UnprocessableCreate < StandardError
       end
 
@@ -17,8 +21,11 @@ module VCAP::CloudController
           ServiceKey.create(**binding_details)
         end
       rescue Sequel::ValidationFailed => e
-        key_already_exists!(name) if e.message == 'name and service_instance_id unique'
-        raise UnprocessableCreate.new(e.message)
+        key_validation_error!(
+          e,
+          name: name,
+          validation_error_handler: ValidationErrorHandler.new
+        )
       end
 
       private
@@ -55,6 +62,12 @@ module VCAP::CloudController
 
       def volume_mount_not_enabled!
         raise UnprocessableCreate.new('Support for volume mount services is disabled.')
+      end
+
+      class ValidationErrorHandler
+        def error!(message)
+          raise UnprocessableCreate.new(message)
+        end
       end
     end
   end
