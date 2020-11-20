@@ -17,7 +17,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
   end
 
   after do
-      WebMock.reset!
+    WebMock.reset!
   end
 
   context 'should not be performed' do
@@ -80,8 +80,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
       end
     end
 
-
-    context 'last operation' do
+    context 'last operation response' do
       context 'response for last operation is 200 state failed' do
         let(:broker_bind_status_code) { 202 }
         before do
@@ -163,15 +162,15 @@ RSpec.shared_examples 'create binding orphan mitigation' do
 
   context 'should be performed' do
     context 'broker returns 200 with bad data' do
-          let(:broker_bind_status_code) { 200 }
-          let(:bind_response_body) { '{ "route_service_url": "bad-url"}' }
+      let(:broker_bind_status_code) { 200 }
+      let(:bind_response_body) { '{ "route_service_url": "bad-url"}' }
 
-          it 'fails the job and performs OM' do
-            execute_all_jobs(expected_successes: 1, expected_failures: 1)
+      it 'fails the job and performs OM' do
+        execute_all_jobs(expected_successes: 1, expected_failures: 1)
 
-            assert_failed_job(binding, job)
-            assert_orphan_mitigation_performed(plan_id, offering_id)
-          end
+        assert_failed_job(binding, job)
+        assert_orphan_mitigation_performed(plan_id, offering_id)
+      end
     end
 
     context 'broker returns a 2xx code' do
@@ -203,14 +202,14 @@ RSpec.shared_examples 'create binding orphan mitigation' do
     end
 
     context 'broker returns a 410 code' do
-        let(:broker_bind_status_code) { 410 }
+      let(:broker_bind_status_code) { 410 }
 
-        it 'does orphan mitigation and fails the job' do
-          execute_all_jobs(expected_successes: 1, expected_failures: 1)
+      it 'does orphan mitigation and fails the job' do
+        execute_all_jobs(expected_successes: 1, expected_failures: 1)
 
-          assert_failed_job(binding, job)
-          assert_orphan_mitigation_performed(plan_id, offering_id)
-        end
+        assert_failed_job(binding, job)
+        assert_orphan_mitigation_performed(plan_id, offering_id)
+      end
     end
 
     context 'broker response is 422 with unknown reason' do
