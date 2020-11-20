@@ -9255,7 +9255,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td><strong>Name:</strong> <code class="prettyprint">private_domain_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains.</td>
 </tr>
 <tr>
-<td><strong>Name:</strong> <code class="prettyprint">resource_matching</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, any user can create resource matches. When disabled, the <a href="#resource-matches">resource match endpoint</a> always returns an empty array of matches.</td>
+<td><strong>Name:</strong> <code class="prettyprint">resource_matching</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, any user can create resource matches. When disabled, the <a href="#resource-matches">resource match endpoint</a> always returns an empty array of matches. The <a href="#upload-package-bits">package upload endpoint</a> will not cache any uploaded packages for resource matching.</td>
 </tr>
 <tr>
 <td><strong>Name:</strong> <code class="prettyprint">route_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes.</td>
