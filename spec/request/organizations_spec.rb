@@ -10,6 +10,7 @@ module VCAP::CloudController
     let!(:organization2) { Organization.make name: 'Dungeon World' }
     let!(:organization3) { Organization.make name: 'The Sprawl' }
     let!(:inaccessible_organization) { Organization.make name: 'D&D' }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
     before do
       organization1.add_user(user)
@@ -17,11 +18,16 @@ module VCAP::CloudController
       organization3.add_user(user)
       Domain.dataset.destroy # this will clean up the seeded test domains
       TestConfig.override(kubernetes: {})
+
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
+        { user.guid => 'Ragnaros' }
+      )
     end
 
     describe 'POST /v3/organizations' do
-      it 'creates a new organization with the given name' do
-        request_body = {
+      let(:request_body) {
+        {
           name: 'org1',
           metadata: {
             labels: {
@@ -34,7 +40,8 @@ module VCAP::CloudController
             }
           }
         }.to_json
-
+      }
+      it 'creates a new organization with the given name' do
         expect {
           post '/v3/organizations', request_body, admin_header
         }.to change {
@@ -68,12 +75,12 @@ module VCAP::CloudController
       end
 
       it 'allows creating a suspended org' do
-        request_body = {
+        suspended_request_body = {
           name: 'suspended-org',
           suspended: true
         }.to_json
 
-        post '/v3/organizations', request_body, admin_header
+        post '/v3/organizations', suspended_request_body, admin_header
         expect(last_response.status).to eq(201)
 
         created_org = Organization.last
@@ -95,6 +102,58 @@ module VCAP::CloudController
             'suspended' => true
           }
         )
+      end
+
+      context 'when "user_org_creation" feature flag is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+        end
+
+        it 'lets ALL users create orgs' do
+          expect {
+            post '/v3/organizations', request_body, user_header
+          }.to change {
+            Organization.count
+          }.by 1
+
+          created_org = Organization.last
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response).to be_a_response_like(
+            {
+              'guid' => created_org.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => 'org1',
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" },
+                'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains" },
+                'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" },
+                'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{created_org.quota_definition.guid}" }
+              },
+              'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
+              'metadata' => {
+                'labels' => { 'freaky' => 'friday' },
+                'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
+              },
+              'suspended' => false
+            }
+          )
+        end
+        it 'gives the user all org roles associated with the new org' do
+          expect {
+            post '/v3/organizations', request_body, user_header
+          }.to change {
+            Organization.count
+          }.by 1
+
+          created_org = Organization.last
+          expect(OrganizationManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
+          expect(OrganizationBillingManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
+          expect(OrganizationAuditor.first(organization_id: created_org.id, user_id: user.id)).to be_present
+          expect(OrganizationUser.first(organization_id: created_org.id, user_id: user.id)).to be_present
+          expect(last_response.status).to eq(201)
+        end
       end
     end
 

@@ -1,3 +1,5 @@
+require 'role_create'
+
 module VCAP::CloudController
   class OrganizationCreate
     class Error < ::StandardError
@@ -8,7 +10,7 @@ module VCAP::CloudController
       @user_audit_info = user_audit_info
     end
 
-    def create(message)
+    def create(message, user)
       org = nil
       Organization.db.transaction do
         org = VCAP::CloudController::Organization.create(
@@ -19,8 +21,10 @@ module VCAP::CloudController
         MetadataUpdate.update(org, message)
       end
 
-      VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
-        perm_client.create_org_role(role: role, org_id: org.guid)
+      VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.each do |role|
+        VCAP::CloudController::RoleCreate.new(message, @user_audit_info).create_organization_role(type: role,
+                                                                   user: user,
+                                                                   organization: org)
       end
 
       Repositories::OrganizationEventRepository.new.record_organization_create(org, @user_audit_info, message.audit_hash)
