@@ -138,24 +138,80 @@ RSpec.describe(OPI::TaskClient) do
   end
 
   describe 'can fetch a task' do
-    it 'should return a empty dummy task' do
-      task = client.fetch_task('some-guid')
-      expect(task).to eq(Diego::Bbs::Models::Task.new)
+    let(:expected_body) {
+      { 'guid': 'foo' }.to_json
+    }
+
+    before(:each) do
+      stub_request(:get, "#{opi_url}/tasks/some-task-guid").
+        to_return(status: 200, body: expected_body)
     end
 
-    it 'should not send any request to opi' do
-      expect(a_request(:any, opi_url)).not_to have_been_made
+    it 'should return a parsed task' do
+      task = client.fetch_task('some-task-guid')
+
+      expect(WebMock).to have_requested(:get, "#{opi_url}/tasks/some-task-guid")
+
+      expect(task).to eq(OpenStruct.new(task_guid: 'foo'))
+    end
+
+    context 'when the task is not found' do
+      before(:each) do
+        stub_request(:get, "#{opi_url}/tasks/some-task-guid").
+          to_return(status: 404)
+      end
+
+      it 'should return nil' do
+        expect(client.fetch_task('some-task-guid')).to be_nil
+      end
+    end
+
+    context 'when fetching the task fails' do
+      before(:each) do
+        stub_request(:get, "#{opi_url}/tasks/some-task-guid").
+          to_return(status: 500)
+      end
+
+      it 'should raise an ApiError' do
+        expect { client.fetch_task('some-task-guid') }.to raise_error(CloudController::Errors::ApiError, /response status code: 500/) do |e|
+          expect(e.name).to eq('TaskError')
+        end
+      end
     end
   end
 
   describe 'can fetch all tasks' do
-    it 'should return an empty list' do
-      tasks = client.fetch_tasks
-      expect(tasks).to be_empty
+    let(:expected_body) {
+      [{ 'guid': 'foo' }, { 'guid': 'bar' }].to_json
+    }
+
+    before(:each) do
+      stub_request(:get, "#{opi_url}/tasks").
+        to_return(status: 200, body: expected_body)
     end
 
-    it 'should not send any request to opi' do
-      expect(a_request(:any, opi_url)).not_to have_been_made
+    it 'should return a parsed list of tasks' do
+      tasks = client.fetch_tasks
+
+      expect(WebMock).to have_requested(:get, "#{opi_url}/tasks")
+
+      expect(tasks).to match_array([
+        OpenStruct.new(task_guid: 'foo'),
+        OpenStruct.new(task_guid: 'bar'),
+      ])
+    end
+
+    context 'when fetching the tasks fails' do
+      before(:each) do
+        stub_request(:get, "#{opi_url}/tasks").
+          to_return(status: 500)
+      end
+
+      it 'should raise an ApiError' do
+        expect { client.fetch_tasks }.to raise_error(CloudController::Errors::ApiError, /response status code: 500/) do |e|
+          expect(e.name).to eq('TaskError')
+        end
+      end
     end
   end
 
