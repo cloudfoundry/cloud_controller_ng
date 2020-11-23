@@ -9,12 +9,12 @@ Example Service Route Binding object
 
 Name | Type | Description
 ---- | ---- | -----------
-**guid** | _uuid_ | Unique identifier for the service credential binding
+**guid** | _uuid_ | Unique identifier for the service route binding
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **route_service_url** | _string_ | The URL for the route service
-**metadata.labels** (*experimental*)| [_label object_](#labels) | Labels applied to the service route binding
-**metadata.annotations** (*experimental*) | [_annotation object_](#annotations) | Annotations applied to the service route binding
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service route binding
+**metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the service route binding
 **relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance that the route is bound to
 **relationships.route** | [_to-one relationship_](#to-one-relationships) | The route that the service instance is bound to
 **links** | [_links object_](#links) | Links to related resources
