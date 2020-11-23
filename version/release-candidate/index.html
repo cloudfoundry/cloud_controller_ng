@@ -29310,7 +29310,10 @@ This endpoint is not available for User-Provided Service Instances.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -29327,7 +29330,7 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <tr>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
-<td>Unique identifier for the service credential binding</td>
+<td>Unique identifier for the service route binding</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -29345,12 +29348,12 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <td>The URL for the route service</td>
 </tr>
 <tr>
-<td><strong>metadata.labels</strong> (<em>experimental</em>)</td>
+<td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the service route binding</td>
 </tr>
 <tr>
-<td><strong>metadata.annotations</strong> (<em>experimental</em>)</td>
+<td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the service route binding</td>
 </tr>
@@ -29422,7 +29425,10 @@ This endpoint is not available for User-Provided Service Instances.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -29543,6 +29549,9 @@ This endpoint is not available for User-Provided Service Instances.</p>
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/15697508-cb68-4d88-9f19-85fc53851571"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
@@ -29589,7 +29598,7 @@ This endpoint is not available for User-Provided Service Instances.</p>
 
 </span></code></pre>
 
-<p>This endpoint retrieves the service credential bindings the user has access to.</p>
+<p>This endpoint retrieves the service route bindings the user has access to.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -29715,7 +29724,7 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
 </code></pre>
-<pre class="highlight plaintext"><code>Example Request for User-Provided Service Instance
+<pre class="highlight plaintext"><code>Example Response for User-Provided Service Instance
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
@@ -29760,7 +29769,10 @@ This endpoint is not available for User-Provided Service Instances.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -29900,7 +29912,10 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -29945,7 +29960,7 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 <td>Admin</td>
 </tr>
 <tr>
-<td>Space Developer (only for service plans from space-scoped brokers)</td>
+<td>Space Developer</td>
 </tr>
 </tbody></table>
 <h3 id="delete-a-service-route-binding">Delete a service route binding</h3>
