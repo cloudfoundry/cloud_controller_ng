@@ -16,7 +16,6 @@ RSpec.describe BackgroundJobEnvironment do
   describe '#setup_environment' do
     before do
       allow(VCAP::CloudController::DB).to receive(:load_models)
-      allow(Thread).to receive(:new).and_yield
       allow(EM).to receive(:run).and_yield
       allow(VCAP::CloudController::ResourcePool).to receive(:new)
     end
@@ -55,7 +54,7 @@ RSpec.describe BackgroundJobEnvironment do
         expect {
           background_job_environment.setup_environment(9999)
         }.to change { open_port_count }.by(1)
-        expect { TCPSocket.new('127.0.0.1', 9999).close }.not_to raise_error
+        expect { background_job_environment.readiness_server.close }.not_to raise_error
       end
     end
   end
