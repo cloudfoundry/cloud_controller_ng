@@ -4,6 +4,8 @@ module VCAP::CloudController
 
     many_to_one :service_instance
 
+    one_to_one :service_key_operation
+
     export_attributes :name, :service_instance_guid, :credentials
 
     import_attributes :name, :service_instance_guid, :credentials
@@ -28,6 +30,10 @@ module VCAP::CloudController
 
     def space
       service_instance.space
+    end
+
+    def last_operation
+      service_key_operation
     end
 
     def validate
