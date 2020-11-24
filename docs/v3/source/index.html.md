@@ -408,6 +408,7 @@ includes:
   - upgrade_guide/new_resources/isolation_segments
   - upgrade_guide/new_resources/manifests
   - upgrade_guide/new_resources/revisions
+  - upgrade_guide/new_resources/service_route_bindings.md
   - upgrade_guide/new_resources/sidecars
   - upgrade_guide/new_resources/tasks
   - upgrade_guide/changed_resources/header
@@ -417,6 +418,7 @@ includes:
   - upgrade_guide/changed_resources/routes_in_v3
   - upgrade_guide/changed_resources/security_groups_in_v3
   - upgrade_guide/changed_resources/service_brokers_in_v3
+  - upgrade_guide/changed_resources/service_instance_routes_in_v3
   - upgrade_guide/changed_resources/service_offerings_in_v3
   - upgrade_guide/changed_resources/service_plans_in_v3
   - upgrade_guide/changed_resources/service_plan_visibility_in_v3
