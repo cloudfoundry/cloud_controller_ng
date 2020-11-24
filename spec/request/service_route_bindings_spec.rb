@@ -189,6 +189,14 @@ RSpec.describe 'v3 service route bindings' do
 
         expect_route_bindings(filtered_route_bindings)
       end
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::RouteBinding }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/service_route_bindings?#{filters}", nil, headers }
+        end
+        let(:headers) { admin_headers }
+      end
     end
 
     describe 'include' do

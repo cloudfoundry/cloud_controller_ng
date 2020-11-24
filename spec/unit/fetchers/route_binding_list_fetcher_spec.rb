@@ -4,7 +4,7 @@ require 'messages/service_route_bindings_list_message'
 module VCAP
   module CloudController
     RSpec.describe RouteBindingListFetcher do
-      let(:fetcher) { RouteBindingListFetcher.new }
+      let(:fetcher) { described_class }
 
       describe 'fetch_all' do
         let!(:route_bindings) { Array.new(3) { RouteBinding.make } }
