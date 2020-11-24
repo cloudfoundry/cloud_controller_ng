@@ -155,11 +155,10 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def fetch_route_bindings(message)
-    fetcher = RouteBindingListFetcher.new
     if permission_queryer.can_read_globally?
-      fetcher.fetch_all(message)
+      RouteBindingListFetcher.fetch_all(message)
     else
-      fetcher.fetch_some(message, space_guids: space_guids)
+      RouteBindingListFetcher.fetch_some(message, space_guids: space_guids)
     end
   end
 
