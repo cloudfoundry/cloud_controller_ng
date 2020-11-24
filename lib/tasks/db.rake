@@ -245,7 +245,7 @@ namespace :db do
       VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
     end
 
-    logger.info("Successfully connected to database")
+    logger.info('Successfully connected to database')
   end
 
   def migrate
