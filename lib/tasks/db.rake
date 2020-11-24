@@ -241,7 +241,7 @@ namespace :db do
       logger.info("[Attempt ##{retries}] Retrying because [#{exception.class} - #{exception.message}]: #{exception.backtrace.first(5).join(' | ')}")
     end
 
-    Retryable.retryable(sleep: 1, tries: 5, log_method: log_method) do
+    Retryable.retryable(sleep: 1, tries: 60, log_method: log_method) do
       VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
     end
 
