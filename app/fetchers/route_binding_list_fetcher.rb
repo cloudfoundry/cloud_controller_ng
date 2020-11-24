@@ -1,3 +1,5 @@
+require 'fetchers/base_list_fetcher'
+
 module VCAP
   module CloudController
     class RouteBindingListFetcher < BaseListFetcher
