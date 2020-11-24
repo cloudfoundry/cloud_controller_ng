@@ -165,6 +165,13 @@ namespace :db do
     end
   end
 
+  desc 'Terminate Istio sidecar for migration job (if one exists)'
+  task :terminate_istio_if_exists do
+    puts 'Terminating Istio sidecar'
+
+    terminate_istio_sidecar_if_exists
+  end
+
   desc 'Validate Deployments are not missing encryption keys'
   task :validate_encryption_keys do
     RakeConfig.context = :api
@@ -301,5 +308,19 @@ namespace :db do
         DbConfig.reset_environment
       end
     end
+  end
+
+  def terminate_istio_sidecar_if_exists
+    client = HTTPClient.new
+    response = client.request(:post, 'http://localhost:15000/quitquitquit')
+
+    unless response.code == 200
+      puts "Failed to terminate Istio sidecar. Received response code: #{response.code}"
+      return
+    end
+
+    puts 'Istio sidecar is now terminated'
+  rescue => e
+    puts "Request to Istio sidecar failed. This is expected if your kubernetes cluster does not use Istio. Error: #{e}"
   end
 end
