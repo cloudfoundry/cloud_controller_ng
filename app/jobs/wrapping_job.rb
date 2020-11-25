@@ -17,6 +17,10 @@ module VCAP::CloudController
         handler.after(job) if handler.respond_to?(:after)
       end
 
+      def before_enqueue(job)
+        handler.before_enqueue(job) if handler.respond_to?(:before_enqueue)
+      end
+
       def after_enqueue(job)
         handler.after_enqueue(job) if handler.respond_to?(:after_enqueue)
       end
