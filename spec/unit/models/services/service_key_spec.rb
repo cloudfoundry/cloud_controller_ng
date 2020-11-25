@@ -155,5 +155,179 @@ module VCAP::CloudController
         expect(visible_to_other_user.all).to be_empty
       end
     end
+
+    describe '#save_with_new_operation' do
+      let(:service_instance) { ServiceInstance.make }
+      let(:binding) {
+        ServiceKey.new(
+          service_instance: service_instance,
+          credentials:      {},
+          name:             'foo',
+        )
+      }
+
+      it 'creates a new last_operation object and associates it with the binding' do
+        last_operation = {
+          state: 'in progress',
+          type: 'create',
+          description: '10%'
+        }
+        binding.save_with_new_operation(last_operation)
+
+        expect(binding.last_operation.state).to eq 'in progress'
+        expect(binding.last_operation.description).to eq '10%'
+        expect(binding.last_operation.type).to eq 'create'
+        expect(ServiceKey.where(guid: binding.guid).count).to eq(1)
+      end
+
+      context 'when saving the binding operation fails' do
+        before do
+          allow(ServiceKeyOperation).to receive(:create).and_raise(Sequel::DatabaseError, 'failed to create new-binding operation')
+        end
+
+        it 'should rollback the binding' do
+          expect { binding.save_with_new_operation({ state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
+          expect(ServiceKey.where(guid: binding.guid).count).to eq(0)
+        end
+      end
+
+      context 'when called twice' do
+        it 'does saves the second operation' do
+          binding.save_with_new_operation({ state: 'in progress', type: 'create', description: 'description' })
+          binding.save_with_new_operation({ state: 'in progress', type: 'delete' })
+
+          expect(binding.last_operation.state).to eq 'in progress'
+          expect(binding.last_operation.type).to eq 'delete'
+          expect(binding.last_operation.description).to eq nil
+          expect(ServiceKey.where(guid: binding.guid).count).to eq(1)
+          expect(ServiceKeyOperation.where(service_key_id: binding.id).count).to eq(1)
+        end
+      end
+
+      context 'when attributes are passed in' do
+        let(:credentials) { { password: 'rice' } }
+        let(:attributes) {
+          {
+            name: 'gohan',
+            credentials: credentials,
+          }
+        }
+        let(:last_operation) { {
+          state: 'in progress',
+          type: 'create',
+          description: '10%'
+        }
+        }
+
+        it 'updates the attributes' do
+          binding.save_with_new_operation(last_operation, attributes: attributes)
+          binding.reload
+          expect(binding.last_operation.state).to eq 'in progress'
+          expect(binding.last_operation.description).to eq '10%'
+          expect(binding.last_operation.type).to eq 'create'
+          expect(binding.name).to eq 'gohan'
+          expect(binding.credentials).to eq(credentials.with_indifferent_access)
+          expect(ServiceKey.where(guid: binding.guid).count).to eq(1)
+        end
+
+        it 'only saves permitted attributes' do
+          expect {
+            binding.save_with_new_operation(last_operation, attributes: attributes.merge(
+              parameters: {
+                foo: 'bar',
+                ding: 'dong'
+              },
+              endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
+            ))
+          }.not_to raise_error
+        end
+      end
+    end
+
+    describe '#terminal_state?' do
+      let(:service_binding) { ServiceKey.make }
+      let(:operation) { ServiceKeyOperation.make(state: state) }
+
+      before do
+        service_binding.service_key_operation = operation
+      end
+
+      context 'when state is succeeded' do
+        let(:state) { 'succeeded' }
+
+        it 'returns true' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+
+      context 'when state is failed' do
+        let(:state) { 'failed' }
+
+        it 'returns true when state is `failed`' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+
+      context 'when state is something else' do
+        let(:state) { 'in progress' }
+
+        it 'returns false' do
+          expect(service_binding.terminal_state?).to be false
+        end
+      end
+
+      context 'when binding operation is missing' do
+        let(:operation) { nil }
+
+        it 'returns true' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+    end
+
+    describe 'operation_in_progress?' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_key) { ServiceKey.make(service_instance: service_instance) }
+
+      context 'when the service key has been created synchronously' do
+        it 'returns false' do
+          expect(service_key.operation_in_progress?).to be false
+        end
+      end
+
+      context 'when the service key is being created asynchronously' do
+        let(:state) {}
+        let(:operation) { ServiceKeyOperation.make(state: state) }
+
+        before do
+          service_key.service_key_operation = operation
+        end
+
+        context 'and the operation is in progress' do
+          let(:state) { 'in progress' }
+
+          it 'returns true' do
+            expect(service_key.operation_in_progress?).to be true
+          end
+        end
+
+        context 'and the operation has failed' do
+          let(:state) { 'failed' }
+
+          it 'returns false' do
+            expect(service_key.operation_in_progress?).to be false
+          end
+        end
+
+        context 'and the operation has succeeded' do
+          let(:state) { 'succeeded' }
+
+          it 'returns false' do
+            expect(service_key.operation_in_progress?).to be false
+          end
+        end
+      end
+    end
+
   end
 end

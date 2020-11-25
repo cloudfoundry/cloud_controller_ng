@@ -32,10 +32,6 @@ module VCAP::CloudController
       service_instance.space
     end
 
-    def last_operation
-      service_key_operation
-    end
-
     def validate
       validates_presence :name
       validates_presence :service_instance
@@ -85,8 +81,48 @@ module VCAP::CloudController
       @logger ||= Steno.logger('cc.models.service_key')
     end
 
+    def last_operation
+      service_key_operation
+    end
+
+    def terminal_state?
+      !service_key_operation || (['succeeded', 'failed'].include? service_key_operation.state)
+    end
+
     def operation_in_progress?
+      if service_key_operation && service_key_operation.state == 'in progress'
+        return true
+      end
+
       false
     end
+
+    def required_parameters
+      nil
+    end
+
+    def save_with_attributes_and_new_operation(attributes, operation)
+      save_with_new_operation(operation, attributes: attributes)
+      self
+    end
+
+    def save_with_new_operation(last_operation, attributes: {})
+      ServiceKey.db.transaction do
+        self.lock!
+        set(attributes.except(:parameters, :route_services_url, :endpoints))
+        save_changes
+
+        if self.last_operation
+          self.last_operation.destroy
+        end
+
+        # it is important to create the service key operation with the service key
+        # instead of doing self.service_key_operation = x
+        # because mysql will deadlock when requests happen concurrently otherwise.
+        ServiceKeyOperation.create(last_operation.merge(service_key_id: self.id))
+        self.service_key_operation(reload: true)
+      end
+    end
+
   end
 end
