@@ -84,9 +84,13 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
   describe '#create' do
     let(:user) { VCAP::CloudController::User.make }
-
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     before do
       set_current_user(user)
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
+        { user.guid => 'Ragnaros' }
+      )
     end
 
     describe 'permissions by role' do
