@@ -4,7 +4,7 @@ require 'jobs/v3/create_service_binding_job_factory'
 module VCAP::CloudController
   module V3
     RSpec.describe CreateServiceBindingFactory do
-      let(:factory) { CreateServiceBindingFactory.new }
+      let(:factory) { subject }
 
       describe '#for' do
         it 'should return route job actor when type is route' do
@@ -17,8 +17,13 @@ module VCAP::CloudController
           expect(actor).to be_an_instance_of(CreateServiceCredentialBindingJobActor)
         end
 
+        it 'should return key job actor when type is key' do
+          actor = CreateServiceBindingFactory.for(:key)
+          expect(actor).to be_an_instance_of(CreateServiceKeyBindingJobActor)
+        end
+
         it 'raise for unknown types' do
-          expect { CreateServiceBindingFactory.for(:key) }.to raise_error(CreateServiceBindingFactory::InvalidType)
+          expect { CreateServiceBindingFactory.for(:random) }.to raise_error(CreateServiceBindingFactory::InvalidType)
         end
       end
 
@@ -34,7 +39,7 @@ module VCAP::CloudController
         end
 
         it 'raise for unknown types' do
-          expect { CreateServiceBindingFactory.action(:key, {}, {}) }.to raise_error(CreateServiceBindingFactory::InvalidType)
+          expect { CreateServiceBindingFactory.action(:random, {}, {}) }.to raise_error(CreateServiceBindingFactory::InvalidType)
         end
       end
     end
