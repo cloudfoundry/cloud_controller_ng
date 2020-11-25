@@ -17678,6 +17678,7 @@ belongs to a space the user does not belong to.</p>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
+  -H <span class="s2">"Content-type: application/json"</span>
   -d <span class="s1">'{
     "destinations": [
       {
@@ -29632,6 +29633,21 @@ This endpoint is not available for User-Provided Service Instances.</p>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
+</tr>
+<tr>
+<td><strong>guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of service route binding guids to filter by</td>
+</tr>
+<tr>
+<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+</tr>
+<tr>
+<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
 </tr>
 <tr>
 <td><strong>include</strong></td>
