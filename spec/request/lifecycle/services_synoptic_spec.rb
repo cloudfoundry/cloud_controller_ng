@@ -15,6 +15,10 @@ RSpec.describe 'V3 services synoptic' do
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+\z}).
       with(basic_auth: %w(admin password)).
       to_return(status: 201, body: {}.to_json, headers: {})
+
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
+      with(body: 'grant_type=client_credentials').
+      to_return(status: 200, body: "{ token_type: 'Bearer', access_token: 'dXNlcm5hbWVfbG9va3VwX2NsaWVudF9uYW1lOnVzZXJuYW1lX2xvb2t1cF9zZWNyZXQ=' }", headers: {})
   end
 
   it 'works end to end' do
