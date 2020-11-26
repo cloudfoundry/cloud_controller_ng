@@ -11,8 +11,8 @@ module VCAP::CloudController
       end
 
       describe '#resource_type' do
-        it 'returns "service_key_binding"' do
-          expect(subject.resource_type).to eq('service_key_binding')
+        it 'returns "service_credential_binding"' do
+          expect(subject.resource_type).to eq('service_credential_binding')
         end
       end
 

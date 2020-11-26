@@ -1,4 +1,4 @@
-RSpec.shared_examples 'service credential binding create endpoint' do |klass, check_app, audit_event_type|
+RSpec.shared_examples 'service credential binding create endpoint' do |klass, check_app, audit_event_type, display_name|
 
   describe 'managed instance' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
@@ -22,16 +22,15 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
-        expect(job.operation).to eq('service_bindings.create')
+        expect(job.operation).to eq("#{display_name}.create")
         expect(job.resource_guid).to eq(binding.guid)
-        expect(job.resource_type).to eq("#{audit_event_type}_binding")
+        expect(job.resource_type).to eq("service_credential_binding")
 
         get "/v3/jobs/#{job.guid}", nil, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['guid']).to eq(job.guid)
-        # FIXME: Should be  service_credential_binding - see job_presenter.rb
-        binding_link = parsed_response.dig('links', "#{audit_event_type}_binding", 'href')
-        expect(binding_link).to end_with("/v3/#{audit_event_type}_bindings/#{binding.guid}")
+        binding_link = parsed_response.dig('links', "service_credential_binding", 'href')
+        expect(binding_link).to end_with("/v3/service_credential_bindings/#{binding.guid}")
       end
     end
 

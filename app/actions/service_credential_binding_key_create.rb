@@ -78,7 +78,6 @@ module VCAP::CloudController
         event_repository.record_start_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
       end
 
-
       def event_repository
         @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
           Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING)
