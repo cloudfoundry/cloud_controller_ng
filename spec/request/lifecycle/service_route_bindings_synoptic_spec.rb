@@ -25,9 +25,9 @@ RSpec.describe 'V3 service route bindings synoptic' do
       to_return(status: 410, body: '', headers: {})
     VCAP::CloudController::Config.config.set(:kubernetes, nil)
 
-    stub_request(:post, "https://uaa.service.cf.internal/oauth/token").
-      with(body: "grant_type=client_credentials").
-      to_return(status: 200, body:  "{ token_type: 'Bearer', access_token: 'dXNlcm5hbWVfbG9va3VwX2NsaWVudF9uYW1lOnVzZXJuYW1lX2xvb2t1cF9zZWNyZXQ=' }", headers: {})
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
+      with(body: 'grant_type=client_credentials').
+      to_return(status: 200, body: "{ token_type: 'Bearer', access_token: 'dXNlcm5hbWVfbG9va3VwX2NsaWVudF9uYW1lOnVzZXJuYW1lX2xvb2t1cF9zZWNyZXQ=' }", headers: {})
   end
 
   it 'works end to end' do
