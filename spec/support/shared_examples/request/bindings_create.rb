@@ -12,6 +12,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       end
 
       it 'creates a credential binding in the database' do
+        expect(binding.app).to eq(app_to_bind_to) if check_app
         expect(binding.service_instance).to eq(service_instance)
         expect(binding.last_operation.state).to eq('in progress')
         expect(binding.last_operation.type).to eq('create')
@@ -40,6 +41,16 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
       let(:broker_status_code) { 201 }
       let(:broker_response) { { credentials: credentials } }
+      let(:app_binding_attributes) {
+        check_app ?
+          {
+              app_guid: app_to_bind_to.guid,
+              bind_resource: {
+                app_guid: app_to_bind_to.guid,
+                space_guid: service_instance.space.guid
+              }
+          } : {}
+      }
       let(:client_body) do
         {
           context: {
@@ -49,14 +60,12 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             space_guid: space.guid,
             space_name: space.name,
           },
-          # app_guid: app_to_bind_to.guid,
           service_id: service_instance.service_plan.service.unique_id,
           plan_id: service_instance.service_plan.unique_id,
           bind_resource: {
             credential_client_id: 'cc_service_key_client',
-            # space_guid: service_instance.space.guid
           },
-        }
+        }.merge(app_binding_attributes)
       end
 
       before do

@@ -251,3 +251,39 @@ RSpec.shared_examples 'polling service binding creation' do
     end
   end
 end
+
+RSpec.shared_examples 'the sync credential binding' do |klass, extra_checks|
+  it 'creates and returns the credential binding' do
+    action.bind(precursor)
+
+    precursor.reload
+    expect(precursor).to eq(klass.where(guid: precursor.guid).first)
+    expect(precursor.credentials).to eq(details[:credentials])
+    expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url]) if extra_checks
+    expect(precursor.last_operation.type).to eq('create')
+    expect(precursor.last_operation.state).to eq('succeeded')
+  end
+
+  it 'creates an audit event' do
+    action.bind(precursor)
+    expect(binding_event_repo).to have_received(:record_create).with(
+      precursor,
+      user_audit_info,
+      audit_hash,
+      manifest_triggered: false,
+    )
+  end
+
+  context 'when saving to the db fails' do
+    it 'fails the binding operation' do
+      allow(precursor).to receive(:save_with_attributes_and_new_operation).once.and_raise(Sequel::ValidationFailed, 'Meh')
+      allow(precursor).to receive(:save_with_attributes_and_new_operation).
+        with(anything, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
+      expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
+      precursor.reload
+      expect(precursor.last_operation.type).to eq('create')
+      expect(precursor.last_operation.state).to eq('failed')
+      expect(precursor.last_operation.description).to eq('Meh')
+    end
+  end
+end
