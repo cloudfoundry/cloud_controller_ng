@@ -92,9 +92,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def update
-    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless can_write_space?(service_instance.space)
+    service_instance = fetch_writable_service_instance(hashed_params[:guid])
 
     case service_instance
     when ManagedServiceInstance
@@ -105,12 +103,8 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def destroy
-    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    service_instance = fetch_writable_service_instance(hashed_params[:guid])
     purge = params['purge'] == 'true'
-
-    unauthorized! unless can_write_space?(service_instance.space)
-
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
 
     if purge
@@ -118,11 +112,12 @@ class ServiceInstancesV3Controller < ApplicationController
       return [:no_content, nil]
     end
 
-    job_guid = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
+    deleted = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
 
-    if job_guid.blank?
+    if deleted
       head :no_content
     else
+      job_guid = enqueue_delete_job(service_instance)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
     end
   rescue V3::ServiceInstanceDelete::AssociationNotEmptyError
@@ -294,10 +289,6 @@ class ServiceInstancesV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
   end
 
-  def admin?
-    permission_queryer.can_write_globally?
-  end
-
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
     unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
     unwriteable_spaces = found_spaces.reject { |s| can_write_space?(s) || unreadable_spaces.include?(s) }
@@ -314,6 +305,33 @@ class ServiceInstancesV3Controller < ApplicationController
 
       unprocessable!(error_msg)
     end
+  end
+
+  def build_create_message(params)
+    generic_message = ServiceInstanceCreateMessage.new(params)
+    unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
+
+    specific_message = if generic_message.type == 'managed'
+                         ServiceInstanceCreateManagedMessage.new(params)
+                       else
+                         ServiceInstanceCreateUserProvidedMessage.new(params)
+                       end
+
+    unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
+    specific_message
+  end
+
+  def fetch_writable_service_instance(guid)
+    service_instance = ServiceInstance.first(guid: guid)
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless can_write_space?(service_instance.space)
+    service_instance
+  end
+
+  def enqueue_delete_job(service_instance)
+    delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
+    pollable_job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job.guid
   end
 
   def unreadable_error_message(service_instance_name, unreadable_space_guids)
@@ -349,28 +367,18 @@ class ServiceInstancesV3Controller < ApplicationController
     permission_queryer.can_write_to_space?(space.guid)
   end
 
-  def build_create_message(params)
-    generic_message = ServiceInstanceCreateMessage.new(params)
-    unprocessable!(generic_message.errors.full_messages) unless generic_message.valid?
-
-    specific_message = if generic_message.type == 'managed'
-                         ServiceInstanceCreateManagedMessage.new(params)
-                       else
-                         ServiceInstanceCreateUserProvidedMessage.new(params)
-                       end
-
-    unprocessable!(specific_message.errors.full_messages) unless specific_message.valid?
-    specific_message
-  end
-
-  def service_instance_not_found!
-    resource_not_found!(:service_instance)
+  def admin?
+    permission_queryer.can_write_globally?
   end
 
   def service_plan_valid?(service_plan, space)
     service_plan &&
       visible_to_current_user?(plan: service_plan) &&
       service_plan.visible_in_space?(space)
+  end
+
+  def service_instance_not_found!
+    resource_not_found!(:service_instance)
   end
 
   def unprocessable_space!

@@ -55,20 +55,16 @@ module VCAP
               with(:delete, instance_of(UserProvidedServiceInstance))
           end
 
-          it 'returns nothing' do
-            expect(subject.delete(service_instance)).to be_nil
+          it 'returns true' do
+            expect(subject.delete(service_instance)).to be_truthy
           end
         end
 
         context 'managed service instances' do
           let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-          it 'enqueues a job and returns the job guid' do
-            job_guid = subject.delete(service_instance)
-            job = VCAP::CloudController::PollableJobModel.last
-
-            expect(job.guid).to eq(job_guid)
-            expect(job.resource_guid).to eq(service_instance.guid)
+          it 'returns false' do
+            expect(subject.delete(service_instance)).to be_falsey
           end
         end
 

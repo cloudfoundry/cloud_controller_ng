@@ -18,15 +18,14 @@ module VCAP::CloudController
 
         lock = DeleterLock.new(service_instance)
 
-        job = case service_instance
-              when ManagedServiceInstance
-                asynchronous_destroy(service_instance)
-              when UserProvidedServiceInstance
-                lock.lock!
-                synchronous_destroy(service_instance, lock)
-              end
-
-        job
+        case service_instance
+        when ManagedServiceInstance
+          return false
+        when UserProvidedServiceInstance
+          lock.lock!
+          synchronous_destroy(service_instance, lock)
+          return true
+        end
       end
 
       private
@@ -35,16 +34,6 @@ module VCAP::CloudController
         lock.unlock_and_destroy!
         service_event_repository.record_user_provided_service_instance_event(:delete, service_instance)
         nil
-      end
-
-      def asynchronous_destroy(service_instance)
-        delete_job = V3::DeleteServiceInstanceJob.new(
-          service_instance.guid,
-          service_event_repository.user_audit_info)
-
-        pollable_job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-        pollable_job.guid
       end
 
       def association_not_empty!
