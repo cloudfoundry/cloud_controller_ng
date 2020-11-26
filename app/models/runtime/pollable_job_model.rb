@@ -28,6 +28,8 @@ module VCAP::CloudController
                 RouteBinding
               when 'service_credential_binding'
                 ServiceBinding
+              when 'service_key_binding'
+                ServiceKey
               else
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end

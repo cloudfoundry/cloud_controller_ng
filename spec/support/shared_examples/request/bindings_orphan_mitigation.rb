@@ -12,8 +12,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
       }).to_return(status: 200, body: {}.to_json)
 
     stub_request(:put, bind_url).
-      with(query: { accepts_incomplete: true },
-        body: client_body).to_return(status: broker_bind_status_code, body: bind_response_body)
+      with(query: { accepts_incomplete: true }).to_return(status: broker_bind_status_code, body: bind_response_body)
   end
 
   after do
@@ -248,8 +247,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
         stub_request(:put, bind_url).
           with(query: {
             accepts_incomplete: true,
-          },
-            body: client_body).to_timeout
+          }).to_timeout
       end
 
       it 'does orphan mitigation and fails the job' do

@@ -1479,7 +1479,7 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'creating a credential binding as a key' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, **service_instance_details) }
-      let(:binding_name) { 'some-key-name' }
+      let(:binding_name) { Sham.name }
       let(:create_body) {
         {
           type: 'key',
@@ -1495,8 +1495,8 @@ RSpec.describe 'v3 service credential bindings' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['space_developer'] = { code: 501 }
-                h['admin'] = { code: 501 }
+                h['space_developer'] = { code: 202 }
+                h['admin'] = { code: 202 }
                 h['org_billing_manager'] = { code: 422 }
                 h['org_auditor'] = { code: 422 }
                 h['no_role'] = { code: 422 }
@@ -1517,7 +1517,7 @@ RSpec.describe 'v3 service credential bindings' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['admin'] = { code: 501 }
+                h['admin'] = { code: 202 }
                 h['org_billing_manager'] = { code: 422 }
                 h['org_auditor'] = { code: 422 }
                 h['no_role'] = { code: 422 }
@@ -1708,10 +1708,10 @@ RSpec.describe 'v3 service credential bindings' do
         end
       end
 
-      it 'should return 501' do
-        api_call.call admin_headers
-        expect(last_response).to have_status_code(501)
+      context 'request is valid' do
+        it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key'
       end
+
     end
   end
 

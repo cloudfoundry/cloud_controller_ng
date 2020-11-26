@@ -95,11 +95,12 @@ module VCAP::Services::ServiceBrokers::V2
 
     def bind(binding, arbitrary_parameters: {}, accepts_incomplete: false)
       path              = service_binding_resource_path(binding.guid, binding.service_instance.guid, accepts_incomplete: accepts_incomplete)
+      key_required_parameters = { credential_client_id: @config.get(:cc_service_key_client_name) } if binding.is_a?(VCAP::CloudController::ServiceKey)
       body              = {
         service_id:    binding.service.broker_provided_id,
         plan_id:       binding.service_plan.broker_provided_id,
         app_guid:      binding.try(:app_guid),
-        bind_resource: binding.required_parameters,
+        bind_resource: binding.required_parameters || key_required_parameters,
         context:       context_hash(binding.service_instance)
       }
       body              = body.reject { |_, v| v.nil? }
@@ -108,7 +109,11 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         response = @http_client.put(path, body)
       rescue Errors::HttpClientTimeout => e
-        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+        if binding.is_a?(VCAP::CloudController::ServiceKey)
+          @orphan_mitigator.cleanup_failed_key(@attrs, binding)
+        else
+          @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+        end
         raise e
       end
 
