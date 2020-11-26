@@ -1221,6 +1221,28 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the binding is of type key' do
+        let(:binding) { VCAP::CloudController::ServiceKey.make }
+
+        it 'sends the right bind_resource' do
+          client.bind(binding)
+
+          expect(http_client).to have_received(:put).
+            with(anything,
+              hash_including({bind_resource: {credential_client_id: 'cc_service_key_client'}})
+            )
+        end
+
+        it 'does not send the app_guid in the request' do
+          client.bind(binding)
+
+          expect(http_client).to have_received(:put).
+            with(anything,
+              hash_excluding(:app_guid)
+            )
+        end
+      end
+
       context 'with a syslog drain url' do
         before do
           instance.service_plan.service.update_from_hash(requires: ['syslog_drain'])
@@ -1336,6 +1358,19 @@ module VCAP::Services::ServiceBrokers::V2
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
                 with(client_attrs, binding)
+            end
+
+            context 'binding of type key' do
+              let(:binding) { VCAP::CloudController::ServiceKey.make }
+
+              it 'propagates the error and cleans up the failed binding' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::HttpClientTimeout)
+
+                expect(orphan_mitigator).to have_received(:cleanup_failed_key).
+                  with(client_attrs, binding)
+              end
             end
           end
         end
