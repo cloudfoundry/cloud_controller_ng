@@ -178,42 +178,6 @@ module VCAP::CloudController
         it_behaves_like 'service binding creation', ServiceBinding
 
         describe 'app specific behaviour' do
-          RSpec.shared_examples 'the sync credential binding' do
-            it 'creates and returns the credential binding' do
-              action.bind(precursor)
-
-              precursor.reload
-              expect(precursor).to eq(ServiceBinding.where(guid: precursor.guid).first)
-              expect(precursor.credentials).to eq(details[:credentials])
-              expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
-              expect(precursor.last_operation.type).to eq('create')
-              expect(precursor.last_operation.state).to eq('succeeded')
-            end
-
-            it 'creates an audit event' do
-              action.bind(precursor)
-              expect(binding_event_repo).to have_received(:record_create).with(
-                precursor,
-                user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
-              )
-            end
-
-            context 'when saving to the db fails' do
-              it 'fails the binding operation' do
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).once.and_raise(Sequel::ValidationFailed, 'Meh')
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).
-                  with(anything, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
-                expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
-                precursor.reload
-                expect(precursor.last_operation.type).to eq('create')
-                expect(precursor.last_operation.state).to eq('failed')
-                expect(precursor.last_operation.description).to eq('Meh')
-              end
-            end
-          end
-
           context 'managed service instance' do
             let(:service_offering) { Service.make(bindings_retrievable: true) }
             let(:service_plan) { ServicePlan.make(service: service_offering) }
@@ -224,7 +188,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it_behaves_like 'the sync credential binding'
+            it_behaves_like 'the sync credential binding', ServiceBinding, true
 
             context 'asynchronous binding' do
               let(:broker_provided_operation) { Sham.guid }
@@ -253,7 +217,7 @@ module VCAP::CloudController
             }
             let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
-            it_behaves_like 'the sync credential binding'
+            it_behaves_like 'the sync credential binding', ServiceBinding, true
           end
         end
       end
