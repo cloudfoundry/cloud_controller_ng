@@ -2,11 +2,19 @@ require 'actions/mixins/service_credential_binding_validation_create'
 
 module VCAP::CloudController
   module V3
-    class ServiceCredentialBindingKeyCreate
+    class ServiceCredentialBindingKeyCreate < V3::ServiceBindingCreate
       include ServiceCredentialBindingCreateMixin
 
       class UnprocessableCreate < StandardError
       end
+
+      def initialize(user_audit_info, audit_hash)
+        super()
+        @user_audit_info = user_audit_info
+        @audit_hash = audit_hash
+      end
+
+      PERMITTED_BINDING_ATTRIBUTES = [:credentials].freeze
 
       def precursor(service_instance, name)
         validate!(service_instance)
@@ -17,9 +25,15 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        ServiceKey.db.transaction do
-          ServiceKey.create(**binding_details)
+        ServiceKey.new(**binding_details).tap do |b|
+          b.save_with_new_operation(
+            {
+              type: 'create',
+              state: 'in progress',
+            }
+          )
         end
+
       rescue Sequel::ValidationFailed => e
         key_validation_error!(
           e,
@@ -38,6 +52,36 @@ module VCAP::CloudController
         else
           key_not_supported_for_user_provided_service!
         end
+      end
+
+      def complete_binding_and_save(binding, binding_details, last_operation)
+        binding.save_with_attributes_and_new_operation(
+          binding_details.symbolize_keys.slice(*PERMITTED_BINDING_ATTRIBUTES),
+          {
+            type: 'create',
+            state: last_operation[:state],
+            description: last_operation[:description]
+          }
+        )
+        event_repository.record_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
+      end
+
+      def save_incomplete_binding(binding, broker_operation)
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: broker_operation
+          }
+        )
+        event_repository.record_start_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
+      end
+
+
+      def event_repository
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING)
       end
 
       def key_not_supported_for_user_provided_service!

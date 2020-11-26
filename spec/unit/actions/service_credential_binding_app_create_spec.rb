@@ -85,79 +85,80 @@ module VCAP::CloudController
 
           let(:service_instance) { ManagedServiceInstance.make(**details) }
 
-          context 'when plan is not bindable' do
-            before do
-              service_instance.service_plan.update(bindable: false)
-            end
+          context 'validations' do
+            context 'when plan is not bindable' do
+              before do
+                service_instance.service_plan.update(bindable: false)
+              end
 
-            it 'raises an error' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Service plan does not allow bindings'
-              )
-            end
-          end
-
-          context 'when plan is not available' do
-            before do
-              service_instance.service_plan.update(active: false)
-            end
-
-            it 'raises an error' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Service plan is not available'
-              )
-            end
-          end
-
-          context 'when the service is a volume service and service volume mounting is disabled' do
-            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
-
-            it 'raises an error' do
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
-              }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Support for volume mount services is disabled'
-              )
-            end
-          end
-
-          context 'when there is an operation in progress for the service instance' do
-            it 'raises an error' do
-              service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
-
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
-              }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'There is an operation in progress for the service instance'
-              )
-            end
-          end
-
-          context 'when the service is a volume service and service volume mounting is enabled' do
-            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
-
-            it 'does not raise an error' do
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: true)
-              }.not_to raise_error
-            end
-          end
-
-          context 'when binding from an app in a shared space' do
-            let(:other_space) { Space.make }
-            let(:service_instance) do
-              ManagedServiceInstance.make(space: other_space).tap do |si|
-                si.add_shared_space(space)
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Service plan does not allow bindings'
+                )
               end
             end
 
-            it_behaves_like 'the credential binding precursor'
-          end
+            context 'when plan is not available' do
+              before do
+                service_instance.service_plan.update(active: false)
+              end
 
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Service plan is not available'
+                )
+              end
+            end
+
+            context 'when the service is a volume service and service volume mounting is disabled' do
+              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+              it 'raises an error' do
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+                }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Support for volume mount services is disabled'
+                )
+              end
+            end
+
+            context 'when there is an operation in progress for the service instance' do
+              it 'raises an error' do
+                service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
+
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+                }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'There is an operation in progress for the service instance'
+                )
+              end
+            end
+
+            context 'when the service is a volume service and service volume mounting is enabled' do
+              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+              it 'does not raise an error' do
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: true)
+                }.not_to raise_error
+              end
+            end
+
+            context 'when binding from an app in a shared space' do
+              let(:other_space) { Space.make }
+              let(:service_instance) do
+                ManagedServiceInstance.make(space: other_space).tap do |si|
+                  si.add_shared_space(space)
+                end
+              end
+
+              it_behaves_like 'the credential binding precursor'
+            end
+          end
           context 'when successful' do
             it_behaves_like 'the credential binding precursor'
           end

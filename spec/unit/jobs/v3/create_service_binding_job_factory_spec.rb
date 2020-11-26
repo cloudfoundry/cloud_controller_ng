@@ -38,6 +38,11 @@ module VCAP::CloudController
           expect(actor).to be_an_instance_of(ServiceCredentialBindingAppCreate)
         end
 
+        it 'should return credential binding action when type is key' do
+          actor = CreateServiceBindingFactory.action(:key, {}, {})
+          expect(actor).to be_an_instance_of(ServiceCredentialBindingKeyCreate)
+        end
+
         it 'raise for unknown types' do
           expect { CreateServiceBindingFactory.action(:random, {}, {}) }.to raise_error(CreateServiceBindingFactory::InvalidType)
         end
