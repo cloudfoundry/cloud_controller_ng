@@ -33,7 +33,6 @@ module VCAP::CloudController
             }
           )
         end
-
       rescue Sequel::ValidationFailed => e
         key_validation_error!(
           e,

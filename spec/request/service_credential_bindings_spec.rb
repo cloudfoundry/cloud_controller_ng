@@ -1610,7 +1610,6 @@ RSpec.describe 'v3 service credential bindings' do
       context 'request is valid' do
         it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key', 'service_keys'
       end
-
     end
   end
 

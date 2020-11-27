@@ -1229,7 +1229,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           expect(http_client).to have_received(:put).
             with(anything,
-              hash_including({bind_resource: {credential_client_id: 'cc_service_key_client'}})
+              hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } })
             )
         end
 

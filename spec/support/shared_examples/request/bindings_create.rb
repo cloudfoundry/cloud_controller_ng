@@ -1,12 +1,10 @@
 RSpec.shared_examples 'service credential binding create endpoint' do |klass, check_app, audit_event_type, display_name|
-
   describe 'managed instance' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
     let(:job) { VCAP::CloudController::PollableJobModel.last }
     let(:binding) { klass.last }
 
     describe 'a successful creation' do
-
       before do
         api_call.call(admin_headers)
       end
@@ -25,12 +23,12 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
         expect(job.operation).to eq("#{display_name}.create")
         expect(job.resource_guid).to eq(binding.guid)
-        expect(job.resource_type).to eq("service_credential_binding")
+        expect(job.resource_type).to eq('service_credential_binding')
 
         get "/v3/jobs/#{job.guid}", nil, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['guid']).to eq(job.guid)
-        binding_link = parsed_response.dig('links', "service_credential_binding", 'href')
+        binding_link = parsed_response.dig('links', 'service_credential_binding', 'href')
         expect(binding_link).to end_with("/v3/service_credential_bindings/#{binding.guid}")
       end
     end
@@ -42,14 +40,17 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       let(:broker_status_code) { 201 }
       let(:broker_response) { { credentials: credentials } }
       let(:app_binding_attributes) {
-        check_app ?
+        if check_app
           {
-              app_guid: app_to_bind_to.guid,
-              bind_resource: {
-                app_guid: app_to_bind_to.guid,
-                space_guid: service_instance.space.guid
-              }
-          } : {}
+                      app_guid: app_to_bind_to.guid,
+                      bind_resource: {
+                        app_guid: app_to_bind_to.guid,
+                        space_guid: service_instance.space.guid
+                      }
+                  }
+        else
+          {}
+        end
       }
       let(:client_body) do
         {
@@ -103,7 +104,6 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
               )
           ).to have_been_made.once
         end
-
       end
 
       context 'when the bind completes synchronously' do
@@ -336,7 +336,6 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       #     let(:offering_id) { offering.unique_id }
       #   end
       # end
-
     end
   end
 end
