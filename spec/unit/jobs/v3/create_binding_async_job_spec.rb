@@ -42,6 +42,24 @@ module VCAP::CloudController
         it_behaves_like 'create binding job', :credential
       end
 
+      context 'key bindings' do
+        let(:binding) do
+          ServiceKey.new.save_with_attributes_and_new_operation(
+            {
+                service_instance: service_instance,
+                name: 'key-name',
+                credentials: {},
+              },
+            {
+              type: 'create',
+              state: 'in progress'
+            },
+          )
+        end
+
+        it_behaves_like 'create binding job', :key
+      end
+
       let(:subject) do
         described_class.new(
           :any,

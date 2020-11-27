@@ -154,188 +154,211 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         end
       end
 
-      # context 'when the binding completes asynchronously' do
-      #   let(:broker_status_code) { 202 }
-      #   let(:operation) { Sham.guid }
-      #   let(:broker_response) { { operation: operation } }
-      #   let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
-      #   let(:last_operation_status_code) { 200 }
-      #   let(:description) { Sham.description }
-      #   let(:state) { 'in progress' }
-      #   let(:last_operation_body) do
-      #     {
-      #       description: description,
-      #       state: state,
-      #     }
-      #   end
-      #
-      #   before do
-      #     stub_request(:get, broker_binding_last_operation_url).
-      #       with(query: hash_including({
-      #         operation: operation
-      #       })).
-      #       to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
-      #   end
-      #
-      #   it 'polls the last operation endpoint' do
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #     expect(
-      #       a_request(:get, broker_binding_last_operation_url).
-      #         with(query: {
-      #           operation: operation,
-      #           service_id: service_instance.service_plan.service.unique_id,
-      #           plan_id: service_instance.service_plan.unique_id,
-      #         })
-      #     ).to have_been_made.once
-      #   end
-      #
-      #   it 'updates the binding and job' do
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #     expect(binding.last_operation.type).to eq('create')
-      #     expect(binding.last_operation.state).to eq(state)
-      #     expect(binding.last_operation.description).to eq(description)
-      #
-      #     expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
-      #   end
-      #
-      #   it 'logs an audit event' do
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #     event = VCAP::CloudController::Event.find(type: 'audit.service_binding.start_create')
-      #     expect(event).to be
-      #     expect(event.actee).to eq(binding.guid)
-      #     expect(event.data).to include({
-      #       'request' => create_body.with_indifferent_access
-      #     })
-      #   end
-      #
-      #   it 'enqueues the next fetch last operation job' do
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #     expect(Delayed::Job.count).to eq(1)
-      #   end
-      #
-      #   it 'keeps track of the broker operation' do
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #     expect(Delayed::Job.count).to eq(1)
-      #
-      #     Timecop.travel(Time.now + 1.minute)
-      #     execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #     expect(
-      #       a_request(:get, broker_binding_last_operation_url).
-      #         with(query: {
-      #           operation: operation,
-      #           service_id: service_instance.service_plan.service.unique_id,
-      #           plan_id: service_instance.service_plan.unique_id,
-      #         })
-      #     ).to have_been_made.twice
-      #   end
-      #
-      #   context 'last operation response is 200 OK and indicates success' do
-      #     let(:state) { 'succeeded' }
-      #     let(:fetch_binding_status_code) { 200 }
-      #     let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
-      #     let(:route_service_url) { 'http://route.example.com/wow' }
-      #     let(:credentials) { { password: 'foo' } }
-      #     let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
-      #
-      #     let(:fetch_binding_body) do
-      #       {
-      #         syslog_drain_url: syslog_drain_url,
-      #         credentials: credentials,
-      #         parameters: parameters,
-      #         service_id: 'extra-field-service_id-should-ignore',
-      #         name: 'extra-field-name-should-not-update',
-      #       }
-      #     end
-      #
-      #     before do
-      #       stub_request(:get, broker_bind_url).
-      #         to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
-      #     end
-      #
-      #     it 'fetches the binding' do
-      #       execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #       expect(
-      #         a_request(:get, broker_bind_url)
-      #       ).to have_been_made.once
-      #     end
-      #
-      #     it 'updates the binding and job' do
-      #       execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #       expect(binding.last_operation.type).to eq('create')
-      #       expect(binding.last_operation.state).to eq(state)
-      #       expect(binding.last_operation.description).to eq(description)
-      #
-      #       expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
-      #     end
-      #
-      #     it 'updates the binding details with the fetch binding response ignoring extra fields' do
-      #       execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      #
-      #       expect(binding.reload.syslog_drain_url).to eq(syslog_drain_url)
-      #       expect(binding.credentials).to eq(credentials.with_indifferent_access)
-      #       expect(binding.name).to eq('some-name')
-      #     end
-      #
-      #     context 'fetching binding fails ' do
-      #       let(:fetch_binding_status_code) { 404 }
-      #       let(:fetch_binding_body) {}
-      #
-      #       it 'fails the job' do
-      #         execute_all_jobs(expected_successes: 0, expected_failures: 1)
-      #
-      #         expect(binding.last_operation.type).to eq('create')
-      #         expect(binding.last_operation.state).to eq('failed')
-      #         expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
-      #
-      #         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-      #         expect(job.cf_api_error).not_to be_nil
-      #         error = YAML.safe_load(job.cf_api_error)
-      #         expect(error['errors'].first).to include({
-      #           'code' => 10009,
-      #           'title' => 'CF-UnableToPerform',
-      #           'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
-      #         })
-      #       end
-      #     end
-      #   end
-      #
-      #   it_behaves_like 'binding last operation response handling', 'create'
-      #
-      #   context 'binding not retrievable' do
-      #     let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
-      #
-      #     it 'fails the job with an appropriate error' do
-      #       execute_all_jobs(expected_successes: 0, expected_failures: 1)
-      #
-      #       expect(binding.last_operation.type).to eq('create')
-      #       expect(binding.last_operation.state).to eq('failed')
-      #       expect(binding.last_operation.description).to eq('The broker responded asynchronously but does not support fetching binding data')
-      #
-      #       expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-      #       expect(job.cf_api_error).not_to be_nil
-      #       error = YAML.safe_load(job.cf_api_error)
-      #       expect(error['errors'].first).to include({
-      #         'code' => 90001,
-      #         'title' => 'CF-ServiceBindingInvalid',
-      #         'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
-      #       })
-      #     end
-      #   end
-      # end
+      context 'when the binding completes asynchronously' do
+        let(:broker_status_code) { 202 }
+        let(:operation) { Sham.guid }
+        let(:broker_response) { { operation: operation } }
+        let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
+        let(:last_operation_status_code) { 200 }
+        let(:description) { Sham.description }
+        let(:state) { 'in progress' }
+        let(:last_operation_body) do
+          {
+            description: description,
+            state: state,
+          }
+        end
 
-      # context 'orphan mitigation' do
-      #   it_behaves_like 'create binding orphan mitigation' do
-      #     let(:bind_url) { broker_bind_url }
-      #     let(:plan_id) { plan.unique_id }
-      #     let(:offering_id) { offering.unique_id }
-      #   end
-      # end
+        before do
+          stub_request(:get, broker_binding_last_operation_url).
+            with(query: hash_including({
+              operation: operation
+            })).
+            to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
+        end
+
+        it 'polls the last operation endpoint' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(
+            a_request(:get, broker_binding_last_operation_url).
+              with(query: {
+                operation: operation,
+                service_id: service_instance.service_plan.service.unique_id,
+                plan_id: service_instance.service_plan.unique_id,
+              })
+          ).to have_been_made.once
+        end
+
+        it 'updates the binding and job' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(binding.last_operation.type).to eq('create')
+          expect(binding.last_operation.state).to eq(state)
+          expect(binding.last_operation.description).to eq(description)
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
+        end
+
+        it 'logs an audit event' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          event = VCAP::CloudController::Event.find(type: "audit.#{audit_event_type}.start_create")
+          expect(event).to be
+          expect(event.actee).to eq(binding.guid)
+          expect(event.data).to include({
+            'request' => create_body.with_indifferent_access
+          })
+        end
+
+        it 'enqueues the next fetch last operation job' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          expect(Delayed::Job.count).to eq(1)
+        end
+
+        it 'keeps track of the broker operation' do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          expect(Delayed::Job.count).to eq(1)
+
+          Timecop.travel(Time.now + 1.minute)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          expect(
+            a_request(:get, broker_binding_last_operation_url).
+              with(query: {
+                operation: operation,
+                service_id: service_instance.service_plan.service.unique_id,
+                plan_id: service_instance.service_plan.unique_id,
+              })
+          ).to have_been_made.twice
+        end
+
+        context 'last operation response is 200 OK and indicates success' do
+          let(:state) { 'succeeded' }
+          let(:fetch_binding_status_code) { 200 }
+          let(:credentials) { { password: 'foo' } }
+          let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
+
+          let(:app_binding_attributes) {
+            if check_app
+              {
+                syslog_drain_url: syslog_drain_url,
+              }
+            else
+              {}
+            end
+          }
+
+          let(:fetch_binding_body) do
+            {
+              credentials: credentials,
+              parameters: parameters,
+              service_id: 'extra-field-service_id-should-ignore',
+              name: 'extra-field-name-should-not-update',
+            }.merge(app_binding_attributes)
+          end
+
+          before do
+            stub_request(:get, broker_bind_url).
+              to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
+          end
+
+          it 'fetches the binding' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(
+              a_request(:get, broker_bind_url)
+            ).to have_been_made.once
+          end
+
+          it 'updates the binding and job' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq(state)
+            expect(binding.last_operation.description).to eq(description)
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+          end
+
+          it 'updates the binding details with the fetch binding response ignoring extra fields' do
+            puts fetch_binding_body
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(binding.reload.credentials).to eq(credentials.with_indifferent_access)
+            expect(binding.syslog_drain_url).to eq(syslog_drain_url) if check_app
+            expect(binding.name).to eq(binding_name)
+          end
+
+          it 'logs an audit event' do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            event = VCAP::CloudController::Event.find(type: "audit.#{audit_event_type}.create")
+            expect(event).to be
+            expect(event.actee).to eq(binding.guid)
+            expect(event.data).to include({
+              'request' => create_body.with_indifferent_access
+            })
+          end
+
+          context 'fetching binding fails ' do
+            let(:fetch_binding_status_code) { 404 }
+            let(:fetch_binding_body) {}
+
+            it 'fails the job' do
+              execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+              expect(binding.last_operation.type).to eq('create')
+              expect(binding.last_operation.state).to eq('failed')
+              expect(binding.last_operation.description).to include('The service broker rejected the request. Status Code: 404 Not Found')
+
+              expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              expect(job.cf_api_error).not_to be_nil
+              error = YAML.safe_load(job.cf_api_error)
+              expect(error['errors'].first).to include({
+                'code' => 10009,
+                'title' => 'CF-UnableToPerform',
+                'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
+              })
+            end
+          end
+        end
+
+        it_behaves_like 'binding last operation response handling', 'create'
+
+        context 'binding not retrievable' do
+          let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
+
+          it 'fails the job with an appropriate error' do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq('failed')
+            expect(binding.last_operation.description).to eq('The broker responded asynchronously but does not support fetching binding data')
+
+            expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            expect(job.cf_api_error).not_to be_nil
+            error = YAML.safe_load(job.cf_api_error)
+            # TODO: check error message
+            expect(error['errors'].first).to include({
+              'code' => 90001,
+              'title' => 'CF-ServiceBindingInvalid',
+              'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
+            })
+          end
+        end
+      end
+
+      if check_app
+        # temporarily only check for app bindings as it is not finished for key bindings
+        context 'orphan mitigation' do
+          it_behaves_like 'create binding orphan mitigation' do
+            let(:bind_url) { broker_bind_url }
+            let(:plan_id) { plan.unique_id }
+            let(:offering_id) { offering.unique_id }
+          end
+        end
+      end
     end
   end
 end
