@@ -123,6 +123,5 @@ module VCAP::CloudController
         self.service_key_operation(reload: true)
       end
     end
-
   end
 end

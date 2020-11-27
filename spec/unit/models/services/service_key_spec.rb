@@ -328,6 +328,5 @@ module VCAP::CloudController
         end
       end
     end
-
   end
 end
