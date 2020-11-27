@@ -5,8 +5,8 @@ module VCAP::CloudController
   module V3
     RSpec.describe CreateServiceKeyBindingJobActor do
       describe '#display_name' do
-        it 'returns "service_bindings.create"' do
-          expect(subject.display_name).to eq('service_bindings.create')
+        it 'returns "service_keys.create"' do
+          expect(subject.display_name).to eq('service_keys.create')
         end
       end
 
