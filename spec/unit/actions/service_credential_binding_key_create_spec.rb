@@ -194,91 +194,12 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        # TODO: extract and reuse from credential bindings type app
-        let(:binding) { action.precursor(service_instance, 'original-name') }
-        let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
+        let(:original_name) { 'original-name' }
+        let(:binding) { action.precursor(service_instance, original_name) }
         let(:volume_mounts) { nil }
         let(:syslog_drain_url) { nil }
-        let(:fetch_binding_response) { { credentials: credentials, name: 'updated-name' } }
 
-        it_behaves_like 'polling service binding creation'
-
-        describe 'key specific behaviour' do
-          let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-          let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-          let(:broker_provided_operation) { Sham.guid }
-          let(:bind_response) { { async: true, operation: broker_provided_operation } }
-          let(:description) { Sham.description }
-          let(:state) { 'in progress' }
-          let(:fetch_last_operation_response) do
-            {
-              last_operation: {
-                state: state,
-                description: description,
-              },
-            }
-          end
-          let(:broker_client) do
-            instance_double(
-              VCAP::Services::ServiceBrokers::V2::Client,
-              {
-                bind: bind_response,
-                fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
-                fetch_service_binding: fetch_binding_response,
-              }
-            )
-          end
-
-          before do
-            allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
-
-            action.bind(binding, accepts_incomplete: true)
-          end
-
-          context 'response says complete' do
-            let(:description) { Sham.description }
-            let(:state) { 'succeeded' }
-
-            it 'fetches the service binding and updates only the credentials' do
-              action.poll(binding)
-
-              expect(broker_client).to have_received(:fetch_service_binding).with(binding)
-
-              binding.reload
-              expect(binding.credentials).to eq(credentials)
-              expect(binding.name).to eq('original-name')
-            end
-
-            it 'creates an audit event' do
-              action.poll(binding)
-
-              expect(binding_event_repo).to have_received(:record_create).with(
-                binding,
-                user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
-              )
-            end
-          end
-
-          context 'response says in progress' do
-            it 'does not create an audit event' do
-              action.poll(binding)
-
-              expect(binding_event_repo).not_to have_received(:record_create)
-            end
-          end
-
-          context 'response says failed' do
-            let(:state) { 'failed' }
-            it 'does not create an audit event' do
-              expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
-
-              expect(binding_event_repo).not_to have_received(:record_create)
-            end
-          end
-        end
+        it_behaves_like 'polling service credential binding creation'
       end
     end
   end
