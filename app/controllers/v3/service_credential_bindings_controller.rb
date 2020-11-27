@@ -123,13 +123,8 @@ class ServiceCredentialBindingsController < ApplicationController
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
     binding = action.precursor(service_instance, message.name)
 
-    case service_instance
-    when ManagedServiceInstance
-      pollable_job_guid = enqueue_key_job(binding.guid, message)
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-    else
-      head :not_implemented
-    end
+    pollable_job_guid = enqueue_key_job(binding.guid, message)
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
   end
 
   def build_create_message(params)
