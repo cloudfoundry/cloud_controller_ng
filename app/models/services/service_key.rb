@@ -86,15 +86,12 @@ module VCAP::CloudController
     end
 
     def terminal_state?
-      !service_key_operation || (['succeeded', 'failed'].include? service_key_operation.state)
+      !service_key_operation || (%w(succeeded failed).include? service_key_operation.state)
     end
 
+    # TODO: can these methods be a mixin somehow
     def operation_in_progress?
-      if service_key_operation && service_key_operation.state == 'in progress'
-        return true
-      end
-
-      false
+      !!service_key_operation && service_key_operation.state == 'in progress'
     end
 
     def required_parameters
