@@ -1,8 +1,8 @@
 ### Service Route Bindings
 
-There is a new resource `service route binding` that represents a binding between a route and a service instance.a
+There is a new resource `service route binding` that represents a binding between a route and a service instance.
 
-Creation/Deletion of bindings is therefore done via that endpoint in v3.
+Creation/Deletion of these bindings is therefore done via that endpoint in v3.
 
 This resource also supports metadata both in create and update requests.
 

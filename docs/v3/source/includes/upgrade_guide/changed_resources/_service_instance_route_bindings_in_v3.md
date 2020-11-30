@@ -1,6 +1,8 @@
-### Service Instance routes in V3
+### Service Instance Route Bindings in V3
 
-There is a new resource `service route binding` that represents a binding between a route and a service instance.
+In v2, binding a service instance to a route was done as a relationship request for the service instance.  
+
+In v3, there is a new resource `service route binding` that represents a binding between a route and a service instance.
 
 Creation/Deletion of bindings is therefore done via that endpoint in v3.
 
