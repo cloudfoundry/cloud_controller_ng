@@ -289,6 +289,6 @@ def delete_request(plan_id, offering_id)
         accepts_incomplete: true,
         plan_id: plan_id,
         service_id: offering_id,
-      },
+      }
     )
 end

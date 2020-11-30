@@ -46,23 +46,37 @@ module VCAP::Services
       end
 
       describe 'cleanup_failed_bind' do
-        it 'enqueues an unbind job' do
-          mock_enqueuer = double(:enqueuer, enqueue: nil)
-          allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
+        RSpec.shared_examples 'enqueues a job with the right data' do
+          let(:mock_enqueuer) { double(:enqueuer, enqueue: nil) }
 
-          OrphanMitigator.new.cleanup_failed_bind(client_attrs, service_binding)
-
-          expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
-            expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
-
-            expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
-            expect(job.name).to eq 'service-instance-unbind'
-            expect(job.client_attrs).to eq client_attrs
-            expect(job.binding_info.guid).to eq service_binding.guid
-            expect(job.binding_info.service_instance_guid).to eq service_binding.service_instance.guid
+          before do
+            allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
+            OrphanMitigator.new.cleanup_failed_bind(client_attrs, binding)
           end
 
-          expect(mock_enqueuer).to have_received(:enqueue)
+          it 'enqueues an unbind job' do
+            expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
+              expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
+
+              expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
+              expect(job.name).to eq 'service-instance-unbind'
+              expect(job.client_attrs).to eq client_attrs
+              expect(job.binding_info.guid).to eq binding.guid
+              expect(job.binding_info.service_instance_guid).to eq binding.service_instance.guid
+            end
+
+            expect(mock_enqueuer).to have_received(:enqueue)
+          end
+        end
+
+        context 'when service app binding' do
+          let(:binding) { service_binding }
+          it_behaves_like 'enqueues a job with the right data'
+        end
+
+        context 'when service key' do
+          let(:binding) { service_key }
+          it_behaves_like 'enqueues a job with the right data'
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
