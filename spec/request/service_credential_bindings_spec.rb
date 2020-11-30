@@ -1156,6 +1156,9 @@ RSpec.describe 'v3 service credential bindings' do
         describe 'a successful creation' do
           let(:syslog_drain_url) { 'http://syslog.example.com/wow' }
           let(:route_service_url) { 'http://route.example.com/wow' }
+          # this is because Orphan mitigation (orphan_mitigator.cleanup_failed_key) for keys does not currently support accepts_incomplete
+          # and does not send the parameter to the broker. That could be changed but not needed at the moment. We do send it for app bindings.
+          let(:om_accepts_incomplete_query_param) { { accepts_incomplete: true } }
 
           it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceBinding, true, 'service_binding', 'service_bindings'
         end
@@ -1398,6 +1401,13 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'request is valid' do
+        let(:binding) { VCAP::CloudController::ServiceBinding.last }
+        let(:audit) { VCAP::CloudController::Event.last }
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+        # this is because Orphan mitigation (orphan_mitigator.cleanup_failed_key) for keys does not currently support accepts_incomplete
+        # and does not send the parameter to the broker. That could be changed but not needed at the moment
+        let(:om_accepts_incomplete_query_param) { {} }
+
         it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key', 'service_keys'
       end
     end

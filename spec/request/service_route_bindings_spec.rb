@@ -866,6 +866,9 @@ RSpec.describe 'v3 service route bindings' do
                 },
               }
             end
+            # this is because Orphan mitigation (orphan_mitigator.cleanup_failed_key) for keys does not currently support accepts_incomplete
+            # and does not send the parameter to the broker. That could be changed but not needed at the moment. We do send it for route bindings.
+            let(:om_accepts_incomplete_query_param) { { accepts_incomplete: true } }
           end
         end
       end
