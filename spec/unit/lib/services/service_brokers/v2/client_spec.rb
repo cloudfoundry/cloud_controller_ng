@@ -1337,111 +1337,109 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when binding fails' do
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-        let(:binding) { VCAP::CloudController::ServiceBinding.make }
         let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid' }
         let(:response) { HttpResponse.new(body: nil, message: nil, code: nil) }
 
-        context 'due to an http client error' do
-          let(:http_client) { instance_double(HttpClient) }
+        RSpec.shared_examples 'binding error handling' do
+          context 'due to an http client error' do
+            let(:http_client) { instance_double(HttpClient) }
 
-          before do
-            allow(http_client).to receive(:put).and_raise(error)
-          end
+            context 'Errors::HttpClientTimeout error' do
+              before do
+                allow(http_client).to receive(:put).and_raise(
+                  Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new)
+                )
 
-          context 'Errors::HttpClientTimeout error' do
-            let(:error) { Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new) }
-
-            it 'propagates the error and cleans up the failed binding' do
-              expect {
-                client.bind(binding)
-              }.to raise_error(Errors::HttpClientTimeout)
-
-              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
-                with(client_attrs, binding)
-            end
-
-            context 'binding of type key' do
-              let(:binding) { VCAP::CloudController::ServiceKey.make }
-
-              it 'propagates the error and cleans up the failed binding' do
                 expect {
                   client.bind(binding)
                 }.to raise_error(Errors::HttpClientTimeout)
+              end
 
-                expect(orphan_mitigator).to have_received(:cleanup_failed_key).
+              it 'propagates the error and cleans up the failed binding' do
+                expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
                   with(client_attrs, binding)
+              end
+            end
+          end
+
+          context 'due to a response parser error' do
+            let(:response_parser) { instance_double(ResponseParser) }
+
+            before do
+              allow(response_parser).to receive(:parse_bind).and_raise(error)
+              allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+            end
+
+            context 'Errors::ServiceBrokerApiTimeout error' do
+              let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+              it 'propagates the error but does not clean up the binding' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::ServiceBrokerApiTimeout)
+
+                expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
+              end
+            end
+
+            context 'ServiceBrokerBadResponse error' do
+              let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
+
+              it 'propagates the error and follows up with a deprovision request' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
+
+                expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              end
+            end
+
+            context 'ConcurrencyError error' do
+              let(:error) { Errors::ConcurrencyError.new(uri, :put, response) }
+
+              it 'propagates the error and does not issue an unbind' do
+                expect {
+                  client.bind(binding, arbitrary_parameters)
+                }.to raise_error(Errors::ConcurrencyError)
+
+                expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
+              end
+            end
+
+            context 'ServiceBrokerResponseMalformed error' do
+              let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
+
+              it 'propagates the error and follows up with a deprovision request' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+                expect(orphan_mitigator).to have_received(:cleanup_failed_bind)
+              end
+
+              context 'when the status code was a 200' do
+                let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
+
+                it 'does not initiate orphan mitigation' do
+                  expect {
+                    client.bind(binding)
+                  }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+                  expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+                end
               end
             end
           end
         end
 
-        context 'due to a response parser error' do
-          let(:response_parser) { instance_double(ResponseParser) }
+        context 'app binding' do
+          let(:binding) { VCAP::CloudController::ServiceBinding.make }
+          it_behaves_like 'binding error handling'
+        end
 
-          before do
-            allow(response_parser).to receive(:parse_bind).and_raise(error)
-            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
-          end
-
-          context 'Errors::ServiceBrokerApiTimeout error' do
-            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
-
-            it 'propagates the error but does not clean up the binding' do
-              expect {
-                client.bind(binding)
-              }.to raise_error(Errors::ServiceBrokerApiTimeout)
-
-              expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
-            end
-          end
-
-          context 'ServiceBrokerBadResponse error' do
-            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
-
-            it 'propagates the error and follows up with a deprovision request' do
-              expect {
-                client.bind(binding)
-              }.to raise_error(Errors::ServiceBrokerBadResponse)
-
-              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
-            end
-          end
-
-          context 'ConcurrencyError error' do
-            let(:error) { Errors::ConcurrencyError.new(uri, :put, response) }
-
-            it 'propagates the error and does not issue an unbind' do
-              expect {
-                client.bind(binding, arbitrary_parameters)
-              }.to raise_error(Errors::ConcurrencyError)
-
-              expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
-            end
-          end
-
-          context 'ServiceBrokerResponseMalformed error' do
-            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
-
-            it 'propagates the error and follows up with a deprovision request' do
-              expect {
-                client.bind(binding)
-              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
-
-              expect(orphan_mitigator).to have_received(:cleanup_failed_bind)
-            end
-
-            context 'when the status code was a 200' do
-              let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
-
-              it 'does not initiate orphan mitigation' do
-                expect {
-                  client.bind(binding)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
-
-                expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(client_attrs, binding)
-              end
-            end
-          end
+        context 'key binding' do
+          let(:binding) { VCAP::CloudController::ServiceKey.make }
+          it_behaves_like 'binding error handling'
         end
       end
     end

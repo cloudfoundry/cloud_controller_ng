@@ -348,14 +348,11 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         end
       end
 
-      if check_app
-        # temporarily only check for app bindings as it is not finished for key bindings
-        context 'orphan mitigation' do
-          it_behaves_like 'create binding orphan mitigation' do
-            let(:bind_url) { broker_bind_url }
-            let(:plan_id) { plan.unique_id }
-            let(:offering_id) { offering.unique_id }
-          end
+      context 'orphan mitigation' do
+        it_behaves_like 'create binding orphan mitigation' do
+          let(:bind_url) { broker_bind_url }
+          let(:plan_id) { plan.unique_id }
+          let(:offering_id) { offering.unique_id }
         end
       end
     end

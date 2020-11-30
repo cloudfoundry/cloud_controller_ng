@@ -109,7 +109,7 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         response = @http_client.put(path, body)
       rescue Errors::HttpClientTimeout => e
-        cleanup_failed_bind(@attrs, binding)
+        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
         raise e
       end
 
@@ -141,18 +141,10 @@ module VCAP::Services::ServiceBrokers::V2
            Errors::ServiceBrokerInvalidSyslogDrainUrl,
            Errors::ServiceBrokerResponseMalformed => e
       unless e.instance_of?(Errors::ServiceBrokerResponseMalformed) && e.status == 200
-        cleanup_failed_bind(@attrs, binding)
+        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       end
 
       raise e
-    end
-
-    def cleanup_failed_bind(attrs, binding)
-      if binding.is_a?(VCAP::CloudController::ServiceKey)
-        @orphan_mitigator.cleanup_failed_key(attrs, binding)
-      else
-        @orphan_mitigator.cleanup_failed_bind(attrs, binding)
-      end
     end
 
     def unbind(service_binding, user_guid=nil, accepts_incomplete=false)

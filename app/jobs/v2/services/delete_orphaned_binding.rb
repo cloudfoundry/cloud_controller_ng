@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Jobs
     module Services
       class OrphanedBindingInfo
-        attr_accessor :guid, :service_instance_guid, :app_guid
+        attr_accessor :guid, :service_instance_guid
 
         def initialize(binding)
           @guid                  = binding.guid

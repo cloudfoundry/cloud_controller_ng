@@ -1398,6 +1398,10 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'request is valid' do
+        let(:binding) { VCAP::CloudController::ServiceBinding.last }
+        let(:audit) { VCAP::CloudController::Event.last }
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
         it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key', 'service_keys'
       end
     end
