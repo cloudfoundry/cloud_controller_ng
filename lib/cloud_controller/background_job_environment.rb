@@ -1,4 +1,8 @@
+require 'socket'
+
 class BackgroundJobEnvironment
+  attr_reader :readiness_server
+
   def initialize(config)
     @config = config
     @log_counter = Steno::Sink::Counter.new
@@ -16,7 +20,7 @@ class BackgroundJobEnvironment
     @config.configure_components
 
     if readiness_port && readiness_port > 0
-      open_readiness_port(readiness_port)
+      listen_on_readiness_port(readiness_port)
     end
 
     yield if block_given?
@@ -24,13 +28,18 @@ class BackgroundJobEnvironment
 
   private
 
-  def open_readiness_port(port)
-    # rubocop:disable Style/GlobalVars
-    $socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
-    sockaddr = Socket.pack_sockaddr_in(port, '127.0.0.1')
-    $socket.bind(sockaddr)
+  def listen_on_readiness_port(port)
+    @readiness_server = TCPServer.open('0.0.0.0', port)
 
-    $socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
-    # rubocop:enable Style/GlobalVars
+    Thread.new do
+      loop do
+        Thread.start(@readiness_server.accept) do |c|
+          c.puts 'ok'
+          c.close
+        end
+      end
+    rescue Errno::EBADF
+      Thread.exit
+    end
   end
 end
