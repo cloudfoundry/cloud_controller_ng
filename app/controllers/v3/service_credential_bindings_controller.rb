@@ -123,7 +123,7 @@ class ServiceCredentialBindingsController < ApplicationController
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
     binding = action.precursor(service_instance, message.name)
 
-    pollable_job_guid = enqueue_bind_job(binding.guid, message, :key)
+    pollable_job_guid = enqueue_bind_job(:key, binding.guid, message)
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
   end
 
@@ -159,7 +159,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
     case service_instance
     when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(binding.guid, message, :credential)
+      pollable_job_guid = enqueue_bind_job(:credential, binding.guid, message)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
       action.bind(binding)
@@ -167,7 +167,7 @@ class ServiceCredentialBindingsController < ApplicationController
     end
   end
 
-  def enqueue_bind_job(binding_guid, message, type)
+  def enqueue_bind_job(type, binding_guid, message)
     bind_job = VCAP::CloudController::V3::CreateBindingAsyncJob.new(
       type,
       binding_guid,
