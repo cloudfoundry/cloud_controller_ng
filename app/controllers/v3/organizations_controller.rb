@@ -47,7 +47,7 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(message, current_user)
+    org = OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e
