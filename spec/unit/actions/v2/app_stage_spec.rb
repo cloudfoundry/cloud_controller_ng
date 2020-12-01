@@ -191,6 +191,16 @@ module VCAP::CloudController
 
           context 'kpack lifecycle' do
             before do
+              TestConfig.override(
+                kubernetes: {
+                  host_url: 'https://kubernetes.example.com',
+                  kpack: {
+                    builder_namespace: 'cf-workloads-staging',
+                    registry_service_account_name: 'fake-registry-service-account',
+                    registry_tag_base: 'gcr.io/fake-image-repository',
+                  }
+                },
+              )
               allow_any_instance_of(Kpack::Stager).to receive(:stage).and_return 'staging-complete'
               allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([OpenStruct.new(name: 'paketo/java')])
             end

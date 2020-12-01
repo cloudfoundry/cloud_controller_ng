@@ -228,6 +228,105 @@ module VCAP::CloudController
               expect(config_load_from_file[:staging][:auth][:password]).to eq('m%40%2Fn%21')
             end
           end
+
+          context 'unit test' do
+            let(:config_contents) {
+              {
+                'some_key' => 'some-value',
+                'database_encryption' => {
+                  'keys' => {
+                    'foo' => 'bar',
+                    'head' => 'banging',
+                    'array' => %w[a b c],
+                  },
+                  'current_key_label' => 'foo'
+                }
+              }
+            }
+            let(:cc_config_file) do
+              file = Tempfile.new('cc_config.yml')
+              file.write(YAML.dump(config_contents))
+              file.close
+              file
+            end
+
+            it 'validates a symbolized version of the config file contents with the correct schema file' do
+              allow(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to receive(:validate)
+
+              Config.load_from_file(cc_config_file.path, context: :worker).config_hash
+
+              expect(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to have_received(:validate).with(
+                some_key: 'some-value',
+                database_encryption: {
+                  keys: {
+                    foo: 'bar',
+                    head: 'banging',
+                    array: %w[a b c],
+                  },
+                  current_key_label: 'foo'
+                }
+              )
+            end
+
+            context 'when the secrets hash is provided' do
+              let(:secrets_hash) do
+                {
+                  'some_secret' => 'shhhhh!',
+                  'database_encryption' => {
+                    'keys' => {
+                      'password' => 'totes-s3cre7',
+                    }
+                  }
+                }
+              end
+
+              it 'merges the secrets hash into the file contents and validates with the correct schema' do
+                allow(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to receive(:validate)
+
+                Config.load_from_file(cc_config_file.path, context: :worker, secrets_hash: secrets_hash).config_hash
+
+                expect(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to have_received(:validate).with(
+                  some_key: 'some-value',
+                  some_secret: 'shhhhh!',
+                  database_encryption: {
+                    keys: {
+                      foo: 'bar',
+                      head: 'banging',
+                      array: %w[a b c],
+                      password: 'totes-s3cre7',
+                    },
+                    current_key_label: 'foo'
+                  }
+                )
+              end
+            end
+
+            context 'when the config has a "kubernetes" key' do
+              let(:config_contents) {
+                { 'kubernetes' => { 'host_url' => 'kubernetes.example.com' } }
+              }
+
+              it 'uses the Kubernetes schema to validate the config' do
+                allow(VCAP::CloudController::ConfigSchemas::Kubernetes::ApiSchema).to receive(:validate)
+                Config.load_from_file(cc_config_file.path, context: :api).config_hash
+
+                expect(VCAP::CloudController::ConfigSchemas::Kubernetes::ApiSchema).to have_received(:validate)
+              end
+            end
+
+            context 'when the config has no "kubernetes" key' do
+              let(:config_contents) {
+                { 'some_non_kubernetes_key' => true }
+              }
+
+              it 'uses the Vms schema to validate the config' do
+                allow(VCAP::CloudController::ConfigSchemas::Vms::ApiSchema).to receive(:validate)
+                Config.load_from_file(cc_config_file.path, context: :api).config_hash
+
+                expect(VCAP::CloudController::ConfigSchemas::Vms::ApiSchema).to have_received(:validate)
+              end
+            end
+          end
         end
       end
     end

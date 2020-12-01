@@ -134,9 +134,11 @@ module VCAP::CloudController
 
       context 'when targeting a Kubernetes API' do
         before do
+          TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
           allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
           allow(route_resource_manager).to receive(:delete_route)
         end
+
         it 'deletes the route resource in Kubernetes' do
           expect {
             route_delete_action.delete_sync(route: route, recursive: false)

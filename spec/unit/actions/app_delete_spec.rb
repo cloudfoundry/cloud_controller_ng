@@ -48,11 +48,17 @@ module VCAP::CloudController
         app_delete.delete(app_dataset)
       end
 
-      it 'deletes the associated kpack resources' do
-        build_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
-        expect(k8s_api_client).to receive(:delete_image).with(app.guid, build_namespace)
-        expect(k8s_api_client).to receive(:delete_builder).with("app-#{app.guid}", build_namespace)
-        app_delete.delete(app_dataset)
+      context 'when the kubernetes api is configured' do
+        before do
+          TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
+        end
+
+        it 'deletes the associated kpack resources' do
+          build_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
+          expect(k8s_api_client).to receive(:delete_image).with(app.guid, build_namespace)
+          expect(k8s_api_client).to receive(:delete_builder).with("app-#{app.guid}", build_namespace)
+          app_delete.delete(app_dataset)
+        end
       end
 
       describe 'recursive deletion' do

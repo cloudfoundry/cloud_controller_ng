@@ -92,7 +92,21 @@ module VCAP::CloudController
       end
 
       context 'when the build is a kpack build' do
+        before do
+          TestConfig.override(
+            kubernetes: {
+              host_url: 'https://kubernetes.example.com',
+              kpack: {
+                builder_namespace: 'cf-workloads-staging',
+                registry_service_account_name: 'fake-registry-service-account',
+                registry_tag_base: 'gcr.io/fake-image-repository',
+              }
+            }
+          )
+        end
+
         let(:build) { BuildModel.make(:kpack) }
+
         it 'finds a kpack stager' do
           stager = stagers.stager_for_build(build)
           expect(stager).to be_a(Kpack::Stager)

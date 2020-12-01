@@ -95,6 +95,10 @@ module VCAP::CloudController
       end
 
       context 'when targeting a Kubernetes API' do
+        before do
+          TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
+        end
+
         it 'deletes the route resource in Kubernetes' do
           expect {
             route_delete.delete([route])
@@ -105,9 +109,7 @@ module VCAP::CloudController
 
       context 'when not targeting a Kubernetes API' do
         before do
-          TestConfig.override(
-            kubernetes: {}
-          )
+          TestConfig.override(kubernetes: {})
         end
 
         it 'does not delete the route resource in Kubernetes' do

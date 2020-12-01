@@ -4,6 +4,14 @@ require 'kubernetes/api_client'
 RSpec.describe Kubernetes::RouteResourceManager do
   let(:k8s_client) { instance_double(Kubernetes::ApiClient) }
   subject(:route_resource_manager) { Kubernetes::RouteResourceManager.new(k8s_client) }
+  before do
+    TestConfig.override(
+      kubernetes: {
+        host_url: 'https://kubernetes.example.com',
+        workloads_namespace: 'cf-workloads',
+      }
+    )
+  end
 
   describe '#create_route' do
     let(:route) { VCAP::CloudController::Route.make }

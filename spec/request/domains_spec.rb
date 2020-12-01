@@ -8,7 +8,7 @@ RSpec.describe 'Domains Request' do
   let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
   let(:user_header) { headers_for(user, scopes: []) }
   let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
-  let(:router_group) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup) }
+  let(:router_group) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'http') }
 
   before do
     VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
@@ -25,14 +25,14 @@ RSpec.describe 'Domains Request' do
       let(:user_header) { admin_header }
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          names:   'foo,bar',
-          guids:   'foo,bar',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          names: 'foo,bar',
+          guids: 'foo,bar',
           organization_guids: 'foo,bar',
-          label_selector:   'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          label_selector: 'foo,bar',
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
         }
       end
@@ -817,20 +817,20 @@ RSpec.describe 'Domains Request' do
           internal: false,
           router_group: { guid: 'some-router-guid' },
           supported_protocols: ['http'],
-        metadata: {
-        labels: { key: 'value' },
-        annotations: { key2: 'value2' }
-        },
-        relationships: {
-        organization: {
-          data: nil
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
           },
-        shared_organizations: {
-          data: []
-          }
-        },
-        links: {
-        self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
+          relationships: {
+            organization: {
+              data: nil
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
             route_reservations: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations) },
             router_group: { href: %r(#{Regexp.escape(link_prefix)}/routing/v1/router_groups/some-router-guid) },
           }

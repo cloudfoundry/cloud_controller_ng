@@ -3,21 +3,70 @@ require 'vcap/config'
 
 RSpec.describe VCAP::Config do
   describe '.define_schema' do
-    it 'should build the corresponding membrane schema' do
-      class MyConfig < VCAP::Config
-        define_schema do
-          [Integer]
+    context 'with no parent schema' do
+      it 'should build the corresponding membrane schema' do
+        class MyConfig < VCAP::Config
+          define_schema do
+            [Integer]
+          end
+        end
+
+        expect(MyConfig.schema).to be_instance_of(Membrane::Schemas::List)
+        expect(MyConfig.schema.elem_schema).to be_instance_of(Membrane::Schemas::Class)
+        expect(MyConfig.schema.elem_schema.klass).to eq(Integer)
+      end
+    end
+
+    context 'with parent schema set' do
+      let(:parent_schema) do
+        Class.new(VCAP::Config) do
+          define_schema do
+            {
+              parent: String,
+              shared: {
+                parent: String,
+                optional(:parent_optional) => String,
+              },
+            }
+          end
         end
       end
 
-      expect(MyConfig.schema).to be_instance_of(Membrane::Schemas::List)
-      expect(MyConfig.schema.elem_schema).to be_instance_of(Membrane::Schemas::Class)
-      expect(MyConfig.schema.elem_schema.klass).to eq(Integer)
+      let(:child_schema) do
+        parent = parent_schema
+
+        Class.new(VCAP::Config) do
+          self.parent_schema = parent
+          define_schema do
+            {
+              child: String,
+              shared: {
+                child: String,
+                optional(:child_optional) => String,
+              },
+            }
+          end
+        end
+      end
+
+      it 'merges parent schema into child schema' do
+        expect(child_schema.schema.schemas.keys).to contain_exactly(:parent, :child, :shared)
+        expect(child_schema.schema.schemas[:shared].schemas.keys).to contain_exactly(
+          :parent, :parent_optional, :child, :child_optional
+        )
+        expect(child_schema.schema.schemas[:shared].optional_keys).to contain_exactly(:parent_optional, :child_optional)
+      end
+
+      it 'does not modify the parent schema' do
+        expect(parent_schema.schema.schemas.keys).to contain_exactly(:parent, :shared)
+        expect(parent_schema.schema.schemas[:shared].schemas.keys).to contain_exactly(:parent, :parent_optional)
+        expect(parent_schema.schema.schemas[:shared].optional_keys).to contain_exactly(:parent_optional)
+      end
     end
   end
 
-  describe '.from_file' do
-    let(:test_config) do
+  describe '.validate' do
+    let(:test_schema) do
       Class.new(VCAP::Config) do
         define_schema do
           { :name => String,
@@ -30,75 +79,93 @@ RSpec.describe VCAP::Config do
       end
     end
 
-    it 'loads successfully when the config is valid' do
-      exp_cfg = {
+    let(:valid_config) {
+      {
         name: 'test_config',
         nums: [1, 2, 3],
-        not_needed: {
-          float: 1.1,
-        }
+        not_needed: { float: 1.1 },
       }
-      cfg = test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'valid_config.yml'))
-      expect(cfg).to eq(exp_cfg)
+    }
+
+    let(:invalid_config) {
+      {
+        name: 'test_config',
+        nums: [1.1],
+      }
+    }
+
+    it 'raises no errors when the config is valid' do
+      expect {
+        test_schema.validate(valid_config)
+      }.not_to raise_error
     end
 
     it 'raises an error when the config is invalid' do
       expect {
-        test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'invalid_config.yml'))
+        test_schema.validate(invalid_config)
       }.to raise_error(Membrane::SchemaValidationError)
     end
 
-    context 'when an optional config hash is also supplied' do
-      let(:test_config) do
+    context 'when a parent_schema is set' do
+      let(:parent_schema) do
         Class.new(VCAP::Config) do
           define_schema do
-            { :name => String,
-              :nums => [Integer],
-              optional(:not_needed) => {
-                float: Float,
-                nested_extra_thing: String,
-              },
-              :required_extra_thing => String,
-            }
+            { parent: String }
           end
         end
       end
 
-      context 'when an optional config hash is also supplied' do
-        context 'given a valid optional config hash' do
-          it 'merges the contents of that hash and returns the merged result' do
-            exp_cfg = {
-              name: 'test_config',
-              nums: [1, 2, 3],
-              not_needed: {
-                float: 1.1,
-                nested_extra_thing: 'testing-deep-merge'
-              },
-              required_extra_thing: 'foobar',
-            }
-            cfg = test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'valid_config.yml'),
-                                        secrets_hash: { not_needed: { nested_extra_thing: 'testing-deep-merge' }, required_extra_thing: 'foobar' })
+      let(:child_schema) do
+        parent = parent_schema
 
-            expect(cfg).to eq(exp_cfg)
+        Class.new(VCAP::Config) do
+          self.parent_schema = parent
+          define_schema do
+            { child: String }
           end
         end
+      end
 
-        context 'given a valid optional config hash with string keys and symbolize_keys options enabled' do
-          it 'merges the contents of that hash and returns the merged result with all keys symbolized' do
-            exp_cfg = {
-              name: 'test_config',
-              nums: [1, 2, 3],
-              not_needed: {
-                float: 1.1,
-                nested_extra_thing: 'testing-deep-merge'
-              },
-              required_extra_thing: 'foobar',
-            }
-            cfg = test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'valid_config.yml'),
-                                        secrets_hash: { 'not_needed' => { 'nested_extra_thing' => 'testing-deep-merge' }, 'required_extra_thing' => 'foobar' })
+      context 'when the config is valid against both schemas' do
+        let(:config) {
+          {
+            parent: 'Homer',
+            child: 'Bart',
+          }
+        }
 
-            expect(cfg).to eq(exp_cfg)
-          end
+        it 'raises no errors' do
+          expect {
+            child_schema.validate(config)
+          }.not_to raise_error
+        end
+      end
+
+      context 'when the config is invalid against the child schema' do
+        let(:config) {
+          {
+            parent: 'Homer',
+          }
+        }
+
+        it 'raises an error when the config is invalid' do
+          expect {
+            child_schema.validate(config)
+          }.to raise_error(Membrane::SchemaValidationError)
+        end
+      end
+
+      context 'when the config is invalid against the parent schema' do
+        let(:config) {
+          {
+            child: 'Bart',
+          }
+        }
+
+        it 'raises an error when the config is invalid' do
+          expect {
+            child_schema.validate(config)
+          }.to raise_error(Membrane::SchemaValidationError)
         end
       end
     end

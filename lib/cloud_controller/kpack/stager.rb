@@ -70,8 +70,8 @@ module Kpack
           name: staging_details.package.app.guid,
           namespace: builder_namespace,
           labels: {
-            APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
-            BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid,
+            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
+            BUILD_GUID_LABEL_KEY.to_sym => staging_details.staging_guid,
             DROPLET_GUID_LABEL_KEY.to_sym => create_droplet_and_get_guid(staging_details),
             STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
           },
@@ -92,13 +92,11 @@ module Kpack
     end
 
     def configure_source(staging_details)
-      if config.package_image_registry_configured?
-        { registry: {
-          image: staging_details.package.bits_image_reference(digest: true)
-        } }
-      else
-        { blob: { url: blobstore_url_generator.package_download_url(staging_details.package) } }
-      end
+      {
+        registry: {
+          image: staging_details.package.bits_image_reference(digest: true),
+        }
+      }
     end
 
     def get_environment_variables(staging_details)

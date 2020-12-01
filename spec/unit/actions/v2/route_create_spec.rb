@@ -11,7 +11,7 @@ module VCAP::CloudController
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
         Space.make(space_quota_definition: space_quota_definition,
-                   organization: space_quota_definition.organization)
+          organization: space_quota_definition.organization)
       end
       let(:domain) { SharedDomain.make }
       let(:path) { '/some-path' }
@@ -52,6 +52,10 @@ module VCAP::CloudController
         end
 
         context 'when targeting a Kubernetes API' do
+          before do
+            TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
+          end
+
           it 'creates a route resource in Kubernetes' do
             expect {
               route = route_create.create_route(route_hash: route_hash)
@@ -66,9 +70,7 @@ module VCAP::CloudController
 
         context 'when not targeting a Kubernetes API' do
           before do
-            TestConfig.override(
-              kubernetes: {}
-            )
+            TestConfig.override(kubernetes: {})
           end
 
           it 'does not create a route resource in Kubernetes' do

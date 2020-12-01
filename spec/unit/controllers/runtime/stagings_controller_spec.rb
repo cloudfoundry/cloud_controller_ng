@@ -258,6 +258,7 @@ module VCAP::CloudController
       end
 
       it 'returns an error for non-existent packages' do
+        puts "config_instance = #{TestConfig.config_instance.inspect}"
         get '/staging/packages/bad-guid'
         expect(last_response.status).to eq(404)
       end
