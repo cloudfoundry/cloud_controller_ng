@@ -282,7 +282,6 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           end
 
           it 'updates the binding details with the fetch binding response ignoring extra fields' do
-            puts fetch_binding_body
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(binding.reload.credentials).to eq(credentials.with_indifferent_access)

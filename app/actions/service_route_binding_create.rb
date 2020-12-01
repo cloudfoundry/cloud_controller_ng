@@ -57,7 +57,7 @@ module VCAP::CloudController
         PERMITTED_BINDING_ATTRIBUTES
       end
 
-      def notify(binding)
+      def post_bind_action(binding)
         binding.notify_diego
       end
 

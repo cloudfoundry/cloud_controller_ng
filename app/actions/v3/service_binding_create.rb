@@ -74,13 +74,12 @@ module VCAP::CloudController
           }
         )
 
-        notify(binding)
+        post_bind_action(binding)
 
         event_repository.record_create(
           binding,
           @user_audit_info,
-          @audit_hash,
-          manifest_triggered: false
+          @audit_hash
         )
       end
 
@@ -105,10 +104,10 @@ module VCAP::CloudController
             broker_provided_operation: broker_operation
           }
         )
-        event_repository.record_start_create(binding, @user_audit_info, @audit_hash, manifest_triggered: false)
+        event_repository.record_start_create(binding, @user_audit_info, @audit_hash)
       end
 
-      def notify(binding); end
+      def post_bind_action(binding); end
 
       def bindings_retrievable?(binding)
         binding.service_instance.service.bindings_retrievable
