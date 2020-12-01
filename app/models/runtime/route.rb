@@ -218,6 +218,8 @@ module VCAP::CloudController
     end
 
     def before_save
+      return if VCAP::CloudController::Config.kubernetes_api_configured?
+
       if internal? && vip_offset.nil?
         len = internal_route_vip_range_len
         raise OutOfVIPException.new('out of vip_offset slots') if self.class.exclude(vip_offset: nil).count >= len

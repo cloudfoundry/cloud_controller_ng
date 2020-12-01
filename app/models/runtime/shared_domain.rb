@@ -92,10 +92,6 @@ module VCAP::CloudController
       router_group_type.blank? ? [] : [:router_group_type]
     end
 
-    def internal?
-      !!internal
-    end
-
     def routing_api_client
       @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
     end

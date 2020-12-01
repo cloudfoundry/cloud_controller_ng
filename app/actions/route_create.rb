@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     def create(message:, space:, domain:, manifest_triggered: false)
       validate_tcp_route!(domain, message)
+      validate_internal_kubernetes_domain!(domain)
 
       route = Route.new(
         host: message.host || '',
@@ -48,6 +49,12 @@ module VCAP::CloudController
     def validate_tcp_route!(domain, message)
       if domain.router_group_guid.present? && router_group(domain).nil?
         error!('Route could not be created because the specified domain does not have a valid router group.')
+      end
+    end
+
+    def validate_internal_kubernetes_domain!(domain)
+      if domain.internal? && VCAP::CloudController::Config.config.kubernetes_api_configured?
+        error!('Internal domains are currently not supported on Kubernetes')
       end
     end
 

@@ -15,7 +15,7 @@ module VCAP::CloudController
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
       allow(Steno).to receive(:logger).and_return(fake_logger)
       allow(fake_logger).to receive(:debug)
-      TestConfig.override(copilot: { enabled: true, temporary_istio_domains: [istio_domain.name, internal_istio_domain.name] })
+      TestConfig.override(copilot: { enabled: true, temporary_istio_domains: [istio_domain.name, internal_istio_domain.name] }, kubernetes: {})
     end
 
     describe '#create_route' do

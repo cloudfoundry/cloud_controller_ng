@@ -147,6 +147,10 @@ module VCAP::CloudController
       ['http']
     end
 
+    def internal?
+      !!internal
+    end
+
     private
 
     def k8s_enabled?

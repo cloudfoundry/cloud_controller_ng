@@ -1331,6 +1331,12 @@ module VCAP::CloudController
     end
 
     context '#internal?' do
+      before do
+        TestConfig.override(
+          kubernetes: {}
+        )
+      end
+
       let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
       let(:internal_route) { Route.make(host: 'meow', domain: internal_domain) }
       let(:external_private_route) { Route.make }
@@ -1350,7 +1356,7 @@ module VCAP::CloudController
 
     describe 'vip_offset' do
       before do
-        TestConfig.override( # 8 theoretical available ips, 6 actual
+        TestConfig.override(
           internal_route_vip_range: '127.128.99.0/29',
           kubernetes: {}
         )
@@ -1363,62 +1369,86 @@ module VCAP::CloudController
         let!(:internal_route_3) { Route.make(host: 'quack', domain: internal_domain) }
         let(:external_private_route) { Route.make }
 
-        it 'auto-assigns vip_offset to internal routes only' do
-          expect(internal_route_1.vip_offset).not_to be_nil
-          expect(external_private_route.vip_offset).to be_nil
-        end
-
-        it 'assigns multiple vips in ascending order without duplicates' do
-          expect(internal_route_1.vip_offset).to eq(1)
-          expect(internal_route_2.vip_offset).to eq(2)
-        end
-
-        it 'never assigns the same vip_offset to multiple internal routes' do
-          expect {
-            Route.make(host: 'ants', vip_offset: 1)
-          }.to raise_error(Sequel::UniqueConstraintViolation, /duplicate.*routes_vip_offset_index/i)
-        end
-
-        it 'finds an available offset' do
-          Route.make(host: 'gulp', domain: internal_domain)
-          expect(Route.all.map(&:vip_offset)).to match_array((1..4).to_a)
-        end
-
-        context 'when the taken offset is not the first' do
+        context 'when the kubernetes API is configured' do
           before do
             TestConfig.override(
+              internal_route_vip_range: '',
+              kubernetes: { host_url: 'api.k8s.example.com' }
+            )
+          end
+
+          it 'does not assign vip_offset' do
+            internal_route_4 = Route.make(host: 'moo', domain: internal_domain)
+            expect(internal_route_4.vip_offset).to be_nil
+            expect(internal_route_4.vip).to be_nil
+          end
+        end
+
+        context 'when the Kubernetes API is not configured' do
+          before do
+            TestConfig.override( # 8 theoretical available ips, 6 actual
+              internal_route_vip_range: '127.128.99.0/29',
               kubernetes: {}
             )
           end
-          it 'finds the first offset' do
-            internal_route_1.destroy
-            expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(1)
-          end
-        end
 
-        context 'when the taken offsets include first and not second' do
+          it 'auto-assigns vip_offset to internal routes only' do
+            expect(internal_route_1.vip_offset).not_to be_nil
+            expect(external_private_route.vip_offset).to be_nil
+          end
+
+          it 'assigns multiple vips in ascending order without duplicates' do
+            expect(internal_route_1.vip_offset).to eq(1)
+            expect(internal_route_2.vip_offset).to eq(2)
+          end
+
+          it 'never assigns the same vip_offset to multiple internal routes' do
+            expect {
+              Route.make(host: 'ants', vip_offset: 1)
+            }.to raise_error(Sequel::UniqueConstraintViolation, /duplicate.*routes_vip_offset_index/i)
+          end
+
           it 'finds an available offset' do
-            internal_route_2.destroy
-            expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(2)
-          end
-        end
-
-        context 'when filling the vip range' do
-          it 'can make 3 more new routes only' do
-            expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
-            expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
-            expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
-            expect { Route.make(host: 'route7', domain: internal_domain) }.to raise_error(Route::OutOfVIPException)
+            Route.make(host: 'gulp', domain: internal_domain)
+            expect(Route.all.map(&:vip_offset)).to match_array((1..4).to_a)
           end
 
-          it 'can reclaim lost vips' do
-            expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
-            expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
-            expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
-            Route.last.destroy
-            internal_route_2.destroy
-            expect(Route.make(host: 'new2', domain: internal_domain).vip_offset).to eq(2)
-            expect(Route.make(host: 'new6', domain: internal_domain).vip_offset).to eq(6)
+          context 'when the taken offset is not the first' do
+            before do
+              TestConfig.override(
+                kubernetes: {}
+              )
+            end
+            it 'finds the first offset' do
+              internal_route_1.destroy
+              expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(1)
+            end
+          end
+
+          context 'when the taken offsets include first and not second' do
+            it 'finds an available offset' do
+              internal_route_2.destroy
+              expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(2)
+            end
+          end
+
+          context 'when filling the vip range' do
+            it 'can make 3 more new routes only' do
+              expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
+              expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
+              expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
+              expect { Route.make(host: 'route7', domain: internal_domain) }.to raise_error(Route::OutOfVIPException)
+            end
+
+            it 'can reclaim lost vips' do
+              expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
+              expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
+              expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
+              Route.last.destroy
+              internal_route_2.destroy
+              expect(Route.make(host: 'new2', domain: internal_domain).vip_offset).to eq(2)
+              expect(Route.make(host: 'new6', domain: internal_domain).vip_offset).to eq(6)
+            end
           end
         end
       end
@@ -1476,6 +1506,12 @@ module VCAP::CloudController
     end
 
     describe 'vip' do
+      before do
+        TestConfig.override(
+          kubernetes: {}
+        )
+      end
+
       let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
       let!(:internal_route_1) { Route.make(host: 'meow', domain: internal_domain, vip_offset: 1) }
       let!(:internal_route_2) { Route.make(host: 'woof', domain: internal_domain, vip_offset: 2) }

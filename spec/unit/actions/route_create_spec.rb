@@ -529,6 +529,52 @@ module VCAP::CloudController
             subject.create(message: message, space: space, domain: internal_domain)
           }.to raise_error(RouteCreate::Error, 'Paths are not supported for internal domains.')
         end
+
+        context 'when the Kubernetes API is configured' do
+          before do
+            TestConfig.override(
+              kubernetes: { host_url: 'https://api.default.svc.cluster-domain.example' }
+            )
+          end
+
+          it 'raises an error' do
+            message = RouteCreateMessage.new({
+              host: 'a',
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: internal_domain.guid }
+                },
+              },
+            })
+
+            expect {
+              subject.create(message: message, space: space, domain: internal_domain)
+            }.to raise_error(RouteCreate::Error, 'Internal domains are currently not supported on Kubernetes')
+          end
+        end
+
+        context 'when the Kubernetes API is not configured' do
+          it 'does not raise an error' do
+            message = RouteCreateMessage.new({
+              host: 'a',
+              relationships: {
+                space: {
+                  data: { guid: space.guid }
+                },
+                domain: {
+                  data: { guid: internal_domain.guid }
+                },
+              },
+            })
+
+            expect {
+              subject.create(message: message, space: space, domain: internal_domain)
+            }.not_to raise_error
+          end
+        end
       end
 
       context 'when using a reserved system hostname' do
