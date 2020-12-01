@@ -5,12 +5,16 @@ require 'cloud_controller/backends/runners'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/backends/instances_reporters'
 require 'repositories/service_event_repository'
-require 'cloud_controller/config_schemas/api_schema'
-require 'cloud_controller/config_schemas/clock_schema'
+require 'cloud_controller/config_schemas/kubernetes/api_schema'
+require 'cloud_controller/config_schemas/vms/api_schema'
+require 'cloud_controller/config_schemas/kubernetes/clock_schema'
+require 'cloud_controller/config_schemas/vms/clock_schema'
 require 'cloud_controller/config_schemas/migrate_schema'
 require 'cloud_controller/config_schemas/route_syncer_schema'
-require 'cloud_controller/config_schemas/worker_schema'
-require 'cloud_controller/config_schemas/deployment_updater_schema'
+require 'cloud_controller/config_schemas/kubernetes/worker_schema'
+require 'cloud_controller/config_schemas/vms/worker_schema'
+require 'cloud_controller/config_schemas/kubernetes/deployment_updater_schema'
+require 'cloud_controller/config_schemas/vms/deployment_updater_schema'
 require 'cloud_controller/config_schemas/rotatate_database_key_schema'
 require 'utils/hash_utils'
 require 'cloud_controller/internal_api'
@@ -25,9 +29,15 @@ module VCAP::CloudController
 
     class << self
       def load_from_file(file_name, context: :api, secrets_hash: {})
-        schema_class = schema_class_for_context(context)
-        config_from_file = schema_class.from_file(file_name, secrets_hash: secrets_hash)
-        hash = merge_defaults(config_from_file)
+        config = VCAP::CloudController::YAMLConfig.safe_load_file(file_name)
+        config = deep_symbolize_keys_except_in_arrays(config)
+        secrets_hash = deep_symbolize_keys_except_in_arrays(secrets_hash)
+        config = config.deep_merge(secrets_hash)
+
+        schema_class = schema_class_for_context(context, config)
+        schema_class.validate(config)
+
+        hash = merge_defaults(config)
         @instance = new(hash, context: context)
       end
 
@@ -35,15 +45,25 @@ module VCAP::CloudController
         @instance
       end
 
-      def schema_class_for_context(context)
-        const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
+      def schema_class_for_context(context, config)
+        module_name = config.key?(:kubernetes) ? 'Kubernetes' : 'Vms'
+        const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
       end
 
       delegate :kubernetes_api_configured?, to: :config
 
       private
 
-      def merge_defaults(config)
+      def deep_symbolize_keys_except_in_arrays(hash)
+        return hash unless hash.is_a? Hash
+
+        hash.each.with_object({}) do |(k, v), new_hash|
+          new_hash[k.to_sym] = deep_symbolize_keys_except_in_arrays(v)
+        end
+      end
+
+      def merge_defaults(orig_config)
+        config = orig_config.dup
         config[:db] ||= {}
         ensure_config_has_database_parts(config)
         sanitize(config)
@@ -85,7 +105,7 @@ module VCAP::CloudController
 
     def initialize(config_hash, context: :api)
       @config_hash = config_hash
-      @schema_class = self.class.schema_class_for_context(context)
+      @schema_class = self.class.schema_class_for_context(context, config_hash)
     end
 
     def configure_components

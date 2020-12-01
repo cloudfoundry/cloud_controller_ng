@@ -49,12 +49,6 @@ module VCAP::CloudController
 
           staging: {
             timeout_in_seconds: Integer,
-            **VCAP::Config::Dsl.omit_on_k8s(
-              auth: {
-                user: String,
-                password: String,
-              },
-            ),
           },
 
           index: Integer, # Component index (cc-0, cc-1, etc)
@@ -194,34 +188,6 @@ module VCAP::CloudController
           max_annotations_per_resource: Integer,
           internal_route_vip_range: String,
           custom_metric_tag_prefix_list: Array,
-
-          **VCAP::Config::Dsl.omit_on_k8s(
-            diego: {
-              bbs: {
-                url: String,
-                ca_file: String,
-                cert_file: String,
-                key_file: String,
-                connect_timeout: Integer,
-                send_timeout: Integer,
-                receive_timeout: Integer,
-              },
-              cc_uploader_url: String,
-              file_server_url: String,
-              lifecycle_bundles: Hash,
-              droplet_destinations: Hash,
-              pid_limit: Integer,
-              use_privileged_containers_for_running: bool,
-              use_privileged_containers_for_staging: bool,
-              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-              enable_declarative_asset_downloads: bool,
-            },
-
-            internal_api: {
-              auth_user: String,
-              auth_password: String,
-            },
-          ),
         }
       end
       # rubocop:enable Metrics/BlockLength
