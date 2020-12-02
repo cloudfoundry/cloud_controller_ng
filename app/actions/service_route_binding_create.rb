@@ -16,19 +16,19 @@ module VCAP::CloudController
       def precursor(service_instance, route, message:)
         validate!(service_instance, route)
 
-        RouteBinding.db.transaction do
-          b = RouteBinding.new.save_with_new_operation(
-            {
-              service_instance: service_instance,
-              route: route,
-            },
-            {
-              type: 'create',
-              state: 'in progress',
-            }
-          )
-          MetadataUpdate.update(b, message)
-          b
+        binding_details = {
+          service_instance: service_instance,
+          route: route,
+        }
+
+        RouteBinding.new.tap do |b|
+          RouteBinding.db.transaction do
+            b.save_with_attributes_and_new_operation(
+              binding_details,
+              CREATE_IN_PROGRESS_OPERATION
+            )
+            MetadataUpdate.update(b, message)
+          end
         end
       end
 

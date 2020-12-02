@@ -156,7 +156,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#save_with_new_operation' do
+    describe '#save_with_attributes_and_new_operation' do
       let(:service_instance) { ServiceInstance.make }
       let(:binding) {
         ServiceKey.new(
@@ -172,7 +172,7 @@ module VCAP::CloudController
           type: 'create',
           description: '10%'
         }
-        binding.save_with_new_operation(last_operation)
+        binding.save_with_attributes_and_new_operation({}, last_operation)
 
         expect(binding.last_operation.state).to eq 'in progress'
         expect(binding.last_operation.description).to eq '10%'
@@ -186,15 +186,15 @@ module VCAP::CloudController
         end
 
         it 'should rollback the binding' do
-          expect { binding.save_with_new_operation({ state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
+          expect { binding.save_with_attributes_and_new_operation({}, { state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
           expect(ServiceKey.where(guid: binding.guid).count).to eq(0)
         end
       end
 
       context 'when called twice' do
-        it 'does saves the second operation' do
-          binding.save_with_new_operation({ state: 'in progress', type: 'create', description: 'description' })
-          binding.save_with_new_operation({ state: 'in progress', type: 'delete' })
+        it 'does save the second operation' do
+          binding.save_with_attributes_and_new_operation({}, { state: 'in progress', type: 'create', description: 'description' })
+          binding.save_with_attributes_and_new_operation({}, { state: 'in progress', type: 'delete' })
 
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.type).to eq 'delete'
@@ -220,7 +220,7 @@ module VCAP::CloudController
         }
 
         it 'updates the attributes' do
-          binding.save_with_new_operation(last_operation, attributes: attributes)
+          binding.save_with_attributes_and_new_operation(attributes, last_operation)
           binding.reload
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.description).to eq '10%'
@@ -232,13 +232,15 @@ module VCAP::CloudController
 
         it 'only saves permitted attributes' do
           expect {
-            binding.save_with_new_operation(last_operation, attributes: attributes.merge(
-              parameters: {
-                foo: 'bar',
-                ding: 'dong'
-              },
-              endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
-            ))
+            binding.save_with_attributes_and_new_operation(attributes.merge(
+                                                             parameters: {
+                                                               foo: 'bar',
+                                                               ding: 'dong'
+                                                             },
+                                                             endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
+            ),
+              last_operation
+            )
           }.not_to raise_error
         end
       end
