@@ -7,8 +7,6 @@ module VCAP::CloudController
       class DeploymentUpdaterSchema < VCAP::Config
         self.parent_schema = VCAP::CloudController::ConfigSchemas::DeploymentUpdaterSchema
 
-        delegate :configure_components, to: :parent_schema
-
         define_schema do
           {
             kubernetes: {
@@ -20,6 +18,10 @@ module VCAP::CloudController
               workloads_namespace: String,
             },
           }
+        end
+
+        class << self
+          delegate :configure_components, to: :parent_schema
         end
       end
     end

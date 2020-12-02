@@ -8,8 +8,6 @@ module VCAP::CloudController
       class ApiSchema < VCAP::Config
         self.parent_schema = VCAP::CloudController::ConfigSchemas::ApiSchema
 
-        delegate :configure_components, to: :parent_schema
-
         define_schema do
           {
             kubernetes: {
@@ -26,6 +24,10 @@ module VCAP::CloudController
               }
             },
           }
+        end
+
+        class << self
+          delegate :configure_components, to: :parent_schema
         end
       end
     end

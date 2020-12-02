@@ -3,16 +3,54 @@ require 'vcap/config'
 
 RSpec.describe VCAP::Config do
   describe '.define_schema' do
-    it 'should build the corresponding membrane schema' do
-      class MyConfig < VCAP::Config
-        define_schema do
-          [Integer]
+    context 'with no parent schema' do
+      it 'should build the corresponding membrane schema' do
+        class MyConfig < VCAP::Config
+          define_schema do
+            [Integer]
+          end
+        end
+
+        expect(MyConfig.schema).to be_instance_of(Membrane::Schemas::List)
+        expect(MyConfig.schema.elem_schema).to be_instance_of(Membrane::Schemas::Class)
+        expect(MyConfig.schema.elem_schema.klass).to eq(Integer)
+      end
+    end
+
+    context 'with parent schema set' do
+      let(:parent_schema) do
+        Class.new(VCAP::Config) do
+          define_schema do
+            {
+              parent: String,
+              shared: {
+                parent: String,
+              },
+            }
+          end
         end
       end
 
-      expect(MyConfig.schema).to be_instance_of(Membrane::Schemas::List)
-      expect(MyConfig.schema.elem_schema).to be_instance_of(Membrane::Schemas::Class)
-      expect(MyConfig.schema.elem_schema.klass).to eq(Integer)
+      let(:child_schema) do
+        parent = parent_schema
+
+        Class.new(VCAP::Config) do
+          self.parent_schema = parent
+          define_schema do
+            {
+              child: String,
+              shared: {
+                child: String,
+              },
+            }
+          end
+        end
+      end
+
+      it 'should merge parent schema into child schema' do
+        expect(child_schema.schema.schemas.key?(:parent)).to be true
+        expect(child_schema.schema.schemas[:shared].schemas.key?(:parent)).to be true
+      end
     end
   end
 

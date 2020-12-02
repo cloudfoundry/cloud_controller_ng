@@ -7,8 +7,6 @@ module VCAP::CloudController
       class ClockSchema < VCAP::Config
         self.parent_schema = VCAP::CloudController::ConfigSchemas::ClockSchema
 
-        delegate :configure_components, to: :parent_schema
-
         define_schema do
           {
             staging: {
@@ -44,6 +42,10 @@ module VCAP::CloudController
               auth_password: String,
             },
           }
+        end
+
+        class << self
+          delegate :configure_components, to: :parent_schema
         end
       end
     end

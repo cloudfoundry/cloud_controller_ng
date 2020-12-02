@@ -12,11 +12,14 @@ module VCAP
 
       def define_schema(&blk)
         @schema = Membrane::SchemaParser.parse(&blk)
+        if parent_schema
+          @schema = Membrane::Schemas::Record.new(@schema.schemas.deep_merge(parent_schema.schema.schemas),
+                                                  @schema.optional_keys.merge(parent_schema.schema.optional_keys))
+        end
       end
 
       def validate(config_hash)
         schema.validate(config_hash)
-        parent_schema.validate(config_hash) if parent_schema
       end
     end
   end
