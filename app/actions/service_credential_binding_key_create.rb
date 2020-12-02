@@ -25,12 +25,10 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        ServiceKey.new(**binding_details).tap do |b|
-          b.save_with_new_operation(
-            {
-              type: 'create',
-              state: 'in progress',
-            }
+        ServiceKey.new.tap do |b|
+          b.save_with_attributes_and_new_operation(
+            binding_details,
+            CREATE_IN_PROGRESS_OPERATION
           )
         end
       rescue Sequel::ValidationFailed => e

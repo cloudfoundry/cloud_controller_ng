@@ -99,11 +99,6 @@ module VCAP::CloudController
     end
 
     def save_with_attributes_and_new_operation(attributes, operation)
-      save_with_new_operation(operation, attributes: attributes)
-      self
-    end
-
-    def save_with_new_operation(last_operation, attributes: {})
       ServiceKey.db.transaction do
         self.lock!
         set(attributes.except(:parameters, :route_services_url, :endpoints))
@@ -116,9 +111,10 @@ module VCAP::CloudController
         # it is important to create the service key operation with the service key
         # instead of doing self.service_key_operation = x
         # because mysql will deadlock when requests happen concurrently otherwise.
-        ServiceKeyOperation.create(last_operation.merge(service_key_id: self.id))
+        ServiceKeyOperation.create(operation.merge(service_key_id: self.id))
         self.service_key_operation(reload: true)
       end
+      self
     end
   end
 end
