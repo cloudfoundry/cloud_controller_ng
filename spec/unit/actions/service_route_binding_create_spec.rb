@@ -202,8 +202,7 @@ module VCAP::CloudController
               expect(binding_event_repo).to have_received(:record_create).with(
                 precursor,
                 user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
+                audit_hash
               )
             end
 
@@ -249,8 +248,7 @@ module VCAP::CloudController
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
                   user_audit_info,
-                  audit_hash,
-                  manifest_triggered: false,
+                  audit_hash
                 )
               end
             end
@@ -325,8 +323,7 @@ module VCAP::CloudController
               expect(binding_event_repo).to have_received(:record_create).with(
                 binding,
                 user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
+                audit_hash
               )
             end
 

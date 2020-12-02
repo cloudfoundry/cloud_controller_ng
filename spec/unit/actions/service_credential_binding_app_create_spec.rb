@@ -85,79 +85,80 @@ module VCAP::CloudController
 
           let(:service_instance) { ManagedServiceInstance.make(**details) }
 
-          context 'when plan is not bindable' do
-            before do
-              service_instance.service_plan.update(bindable: false)
-            end
+          context 'validations' do
+            context 'when plan is not bindable' do
+              before do
+                service_instance.service_plan.update(bindable: false)
+              end
 
-            it 'raises an error' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Service plan does not allow bindings'
-              )
-            end
-          end
-
-          context 'when plan is not available' do
-            before do
-              service_instance.service_plan.update(active: false)
-            end
-
-            it 'raises an error' do
-              expect { action.precursor(service_instance, app: app) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Service plan is not available'
-              )
-            end
-          end
-
-          context 'when the service is a volume service and service volume mounting is disabled' do
-            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
-
-            it 'raises an error' do
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
-              }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'Support for volume mount services is disabled'
-              )
-            end
-          end
-
-          context 'when there is an operation in progress for the service instance' do
-            it 'raises an error' do
-              service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
-
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
-              }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'There is an operation in progress for the service instance'
-              )
-            end
-          end
-
-          context 'when the service is a volume service and service volume mounting is enabled' do
-            let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
-
-            it 'does not raise an error' do
-              expect {
-                action.precursor(service_instance, app: app, volume_mount_services_enabled: true)
-              }.not_to raise_error
-            end
-          end
-
-          context 'when binding from an app in a shared space' do
-            let(:other_space) { Space.make }
-            let(:service_instance) do
-              ManagedServiceInstance.make(space: other_space).tap do |si|
-                si.add_shared_space(space)
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Service plan does not allow bindings'
+                )
               end
             end
 
-            it_behaves_like 'the credential binding precursor'
-          end
+            context 'when plan is not available' do
+              before do
+                service_instance.service_plan.update(active: false)
+              end
 
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Service plan is not available'
+                )
+              end
+            end
+
+            context 'when the service is a volume service and service volume mounting is disabled' do
+              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+              it 'raises an error' do
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+                }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'Support for volume mount services is disabled'
+                )
+              end
+            end
+
+            context 'when there is an operation in progress for the service instance' do
+              it 'raises an error' do
+                service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
+
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false)
+                }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'There is an operation in progress for the service instance'
+                )
+              end
+            end
+
+            context 'when the service is a volume service and service volume mounting is enabled' do
+              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **details) }
+
+              it 'does not raise an error' do
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: true)
+                }.not_to raise_error
+              end
+            end
+
+            context 'when binding from an app in a shared space' do
+              let(:other_space) { Space.make }
+              let(:service_instance) do
+                ManagedServiceInstance.make(space: other_space).tap do |si|
+                  si.add_shared_space(space)
+                end
+              end
+
+              it_behaves_like 'the credential binding precursor'
+            end
+          end
           context 'when successful' do
             it_behaves_like 'the credential binding precursor'
           end
@@ -177,42 +178,6 @@ module VCAP::CloudController
         it_behaves_like 'service binding creation', ServiceBinding
 
         describe 'app specific behaviour' do
-          RSpec.shared_examples 'the sync credential binding' do
-            it 'creates and returns the credential binding' do
-              action.bind(precursor)
-
-              precursor.reload
-              expect(precursor).to eq(ServiceBinding.where(guid: precursor.guid).first)
-              expect(precursor.credentials).to eq(details[:credentials])
-              expect(precursor.syslog_drain_url).to eq(details[:syslog_drain_url])
-              expect(precursor.last_operation.type).to eq('create')
-              expect(precursor.last_operation.state).to eq('succeeded')
-            end
-
-            it 'creates an audit event' do
-              action.bind(precursor)
-              expect(binding_event_repo).to have_received(:record_create).with(
-                precursor,
-                user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
-              )
-            end
-
-            context 'when saving to the db fails' do
-              it 'fails the binding operation' do
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).once.and_raise(Sequel::ValidationFailed, 'Meh')
-                allow(precursor).to receive(:save_with_attributes_and_new_operation).
-                  with(anything, { type: 'create', state: 'failed', description: 'Meh' }).and_call_original
-                expect { action.bind(precursor) }.to raise_error(Sequel::ValidationFailed, 'Meh')
-                precursor.reload
-                expect(precursor.last_operation.type).to eq('create')
-                expect(precursor.last_operation.state).to eq('failed')
-                expect(precursor.last_operation.description).to eq('Meh')
-              end
-            end
-          end
-
           context 'managed service instance' do
             let(:service_offering) { Service.make(bindings_retrievable: true) }
             let(:service_plan) { ServicePlan.make(service: service_offering) }
@@ -223,7 +188,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it_behaves_like 'the sync credential binding'
+            it_behaves_like 'the sync credential binding', ServiceBinding, true
 
             context 'asynchronous binding' do
               let(:broker_provided_operation) { Sham.guid }
@@ -235,8 +200,7 @@ module VCAP::CloudController
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
                   user_audit_info,
-                  audit_hash,
-                  manifest_triggered: false,
+                  audit_hash
                 )
               end
             end
@@ -252,110 +216,30 @@ module VCAP::CloudController
             }
             let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
-            it_behaves_like 'the sync credential binding'
+            it_behaves_like 'the sync credential binding', ServiceBinding, true
           end
         end
       end
 
       describe '#poll' do
-        let(:binding) { action.precursor(service_instance, app: app, name: 'original-name') }
-        let(:credentials) { { 'password' => 'rennt', 'username' => 'lola' } }
+        let(:original_name) { 'original-name' }
+        let(:binding) { action.precursor(service_instance, app: app, name: original_name) }
         let(:volume_mounts) { [{
-            'driver' => 'cephdriver',
-            'container_dir' => '/data/images',
-            'mode' => 'r',
-            'device_type' => 'shared',
-            'device' => {
-              'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-              'mount_config' => {
-                'key' => 'value'
-              }
-            }
-          }]
+        'driver' => 'cephdriver',
+        'container_dir' => '/data/images',
+        'mode' => 'r',
+        'device_type' => 'shared',
+        'device' => {
+        'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+        'mount_config' => {
+        'key' => 'value'
+        }
+        }
+        }]
         }
         let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
-        let(:fetch_binding_response) { { credentials: credentials, syslog_drain_url: syslog_drain_url, volume_mounts: volume_mounts, name: 'updated-name' } }
 
-        it_behaves_like 'polling service binding creation'
-
-        describe 'app specific behaviour' do
-          let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-          let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-          let(:broker_provided_operation) { Sham.guid }
-          let(:bind_response) { { async: true, operation: broker_provided_operation } }
-          let(:description) { Sham.description }
-          let(:state) { 'in progress' }
-          let(:fetch_last_operation_response) do
-            {
-              last_operation: {
-                state: state,
-                description: description,
-              },
-            }
-          end
-          let(:broker_client) do
-            instance_double(
-              VCAP::Services::ServiceBrokers::V2::Client,
-              {
-                bind: bind_response,
-                fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
-                fetch_service_binding: fetch_binding_response,
-              }
-            )
-          end
-
-          before do
-            allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
-
-            action.bind(binding, accepts_incomplete: true)
-          end
-
-          context 'response says complete' do
-            let(:description) { Sham.description }
-            let(:state) { 'succeeded' }
-
-            it 'fetches the service binding and updates only the credentials, volume_mounts and syslog_drain_url' do
-              action.poll(binding)
-
-              expect(broker_client).to have_received(:fetch_service_binding).with(binding)
-
-              binding.reload
-              expect(binding.credentials).to eq(credentials)
-              expect(binding.syslog_drain_url).to eq(syslog_drain_url)
-              expect(binding.volume_mounts).to eq(volume_mounts)
-              expect(binding.name).to eq('original-name')
-            end
-
-            it 'creates an audit event' do
-              action.poll(binding)
-
-              expect(binding_event_repo).to have_received(:record_create).with(
-                binding,
-                user_audit_info,
-                audit_hash,
-                manifest_triggered: false,
-              )
-            end
-          end
-
-          context 'response says in progress' do
-            it 'does not create an audit event' do
-              action.poll(binding)
-
-              expect(binding_event_repo).not_to have_received(:record_create)
-            end
-          end
-
-          context 'response says failed' do
-            let(:state) { 'failed' }
-            it 'does not create an audit event' do
-              expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
-
-              expect(binding_event_repo).not_to have_received(:record_create)
-            end
-          end
-        end
+        it_behaves_like 'polling service credential binding creation'
       end
     end
   end

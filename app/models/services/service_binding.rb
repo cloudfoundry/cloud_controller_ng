@@ -133,15 +133,11 @@ module VCAP::CloudController
     end
 
     def terminal_state?
-      !service_binding_operation || (['succeeded', 'failed'].include? service_binding_operation.state)
+      !service_binding_operation || (%w(succeeded failed).include? service_binding_operation.state)
     end
 
     def operation_in_progress?
-      if service_binding_operation && service_binding_operation.state == 'in progress'
-        return true
-      end
-
-      false
+      !!service_binding_operation && service_binding_operation.state == 'in progress'
     end
 
     def save_with_attributes_and_new_operation(attributes, operation)

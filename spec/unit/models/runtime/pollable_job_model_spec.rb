@@ -85,24 +85,30 @@ module VCAP::CloudController
           expect(job.resource_exists?).to be(false)
         end
 
-        it 'returns true if the resource exists' do
+        it 'returns true if the route binding resource exists' do
           route_binding = RouteBinding.make
           job = PollableJobModel.make(resource_type: 'service_route_binding', resource_guid: route_binding.guid)
           expect(job.resource_exists?).to be(true)
         end
 
-        it 'returns false if the resource does NOT exist' do
+        it 'returns false if the route binding resource does NOT exist' do
           job = PollableJobModel.make(resource_type: 'service_route_binding', resource_guid: 'not-a-real-guid')
           expect(job.resource_exists?).to be(false)
         end
 
-        it 'returns true if the resource exists' do
+        it 'returns true if the service binding resource exists' do
           binding = ServiceBinding.make
           job = PollableJobModel.make(resource_type: 'service_credential_binding', resource_guid: binding.guid)
           expect(job.resource_exists?).to be(true)
         end
 
-        it 'returns false if the resource does NOT exist' do
+        it 'returns true if the service key resource exists' do
+          binding = ServiceKey.make
+          job = PollableJobModel.make(resource_type: 'service_credential_binding', resource_guid: binding.guid)
+          expect(job.resource_exists?).to be(true)
+        end
+
+        it 'returns false if the service credential binding resource does NOT exist' do
           job = PollableJobModel.make(resource_type: 'service_credential_binding', resource_guid: 'not-a-real-guid')
           expect(job.resource_exists?).to be(false)
         end

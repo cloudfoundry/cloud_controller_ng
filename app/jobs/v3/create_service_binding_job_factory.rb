@@ -1,5 +1,9 @@
 require 'jobs/v3/create_service_route_binding_job_actor'
 require 'jobs/v3/create_service_credential_binding_job_actor'
+require 'jobs/v3/create_service_key_binding_job_actor'
+require 'actions/service_credential_binding_app_create'
+require 'actions/service_credential_binding_key_create'
+require 'actions/service_route_binding_create'
 
 module VCAP::CloudController
   module V3
@@ -13,6 +17,8 @@ module VCAP::CloudController
           CreateServiceRouteBindingJobActor.new
         when :credential
           CreateServiceCredentialBindingJobActor.new
+        when :key
+          CreateServiceKeyBindingJobActor.new
         else
           raise InvalidType
         end
@@ -24,6 +30,8 @@ module VCAP::CloudController
           V3::ServiceRouteBindingCreate.new(user_audit_info, audit_hash)
         when :credential
           V3::ServiceCredentialBindingAppCreate.new(user_audit_info, audit_hash)
+        when :key
+          V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, audit_hash)
         else
           raise InvalidType
         end

@@ -11,6 +11,8 @@ module VCAP::CloudController
         @audit_hash = audit_hash
       end
 
+      PERMITTED_BINDING_ATTRIBUTES = [:route_service_url].freeze
+
       def precursor(service_instance, route, message:)
         validate!(service_instance, route)
 
@@ -51,44 +53,12 @@ module VCAP::CloudController
         operation_in_progress! if service_instance.operation_in_progress?
       end
 
-      def complete_binding_and_save(binding, binding_details, last_operation)
-        binding.save_with_attributes_and_new_operation(
-          {
-            route_service_url: binding_details[:route_service_url]
-          },
-          {
-            type: 'create',
-            state: last_operation[:state],
-            description: last_operation[:description],
-          }
-        )
-
-        binding.notify_diego
-
-        event_repository.record_create(
-          binding,
-          @user_audit_info,
-          @audit_hash,
-          manifest_triggered: false
-        )
+      def permitted_binding_attributes
+        PERMITTED_BINDING_ATTRIBUTES
       end
 
-      def save_incomplete_binding(precursor, operation)
-        precursor.save_with_attributes_and_new_operation(
-          {},
-          {
-            type: 'create',
-            state: 'in progress',
-            broker_provided_operation: operation
-          }
-        )
-
-        event_repository.record_start_create(
-          precursor,
-          @user_audit_info,
-          @audit_hash,
-          manifest_triggered: false
-        )
+      def post_bind_action(binding)
+        binding.notify_diego
       end
 
       def operation_in_progress!

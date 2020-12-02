@@ -1,12 +1,12 @@
 require 'db_spec_helper'
-require 'jobs/v3/create_service_credential_binding_job_actor'
+require 'jobs/v3/create_service_key_binding_job_actor'
 
 module VCAP::CloudController
   module V3
-    RSpec.describe CreateServiceCredentialBindingJobActor do
+    RSpec.describe CreateServiceKeyBindingJobActor do
       describe '#display_name' do
-        it 'returns "service_bindings.create"' do
-          expect(subject.display_name).to eq('service_bindings.create')
+        it 'returns "service_keys.create"' do
+          expect(subject.display_name).to eq('service_keys.create')
         end
       end
 
@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       describe '#get_resource' do
         let(:binding) do
-          ServiceBinding.make
+          ServiceKey.make
         end
 
         it 'returns the resource when it exists' do

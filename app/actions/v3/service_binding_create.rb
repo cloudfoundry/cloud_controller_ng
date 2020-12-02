@@ -64,6 +64,25 @@ module VCAP::CloudController
         )
       end
 
+      def complete_binding_and_save(binding, binding_details, last_operation)
+        binding.save_with_attributes_and_new_operation(
+          binding_details.symbolize_keys.slice(*permitted_binding_attributes),
+          {
+            type: 'create',
+            state: last_operation[:state],
+            description: last_operation[:description],
+          }
+        )
+
+        post_bind_action(binding)
+
+        event_repository.record_create(
+          binding,
+          @user_audit_info,
+          @audit_hash
+        )
+      end
+
       def save_last_operation(binding, details)
         binding.save_with_attributes_and_new_operation(
           {},
@@ -75,6 +94,20 @@ module VCAP::CloudController
           }
         )
       end
+
+      def save_incomplete_binding(binding, broker_operation)
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'in progress',
+            broker_provided_operation: broker_operation
+          }
+        )
+        event_repository.record_start_create(binding, @user_audit_info, @audit_hash)
+      end
+
+      def post_bind_action(binding); end
 
       def bindings_retrievable?(binding)
         binding.service_instance.service.bindings_retrievable
