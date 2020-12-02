@@ -291,7 +291,15 @@ includes:
   - resources/service_plan_visibility/get
   - resources/service_plan_visibility/update
   - resources/service_plan_visibility/apply
-  - resources/service_plan_visibility/delete  
+  - resources/service_plan_visibility/delete
+  - resources/service_route_bindings/header
+  - resources/service_route_bindings/object
+  - resources/service_route_bindings/get
+  - resources/service_route_bindings/list
+  - resources/service_route_bindings/create
+  - resources/service_route_bindings/update
+  - resources/service_route_bindings/delete
+  - resources/service_route_bindings/parameters  
   - resources/service_usage_events/header
   - resources/service_usage_events/object
   - resources/service_usage_events/get
@@ -364,14 +372,6 @@ includes:
   - experimental_resources/service_credential_bindings/delete
   - experimental_resources/service_credential_bindings/details
   - experimental_resources/service_credential_bindings/parameters
-  - experimental_resources/service_route_bindings/header
-  - experimental_resources/service_route_bindings/object
-  - experimental_resources/service_route_bindings/get
-  - experimental_resources/service_route_bindings/list
-  - experimental_resources/service_route_bindings/create
-  - experimental_resources/service_route_bindings/update
-  - experimental_resources/service_route_bindings/delete
-  - experimental_resources/service_route_bindings/parameters
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/create
   - experimental_resources/service_instances/get
