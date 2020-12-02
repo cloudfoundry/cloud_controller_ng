@@ -71,10 +71,11 @@ module VCAP::Services::ServiceBrokers::V2
       body              = {
         service_id:    key.service.broker_provided_id,
         plan_id:       key.service_plan.broker_provided_id,
-        bind_resource: { credential_client_id: @config.get(:cc_service_key_client_name) },
+        bind_resource: {},
         context:       context_hash(key.service_instance),
       }
 
+      body[:bind_resource][:credential_client_id] = @config.get(:cc_service_key_client_name) if @config.get(:cc_service_key_client_name).present?
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       begin
@@ -95,12 +96,11 @@ module VCAP::Services::ServiceBrokers::V2
 
     def bind(binding, arbitrary_parameters: {}, accepts_incomplete: false)
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid, accepts_incomplete: accepts_incomplete)
-      key_required_parameters = { credential_client_id: @config.get(:cc_service_key_client_name) } if binding.is_a?(VCAP::CloudController::ServiceKey)
       body = {
         service_id:    binding.service.broker_provided_id,
         plan_id:       binding.service_plan.broker_provided_id,
         app_guid:      binding.try(:app_guid),
-        bind_resource: binding.required_parameters || key_required_parameters,
+        bind_resource: binding_required_parameters(binding),
         context:       context_hash(binding.service_instance)
       }
       body = body.reject { |_, v| v.nil? }
@@ -326,6 +326,14 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def binding_required_parameters(binding)
+      if binding.is_a?(VCAP::CloudController::ServiceKey) && @config.get(:cc_service_key_client_name).present?
+        service_key_parameters = { credential_client_id: @config.get(:cc_service_key_client_name) }
+      end
+
+      binding.required_parameters || service_key_parameters || {}
+    end
 
     def context_hash_with_instance_name(service_instance, name: service_instance.name)
       context_hash(service_instance).merge(instance_name: name)
