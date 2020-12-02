@@ -117,13 +117,17 @@ module VCAP::CloudController
     def fetch_users(user_ids)
       return {} unless user_ids.present?
 
-      filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-      results = query(:user_id, filter: filter_string, count: user_ids.length)
+      results_hash = {}
 
-      results['resources'].each_with_object({}) do |resource, results_hash|
-        results_hash[resource['id']] = resource
-        results_hash
+      user_ids.each_slice(200) do |batch|
+        filter_string = batch.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
+        results = query(:user_id, filter: filter_string, count: batch.length)
+        results['resources'].each do |user|
+          results_hash[user['id']] = user
+        end
       end
+
+      results_hash
     end
 
     def token_issuer

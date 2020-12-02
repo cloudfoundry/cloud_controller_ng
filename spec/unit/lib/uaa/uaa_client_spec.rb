@@ -314,6 +314,58 @@ module VCAP::CloudController
         end
       end
 
+      context 'when were asking for over 200 users' do
+        let(:user_ids) { (0...300).to_a }
+        let(:actual_users) do
+          user_ids.map do |id|
+            { 'id' => "#{id}", 'origin' => 'uaa', 'username' => "user_#{id}" }
+          end
+        end
+        let(:response_body1) do
+          {
+            'resources' => actual_users.slice(0, 200),
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 200,
+            'totalresults' => 2
+          }
+        end
+        let(:response_body2) do
+          {
+            'resources' => actual_users.slice(200, 200),
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2
+          }
+        end
+
+        before do
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: {
+            'filter' => user_ids.slice(0, 200).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
+            'count' => 200
+          }).to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body1.to_json)
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: {
+            'filter' => user_ids.slice(200, 100).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
+            'count' => 100
+          }).to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body2.to_json)
+        end
+
+        it 'returns the list of users after making batch requests' do
+          results = uaa_client.users_for_ids(user_ids)
+          expect(results).to eq(actual_users.map { |user| [user['id'], user] }.to_h)
+        end
+      end
+
       context 'when the endpoint returns an error' do
         let(:uaa_error) { CF::UAA::UAAError.new('some error') }
         let(:mock_logger) { double(:steno_logger, error: nil) }
