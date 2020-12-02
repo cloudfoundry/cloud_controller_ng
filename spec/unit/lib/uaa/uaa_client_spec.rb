@@ -318,7 +318,7 @@ module VCAP::CloudController
         let(:user_ids) { (0...300).to_a }
         let(:actual_users) do
           user_ids.map do |id|
-            { 'id' => "#{id}", 'origin' => 'uaa', 'username' => "user_#{id}" }
+            { 'id' => id.to_s, 'origin' => 'uaa', 'username' => "user_#{id}" }
           end
         end
         let(:response_body1) do
