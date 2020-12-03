@@ -294,7 +294,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def list_fetcher
-    @list_fetcher ||= VCAP::CloudController::ServiceCredentialBindingListFetcher.new
+    @list_fetcher ||= VCAP::CloudController::ServiceCredentialBindingListFetcher
   end
 
   def fetcher

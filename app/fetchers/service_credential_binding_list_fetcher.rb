@@ -1,59 +1,63 @@
+require 'fetchers/base_list_fetcher'
+
 module VCAP
   module CloudController
-    class ServiceCredentialBindingListFetcher
-      def fetch(space_guids:, message: nil)
-        dataset = case space_guids
-                  when :all
-                    ServiceCredentialBinding::View.dataset
-                  else
-                    ServiceCredentialBinding::View.where { Sequel[:space_guid] =~ space_guids }
-                  end
+    class ServiceCredentialBindingListFetcher < BaseListFetcher
+      class << self
+        FILTERABLE_PROPERTIES = %w{
+          service_instance_name
+          service_instance_guid
+          name
+          app_name
+          app_guid
+          type
+          service_plan_name
+          service_plan_guid
+          service_offering_name
+          service_offering_guid
+        }.freeze
 
-        return dataset if message.nil?
+        def fetch(space_guids:, message: nil)
+          dataset = case space_guids
+                    when :all
+                      ServiceCredentialBinding::View.dataset
+                    else
+                      ServiceCredentialBinding::View.where { Sequel[:space_guid] =~ space_guids }
+                    end
 
-        apply_filters(dataset, message)
-      end
+          return dataset if message.nil?
 
-      private
-
-      def apply_filters(dataset, message)
-        filters_from_message(message).each do |f|
-          dataset = dataset.where { f }
+          filter(dataset, message)
         end
 
-        dataset
-      end
+        private
 
-      FILTERABLE_PROPERTIES = %w{
-        service_instance_name
-        service_instance_guid
-        name
-        app_name
-        app_guid
-        type
-        service_plan_name
-        service_plan_guid
-        service_offering_name
-        service_offering_guid
-      }.freeze
+        def filter(dataset, message)
+          filters_from_message(message).each do |f|
+            dataset = dataset.where { f }
+          end
 
-      def filters_from_message(message)
-        FILTERABLE_PROPERTIES.
-          select { |property| message.requested?(message_param_for(property)) }.
-          reduce([]) { |clauses, property| clauses << build_where_clause(message, property) }
-      end
+          super(message, dataset, ServiceCredentialBinding::View)
+        end
 
-      def build_where_clause(message, field)
-        message_param = message_param_for(field)
-        Sequel[field.to_sym] =~ message.public_send(message_param)
-      end
+        def filters_from_message(message)
+          FILTERABLE_PROPERTIES.
+            select { |property| message.requested?(message_param_for(property)) }.
+            reduce([]) { |clauses, property| clauses << build_where_clause(message, property) }
+        end
 
-      def message_param_for(field)
-        case field
-        when 'type'
-          :type
-        else
-          field.pluralize.to_sym
+        def build_where_clause(message, field)
+          message_param = message_param_for(field)
+          Sequel[field.to_sym] =~ message.public_send(message_param)
+        end
+
+        def message_param_for(field)
+          case field
+          when 'type'
+            :type
+          else
+            field.pluralize.to_sym
+          end
         end
       end
     end

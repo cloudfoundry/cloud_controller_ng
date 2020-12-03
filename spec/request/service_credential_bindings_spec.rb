@@ -113,6 +113,22 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       describe 'filters' do
+        it_behaves_like 'list_endpoint_with_common_filters' do
+          let(:resource_klass) { VCAP::CloudController::ServiceBinding }
+          let(:api_call) do
+            lambda { |headers, filters| get "/v3/service_credential_bindings?#{filters}", nil, headers }
+          end
+          let(:headers) { admin_headers }
+        end
+
+        it_behaves_like 'list_endpoint_with_common_filters' do
+          let(:resource_klass) { VCAP::CloudController::ServiceKey }
+          let(:api_call) do
+            lambda { |headers, filters| get "/v3/service_credential_bindings?#{filters}", nil, headers }
+          end
+          let(:headers) { admin_headers }
+        end
+
         let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
         let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
         let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
