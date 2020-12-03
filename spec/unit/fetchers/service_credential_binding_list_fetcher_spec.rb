@@ -7,7 +7,7 @@ module VCAP
     RSpec.describe ServiceCredentialBindingListFetcher do
       let(:params) { {} }
       let(:message) { ServiceCredentialBindingListMessage.from_params(params) }
-      let(:fetcher) { ServiceCredentialBindingListFetcher.new }
+      let(:fetcher) { described_class }
 
       describe 'no bindings' do
         it 'returns an empty result' do

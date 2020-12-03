@@ -10,7 +10,7 @@ module VCAP
       private
 
       def list_fetcher
-        ServiceCredentialBindingListFetcher.new
+        ServiceCredentialBindingListFetcher
       end
     end
   end
