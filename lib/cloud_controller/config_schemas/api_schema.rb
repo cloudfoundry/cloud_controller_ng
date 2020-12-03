@@ -361,11 +361,10 @@ module VCAP::CloudController
               registry_tag_base: String,
             }
           },
+          optional(:cc_service_key_client_name) => String,
+          optional(:cc_service_key_client_secret) => String,
 
           **VCAP::Config::Dsl.omit_on_k8s(
-            cc_service_key_client_name: String,
-            cc_service_key_client_secret: String,
-
             diego: {
               bbs: {
                 url: String,

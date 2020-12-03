@@ -976,6 +976,32 @@ module VCAP::Services::ServiceBrokers::V2
           )
       end
 
+      context 'when cc_service_key_client is configured' do
+        it 'includes the optional credential_client_id parameter' do
+          client.create_service_key(key)
+
+          expect(http_client).to have_received(:put).
+            with(anything,
+              hash_including({ bind_resource: { credential_client_id: cc_service_key_client_name } })
+            )
+        end
+      end
+
+      context 'when cc_service_key_client is NOT present' do
+        before do
+          TestConfig.override(cc_service_key_client_name: nil)
+        end
+
+        it 'does NOT include the optional credential_client_id parameter' do
+          client.create_service_key(key)
+
+          expect(http_client).to have_received(:put).
+            with(anything,
+              hash_excluding({ bind_resource: { credential_client_id: anything } })
+            )
+        end
+      end
+
       it 'sets the credentials on the key' do
         attributes = client.create_service_key(key)
         key.set(attributes)
@@ -1224,13 +1250,30 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the binding is of type key' do
         let(:binding) { VCAP::CloudController::ServiceKey.make }
 
-        it 'sends the right bind_resource' do
-          client.bind(binding)
+        context 'when cc_service_key_client is configured' do
+          it 'includes the optional credential_client_id parameter' do
+            client.bind(binding)
 
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } })
-            )
+            expect(http_client).to have_received(:put).
+              with(anything,
+                hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } })
+              )
+          end
+        end
+
+        context 'when cc_service_key_client is NOT present' do
+          before do
+            TestConfig.override(cc_service_key_client_name: nil)
+          end
+
+          it 'does NOT include the optional credential_client_id parameter' do
+            client.bind(binding)
+
+            expect(http_client).to have_received(:put).
+              with(anything,
+                hash_excluding({ bind_resource: { credential_client_id: anything } })
+              )
+          end
         end
 
         it 'does not send the app_guid in the request' do
