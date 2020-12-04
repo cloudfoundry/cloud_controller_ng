@@ -293,16 +293,16 @@ opi:
   url: http://opi.service.cf.internal
   opi_staging: false
 
-kubernetes:
-  host_url: https://master.default.svc.cluster-domain.example
-  service_account:
-    token_file: "spec/fixtures/service_accounts/k8s.token"
-  ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
-  workloads_namespace: 'cf-workloads'
-  kpack:
-    builder_namespace: 'cf-workloads-staging'
-    registry_service_account_name: 'fake-registry-service-account'
-    registry_tag_base: 'gcr.io/fake-image-repository'
+#kubernetes:
+#  host_url: https://master.default.svc.cluster-domain.example
+#  service_account:
+#    token_file: "spec/fixtures/service_accounts/k8s.token"
+#  ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
+#  workloads_namespace: 'cf-workloads'
+#  kpack:
+#    builder_namespace: 'cf-workloads-staging'
+#    registry_service_account_name: 'fake-registry-service-account'
+#    registry_tag_base: 'gcr.io/fake-image-repository'
 
 directories:
   tmpdir: /tmp

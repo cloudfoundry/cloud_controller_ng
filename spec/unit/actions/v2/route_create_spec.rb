@@ -52,6 +52,10 @@ module VCAP::CloudController
         end
 
         context 'when targeting a Kubernetes API' do
+          before do
+            TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
+          end
+
           it 'creates a route resource in Kubernetes' do
             expect {
               route = route_create.create_route(route_hash: route_hash)

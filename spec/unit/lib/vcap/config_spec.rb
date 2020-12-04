@@ -46,10 +46,23 @@ RSpec.describe VCAP::Config do
           end
         end
       end
+      # TODO: handle nested optional
+      # TODO: ensure that the base schemas are correct
 
       it 'should merge parent schema into child schema' do
-        expect(child_schema.schema.schemas.key?(:parent)).to be true
-        expect(child_schema.schema.schemas[:shared].schemas.key?(:parent)).to be true
+        expect(child_schema.schema.schemas).to have_key(:parent)
+        expect(child_schema.schema.schemas[:shared].schemas).to have_key(:parent)
+
+        expect(child_schema.schema.schemas).to have_key(:child)
+        expect(child_schema.schema.schemas[:shared].schemas).to have_key(:child)
+      end
+
+      it 'does not modify the parent schema' do
+        expect(parent_schema.schema.schemas).to have_key(:parent)
+        expect(parent_schema.schema.schemas[:shared].schemas).to have_key(:parent)
+
+        expect(parent_schema.schema.schemas).not_to have_key(:child)
+        expect(parent_schema.schema.schemas[:shared].schemas).not_to have_key(:child)
       end
     end
   end

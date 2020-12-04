@@ -9,13 +9,14 @@ require 'cloud_controller/config_schemas/kubernetes/api_schema'
 require 'cloud_controller/config_schemas/vms/api_schema'
 require 'cloud_controller/config_schemas/kubernetes/clock_schema'
 require 'cloud_controller/config_schemas/vms/clock_schema'
-require 'cloud_controller/config_schemas/migrate_schema'
-require 'cloud_controller/config_schemas/route_syncer_schema'
+require 'cloud_controller/config_schemas/kubernetes/migrate_schema'
+require 'cloud_controller/config_schemas/vms/migrate_schema'
+require 'cloud_controller/config_schemas/vms/route_syncer_schema'
 require 'cloud_controller/config_schemas/kubernetes/worker_schema'
 require 'cloud_controller/config_schemas/vms/worker_schema'
 require 'cloud_controller/config_schemas/kubernetes/deployment_updater_schema'
 require 'cloud_controller/config_schemas/vms/deployment_updater_schema'
-require 'cloud_controller/config_schemas/rotatate_database_key_schema'
+require 'cloud_controller/config_schemas/vms/rotate_database_key_schema'
 require 'utils/hash_utils'
 require 'cloud_controller/internal_api'
 
@@ -46,7 +47,7 @@ module VCAP::CloudController
       end
 
       def schema_class_for_context(context, config)
-        module_name = config.key?(:kubernetes) ? 'Kubernetes' : 'Vms'
+        module_name = config.dig(:kubernetes, :host_url).present? ? 'Kubernetes' : 'Vms'
         const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
       end
 
@@ -149,6 +150,8 @@ module VCAP::CloudController
 
     def kubernetes_api_configured?
       get(:kubernetes, :host_url).present?
+    rescue InvalidConfigPath
+      false
     end
 
     def kubernetes_host_url

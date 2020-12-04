@@ -74,14 +74,6 @@ module VCAP::CloudController
             key_file: String
           },
 
-          optional(:kubernetes) => {
-            host_url: String,
-            service_account: {
-              token_file: String,
-            },
-            ca_file: String,
-            workloads_namespace: String,
-          },
           staging: {
             timeout_in_seconds: Integer,
           },

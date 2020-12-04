@@ -68,7 +68,10 @@ module Kpack
     }
 
     before do
-      TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+      TestConfig.override(
+        kubernetes: { host_url: 'https://kubernetes.example.com' },
+        packages: { image_registry: { base_path: 'hub.example.com/user' } }
+      )
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
       allow(client).to receive(:get_image).and_return(nil)

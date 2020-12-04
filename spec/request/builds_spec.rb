@@ -139,6 +139,7 @@ RSpec.describe 'Builds' do
       let(:k8s_api_client) { instance_double(Kubernetes::ApiClient) }
 
       before do
+        TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
         allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
         allow(k8s_api_client).to receive(:create_image)
         allow(k8s_api_client).to receive(:create_builder)

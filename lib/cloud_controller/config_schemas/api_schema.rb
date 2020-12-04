@@ -340,20 +340,6 @@ module VCAP::CloudController
               write_key: String,
               dataset: String,
           },
-
-          optional(:kubernetes) => {
-            host_url: String,
-            service_account: {
-              token_file: String,
-            },
-            ca_file: String,
-            workloads_namespace: String,
-            kpack: {
-              builder_namespace: String,
-              registry_service_account_name: String,
-              registry_tag_base: String,
-            }
-          }
         }
       end
       # rubocop:enable Metrics/BlockLength
