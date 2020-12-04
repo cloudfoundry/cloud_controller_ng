@@ -23,7 +23,10 @@ module VCAP::CloudController
                ManifestRouteUpdate::InvalidRoute,
                Route::InvalidOrganizationRelation,
                AppApplyManifest::Error,
-               AppApplyManifest::ServiceBindingError => e
+               AppApplyManifest::ServiceBindingError,
+               SidecarCreate::InvalidSidecar,
+               SidecarUpdate::InvalidSidecar,
+               ProcessScale::SidecarMemoryLessThanProcessMemory => e
 
           app_name = AppModel.find(guid: app_guid)&.name
           error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message

@@ -54,7 +54,11 @@ module VCAP::CloudController
         ProcessScale::InvalidProcess,
         ProcessUpdate::InvalidProcess,
         Route::InvalidOrganizationRelation,
+        AppApplyManifest::Error,
         AppApplyManifest::ServiceBindingError,
+        SidecarCreate::InvalidSidecar,
+        SidecarUpdate::InvalidSidecar,
+        ProcessScale::SidecarMemoryLessThanProcessMemory,
       ].each do |klass|
         it "wraps a #{klass} in an ApiError" do
           allow(apply_manifest_action).to receive(:apply).
