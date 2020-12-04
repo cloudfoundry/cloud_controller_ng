@@ -10,7 +10,8 @@ module VCAP
       describe 'app bindings' do
         let(:credential_binding) do
           ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance).tap do |binding|
-            binding.save_with_new_operation(
+            binding.save_with_attributes_and_new_operation(
+              {},
               {
                 type: 'create',
                 state: 'succeeded',
@@ -101,12 +102,21 @@ module VCAP
 
       describe 'key bindings' do
         let(:credential_binding) do
-          ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance)
+          ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance).tap do |binding|
+            binding.save_with_attributes_and_new_operation(
+              {},
+              {
+                type: 'create',
+                state: 'succeeded',
+                description: 'some description'
+              }
+            )
+          end
         end
 
         it 'should include the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
-          expect(presenter.to_hash).to match(
+          expect(presenter.to_hash.with_indifferent_access).to match(
             {
               guid: 'some-guid',
               type: 'key',
@@ -116,7 +126,7 @@ module VCAP
               last_operation: {
                 type: 'create',
                 state: 'succeeded',
-                description: '',
+                description: 'some description',
                 updated_at: credential_binding.updated_at,
                 created_at: credential_binding.created_at
               },

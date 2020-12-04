@@ -434,7 +434,11 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'key credential binding' do
-      let(:key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+      let(:key) do
+        VCAP::CloudController::ServiceKey.make(service_instance: instance) do |binding|
+          operate_on(binding)
+        end
+      end
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
       let(:expected_object) { expected_json(key) }
@@ -782,7 +786,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when an operation is still on going for the binding' do
           before do
-            binding.save_with_new_operation({ type: 'create', state: 'in progress' })
+            binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
           end
 
           it 'should fail as not allowed' do
@@ -1933,7 +1937,8 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   def operate_on(binding)
-    binding.save_with_new_operation(
+    binding.save_with_attributes_and_new_operation(
+      {},
       {
         type: 'create',
         state: 'succeeded',
