@@ -113,6 +113,8 @@ module VCAP::CloudController
             optional(:uaa_client_secret) => String,
             optional(:uaa_client_scope) => String,
 
+            optional(:cc_service_key_client_name) => String,
+
             optional(:credhub_api) => {
               internal_url: String,
             },
