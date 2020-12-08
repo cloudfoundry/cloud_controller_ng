@@ -113,10 +113,10 @@ class ServiceInstancesV3Controller < ApplicationController
     end
 
     delete_action = V3::ServiceInstanceDelete.new(service_instance, service_event_repository)
-    delete_action.delete_checks
 
     case service_instance
     when VCAP::CloudController::ManagedServiceInstance
+      delete_action.delete_checks
       job_guid = enqueue_delete_job(service_instance)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
     when VCAP::CloudController::UserProvidedServiceInstance
