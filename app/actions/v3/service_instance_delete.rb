@@ -1,5 +1,6 @@
 require 'jobs/v3/delete_service_instance_job'
 require 'actions/service_route_binding_delete'
+require 'actions/service_credential_binding_delete'
 require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
@@ -32,7 +33,7 @@ module VCAP::CloudController
 
         if service_instance.is_a?(UserProvidedServiceInstance)
           errors = remove_bindings
-          raise errors[0] if errors.any?
+          raise errors.first if errors.any?
         end
 
         result = send_deprovison_to_broker
@@ -124,22 +125,18 @@ module VCAP::CloudController
 
       def remove_bindings
         errors = []
-        remove_route_bindings_action = ServiceRouteBindingDelete.new(service_event_repository.user_audit_info)
+        route_bindings_action = ServiceRouteBindingDelete.new(service_event_repository.user_audit_info)
         RouteBinding.where(service_instance: service_instance).each do |route_binding|
-          begin
-            remove_route_bindings_action.delete(route_binding)
-          rescue => e
-            errors << e
-          end
+          route_bindings_action.delete(route_binding)
+        rescue => e
+          errors << e
         end
 
-        remove_service_bindings_action = ServiceCredentialBindingDelete.new(service_event_repository.user_audit_info)
-        service_instance.bindings.each do |service_binding|
-          begin
-            remove_service_bindings_action.delete(service_binding)
-          rescue => e
-            errors << e
-          end
+        service_bindings_action = ServiceCredentialBindingDelete.new(:credential, service_event_repository.user_audit_info)
+        service_instance.service_bindings.each do |service_binding|
+          service_bindings_action.delete(service_binding)
+        rescue => e
+          errors << e
         end
 
         return errors

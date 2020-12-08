@@ -2588,13 +2588,16 @@ RSpec.describe 'V3 service instances' do
         expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
       end
 
-      it 'deletes any related route bindings' do
+      it 'deletes any related bindings' do
         VCAP::CloudController::RouteBinding.make(service_instance: instance)
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(204)
 
         expect(VCAP::CloudController::ServiceInstance.all).to be_empty
         expect(VCAP::CloudController::RouteBinding.all).to be_empty
+        expect(VCAP::CloudController::ServiceBinding.all).to be_empty
       end
 
       context 'with purge' do
