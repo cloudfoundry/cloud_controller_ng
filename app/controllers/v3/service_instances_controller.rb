@@ -112,13 +112,16 @@ class ServiceInstancesV3Controller < ApplicationController
       return [:no_content, nil]
     end
 
-    deleted = V3::ServiceInstanceDelete.new(service_event_repository).delete(service_instance)
+    delete_action = V3::ServiceInstanceDelete.new(service_instance, service_event_repository)
+    delete_action.delete_checks
 
-    if deleted
-      head :no_content
-    else
+    case service_instance
+    when VCAP::CloudController::ManagedServiceInstance
       job_guid = enqueue_delete_job(service_instance)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
+    when VCAP::CloudController::UserProvidedServiceInstance
+      delete_action.delete
+      head :no_content
     end
   rescue V3::ServiceInstanceDelete::AssociationNotEmptyError
     associations_not_empty!
