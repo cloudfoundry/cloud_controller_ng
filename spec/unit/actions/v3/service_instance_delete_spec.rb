@@ -104,7 +104,7 @@ module VCAP::CloudController
               allow(ServiceCredentialBindingDelete).to receive(:new).and_return(delete_service_binding_action)
             end
 
-            it 'unbinds all the bindings' do
+            it 'unbinds all the bindings and unshares the spaces' do
               action.delete
 
               expect(ServiceRouteBindingDelete).to have_received(:new).with(event_repository.user_audit_info)
@@ -139,7 +139,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'attempts to remove other route bindings' do
+              it 'attempts to remove the other bindings' do
                 expect {
                   action.delete
                 }.to raise_error(StandardError, 'boom-route')
@@ -305,61 +305,99 @@ module VCAP::CloudController
               expect(ServiceInstance.first.last_operation.description).to eq('bang')
             end
           end
-        end
-      end
 
-      describe '#delete_checks' do
-        describe 'invalid pre-conditions' do
-          let!(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https://bar.com') }
+          context 'when there are bindings and shares' do
+            let(:delete_service_binding_action) do
+              double(ServiceCredentialBindingDelete).tap do |d|
+                allow(d).to receive(:delete), &:destroy
+              end
+            end
+            let(:delete_service_key_action) do
+              double(ServiceCredentialBindingDelete).tap do |d|
+                allow(d).to receive(:delete), &:destroy
+              end
+            end
+            let(:unshare_action) do
+              double(ServiceInstanceUnshare).tap do |d|
+                allow(d).to receive(:unshare) { |si, s, _| si.remove_shared_space(s) }
+              end
+            end
 
-          context 'when there are associated service bindings' do
+            let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
+            let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+            let!(:service_binding_3) { ServiceBinding.make(service_instance: service_instance) }
+            let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
+            let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
+            let!(:service_key_3) { ServiceKey.make(service_instance: service_instance) }
+            let!(:shared_space_1) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
+            let!(:shared_space_2) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
+            let!(:shared_space_3) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
+
             before do
-              VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
+              allow(ServiceCredentialBindingDelete).to receive(:new) { |type, _| type == :credential ? delete_service_binding_action : delete_service_key_action }
+              allow(ServiceInstanceUnshare).to receive(:new).and_return(unshare_action)
             end
 
-            it 'does not delete the service instance' do
-              expect { subject.delete_checks }.to raise_error(V3::ServiceInstanceDelete::AssociationNotEmptyError)
-              expect { service_instance.reload }.not_to raise_error
-            end
-          end
+            it 'unbinds all the bindings and unshares the spaces' do
+              action.delete
 
-          context 'when there are associated service keys' do
-            before do
-              VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
-            end
+              expect(ServiceCredentialBindingDelete).to have_received(:new).with(:credential, event_repository.user_audit_info)
+              expect(delete_service_binding_action).to have_received(:delete).with(service_binding_1)
+              expect(delete_service_binding_action).to have_received(:delete).with(service_binding_2)
+              expect(delete_service_binding_action).to have_received(:delete).with(service_binding_3)
 
-            it 'does not delete the service instance' do
-              expect { subject.delete_checks }.to raise_error(V3::ServiceInstanceDelete::AssociationNotEmptyError)
-              expect { service_instance.reload }.not_to raise_error
-            end
-          end
+              expect(ServiceCredentialBindingDelete).to have_received(:new).with(:key, event_repository.user_audit_info)
+              expect(delete_service_key_action).to have_received(:delete).with(service_key_1)
+              expect(delete_service_key_action).to have_received(:delete).with(service_key_2)
+              expect(delete_service_key_action).to have_received(:delete).with(service_key_3)
 
-          context 'when there are associated route bindings' do
-            before do
-              VCAP::CloudController::RouteBinding.make(
-                service_instance: service_instance,
-                route: VCAP::CloudController::Route.make(space: service_instance.space)
-              )
+              expect(ServiceInstanceUnshare).to have_received(:new)
+              expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_1, event_repository.user_audit_info)
+              expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_2, event_repository.user_audit_info)
+              expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_3, event_repository.user_audit_info)
             end
 
-            it 'does not delete the service instance' do
-              expect { subject.delete_checks }.to raise_error(V3::ServiceInstanceDelete::AssociationNotEmptyError)
-              expect { service_instance.reload }.not_to raise_error
-            end
-          end
+            context 'when deleting bindings or unsharing spaces raises' do
+              let(:delete_service_binding_action) do
+                double(ServiceCredentialBindingDelete).tap do |d|
+                  allow(d).to receive(:delete) do |binding|
+                    raise StandardError.new('boom-credential') if binding == service_binding_2
 
-          context 'when the service instance is shared' do
-            let(:space) { VCAP::CloudController::Space.make }
-            let(:other_space) { VCAP::CloudController::Space.make }
-            let!(:service_instance) {
-              si = VCAP::CloudController::ServiceInstance.make(space: space)
-              si.shared_space_ids = [other_space.id]
-              si
-            }
+                    binding.destroy
+                  end
+                end
+              end
 
-            it 'does not delete the service instance' do
-              expect { subject.delete_checks }.to raise_error(V3::ServiceInstanceDelete::InstanceSharedError)
-              expect { service_instance.reload }.not_to raise_error
+              let(:delete_service_key_action) do
+                double(ServiceCredentialBindingDelete).tap do |d|
+                  allow(d).to receive(:delete) do |binding|
+                    raise StandardError.new('boom-key') if binding == service_key_2
+
+                    binding.destroy
+                  end
+                end
+              end
+
+              let(:unshare_action) do
+                double(ServiceInstanceUnshare).tap do |d|
+                  allow(d).to receive(:unshare) do |si, s, _|
+                    raise StandardError.new('boom-unshared') if s == shared_space_2
+
+                    si.remove_shared_space(s)
+                  end
+                end
+              end
+
+              it 'attempts to remove the other bindings and shares' do
+                expect {
+                  action.delete
+                }.to raise_error(StandardError, 'boom-credential')
+
+                expect(ServiceInstance.all).to contain_exactly(service_instance)
+                expect(ServiceBinding.all).to contain_exactly(service_binding_2)
+                expect(ServiceKey.all).to contain_exactly(service_key_2)
+                expect(ServiceInstance.first.shared_spaces).to contain_exactly(shared_space_2)
+              end
             end
           end
         end

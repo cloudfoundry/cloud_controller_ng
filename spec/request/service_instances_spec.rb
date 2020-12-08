@@ -2925,63 +2925,76 @@ RSpec.describe 'V3 service instances' do
             end
           end
         end
-      end
 
-      context 'when it is shared' do
-        let(:other_space) { VCAP::CloudController::Space.make }
+        context 'when the service instance is shared' do
+          before do
+            instance.add_shared_space(VCAP::CloudController::Space.make)
+          end
 
-        before do
-          share_service_instance(instance, other_space)
-        end
-
-        it 'returns a 422 Unprocessable Entity' do
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(422)
-          response = parsed_response['errors'].first
-          expect(response).to include('title' => 'CF-ServiceInstanceDeletionSharesExists')
-          expect(response).to include('detail' => include('Service instances must be unshared before they can be deleted.'))
-        end
-      end
-
-      context 'when there are associations' do
-        RSpec.shared_examples 'associations not empty' do
-          it 'returns a 422 Unprocessable Entity' do
+          it 'removes the service instance' do
             api_call.call(admin_headers)
-            expect(last_response).to have_status_code(422)
-            response = parsed_response['errors'].first
-            expect(response).to include('title' => 'CF-AssociationNotEmpty')
-            expect(response).to include('detail' => include('Please delete the service_bindings, service_keys, and routes associations for your service_instances.'))
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            expect(VCAP::CloudController::ServiceInstance.all).to be_empty
           end
         end
 
+        context 'when there are bindings' do
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+          let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+          let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
+          let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
+          let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+
+          context 'and the broker responds synchronously to the bindings being deleted' do
+            before do
+              [route_binding, service_binding, service_key].each do |binding|
+                stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
+                  with(query: {
+                    'accepts_incomplete' => true,
+                    'service_id' => instance.service.broker_provided_id,
+                    'plan_id' => instance.service_plan.broker_provided_id
+                  }).
+                  to_return(status: 200, body: '{}', headers: {})
+              end
+            end
+
+            it 'removes the service instance' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+              expect(VCAP::CloudController::ServiceInstance.all).to be_empty
+              expect(VCAP::CloudController::RouteBinding.all).to be_empty
+              expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+              expect(VCAP::CloudController::ServiceKey.all).to be_empty
+
+              [route_binding, service_binding, service_key].each do |binding|
+                expect(
+                  a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
+                    with(query: {
+                      accepts_incomplete: true,
+                      service_id: instance.service.broker_provided_id,
+                      plan_id: instance.service_plan.broker_provided_id
+                    })
+                ).to have_been_made.once
+              end
+            end
+          end
+        end
+      end
+
+      context 'when purge is true' do
+        let(:query_params) { 'purge=true' }
         let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        before(:each) do
+          @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+          @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+          @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
 
-        describe 'service bindings' do
-          before(:each) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
-          it_should_behave_like 'associations not empty'
-        end
-
-        describe 'service keys' do
-          before(:each) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
-          it_should_behave_like 'associations not empty'
-        end
-
-        describe 'route bindings' do
-          before(:each) { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
-          it_should_behave_like 'associations not empty'
-        end
-
-        context 'but purge is true' do
-          let(:query_params) { 'purge=true' }
-          before(:each) do
-            @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
-            @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
-            @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
-
-            api_call.call(admin_headers)
-          end
+          api_call.call(admin_headers)
 
           it 'removes all associations' do
             expect { @binding.reload }.to raise_error Sequel::NoExistingObject
