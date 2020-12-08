@@ -15,11 +15,11 @@ module VCAP::CloudController
       end
 
       def actor
-        @actor ||= DeleteServiceBindingFactory.for(@type)
+        DeleteServiceBindingFactory.for(@type)
       end
 
       def action
-        @action ||= DeleteServiceBindingFactory.action(@type, @user_audit_info)
+        DeleteServiceBindingFactory.action(@type, @user_audit_info)
       end
 
       def operation

@@ -22,11 +22,11 @@ module VCAP::CloudController
       end
 
       def actor
-        @actor ||= CreateServiceBindingFactory.for(@type)
+        CreateServiceBindingFactory.for(@type)
       end
 
       def action
-        @action ||= CreateServiceBindingFactory.action(@type, @user_audit_info, @audit_hash)
+        CreateServiceBindingFactory.action(@type, @user_audit_info, @audit_hash)
       end
 
       def operation
