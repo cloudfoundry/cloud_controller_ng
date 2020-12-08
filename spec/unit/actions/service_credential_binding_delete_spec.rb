@@ -6,29 +6,21 @@ module VCAP::CloudController
   module V3
     RSpec.describe V3::ServiceCredentialBindingDelete do
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
-      let(:action) { described_class.new(user_audit_info) }
-
-      let(:space) { Space.make }
-      let(:app) { AppModel.make(space: space) }
-      let(:binding) do
-        VCAP::CloudController::ServiceBinding.new.save_with_attributes_and_new_operation(
-          { type: 'app', service_instance: service_instance, app: app, credentials: { test: 'secretPassword' } },
-          { type: 'create', state: 'successful' }
-        )
-      end
+      let(:action) { described_class.new(type, user_audit_info) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
+      let(:space) { Space.make }
 
       before do
-        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
+        allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with(audit_event).and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_delete)
         allow(binding_event_repo).to receive(:record_start_delete)
       end
 
-      RSpec.shared_examples 'successful credential binding delete' do
+      RSpec.shared_examples 'successful credential binding delete' do |klass|
         it 'deletes the binding' do
           action.delete(binding)
 
-          expect(ServiceBinding.all).to be_empty
+          expect(klass.all).to be_empty
         end
 
         it 'creates an audit event' do
@@ -47,11 +39,11 @@ module VCAP::CloudController
         end
       end
 
-      describe '#delete' do
+      RSpec.shared_examples 'managed service instance binding delete' do |klass|
         context 'managed service instance' do
           let(:service_instance) { ManagedServiceInstance.make(space: space) }
 
-          it_behaves_like 'service binding deletion', ServiceBinding
+          it_behaves_like 'service binding deletion', klass
 
           context 'broker returns delete complete' do
             let(:unbind_response) { { async: false } }
@@ -61,7 +53,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it_behaves_like 'successful credential binding delete'
+            it_behaves_like 'successful credential binding delete', klass
           end
 
           context 'async unbinding' do
@@ -83,85 +75,126 @@ module VCAP::CloudController
             end
           end
         end
+      end
 
-        context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
+      RSpec.shared_examples 'polling last operation' do |klass|
+        describe '#poll' do
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:description) { Sham.description }
+          let(:state) { 'in progress' }
+          let(:last_operation_response) do
+            {
+              last_operation: {
+                state: state,
+                description: description,
+              },
+            }
+          end
+          let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+          let(:broker_provided_operation) { Sham.guid }
 
-          it_behaves_like 'successful credential binding delete'
+          before do
+            binding.last_operation.broker_provided_operation = broker_provided_operation
+            binding.save
+
+            allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+            allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(last_operation_response)
+          end
+
+          it_behaves_like 'polling service binding deletion'
+
+          context 'last operation state is complete' do
+            let(:state) { 'succeeded' }
+
+            it 'logs an audit event' do
+              result = action.poll(binding)
+
+              expect(klass.all).to be_empty
+              expect(binding_event_repo).to have_received(:record_delete).with(
+                binding,
+                user_audit_info,
+              )
+              expect(result[:finished]).to be_truthy
+            end
+          end
+
+          context 'last operation state is in progress' do
+            let(:state) { 'in progress' }
+
+            it 'does not log an audit event' do
+              action.poll(binding)
+
+              expect(klass.first).to eq(binding)
+              expect(binding_event_repo).not_to have_received(:record_delete)
+            end
+          end
+
+          context 'last operation state is failed' do
+            let(:state) { 'failed' }
+
+            it 'does not create an audit event' do
+              expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+
+              expect(klass.first).to eq(binding)
+              expect(binding_event_repo).not_to have_received(:record_delete)
+            end
+          end
+
+          context 'broker client raises' do
+            it 'does not create an audit event' do
+              allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(StandardError, 'awful thing')
+
+              expect { action.poll(binding) }.to raise_error(StandardError)
+
+              expect(klass.first).to eq(binding)
+              expect(binding_event_repo).not_to have_received(:record_delete)
+            end
+          end
         end
       end
 
-      describe '#poll' do
-        let(:service_instance) { ManagedServiceInstance.make(space: space) }
-        let(:description) { Sham.description }
-        let(:state) { 'in progress' }
-        let(:last_operation_response) do
-          {
-            last_operation: {
-              state: state,
-              description: description,
-            },
-          }
-        end
-        let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-        let(:broker_provided_operation) { Sham.guid }
-
-        before do
-          binding.last_operation.broker_provided_operation = broker_provided_operation
-          binding.save
-
-          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
-          allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(last_operation_response)
+      describe 'app binding' do
+        let(:audit_event) { 'service_binding' }
+        let(:type) { :credential }
+        let(:app) { AppModel.make(space: space) }
+        let(:binding) do
+          VCAP::CloudController::ServiceBinding.new.save_with_attributes_and_new_operation(
+            { type: 'app', service_instance: service_instance, app: app, credentials: { test: 'secretPassword' } },
+            { type: 'create', state: 'successful' }
+          )
         end
 
-        it_behaves_like 'polling service binding deletion'
+        describe '#delete' do
+          it_behaves_like 'managed service instance binding delete', ServiceBinding
 
-        context 'last operation state is complete' do
-          let(:state) { 'succeeded' }
+          context 'user-provided service instance' do
+            let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
 
-          it 'logs an audit event' do
-            result = action.poll(binding)
-
-            expect(ServiceBinding.all).to be_empty
-            expect(binding_event_repo).to have_received(:record_delete).with(
-              binding,
-              user_audit_info,
-            )
-            expect(result[:finished]).to be_truthy
+            it_behaves_like 'successful credential binding delete', ServiceBinding
           end
         end
 
-        context 'last operation state is in progress' do
-          let(:state) { 'in progress' }
+        describe '#poll' do
+          it_behaves_like 'polling last operation', ServiceBinding
+        end
+      end
 
-          it 'does not log an audit event' do
-            action.poll(binding)
-
-            expect(ServiceBinding.first).to eq(binding)
-            expect(binding_event_repo).not_to have_received(:record_delete)
-          end
+      describe 'key binding' do
+        let(:type) { :key }
+        let(:audit_event) { 'service_key' }
+        let(:binding) do
+          VCAP::CloudController::ServiceKey.new.save_with_attributes_and_new_operation(
+            { name: 'binding_name', service_instance: service_instance, credentials: { test: 'secretPassword' } },
+            { type: 'create', state: 'successful' }
+          )
         end
 
-        context 'last operation state is failed' do
-          let(:state) { 'failed' }
-
-          it 'does not create an audit event' do
-            expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
-
-            expect(ServiceBinding.first).to eq(binding)
-            expect(binding_event_repo).not_to have_received(:record_delete)
-          end
+        describe '#delete' do
+          it_behaves_like 'managed service instance binding delete', ServiceKey
         end
 
-        context 'broker client raises' do
-          it 'does not create an audit event' do
-            allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(StandardError, 'awful thing')
-
-            expect { action.poll(binding) }.to raise_error(StandardError)
-
-            expect(ServiceBinding.first).to eq(binding)
-            expect(binding_event_repo).not_to have_received(:record_delete)
-          end
+        describe '#poll' do
+          it_behaves_like 'polling last operation', ServiceKey
         end
       end
     end

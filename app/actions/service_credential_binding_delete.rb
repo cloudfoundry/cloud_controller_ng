@@ -1,11 +1,18 @@
 require 'actions/v3/service_binding_delete'
+require 'repositories/service_generic_binding_event_repository'
 
 module VCAP::CloudController
   module V3
     class ServiceCredentialBindingDelete < V3::ServiceBindingDelete
-      def initialize(user_audit_info)
+      EVENT_REPOSITORY_TYPES = {
+        key: Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING,
+        credential: Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+      }.freeze
+
+      def initialize(type, user_audit_info)
         super()
         @user_audit_info = user_audit_info
+        @event_repository_type = EVENT_REPOSITORY_TYPES[type]
       end
 
       private
@@ -21,8 +28,7 @@ module VCAP::CloudController
       end
 
       def event_repository
-        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
-          Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING)
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(@event_repository_type)
       end
     end
   end

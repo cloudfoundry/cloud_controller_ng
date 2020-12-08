@@ -1,5 +1,6 @@
 require 'jobs/v3/delete_service_route_binding_job_actor'
 require 'jobs/v3/delete_service_credential_binding_job_actor'
+require 'jobs/v3/delete_service_key_binding_job_actor'
 require 'actions/service_route_binding_delete'
 require 'actions/service_credential_binding_delete'
 
@@ -15,6 +16,8 @@ module VCAP::CloudController
           DeleteServiceRouteBindingJobActor.new
         when :credential
           DeleteServiceCredentialBindingJobActor.new
+        when :key
+          DeleteServiceKeyBindingJobActor.new
         else
           raise InvalidType
         end
@@ -24,8 +27,8 @@ module VCAP::CloudController
         case type
         when :route
           V3::ServiceRouteBindingDelete.new(user_audit_info)
-        when :credential
-          V3::ServiceCredentialBindingDelete.new(user_audit_info)
+        when :credential, :key
+          V3::ServiceCredentialBindingDelete.new(type, user_audit_info)
         else
           raise InvalidType
         end

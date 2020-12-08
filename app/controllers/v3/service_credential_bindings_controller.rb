@@ -66,19 +66,16 @@ class ServiceCredentialBindingsController < ApplicationController
     not_found! unless service_credential_binding.present?
     unauthorized! unless can_write_to_space?(binding_space)
 
-    if service_credential_binding.is_a?(ServiceKey)
-      head :not_implemented
-      return
-    end
+    type = service_credential_binding.is_a?(ServiceKey) ? :key : :credential
 
     operation_in_progress! if service_credential_binding.service_instance.operation_in_progress?
 
     case service_credential_binding.service_instance
     when ManagedServiceInstance
-      pollable_job_guid = enqueue_unbind_job(service_credential_binding.guid)
+      pollable_job_guid = enqueue_unbind_job(type, service_credential_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceCredentialBindingDelete.new(user_audit_info)
+      action = V3::ServiceCredentialBindingDelete.new(type, user_audit_info)
       action.delete(service_credential_binding)
       head :no_content
     end
@@ -179,9 +176,9 @@ class ServiceCredentialBindingsController < ApplicationController
     pollable_job.guid
   end
 
-  def enqueue_unbind_job(binding_guid)
+  def enqueue_unbind_job(type, binding_guid)
     bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
-      :credential,
+      type,
       binding_guid,
       user_audit_info: user_audit_info,
     )
