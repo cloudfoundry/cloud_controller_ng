@@ -1,8 +1,8 @@
 module VCAP::CloudController
   module V3
-    class DeleteServiceCredentialBindingJobActor
+    class DeleteServiceKeyBindingJobActor
       def display_name
-        'service_bindings.delete'
+        'service_keys.delete'
       end
 
       def resource_type
@@ -10,7 +10,7 @@ module VCAP::CloudController
       end
 
       def get_resource(resource_id)
-        ServiceBinding.first(guid: resource_id)
+        ServiceKey.first(guid: resource_id)
       end
     end
   end

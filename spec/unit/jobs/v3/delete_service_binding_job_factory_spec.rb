@@ -17,8 +17,13 @@ module VCAP::CloudController
           expect(actor).to be_an_instance_of(DeleteServiceCredentialBindingJobActor)
         end
 
+        it 'should return credential job actor when type is key' do
+          actor = DeleteServiceBindingFactory.for(:key)
+          expect(actor).to be_an_instance_of(DeleteServiceKeyBindingJobActor)
+        end
+
         it 'raise for unknown types' do
-          expect { DeleteServiceBindingFactory.for(:key) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
+          expect { DeleteServiceBindingFactory.for(:unknown) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
         end
       end
 
@@ -33,8 +38,13 @@ module VCAP::CloudController
           expect(actor).to be_an_instance_of(V3::ServiceCredentialBindingDelete)
         end
 
+        it 'should return credential binding action when type is key' do
+          actor = DeleteServiceBindingFactory.action(:key, {})
+          expect(actor).to be_an_instance_of(V3::ServiceCredentialBindingDelete)
+        end
+
         it 'raise for unknown types' do
-          expect { DeleteServiceBindingFactory.action(:key, {}) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
+          expect { DeleteServiceBindingFactory.action(:unknown, {}) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
         end
       end
     end
