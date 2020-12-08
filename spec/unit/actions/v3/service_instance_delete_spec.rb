@@ -79,6 +79,75 @@ module VCAP::CloudController
             result = action.delete
             expect(result[:finished]).to be_truthy
           end
+
+          context 'when there are bindings' do
+            let(:delete_route_binding_action) do
+              double(ServiceRouteBindingDelete).tap do |d|
+                allow(d).to receive(:delete) { |route_binding| route_binding.destroy }
+              end
+            end
+            let(:delete_service_binding_action) do
+              double(ServiceCredentialBindingDelete).tap do |d|
+                allow(d).to receive(:delete) { |service_binding| service_binding.destroy }
+              end
+            end
+
+            let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance) }
+            let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance) }
+            let!(:route_binding_3) { RouteBinding.make(service_instance: service_instance) }
+            let!(:service_binding_1){ServiceBinding.make(service_instance: service_instance)}
+            let!(:service_binding_2){ServiceBinding.make(service_instance: service_instance)}
+            let!(:service_binding_3){ServiceBinding.make(service_instance: service_instance)}
+
+            before do
+              allow(ServiceRouteBindingDelete).to receive(:new).and_return(delete_route_binding_action)
+              allow(ServiceCredentialBindingDelete).to receive(:new).and_return(delete_service_binding_action)
+            end
+
+            it 'unbinds all the bindings' do
+              action.delete
+
+              expect(ServiceRouteBindingDelete).to have_received(:new).with(event_repository.user_audit_info)
+              expect(delete_route_binding_action).to have_received(:delete).with(route_binding_1)
+              expect(delete_route_binding_action).to have_received(:delete).with(route_binding_2)
+              expect(delete_route_binding_action).to have_received(:delete).with(route_binding_3)
+
+              expect(ServiceCredentialBindingDelete).to have_received(:new).with(event_repository.user_audit_info)
+              expect(delete_route_binding_action).to have_received(:delete).with(service_binding_1)
+              expect(delete_route_binding_action).to have_received(:delete).with(service_binding_2)
+              expect(delete_route_binding_action).to have_received(:delete).with(service_binding_3)
+            end
+
+            context 'when the delete action raises' do
+              let(:delete_route_binding_action) do
+                double(ServiceRouteBindingDelete).tap do |d|
+                  allow(d).to receive(:delete) do |route_binding|
+                    raise StandardError.new('boom') if route_binding == route_binding_2
+                    route_binding.destroy
+                  end
+                end
+              end
+
+              it 'attempts to remove other route bindings' do
+                expect {
+                  action.delete
+                }.to raise_error(StandardError, 'boom')
+
+                expect(delete_route_binding_action).to have_received(:delete).with(route_binding_1)
+                expect(delete_route_binding_action).to have_received(:delete).with(route_binding_2)
+                expect(delete_route_binding_action).to have_received(:delete).with(route_binding_3)
+              end
+
+              it 'does not remove the service instance' do
+                expect {
+                  action.delete
+                }.to raise_error(StandardError, 'boom')
+
+                expect(ServiceInstance.all).to contain_exactly(service_instance)
+                expect(RouteBinding.all).to contain_exactly(route_binding_2)
+              end
+            end
+          end
         end
 
         context 'managed service instances' do
