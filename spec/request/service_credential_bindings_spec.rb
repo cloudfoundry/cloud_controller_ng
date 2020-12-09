@@ -1418,9 +1418,7 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'request is valid' do
-        let(:binding) { VCAP::CloudController::ServiceBinding.last }
         let(:audit) { VCAP::CloudController::Event.last }
-        let(:job) { VCAP::CloudController::PollableJobModel.last }
 
         it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key', 'service_keys'
       end
@@ -1504,7 +1502,7 @@ RSpec.describe 'v3 service credential bindings' do
             binding.reload
           end
 
-          it 'leaves the route binding in its current state' do
+          it 'leaves the credential binding in its current state' do
             expect(binding.last_operation.type).to eq('create')
             expect(binding.last_operation.state).to eq('in progress')
             expect(binding.last_operation.broker_provided_operation).to eq('very important info')
@@ -1656,10 +1654,21 @@ RSpec.describe 'v3 service credential bindings' do
               expect(klass.all).to be_empty
             end
 
-            it 'completes the job' do
+            it 'completes the job and logs an audit event' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+
+              event = VCAP::CloudController::Event.find(type: "audit.#{audit_event}.delete")
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => bound_app&.guid,
+                  'route_guid' => nil,
+                  'service_instance_guid' => service_instance.guid
+                }
+              })
             end
           end
 
@@ -1673,10 +1682,21 @@ RSpec.describe 'v3 service credential bindings' do
               expect(klass.all).to be_empty
             end
 
-            it 'completes the job' do
+            it 'completes the job and logs an audit event' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
+
+              event = VCAP::CloudController::Event.find(type: "audit.#{audit_event}.delete")
+              expect(event).to be
+              expect(event.actee).to eq(binding.guid)
+              expect(event.data).to include({
+                'request' => {
+                  'app_guid' => bound_app&.guid,
+                  'route_guid' => nil,
+                  'service_instance_guid' => service_instance.guid
+                }
+              })
             end
           end
         end
