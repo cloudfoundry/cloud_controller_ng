@@ -126,7 +126,7 @@ function main() {
     write_versions_json
     push_docs
 
-    git checkout master
+    git checkout main
   popd > /dev/null
 }
 
