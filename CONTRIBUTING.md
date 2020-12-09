@@ -30,7 +30,7 @@ Follow these steps to make a contribution to any of our open source repositories
 ## Contribution Workflow
 
 1. Fork the repository
-1. Check out `master` of cloud_controller 
+1. Check out `main` of cloud_controller
 1. Create a feature branch (`git checkout -b better_cloud_controller`)
 1. Make changes on your branch
 1. [Run unit tests](https://github.com/cloudfoundry/cloud_controller_ng#unit-tests)
@@ -42,12 +42,12 @@ Follow these steps to make a contribution to any of our open source repositories
 
 ### Deploying your changes to a bosh-lite
 1. Deploy a bosh director (one easy option is deploying a [bosh-lite](https://bosh.io/docs/bosh-lite/) on your development machine using [bosh deployment](https://github.com/cloudfoundry/bosh-deployment))
-1. Check out the `master` branch of [cf-deployment](https://github.com/cloudfoundry/cf-deployment)
-1. Check out the `master` branch of [capi-release](https://github.com/cloudfoundry/capi-release)
+1. Check out the `main` branch of [cf-deployment](https://github.com/cloudfoundry/cf-deployment)
+1. Check out the `main` branch of [capi-release](https://github.com/cloudfoundry/capi-release)
 1. Run `scripts/update` from the `capi-release` repo to update submodules
 1. Checkout your branch of cloud_controller_ng in the submodule of capi-release.
-1. Run this [script](https://github.com/cloudfoundry/capi-workspace/blob/master/scripts/create_and_upload) to create and upload a capi dev release to your bosh-lite.
-1. Run this [script](https://github.com/cloudfoundry/capi-workspace/blob/master/scripts/deploy) to deploy CF to your bosh-lite with the capi dev release you just created.
+1. Run this [script](https://github.com/cloudfoundry/capi-workspace/blob/main/scripts/create_and_upload) to create and upload a capi dev release to your bosh-lite.
+1. Run this [script](https://github.com/cloudfoundry/capi-workspace/blob/main/scripts/deploy) to deploy CF to your bosh-lite with the capi dev release you just created.
 
 ### PR Considerations
 We favor pull requests with very small, single commits with a single purpose.

@@ -8,7 +8,7 @@
 # This script is not deployed to your bosh VM by default. To install it, run the following script:
 #
 # apt-get install jq
-# wget https://raw.githubusercontent.com/cloudfoundry/cloud_controller_ng/master/scripts/find_error -O /usr/local/bin/find_error
+# wget https://raw.githubusercontent.com/cloudfoundry/cloud_controller_ng/main/scripts/find_error -O /usr/local/bin/find_error
 # chmod +x /usr/local/bin/find_error
 
 source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh

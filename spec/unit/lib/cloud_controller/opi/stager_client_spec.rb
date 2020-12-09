@@ -193,7 +193,7 @@ RSpec.describe(OPI::StagerClient) do
       context 'when kubernetes is configured' do
         let(:kubernetes_config) do
           {
-            host_url: 'https://master.default.svc.cluster-domain.example',
+            host_url: 'https://main.default.svc.cluster-domain.example',
           }
         end
 

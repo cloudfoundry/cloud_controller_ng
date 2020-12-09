@@ -12,7 +12,7 @@ RSpec.describe 'V3 service route bindings synoptic' do
       with(basic_auth: %w(admin password)).
       to_return(status: 201, body: {}.to_json, headers: {})
 
-    stub_request(:get, 'https://master.default.svc.cluster-domain.example/apis/networking.cloudfoundry.org/v1alpha1').
+    stub_request(:get, 'https://main.default.svc.cluster-domain.example/apis/networking.cloudfoundry.org/v1alpha1').
       with(basic_auth: %w(admin password)).
       to_return(status: 200, body: '', headers: {})
 
