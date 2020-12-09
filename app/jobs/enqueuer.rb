@@ -3,6 +3,7 @@ require 'cloud_controller/clock/job_timeout_calculator'
 require 'jobs/pollable_job_wrapper'
 require 'jobs/logging_context_job'
 require 'jobs/timeout_job'
+require 'securerandom'
 
 module VCAP::CloudController
   module Jobs
@@ -38,6 +39,7 @@ module VCAP::CloudController
       private
 
       def enqueue_job(job)
+        @opts['guid'] = SecureRandom.uuid
         request_id = ::VCAP::Request.current_id
         timeout_job = TimeoutJob.new(job, job_timeout)
         logging_context_job = LoggingContextJob.new(timeout_job, request_id)
