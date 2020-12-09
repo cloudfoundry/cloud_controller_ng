@@ -1539,12 +1539,22 @@ RSpec.describe 'V3 service brokers' do
     plan.save
 
     request_body = {
+      type: 'managed',
       name: 'my-service-instance',
-      space_guid: space.guid,
-      service_plan_guid: plan.guid
+      relationships: {
+        space: {
+          data: {
+            guid: space.guid
+          }
+        },
+        service_plan: {
+          data: {
+            guid: plan.guid
+          }
+        }
+      }
     }
-    # TODO: replace this with v3 once it's implemented
-    post('/v2/service_instances', request_body.to_json, with)
-    expect(last_response).to have_status_code(201)
+    post('/v3/service_instances', request_body.to_json, with)
+    expect(last_response).to have_status_code(202)
   end
 end
