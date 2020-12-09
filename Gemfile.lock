@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/fog/fog-azure-rm.git
-  revision: e7197a91274943f88567844ee38744649a4162a4
+  revision: 79a738331538c6bdba806774cb11af8977979f8e
   branch: fog-arm-cf
   specs:
     fog-azure-rm (0.4.7)
