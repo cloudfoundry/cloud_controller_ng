@@ -6,11 +6,11 @@ Thanks for contributing to cloud_controller_ng. To speed up the process of revie
 
 * Links to any other associated PRs
 
-* [ ] I have reviewed the [contributing guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
+* [ ] I have reviewed the [contributing guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/main/CONTRIBUTING.md)
 
 * [ ] I have viewed, signed, and submitted the Contributor License Agreement
 
-* [ ] I have made this pull request to the `master` branch
+* [ ] I have made this pull request to the `main` branch
 
 * [ ] I have run all the unit tests using `bundle exec rake`
 
