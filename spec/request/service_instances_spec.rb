@@ -2927,8 +2927,10 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when the service instance is shared' do
-          before do
-            instance.add_shared_space(VCAP::CloudController::Space.make)
+          let!(:shared_space) do
+            VCAP::CloudController::Space.make.tap do |s|
+              instance.add_shared_space(s)
+            end
           end
 
           it 'removes the service instance' do
@@ -2936,6 +2938,40 @@ RSpec.describe 'V3 service instances' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(VCAP::CloudController::ServiceInstance.all).to be_empty
+          end
+
+          context 'when there is a binding in the shared space' do
+            let!(:application) { VCAP::CloudController::AppModel.make(space: shared_space) }
+            let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: application) }
+
+            before do
+              stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
+                with(query: {
+                  'accepts_incomplete' => true,
+                  'service_id' => instance.service.broker_provided_id,
+                  'plan_id' => instance.service_plan.broker_provided_id
+                }).
+                to_return(status: 202, body: '{}', headers: {})
+            end
+
+            it 'fails when the unbind is async' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+
+              lo = instance.last_operation
+              expect(lo.type).to eq('delete')
+              expect(lo.state).to eq('failed')
+              expect(lo.description).to eq("An operation for a service binding of service instance #{instance.name} is in progress.")
+
+              expect(
+                stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
+                  with(query: {
+                    'accepts_incomplete' => true,
+                    service_id: instance.service.broker_provided_id,
+                    plan_id: instance.service_plan.broker_provided_id
+                  })
+              ).to have_been_made.once
+            end
           end
         end
 
@@ -2979,6 +3015,73 @@ RSpec.describe 'V3 service instances' do
                     })
                 ).to have_been_made.once
               end
+            end
+          end
+
+          context 'and the broker responds asynchronously to the bindings being deleted' do
+            before do
+              [route_binding, service_binding, service_key].each do |binding|
+                stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
+                  with(query: {
+                    'accepts_incomplete' => true,
+                    'service_id' => instance.service.broker_provided_id,
+                    'plan_id' => instance.service_plan.broker_provided_id
+                  }).
+                  to_return(status: 202, body: '{}', headers: {})
+
+                stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
+                  with(query: {
+                    'service_id' => instance.service.broker_provided_id,
+                    'plan_id' => instance.service_plan.broker_provided_id
+                  }).
+                  to_return(status: 200, body: '{"state":"succeeded"}', headers: {})
+              end
+            end
+
+            it 'fails and starts the delete operation on the bindings' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+
+              lo = VCAP::CloudController::ServiceInstance.first.last_operation
+              expect(lo.type).to eq('delete')
+              expect(lo.state).to eq('failed')
+              expect(lo.description).to eq("An operation for a service binding of service instance #{instance.name} is in progress.")
+
+              lo = VCAP::CloudController::RouteBinding.first.last_operation
+              expect(lo.type).to eq('delete')
+              expect(lo.state).to eq('in progress')
+
+              lo = VCAP::CloudController::ServiceBinding.first.last_operation
+              expect(lo.type).to eq('delete')
+              expect(lo.state).to eq('in progress')
+
+              lo = VCAP::CloudController::ServiceKey.first.last_operation
+              expect(lo.type).to eq('delete')
+              expect(lo.state).to eq('in progress')
+            end
+
+            it 'continues to poll the last operation for the bindings' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 3, expected_failures: 1)
+
+              [route_binding, service_binding, service_key].each do |binding|
+                expect(
+                  stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
+                    with(query: {
+                      service_id: instance.service.broker_provided_id,
+                      plan_id: instance.service_plan.broker_provided_id
+                    })
+                ).to have_been_made.once
+              end
+            end
+
+            it 'eventually removes the bindings' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 3, expected_failures: 1)
+
+              expect(VCAP::CloudController::RouteBinding.all).to be_empty
+              expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+              expect(VCAP::CloudController::ServiceKey.all).to be_empty
             end
           end
         end

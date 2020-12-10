@@ -9,7 +9,6 @@ module VCAP::CloudController
       def initialize(type, binding_guid, user_audit_info:)
         super()
         @type = type
-        @first_time = true
         @binding_guid = binding_guid
         @user_audit_info = user_audit_info
       end
@@ -51,8 +50,7 @@ module VCAP::CloudController
 
         compute_maximum_duration
 
-        if @first_time
-          @first_time = false
+        unless delete_in_progress?
           delete_result = action.delete(binding)
           if delete_result[:finished]
             return finish
@@ -82,6 +80,11 @@ module VCAP::CloudController
 
       def binding
         actor.get_resource(resource_guid)
+      end
+
+      def delete_in_progress?
+        binding.last_operation&.type == 'delete' &&
+          binding.last_operation&.state == 'in progress'
       end
 
       def save_failure(description)
