@@ -1,7 +1,7 @@
 ### Create a service credential binding
 
 ```
-Example Request
+Example App Credential Binding Create Request
 ```
 
 ```shell
@@ -29,6 +29,64 @@ curl "https://api.example.org/v3/service_credential_bindings" \
       "key2": "value2"
     }
   }'
+```
+
+```
+Example Key Credential Binding Create Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_credential_bindings" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "type": "key",
+    "name": "some-binding-name",
+    "relationships": {
+      "service_instance": {
+        "data": {
+          "guid": "7304bc3c-7010-11ea-8840-48bf6bec2d78"
+        }
+      }
+    },
+    "parameters": {
+      "key1": "value1",
+      "key2": "value2"
+    }
+  }'
+```
+
+```
+Example Response for Managed Service Instance
+```
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
+```
+
+```
+Example App Credential Binding Response for User-Provided Service Instance
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_service_credential_binding_app %>
+```
+
+```
+Example Key Credential Binding Response for User-Provided Service Instance
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_service_credential_binding_key %>
 ```
 
 This endpoint creates a new service credential binding. Service credential bindings can be of type `app` or `key`; `key` is only

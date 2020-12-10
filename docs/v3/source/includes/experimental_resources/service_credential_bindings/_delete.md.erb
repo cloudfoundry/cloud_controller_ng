@@ -24,7 +24,9 @@ Example Response for Managed Service Instance
 
 ```http
 HTTP/1.1 202 Accepted
-``` 
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
+```
 
 This endpoint deletes a service credential binding. When deleting credential bindings originated from user provided 
 service instances, the delete operation does not require interactions with service brokers, therefore the API will 
