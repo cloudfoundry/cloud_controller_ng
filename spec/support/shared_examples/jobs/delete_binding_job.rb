@@ -34,7 +34,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
       allow(VCAP::CloudController::V3::DeleteServiceBindingFactory).to receive(:action).and_return(action)
     end
 
-    context 'first time' do
+    context 'delete not started' do
       context 'synchronous response' do
         let(:delete_response) { { finished: true } }
 
@@ -89,7 +89,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
       end
     end
 
-    context 'subsequent times' do
+    context 'delete in progress' do
       let(:new_action) do
         double('UnbindingDouble', {
           delete: delete_response,
@@ -101,6 +101,11 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
         allow(VCAP::CloudController::V3::DeleteServiceBindingFactory).to receive(:action).and_return(new_action)
 
         subject.perform
+
+        binding.save_with_attributes_and_new_operation({}, {
+          type: 'delete',
+          state: 'in progress'
+        })
       end
 
       it 'only calls poll' do

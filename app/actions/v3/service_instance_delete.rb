@@ -1,18 +1,19 @@
 require 'jobs/v3/delete_service_instance_job'
 require 'actions/service_route_binding_delete'
 require 'actions/service_credential_binding_delete'
+require 'actions/service_instance_unshare'
 require 'cloud_controller/errors/api_error'
+require 'jobs/v3/delete_binding_job'
+require 'jobs/enqueuer'
+require 'jobs/queues'
 
 module VCAP::CloudController
   module V3
     class ServiceInstanceDelete
-      class AssociationNotEmptyError < StandardError
-      end
-
-      class InstanceSharedError < StandardError
-      end
-
       class DeleteFailed < StandardError
+      end
+
+      class BindingOperatationInProgress < StandardError
       end
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
@@ -31,10 +32,8 @@ module VCAP::CloudController
       def delete
         operation_in_progress! if service_instance.operation_in_progress? && service_instance.last_operation.type != 'create'
 
-        if service_instance.is_a?(UserProvidedServiceInstance)
-          errors = remove_bindings
-          raise errors.first if errors.any?
-        end
+        errors = remove_associations
+        raise errors.first if errors.any?
 
         result = send_deprovison_to_broker
         if result[:finished]
@@ -49,11 +48,6 @@ module VCAP::CloudController
       rescue => e
         update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
         raise e
-      end
-
-      def delete_checks
-        association_not_empty! if service_instance.has_bindings? || service_instance.has_keys? || service_instance.has_routes?
-        cannot_delete_shared_instances! if service_instance.shared?
       end
 
       def poll
@@ -123,23 +117,51 @@ module VCAP::CloudController
         end
       end
 
-      def remove_bindings
-        errors = []
-        route_bindings_action = ServiceRouteBindingDelete.new(service_event_repository.user_audit_info)
-        RouteBinding.where(service_instance: service_instance).each do |route_binding|
-          route_bindings_action.delete(route_binding)
+      def remove_associations
+        errors = delete_bindings(
+          action: ServiceRouteBindingDelete.new(service_event_repository.user_audit_info),
+          list: RouteBinding.where(service_instance: service_instance),
+          type: :route,
+        )
+
+        errors += delete_bindings(
+          action: ServiceCredentialBindingDelete.new(:credential, service_event_repository.user_audit_info),
+          list: service_instance.service_bindings,
+          type: :credential,
+        )
+
+        errors += delete_bindings(
+          action: ServiceCredentialBindingDelete.new(:key, service_event_repository.user_audit_info),
+          list: service_instance.service_keys,
+          type: :key,
+        )
+
+        errors + unshare_all_spaces
+      end
+
+      def delete_bindings(action:, list:, type:)
+        list.each_with_object([]) do |binding, errors|
+          result = action.delete(binding)
+          unless result[:finished]
+            polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info: service_event_repository.user_audit_info)
+            Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
+            binding_operation_in_progress!
+          end
         rescue => e
           errors << e
         end
+      end
 
-        service_bindings_action = ServiceCredentialBindingDelete.new(:credential, service_event_repository.user_audit_info)
-        service_instance.service_bindings.each do |service_binding|
-          service_bindings_action.delete(service_binding)
+      def unshare_all_spaces
+        # The array from `service_instance.shared_spaces` gets updated as spaces are unshared, so we make list of guids
+        space_guids = service_instance.shared_spaces.map(&:guid)
+
+        unshare_action = ServiceInstanceUnshare.new
+        space_guids.each_with_object([]) do |space_guid, errors|
+          unshare_action.unshare(service_instance, Space.first(guid: space_guid), service_event_repository.user_audit_info)
         rescue => e
           errors << e
         end
-
-        return errors
       end
 
       def update_last_operation_with_operation_id(operation_id)
@@ -160,16 +182,12 @@ module VCAP::CloudController
         service_instance.save_with_new_operation({}, lo)
       end
 
-      def association_not_empty!
-        raise AssociationNotEmptyError
-      end
-
-      def cannot_delete_shared_instances!
-        raise InstanceSharedError
-      end
-
       def operation_in_progress!
         raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+      end
+
+      def binding_operation_in_progress!
+        raise BindingOperatationInProgress.new("An operation for a service binding of service instance #{service_instance.name} is in progress.")
       end
 
       def delete_failed!(message)
