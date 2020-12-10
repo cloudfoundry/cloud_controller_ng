@@ -17,6 +17,8 @@ module VCAP::CloudController
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
       def delete(binding)
+        operation_in_progress! if binding.operation_in_progress? && binding.last_operation.type != 'create'
+
         result = send_unbind_to_client(binding)
         if result[:finished]
           perform_delete_actions(binding)
@@ -68,22 +70,12 @@ module VCAP::CloudController
         details = client.unbind(binding, nil, true)
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
-        raise ConcurrencyError.new(
-          'The service broker rejected the request due to an operation being in progress for the binding'
-        )
+        broker_concurrency_error!
       rescue CloudController::Errors::ApiError => err
-        if err.name == 'AsyncServiceBindingOperationInProgress'
-          raise ConcurrencyError.new(
-            'The service broker rejected the request due to an operation being in progress for the binding'
-          )
-        end
-        raise unprocessable!(binding, err)
+        broker_concurrency_error! if err.name == 'AsyncServiceBindingOperationInProgress'
+        unprocessable!(binding, err)
       rescue => err
-        raise unprocessable!(binding, err)
-      end
-
-      def unprocessable!(binding, err)
-        UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
+        unprocessable!(binding, err)
       end
 
       def update_last_operation(binding, description: nil, state: 'in progress', operation: nil)
@@ -95,6 +87,20 @@ module VCAP::CloudController
           description: description,
           broker_provided_operation: operation || binding.last_operation&.broker_provided_operation
         })
+      end
+
+      def unprocessable!(binding, err)
+        raise UnprocessableDelete.new("Service broker failed to delete service binding for instance #{binding.service_instance.name}: #{err.message}")
+      end
+
+      def operation_in_progress!
+        raise ConcurrencyError.new('The delete request was rejected due to an operation being in progress for the binding')
+      end
+
+      def broker_concurrency_error!
+        raise ConcurrencyError.new(
+          'The service broker rejected the request due to an operation being in progress for the binding'
+        )
       end
     end
   end

@@ -45,23 +45,56 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
       end
     end
 
-    context 'broker returns a concurrency error' do
-      let(:broker_client) do
-        dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
-        allow(dbl).to receive(:unbind).and_raise(
-          VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
-            'foo',
-            :delete,
-            double(code: '500', reason: '', body: '')
-          )
-        )
-        dbl
-      end
-
+    context 'when a create operation is already in progress' do
       before do
         binding.save_with_attributes_and_new_operation(
           {},
           { type: 'create', state: 'in progress', description: 'doing stuff' }
+        )
+      end
+
+      context 'broker accepts delete request' do
+        it 'removes the binding' do
+          action.delete(binding)
+
+          expect(binding_model.all).to be_empty
+        end
+      end
+
+      context 'broker rejects delete request' do
+        let(:broker_client) do
+          dbl = instance_double(VCAP::Services::ServiceBrokers::V2::Client)
+          allow(dbl).to receive(:unbind).and_raise(
+            VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
+              'foo',
+              :delete,
+              double(code: '500', reason: '', body: '')
+            )
+          )
+          dbl
+        end
+
+        it 'fails with an appropriate error and does not alter the binding' do
+          expect {
+            action.delete(binding)
+          }.to raise_error(
+            described_class::ConcurrencyError,
+            'The service broker rejected the request due to an operation being in progress for the binding',
+          )
+
+          binding.reload
+          expect(binding.last_operation.type).to eq('create')
+          expect(binding.last_operation.state).to eq('in progress')
+          expect(binding.last_operation.description).to eq('doing stuff')
+        end
+      end
+    end
+
+    context 'when a delete operation is already in progress' do
+      before do
+        binding.save_with_attributes_and_new_operation(
+          {},
+          { type: 'delete', state: 'in progress', description: 'doing stuff' }
         )
       end
 
@@ -70,11 +103,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
           action.delete(binding)
         }.to raise_error(
           described_class::ConcurrencyError,
-          'The service broker rejected the request due to an operation being in progress for the binding',
+          'The delete request was rejected due to an operation being in progress for the binding',
         )
 
         binding.reload
-        expect(binding.last_operation.type).to eq('create')
+        expect(binding.last_operation.type).to eq('delete')
         expect(binding.last_operation.state).to eq('in progress')
         expect(binding.last_operation.description).to eq('doing stuff')
       end

@@ -89,7 +89,6 @@ module VCAP::CloudController
       !service_key_operation || (%w(succeeded failed).include? service_key_operation.state)
     end
 
-    # TODO: can these methods be a mixin somehow
     def operation_in_progress?
       !!service_key_operation && service_key_operation.state == 'in progress'
     end
