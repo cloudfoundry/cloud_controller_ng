@@ -6,11 +6,12 @@ class BackgroundJobEnvironment
   def initialize(config)
     @config = config
     @log_counter = Steno::Sink::Counter.new
-    @logger = Steno.logger('cc.background')
 
     VCAP::CloudController::StenoConfigurer.new(config.get(:logging)).configure do |steno_config_hash|
       steno_config_hash[:sinks] << @log_counter
     end
+
+    @logger = Steno.logger('cc.background')
   end
 
   READINESS_SOCKET_QUEUE_DEPTH = 100
