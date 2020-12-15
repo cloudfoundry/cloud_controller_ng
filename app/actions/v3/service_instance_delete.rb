@@ -37,14 +37,13 @@ module VCAP::CloudController
 
         result = send_deprovison_to_broker
         if result[:finished]
-          destroy
-          record_delete_event
+          perform_delete_actions
         else
           update_last_operation_with_operation_id(result[:operation])
           record_start_delete_event
         end
 
-        result
+        return result
       rescue => e
         update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
         raise e
@@ -57,7 +56,7 @@ module VCAP::CloudController
           update_last_operation_with_description(result[:last_operation][:description])
           ContinuePolling.call(result[:retry_after])
         when 'succeeded'
-          destroy
+          perform_delete_actions
           PollingFinished
         else
           delete_failed!(result[:last_operation][:description])
@@ -82,6 +81,11 @@ module VCAP::CloudController
       end
 
       private
+
+      def perform_delete_actions
+        destroy
+        record_delete_event
+      end
 
       attr_reader :service_event_repository, :service_instance
 
