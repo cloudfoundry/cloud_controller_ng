@@ -218,6 +218,30 @@ module VCAP::CloudController
         end
       end
 
+      context 'when performing byte unit conversions' do
+        context 'when the field is equivalent' do
+          before do
+            default_manifest['applications'][0]['processes'][0]['memory'] = '1G'
+            default_manifest['applications'][0]['processes'][0]['disk_quota'] = '1G'
+          end
+          it 'returns an empty diff' do
+            expect(subject).to eq([])
+          end
+        end
+        context 'when the field is not equivalent' do
+          before do
+            default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
+            default_manifest['applications'][0]['processes'][0]['disk_quota'] = '4G'
+          end
+          it 'returns the diff formatted as megabytes' do
+            expect(subject).to eq([
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
+            ])
+          end
+        end
+      end
+
       context 'when the user passes in a v2 manifest' do
         let(:default_manifest) {
           {

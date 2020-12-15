@@ -31,6 +31,7 @@ module VCAP::CloudController
             'timeout'
           )
         end
+        manifest_app_hash = convert_byte_measurements_to_mb(manifest_app_hash, 'processes')
         manifest_app_hash = manifest_app_hash.except('processes') if manifest_app_hash['processes'] == [{}]
       end
 
@@ -112,6 +113,29 @@ module VCAP::CloudController
       # rubocop:enable Metrics/CyclomaticComplexity
 
       json_diff
+    end
+
+    def self.convert_byte_measurements_to_mb(manifest_app_hash, top_level_key)
+      byte_measurement_key_words = ['memory', 'disk-quota', 'disk_quota']
+      manifest_app_hash[top_level_key].each_with_index do |process_hash, index|
+        byte_measurement_key_words.each do |key|
+          value = process_hash[key]
+          manifest_app_hash[top_level_key][index][key] = convert_to_mb(value, key) unless value.nil?
+        end
+      end
+      manifest_app_hash
+    end
+
+    def self.convert_to_mb(human_readable_byte_value, attribute_name)
+      byte_converter.convert_to_mb(human_readable_byte_value).to_s + 'M'
+    rescue ByteConverter::InvalidUnitsError
+      "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
+    rescue ByteConverter::NonNumericError
+      "#{attribute_name} is not a number"
+    end
+
+    def self.byte_converter
+      ByteConverter.new
     end
   end
 end
