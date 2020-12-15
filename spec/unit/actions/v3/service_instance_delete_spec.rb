@@ -438,8 +438,8 @@ module VCAP::CloudController
                   expect {
                     action.delete
                   }.to raise_error(
-                    ServiceInstanceDelete::BindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress.",
+                    ServiceInstanceDelete::UnbindingOperatationInProgress,
+                    "An unbinding operation for a service binding of service instance #{service_instance.name} is in progress.",
                   )
 
                   expect(Delayed::Job.all).to have(1).job
@@ -462,8 +462,8 @@ module VCAP::CloudController
                   expect {
                     action.delete
                   }.to raise_error(
-                    ServiceInstanceDelete::BindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress.",
+                    ServiceInstanceDelete::UnbindingOperatationInProgress,
+                    "An unbinding operation for a service binding of service instance #{service_instance.name} is in progress.",
                   )
 
                   expect(Delayed::Job.all).to have(1).job
@@ -486,8 +486,8 @@ module VCAP::CloudController
                   expect {
                     action.delete
                   }.to raise_error(
-                    ServiceInstanceDelete::BindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress.",
+                    ServiceInstanceDelete::UnbindingOperatationInProgress,
+                    "An unbinding operation for a service binding of service instance #{service_instance.name} is in progress.",
                   )
 
                   expect(Delayed::Job.all).to have(1).job
