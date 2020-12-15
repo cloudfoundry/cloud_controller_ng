@@ -583,6 +583,15 @@ module VCAP::CloudController
             expect(ServiceInstance.all).to be_empty
           end
 
+          it 'creates an audit event' do
+            action.poll
+
+            expect(event_repository).to have_received(:record_service_instance_event).with(
+              :delete,
+              instance_of(ManagedServiceInstance)
+            )
+          end
+
           it 'returns finished' do
             result = action.poll
 
