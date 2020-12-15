@@ -13,7 +13,7 @@ module VCAP::CloudController
       class DeleteFailed < StandardError
       end
 
-      class BindingOperatationInProgress < StandardError
+      class UnbindingOperatationInProgress < StandardError
       end
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
@@ -145,7 +145,7 @@ module VCAP::CloudController
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info: service_event_repository.user_audit_info)
             Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
-            binding_operation_in_progress!
+            unbinding_operation_in_progress!
           end
         rescue => e
           errors << e
@@ -186,8 +186,8 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
       end
 
-      def binding_operation_in_progress!
-        raise BindingOperatationInProgress.new("An operation for a service binding of service instance #{service_instance.name} is in progress.")
+      def unbinding_operation_in_progress!
+        raise UnbindingOperatationInProgress.new("An unbinding operation for a service binding of service instance #{service_instance.name} is in progress.")
       end
 
       def delete_failed!(message)
