@@ -196,11 +196,41 @@ module VCAP::CloudController
                   success_response[:result][:process_types] = nil
                 end
 
-                it 'gracefully sets process_types to an empty hash, but mark the build as failed' do
-                  subject.staging_complete(success_response)
-                  build.reload
-                  expect(build.state).to eq(BuildModel::FAILED_STATE)
-                  expect(build.error_id).to match(/StagingError/)
+                context 'and the app\'s web process does NOT have a start command' do
+                  let(:runner) { instance_double(Diego::Runner, start: nil) }
+                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+
+                  before do
+                    allow(runners).to receive(:runner_for_process).and_return(runner)
+                  end
+
+                  it 'gracefully sets process_types to an empty hash, and marks the droplet as failed' do
+                    subject.staging_complete(success_response)
+                    build.reload
+                    expect(build.state).to eq(BuildModel::FAILED_STATE)
+                    expect(build.error_id).to eq('StagingError')
+                  end
+                end
+
+                context 'and the app\'s web process has a start command' do
+                  let(:runner) { instance_double(Diego::Runner, start: nil) }
+                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+
+                  before do
+                    success_response[:result][:execution_metadata] = 'black-box-string'
+                    allow(runners).to receive(:runner_for_process).and_return(runner)
+                  end
+
+                  it 'updates the droplet with the metadata' do
+                    subject.staging_complete(success_response)
+                    droplet.reload
+
+                    expect(droplet.process_types).to eq({})
+                    expect(droplet.execution_metadata).to eq('black-box-string')
+                    expect(droplet.buildpack_receipt_buildpack).to eq('lifecycle-bp')
+                    expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
+                    expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
+                  end
                 end
 
                 context 'when a start is requested' do
@@ -211,17 +241,6 @@ module VCAP::CloudController
                     before do
                       success_response[:result][:execution_metadata] = 'black-box-string'
                       allow(runners).to receive(:runner_for_process).and_return(runner)
-                    end
-
-                    it 'updates the droplet with the metadata' do
-                      subject.staging_complete(success_response, true)
-                      droplet.reload
-
-                      expect(droplet.process_types).to eq({})
-                      expect(droplet.execution_metadata).to eq('black-box-string')
-                      expect(droplet.buildpack_receipt_buildpack).to eq('lifecycle-bp')
-                      expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
-                      expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
                     end
 
                     context 'when revisions are enabled' do

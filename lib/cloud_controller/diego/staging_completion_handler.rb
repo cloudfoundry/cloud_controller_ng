@@ -72,7 +72,6 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
-      # rubocop:todo Metrics/CyclomaticComplexity
       # with_start is true when v2 staging causes apps to start
       def handle_success(payload, with_start)
         begin
@@ -89,13 +88,11 @@ module VCAP::CloudController
 
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if build.in_final_state?
 
-        app                    = droplet.app
-        requires_start_command = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
+        app = droplet.app
+        no_process_types = payload[:result][:process_types].blank?
+        no_app_command = app.newest_web_process&.command.blank?
 
-        if payload[:result][:process_types].blank? && !with_start
-          payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
-          handle_failure(payload, with_start)
-        elsif requires_start_command
+        if no_process_types && no_app_command
           payload[:error] = { message: 'Start command not specified', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
         else
@@ -130,7 +127,6 @@ module VCAP::CloudController
           BitsExpiration.new.expire_droplets!(app)
         end
       end
-      # rubocop:enable Metrics/CyclomaticComplexity
 
       def handle_missing_droplet!(payload)
         raise NotImplementedError

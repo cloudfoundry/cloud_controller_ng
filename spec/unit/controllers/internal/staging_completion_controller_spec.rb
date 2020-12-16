@@ -318,8 +318,6 @@ module VCAP::CloudController
         end
 
         it 'adds the buildpack info to the droplet' do
-          # expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
-
           allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
