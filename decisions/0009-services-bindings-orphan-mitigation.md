@@ -42,30 +42,34 @@ However, we have chosen to keep performing orphan mitigation in many cases in or
  
 ## Scenarios when CF will perform OM:
 
-Component     | Status code | Response Body | Notes
---------------| :------------:| --------------| --------
-Service Broker| 200 | malformed | 
-Service Broker| 201 | malformed | 
-Service Broker| 201 | bad data | In the rare case that this might happen, CF would not be able to record the broker response. Safest assumption is to delete the resource from the broker and allow the operator to start over.
-Service Broker| 202 | malformed | CF would not be able to record the broker response that might include important properties for continuing the async flow (e.g. operation_id).
-Service Broker| 2xx | - | 
-Service Broker| 410 | - | This is not a valid error code for a `POST` request. No resource should have been created, however attempting OM does not have any risks.
-Service Broker| 422 | Unexpected error | No resource should have been created, however attempting OM does not have any risks.
-Service Broker| 5xx | - |
-Service Broker| Client Timeout | - 
+Status code | Response Body |  OSBAPI advices OM |Notes
+:------------:| --------------|:--------------:| --------
+ 200 | bad data | No | If this happens, CF would not be able to record the broker response. Safest assumption is to delete the resource from the broker and allow the operator to start over.
+ 201 | malformed |  Yes |
+ 201 | bad data | No | If this happens, CF would not be able to record the broker response. Safest assumption is to delete the resource from the broker and allow the operator to start over.
+ 202 | malformed | No | If this happens, CF would not be able to record the broker response that might include important properties for continuing the async flow (e.g. operation_id).
+ 2xx | - |  Yes |
+ 410 | - | No | This is not a valid error code for a `POST` request. No resource should have been created, however attempting OM does not have any risks.
+ 422 | unexpected error | No | No resource should have been created, however attempting OM does not have any risks.
+ 5xx | - | |
+ Client Timeout | - | |
 
 ## Scenarios when CF will NOT perform OM:
 
-Component     | Status code | Response Body |  Comments
---------------| :------------:| --------------| --------
-Service Broker| 201 | other | 
-Service Broker| 202 | other | 
-Service Broker| 401 | - | 
-Service Broker| 408 | - | 
-Service Broker| 409 | - | 
-Service Broker| 422 | Requires app/Async/Concurrency error | 
-Service Broker| 4xx | - | 
-Cloud Controller| Internal error(1) | - |Different from v2, in v3 there is a record of the resource in the DB. The user can delete the resource after failure. 
+Status code | Response Body |  OSBAPI advices OM |Notes
+:------------:| --------------|:--------------:| --------
+ 200 | Malformed | No |
+ 201 | Other (not Malformed or Bad data) | No |
+ 202 | Other (not Malformed or Bad data) | No |
+ 401 | - | No |
+ 408 | - | No |
+ 409 | - | No |
+ 422 | Requires app/Async/Concurrency error | No |
+ 4xx | - | No |
+ 
+
+In v3, in the case of any other CF internal error not related to the Broker response, CF does not perform OM. 
+Even in case of failure, there is a record of the resource in the DB and the user is able to delete the resource after failure. 
 
 # Handling binding last operation broker responses
 
@@ -89,4 +93,5 @@ Draft
 
 We are mostly keeping in line with what v2 does, except for the scenarios that do not happen in v3 and the places where the code is significantly simpler and easier to maintain if we moved closer to OSB API. 
 As a consequence we might get issues filed regarding misalignment with the spec. However the spec is quite loose and we have good justification for the scenarios we are deviating from it; Hence we are confident this won’t cause future problems.
+
 
