@@ -35,6 +35,7 @@ module VCAP::CloudController
 
         it 'records the service binding delete event' do
           subject.purge(service_instance)
+
           events              = Event.where(type: 'audit.service_binding.delete').all
           event_binding_guids = events.collect(&:actee)
 
@@ -44,6 +45,7 @@ module VCAP::CloudController
 
         it 'deletes the service bindings' do
           subject.purge(service_instance)
+
           expect(service_binding_1).not_to exist
           expect(service_binding_2).not_to exist
         end
@@ -56,8 +58,19 @@ module VCAP::CloudController
         let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance, route: route_1) }
         let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance, route: route_2) }
 
+        it 'records the service binding delete event' do
+          subject.purge(service_instance)
+
+          events              = Event.where(type: 'audit.service_route_binding.delete').all
+          event_binding_guids = events.collect(&:actee)
+
+          expect(events.length).to eq(2)
+          expect(event_binding_guids).to match_array([route_binding_1.guid, route_binding_2.guid])
+        end
+
         it 'deletes the route bindings' do
           subject.purge(service_instance)
+
           expect(route_binding_1).not_to exist
           expect(route_binding_2).not_to exist
         end
@@ -69,6 +82,7 @@ module VCAP::CloudController
 
         it 'records the service key delete event' do
           subject.purge(service_instance)
+
           events          = Event.where(type: 'audit.service_key.delete').all
           event_key_guids = events.collect(&:actee)
 
@@ -78,6 +92,7 @@ module VCAP::CloudController
 
         it 'deletes the service keys' do
           subject.purge(service_instance)
+
           expect(service_key_1).not_to exist
           expect(service_key_2).not_to exist
         end
@@ -90,6 +105,7 @@ module VCAP::CloudController
 
         it 'records an unshare service event' do
           subject.purge(service_instance)
+
           events = Event.where(type: 'audit.service_instance.unshare').all
           event_key_guid = events.collect(&:actee)
 
