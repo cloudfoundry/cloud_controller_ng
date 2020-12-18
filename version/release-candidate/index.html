@@ -984,7 +984,7 @@ will be created and the droplet will be expanded inside that container to be exe
 </tr>
 <tr>
 <td><strong>data.buildpacks</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>A list of the names of buildpacks, URLs from which they may be downloaded, or <code class="prettyprint">null</code> to auto-detect a suitable buildpack during staging</td>
 </tr>
 <tr>
@@ -1063,7 +1063,7 @@ This image is published to the app image registry and a <code class="prettyprint
 </tr>
 <tr>
 <td><strong>data.buildpacks</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>An optional list of buildpack names. Specify an empty list to auto-detect a suitable buildpack during staging</td>
 </tr>
 </tbody></table>
@@ -10747,7 +10747,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 <tr>
 <td><strong>buildpacks</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy <code class="prettyprint">buildpack</code> field</td>
 </tr>
 <tr>
@@ -10924,7 +10924,7 @@ take either an array of service instance name strings or an array of the followi
 </tr>
 <tr>
 <td><strong>process_types</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>List of processes to associate sidecar with</td>
 </tr>
 <tr>
@@ -20167,7 +20167,7 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </tr>
 <tr>
 <td><strong>tags</strong> (<em>experimental</em>)</td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env</td>
 </tr>
 <tr>
@@ -20835,7 +20835,7 @@ There is no mechanism to link a service broker with its jobs, apart from the <co
 </tr>
 <tr>
 <td><strong>tags</strong> (<em>experimental</em>)</td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env</td>
 </tr>
 <tr>
@@ -20894,7 +20894,7 @@ The response will be asynchronous if:</p>
 </tr>
 <tr>
 <td><strong>tags</strong> (<em>experimental</em>)</td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env</td>
 </tr>
 <tr>
@@ -28347,7 +28347,7 @@ Each object contains the command that the given process type was running at this
 </tr>
 <tr>
 <td><strong>process_types</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>A list of process types the sidecar applies to</td>
 </tr>
 <tr>
@@ -30430,7 +30430,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 </thead><tbody>
 <tr>
 <td><strong>tags</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env</td>
 </tr>
 <tr>
@@ -30487,7 +30487,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 </thead><tbody>
 <tr>
 <td><strong>tags</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env</td>
 </tr>
 <tr>
@@ -31063,7 +31063,7 @@ will continue in the background. The operation can be retried until it is succes
 </tr>
 <tr>
 <td><strong>process_types</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>A list of process types the sidecar applies to</td>
 </tr>
 <tr>
@@ -31156,7 +31156,7 @@ will continue in the background. The operation can be retried until it is succes
 </tr>
 <tr>
 <td><strong>process_types</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>A list of process types the sidecar applies to</td>
 </tr>
 </tbody></table>
@@ -31321,7 +31321,7 @@ will continue in the background. The operation can be retried until it is succes
 </tr>
 <tr>
 <td><strong>process_types</strong></td>
-<td><em>array of strings</em></td>
+<td><em>list of strings</em></td>
 <td>A list of process types the sidecar applies to</td>
 </tr>
 <tr>
