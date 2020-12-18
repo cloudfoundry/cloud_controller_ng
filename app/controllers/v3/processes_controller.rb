@@ -77,6 +77,7 @@ class ProcessesController < ApplicationController
     message = ProcessScaleMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
+    @process.skip_process_version_update = true if message.requested?(:memory_in_mb)
     ProcessScale.new(user_audit_info, @process, message).scale
     TelemetryLogger.v3_emit(
       'scale-app',

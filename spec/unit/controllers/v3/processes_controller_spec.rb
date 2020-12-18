@@ -602,14 +602,14 @@ RSpec.describe ProcessesController, type: :controller do
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
-    it 'scales the process and changes its version' do
+    it 'does not changes its version' do
       process_type.update(state: VCAP::CloudController::ProcessModel::STARTED)
       version = process_type.version
       put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
       expect(response.status).to eq(202)
       process_type.reload
-      expect(process_type.version).not_to eq(version)
+      expect(process_type.version).to eq(version)
     end
 
     context 'accessed as app subresource' do
