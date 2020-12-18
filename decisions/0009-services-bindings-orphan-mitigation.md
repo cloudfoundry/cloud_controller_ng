@@ -84,14 +84,11 @@ There is not a clear benefit of implementing any OM logic for such straightforwa
 ## Changes from v2 to v3
 When possible we have kept the same OM implementation in v2 and v3. Cases when we have diverged have been documented in this doc.
 
-In v3 all types of bindings (including service bindings, service keys and route bindings) have the same OM behaviour.
+In v3 all types of bindings, including service credentials bindings for apps and keys and service route bindings, have the same OM behaviour.
 
 # Status
 Draft
 
 # Consequences:
-
-We are mostly keeping in line with what v2 does, except for the scenarios that do not happen in v3 and the places where the code is significantly simpler and easier to maintain if we moved closer to OSB API. 
-As a consequence we might get issues filed regarding misalignment with the spec. However the spec is quite loose and we have good justification for the scenarios we are deviating from it; Hence we are confident this won’t cause future problems.
-
-
+This document is a description of our reasoning about OM and its current implementation at the time of writing. 
+The behaviour for each use-case might change if OSBAPI advices new behaviour or our customers request other changes.
