@@ -21,7 +21,7 @@ Name | Type | Description
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **name** | _string_ | Name of the service instance
 **type** (*experimental*)| _string_ | Either `managed` or `user-provided`
-**tags** (*experimental*)| _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**tags** (*experimental*)| _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
 **syslog_drain_url** (*experimental*)| _string_ | URL to which logs for bound applications will be streamed; only shown when type is `user-provided`
 **route_service_url** (*experimental*)| _string_ | URL to which requests for bound routes will be forwarded; only shown when type is `user-provided`
 **maintenance_info** (*experimental*)| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance; only shown when type is `managed`

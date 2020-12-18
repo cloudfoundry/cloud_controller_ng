@@ -37,7 +37,7 @@ will be created and the droplet will be expanded inside that container to be exe
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
-**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
+**data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
 
 ### Docker lifecycle
@@ -92,4 +92,4 @@ When running an app with this lifecycle, a container is created and the OCI imag
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `kpack`
-**data.buildpacks** | _array of strings_ | An optional list of buildpack names. Specify an empty list to auto-detect a suitable buildpack during staging
+**data.buildpacks** | _list of strings_ | An optional list of buildpack names. Specify an empty list to auto-detect a suitable buildpack during staging

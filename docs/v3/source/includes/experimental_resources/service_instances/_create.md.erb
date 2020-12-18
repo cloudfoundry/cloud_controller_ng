@@ -121,7 +121,7 @@ Name | Type | Description
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**tags** | _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**tags** | _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
 **parameters** | _object_ | A JSON object that is passed to the service broker
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service instance
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance
@@ -138,7 +138,7 @@ Name | Type | Description
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**tags** | _array of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**tags** | _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
 **credentials** | _object_ | A JSON object that is made available to apps bound to this service instance
 **syslog_drain_url** | _string_ | URL to which logs for bound applications will be streamed
 **route_service_url** | _string_ | URL to which requests for bound routes will be forwarded; must use the `https` protocol
