@@ -228,6 +228,7 @@ module VCAP::CloudController
             expect(subject).to eq([])
           end
         end
+
         context 'when the field is not equivalent' do
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
@@ -238,6 +239,50 @@ module VCAP::CloudController
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
             ])
+          end
+        end
+
+        context 'when updating sidecar configurations' do
+          let(:default_manifest) {
+            {
+              'applications' => [
+                {
+                  'name' => app1_model.name,
+                  'stack' => process1.stack.name,
+                  'routes' => [
+                    {
+                      'route' => "a_host.#{shared_domain.name}"
+                    }
+                  ],
+                  'sidecars' => [
+                    {
+                      'name' => sidecar_model.name,
+                      'process_types' => [sidecar_process_type_model.type],
+                      'command' => sidecar_model.command,
+                      'memory' => '2G',
+                    }
+                  ]
+                },
+              ]
+            }
+          }
+          let!(:sidecar_process_model) { ProcessModel.make(app: app1_model) }
+          let!(:sidecar_model) { SidecarModel.make(app: app1_model, memory: 2048) }
+          let!(:sidecar_process_type_model) { SidecarProcessTypeModel.make(type: sidecar_process_model.type, sidecar: sidecar_model) }
+
+          it 'returns an empty diff if the field is equivalent' do
+            expect(subject).to eq([])
+          end
+        end
+
+        context 'when updating app-level configurations' do
+          before do
+            default_manifest['applications'][0]['memory'] = '1G'
+            default_manifest['applications'][0]['disk_quota'] = '1G'
+          end
+
+          it 'returns an empty diff if the field is equivalent' do
+            expect(subject).to eq([])
           end
         end
       end

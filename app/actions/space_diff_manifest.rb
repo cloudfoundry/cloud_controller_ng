@@ -15,6 +15,7 @@ module VCAP::CloudController
             'memory'
           )
         end
+        manifest_app_hash['sidecars'] = convert_byte_measurements_to_mb(manifest_app_hash['sidecars'])
         manifest_app_hash = manifest_app_hash.except('sidecars') if manifest_app_hash['sidecars'] == [{}]
       end
       if manifest_app_hash.key? 'processes'
@@ -31,7 +32,7 @@ module VCAP::CloudController
             'timeout'
           )
         end
-        manifest_app_hash = convert_byte_measurements_to_mb(manifest_app_hash, 'processes')
+        manifest_app_hash['processes'] = convert_byte_measurements_to_mb(manifest_app_hash['processes'])
         manifest_app_hash = manifest_app_hash.except('processes') if manifest_app_hash['processes'] == [{}]
       end
 
@@ -65,6 +66,7 @@ module VCAP::CloudController
     def self.generate_diff(app_manifests, space)
       json_diff = []
       recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s)
+      app_manifests = convert_byte_measurements_to_mb(app_manifests)
       app_manifests.each_with_index do |manifest_app_hash, index|
         manifest_app_hash = SpaceDiffManifest.filter_manifest_app_hash(manifest_app_hash)
         existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] }
@@ -115,12 +117,12 @@ module VCAP::CloudController
       json_diff
     end
 
-    def self.convert_byte_measurements_to_mb(manifest_app_hash, top_level_key)
+    def self.convert_byte_measurements_to_mb(manifest_app_hash)
       byte_measurement_key_words = ['memory', 'disk-quota', 'disk_quota']
-      manifest_app_hash[top_level_key].each_with_index do |process_hash, index|
+      manifest_app_hash.each_with_index do |process_hash, index|
         byte_measurement_key_words.each do |key|
           value = process_hash[key]
-          manifest_app_hash[top_level_key][index][key] = convert_to_mb(value, key) unless value.nil?
+          manifest_app_hash[index][key] = convert_to_mb(value, key) unless value.nil?
         end
       end
       manifest_app_hash
