@@ -68,14 +68,15 @@ class ServiceCredentialBindingsController < ApplicationController
 
     type = service_credential_binding.is_a?(ServiceKey) ? :key : :credential
 
-    operation_in_progress! if service_credential_binding.service_instance.operation_in_progress?
+    action = V3::ServiceCredentialBindingDelete.new(type, user_audit_info)
+    binding_operation_in_progress! if action.blocking_operation_in_progress?(service_credential_binding)
+    instance_operation_in_progress! if service_credential_binding.service_instance.operation_in_progress?
 
     case service_credential_binding.service_instance
     when ManagedServiceInstance
       pollable_job_guid = enqueue_unbind_job(type, service_credential_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceCredentialBindingDelete.new(type, user_audit_info)
       action.delete(service_credential_binding)
       head :no_content
     end
@@ -302,8 +303,12 @@ class ServiceCredentialBindingsController < ApplicationController
     request.query_parameters.with_indifferent_access
   end
 
-  def operation_in_progress!
+  def instance_operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
+  end
+
+  def binding_operation_in_progress!
+    unprocessable!('There is an operation in progress for the service credential binding.')
   end
 
   def not_found!

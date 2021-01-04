@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'actions/service_route_binding_delete'
 require 'support/shared_examples/v3_service_binding_delete'
+require 'unit/actions/service_credential_binding_delete_spec'
 
 module VCAP::CloudController
   module V3
@@ -49,10 +50,12 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:route) { Route.make(space: space) }
       let(:route_service_url) { 'https://route_service_url.com' }
+      let(:last_operation_type) { 'create' }
+      let(:last_operation_state) { 'successful' }
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
           { service_instance: service_instance, route: route, route_service_url: route_service_url },
-          { type: 'create', state: 'successful' }
+          { type: last_operation_type, state: last_operation_state }
         )
       end
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
@@ -67,6 +70,14 @@ module VCAP::CloudController
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_route_binding').and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_delete)
         allow(binding_event_repo).to receive(:record_start_delete)
+      end
+
+      describe '#blocking_operation_in_progress?' do
+        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+        let(:service_plan) { ServicePlan.make(service: service_offering) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+        it_behaves_like 'blocking operation in progress'
       end
 
       describe '#delete' do

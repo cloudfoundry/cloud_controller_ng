@@ -64,14 +64,16 @@ class ServiceRouteBindingsController < ApplicationController
 
   def destroy
     route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
-    operation_in_progress! if @route_binding.service_instance.operation_in_progress?
+
+    action = V3::ServiceRouteBindingDelete.new(user_audit_info)
+    binding_operation_in_progress! if action.blocking_operation_in_progress?(@route_binding)
+    instance_operation_in_progress! if @route_binding.service_instance.operation_in_progress?
 
     case @route_binding.service_instance
     when ManagedServiceInstance
       pollable_job_guid = enqueue_unbind_job(@route_binding.guid)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
     when UserProvidedServiceInstance
-      action = V3::ServiceRouteBindingDelete.new(user_audit_info)
       action.delete(@route_binding)
       head :no_content
     end
@@ -238,8 +240,12 @@ class ServiceRouteBindingsController < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute').with_response_code(422)
   end
 
-  def operation_in_progress!
+  def instance_operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
+  end
+
+  def binding_operation_in_progress!
+    unprocessable!('There is an operation in progress for the service binding.')
   end
 
   def set_route_binding

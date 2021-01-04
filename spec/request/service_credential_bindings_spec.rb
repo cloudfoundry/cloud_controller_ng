@@ -1457,6 +1457,20 @@ RSpec.describe 'v3 service credential bindings' do
         end
       end
 
+      context 'when the service credential binding has a delete in progress' do
+        it 'responds with 422' do
+          binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+
+          api_call.call admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('There is an operation in progress for the service credential binding.'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
       context 'when the service credential binding is still creating' do
         before do
           binding.save_with_attributes_and_new_operation(
