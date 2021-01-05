@@ -33,7 +33,9 @@ class ServiceBindingPresenter
   def present_service_binding(service_binding)
     {
       name: service_binding.name.presence || service_instance.name,
+      instance_id: service_instance.id,
       instance_name: service_instance.name,
+      binding_id: service_binding.id,
       binding_name: service_binding.name,
       credentials: service_binding.credentials,
       syslog_drain_url: service_binding.syslog_drain_url,

@@ -1328,7 +1328,7 @@ RSpec.describe 'Apps' do
         name: 'si-name',
         tags: ['50% off']
       )
-      VCAP::CloudController::ServiceBinding.make(
+      service_binding = VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
         app: app_model,
         syslog_drain_url: 'https://syslog.example.com/drain',
@@ -1352,7 +1352,9 @@ RSpec.describe 'Apps' do
                   service_instance.service.label => [
                     {
                         'name' => 'si-name',
+                        'instance_id' => service_instance.id,
                         'instance_name' => 'si-name',
+                        'binding_id' => service_binding.id,
                         'binding_name' => nil,
                         'credentials' => { 'password' => 'top-secret' },
                         'syslog_drain_url' => 'https://syslog.example.com/drain',
