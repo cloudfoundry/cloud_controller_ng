@@ -3098,20 +3098,37 @@ RSpec.describe 'V3 service instances' do
           @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
 
           api_call.call(admin_headers)
+        end
 
-          it 'removes all associations' do
-            expect { @binding.reload }.to raise_error Sequel::NoExistingObject
-            expect { @key.reload }.to raise_error Sequel::NoExistingObject
-            expect { @route.reload }.to raise_error Sequel::NoExistingObject
-          end
+        it 'removes all associations' do
+          expect { @binding.reload }.to raise_error Sequel::NoExistingObject
+          expect { @key.reload }.to raise_error Sequel::NoExistingObject
+          expect { @route.reload }.to raise_error Sequel::NoExistingObject
+        end
 
-          it 'deletes the service instance' do
-            expect { instance.reload }.to raise_error Sequel::NoExistingObject
-          end
+        it 'deletes the service instance' do
+          expect { instance.reload }.to raise_error Sequel::NoExistingObject
+        end
 
-          it 'responds with 204' do
-            expect(last_response).to have_status_code(204)
-          end
+        it 'responds with 204' do
+          expect(last_response).to have_status_code(204)
+        end
+      end
+
+      context 'when delete is already in progress' do
+        before do
+          instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'responds with 422' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('There is an operation in progress for the service instance.'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
         end
       end
 

@@ -29,8 +29,12 @@ module VCAP::CloudController
         @service_event_repository = event_repo
       end
 
+      def blocking_operation_in_progress?
+        service_instance.operation_in_progress? && service_instance.last_operation.type != 'create'
+      end
+
       def delete
-        operation_in_progress! if service_instance.operation_in_progress? && service_instance.last_operation.type != 'create'
+        operation_in_progress! if blocking_operation_in_progress?
 
         errors = remove_associations
         raise errors.first if errors.any?

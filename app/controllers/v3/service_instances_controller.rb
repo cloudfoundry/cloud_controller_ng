@@ -113,6 +113,7 @@ class ServiceInstancesV3Controller < ApplicationController
     end
 
     delete_action = V3::ServiceInstanceDelete.new(service_instance, service_event_repository)
+    operation_in_progress! if delete_action.blocking_operation_in_progress?
 
     case service_instance
     when VCAP::CloudController::ManagedServiceInstance
@@ -393,5 +394,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def invalid_service_plan_relation!
     raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', 'service plan relates to a different service offering')
+  end
+
+  def operation_in_progress!
+    unprocessable!('There is an operation in progress for the service instance.')
   end
 end

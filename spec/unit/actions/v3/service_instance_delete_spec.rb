@@ -13,6 +13,41 @@ module VCAP::CloudController
         dbl
       end
 
+      describe '#blocking_operation_in_progress?' do
+        let!(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make.tap do |si|
+            si.save_with_new_operation({}, { type: last_operation_type, state: last_operation_state })
+          end
+        end
+
+        describe 'delete in progress' do
+          let(:last_operation_type) { 'delete' }
+          let(:last_operation_state) { 'in progress' }
+
+          it 'is blocking' do
+            expect(action.blocking_operation_in_progress?).to be_truthy
+          end
+        end
+
+        describe 'create in progress' do
+          let(:last_operation_type) { 'create' }
+          let(:last_operation_state) { 'in progress' }
+
+          it 'is not blocking' do
+            expect(action.blocking_operation_in_progress?).to be_falsey
+          end
+        end
+
+        describe 'operation not in progress' do
+          let(:last_operation_type) { 'delete' }
+          let(:last_operation_state) { 'failed' }
+
+          it 'is not blocking' do
+            expect(action.blocking_operation_in_progress?).to be_falsey
+          end
+        end
+      end
+
       describe '#delete' do
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
