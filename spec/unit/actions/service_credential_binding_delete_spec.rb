@@ -153,15 +153,52 @@ module VCAP::CloudController
         end
       end
 
+      RSpec.shared_examples 'blocking operation in progress' do
+        describe 'delete in progress' do
+          let(:last_operation_type) { 'delete' }
+          let(:last_operation_state) { 'in progress' }
+
+          it 'is blocking' do
+            expect(action.blocking_operation_in_progress?(binding)).to be_truthy
+          end
+        end
+
+        describe 'create in progress' do
+          let(:last_operation_type) { 'create' }
+          let(:last_operation_state) { 'in progress' }
+
+          it 'is not blocking' do
+            expect(action.blocking_operation_in_progress?(binding)).to be_falsey
+          end
+        end
+
+        describe 'operation not in progress' do
+          let(:last_operation_type) { 'delete' }
+          let(:last_operation_state) { 'failed' }
+
+          it 'is not blocking' do
+            expect(action.blocking_operation_in_progress?(binding)).to be_falsey
+          end
+        end
+      end
+
       describe 'app binding' do
         let(:audit_event) { 'service_binding' }
         let(:type) { :credential }
         let(:app) { AppModel.make(space: space) }
+        let(:last_operation_type) { 'create' }
+        let(:last_operation_state) { 'successful' }
         let(:binding) do
           VCAP::CloudController::ServiceBinding.new.save_with_attributes_and_new_operation(
             { type: 'app', service_instance: service_instance, app: app, credentials: { test: 'secretPassword' } },
-            { type: 'create', state: 'successful' }
+            { type: last_operation_type, state: last_operation_state }
           )
+        end
+
+        describe '#blocking_operation_in_progress?' do
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+          it_behaves_like 'blocking operation in progress'
         end
 
         describe '#delete' do
@@ -182,11 +219,19 @@ module VCAP::CloudController
       describe 'key binding' do
         let(:type) { :key }
         let(:audit_event) { 'service_key' }
+        let(:last_operation_type) { 'create' }
+        let(:last_operation_state) { 'successful' }
         let(:binding) do
           VCAP::CloudController::ServiceKey.new.save_with_attributes_and_new_operation(
             { name: 'binding_name', service_instance: service_instance, credentials: { test: 'secretPassword' } },
-            { type: 'create', state: 'successful' }
+            { type: last_operation_type, state: last_operation_state }
           )
+        end
+
+        describe '#blocking_operation_in_progress?' do
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+          it_behaves_like 'blocking operation in progress'
         end
 
         describe '#delete' do

@@ -16,8 +16,12 @@ module VCAP::CloudController
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
+      def blocking_operation_in_progress?(binding)
+        binding.operation_in_progress? && binding.last_operation.type != 'create'
+      end
+
       def delete(binding)
-        operation_in_progress! if binding.operation_in_progress? && binding.last_operation.type != 'create'
+        operation_in_progress! if blocking_operation_in_progress?(binding)
 
         result = send_unbind_to_client(binding)
         if result[:finished]
@@ -94,12 +98,12 @@ module VCAP::CloudController
       end
 
       def operation_in_progress!
-        raise ConcurrencyError.new('The delete request was rejected due to an operation being in progress for the binding')
+        raise ConcurrencyError.new('The delete request was rejected due to an operation being in progress for the service binding.')
       end
 
       def broker_concurrency_error!
         raise ConcurrencyError.new(
-          'The service broker rejected the request due to an operation being in progress for the binding'
+          'The service broker rejected the request due to an operation being in progress for the service binding.'
         )
       end
     end
