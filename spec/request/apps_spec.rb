@@ -1352,9 +1352,9 @@ RSpec.describe 'Apps' do
                   service_instance.service.label => [
                     {
                         'name' => 'si-name',
-                        'instance_id' => service_instance.id,
+                        'instance_guid' => service_instance.guid,
                         'instance_name' => 'si-name',
-                        'binding_id' => service_binding.id,
+                        'binding_guid' => service_binding.guid,
                         'binding_name' => nil,
                         'credentials' => { 'password' => 'top-secret' },
                         'syslog_drain_url' => 'https://syslog.example.com/drain',

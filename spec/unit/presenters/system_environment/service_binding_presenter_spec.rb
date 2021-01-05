@@ -44,13 +44,13 @@ module VCAP::CloudController
 
           expect(result).to have_key(:label)
           expect(result).to have_key(:name)
-          expect(result).to have_key(:binding_id)
+          expect(result).to have_key(:binding_guid)
           expect(result).to have_key(:credentials)
           expect(result).to have_key(:plan)
           expect(result).to have_key(:provider)
           expect(result).to have_key(:tags)
           expect(result).to have_key(:instance_name)
-          expect(result).to have_key(:instance_id)
+          expect(result).to have_key(:instance_guid)
           expect(result).to have_key(:binding_name)
         end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
         end
 
         it 'sets the binding id' do
-          expect(result[:binding_id]).to eq(service_binding.id)
+          expect(result[:binding_guid]).to eq(service_binding.guid)
         end
 
         it 'sets the instance_name' do
@@ -67,7 +67,7 @@ module VCAP::CloudController
         end
 
         it 'sets the instance_id' do
-          expect(result[:instance_id]).to eq(service_instance.id)
+          expect(result[:instance_guid]).to eq(service_instance.guid)
         end
 
         context 'when the binding has a name' do

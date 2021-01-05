@@ -49,7 +49,9 @@ RSpec.describe 'v3 service bindings' do
           'guid' => guid,
           'type' => 'app',
           'data' => {
+            'binding_guid' => guid,
             'binding_name' => nil,
+            'instance_guid' => service_instance.guid,
             'credentials' => {
               'username' => 'managed_username'
             },
@@ -189,7 +191,9 @@ RSpec.describe 'v3 service bindings' do
           'guid' => guid,
           'type' => 'app',
           'data' => {
+            'binding_guid' => guid,
             'binding_name' => nil,
+            'instance_guid' => service_instance.guid,
             'credentials' => {
               'username' => 'user_provided_username'
             },
@@ -351,10 +355,12 @@ RSpec.describe 'v3 service bindings' do
         'guid' => service_binding.guid,
         'type' => 'app',
         'data' => {
+          'binding_guid' => service_binding.guid,
           'binding_name' => 'binding-name',
           'credentials' => {
             'username' => 'managed_username'
           },
+          'instance_guid' => service_instance.guid,
           'instance_name' => 'service-instance-name',
           'name' => 'binding-name',
           'syslog_drain_url' => 'syslog://mydrain.example.com',
@@ -453,7 +459,9 @@ RSpec.describe 'v3 service bindings' do
             'guid' => service_binding1.guid,
             'type' => 'app',
             'data' => {
+              'binding_guid' => service_binding1.guid,
               'binding_name' => nil,
+              'instance_guid' => service_instance1.guid,
               'instance_name' => 'service-instance-1',
               'name' => 'service-instance-1',
               'credentials' => {
@@ -480,7 +488,9 @@ RSpec.describe 'v3 service bindings' do
             'guid' => service_binding2.guid,
             'type' => 'app',
             'data' => {
+              'binding_guid' => service_binding2.guid,
               'binding_name' => nil,
+              'instance_guid' => service_instance2.guid,
               'instance_name' => 'service-instance-2',
               'name' => 'service-instance-2',
               'credentials' => {
