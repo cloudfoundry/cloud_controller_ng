@@ -33,6 +33,10 @@ Content-Type: application/json
       "mysql": [
         {
           "name": "db-for-my-app",
+          "binding_id": "0e85b634-e043-4b43-96da-f83dfe83ab33",
+          "binding_name": "db-for-my-app",
+          "instance_id": "07fca01c-f789-4d45-80b4-e19ba3ca862c",
+          "instance_name": "my-mysql-service",
           "label": "mysql",
           "tags": ["relational", "sql"],
           "plan": "xlarge",
@@ -41,6 +45,7 @@ Content-Type: application/json
             "password": "top-secret"
            },
           "syslog_drain_url": "https://syslog.example.org/drain",
+          "volume_mounts": [],
           "provider": null
         }
       ]
