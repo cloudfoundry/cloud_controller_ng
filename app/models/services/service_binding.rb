@@ -8,6 +8,11 @@ module VCAP::CloudController
 
     one_to_one :service_binding_operation
 
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceBindingLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceBindingAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :service_instance, key: :service_instance_guid, primary_key: :guid, without_guid_generation: true
 

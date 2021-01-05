@@ -153,7 +153,13 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create_app_binding(message, service_instance, app)
     action = V3::ServiceCredentialBindingAppCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(service_instance, app: app, name: message.name, volume_mount_services_enabled: volume_services_enabled?)
+    binding = action.precursor(
+      service_instance,
+      app: app,
+      name: message.name,
+      volume_mount_services_enabled: volume_services_enabled?,
+      message: message,
+    )
 
     case service_instance
     when ManagedServiceInstance

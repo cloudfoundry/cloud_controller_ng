@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
 
-      def precursor(service_instance, app: nil, name: nil, volume_mount_services_enabled: false)
+      def precursor(service_instance, app: nil, name: nil, volume_mount_services_enabled: false, message:)
         validate!(service_instance, app, volume_mount_services_enabled)
 
         binding_details = {
@@ -35,6 +35,8 @@ module VCAP::CloudController
             binding_details,
             CREATE_IN_PROGRESS_OPERATION
           )
+
+          MetadataUpdate.update(b, message)
         end
       rescue Sequel::ValidationFailed, Sequel::UniqueConstraintViolation => e
         already_bound! if e.message =~ /The app is already bound to the service|unique_service_binding_service_instance_guid_app_guid/
