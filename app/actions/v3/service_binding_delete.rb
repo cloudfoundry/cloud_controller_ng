@@ -98,12 +98,12 @@ module VCAP::CloudController
       end
 
       def operation_in_progress!
-        raise ConcurrencyError.new('The delete request was rejected due to an operation being in progress for the binding')
+        raise ConcurrencyError.new('The delete request was rejected due to an operation being in progress for the service binding.')
       end
 
       def broker_concurrency_error!
         raise ConcurrencyError.new(
-          'The service broker rejected the request due to an operation being in progress for the binding'
+          'The service broker rejected the request due to an operation being in progress for the service binding.'
         )
       end
     end

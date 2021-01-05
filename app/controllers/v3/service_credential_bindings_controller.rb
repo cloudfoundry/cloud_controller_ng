@@ -308,7 +308,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def binding_operation_in_progress!
-    unprocessable!('There is an operation in progress for the service credential binding.')
+    unprocessable!('There is an operation in progress for the service binding.')
   end
 
   def not_found!
