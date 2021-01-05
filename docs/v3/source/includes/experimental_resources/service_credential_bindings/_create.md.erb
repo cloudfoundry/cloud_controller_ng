@@ -27,6 +27,14 @@ curl "https://api.example.org/v3/service_credential_bindings" \
     "parameters": {
       "key1": "value1",
       "key2": "value2"
+    },
+    "metadata": {
+      "labels": {
+        "foo": "bar"
+      },
+      "annotations": {
+        "baz": "woo"
+      }
     }
   }'
 ```
