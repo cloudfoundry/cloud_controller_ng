@@ -340,11 +340,10 @@ module VCAP::CloudController
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
 
-      !skip_process_version_update &&
       started? &&
         (column_changed?(:state) ||
-        column_changed?(:memory) ||
-        column_changed?(:health_check_type) ||
+        (column_changed?(:memory) && !skip_process_version_update) ||
+        (column_changed?(:health_check_type) && !skip_process_version_update) ||
         column_changed?(:health_check_http_endpoint) ||
         @ports_changed_by_user
       )

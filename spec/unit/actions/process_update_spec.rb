@@ -11,19 +11,20 @@ module VCAP::CloudController
         data: { timeout: 20 }
       }
     end
-    let(:message) { ProcessUpdateMessage.new({
-      command: 'new',
-      health_check: health_check,
-      metadata: {
-        labels: {
-          freaky: 'wednesday',
+    let(:message) do
+      ProcessUpdateMessage.new(
+        command: 'new',
+        health_check: health_check,
+        metadata: {
+          labels: {
+            freaky: 'wednesday',
+          },
+          annotations: {
+            tokyo: 'grapes'
+          },
         },
-        annotations: {
-          tokyo: 'grapes'
-        },
-      },
-    })
-    }
+      )
+    end
     let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
     let!(:app) { AppModel.make(droplet: droplet) }
     let!(:process) do
@@ -34,7 +35,8 @@ module VCAP::CloudController
         health_check_type:    'port',
         health_check_timeout: 10,
         ports:                [1574, 3389],
-        app: app
+        app: app,
+        state: 'STARTED'
       )
     end
 
@@ -142,6 +144,19 @@ module VCAP::CloudController
           process.reload
           expect(process.health_check_type).to eq('process')
           expect(process.health_check_timeout).to eq(10)
+        end
+      end
+
+      context 'when only updating the health_check_type' do
+        let(:health_check) { { type: 'process' } }
+
+        it 'does not create a new process version' do
+          old_version = process.version
+          process_update.update(process, message, NonManifestStrategy)
+
+          process.reload
+          expect(process.health_check_type).to eq('process')
+          expect(process.version).to eq(old_version)
         end
       end
 

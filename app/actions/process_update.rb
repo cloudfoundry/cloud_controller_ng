@@ -21,8 +21,12 @@ module VCAP::CloudController
 
         MetadataUpdate.update(process, message)
 
+        if message.requested?(:health_check_type)
+          process.health_check_type = message.health_check_type
+          process.skip_process_version_update = true
+        end
+
         process.command              = strategy.updated_command if message.requested?(:command)
-        process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
         process.health_check_invocation_timeout = message.health_check_invocation_timeout if message.requested?(:health_check_invocation_timeout)
         if message.requested?(:health_check_type) && message.health_check_type != HealthCheckTypes::HTTP

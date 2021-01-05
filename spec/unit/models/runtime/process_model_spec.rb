@@ -1199,10 +1199,20 @@ module VCAP::CloudController
           end
         end
 
-        it 'should not update the version when its been asked not to' do
-          process.memory = 2048
-          process.skip_process_version_update = true
-          expect { process.save }.not_to change(process, :version)
+        context 'when asked not to update the version' do
+          before do
+            process.skip_process_version_update = true
+          end
+
+          it 'should not update the version for memory' do
+            process.memory = 2048
+            expect { process.save }.not_to change(process, :version)
+          end
+
+          it 'should not update the version for health_check_type' do
+            process.health_check_type = 'process'
+            expect { process.save }.not_to change(process, :version)
+          end
         end
 
         it 'should update the version when changing :memory' do
