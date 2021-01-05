@@ -1,3 +1,5 @@
+require 'actions/services/service_instance_delete'
+
 module VCAP::CloudController
   class ServiceInstanceDeprovisioner
     def initialize(services_event_repository)

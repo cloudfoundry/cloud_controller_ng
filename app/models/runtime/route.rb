@@ -2,6 +2,7 @@ require 'utils/uri_utils'
 require 'models/helpers/process_types'
 require 'cloud_controller/routing_api/disabled_routing_api_client'
 require 'cloud_controller/route_validator'
+require 'actions/services/route_binding_delete'
 
 module VCAP::CloudController
   class Route < Sequel::Model

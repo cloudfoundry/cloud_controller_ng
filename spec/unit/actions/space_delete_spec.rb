@@ -71,7 +71,7 @@ module VCAP::CloudController
             stub_deprovision(service_instance, accepts_incomplete: true)
           end
 
-          it 'are deleted' do
+          it 'deletes service instances' do
             expect {
               space_delete.delete(space_dataset)
             }.to change { ServiceInstance.count }.by(-1)
@@ -146,7 +146,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'when unsharing a service instance that has been shared to the space' do
+          context 'when unsharing a service instance that has been shared to the space fails' do
             let(:other_space) { Space.make }
             let(:fake_shared_service) { instance_double(ManagedServiceInstance) }
 
@@ -190,6 +190,18 @@ module VCAP::CloudController
               result = result.first
               expect(result).to be_instance_of(CloudController::Errors::ApiError)
               expect(result.message).to include("An operation for service instance #{service_instance.name} is in progress.")
+            end
+
+            it 'enqueues a job to poll the service instance and remove it' do
+              space_delete.delete(space_dataset)
+
+              stub_request(:get, last_operation_state_url(service_instance)).
+                to_return(status: 410, body: '{}')
+
+              # There's a delete buildpack cache job scheduled as well
+              execute_all_jobs(expected_successes: 2, expected_failures: 0)
+
+              expect(ServiceInstance.all).not_to include(service_instance)
             end
 
             context 'and there are multiple service instances deprovisioned with accepts_incomplete' do
@@ -248,10 +260,10 @@ module VCAP::CloudController
 
             context 'when deleting a service instance associated with a private broker fails' do
               before do
-                errors = [CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'fake-name')]
-                warnings = []
-                service_instance_delete = instance_double(ServiceInstanceDelete, delete: [errors, warnings])
-                allow(ServiceInstanceDelete).to receive(:new).and_return(service_instance_delete)
+                service_instance_delete = instance_double(V3::ServiceInstanceDelete)
+                allow(service_instance_delete).
+                  to receive(:delete).and_raise(CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', 'fake-name'))
+                allow(V3::ServiceInstanceDelete).to receive(:new).and_return(service_instance_delete)
               end
 
               it 'deletes all but the associated broker' do
