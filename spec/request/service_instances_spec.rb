@@ -3045,7 +3045,7 @@ RSpec.describe 'V3 service instances' do
               lo = VCAP::CloudController::ServiceInstance.first.last_operation
               expect(lo.type).to eq('delete')
               expect(lo.state).to eq('failed')
-              expect(lo.description).to eq("An unbinding operation for a service binding of service instance #{instance.name} is in progress.")
+              expect(lo.description).to eq("An operation for a service binding of service instance #{instance.name} is in progress.")
 
               lo = VCAP::CloudController::RouteBinding.first.last_operation
               expect(lo.type).to eq('delete')

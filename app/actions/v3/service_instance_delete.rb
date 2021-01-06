@@ -153,7 +153,7 @@ module VCAP::CloudController
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info: service_event_repository.user_audit_info)
             Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
-            unbinding_operation_in_progress!(type, binding)
+            unbinding_operation_in_progress!(binding)
           end
         rescue => e
           errors << e
@@ -194,13 +194,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
       end
 
-      def unbinding_operation_in_progress!(type, binding)
+      def unbinding_operation_in_progress!(binding)
         raise UnbindingOperatationInProgress.new(
-          case type
-          when :credential
+          if binding.is_a?(VCAP::CloudController::ServiceBinding)
             "An operation for the service binding between app #{binding.app.name} and service instance #{service_instance.name} is in progress."
           else
-            "An unbinding operation for a service binding of service instance #{service_instance.name} is in progress."
+            "An operation for a service binding of service instance #{service_instance.name} is in progress."
           end
         )
       end
