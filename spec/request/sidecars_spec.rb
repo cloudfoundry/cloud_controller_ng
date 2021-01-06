@@ -357,7 +357,7 @@ RSpec.describe 'Sidecars' do
     )
     }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { "/v3/processes/#{process1.guid}/sidecars" }
       let(:message) { VCAP::CloudController::SidecarsListMessage }
 

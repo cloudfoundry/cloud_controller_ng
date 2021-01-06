@@ -424,7 +424,7 @@ RSpec.describe 'v3 service bindings' do
 
     before { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance3, app: app_model) }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_bindings' }
       let(:message) { VCAP::CloudController::ServiceBindingsListMessage }
       let(:user_header) { headers_for(user) }

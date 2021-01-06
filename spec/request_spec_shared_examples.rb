@@ -183,7 +183,7 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
   end
 end
 
-RSpec.shared_examples 'request_spec_shared_examples.rb list query endpoint' do
+RSpec.shared_examples 'list query endpoint' do
   let(:excluded_params) { [] }
   it 'returns 200 even using all possible query parameters' do
     expect(user_header).to be_present, 'user header not provided (should be provided in a `let` block)'

@@ -140,7 +140,7 @@ RSpec.describe 'Routes Request' do
     end
 
     describe 'query list parameters' do
-      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      it_behaves_like 'list query endpoint' do
         let(:request) { 'v3/routes' }
         let(:message) { VCAP::CloudController::RoutesListMessage }
         let(:user_header) { admin_header }

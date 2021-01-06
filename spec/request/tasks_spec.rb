@@ -31,7 +31,7 @@ RSpec.describe 'Tasks' do
       end
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/tasks' }
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }
@@ -59,7 +59,7 @@ RSpec.describe 'Tasks' do
       end
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/tasks' }
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }

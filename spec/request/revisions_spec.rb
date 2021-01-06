@@ -79,7 +79,7 @@ RSpec.describe 'Revisions' do
   describe 'GET /v3/apps/:guid/revisions' do
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::AppRevisionsListMessage }
       let(:request) { "/v3/apps/#{app_model.guid}/revisions" }
       let(:excluded_params) { [:deployable] }

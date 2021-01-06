@@ -222,7 +222,7 @@ RSpec.describe 'IsolationSegmentModels' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::IsolationSegmentsListMessage }
       let(:request) { '/v3/isolation_segments' }
 

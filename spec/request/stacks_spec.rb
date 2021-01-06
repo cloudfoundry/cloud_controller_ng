@@ -20,7 +20,7 @@ RSpec.describe 'Stacks Request' do
       end
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/stacks' }
       let(:message) { VCAP::CloudController::StacksListMessage }
       let(:user_header) { headers }

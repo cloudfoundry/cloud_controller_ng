@@ -191,7 +191,7 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces' do
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/spaces' }
       let(:message) { VCAP::CloudController::SpacesListMessage }
 

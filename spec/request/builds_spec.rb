@@ -332,7 +332,7 @@ RSpec.describe 'Builds' do
       second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/builds' }
       let(:user_header) { developer_headers }
       let(:message) { VCAP::CloudController::BuildsListMessage }

@@ -53,7 +53,7 @@ RSpec.describe 'Processes' do
 
     before { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::ProcessesListMessage }
       let(:request) { '/v3/processes' }
       let(:user_header) { developer_headers }

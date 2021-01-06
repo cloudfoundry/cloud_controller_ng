@@ -19,7 +19,7 @@ RSpec.describe 'Domains Request' do
   end
 
   describe 'GET /v3/domains' do
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/domains' }
       let(:message) { VCAP::CloudController::DomainsListMessage }
       let(:user_header) { admin_header }

@@ -331,7 +331,7 @@ RSpec.describe 'Packages' do
       space.add_developer(user)
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::PackagesListMessage }
       let(:request) { '/v3/packages' }
       let(:excluded_params) {

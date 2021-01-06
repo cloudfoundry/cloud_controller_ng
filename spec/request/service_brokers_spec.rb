@@ -102,7 +102,7 @@ RSpec.describe 'V3 service brokers' do
       let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceBroker.make } }
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_brokers' }
       let(:message) { VCAP::CloudController::ServiceBrokersListMessage }
       let(:user_header) { headers_for(user) }

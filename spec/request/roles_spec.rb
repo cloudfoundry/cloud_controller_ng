@@ -929,7 +929,7 @@ RSpec.describe 'Roles Request' do
         allow(uaa_client).to receive(:users_for_ids).and_return([])
       end
 
-      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      it_behaves_like 'list query endpoint' do
         let(:request) { 'v3/roles' }
         let(:message) { VCAP::CloudController::RolesListMessage }
         let(:user_header) { headers_for(user) }

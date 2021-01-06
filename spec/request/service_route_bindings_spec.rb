@@ -31,7 +31,7 @@ RSpec.describe 'v3 service route bindings' do
       end
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_route_bindings' }
       let(:message) { VCAP::CloudController::ServiceRouteBindingsListMessage }
       let(:user_header) { headers_for(user) }

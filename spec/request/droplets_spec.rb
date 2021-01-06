@@ -571,7 +571,7 @@ RSpec.describe 'Droplets' do
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/droplets' }
       let(:message) { VCAP::CloudController::DropletsListMessage }
       let(:user_header) { developer_headers }
@@ -599,7 +599,7 @@ RSpec.describe 'Droplets' do
       end
     end
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/droplets' }
       let(:message) { VCAP::CloudController::DropletsListMessage }
       let(:user_header) { developer_headers }

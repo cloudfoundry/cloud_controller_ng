@@ -178,7 +178,7 @@ RSpec.describe 'V3 service plans' do
   describe 'GET /v3/service_plans' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_plans', nil, user_headers } }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_plans' }
       let(:message) { VCAP::CloudController::ServicePlansListMessage }
       let(:user_header) { headers_for(user) }

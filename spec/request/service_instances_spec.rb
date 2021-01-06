@@ -147,7 +147,7 @@ RSpec.describe 'V3 service instances' do
   describe 'GET /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_instances', nil, user_headers } }
 
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:user_header) { admin_headers }
       let(:request) { 'v3/service_instances' }
       let(:message) { VCAP::CloudController::ServiceInstancesListMessage }

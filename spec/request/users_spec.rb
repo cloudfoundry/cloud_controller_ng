@@ -102,7 +102,7 @@ RSpec.describe 'Users Request' do
         allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
       end
 
-      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      it_behaves_like 'list query endpoint' do
         let(:request) { 'v3/users' }
         let(:message) { VCAP::CloudController::UsersListMessage }
         let(:user_header) { admin_header }

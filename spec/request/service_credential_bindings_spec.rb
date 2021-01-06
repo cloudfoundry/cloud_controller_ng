@@ -13,7 +13,7 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   describe 'GET /v3/service_credential_bindings' do
-    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+    it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_credential_bindings' }
       let(:message) { VCAP::CloudController::ServiceCredentialBindingListMessage }
       let(:user_header) { headers_for(user) }

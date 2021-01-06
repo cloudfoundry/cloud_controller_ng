@@ -167,7 +167,7 @@ module VCAP::CloudController
         end
 
         describe 'query list parameters' do
-          it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+          it_behaves_like 'list query endpoint' do
             let(:message) { VCAP::CloudController::OrgsListMessage }
             let(:request) { '/v3/organizations' }
             let(:excluded_params) {
