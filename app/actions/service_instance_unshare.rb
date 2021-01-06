@@ -1,10 +1,13 @@
+require 'actions/service_credential_binding_delete'
+require 'jobs/v3/delete_binding_job'
+
 module VCAP::CloudController
   class ServiceInstanceUnshare
     class Error < ::StandardError
     end
 
     def unshare(service_instance, target_space, user_audit_info)
-      errors, _ = delete_bindings_in_target_space!(service_instance, target_space, user_audit_info)
+      errors = delete_bindings_in_target_space!(service_instance, target_space, user_audit_info)
       if errors.any?
         error_msg = "Unshare of service instance failed because one or more bindings could not be deleted.\n\n " \
           "#{errors.map { |err| "\t#{err.message}" }.join("\n\n")}"
@@ -27,15 +30,18 @@ module VCAP::CloudController
       active_bindings = ServiceBinding.where(service_instance_guid: service_instance.guid)
       bindings_in_target_space = active_bindings.all.select { |b| b.app.space_guid == target_space.guid }
 
-      delete_errors, warnings = ServiceBindingDelete.new(user_audit_info, true).delete(bindings_in_target_space)
-      return [delete_errors, warnings] unless delete_errors.empty?
-
-      bindings_in_target_space.select(&:operation_in_progress?).each do |binding_in_progress|
-        delete_errors << Error.new("The binding between an application and service instance #{service_instance.name} " \
+      action = V3::ServiceCredentialBindingDelete.new(:credential, user_audit_info)
+      bindings_in_target_space.each_with_object([]) do |binding, errors|
+        result = action.delete(binding)
+        unless result[:finished]
+          polling_job = V3::DeleteBindingJob.new(:credential, binding.guid, user_audit_info: user_audit_info)
+          Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
+          errors << Error.new("The binding between an application and service instance #{service_instance.name} " \
                                    "in space #{target_space.name} is being deleted asynchronously.")
+        end
+      rescue => e
+        errors << e
       end
-
-      [delete_errors, warnings]
     end
   end
 end
