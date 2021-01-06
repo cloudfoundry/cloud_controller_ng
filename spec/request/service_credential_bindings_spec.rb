@@ -1202,6 +1202,10 @@ RSpec.describe 'v3 service credential bindings' do
           name: binding_name,
           relationships: {
             service_instance: { data: { guid: service_instance_guid } },
+          },
+          metadata: {
+            labels: { foo: 'bar' },
+            annotations: { foz: 'baz' }
           }
         }.merge(request_extra)
       }

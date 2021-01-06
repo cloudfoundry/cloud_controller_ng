@@ -6,6 +6,11 @@ module VCAP::CloudController
 
     one_to_one :service_key_operation
 
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceKeyLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceKeyAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     export_attributes :name, :service_instance_guid, :credentials
 
     import_attributes :name, :service_instance_guid, :credentials

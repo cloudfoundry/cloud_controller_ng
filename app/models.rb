@@ -134,6 +134,8 @@ require 'models/services/service_plan_annotation_model'
 require 'models/services/service_plan_label_model'
 require 'models/services/service_usage_event'
 require 'models/services/service_key'
+require 'models/services/service_key_label_model'
+require 'models/services/service_key_annotation_model'
 require 'models/services/service_key_operation'
 require 'models/services/service_credential_binding_view'
 

@@ -14,6 +14,20 @@ module VCAP::CloudController
       let(:binding_details) {}
       let(:name) { 'test-key' }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
+      let(:message) {
+        VCAP::CloudController::ServiceCredentialKeyBindingCreateMessage.new(
+          {
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                'seriouseats.com/potato': 'fried'
+              }
+            }
+          }
+        )
+      }
 
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_key').and_return(binding_event_repo)
@@ -24,18 +38,22 @@ module VCAP::CloudController
       describe '#precursor' do
         RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
-            binding = action.precursor(service_instance, name)
+            binding = action.precursor(service_instance, name, message: message)
 
             expect(binding).to be
             expect(binding).to eq(ServiceKey.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.name).to eq(name)
             expect(binding.credentials).to be_empty
+            expect(binding.last_operation.type).to eq('create')
+            expect(binding.last_operation.state).to eq('in progress')
+            expect(binding).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
+            expect(binding).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
           end
 
           it 'raises an error when a key with same name already exists' do
             binding = ServiceKey.make(service_instance: service_instance)
-            expect { action.precursor(service_instance, binding.name) }.to raise_error(
+            expect { action.precursor(service_instance, binding.name, message: message) }.to raise_error(
               ServiceCredentialBindingKeyCreate::UnprocessableCreate,
               "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
             )
@@ -46,7 +64,7 @@ module VCAP::CloudController
           let(:service_instance) { UserProvidedServiceInstance.make }
 
           it 'raises error' do
-            expect { action.precursor(service_instance, name) }.to raise_error(
+            expect { action.precursor(service_instance, name, message: message) }.to raise_error(
               ServiceCredentialBindingKeyCreate::UnprocessableCreate,
               "Service credential bindings of type 'key' are not supported for user-provided service instances."
             )
@@ -63,7 +81,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, name) }.to raise_error(
+                expect { action.precursor(service_instance, name, message: message) }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   'Service plan does not allow bindings.'
                 )
@@ -76,7 +94,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, name) }.to raise_error(
+                expect { action.precursor(service_instance, name, message: message) }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   'Service plan is not available.'
                 )
@@ -88,7 +106,7 @@ module VCAP::CloudController
                 service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
 
                 expect {
-                  action.precursor(service_instance, name)
+                  action.precursor(service_instance, name, message: message)
                 }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   'There is an operation in progress for the service instance.'
@@ -100,7 +118,7 @@ module VCAP::CloudController
               let(:existing_service_key) { ServiceKey.make(service_instance: service_instance) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, existing_service_key.name) }.to raise_error(
+                expect { action.precursor(service_instance, existing_service_key.name, message: message) }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{existing_service_key.name}'."
                 )
@@ -124,7 +142,7 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect { action.precursor(service_instance, name) }.to raise_error(
+              expect { action.precursor(service_instance, name, message: message) }.to raise_error(
                 ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                 "You have exceeded your space's limit for service binding of type key."
               )
@@ -139,7 +157,7 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect { action.precursor(service_instance, name) }.to raise_error(
+              expect { action.precursor(service_instance, name, message: message) }.to raise_error(
                 ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                 "You have exceeded your organization's limit for service binding of type key."
               )
@@ -150,7 +168,7 @@ module VCAP::CloudController
 
       context '#bind' do
         let(:app) { nil }
-        let(:precursor) { action.precursor(service_instance, name) }
+        let(:precursor) { action.precursor(service_instance, name, message: message) }
         let(:specific_fields) { {} }
         let(:details) {
           {
@@ -194,7 +212,7 @@ module VCAP::CloudController
 
       describe '#poll' do
         let(:original_name) { 'original-name' }
-        let(:binding) { action.precursor(service_instance, original_name) }
+        let(:binding) { action.precursor(service_instance, original_name, message: message) }
         let(:volume_mounts) { nil }
         let(:syslog_drain_url) { nil }
 

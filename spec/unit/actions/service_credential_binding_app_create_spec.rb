@@ -37,8 +37,6 @@ module VCAP::CloudController
       end
 
       describe '#precursor' do
-
-
         RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app: app, name: si_details[:name], message: message)
