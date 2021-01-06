@@ -2961,7 +2961,7 @@ RSpec.describe 'V3 service instances' do
               lo = instance.last_operation
               expect(lo.type).to eq('delete')
               expect(lo.state).to eq('failed')
-              expect(lo.description).to eq("An unbinding operation for a service binding of service instance #{instance.name} is in progress.")
+              expect(lo.description).to eq("An operation for the service binding between app #{application.name} and service instance #{instance.name} is in progress.")
 
               expect(
                 stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
