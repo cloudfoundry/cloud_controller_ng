@@ -16,7 +16,20 @@ module VCAP::CloudController
       let(:binding_details) {}
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
-
+      let(:message) {
+        VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
+          {
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                'seriouseats.com/potato': 'fried'
+              }
+            }
+          }
+        )
+      }
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_create)
@@ -24,6 +37,8 @@ module VCAP::CloudController
       end
 
       describe '#precursor' do
+
+
         RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app: app, name: si_details[:name], message: message)
@@ -67,21 +82,6 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:message) {
-            VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
-              {
-                metadata: {
-                  labels: {
-                    release: 'stable'
-                  },
-                  annotations: {
-                    'seriouseats.com/potato': 'fried'
-                  }
-                }
-              }
-            )
-          }
-
           let(:si_details) {
             {
             space: space,
@@ -96,21 +96,6 @@ module VCAP::CloudController
         end
 
         context 'managed service instance' do
-          let(:message) {
-            VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
-              {
-                metadata: {
-                  labels: {
-                    release: 'stable'
-                  },
-                  annotations: {
-                    'seriouseats.com/potato': 'fried'
-                  }
-                }
-              }
-            )
-          }
-
           let(:si_details) do
             {
               space: space
@@ -200,7 +185,7 @@ module VCAP::CloudController
       end
 
       context '#bind' do
-        let(:precursor) { action.precursor(service_instance, app: app) }
+        let(:precursor) { action.precursor(service_instance, app: app, message: message) }
         let(:details) {
           {
             credentials: { 'password' => 'rennt', 'username' => 'lola' },
@@ -257,7 +242,7 @@ module VCAP::CloudController
 
       describe '#poll' do
         let(:original_name) { 'original-name' }
-        let(:binding) { action.precursor(service_instance, app: app, name: original_name) }
+        let(:binding) { action.precursor(service_instance, app: app, name: original_name, message: message) }
         let(:volume_mounts) { [{
         'driver' => 'cephdriver',
         'container_dir' => '/data/images',
