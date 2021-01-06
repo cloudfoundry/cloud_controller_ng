@@ -1,4 +1,5 @@
-require 'actions/services/service_instance_delete'
+require 'actions/v3/service_instance_delete'
+require 'jobs/v3/delete_service_instance_job'
 
 module VCAP::CloudController
   class SpaceDelete
@@ -50,22 +51,17 @@ module VCAP::CloudController
     end
 
     def delete_service_instances(space_model)
-      service_instance_deleter = ServiceInstanceDelete.new(
-        accepts_incomplete: true,
-        event_repository: @services_event_repository
-      )
-
-      delete_instance_errors, _ = service_instance_deleter.delete(space_model.service_instances_dataset)
-      if delete_instance_errors.empty?
-        async_deprovisioning_instances = space_model.service_instances_dataset.all.select(&:operation_in_progress?)
-        deprovision_in_progress_errors = async_deprovisioning_instances.map do |service_instance|
-          CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+      space_model.service_instances_dataset.each_with_object([]) do |service_instance, errors|
+        service_instance_deleter = V3::ServiceInstanceDelete.new(service_instance, @services_event_repository)
+        result = service_instance_deleter.delete
+        unless result[:finished]
+          polling_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, @services_event_repository.user_audit_info)
+          Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
+          errors << CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
         end
-
-        delete_instance_errors.concat deprovision_in_progress_errors
+      rescue => e
+        errors << e
       end
-
-      delete_instance_errors
     end
 
     def unshare_service_instances(space_model)
