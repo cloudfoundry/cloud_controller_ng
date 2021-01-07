@@ -330,5 +330,22 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#destroy' do
+      it 'cascade deletes all ServiceKeyOperations for this binding' do
+        binding = ServiceKey.make
+        ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
+        ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
+        last_operation = ServiceKeyOperation.make
+        binding.service_key_operation = last_operation
+
+        binding.destroy
+
+        expect(ServiceKey.find(guid: binding.guid)).to be_nil
+        expect(ServiceKeyOperation.find(id: last_operation.id)).to be_nil
+        expect(ServiceKeyLabelModel.find(resource_guid: binding.guid)).to be_nil
+        expect(ServiceKeyAnnotationModel.find(resource_guid: binding.guid)).to be_nil
+      end
+    end
   end
 end
