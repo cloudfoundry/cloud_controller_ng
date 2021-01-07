@@ -16,7 +16,7 @@ module VCAP::CloudController
       let(:binding_details) {}
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
-      let(:name) { 'foo'}
+      let(:name) { 'foo' }
       let(:message) {
         VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
           {

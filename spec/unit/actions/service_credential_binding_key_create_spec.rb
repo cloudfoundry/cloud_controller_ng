@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:binding_details) {}
       let(:name) { 'test-key' }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
-      let(:name) { 'some-binding-name'}
+      let(:name) { 'some-binding-name' }
       let(:message) {
         VCAP::CloudController::ServiceCredentialKeyBindingCreateMessage.new(
           {
