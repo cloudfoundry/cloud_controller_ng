@@ -27,6 +27,14 @@ curl "https://api.example.org/v3/service_credential_bindings" \
     "parameters": {
       "key1": "value1",
       "key2": "value2"
+    },
+    "metadata": {
+      "labels": {
+        "foo": "bar"
+      },
+      "annotations": {
+        "baz": "qux"
+      }
     }
   }'
 ```
@@ -53,6 +61,14 @@ curl "https://api.example.org/v3/service_credential_bindings" \
     "parameters": {
       "key1": "value1",
       "key2": "value2"
+    },
+    "metadata": {
+      "labels": {
+        "foo": "bar"
+      },
+      "annotations": {
+        "baz": "qux"
+      }
     }
   }'
 ```
@@ -112,6 +128,9 @@ Name | Type | Description |
 ---- | ---- | ----------- |
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app to be bound. Required when type is `app`
 **parameters** | _object_ | A JSON object that is passed to the service broker
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service credential binding
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service credential binding
+
 
 #### Permitted roles
  |

@@ -15,6 +15,10 @@ module VCAP::CloudController
         },
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } }
+        },
+        metadata: {
+          labels: { foo: 'bar' },
+          annotations: { foz: 'baz' }
         }
       }
     }
@@ -28,6 +32,7 @@ module VCAP::CloudController
         expect(message.name).to eq('some-name')
         expect(message.service_instance_guid).to eq('some-instance-guid')
         expect(message.parameters).to eq({ some_param: 'very important', another_param: 'epa' })
+        expect(message.metadata).to eq({ labels: { foo: 'bar' }, annotations: { foz: 'baz' } })
       end
 
       it 'converts requested keys to symbols' do

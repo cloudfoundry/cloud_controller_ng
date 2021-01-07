@@ -869,6 +869,10 @@ RSpec.describe 'v3 service credential bindings' do
           relationships: {
             service_instance: { data: { guid: service_instance_guid } },
             app: { data: { guid: app_guid } }
+          },
+          metadata: {
+            labels: { foo: 'bar' },
+            annotations: { foz: 'baz' }
           }
         }.merge(request_extra)
       }
@@ -1068,6 +1072,11 @@ RSpec.describe 'v3 service credential bindings' do
             get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to match_json_response(binding_response)
+
+            binding = VCAP::CloudController::ServiceBinding.first
+            expect(binding).to_not be_nil
+            expect(binding).to have_labels({ prefix: nil, key: 'foo', value: 'bar' })
+            expect(binding).to have_annotations({ prefix: nil, key: 'foz', value: 'baz' })
           end
 
           it 'logs an audit event' do
@@ -1193,6 +1202,10 @@ RSpec.describe 'v3 service credential bindings' do
           name: binding_name,
           relationships: {
             service_instance: { data: { guid: service_instance_guid } },
+          },
+          metadata: {
+            labels: { foo: 'bar' },
+            annotations: { foz: 'baz' }
           }
         }.merge(request_extra)
       }

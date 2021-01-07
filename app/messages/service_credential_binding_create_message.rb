@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServiceCredentialBindingCreateMessage < BaseMessage
+  class ServiceCredentialBindingCreateMessage < MetadataBaseMessage
     register_allowed_keys [:type, :name, :relationships, :parameters]
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates :parameters, hash: true, allow_nil: true
