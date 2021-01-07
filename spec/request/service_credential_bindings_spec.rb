@@ -64,16 +64,33 @@ RSpec.describe 'v3 service credential bindings' do
       let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
 
       describe 'permissions' do
+        let(:labels) { { foo: 'bar' } }
+        let(:annotations) { { baz: 'wow' } }
+        let!(:key_binding) do
+          VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) do |binding|
+            operate_on(binding)
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
+            VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
+          end
+        end
+        let!(:other_app_binding) do
+          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) do |binding|
+            operate_on(binding)
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
+            VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
+          end
+        end
+
         let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings?order_by=created_at', nil, user_headers } }
 
         let(:all_bindings) do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding),
+              expected_json(key_binding, labels: labels, annotations: annotations),
               expected_json(other_key_binding),
               expected_json(app_binding),
-              expected_json(other_app_binding),
+              expected_json(other_app_binding, labels: labels, annotations: annotations),
             ]
           }
         end
@@ -82,7 +99,7 @@ RSpec.describe 'v3 service credential bindings' do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding),
+              expected_json(key_binding, labels: labels, annotations: annotations),
               expected_json(app_binding)
             ]
           }
@@ -1904,7 +1921,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  def expected_json(binding, labels: nil, annotations: nil)
+  def expected_json(binding, labels: {}, annotations: {})
     {
       guid: binding.guid,
       created_at: iso8601,
