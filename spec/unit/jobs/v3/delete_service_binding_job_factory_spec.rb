@@ -8,43 +8,57 @@ module VCAP::CloudController
 
       describe '#for' do
         it 'should return route job actor when type is route' do
-          actor = DeleteServiceBindingFactory.for(:route)
+          actor = described_class.for(:route)
           expect(actor).to be_an_instance_of(DeleteServiceRouteBindingJobActor)
         end
 
         it 'should return credential job actor when type is credential' do
-          actor = DeleteServiceBindingFactory.for(:credential)
+          actor = described_class.for(:credential)
           expect(actor).to be_an_instance_of(DeleteServiceCredentialBindingJobActor)
         end
 
         it 'should return credential job actor when type is key' do
-          actor = DeleteServiceBindingFactory.for(:key)
+          actor = described_class.for(:key)
           expect(actor).to be_an_instance_of(DeleteServiceKeyBindingJobActor)
         end
 
         it 'raise for unknown types' do
-          expect { DeleteServiceBindingFactory.for(:unknown) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
+          expect { described_class.for(:unknown) }.to raise_error(described_class::InvalidType)
         end
       end
 
       describe '#action' do
         it 'should return route action when type is route' do
-          actor = DeleteServiceBindingFactory.action(:route, {})
+          actor = described_class.action(:route, {})
           expect(actor).to be_an_instance_of(ServiceRouteBindingDelete)
         end
 
         it 'should return credential binding action when type is credential' do
-          actor = DeleteServiceBindingFactory.action(:credential, {})
+          actor = described_class.action(:credential, {})
           expect(actor).to be_an_instance_of(V3::ServiceCredentialBindingDelete)
         end
 
         it 'should return credential binding action when type is key' do
-          actor = DeleteServiceBindingFactory.action(:key, {})
+          actor = described_class.action(:key, {})
           expect(actor).to be_an_instance_of(V3::ServiceCredentialBindingDelete)
         end
 
         it 'raise for unknown types' do
-          expect { DeleteServiceBindingFactory.action(:unknown, {}) }.to raise_error(DeleteServiceBindingFactory::InvalidType)
+          expect { described_class.action(:unknown, {}) }.to raise_error(described_class::InvalidType)
+        end
+      end
+
+      describe '#type_of' do
+        it 'returns the type constant for a binding model' do
+          expect(described_class.type_of(RouteBinding.make)).to eq(:route)
+          expect(described_class.type_of(ServiceKey.make)).to eq(:key)
+          expect(described_class.type_of(ServiceBinding.make)).to eq(:credential)
+        end
+
+        it 'raises on invalid input' do
+          expect {
+            described_class.type_of(ServiceInstance.make)
+          }.to raise_error(described_class::InvalidType)
         end
       end
     end

@@ -3,13 +3,13 @@ require 'actions/service_route_binding_delete'
 require 'actions/service_credential_binding_delete'
 require 'actions/service_instance_unshare'
 require 'cloud_controller/errors/api_error'
-require 'jobs/v3/delete_binding_job'
-require 'jobs/enqueuer'
-require 'jobs/queues'
+require 'actions/mixins/bindings_delete'
 
 module VCAP::CloudController
   module V3
     class ServiceInstanceDelete
+      include BindingsDeleteMixin
+
       class DeleteFailed < StandardError
       end
 
@@ -126,38 +126,10 @@ module VCAP::CloudController
       end
 
       def remove_associations
-        errors = delete_bindings(
-          action: ServiceRouteBindingDelete.new(service_event_repository.user_audit_info),
-          list: RouteBinding.where(service_instance: service_instance),
-          type: :route,
-        )
-
-        errors += delete_bindings(
-          action: ServiceCredentialBindingDelete.new(:credential, service_event_repository.user_audit_info),
-          list: service_instance.service_bindings,
-          type: :credential,
-        )
-
-        errors += delete_bindings(
-          action: ServiceCredentialBindingDelete.new(:key, service_event_repository.user_audit_info),
-          list: service_instance.service_keys,
-          type: :key,
-        )
-
+        errors = delete_bindings(RouteBinding.where(service_instance: service_instance), user_audit_info: service_event_repository.user_audit_info)
+        errors += delete_bindings(service_instance.service_bindings, user_audit_info: service_event_repository.user_audit_info)
+        errors += delete_bindings(service_instance.service_keys, user_audit_info: service_event_repository.user_audit_info)
         errors + unshare_all_spaces
-      end
-
-      def delete_bindings(action:, list:, type:)
-        list.each_with_object([]) do |binding, errors|
-          result = action.delete(binding)
-          unless result[:finished]
-            polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info: service_event_repository.user_audit_info)
-            Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
-            unbinding_operation_in_progress!(binding)
-          end
-        rescue => e
-          errors << e
-        end
       end
 
       def unshare_all_spaces
