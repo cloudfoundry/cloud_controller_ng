@@ -29552,6 +29552,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     "parameters": {
       "key1": "value1",
       "key2": "value2"
+    },
+    "metadata": {
+      "labels": {
+        "foo": "bar"
+      },
+      "annotations": {
+        "baz": "qux"
+      }
     }
   }'</span>
 </code></pre>
@@ -29574,6 +29582,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     "parameters": {
       "key1": "value1",
       "key2": "value2"
+    },
+    "metadata": {
+      "labels": {
+        "foo": "bar"
+      },
+      "annotations": {
+        "baz": "qux"
+      }
     }
   }'</span>
 </code></pre>
@@ -29728,6 +29744,16 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <td><strong>parameters</strong></td>
 <td><em>object</em></td>
 <td>A JSON object that is passed to the service broker</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service credential binding</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service credential binding</td>
 </tr>
 </tbody></table>
 
