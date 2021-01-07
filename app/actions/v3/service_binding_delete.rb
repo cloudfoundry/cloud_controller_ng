@@ -6,6 +6,7 @@ module VCAP::CloudController
       class UnprocessableDelete < StandardError; end
 
       class ConcurrencyError < StandardError; end
+
       class OperationCancelled < StandardError; end
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
@@ -65,8 +66,6 @@ module VCAP::CloudController
         raise e
       end
 
-      class BindingNotRetrievable < StandardError; end
-
       private
 
       def send_unbind_to_client(binding)
@@ -86,11 +85,11 @@ module VCAP::CloudController
         binding.save_with_attributes_and_new_operation(
           {},
           {
-          type: 'delete',
-          state: state,
-          description: description,
-          broker_provided_operation: operation || binding.last_operation&.broker_provided_operation
-        })
+            type: 'delete',
+            state: state,
+            description: description,
+            broker_provided_operation: operation || binding.last_operation&.broker_provided_operation
+          })
       end
 
       def unprocessable!(binding, err)

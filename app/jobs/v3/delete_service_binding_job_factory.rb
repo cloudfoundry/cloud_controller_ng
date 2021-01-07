@@ -33,6 +33,19 @@ module VCAP::CloudController
           raise InvalidType
         end
       end
+
+      def self.type_of(binding)
+        case binding
+        when RouteBinding
+          :route
+        when ServiceKey
+          :key
+        when ServiceBinding
+          :credential
+        else
+          raise InvalidType
+        end
+      end
     end
   end
 end
