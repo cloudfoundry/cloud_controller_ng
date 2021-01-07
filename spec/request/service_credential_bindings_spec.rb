@@ -1073,8 +1073,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to match_json_response(binding_response)
 
-            binding = VCAP::CloudController::ServiceBinding.where(guid: 'teesrt').first
-            p binding
+            binding = VCAP::CloudController::ServiceBinding.first
             expect(binding).to_not be_nil
             expect(binding).to have_labels({ prefix: nil, key: 'foo', value: 'bar' })
             expect(binding).to have_annotations({ prefix: nil, key: 'foz', value: 'baz' })
