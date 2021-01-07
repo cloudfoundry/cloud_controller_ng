@@ -93,7 +93,7 @@ module Logcache
         end
         # rubocop:enable Style/PreferredHashMethods
 
-        tags.merge!(e.tags)
+        tags.merge!(e.tags.to_h)
       }
 
       tc_envelope.tags = tags.map { |k, v| TrafficController::Models::Envelope::TagsEntry.new(key: k, value: v) }

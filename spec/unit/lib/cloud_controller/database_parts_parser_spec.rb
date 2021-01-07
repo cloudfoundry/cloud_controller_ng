@@ -38,7 +38,7 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
         uri = 'mysql://user:p4s sw0rd@example.com:1234/databasename'
         expect {
           VCAP::CloudController::DatabasePartsParser.database_parts_from_connection(uri)
-        }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): #{uri}")
+        }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
       end
     end
   end

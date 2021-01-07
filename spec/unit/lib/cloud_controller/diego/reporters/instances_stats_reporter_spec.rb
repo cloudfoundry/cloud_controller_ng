@@ -87,7 +87,7 @@ module VCAP::CloudController
                 uris:       process.uris,
                 host:       'lrp-host',
                 port:       2222,
-                net_info:   lrp_1_net_info.to_hash,
+                net_info:   lrp_1_net_info.to_h,
                 uptime:     two_days_in_seconds,
                 mem_quota:  process.memory * 1024 * 1024,
                 disk_quota: process.disk_quota * 1024 * 1024,

@@ -4,21 +4,23 @@
 require 'google/protobuf'
 
 Google::Protobuf::DescriptorPool.generated_pool.build do
-  add_message "diego.bbs.models.CachedDependency" do
-    optional :name, :string, 1
-    optional :from, :string, 2
-    optional :to, :string, 3
-    optional :cache_key, :string, 4
-    optional :log_source, :string, 5
-    optional :checksum_algorithm, :string, 6
-    optional :checksum_value, :string, 7
+  add_file("cached_dependency.proto", :syntax => :proto3) do
+    add_message "diego.bbs.models.CachedDependency" do
+      optional :name, :string, 1
+      optional :from, :string, 2
+      optional :to, :string, 3
+      optional :cache_key, :string, 4
+      optional :log_source, :string, 5
+      optional :checksum_algorithm, :string, 6
+      optional :checksum_value, :string, 7
+    end
   end
 end
 
 module Diego
   module Bbs
     module Models
-      CachedDependency = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.CachedDependency").msgclass
+      CachedDependency = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.CachedDependency").msgclass
     end
   end
 end

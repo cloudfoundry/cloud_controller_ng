@@ -39,7 +39,7 @@ module VCAP::CloudController
               uris:       process.uris,
               host:       actual_lrp.actual_lrp_net_info.address,
               port:       get_default_port(actual_lrp.actual_lrp_net_info),
-              net_info:   actual_lrp.actual_lrp_net_info.to_hash,
+              net_info:   actual_lrp.actual_lrp_net_info.to_h,
               uptime:     nanoseconds_to_seconds(current_time * 1e9 - actual_lrp.since),
               mem_quota:  process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
