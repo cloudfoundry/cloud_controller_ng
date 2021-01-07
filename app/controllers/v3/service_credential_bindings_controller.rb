@@ -119,7 +119,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create_key_binding(message, service_instance)
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(service_instance, message.name, message: message)
+    binding = action.precursor(service_instance, message: message)
 
     pollable_job_guid = enqueue_bind_job(:key, binding.guid, message)
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
@@ -156,7 +156,6 @@ class ServiceCredentialBindingsController < ApplicationController
     binding = action.precursor(
       service_instance,
       app: app,
-      name: message.name,
       volume_mount_services_enabled: volume_services_enabled?,
       message: message,
     )

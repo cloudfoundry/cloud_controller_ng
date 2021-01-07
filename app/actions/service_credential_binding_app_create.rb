@@ -19,12 +19,12 @@ module VCAP::CloudController
 
       PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
 
-      def precursor(service_instance, app: nil, name: nil, volume_mount_services_enabled: false, message:)
+      def precursor(service_instance, app: nil, volume_mount_services_enabled: false, message:)
         validate!(service_instance, app, volume_mount_services_enabled)
 
         binding_details = {
           service_instance: service_instance,
-          name: name,
+          name: message.name,
           app: app,
           type: 'app',
           credentials: {}

@@ -16,12 +16,12 @@ module VCAP::CloudController
 
       PERMITTED_BINDING_ATTRIBUTES = [:credentials].freeze
 
-      def precursor(service_instance, name, message:)
+      def precursor(service_instance, message:)
         validate!(service_instance)
 
         binding_details = {
           service_instance: service_instance,
-          name: name,
+          name: message.name,
           credentials: {}
         }
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
       rescue Sequel::ValidationFailed => e
         key_validation_error!(
           e,
-          name: name,
+          name: message.name,
           validation_error_handler: ValidationErrorHandler.new
         )
       end

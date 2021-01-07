@@ -16,9 +16,11 @@ module VCAP::CloudController
       let(:binding_details) {}
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
+      let(:name) { 'foo'}
       let(:message) {
         VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
           {
+            name: name,
             metadata: {
               labels: {
                 release: 'stable'
@@ -39,13 +41,13 @@ module VCAP::CloudController
       describe '#precursor' do
         RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
-            binding = action.precursor(service_instance, app: app, name: si_details[:name], message: message)
+            binding = action.precursor(service_instance, app: app, message: message)
 
             expect(binding).to be
             expect(binding).to eq(ServiceBinding.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.app).to eq(app)
-            expect(binding.name).to eq(si_details[:name])
+            expect(binding.name).to eq(name)
             expect(binding.credentials).to be_empty
             expect(binding.syslog_drain_url).to be_nil
             expect(binding.last_operation.type).to eq('create')
@@ -63,7 +65,7 @@ module VCAP::CloudController
 
           it 'raises an error when a binding already exists' do
             ServiceBinding.make(service_instance: service_instance, app: app)
-            expect { action.precursor(service_instance, app: app, name: si_details[:name], message: message) }.to raise_error(
+            expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
               ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'The app is already bound to the service instance'
             )
@@ -72,7 +74,7 @@ module VCAP::CloudController
           it 'raises an error when a the app and the instance are in different spaces' do
             another_space = Space.make
             another_app = AppModel.make(space: another_space)
-            expect { action.precursor(service_instance, app: another_app, name: si_details[:name], message: message) }.to raise_error(
+            expect { action.precursor(service_instance, app: another_app, message: message) }.to raise_error(
               ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'The service instance and the app are in different spaces'
             )
@@ -239,8 +241,8 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        let(:original_name) { 'original-name' }
-        let(:binding) { action.precursor(service_instance, app: app, name: original_name, message: message) }
+        let(:original_name) { name }
+        let(:binding) { action.precursor(service_instance, app: app, message: message) }
         let(:volume_mounts) { [{
         'driver' => 'cephdriver',
         'container_dir' => '/data/images',
