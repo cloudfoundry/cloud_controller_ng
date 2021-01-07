@@ -42,7 +42,7 @@ module VCAP::CloudController
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, message: message)
 
-            expect(binding).to be
+            expect(binding).to_not be_nil
             expect(binding).to eq(ServiceKey.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.name).to eq(name)
