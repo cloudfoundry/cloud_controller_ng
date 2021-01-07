@@ -434,14 +434,18 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'key credential binding' do
+      let(:labels) { { foo: 'bar' } }
+      let(:annotations) { { baz: 'wow' } }
       let(:key) do
         VCAP::CloudController::ServiceKey.make(service_instance: instance) do |binding|
           operate_on(binding)
+          VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
+          VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
         end
       end
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(key) }
+      let(:expected_object) { expected_json(key, labels: labels, annotations: annotations) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -473,14 +477,19 @@ RSpec.describe 'v3 service credential bindings' do
 
     describe 'app credential binding ' do
       let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:labels) { { foo: 'bar' } }
+      let(:annotations) { { baz: 'wow' } }
       let(:app_binding) do
         VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
           operate_on(binding)
+          VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
+          VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
         end
       end
+
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(app_binding) }
+      let(:expected_object) { expected_json(app_binding, labels: labels, annotations: annotations) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -1895,7 +1904,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  def expected_json(binding)
+  def expected_json(binding, labels: nil, annotations: nil)
     {
       guid: binding.guid,
       created_at: iso8601,
@@ -1908,6 +1917,10 @@ RSpec.describe 'v3 service credential bindings' do
             guid: binding.service_instance.guid
           }
         }
+      },
+      metadata: {
+        labels: labels,
+        annotations: annotations
       },
       links: {
         self: {

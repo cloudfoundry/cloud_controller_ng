@@ -1,5 +1,6 @@
 require_relative 'base_presenter'
 require 'presenters/mixins/last_operation_helper'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP
   module CloudController
@@ -7,6 +8,7 @@ module VCAP
       module V3
         class ServiceCredentialBindingPresenter < BasePresenter
           include VCAP::CloudController::Presenters::Mixins::LastOperationHelper
+          include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
           def to_hash
             base_hash.merge(extra).merge(decorations)
@@ -26,6 +28,10 @@ module VCAP
               name: binding.name,
               type: type,
               last_operation: last_operation(binding),
+              metadata: {
+                labels: hashified_labels(binding.labels),
+                annotations: hashified_annotations(binding.annotations),
+              }
             }
           end
 
