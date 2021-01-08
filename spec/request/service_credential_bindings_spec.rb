@@ -64,16 +64,33 @@ RSpec.describe 'v3 service credential bindings' do
       let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
 
       describe 'permissions' do
+        let(:labels) { { foo: 'bar' } }
+        let(:annotations) { { baz: 'wow' } }
+        let!(:key_binding) do
+          VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) do |binding|
+            operate_on(binding)
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
+            VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
+          end
+        end
+        let!(:other_app_binding) do
+          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) do |binding|
+            operate_on(binding)
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
+            VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
+          end
+        end
+
         let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings?order_by=created_at', nil, user_headers } }
 
         let(:all_bindings) do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding),
+              expected_json(key_binding, labels: labels, annotations: annotations),
               expected_json(other_key_binding),
               expected_json(app_binding),
-              expected_json(other_app_binding),
+              expected_json(other_app_binding, labels: labels, annotations: annotations),
             ]
           }
         end
@@ -82,7 +99,7 @@ RSpec.describe 'v3 service credential bindings' do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding),
+              expected_json(key_binding, labels: labels, annotations: annotations),
               expected_json(app_binding)
             ]
           }
@@ -434,14 +451,18 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'key credential binding' do
+      let(:labels) { { foo: 'bar' } }
+      let(:annotations) { { baz: 'wow' } }
       let(:key) do
         VCAP::CloudController::ServiceKey.make(service_instance: instance) do |binding|
           operate_on(binding)
+          VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
+          VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
         end
       end
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(key) }
+      let(:expected_object) { expected_json(key, labels: labels, annotations: annotations) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -473,14 +494,19 @@ RSpec.describe 'v3 service credential bindings' do
 
     describe 'app credential binding ' do
       let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:labels) { { foo: 'bar' } }
+      let(:annotations) { { baz: 'wow' } }
       let(:app_binding) do
         VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
           operate_on(binding)
+          VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
+          VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
         end
       end
+
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(app_binding) }
+      let(:expected_object) { expected_json(app_binding, labels: labels, annotations: annotations) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -1048,6 +1074,14 @@ RSpec.describe 'v3 service credential bindings' do
                 updated_at: iso8601,
                 description: nil,
               },
+              metadata: {
+                annotations: {
+                  foz: 'baz'
+                },
+                labels: {
+                  foo: 'bar'
+                }
+              },
               relationships: {
                 service_instance: { data: { guid: service_instance_guid } },
                 app: { data: { guid: app_guid } }
@@ -1072,11 +1106,6 @@ RSpec.describe 'v3 service credential bindings' do
             get "/v3/service_credential_bindings/#{@binding_guid}", {}, admin_headers
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to match_json_response(binding_response)
-
-            binding = VCAP::CloudController::ServiceBinding.first
-            expect(binding).to_not be_nil
-            expect(binding).to have_labels({ prefix: nil, key: 'foo', value: 'bar' })
-            expect(binding).to have_annotations({ prefix: nil, key: 'foz', value: 'baz' })
           end
 
           it 'logs an audit event' do
@@ -1895,7 +1924,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
-  def expected_json(binding)
+  def expected_json(binding, labels: {}, annotations: {})
     {
       guid: binding.guid,
       created_at: iso8601,
@@ -1908,6 +1937,10 @@ RSpec.describe 'v3 service credential bindings' do
             guid: binding.service_instance.guid
           }
         }
+      },
+      metadata: {
+        labels: labels,
+        annotations: annotations
       },
       links: {
         self: {

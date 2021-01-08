@@ -1,5 +1,7 @@
 require 'db_spec_helper'
 require 'presenters/v3/service_credential_binding_presenter'
+require 'actions/labels_update'
+require 'actions/annotations_update'
 
 module VCAP
   module CloudController
@@ -21,6 +23,11 @@ module VCAP
           end
         end
 
+        before do
+          LabelsUpdate.update(credential_binding, { lang: 'ruby' }, ServiceBindingLabelModel)
+          AnnotationsUpdate.update(credential_binding, { 'prefix/key' => 'bar' }, ServiceBindingAnnotationModel)
+        end
+
         it 'should include the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
           expect(presenter.to_hash.with_indifferent_access).to match(
@@ -36,6 +43,14 @@ module VCAP
                 description: 'some description',
                 updated_at: credential_binding.last_operation.updated_at,
                 created_at: credential_binding.last_operation.created_at
+              },
+              metadata: {
+                annotations: {
+                'prefix/key' => 'bar'
+                },
+                labels: {
+                  lang: 'ruby',
+                }
               },
               relationships: {
                 app: {
@@ -114,6 +129,11 @@ module VCAP
           end
         end
 
+        before do
+          LabelsUpdate.update(credential_binding, { lang: 'ruby' }, ServiceKeyLabelModel)
+          AnnotationsUpdate.update(credential_binding, { 'prefix/key' => 'bar' }, ServiceKeyAnnotationModel)
+        end
+
         it 'should include the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
           expect(presenter.to_hash.with_indifferent_access).to match(
@@ -129,6 +149,14 @@ module VCAP
                 description: 'some description',
                 updated_at: credential_binding.updated_at,
                 created_at: credential_binding.created_at
+              },
+              metadata: {
+                annotations: {
+                  'prefix/key' => 'bar'
+                },
+                labels: {
+                  lang: 'ruby',
+                }
               },
               relationships: {
                 service_instance: {

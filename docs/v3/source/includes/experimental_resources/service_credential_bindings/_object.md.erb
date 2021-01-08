@@ -22,6 +22,8 @@ Name | Type | Description
 **last_operation** (*experimental*)| _[last operation object](#the-last-operation-object-for-service-credential-binding)_ | The last operation of this binding
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service credential binding
+**metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the service credential binding
 **relationships.service_instance** | [_to-one relationship_](#to-one-relationships) | The service instance that this binding is originated from
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app using this binding; omitted for `key` bindings
 **links** | [_links object_](#links) | Links to related resources
