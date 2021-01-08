@@ -1468,7 +1468,7 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   describe 'DELETE /v3/service_credential_bindings/:guid' do
-    RSpec.shared_examples 'service credential binding delete endpoint' do |audit_event, klass|
+    RSpec.shared_examples 'service credential binding delete endpoint' do |audit_event, klass, label_class, annotation_class|
       it 'responds with a job resource' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(202)
@@ -1592,6 +1592,8 @@ RSpec.describe 'v3 service credential bindings' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             expect(klass.all).to be_empty
+            expect(label_class.all).to be_empty
+            expect(annotation_class.all).to be_empty
           end
 
           it 'completes the job' do
@@ -1806,6 +1808,9 @@ RSpec.describe 'v3 service credential bindings' do
           lambda {
             get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
             expect(last_response).to have_status_code(404)
+
+            expect(VCAP::CloudController::ServiceBindingLabelModel.all).to be_empty
+            expect(VCAP::CloudController::ServiceBindingAnnotationModel.all).to be_empty
           }
         }
 
@@ -1897,13 +1902,21 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'app binding' do
-        it_behaves_like 'service credential binding delete endpoint', 'service_binding', VCAP::CloudController::ServiceBinding
+        it_behaves_like 'service credential binding delete endpoint',
+          'service_binding',
+          VCAP::CloudController::ServiceBinding,
+          VCAP::CloudController::ServiceBindingLabelModel,
+          VCAP::CloudController::ServiceBindingAnnotationModel
       end
 
       context 'key bindings' do
         let(:bound_app) { nil }
         let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
-        it_behaves_like 'service credential binding delete endpoint', 'service_key', VCAP::CloudController::ServiceKey
+        it_behaves_like 'service credential binding delete endpoint',
+          'service_key',
+          VCAP::CloudController::ServiceKey,
+          VCAP::CloudController::ServiceKeyLabelModel,
+          VCAP::CloudController::ServiceKeyAnnotationModel
       end
     end
 
