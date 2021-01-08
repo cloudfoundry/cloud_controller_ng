@@ -27,7 +27,7 @@ curl "https://api.example.org/v3/service_brokers/[guid]" \
 ```
 
 ```
-Example Response
+Example Response with job
 ```
 
 ```http
@@ -36,10 +36,26 @@ Content-Type: application/json
 Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
 ```
 
-This endpoint updates a broker and creates a job to synchronize the service offerings and service plans with those in the broker's catalog.
-The `Location` header refers to the created job which syncs the broker with the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+```
+Example Response without job
+```
 
-Service brokers that are in the process of being synchronized or deleted cannot be updated.
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_broker %>
+```
+
+This endpoint updates a service broker. If the parameters include
+`url` or `authentication`, then the endpoint will enqueue a background job to
+synchronize the service offerings and service plans with those in the broker's catalog.
+For updates that consist of only `name` or `metadata`, the update is
+processed immediately, and the service broker's catalog is not synchronized.
+
+When a service broker has a synchronization job in progress, only
+updates with `name` and `metadata` are permitted until the synchronization job
+is complete.
 
 #### Definition
 `PATCH /v3/service_brokers/:guid`
@@ -62,4 +78,3 @@ Name | Type | Description
 --- | ---
 Admin |
 Space Developer (only space-scoped brokers) |
-

@@ -51,7 +51,6 @@ class ServiceBrokersController < ApplicationController
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     end
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository)
     result = service_broker_create.create(message)
 
@@ -75,11 +74,15 @@ class ServiceBrokersController < ApplicationController
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     end
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-    service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, service_event_repository)
-    result = service_broker_update.update(message)
+    service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, message, service_event_repository)
 
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
+    if service_broker_update.update_broker_needed?
+      job = service_broker_update.enqueue_update
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+    else
+      service_broker_update.update_sync
+      render status: :ok, json: Presenters::V3::ServiceBrokerPresenter.new(service_broker).to_json
+    end
   rescue VCAP::CloudController::V3::ServiceBrokerUpdate::InvalidServiceBroker => e
     unprocessable!(e.message)
   end
@@ -109,6 +112,10 @@ class ServiceBrokersController < ApplicationController
   end
 
   private
+
+  def service_event_repository
+    VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+  end
 
   def broker_has_instances!(broker_name)
     raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerNotRemovable', broker_name)
