@@ -1873,7 +1873,8 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'app binding' do
-        it_behaves_like 'service credential binding delete endpoint', 'service_binding',
+        it_behaves_like 'service credential binding delete endpoint',
+          'service_binding',
           VCAP::CloudController::ServiceBinding,
           VCAP::CloudController::ServiceBindingLabelModel,
           VCAP::CloudController::ServiceBindingAnnotationModel
@@ -1882,7 +1883,8 @@ RSpec.describe 'v3 service credential bindings' do
       context 'key bindings' do
         let(:bound_app) { nil }
         let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
-        it_behaves_like 'service credential binding delete endpoint', 'service_key',
+        it_behaves_like 'service credential binding delete endpoint',
+          'service_key',
           VCAP::CloudController::ServiceKey,
           VCAP::CloudController::ServiceKeyLabelModel,
           VCAP::CloudController::ServiceKeyAnnotationModel

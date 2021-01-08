@@ -635,7 +635,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      it 'cascade deletes all ServiceBindingOperations for this binding' do
+      it 'cascades deletion of related dependencies' do
         binding = ServiceBinding.make
         ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
         ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
