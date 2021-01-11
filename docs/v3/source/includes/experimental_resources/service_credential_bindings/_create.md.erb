@@ -1,7 +1,7 @@
 ### Create a service credential binding
 
 ```
-Example App Credential Binding Create Request
+Example Request to create an App Credential Binding
 ```
 
 ```shell
@@ -40,7 +40,7 @@ curl "https://api.example.org/v3/service_credential_bindings" \
 ```
 
 ```
-Example Key Credential Binding Create Request
+Example Request to create a Key Credential Binding
 ```
 
 ```shell
@@ -74,7 +74,7 @@ curl "https://api.example.org/v3/service_credential_bindings" \
 ```
 
 ```
-Example Response for Managed Service Instance
+Example Response for a Managed Service Instance
 ```
 
 ```http
@@ -84,7 +84,7 @@ Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
 ```
 
 ```
-Example App Credential Binding Response for User-Provided Service Instance
+Example Response for a User-Provided Service Instance
 ```
 
 ```http
@@ -92,17 +92,6 @@ HTTP/1.1 201 Created
 Content-Type: application/json
 
 <%= yield_content :single_service_credential_binding_app %>
-```
-
-```
-Example Key Credential Binding Response for User-Provided Service Instance
-```
-
-```http
-HTTP/1.1 201 Created
-Content-Type: application/json
-
-<%= yield_content :single_service_credential_binding_key %>
 ```
 
 This endpoint creates a new service credential binding. Service credential bindings can be of type `app` or `key`; `key` is only
