@@ -9,23 +9,28 @@ module VCAP::CloudController
       class InvalidServiceBroker < StandardError
       end
 
-      attr_reader :broker, :service_event_repository
-
-      def initialize(service_broker, service_event_repository)
+      def initialize(service_broker, message, service_event_repository)
         @broker = service_broker
+        @message = message
         @service_event_repository = service_event_repository
       end
 
-      def update(message)
-        params = {}
-        params[:name] = message.name if message.requested?(:name)
+      def update_broker_needed?
+        message.requested?(:url) || message.requested?(:authentication)
+      end
+
+      def update_sync
+        ServiceBroker.db.transaction do
+          broker.update(process_name(message))
+          MetadataUpdate.update(broker, message)
+        end
+      end
+
+      def enqueue_update
+        params = process_name(message)
         params[:broker_url] = message.url if message.requested?(:url)
         params[:authentication] = message.authentication.to_json if message.requested?(:authentication)
         params[:service_broker_id] = broker.id
-
-        if params[:name] && !ServiceBroker.where(name: params[:name]).exclude(guid: broker.guid).empty?
-          raise InvalidServiceBroker.new('Name must be unique')
-        end
 
         if broker.in_transitional_state?
           raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress')
@@ -45,7 +50,25 @@ module VCAP::CloudController
           pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
         end
 
-        { pollable_job: pollable_job }
+        pollable_job
+      end
+
+      private
+
+      attr_reader :broker, :service_event_repository, :message
+
+      def process_name(message)
+        params = {}
+        if message.requested?(:name)
+          unique_name! if ServiceBroker.where(name: message.name).exclude(guid: broker.guid).any?
+          params[:name] = message.name
+        end
+
+        params
+      end
+
+      def unique_name!
+        raise InvalidServiceBroker.new('Name must be unique')
       end
     end
   end
