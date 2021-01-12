@@ -15,22 +15,30 @@ module VCAP::CloudController
         @service_event_repository = service_event_repository
       end
 
+      # Technically a name change can be done without contacting the broker. However the CF CLI v7.2
+      # (which is the most recent version at the time of writing) expects a broker rename to return a job.
+      # Once CF CLI v7.2 is out of support, then it may make sense to allow name changes to happen
+      # synchronously.
       def update_broker_needed?
-        message.requested?(:url) || message.requested?(:authentication)
+        message.requested?(:url) || message.requested?(:authentication) || message.requested?(:name)
       end
 
       def update_sync
         ServiceBroker.db.transaction do
-          broker.update(process_name(message))
           MetadataUpdate.update(broker, message)
         end
       end
 
       def enqueue_update
-        params = process_name(message)
+        params = {}
         params[:broker_url] = message.url if message.requested?(:url)
         params[:authentication] = message.authentication.to_json if message.requested?(:authentication)
         params[:service_broker_id] = broker.id
+
+        if message.requested?(:name)
+          unique_name! if ServiceBroker.where(name: message.name).exclude(guid: broker.guid).any?
+          params[:name] = message.name
+        end
 
         if broker.in_transitional_state?
           raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress')
@@ -56,16 +64,6 @@ module VCAP::CloudController
       private
 
       attr_reader :broker, :service_event_repository, :message
-
-      def process_name(message)
-        params = {}
-        if message.requested?(:name)
-          unique_name! if ServiceBroker.where(name: message.name).exclude(guid: broker.guid).any?
-          params[:name] = message.name
-        end
-
-        params
-      end
 
       def unique_name!
         raise InvalidServiceBroker.new('Name must be unique')

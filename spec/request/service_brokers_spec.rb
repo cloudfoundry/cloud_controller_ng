@@ -530,7 +530,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when updating url or authentication' do
+    context 'when updating url, authentication, or name' do
       let(:update_request_body) {
         {
           name: 'new-name',
@@ -695,11 +695,9 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when updating name or metadata only' do
-      let(:new_name) { Sham.name }
+    context 'when metadata only' do
       let(:update_request_body) {
         {
-          name: new_name,
           metadata: {
             labels: { potato: 'sweet' },
             annotations: { style: 'mashed', amount: 'all' }
@@ -712,7 +710,7 @@ RSpec.describe 'V3 service brokers' do
         expect(last_response).to have_status_code(200)
 
         broker.reload
-        expect(broker.name).to eq(new_name)
+        expect(broker.name).to eq('broker name')
         expect(broker.broker_url).to eq('http://example.org/broker-url')
         expect(broker.auth_username).to eq('admin')
         expect(broker.auth_password).to eq('welcome')
@@ -732,7 +730,7 @@ RSpec.describe 'V3 service brokers' do
         expect(parsed_response).to match_json_response(
           {
             guid: broker.guid,
-            name: new_name,
+            name: broker.name,
             url: broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
@@ -750,18 +748,6 @@ RSpec.describe 'V3 service brokers' do
         )
       end
 
-      context 'when a broker with the same name exists' do
-        before do
-          VCAP::CloudController::ServiceBroker.make(name: 'another broker')
-        end
-
-        it 'should return 422 and meaningful error and does not create a broker' do
-          patch("/v3/service_brokers/#{broker.guid}", { name: 'another broker' }.to_json, admin_headers)
-          expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
-          expect(broker.reload.name).to eq 'broker name'
-        end
-      end
-
       context 'when an operation is already in progress' do
         it 'updates the broker anyway' do
           broker.update(state: VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
@@ -770,7 +756,11 @@ RSpec.describe 'V3 service brokers' do
           expect(last_response).to have_status_code(200)
 
           broker.reload
-          expect(broker.name).to eq(new_name)
+          expect(broker).to have_labels({ prefix: nil, key: 'potato', value: 'sweet' })
+          expect(broker).to have_annotations(
+            { prefix: nil, key: 'style', value: 'mashed' },
+            { prefix: nil, key: 'amount', value: 'all' }
+          )
           expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
         end
       end
