@@ -20,7 +20,8 @@ module VCAP::CloudController
         'app_guids' => 'app-1-guid, app-2-guid, app-3-guid',
         'app_names' => 'app-1-name, app-2-name, app-3-name',
         'type' => 'app',
-        'include' => 'app,service_instance'
+        'include' => 'app,service_instance',
+        'label_selector' => 'key=value'
       }
     end
 
@@ -91,6 +92,16 @@ module VCAP::CloudController
           message = described_class.from_params({ 'include' => 'app, service_instance' })
           expect(message).to be_valid
         end
+      end
+
+      it 'validates metadata requirements' do
+        message = described_class.from_params({ 'label_selector' => '' }.with_indifferent_access)
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+            with(message).
+            and_call_original
+        message.valid?
       end
     end
 
