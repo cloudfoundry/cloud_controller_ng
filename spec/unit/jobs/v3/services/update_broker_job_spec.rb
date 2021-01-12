@@ -5,7 +5,7 @@ require 'cloud_controller/errors/api_error'
 module VCAP
   module CloudController
     module V3
-      RSpec.describe 'V3::UpdateBrokerJob' do
+      RSpec.describe UpdateBrokerJob do
         it_behaves_like 'delayed job', UpdateBrokerJob
 
         describe '#perform' do
@@ -115,7 +115,17 @@ module VCAP
               UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
             end
 
-            it 'updates the name' do
+            let!(:updater_stub) do
+              instance_double(VCAP::CloudController::V3::ServiceBrokerCatalogUpdater, {
+                refresh: nil
+              })
+            end
+
+            before do
+              allow(VCAP::CloudController::V3::ServiceBrokerCatalogUpdater).to receive(:new).and_return(updater_stub)
+            end
+
+            it 'updates the name without refreshing the catalog' do
               update_broker_request = ServiceBrokerUpdateRequest.create(name: 'new-name', service_broker_id: broker.id)
               job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
 
@@ -126,9 +136,11 @@ module VCAP
               expect(broker.broker_url).to eq('http://example.org/broker-url')
               expect(broker.auth_username).to eq('username')
               expect(broker.auth_password).to eq('password')
+
+              expect(updater_stub).not_to have_received(:refresh)
             end
 
-            it 'updates the url' do
+            it 'updates the url and refreshes the catalog' do
               update_broker_request = ServiceBrokerUpdateRequest.create(
                 broker_url: 'http://example.org/new-broker-url',
                 service_broker_id: broker.id
@@ -142,9 +154,11 @@ module VCAP
               expect(broker.broker_url).to eq('http://example.org/new-broker-url')
               expect(broker.auth_username).to eq('username')
               expect(broker.auth_password).to eq('password')
+
+              expect(updater_stub).to have_received(:refresh)
             end
 
-            it 'updates the authentication' do
+            it 'updates the authentication and refreshes the catalog' do
               update_broker_request = ServiceBrokerUpdateRequest.create(
                 authentication: '{"credentials":{"username":"new-admin","password":"welcome"}}',
                 service_broker_id: broker.id
@@ -158,6 +172,8 @@ module VCAP
               expect(broker.broker_url).to eq('http://example.org/broker-url')
               expect(broker.auth_username).to eq('new-admin')
               expect(broker.auth_password).to eq('welcome')
+
+              expect(updater_stub).to have_received(:refresh)
             end
           end
 

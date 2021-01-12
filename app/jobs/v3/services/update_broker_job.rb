@@ -55,7 +55,7 @@ module VCAP::CloudController
           ServiceBroker.db.transaction do
             broker.update(update_params)
 
-            @warnings = @catalog_updater.refresh
+            @warnings = @catalog_updater.refresh unless only_name_change?(update_params)
 
             MetadataUpdate.update(broker, ServiceBrokerUpdateMetadataMessage.new(build_metadata_request_params))
             broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
@@ -91,6 +91,10 @@ module VCAP::CloudController
           end
 
           params
+        end
+
+        def only_name_change?(params)
+          params.keys == [:name]
         end
 
         def build_metadata_request_params

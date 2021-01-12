@@ -47,15 +47,21 @@ Content-Type: application/json
 <%= yield_content :single_service_broker %>
 ```
 
-This endpoint updates a service broker. If the parameters include
-`url` or `authentication`, then the endpoint will enqueue a background job to
-synchronize the service offerings and service plans with those in the broker's catalog.
-For updates that consist of only `name` or `metadata`, the update is
-processed immediately, and the service broker's catalog is not synchronized.
+This endpoint updates a service broker. Depending on the parameters specified,
+the endpoint may respond with a background job, and it may synchronize the
+service offerings and service plans with those in the broker's catalog.
 
 When a service broker has a synchronization job in progress, only
-updates with `name` and `metadata` are permitted until the synchronization job
+updates with `metadata` are permitted until the synchronization job
 is complete.
+
+Parameter | Updates Catalog | Responds with job
+--------- | --------------- | -----------------
+**name** | No | Yes
+**url** | Yes | Yes
+**authentication** | Yes | Yes
+**metadata.labels** | No | No
+**metadata.annotations** | No | No
 
 #### Definition
 `PATCH /v3/service_brokers/:guid`
