@@ -22,9 +22,13 @@ class ServiceCredentialBindingsController < ApplicationController
 
     results = list_fetcher.fetch(space_guids: space_guids, message: message)
 
+    default_order_by_overriden = override_default_order_by(message)
+    page_results = SequelPaginator.new.get_page(results, message.try(:pagination_options))
+    page_results.pagination_options.order_by = nil if default_order_by_overriden
+
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceCredentialBindingPresenter,
-      paginated_result: SequelPaginator.new.get_page(results, message.try(:pagination_options)),
+      paginated_result: page_results,
       path: '/v3' + service_credential_bindings_path,
       message: message,
       decorators: decorators(message)
@@ -116,6 +120,15 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   private
+
+  def override_default_order_by(message)
+    order_by_set = false
+    unless message.pagination_options.ordering_configured?
+      message.pagination_options.order_by = 'created_at'
+      order_by_set = true
+    end
+    order_by_set
+  end
 
   def create_key_binding(message, service_instance)
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
@@ -261,11 +274,6 @@ class ServiceCredentialBindingsController < ApplicationController
     else
       permission_queryer.readable_space_guids
     end
-  end
-
-  def pagination_options
-    query_params_with_order_by = query_params.reverse_merge(order_by: :created_at)
-    ListMessage.from_params(query_params_with_order_by, []).pagination_options
   end
 
   def serialized(message)

@@ -55,27 +55,27 @@ RSpec.describe 'v3 service credential bindings' do
       let(:now) { Time.now }
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-      let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
-      let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
+      let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+      let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance) }
       let!(:app_binding) do
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds).tap do |binding|
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance).tap do |binding|
           operate_on(binding)
         end
       end
-      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) }
+      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name) }
 
       describe 'permissions' do
         let(:labels) { { foo: 'bar' } }
         let(:annotations) { { baz: 'wow' } }
         let!(:key_binding) do
-          VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) do |binding|
+          VCAP::CloudController::ServiceKey.make(service_instance: instance) do |binding|
             operate_on(binding)
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
             VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
           end
         end
         let!(:other_app_binding) do
-          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, created_at: now - 1.second, name: Sham.name) do |binding|
+          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name) do |binding|
             operate_on(binding)
             VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
             VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)

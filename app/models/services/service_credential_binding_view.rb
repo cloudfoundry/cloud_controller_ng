@@ -81,7 +81,7 @@ module VCAP
         SERVICE_BINDING_VIEW
       ].inject do |statement, sub_select|
         statement.union(sub_select, all: true, from_self: false)
-      end.from_self.order_by(:created_at).freeze
+      end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
         plugin :single_table_inheritance,
