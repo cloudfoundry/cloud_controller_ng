@@ -19869,17 +19869,60 @@ The <code class="prettyprint">Location</code> header refers to the created job w
     }
   }'</span>
 </code></pre>
-<pre class="highlight plaintext"><code>Example Response
+<pre class="highlight plaintext"><code>Example Response with job
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
 </code></pre>
+<pre class="highlight plaintext"><code>Example Response without job
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
-<p>This endpoint updates a broker and creates a job to synchronize the service offerings and service plans with those in the broker&rsquo;s catalog.
-The <code class="prettyprint">Location</code> header refers to the created job which syncs the broker with the catalog. See <a href="#service-broker-jobs"><em>Service broker jobs</em></a> for more information and limitations.</p>
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_broker"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.service-broker.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_offerings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings?service_broker_guids=dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
-<p>Service brokers that are in the process of being synchronized or deleted cannot be updated.</p>
+</span></code></pre>
+
+<p>This endpoint updates a service broker. If the parameters include
+<code class="prettyprint">url</code> or <code class="prettyprint">authentication</code>, then the endpoint will enqueue a background job to
+synchronize the service offerings and service plans with those in the broker&rsquo;s catalog.
+For updates that consist of only <code class="prettyprint">name</code> or <code class="prettyprint">metadata</code>, the update is
+processed immediately, and the service broker&rsquo;s catalog is not synchronized.</p>
+
+<p>When a service broker has a synchronization job in progress, only
+updates with <code class="prettyprint">name</code> and <code class="prettyprint">metadata</code> are permitted until the synchronization job
+is complete.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -29367,6 +29410,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29412,6 +29463,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29474,6 +29533,16 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>updated_at</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time with zone when the object was last updated</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service credential binding</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service credential binding</td>
 </tr>
 <tr>
 <td><strong>relationships.service_instance</strong></td>
@@ -29616,6 +29685,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29664,6 +29741,14 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29795,6 +29880,14 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29843,6 +29936,14 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
     </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29960,6 +30061,14 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
         </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"baz"</span><span class="p">:</span><span class="w"> </span><span class="s2">"qux"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -29998,6 +30107,12 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
         </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"foo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"service_instance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -30107,6 +30222,11 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <td><strong>include</strong></td>
 <td><em>list of strings</em></td>
 <td>Optionally include a list of unique related resources in the response. Valid values are: <code class="prettyprint">app</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
