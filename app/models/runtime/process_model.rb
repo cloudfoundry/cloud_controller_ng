@@ -344,7 +344,7 @@ module VCAP::CloudController
         (column_changed?(:state) ||
         (column_changed?(:memory) && !skip_process_version_update) ||
         (column_changed?(:health_check_type) && !skip_process_version_update) ||
-        column_changed?(:health_check_http_endpoint) ||
+        (column_changed?(:health_check_http_endpoint) && !skip_process_version_update) ||
         @ports_changed_by_user
       )
     end

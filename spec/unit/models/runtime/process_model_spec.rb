@@ -1213,6 +1213,11 @@ module VCAP::CloudController
             process.health_check_type = 'process'
             expect { process.save }.not_to change(process, :version)
           end
+
+          it 'should not update the version for health_check_http_endpoint' do
+            process.health_check_http_endpoint = '/two'
+            expect { process.save }.not_to change(process, :version)
+          end
         end
 
         it 'should update the version when changing :memory' do

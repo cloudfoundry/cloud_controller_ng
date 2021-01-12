@@ -110,6 +110,31 @@ module VCAP::CloudController
           expect(process.health_check_type).to eq('port')
           expect(process.health_check_http_endpoint).to be_nil
         end
+
+        context 'when nothing else is changed' do
+          let!(:process) do
+            ProcessModel.make(
+              :process,
+              health_check_type:    'http',
+              health_check_http_endpoint: '/healthcheck',
+            )
+          end
+
+          let(:health_check) do
+            {
+              type: 'port',
+            }
+          end
+
+          it 'does not create a new process version' do
+            old_version = process.version
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.health_check_type).to eq('port')
+            expect(process.version).to eq(old_version)
+          end
+        end
       end
 
       context 'when no changes are requested' do
@@ -156,6 +181,19 @@ module VCAP::CloudController
 
           process.reload
           expect(process.health_check_type).to eq('process')
+          expect(process.version).to eq(old_version)
+        end
+      end
+
+      context 'when only updating the health_check http enpoint' do
+        let(:health_check) { { data: { 'endpoint': '/two' } } }
+
+        it 'does not create a new process version' do
+          old_version = process.version
+          process_update.update(process, message, NonManifestStrategy)
+
+          process.reload
+          expect(process.health_check_http_endpoint).to eq('/two')
           expect(process.version).to eq(old_version)
         end
       end
