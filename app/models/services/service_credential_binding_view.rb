@@ -94,18 +94,13 @@ module VCAP
     end
 
     module ServiceCredentialBindingLabels
-      module Types
-        SERVICE_KEY = 'key'.freeze
-        SERVICE_BINDING = 'app'.freeze
-      end
-
       SERVICE_KEY_LABELS_VIEW = Sequel::Model(:service_key_labels).select(
         Sequel.as(:service_key_labels__guid, :guid),
         Sequel.as(:service_key_labels__resource_guid, :resource_guid),
         Sequel.as(:service_key_labels__key_prefix, :key_prefix),
         Sequel.as(:service_key_labels__key_name, :key_name),
         Sequel.as(:service_key_labels__value, :value),
-        Sequel.as(Types::SERVICE_KEY, :type),
+        Sequel.as(ServiceCredentialBinding::Types::SERVICE_KEY, :type),
       )
 
       SERVICE_BINDING_LABELS_VIEW = Sequel::Model(:service_binding_labels).select(
@@ -114,7 +109,7 @@ module VCAP
         Sequel.as(:service_binding_labels__key_prefix, :key_prefix),
         Sequel.as(:service_binding_labels__key_name, :key_name),
         Sequel.as(:service_binding_labels__value, :value),
-        Sequel.as(Types::SERVICE_BINDING, :type),
+        Sequel.as(ServiceCredentialBinding::Types::SERVICE_BINDING, :type),
       )
 
       VIEW = [
