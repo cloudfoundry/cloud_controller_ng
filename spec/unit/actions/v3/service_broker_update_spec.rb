@@ -30,8 +30,8 @@ module VCAP
         context 'name' do
           let(:request) { { name: 'new-name' } }
 
-          it 'is false' do
-            expect(action.update_broker_needed?).to be_falsey
+          it 'is true' do
+            expect(action.update_broker_needed?).to be_truthy
           end
         end
 
@@ -79,7 +79,6 @@ module VCAP
       describe '#update_sync' do
         let(:request) do
           {
-            name: 'new-name',
             metadata: {
               labels: { potato: 'yam' },
               annotations: { style: 'mashed' }
@@ -91,8 +90,7 @@ module VCAP
           action.update_sync
         end
 
-        it 'updates name and metadata' do
-          expect(existing_service_broker.name).to eq('new-name')
+        it 'updates metadata' do
           expect(existing_service_broker).to have_labels({ key: 'potato', value: 'yam' })
           expect(existing_service_broker).to have_annotations({ key: 'style', value: 'mashed' })
         end
