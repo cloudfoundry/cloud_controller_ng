@@ -49,6 +49,7 @@ class ServiceCredentialBindingsController < ApplicationController
   def create
     message = build_create_message(hashed_params[:body])
     service_instance = get_service_instance!(message.service_instance_guid)
+    check_parameters_support(service_instance, message)
 
     case message.type
     when 'app'
@@ -203,6 +204,16 @@ class ServiceCredentialBindingsController < ApplicationController
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
+  end
+
+  def check_parameters_support(service_instance, message)
+    unless service_instance.is_a?(VCAP::CloudController::ManagedServiceInstance)
+      parameters_not_supported! if message.requested?(:parameters)
+    end
+  end
+
+  def parameters_not_supported!
+    unprocessable!('Binding parameters are not supported for user-provided service instances')
   end
 
   def unprocessable_resource!(resource, guid)
