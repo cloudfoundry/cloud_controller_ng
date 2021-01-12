@@ -39,7 +39,7 @@ module VCAP
           end
 
           if message.requested?(:label_selector)
-            dataset =  LabelSelectorQueryGenerator.add_selector_queries(
+            dataset = LabelSelectorQueryGenerator.add_selector_queries(
               label_klass: ServiceCredentialBindingLabels::View,
               resource_dataset: dataset,
               requirements: message.requirements,

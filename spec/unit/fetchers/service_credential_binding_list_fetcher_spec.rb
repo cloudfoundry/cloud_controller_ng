@@ -155,10 +155,9 @@ module VCAP
 
               ServiceBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', service_binding: another_binding)
               ServiceBindingLabelModel.make(key_name: 'tier', value: 'worker', service_binding: another_binding)
-
             end
 
-            let(:params) { { 'label_selector' => "fruit=strawberry,tier in (backend,worker)" } }
+            let(:params) { { 'label_selector' => 'fruit=strawberry,tier in (backend,worker)' } }
             it 'returns the right result' do
               bindings = fetcher.fetch(space_guids: :all, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, another_binding.guid)

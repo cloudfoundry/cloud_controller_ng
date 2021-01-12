@@ -353,8 +353,8 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         describe 'label_selector' do
-          let!(:key_labels) { {env: 'prod', animal: 'dog'}}
-          let!(:app_labels) { {env: 'prod', animal: 'horse'}}
+          let!(:key_labels) { { env: 'prod', animal: 'dog' } }
+          let!(:app_labels) { { env: 'prod', animal: 'horse' } }
           before do
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: key_binding)
