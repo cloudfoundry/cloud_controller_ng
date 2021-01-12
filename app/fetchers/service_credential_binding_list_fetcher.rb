@@ -1,4 +1,5 @@
 require 'fetchers/base_list_fetcher'
+require 'fetchers/label_selector_query_generator'
 
 module VCAP
   module CloudController
@@ -35,6 +36,15 @@ module VCAP
         def filter(dataset, message)
           filters_from_message(message).each do |f|
             dataset = dataset.where { f }
+          end
+
+          if message.requested?(:label_selector)
+            dataset = LabelSelectorQueryGenerator.add_selector_queries(
+              label_klass: ServiceCredentialBindingLabels::View,
+              resource_dataset: dataset,
+              requirements: message.requirements,
+              resource_klass: ServiceCredentialBinding::View
+            )
           end
 
           super(message, dataset, ServiceCredentialBinding::View)

@@ -1,6 +1,7 @@
 require 'db_spec_helper'
 require 'fetchers/service_credential_binding_list_fetcher'
 require 'messages/service_credential_binding_list_message'
+require 'fetchers/label_selector_query_generator'
 
 module VCAP
   module CloudController
@@ -140,6 +141,26 @@ module VCAP
             it 'returns the right result' do
               bindings = fetcher.fetch(space_guids: :all, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, key_binding.guid)
+            end
+          end
+
+          context 'label selector' do
+            before do
+              ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
+              ServiceKeyLabelModel.make(key_name: 'tier', value: 'backend', service_key: key_binding)
+
+              ServiceKeyLabelModel.make(key_name: 'fruit', value: 'lemon', service_key: another_key)
+
+              ServiceBindingLabelModel.make(key_name: 'tier', value: 'worker', service_binding: app_binding)
+
+              ServiceBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', service_binding: another_binding)
+              ServiceBindingLabelModel.make(key_name: 'tier', value: 'worker', service_binding: another_binding)
+            end
+
+            let(:params) { { 'label_selector' => 'fruit=strawberry,tier in (backend,worker)' } }
+            it 'returns the right result' do
+              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, another_binding.guid)
             end
           end
 

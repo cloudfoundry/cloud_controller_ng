@@ -36,6 +36,7 @@ RSpec.describe 'v3 service credential bindings' do
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
+          label_selector: 'env'
         }
       end
     end
@@ -165,10 +166,10 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get "/v3/service_credential_bindings?order_by=created_at&service_instance_names=#{instance.name},#{other_instance.name}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -183,10 +184,10 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get "/v3/service_credential_bindings?order_by=created_at&service_instance_guids=#{instance.guid},#{other_instance.guid}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -202,10 +203,10 @@ RSpec.describe 'v3 service credential bindings' do
             filter = "service_plan_names=#{instance.service_plan.name},#{other_instance.service_plan.name}"
             get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -221,10 +222,10 @@ RSpec.describe 'v3 service credential bindings' do
             filter = "service_plan_guids=#{instance.service_plan.guid},#{other_instance.service_plan.guid}"
             get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -240,10 +241,10 @@ RSpec.describe 'v3 service credential bindings' do
             filter = "service_offering_names=#{instance.service.name},#{other_instance.service.name}"
             get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -259,10 +260,10 @@ RSpec.describe 'v3 service credential bindings' do
             filter = "service_offering_guids=#{instance.service.guid},#{other_instance.service.guid}"
             get "/v3/service_credential_bindings?order_by=created_at&#{filter}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_key_binding,
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -277,8 +278,8 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get "/v3/service_credential_bindings?order_by=created_at&names=#{key_binding.name},#{other_app_binding.name}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_app_binding)
+              key_binding,
+              other_app_binding
             )
           end
         end
@@ -293,8 +294,8 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get "/v3/service_credential_bindings?app_names=#{app_binding.app.name},#{other_app_binding.app.name}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -309,8 +310,8 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get "/v3/service_credential_bindings?app_guids=#{app_binding.app.guid},#{other_app_binding.app.guid}", nil, admin_headers
             check_filtered_bindings(
-              expected_json(app_binding),
-              expected_json(other_app_binding)
+              app_binding,
+              other_app_binding
             )
           end
         end
@@ -337,16 +338,46 @@ RSpec.describe 'v3 service credential bindings' do
           it 'returns the filtered bindings' do
             get '/v3/service_credential_bindings?type=key', nil, admin_headers
             check_filtered_bindings(
-              expected_json(key_binding),
-              expected_json(other_key_binding),
-              expected_json(another_key)
+              key_binding,
+              other_key_binding,
+              another_key
             )
 
             get '/v3/service_credential_bindings?type=app', nil, admin_headers
             check_filtered_bindings(
-              expected_json(app_binding),
-              expected_json(other_app_binding),
-              expected_json(another_binding)
+              app_binding,
+              other_app_binding,
+              another_binding
+            )
+          end
+        end
+
+        describe 'label_selector' do
+          let!(:key_labels) { { env: 'prod', animal: 'dog' } }
+          let!(:app_labels) { { env: 'prod', animal: 'horse' } }
+          before do
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: key_binding)
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'animal', value: 'horse', service_key: key_binding)
+
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: other_key_binding)
+            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'animal', value: 'dog', service_key: other_key_binding)
+
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'prod', service_binding: app_binding)
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'animal', value: 'horse', service_binding: app_binding)
+
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'prod', service_binding: other_app_binding)
+
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'staging', service_binding: another_binding)
+            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'animal', value: 'dog', service_binding: another_binding)
+          end
+
+          it 'returns the filtered list' do
+            get '/v3/service_credential_bindings?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
+
+            check_filtered_bindings(
+              other_key_binding,
+              app_binding,
             )
           end
         end
@@ -354,9 +385,10 @@ RSpec.describe 'v3 service credential bindings' do
         def check_filtered_bindings(*bindings)
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].length).to be(bindings.length)
-          expect({ resources: parsed_response['resources'] }).to match_json_response(
-            { resources: bindings }
-          )
+
+          returned_guids = parsed_response['resources'].map { |r| r['guid'] }
+          expected_guids = bindings.map(&:guid)
+          expect(returned_guids).to contain_exactly(*expected_guids)
         end
       end
 
@@ -365,7 +397,7 @@ RSpec.describe 'v3 service credential bindings' do
           %w(
             page per_page order_by created_ats updated_ats guids names service_instance_guids service_instance_names
             service_plan_names service_plan_guids service_offering_names service_offering_guids app_guids app_names
-            include type
+            include type label_selector
           )
         end
 

@@ -92,5 +92,41 @@ module VCAP
                }
       end
     end
+
+    module ServiceCredentialBindingLabels
+      SERVICE_KEY_LABELS_VIEW = Sequel::Model(:service_key_labels).select(
+        Sequel.as(:service_key_labels__guid, :guid),
+        Sequel.as(:service_key_labels__resource_guid, :resource_guid),
+        Sequel.as(:service_key_labels__key_prefix, :key_prefix),
+        Sequel.as(:service_key_labels__key_name, :key_name),
+        Sequel.as(:service_key_labels__value, :value),
+        Sequel.as(ServiceCredentialBinding::Types::SERVICE_KEY, :type),
+      )
+
+      SERVICE_BINDING_LABELS_VIEW = Sequel::Model(:service_binding_labels).select(
+        Sequel.as(:service_binding_labels__guid, :guid),
+        Sequel.as(:service_binding_labels__resource_guid, :resource_guid),
+        Sequel.as(:service_binding_labels__key_prefix, :key_prefix),
+        Sequel.as(:service_binding_labels__key_name, :key_name),
+        Sequel.as(:service_binding_labels__value, :value),
+        Sequel.as(ServiceCredentialBinding::Types::SERVICE_BINDING, :type),
+      )
+
+      VIEW = [
+        SERVICE_KEY_LABELS_VIEW,
+        SERVICE_BINDING_LABELS_VIEW
+      ].inject do |statement, sub_select|
+        statement.union(sub_select, all: true)
+      end.freeze
+
+      class View < Sequel::Model(VIEW)
+        plugin :single_table_inheritance,
+          :type,
+          model_map: {
+            'app' => 'VCAP::CloudController::ServiceBindingLabels',
+            'key' => 'VCAP::CloudController::ServiceKeyLabels'
+          }
+      end
+    end
   end
 end
