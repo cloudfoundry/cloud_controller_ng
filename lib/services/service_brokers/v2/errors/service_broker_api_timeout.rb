@@ -7,7 +7,7 @@ module VCAP::Services
         class ServiceBrokerApiTimeout < HttpRequestError
           def initialize(uri, method, source)
             super(
-              "The request to the service broker timed out: #{uri}",
+              'The request to the service broker timed out',
               uri,
               method,
               source

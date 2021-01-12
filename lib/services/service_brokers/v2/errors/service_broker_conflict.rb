@@ -12,7 +12,7 @@ module VCAP::Services
             end
 
             super(
-              error_message || "Resource conflict: #{uri}",
+              error_message || 'Resource conflict',
               method,
               response
             )

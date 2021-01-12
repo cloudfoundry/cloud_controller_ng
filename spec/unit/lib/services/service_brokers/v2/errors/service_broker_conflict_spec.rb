@@ -30,7 +30,7 @@ module VCAP::Services
 
             it 'initializes the base class correctly' do
               exception = ServiceBrokerConflict.new(uri, method, response)
-              expect(exception.message).to eq("Resource conflict: #{uri}")
+              expect(exception.message).to eq('Resource conflict')
               expect(exception.method).to eq(method)
               expect(exception.source).to eq(MultiJson.load(response.body))
             end
@@ -41,7 +41,7 @@ module VCAP::Services
 
             it 'initializes the base class correctly' do
               exception = ServiceBrokerConflict.new(uri, method, response)
-              expect(exception.message).to eq("Resource conflict: #{uri}")
+              expect(exception.message).to eq('Resource conflict')
               expect(exception.method).to eq(method)
               expect(exception.source).to eq(response.body)
             end
