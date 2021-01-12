@@ -113,7 +113,7 @@ module OPI
 
       def to_hash
         command = if @process.started_command.presence
-                    ['/bin/sh', '-c', "#{CNB_LAUNCHER_PATH} #{@process.started_command}"]
+                    [CNB_LAUNCHER_PATH.to_s, @process.started_command.to_s]
                   else
                     []
                   end
