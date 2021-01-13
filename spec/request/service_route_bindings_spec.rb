@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
+require 'request/service_bindings_shared_examples'
 
 RSpec.describe 'v3 service route bindings' do
   describe 'GET /v3/service_route_bindings' do
@@ -1579,12 +1580,13 @@ RSpec.describe 'v3 service route bindings' do
     end
   end
 
-  describe 'PATCH /v3/service_plans/:guid' do
+  describe 'PATCH /v3/service_route_bindings/:guid' do
+    let(:api_call) { lambda { |user_headers| patch "/v3/service_route_bindings/#{guid}", update_request_body.to_json, user_headers } }
+
     let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
     let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan, route_service_url: route_service_url) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:binding) { bind_service_to_route(service_instance, route) }
     let(:guid) { binding.guid }
     let(:labels) { { potato: 'sweet' } }
@@ -1598,94 +1600,9 @@ RSpec.describe 'v3 service route bindings' do
       }
     }
 
-    let(:api_call) { lambda { |user_headers| patch "/v3/service_route_bindings/#{guid}", update_request_body.to_json, user_headers } }
+    it_behaves_like 'metadata update for service binding'
 
-    it 'can update labels and annotations' do
-      api_call.call(admin_headers)
-      expect(last_response).to have_status_code(200)
-      expect(parsed_response.deep_symbolize_keys).to include(update_request_body)
-    end
-
-    context 'when some labels are invalid' do
-      let(:labels) { { potato: 'sweet invalid potato' } }
-
-      it 'returns a proper failure' do
-        api_call.call(admin_headers)
-
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
-      end
-    end
-
-    context 'when some annotations are invalid' do
-      let(:annotations) { { '/style' => 'sweet invalid style' } }
-
-      it 'returns a proper failure' do
-        api_call.call(admin_headers)
-
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
-      end
-    end
-
-    context 'when the route binding does not exist' do
-      let(:guid) { 'moonlight-sonata' }
-
-      it 'returns a not found error' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(404)
-      end
-    end
-
-    context 'when the route binding is being created' do
-      before do
-        binding.save_with_new_operation(
-          {},
-          { type: 'create', state: 'in progress', broker_provided_operation: 'some-info' }
-        )
-      end
-
-      before do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(200)
-        binding.reload
-      end
-
-      it 'can still update metadata' do
-        expect(binding).to have_labels({ prefix: nil, key: 'potato', value: 'sweet' })
-        expect(binding).to have_annotations({ prefix: nil, key: 'style', value: 'mashed' }, { prefix: nil, key: 'amount', value: 'all' })
-      end
-
-      it 'does not update last operation' do
-        expect(binding.last_operation.type).to eq('create')
-        expect(binding.last_operation.state).to eq('in progress')
-        expect(binding.last_operation.broker_provided_operation).to eq('some-info')
-      end
-    end
-
-    context 'when the route binding is being deleted' do
-      before do
-        binding.save_with_new_operation(
-          {},
-          { type: 'delete', state: 'in progress', broker_provided_operation: 'some-info' }
-        )
-      end
-
-      it 'responds with a 422' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(422)
-      end
-
-      it 'does not update last operation' do
-        api_call.call(admin_headers)
-        binding.reload
-        expect(binding.last_operation.type).to eq('delete')
-        expect(binding.last_operation.state).to eq('in progress')
-        expect(binding.last_operation.broker_provided_operation).to eq('some-info')
-      end
-    end
-
-    context 'permissions' do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:response_object) {
         expected_json(
           binding_guid: binding.guid,
@@ -1711,8 +1628,6 @@ RSpec.describe 'v3 service route bindings' do
           h['org_billing_manager'] = { code: 404 }
         end
       end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 

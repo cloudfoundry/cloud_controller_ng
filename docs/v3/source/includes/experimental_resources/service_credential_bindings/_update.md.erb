@@ -1,18 +1,18 @@
-### Update a service route binding
+### Update a service credential binding
 
 ```
 Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/service_route_bindings/[guid]" \
+curl "https://api.example.org/v3/service_credential_bindings/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
     "metadata": {
-      "labels": {"key": "value"},
-      "annotations": {"note": "detailed information"}
+      "labels": {"foo": "bar"},
+      "annotations": {"baz": "qux"}
     }
   }'
 ```
@@ -25,13 +25,13 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :single_service_route_binding %>
+<%= yield_content :single_service_credential_binding_app %>
 ```
 
-This endpoint updates a service route binding with labels and annotations.
+This endpoint updates a service credential binding with labels and annotations.
 
 #### Definition
-`PATCH /v3/service_route_bindings/:guid`
+`PATCH /v3/service_credential_bindings/:guid`
 
 #### Optional parameters
 
@@ -45,4 +45,3 @@ Name | Type | Description
 --- | ---
 Admin |
 Space Developer |
-
