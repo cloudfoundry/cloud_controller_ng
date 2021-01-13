@@ -19914,15 +19914,47 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 
 </span></code></pre>
 
-<p>This endpoint updates a service broker. If the parameters include
-<code class="prettyprint">url</code> or <code class="prettyprint">authentication</code>, then the endpoint will enqueue a background job to
-synchronize the service offerings and service plans with those in the broker&rsquo;s catalog.
-For updates that consist of only <code class="prettyprint">name</code> or <code class="prettyprint">metadata</code>, the update is
-processed immediately, and the service broker&rsquo;s catalog is not synchronized.</p>
+<p>This endpoint updates a service broker. Depending on the parameters specified,
+the endpoint may respond with a background job, and it may synchronize the
+service offerings and service plans with those in the broker&rsquo;s catalog.</p>
 
 <p>When a service broker has a synchronization job in progress, only
-updates with <code class="prettyprint">name</code> and <code class="prettyprint">metadata</code> are permitted until the synchronization job
+updates with <code class="prettyprint">metadata</code> are permitted until the synchronization job
 is complete.</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Updates Catalog</th>
+<th>Responds with job</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>url</strong></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>authentication</strong></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody></table>
 
 <h4 id="definition">Definition</h4>
 
