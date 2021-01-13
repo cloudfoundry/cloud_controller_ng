@@ -20,7 +20,9 @@ module VCAP::CloudController
         end
 
         reasons = revision_reasons(latest_revision, app)
-        if !reasons.empty?
+        if reasons.empty?
+          latest_revision
+        else
           RevisionCreate.create(
             app: app,
             droplet_guid: app.droplet_guid,
@@ -29,8 +31,6 @@ module VCAP::CloudController
             commands_by_process_type: app.commands_by_process_type,
             user_audit_info: user_audit_info,
           )
-        else
-          latest_revision
         end
       end
 

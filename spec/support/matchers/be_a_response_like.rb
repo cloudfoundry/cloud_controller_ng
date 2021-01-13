@@ -23,10 +23,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
     expected.each do |expected_key, expected_value|
       expect(actual).to have_key(expected_key)
       if expected_value.is_a?(Array)
-        if expected_value.length != actual[expected_key].length
-          bad_key!(expected_key)
-          expect(expected_value.length).to eq(actual[expected_key].length)
-        else
+        if expected_value.length == actual[expected_key].length
           expected_value.each_with_index do |nested_expected_value, index|
             if nested_expected_value.is_a?(Hash)
               expect(actual[expected_key][index]).to be_a_response_like(nested_expected_value, @problem_keys)
@@ -34,6 +31,9 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
               expect(actual[expected_key][index]).to eq(nested_expected_value)
             end
           end
+        else
+          bad_key!(expected_key)
+          expect(expected_value.length).to eq(actual[expected_key].length)
         end
       elsif expected_value.is_a?(String)
         bad_key!(expected_key) unless expected_value == actual[expected_key]

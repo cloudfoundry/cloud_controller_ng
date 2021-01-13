@@ -41,15 +41,15 @@ RSpec::Matchers.define :match_object do |expected|
   end
 
   def compare_arrays(actual, expected, path, context=actual)
-    if expected.size != actual.size
+    if expected.size == actual.size
+      true
+    else
       @error_message << "Extra/missing elements in #{path}:"
       @error_message << "\tactual=#{actual.size} expected=#{expected.size}"
       @error_message << "\textra=#{actual - expected}"
       @error_message << "\tmissing=#{expected - actual}"
       @error_message << "\tcontext=#{context}"
       false
-    else
-      true
     end
   end
 end

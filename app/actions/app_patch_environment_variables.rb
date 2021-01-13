@@ -15,7 +15,7 @@ module VCAP::CloudController
 
         if message.requested?(:var)
           new_values                     = message.var
-          app.environment_variables      = existing_environment_variables_for(app).merge(new_values).reject { |_, v| v.nil? }
+          app.environment_variables      = existing_environment_variables_for(app).merge(new_values).compact
           app.save
         end
 

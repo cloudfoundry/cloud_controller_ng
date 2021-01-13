@@ -23,7 +23,7 @@ module VCAP::CloudController
     private
 
     def merge_environment_variables(existing_variables, new_variables)
-      existing_variables.symbolize_keys.merge(new_variables).reject { |_, v| v.nil? }
+      existing_variables.symbolize_keys.merge(new_variables).compact
     end
   end
 end

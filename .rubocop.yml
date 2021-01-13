@@ -477,3 +477,12 @@ Style/DocumentDynamicEvalDefinition: # (new in 1.1)
 
 Style/SwapValues: # (new in 1.1)
   Enabled: true
+
+Lint/NoReturnInBeginEndBlocks: # (new in 1.2)
+  Enabled: true
+
+Style/CollectionCompact: # (new in 1.2)
+  Enabled: true
+
+Style/NegatedIfElseCondition: # (new in 1.2)
+  Enabled: true

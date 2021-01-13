@@ -103,7 +103,7 @@ module VCAP::Services::ServiceBrokers::V2
         bind_resource: binding_required_parameters(binding),
         context:       context_hash(binding.service_instance)
       }
-      body = body.reject { |_, v| v.nil? }
+      body = body.compact
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       begin

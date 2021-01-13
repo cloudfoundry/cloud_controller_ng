@@ -365,7 +365,7 @@ module VCAP::CloudController::Validators
               {
                 'protocol': proto,
                 'destination': '10.10.10.0/24',
-                'ports': (proto != 'all' ? '8080' : nil),
+                'ports': (proto == 'all' ? nil : '8080'),
                 'type': (proto == 'icmp' ? -1 : nil),
                 'code': (proto == 'icmp' ? 255 : nil)
               }

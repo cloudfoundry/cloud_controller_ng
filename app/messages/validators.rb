@@ -71,9 +71,7 @@ module VCAP::CloudController::Validators
     extend StandaloneValidator
 
     def validate_each(record, attribute, value)
-      if !value.is_a?(Hash)
-        record.errors.add(attribute, 'must be an object')
-      else
+      if value.is_a?(Hash)
         value.each_key do |key|
           if ![String, Symbol].include?(key.class)
             record.errors.add(attribute, 'key must be a string')
@@ -87,6 +85,8 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, 'cannot set PORT')
           end
         end
+      else
+        record.errors.add(attribute, 'must be an object')
       end
     end
   end
@@ -95,9 +95,7 @@ module VCAP::CloudController::Validators
     extend StandaloneValidator
 
     def validate_each(record, attribute, value)
-      if !value.is_a?(Hash)
-        record.errors.add(attribute, 'must be an object')
-      else
+      if value.is_a?(Hash)
         value.each do |key, inner_value|
           if ![String, Symbol].include?(key.class)
             record.errors.add(attribute, 'key must be a string')
@@ -114,6 +112,8 @@ module VCAP::CloudController::Validators
             record.errors.add(:base, "Non-string value in environment variable for key '#{key}', value '#{stringified}'")
           end
         end
+      else
+        record.errors.add(attribute, 'must be an object')
       end
     end
   end
@@ -122,9 +122,7 @@ module VCAP::CloudController::Validators
     extend StandaloneValidator
 
     def validate_each(record, attribute, value)
-      if !value.is_a?(Hash)
-        record.errors.add(attribute, 'must be an object')
-      else
+      if value.is_a?(Hash)
         allowed_resources = options[:allowed]
         value.each do |resource, keys|
           allowed_keys = allowed_resources[resource.to_s] || allowed_resources[resource.to_sym]
@@ -134,6 +132,8 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, "valid keys for '#{resource}' are: #{allowed_keys.map { |i| "'#{i}'" }.join(', ')}")
           end
         end
+      else
+        record.errors.add(attribute, 'must be an object')
       end
     end
   end
