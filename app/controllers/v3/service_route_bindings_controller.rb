@@ -195,9 +195,8 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def check_parameters_support(service_instance, message)
-    unless service_instance.is_a?(VCAP::CloudController::ManagedServiceInstance)
-      parameters_not_supported! if message.requested?(:parameters)
-    end
+    parameters_not_supported! if service_instance.is_a?(VCAP::CloudController::UserProvidedServiceInstance) &&
+      message.requested?(:parameters)
   end
 
   def service_event_repository
