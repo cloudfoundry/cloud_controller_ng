@@ -250,7 +250,7 @@ GEM
     json-diff (0.4.1)
     json-schema (2.8.0)
       addressable (>= 2.4)
-    json_pure (2.4.1)
+    json_pure (2.5.1)
     jsonpath (1.0.5)
       multi_json
       to_regexp (~> 0.2.1)
