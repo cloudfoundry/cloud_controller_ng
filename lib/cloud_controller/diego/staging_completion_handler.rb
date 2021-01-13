@@ -3,6 +3,8 @@ require 'actions/staging_cancel'
 module VCAP::CloudController
   module Diego
     class StagingCompletionHandler
+      class MalformedDiegoResponseError < StandardError; end
+
       DEFAULT_STAGING_ERROR = 'StagingError'.freeze
 
       attr_reader :droplet, :build
@@ -76,14 +78,18 @@ module VCAP::CloudController
       # with_start is true when v2 staging causes apps to start
       def handle_success(payload, with_start)
         begin
+          if payload[:result] && !payload[:result].is_a?(Hash)
+            # keeping the error format the same as Membrane errors
+            raise MalformedDiegoResponseError.new('{ result => unexpected format }')
+          end
+
           payload[:result][:process_types] ||= {} if payload[:result]
           self.class.success_parser.validate(payload)
-        rescue Membrane::SchemaValidationError => e
+        rescue Membrane::SchemaValidationError, MalformedDiegoResponseError => e
           logger.error(logger_prefix + 'success.invalid-message', staging_guid: build.guid, payload: payload, error: e.to_s)
 
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
-
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest')
         end
 

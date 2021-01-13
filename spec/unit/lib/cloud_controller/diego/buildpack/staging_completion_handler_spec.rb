@@ -576,6 +576,21 @@ module VCAP::CloudController
               it 'should mark the build as failed' do
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
+
+              context 'with an unexpected format' do
+                let(:malformed_success_response) do
+                  { result: 'command' }
+                end
+
+                it 'logs a helpful error' do
+                  expect(logger).to have_received(:error).with(
+                    'diego.staging.buildpack.success.invalid-message',
+                    staging_guid: build.guid,
+                    payload:      malformed_success_response,
+                    error:        '{ result => unexpected format }'
+                  )
+                end
+              end
             end
 
             context 'with a malformed error message' do
