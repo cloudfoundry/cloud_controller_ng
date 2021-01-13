@@ -3391,8 +3391,7 @@ module VCAP::CloudController
 
               response_description = [
                 "Service instance #{service_instance.name}:",
-                ' The request to the service broker timed out:',
-                " #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+                ' The request to the service broker timed out'
               ].join
               expect(decoded_response['description']).to eq(response_description)
             end

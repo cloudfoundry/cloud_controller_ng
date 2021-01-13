@@ -491,7 +491,7 @@ module VCAP::Services
         end
 
         def self.broker_timeout_error(uri)
-          "The request to the service broker timed out: #{uri}"
+          'The request to the service broker timed out'
         end
 
         def self.with_valid_volume_mounts
