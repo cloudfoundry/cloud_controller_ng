@@ -1156,6 +1156,29 @@ RSpec.describe 'v3 service credential bindings' do
             })
           end
         end
+
+        context 'parameters are specified' do
+          let(:request_extra) do
+            {
+              parameters: { foo: 'bar' }
+            }
+          end
+
+          it 'fails with a 422 unprocessable' do
+            api_call.call(space_dev_headers)
+
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({
+                'detail' => 'Binding parameters are not supported for user-provided service instances',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008,
+              })
+            )
+
+            expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+          end
+        end
       end
 
       context 'managed service' do
