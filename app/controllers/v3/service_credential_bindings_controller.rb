@@ -67,6 +67,19 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def update
+    not_found! unless service_credential_binding.present?
+    unauthorized! unless can_write_to_space?(binding_space)
+
+    unprocessable!('The service binding is being deleted') if delete_in_progress?(service_credential_binding)
+
+    message = MetadataUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_binding = TransactionalMetadataUpdate.update(service_credential_binding, message)
+    render status: :ok, json: Presenters::V3::ServiceCredentialBindingPresenter.new(updated_binding).to_hash
+  end
+
   def destroy
     not_found! unless service_credential_binding.present?
     unauthorized! unless can_write_to_space?(binding_space)
@@ -324,6 +337,10 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def query_params
     request.query_parameters.with_indifferent_access
+  end
+
+  def delete_in_progress?(binding)
+    binding.operation_in_progress? && binding.last_operation.type == 'delete'
   end
 
   def instance_operation_in_progress!

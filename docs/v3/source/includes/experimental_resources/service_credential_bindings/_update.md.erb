@@ -1,0 +1,47 @@
+### Update a service credential binding
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_credential_bindings/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "metadata": {
+      "labels": {"foo": "bar"},
+      "annotations": {"baz": "qux"}
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_credential_binding_app %>
+```
+
+This endpoint updates a service credential binding with labels and annotations.
+
+#### Definition
+`PATCH /v3/service_credential_bindings/:guid`
+
+#### Optional parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service credential binding
+**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service credential binding
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Developer |

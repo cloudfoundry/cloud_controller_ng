@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
+require 'request/service_bindings_shared_examples'
 
 RSpec.describe 'v3 service credential bindings' do
   let(:user) { VCAP::CloudController::User.make }
@@ -1522,6 +1523,54 @@ RSpec.describe 'v3 service credential bindings' do
     end
   end
 
+  describe 'PATCH /v3/service_credential_bindings/:guid' do
+    let(:api_call) { lambda { |user_headers| patch "/v3/service_credential_bindings/#{guid}", update_request_body.to_json, user_headers } }
+
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:guid) { binding.guid }
+    let(:labels) { { potato: 'sweet' } }
+    let(:annotations) { { style: 'mashed', amount: 'all' } }
+    let(:update_request_body) {
+      {
+        metadata: {
+          labels: labels,
+          annotations: annotations
+        }
+      }
+    }
+    let(:response_object) { expected_json(binding, labels: labels, annotations: annotations) }
+    let(:expected_codes_and_responses) do
+      Hash.new(code: 403).tap do |h|
+        h['admin'] = { code: 200, response_object: response_object }
+        h['space_developer'] = { code: 200, response_object: response_object }
+        h['no_role'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+      end
+    end
+
+    context 'key credential binding' do
+      let(:binding) do
+        VCAP::CloudController::ServiceKey.make(service_instance: instance) { |binding| operate_on(binding) }
+      end
+
+      it_behaves_like 'metadata update for service binding'
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'app credential binding' do
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:binding) do
+        VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) { |binding| operate_on(binding) }
+      end
+
+      it_behaves_like 'metadata update for service binding'
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'DELETE /v3/service_credential_bindings/:guid' do
     RSpec.shared_examples 'service credential binding delete endpoint' do |audit_event, klass, label_class, annotation_class|
       it 'responds with a job resource' do
@@ -1842,10 +1891,10 @@ RSpec.describe 'v3 service credential bindings' do
     let(:guid) { binding.guid }
     let(:service_instance_details) {
       {
-      space: space,
-      syslog_drain_url: 'http://syslog.example.com/wow',
-      credentials: { password: 'foo' }
-    }
+        space: space,
+        syslog_drain_url: 'http://syslog.example.com/wow',
+        credentials: { password: 'foo' }
+      }
     }
     let(:bound_app) { VCAP::CloudController::AppModel.make(space: space) }
     let(:binding_details) {
