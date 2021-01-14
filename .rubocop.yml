@@ -503,3 +503,5 @@ Layout/EmptyLineBetweenDefs:
   Enabled: true
   EmptyLineBetweenClassDefs: false
 
+Lint/UnexpectedBlockArity: # (new in 1.5)
+  Enabled: true
