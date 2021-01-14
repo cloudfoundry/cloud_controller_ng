@@ -128,12 +128,12 @@ Name | Type | Description
 
 Some updates can be performed entirely within the Cloud Controller in which case the response is synchronous.
 Some updates require communication with the service broker, in which case the response will be asynchronous.
-The response will be asynchronous if:
+The response will be asynchronous if any of these parameters are specified:
 
-* `parameters` are specified
-* `service_plan` is specified
-* `maintenance_info` is specified
-* `name` is specified and the service offering has the `allow_context_updates` feature enabled
+* `parameters`
+* `service_plan`
+* `maintenance_info`
+* `name` - when the service offering has `allow_context_updates` feature enabled
 
 Otherwise the response will be synchronous.
 
