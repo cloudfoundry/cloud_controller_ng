@@ -59,6 +59,53 @@ module VCAP::CloudController
           }
         end
 
+        context 'when only metadata is being updated' do
+          let(:body) do
+            {
+              metadata: {
+                labels: {
+                  foo: 'bar',
+                  'pre.fix/to_delete': nil,
+                },
+                annotations: {
+                  alpha: 'beta',
+                  'pre.fix/to_delete': nil,
+                }
+              }
+            }
+          end
+
+          it 'updates the values in the service instance in the database' do
+            action.update(service_instance, message)
+
+            service_instance.reload
+
+            expect(service_instance).to have_annotations(
+              { prefix: nil, key: 'alpha', value: 'beta' },
+              { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+            )
+            expect(service_instance).to have_labels(
+              { prefix: nil, key: 'foo', value: 'bar' },
+              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+            )
+          end
+
+          it 'creates an audit event' do
+            action.update(service_instance, message)
+
+            expect(event_repository).
+              to have_received(:record_service_instance_event).with(
+                :update,
+                have_attributes(
+                  name: original_name,
+                  guid: service_instance.guid,
+                  space: service_instance.space,
+                ),
+                body.with_indifferent_access
+              )
+          end
+        end
+
         it 'updates the values in the service instance in the database' do
           action.update(service_instance, message)
 
