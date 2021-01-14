@@ -505,3 +505,12 @@ Layout/EmptyLineBetweenDefs:
 
 Lint/UnexpectedBlockArity: # (new in 1.5)
   Enabled: true
+
+Layout/SpaceBeforeBrackets: # (new in 1.7)
+  Enabled: false
+
+Lint/AmbiguousAssignment: # (new in 1.7)
+  Enabled: true
+
+Style/HashExcept: # (new in 1.7)
+  Enabled: true
