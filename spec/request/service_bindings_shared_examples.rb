@@ -31,7 +31,7 @@ RSpec.shared_examples 'metadata update for service binding' do
     end
   end
 
-  context 'when the route binding does not exist' do
+  context 'when the binding does not exist' do
     let(:guid) { 'moonlight-sonata' }
 
     it 'returns a not found error' do
@@ -40,7 +40,7 @@ RSpec.shared_examples 'metadata update for service binding' do
     end
   end
 
-  context 'when the route binding is being created' do
+  context 'when the binding is being created' do
     before do
       binding.save_with_attributes_and_new_operation(
         {},
@@ -66,7 +66,7 @@ RSpec.shared_examples 'metadata update for service binding' do
     end
   end
 
-  context 'when the route binding is being deleted' do
+  context 'when the binding is being deleted' do
     before do
       binding.save_with_attributes_and_new_operation(
         {},
