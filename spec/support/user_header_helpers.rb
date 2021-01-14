@@ -77,6 +77,7 @@ module UserHeaderHelpers
       org.add_user(current_user)
     end
 
+    # rubocop:disable Lint/DuplicateBranch
     case role.to_s
     when 'admin'
       set_user_with_header_as_admin(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
@@ -117,6 +118,7 @@ module UserHeaderHelpers
     else
       fail("Unknown role '#{role}'")
     end
+    # rubocop:enable Lint/DuplicateBranch
   end
 
   # rubocop:disable all

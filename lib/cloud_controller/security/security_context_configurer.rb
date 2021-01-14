@@ -52,9 +52,8 @@ module VCAP::CloudController
         validate_unique_user(token, guid)
 
         User.find(guid: guid.to_s) || User.create(guid: guid, active: true, is_oauth_client: is_oauth_client?(token))
-      rescue Sequel::ValidationFailed
-        User.find(guid: guid.to_s)
-      rescue Sequel::UniqueConstraintViolation
+      rescue Sequel::ValidationFailed,
+             Sequel::UniqueConstraintViolation
         User.find(guid: guid.to_s)
       end
 

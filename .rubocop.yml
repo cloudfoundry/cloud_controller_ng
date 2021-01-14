@@ -486,3 +486,12 @@ Style/CollectionCompact: # (new in 1.2)
 
 Style/NegatedIfElseCondition: # (new in 1.2)
   Enabled: true
+
+Lint/DuplicateBranch: # (new in 1.3)
+  Enabled: true
+
+Lint/EmptyClass: # (new in 1.3)
+  Enabled: true
+
+Style/NilLambda: # (new in 1.3)
+  Enabled: true

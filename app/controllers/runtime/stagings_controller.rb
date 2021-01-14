@@ -141,11 +141,13 @@ module VCAP::CloudController
       @upload_path ||=
         if HashUtils.dig(params, 'droplet_path') # passed from nginx
           params['droplet_path']
-        elsif (tempfile = HashUtils.dig(params, 'file', :tempfile))
-          tempfile.path
-        elsif (tempfile = HashUtils.dig(params, 'upload', 'droplet', :tempfile))
+        elsif (tempfile = params_tempfile)
           tempfile.path
         end
+    end
+
+    def params_tempfile
+      HashUtils.dig(params, 'file', :tempfile) || HashUtils.dig(params, 'upload', 'droplet', :tempfile)
     end
 
     def check_file_md5

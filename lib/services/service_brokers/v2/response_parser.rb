@@ -12,10 +12,7 @@ module VCAP::Services
 
           validator =
             case unvalidated_response.code
-            when 200
-              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
-                  SuccessValidator.new(state: 'succeeded'))
-            when 201
+            when 200, 201
               JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
                   SuccessValidator.new(state: 'succeeded'))
             when 202
@@ -82,8 +79,6 @@ module VCAP::Services
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
               JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
-            when 204
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 410
               @logger.warn("Already deleted: #{unvalidated_response.uri}")
               SuccessValidator.new { |res| {} }
@@ -113,8 +108,6 @@ module VCAP::Services
             when 202
               JsonSchemaValidator.new(@logger, deprovision_service_instance_response_schema,
                   SuccessValidator.new(state: 'in progress'))
-            when 204
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 410
               @logger.warn("Already deleted: #{unvalidated_response.uri}")
               SuccessValidator.new { |res| {} }

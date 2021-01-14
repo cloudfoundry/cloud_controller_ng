@@ -22,12 +22,10 @@ module VCAP::CloudController
     def validate_route_service_url
       return if route_service_url.blank?
 
-      if invalid_url?
+      if invalid_url? || not_valid_host?
         errors.add(:service_instance, :route_service_url_invalid)
       elsif not_https?
         errors.add(:service_instance, :route_service_url_not_https)
-      elsif not_valid_host?
-        errors.add(:service_instance, :route_service_url_invalid)
       end
     end
 

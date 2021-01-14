@@ -69,6 +69,7 @@ module UserHelpers
       org.add_user(current_user)
     end
 
+    # rubocop:disable Lint/DuplicateBranch
     case role.to_s
     when 'admin'
       set_current_user_as_admin(user: current_user, scopes: scopes || [])
@@ -109,6 +110,7 @@ module UserHelpers
     else
       fail("Unknown role '#{role}'")
     end
+    # rubocop:enable Lint/DuplicateBranch
   end
 
   def user_token(user, opts={})
