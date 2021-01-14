@@ -2,7 +2,7 @@ require 'hashdiff'
 
 RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
   define_method :init_problem_keys do
-    @problem_keys ||= problem_keys
+    @problem_keys ||= problem_keys # rubocop:disable Naming/MemoizedInstanceVariableName
   end
 
   define_method :bad_key! do |key|
