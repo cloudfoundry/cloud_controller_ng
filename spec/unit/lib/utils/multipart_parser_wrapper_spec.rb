@@ -16,7 +16,7 @@ RSpec.describe VCAP::MultipartParserWrapper do
         second_part,
         "\r\n",
         "--#{boundary}--",
-      ].join('')
+      ].join
     end
     let(:boundary) { 'boundary-guid' }
     let(:first_part) { "part one\r\n data" }

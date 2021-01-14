@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
         parts << '/'
         parts << config[:database]
-        parts.join('')
+        parts.join
       end
     end
   end
