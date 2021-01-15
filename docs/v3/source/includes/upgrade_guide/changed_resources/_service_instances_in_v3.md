@@ -41,7 +41,7 @@ and `/v2/user_provided_service_instances/:guid/service_bindings` to retrieve the
 
 In v3, the [service credential bindings](#list-service-credential-bindings) can be filtered by `service_instance_guids` to retrieve the bindings of any service instance. 
 
-#### Service Instance Route Bindings
+#### Service instance route bindings
 
 In v2, binding a service instance to a route was done as a relationship request for the service instance.
 
