@@ -18,7 +18,7 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
     it 'makes the right call to the broker client' do
       action.delete(binding)
 
-      expect(broker_client).to have_received(:unbind).with(binding, nil, true)
+      expect(broker_client).to have_received(:unbind).with(binding, { accepts_incomplete: true })
     end
 
     context 'unbind fails with generic error' do

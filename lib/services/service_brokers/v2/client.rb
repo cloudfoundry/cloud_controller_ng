@@ -14,12 +14,12 @@ module VCAP::Services::ServiceBrokers::V2
       @config = VCAP::CloudController::Config.config
     end
 
-    def catalog
-      response = @http_client.get(CATALOG_PATH)
+    def catalog(user_guid: nil)
+      response = @http_client.get(CATALOG_PATH, user_guid: user_guid)
       @response_parser.parse_catalog(CATALOG_PATH, response)
     end
 
-    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false, maintenance_info: nil)
+    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false, maintenance_info: nil, user_guid: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
@@ -34,7 +34,7 @@ module VCAP::Services::ServiceBrokers::V2
       body[:maintenance_info] = maintenance_info if maintenance_info.present?
 
       begin
-        response = @http_client.put(path, body)
+        response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
         @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
         raise e
@@ -66,7 +66,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def create_service_key(key, arbitrary_parameters: {})
+    def create_service_key(key, arbitrary_parameters: {}, user_guid: nil)
       path = service_binding_resource_path(key.guid, key.service_instance.guid)
       body = {
         service_id: key.service.broker_provided_id,
@@ -79,7 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       begin
-        response = @http_client.put(path, body)
+        response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
         @orphan_mitigator.cleanup_failed_key(@attrs, key)
         raise e
@@ -94,7 +94,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def bind(binding, arbitrary_parameters: {}, accepts_incomplete: false)
+    def bind(binding, arbitrary_parameters: {}, accepts_incomplete: false, user_guid: nil)
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid, accepts_incomplete: accepts_incomplete)
       body = {
         service_id: binding.service.broker_provided_id,
@@ -107,7 +107,7 @@ module VCAP::Services::ServiceBrokers::V2
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       begin
-        response = @http_client.put(path, body)
+        response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
         @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
         raise e
@@ -147,7 +147,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def unbind(service_binding, user_guid=nil, accepts_incomplete=false)
+    def unbind(service_binding, user_guid: nil, accepts_incomplete: false)
       path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid, accepts_incomplete: accepts_incomplete)
 
       body = {
@@ -155,7 +155,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id: service_binding.service_plan.broker_provided_id,
       }
       body[:accepts_incomplete] = true if accepts_incomplete
-      response = @http_client.delete(path, body, user_guid)
+      response = @http_client.delete(path, body, user_guid: user_guid)
 
       parsed_response = @response_parser.parse_unbind(path, response)
 
@@ -171,7 +171,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil, name: instance.name)
+    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil, name: instance.name, user_guid: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
@@ -182,7 +182,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters
       body[:maintenance_info] = maintenance_info if maintenance_info
-      response = @http_client.patch(path, body)
+      response = @http_client.patch(path, body, user_guid: user_guid)
 
       parsed_response = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -225,7 +225,7 @@ module VCAP::Services::ServiceBrokers::V2
       [attributes, e]
     end
 
-    def deprovision(instance, accepts_incomplete: false)
+    def deprovision(instance, accepts_incomplete: false, user_guid: nil)
       path = service_instance_resource_path(instance)
 
       body = {
@@ -233,7 +233,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id: instance.service_plan.broker_provided_id,
       }
       body[:accepts_incomplete] = true if accepts_incomplete
-      response = @http_client.delete(path, body)
+      response = @http_client.delete(path, body, user_guid: user_guid)
 
       parsed_response = @response_parser.parse_deprovision(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -255,9 +255,9 @@ module VCAP::Services::ServiceBrokers::V2
       raise e.exception("Service instance #{instance.name}: #{e.message}")
     end
 
-    def fetch_service_instance_last_operation(instance)
+    def fetch_service_instance_last_operation(instance, user_guid: nil)
       path = service_instance_last_operation_path(instance)
-      response = @http_client.get(path)
+      response = @http_client.get(path, user_guid: user_guid)
       parsed_response = @response_parser.parse_fetch_state(path, response)
       last_operation_hash = parsed_response.delete('last_operation') || {}
 
@@ -273,9 +273,9 @@ module VCAP::Services::ServiceBrokers::V2
       result.merge(parsed_response.symbolize_keys)
     end
 
-    def fetch_service_binding_last_operation(service_binding)
+    def fetch_service_binding_last_operation(service_binding, user_guid: nil)
       path = service_binding_last_operation_path(service_binding)
-      response = @http_client.get(path)
+      response = @http_client.get(path, user_guid: user_guid)
       parsed_response = @response_parser.parse_fetch_service_binding_last_operation(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
 
@@ -287,8 +287,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    def fetch_and_handle_service_binding_last_operation(service_binding)
-      fetch_service_binding_last_operation(service_binding)
+    def fetch_and_handle_service_binding_last_operation(service_binding, user_guid: nil)
+      fetch_service_binding_last_operation(service_binding, user_guid: user_guid)
     rescue Errors::HttpClientTimeout,
            Errors::ServiceBrokerApiUnreachable,
            HttpRequestError,
@@ -305,15 +305,15 @@ module VCAP::Services::ServiceBrokers::V2
       raise e.exception("Service binding polling #{service_binding.guid}: #{e.message}")
     end
 
-    def fetch_service_instance(instance)
+    def fetch_service_instance(instance, user_guid: nil)
       path = service_instance_resource_path(instance)
-      response = @http_client.get(path)
+      response = @http_client.get(path, user_guid: user_guid)
       @response_parser.parse_fetch_instance_parameters(path, response).deep_symbolize_keys
     end
 
-    def fetch_service_binding(service_binding)
+    def fetch_service_binding(service_binding, user_guid: nil)
       path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)
-      response = @http_client.get(path)
+      response = @http_client.get(path, user_guid: user_guid)
       @response_parser.parse_fetch_binding_parameters(path, response).deep_symbolize_keys
     end
 

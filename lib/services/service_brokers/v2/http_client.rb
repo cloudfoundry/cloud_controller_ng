@@ -19,19 +19,19 @@ module VCAP::Services
         @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
       end
 
-      def get(path)
-        make_request(:get, uri_for(path))
+      def get(path, user_guid: nil)
+        make_request(:get, uri_for(path), nil, user_guid: user_guid)
       end
 
-      def put(path, message)
-        make_request(:put, uri_for(path), message.to_json, content_type: 'application/json')
+      def put(path, message, user_guid: nil)
+        make_request(:put, uri_for(path), message.to_json, content_type: 'application/json', user_guid: user_guid)
       end
 
-      def patch(path, message)
-        make_request(:patch, uri_for(path), message.to_json, content_type: 'application/json')
+      def patch(path, message, user_guid: nil)
+        make_request(:patch, uri_for(path), message.to_json, content_type: 'application/json', user_guid: user_guid)
       end
 
-      def delete(path, message, user_guid=nil)
+      def delete(path, message, user_guid: nil)
         uri = uri_for(path)
         uri.query = message.to_query
 

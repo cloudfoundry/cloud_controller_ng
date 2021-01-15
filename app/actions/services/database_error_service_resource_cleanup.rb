@@ -24,7 +24,7 @@ module VCAP::CloudController
     def attempt_unbind(service_binding)
       @logger.info "Attempting synchronous orphan mitigation for service binding #{service_binding.guid}"
       service_instance = service_binding.service_instance
-      client(service_instance).unbind(service_binding, nil, true)
+      client(service_instance).unbind(service_binding, accepts_incomplete: true)
       @logger.info "Success unbinding orphaned service binding #{service_binding.guid}"
     rescue => e
       @logger.error "Unable to delete orphaned service binding #{service_binding.guid}: #{e}"

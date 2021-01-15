@@ -70,7 +70,7 @@ module VCAP::CloudController
 
       def send_unbind_to_client(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.unbind(binding, nil, true)
+        details = client.unbind(binding, accepts_incomplete: true)
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
         broker_concurrency_error!
