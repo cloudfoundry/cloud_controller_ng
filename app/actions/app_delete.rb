@@ -104,7 +104,7 @@ module VCAP::CloudController
 
     def delete_non_transactional_subresources(app)
       errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info)
-      non_async_errors = errors.select { |e| !e.is_a?(AsyncBindingDeletionsTriggered) }
+      non_async_errors = errors.reject { |e| e.is_a?(AsyncBindingDeletionsTriggered) }
       raise non_async_errors.first unless non_async_errors.empty?
 
       errors
