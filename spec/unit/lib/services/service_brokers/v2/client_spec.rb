@@ -6,7 +6,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     let(:client_attrs) {
       {
-        url:           service_broker.broker_url,
+        url: service_broker.broker_url,
         auth_username: service_broker.auth_username,
         auth_password: service_broker.auth_password,
       }
@@ -48,13 +48,13 @@ module VCAP::Services::ServiceBrokers::V2
         {
           'services' => [
             {
-              'id'          => service_id,
-              'name'        => service_name,
+              'id' => service_id,
+              'name' => service_name,
               'description' => service_description,
-              'plans'       => [
+              'plans' => [
                 {
-                  'id'          => plan_id,
-                  'name'        => plan_name,
+                  'id' => plan_id,
+                  'name' => plan_name,
                   'description' => plan_description
                 }
               ]
@@ -85,8 +85,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
-          space:        space,
-          name:     'instance-007'
+          space: space,
+          name: 'instance-007'
         )
       end
 
@@ -134,17 +134,17 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).with(
           anything,
-          service_id:        instance.service.broker_provided_id,
-          plan_id:           instance.service_plan.broker_provided_id,
+          service_id: instance.service.broker_provided_id,
+          plan_id: instance.service_plan.broker_provided_id,
           organization_guid: instance.organization.guid,
-          space_guid:        instance.space.guid,
-          context:           {
-            platform:          'cloudfoundry',
+          space_guid: instance.space.guid,
+          context: {
+            platform: 'cloudfoundry',
             organization_guid: instance.organization.guid,
-            space_guid:        instance.space_guid,
-            instance_name:     instance.name,
+            space_guid: instance.space_guid,
+            instance_name: instance.name,
             organization_name: instance.organization.name,
-            space_name:        instance.space.name
+            space_name: instance.space.name
           }
         )
       end
@@ -217,7 +217,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client        = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes, _ = client.provision(instance, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -227,7 +227,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client        = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes, _ = client.provision(instance, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
@@ -243,7 +243,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client        = Client.new(client_attrs)
+          client = Client.new(client_attrs)
           attributes, _ = client.provision(instance, accepts_incomplete: true)
 
           expect(attributes[:instance][:broker_provided_operation]).to be_nil
@@ -366,13 +366,13 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
-          space:        space
+          space: space
         )
       end
 
       let(:response_data) do
         {
-          'state'       => 'succeeded',
+          'state' => 'succeeded',
           'description' => '100% created'
         }
       end
@@ -416,7 +416,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'returns the attributes to update the service instance model' do
-        attrs          = client.fetch_service_instance_last_operation(instance)
+        attrs = client.fetch_service_instance_last_operation(instance)
         expected_attrs = { last_operation: response_data.symbolize_keys }
         expect(attrs).to eq(expected_attrs)
       end
@@ -424,9 +424,9 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker provides other fields' do
         let(:response_data) do
           {
-            'state'       => 'succeeded',
+            'state' => 'succeeded',
             'description' => '100% created',
-            'foo'         => 'bar'
+            'foo' => 'bar'
           }
         end
 
@@ -536,7 +536,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response) { HttpResponse.new(code: code, message: message, body: response_body, headers: { 'Retry-After' => 10 }) }
 
         it 'returns the retry after header in the result' do
-          attrs          = client.fetch_service_instance_last_operation(instance)
+          attrs = client.fetch_service_instance_last_operation(instance)
           expected_attrs = { retry_after: 10, last_operation: response_data.symbolize_keys }
           expect(attrs).to eq(expected_attrs)
         end
@@ -550,7 +550,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:space) { VCAP::CloudController::Space.make }
       let(:last_operation) do
         VCAP::CloudController::ServiceInstanceOperation.make(
-          type:  'create',
+          type: 'create',
           state: 'succeeded'
         )
       end
@@ -558,8 +558,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: old_plan,
-          space:        space,
-          name:         'instance-007'
+          space: space,
+          name: 'instance-007'
         )
       end
 
@@ -593,12 +593,12 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(anything,
           hash_including({
             context: {
-              platform:          'cloudfoundry',
+              platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid:        instance.space_guid,
-              instance_name:     'fake_name',
+              space_guid: instance.space_guid,
+              instance_name: 'fake_name',
               organization_name: instance.organization.name,
-              space_name:        instance.space.name
+              space_name: instance.space.name
             }
           })
         )
@@ -610,12 +610,12 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(anything,
           hash_including({
             context: {
-              platform:          'cloudfoundry',
+              platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid:        instance.space_guid,
-              instance_name:     instance.name,
+              space_guid: instance.space_guid,
+              instance_name: instance.name,
               organization_name: instance.organization.name,
-              space_name:        instance.space.name
+              space_name: instance.space.name
             }
           })
         )
@@ -633,7 +633,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect(http_client).to have_received(:patch).with(
             anything,
             hash_including({
-              plan_id:         new_plan.broker_provided_id,
+              plan_id: new_plan.broker_provided_id,
               previous_values: {
                 plan_id: '1234'
               }
@@ -649,7 +649,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect(http_client).to have_received(:patch).with(
             anything,
             hash_including({
-              parameters:      { myParam: 'some-value' },
+              parameters: { myParam: 'some-value' },
               previous_values: {}
             })
           )
@@ -679,7 +679,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns maintenance_info as a proposed changed' do
-            client           = Client.new(client_attrs.merge(accepts_incomplete: true))
+            client = Client.new(client_attrs.merge(accepts_incomplete: true))
             attributes, _, _ = client.update(instance, old_plan, maintenance_info: maintenance_info, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:proposed_changes]).to eq({ service_plan_guid: old_plan.guid, maintenance_info: maintenance_info })
@@ -721,7 +721,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'return immediately with the broker response' do
-            client               = Client.new(client_attrs.merge(accepts_incomplete: true))
+            client = Client.new(client_attrs.merge(accepts_incomplete: true))
             attributes, _, error = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:type]).to eq('update')
@@ -758,7 +758,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client        = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -768,7 +768,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client        = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
@@ -826,8 +826,8 @@ module VCAP::Services::ServiceBrokers::V2
             expect(err).to eq error
             expect(attrs).to eq({
               last_operation: {
-                state:       'failed',
-                type:        'update',
+                state: 'failed',
+                type: 'update',
                 description: error.message,
               }
             })
@@ -847,8 +847,8 @@ module VCAP::Services::ServiceBrokers::V2
             expect(err).to eq error
             expect(attrs).to eq({
               last_operation: {
-                state:       'failed',
-                type:        'update',
+                state: 'failed',
+                type: 'update',
                 description: error.message,
               }
             })
@@ -868,8 +868,8 @@ module VCAP::Services::ServiceBrokers::V2
             expect(err).to eq error
             expect(attrs).to eq({
               last_operation: {
-                state:       'failed',
-                type:        'update',
+                state: 'failed',
+                type: 'update',
                 description: error.message,
               }
             })
@@ -889,8 +889,8 @@ module VCAP::Services::ServiceBrokers::V2
             expect(err).to eq error
             expect(attrs).to eq({
               last_operation: {
-                state:       'failed',
-                type:        'update',
+                state: 'failed',
+                type: 'update',
                 description: error.message,
               }
             })
@@ -910,8 +910,8 @@ module VCAP::Services::ServiceBrokers::V2
             expect(err).to eq error
             expect(attrs).to eq({
               last_operation: {
-                state:       'failed',
-                type:        'update',
+                state: 'failed',
+                type: 'update',
                 description: error.message,
               }
             })
@@ -924,7 +924,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:key) do
         VCAP::CloudController::ServiceKey.new(
-          name:             'fake-service_key',
+          name: 'fake-service_key',
           service_instance: instance
         )
       end
@@ -961,14 +961,14 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).
           with(anything,
-            plan_id:    key.service_plan.broker_provided_id,
+            plan_id: key.service_plan.broker_provided_id,
             service_id: key.service.broker_provided_id,
-            context:    {
-              platform:          'cloudfoundry',
+            context: {
+              platform: 'cloudfoundry',
               organization_guid: key.service_instance.organization.guid,
-              space_guid:        key.service_instance.space.guid,
+              space_guid: key.service_instance.space.guid,
               organization_name: key.service_instance.organization.name,
-              space_name:        key.service_instance.space.name
+              space_name: key.service_instance.space.name
             },
             bind_resource: {
               credential_client_id: cc_service_key_client_name,
@@ -1112,8 +1112,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
-          app:              app,
-          type:             'app'
+          app: app,
+          type: 'app'
         )
       end
       let(:arbitrary_parameters) { {} }
@@ -1149,16 +1149,16 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).
           with(anything,
-            plan_id:       binding.service_plan.broker_provided_id,
-            service_id:    binding.service.broker_provided_id,
-            app_guid:      binding.app_guid,
+            plan_id: binding.service_plan.broker_provided_id,
+            service_id: binding.service.broker_provided_id,
+            app_guid: binding.app_guid,
             bind_resource: binding.required_parameters,
-            context:       {
-              platform:          'cloudfoundry',
+            context: {
+              platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid:        instance.space_guid,
+              space_guid: instance.space_guid,
               organization_name: instance.organization.name,
-              space_name:        instance.space.name
+              space_name: instance.space.name
             }
           )
       end
@@ -1293,7 +1293,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         let(:response_data) do
           {
-            'credentials'      => {},
+            'credentials' => {},
             'syslog_drain_url' => 'syslog://example.com:514'
           }
         end
@@ -1517,7 +1517,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:delete).
           with(anything,
             {
-              plan_id:    binding.service_plan.broker_provided_id,
+              plan_id: binding.service_plan.broker_provided_id,
               service_id: binding.service.broker_provided_id,
             },
             nil
@@ -1667,7 +1667,7 @@ module VCAP::Services::ServiceBrokers::V2
           anything,
           {
             service_id: instance.service.broker_provided_id,
-            plan_id:    instance.service_plan.broker_provided_id
+            plan_id: instance.service_plan.broker_provided_id
           }
         )
       end
@@ -1677,8 +1677,8 @@ module VCAP::Services::ServiceBrokers::V2
           attrs, _ = client.deprovision(instance)
           expect(attrs).to eq({
             last_operation: {
-              type:        'delete',
-              state:       'succeeded',
+              type: 'delete',
+              state: 'succeeded',
               description: ''
             }
           })
@@ -1700,8 +1700,8 @@ module VCAP::Services::ServiceBrokers::V2
             attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
-                type:        'delete',
-                state:       'in progress',
+                type: 'delete',
+                state: 'in progress',
                 description: ''
               }
             })
@@ -1717,9 +1717,9 @@ module VCAP::Services::ServiceBrokers::V2
 
               expect(attributes).to eq({
                 last_operation: {
-                  type:                      'delete',
-                  state:                     'in progress',
-                  description:               '',
+                  type: 'delete',
+                  state: 'in progress',
+                  description: '',
                   broker_provided_operation: 'a_broker_operation_identifier'
                 }
               })
@@ -1734,8 +1734,8 @@ module VCAP::Services::ServiceBrokers::V2
             attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
-                type:        'delete',
-                state:       'succeeded',
+                type: 'delete',
+                state: 'succeeded',
                 description: ''
               }
             })
@@ -1781,7 +1781,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client     = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes = client.deprovision(instance)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -1791,7 +1791,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client     = Client.new(client_attrs)
+            client = Client.new(client_attrs)
             attributes = client.deprovision(instance)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
@@ -1806,8 +1806,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
-          app:              app,
-          type:             'app'
+          app: app,
+          type: 'app'
         )
       end
 
@@ -1852,7 +1852,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#fetch_service_binding_last_operation' do
       let(:response_data) do
         {
-          'state'       => 'in progress',
+          'state' => 'in progress',
           'description' => '10%'
         }
       end
@@ -1950,7 +1950,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#fetch_service_binding_create_last_operation' do
       let(:response_data) do
         {
-          'state'       => 'in progress',
+          'state' => 'in progress',
           'description' => '10%'
         }
       end

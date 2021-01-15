@@ -182,9 +182,9 @@ module VCAP::Services::ServiceBrokers::V2
           make_request
 
           expect(a_request(http_method, full_url).
-                 with(basic_auth: basic_auth).
-                 with(query: hash_including({})).
-                 with(headers: { 'X-Broker-API-Request-Identity' => /[[:alnum:]-]+/ })).
+            with(basic_auth: basic_auth).
+            with(query: hash_including({})).
+            with(headers: { 'X-Broker-API-Request-Identity' => /[[:alnum:]-]+/ })).
             to have_been_made
         end
       end
