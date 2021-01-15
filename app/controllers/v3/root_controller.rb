@@ -27,7 +27,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:routes))
     links.merge!(create_link(:security_groups))
     links.merge!(create_link(:service_brokers))
-    links.merge!(create_link(:service_instances, experimental: true))
+    links.merge!(create_link(:service_instances))
     links.merge!(create_link(:service_credential_bindings, experimental: true))
     links.merge!(create_link(:service_offerings))
     links.merge!(create_link(:service_plans))
