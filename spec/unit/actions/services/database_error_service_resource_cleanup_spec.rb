@@ -70,7 +70,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     it 'attempts to unbind the binding' do
       subject.attempt_unbind(service_binding)
 
-      expect(client).to have_received(:unbind).with(service_binding, nil, true)
+      expect(client).to have_received(:unbind).with(service_binding, { accepts_incomplete: true })
     end
 
     it 'logs that it is attempting to orphan mitigate' do

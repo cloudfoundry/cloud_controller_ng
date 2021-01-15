@@ -72,7 +72,7 @@ module VCAP::CloudController
 
     def remove_from_broker(service_binding)
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
-      client.unbind(service_binding, @user_audit_info.user_guid, @accepts_incomplete)
+      client.unbind(service_binding, user_guid: @user_audit_info.user_guid, accepts_incomplete: @accepts_incomplete)
     rescue => e
       logger.error("Failed unbinding #{service_binding.guid}: #{e.message}")
       raise_wrapped_error(service_binding, e)

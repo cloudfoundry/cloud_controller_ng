@@ -276,7 +276,7 @@ module VCAP::CloudController
               let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
 
               it 'should always call the broker with accepts_incomplete true' do
-                expect(client).to receive(:unbind).with(binding1, user_audit_info.user_guid, true)
+                expect(client).to receive(:unbind).with(binding1, user_guid: user_audit_info.user_guid, accepts_incomplete: true)
 
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
               end

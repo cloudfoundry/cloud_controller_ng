@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       it 'asks the broker to unbind the instance' do
-        expect(client).to receive(:unbind).with(service_binding, user_guid, false)
+        expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: false)
         service_binding_delete.foreground_delete_request(service_binding)
       end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
         let(:accepts_incomplete) { true }
 
         it 'asks the broker to unbind the instance async' do
-          expect(client).to receive(:unbind).with(service_binding, user_guid, true)
+          expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: true)
           service_binding_delete.delete(service_binding)
         end
 
@@ -219,7 +219,7 @@ module VCAP::CloudController
         let(:accepts_incomplete) { false }
 
         it 'asks the broker to unbind the instance sync' do
-          expect(client).to receive(:unbind).with(service_binding, user_guid, false)
+          expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: false)
           service_binding_delete.delete(service_binding)
         end
 
@@ -270,7 +270,7 @@ module VCAP::CloudController
         let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
 
         it 'defaults to false and asks the broker to unbind the instance sync' do
-          expect(client).to receive(:unbind).with(service_binding, user_guid, false)
+          expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: false)
           service_binding_delete.delete(service_binding)
         end
       end

@@ -70,11 +70,21 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'OK' }
 
       before do
-        allow(http_client).to receive(:get).with(path).and_return(catalog_response)
+        allow(http_client).to receive(:get).and_return(catalog_response)
       end
 
       it 'returns a catalog' do
         expect(client.catalog).to eq(response_data)
+        expect(http_client).to have_received(:get).with(path, { user_guid: nil })
+      end
+
+      context 'with a user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.catalog(user_guid: user_guid)
+          expect(http_client).to have_received(:get).with(anything, { user_guid: user_guid })
+        end
       end
     end
 
@@ -115,7 +125,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-          with(path, anything)
+          with(path, anything, { user_guid: nil })
       end
 
       context 'when the caller passes the accepts_incomplete flag' do
@@ -125,7 +135,7 @@ module VCAP::Services::ServiceBrokers::V2
           client.provision(instance, accepts_incomplete: true)
 
           expect(http_client).to have_received(:put).
-            with(path, anything)
+            with(path, anything, { user_guid: nil })
         end
       end
 
@@ -134,18 +144,21 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).with(
           anything,
-          service_id: instance.service.broker_provided_id,
-          plan_id: instance.service_plan.broker_provided_id,
-          organization_guid: instance.organization.guid,
-          space_guid: instance.space.guid,
-          context: {
-            platform: 'cloudfoundry',
+          {
+            service_id: instance.service.broker_provided_id,
+            plan_id: instance.service_plan.broker_provided_id,
             organization_guid: instance.organization.guid,
-            space_guid: instance.space_guid,
-            instance_name: instance.name,
-            organization_name: instance.organization.name,
-            space_name: instance.space.name
-          }
+            space_guid: instance.space.guid,
+            context: {
+              platform: 'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid: instance.space_guid,
+              instance_name: instance.name,
+              organization_name: instance.organization.name,
+              space_name: instance.space.name
+            }
+          },
+          { user_guid: nil }
         )
       end
 
@@ -186,12 +199,21 @@ module VCAP::Services::ServiceBrokers::V2
         }
 
         client.provision(instance, arbitrary_parameters: arbitrary_parameters)
-        expect(http_client).to have_received(:put).with(path, hash_including(parameters: arbitrary_parameters))
+        expect(http_client).to have_received(:put).with(path, hash_including(parameters: arbitrary_parameters), { user_guid: nil })
       end
 
       it 'passes the maintenance_info to the broker' do
         client.provision(instance, maintenance_info: { 'version': '2.0.0' })
-        expect(http_client).to have_received(:put).with(path, hash_including(maintenance_info: { 'version': '2.0.0' }))
+        expect(http_client).to have_received(:put).with(path, hash_including(maintenance_info: { 'version': '2.0.0' }), { user_guid: nil })
+      end
+
+      context 'when the caller passes the user_guid flag' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.provision(instance, user_guid: user_guid)
+          expect(http_client).to have_received(:put).with(path, anything, { user_guid: user_guid })
+        end
       end
 
       context 'when the broker returns 204 (No Content)' do
@@ -393,8 +415,10 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a put request with correct path' do
         client.fetch_service_instance_last_operation(instance)
 
-        expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}")
+        expect(http_client).to have_received(:get).with(
+          "/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}",
+          { user_guid: nil }
+        )
       end
 
       context 'when the broker operation id is specified' do
@@ -412,6 +436,15 @@ module VCAP::Services::ServiceBrokers::V2
             expect(query_params['service_id']).to eq(instance.service.broker_provided_id)
             expect(query_params['operation']).to eq(broker_provided_operation)
           end
+        end
+      end
+
+      context 'when the user_guid is specified' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.fetch_service_instance_last_operation(instance, user_guid: user_guid)
+          expect(http_client).to have_received(:get).with(anything, { user_guid: user_guid })
         end
       end
 
@@ -580,17 +613,20 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a patch request with the service_id included in the body' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
-        expect(http_client).to have_received(:patch).with(anything,
+        expect(http_client).to have_received(:patch).with(
+          anything,
           hash_including({
             service_id: instance.service.broker_provided_id,
-          })
+          }),
+          { user_guid: nil }
         )
       end
 
       it 'makes a patch request with the correct context in the body' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' }, name: 'fake_name')
 
-        expect(http_client).to have_received(:patch).with(anything,
+        expect(http_client).to have_received(:patch).with(
+          anything,
           hash_including({
             context: {
               platform: 'cloudfoundry',
@@ -600,14 +636,16 @@ module VCAP::Services::ServiceBrokers::V2
               organization_name: instance.organization.name,
               space_name: instance.space.name
             }
-          })
+          }),
+          { user_guid: nil }
         )
       end
 
       it 'makes a patch request with the correct context in the body (default name)' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
-        expect(http_client).to have_received(:patch).with(anything,
+        expect(http_client).to have_received(:patch).with(
+          anything,
           hash_including({
             context: {
               platform: 'cloudfoundry',
@@ -617,13 +655,14 @@ module VCAP::Services::ServiceBrokers::V2
               organization_name: instance.organization.name,
               space_name: instance.space.name
             }
-          })
+          }),
+          { user_guid: nil }
         )
       end
 
       it 'makes a patch request to the correct path' do
         client.update(instance, new_plan)
-        expect(http_client).to have_received(:patch).with(path, anything)
+        expect(http_client).to have_received(:patch).with(path, anything, { user_guid: nil })
       end
 
       context 'when the caller passes a new service plan' do
@@ -637,7 +676,8 @@ module VCAP::Services::ServiceBrokers::V2
               previous_values: {
                 plan_id: '1234'
               }
-            })
+            }),
+            { user_guid: nil }
           )
         end
       end
@@ -651,7 +691,8 @@ module VCAP::Services::ServiceBrokers::V2
             hash_including({
               parameters: { myParam: 'some-value' },
               previous_values: {}
-            })
+            }),
+            { user_guid: nil }
           )
         end
       end
@@ -667,7 +708,8 @@ module VCAP::Services::ServiceBrokers::V2
             hash_including({
               maintenance_info: { version: '2.0' },
               previous_values: {}
-            })
+            }),
+            { user_guid: nil }
           )
         end
 
@@ -694,7 +736,7 @@ module VCAP::Services::ServiceBrokers::V2
           client.update(instance, new_plan, accepts_incomplete: true)
 
           expect(http_client).to have_received(:patch).
-            with(path, anything)
+            with(path, anything, { user_guid: nil })
         end
 
         context 'and the broker returns a 200' do
@@ -745,6 +787,15 @@ module VCAP::Services::ServiceBrokers::V2
               expect(error).to be_nil
             end
           end
+        end
+      end
+
+      context 'when the caller passes the user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.update(instance, new_plan, user_guid: user_guid)
+          expect(http_client).to have_received(:patch).with(anything, anything, { user_guid: user_guid })
         end
       end
 
@@ -923,7 +974,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#create_service_key' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:key) do
-        VCAP::CloudController::ServiceKey.new(
+        VCAP::CloudController::ServiceKey.make(
           name: 'fake-service_key',
           service_instance: instance
         )
@@ -953,14 +1004,19 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a put request with correct path' do
         client.create_service_key(key)
 
-        expect(http_client).to have_received(:put).with("/v2/service_instances/#{instance.guid}/service_bindings/#{key.guid}", anything)
+        expect(http_client).to have_received(:put).with(
+          "/v2/service_instances/#{instance.guid}/service_bindings/#{key.guid}",
+          anything,
+          { user_guid: nil }
+        )
       end
 
       it 'makes a put request with correct message' do
         client.create_service_key(key)
 
-        expect(http_client).to have_received(:put).
-          with(anything,
+        expect(http_client).to have_received(:put).with(
+          anything,
+          {
             plan_id: key.service_plan.broker_provided_id,
             service_id: key.service.broker_provided_id,
             context: {
@@ -973,17 +1029,20 @@ module VCAP::Services::ServiceBrokers::V2
             bind_resource: {
               credential_client_id: cc_service_key_client_name,
             }
-          )
+          },
+          { user_guid: nil }
+        )
       end
 
       context 'when cc_service_key_client is configured' do
         it 'includes the optional credential_client_id parameter' do
           client.create_service_key(key)
 
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_including({ bind_resource: { credential_client_id: cc_service_key_client_name } })
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_including({ bind_resource: { credential_client_id: cc_service_key_client_name } }),
+            { user_guid: nil }
+          )
         end
       end
 
@@ -995,10 +1054,25 @@ module VCAP::Services::ServiceBrokers::V2
         it 'does NOT include the optional credential_client_id parameter' do
           client.create_service_key(key)
 
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_excluding({ bind_resource: { credential_client_id: anything } })
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_excluding({ bind_resource: { credential_client_id: anything } }),
+            { user_guid: nil }
+          )
+        end
+      end
+
+      context 'when user_guid is configured' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.create_service_key(key, user_guid: user_guid)
+
+          expect(http_client).to have_received(:put).with(
+            anything,
+            anything,
+            { user_guid: user_guid }
+          )
         end
       end
 
@@ -1017,12 +1091,11 @@ module VCAP::Services::ServiceBrokers::V2
         it 'make a put request with arbitrary parameters' do
           arbitrary_parameters = { 'name' => 'value' }
           client.create_service_key(key, arbitrary_parameters: arbitrary_parameters)
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_including(
-                parameters: arbitrary_parameters
-              )
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_including(parameters: arbitrary_parameters),
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1110,7 +1183,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.new(
+        VCAP::CloudController::ServiceBinding.make(
           service_instance: instance,
           app: app,
           type: 'app'
@@ -1140,15 +1213,19 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a put request with correct path' do
         client.bind(binding)
 
-        expect(http_client).to have_received(:put).
-          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
+        expect(http_client).to have_received(:put).with(
+          "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+          anything,
+          { user_guid: nil }
+        )
       end
 
       it 'makes a put request with correct message' do
         client.bind(binding)
 
-        expect(http_client).to have_received(:put).
-          with(anything,
+        expect(http_client).to have_received(:put).with(
+          anything,
+          {
             plan_id: binding.service_plan.broker_provided_id,
             service_id: binding.service.broker_provided_id,
             app_guid: binding.app_guid,
@@ -1160,7 +1237,9 @@ module VCAP::Services::ServiceBrokers::V2
               organization_name: instance.organization.name,
               space_name: instance.space.name
             }
-          )
+          },
+          { user_guid: nil }
+        )
       end
 
       it 'sets the credentials on the binding' do
@@ -1183,14 +1262,13 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
         let(:arbitrary_parameters) { { 'name' => 'value' } }
 
-        it 'make a put request with arbitrary parameters' do
+        it 'makes a put request with arbitrary parameters' do
           client.bind(binding, arbitrary_parameters: arbitrary_parameters)
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_including(
-                parameters: arbitrary_parameters
-              )
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_including(parameters: arbitrary_parameters),
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1198,10 +1276,13 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when accepts_incomplete=true' do
           let(:accepts_incomplete) { true }
 
-          it 'make a put request with accepts_incomplete true' do
+          it 'makes a put request with accepts_incomplete true' do
             client.bind(binding, accepts_incomplete: accepts_incomplete)
-            expect(http_client).to have_received(:put).
-              with(/accepts_incomplete=true/, anything)
+            expect(http_client).to have_received(:put).with(
+              /accepts_incomplete=true/,
+              anything,
+              { user_guid: nil }
+            )
           end
 
           context 'and when the broker returns asynchronously' do
@@ -1226,11 +1307,27 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when accepts_incomplete=false' do
           let(:accepts_incomplete) { false }
 
-          it 'make a put request without the accepts_incomplete query parameter' do
+          it 'makes a put request without the accepts_incomplete query parameter' do
             client.bind(binding, accepts_incomplete: accepts_incomplete)
-            expect(http_client).to have_received(:put).
-              with(/^((?!accepts_incomplete).)*$/, anything)
+            expect(http_client).to have_received(:put).with(
+              /^((?!accepts_incomplete).)*$/,
+              anything,
+              { user_guid: nil }
+            )
           end
+        end
+      end
+
+      context 'when the caller provides user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.bind(binding, user_guid: user_guid)
+          expect(http_client).to have_received(:put).with(
+            anything,
+            anything,
+            { user_guid: user_guid }
+          )
         end
       end
 
@@ -1240,10 +1337,11 @@ module VCAP::Services::ServiceBrokers::V2
         it 'does not send the app_guid in the request' do
           client.bind(binding)
 
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_excluding(:app_guid)
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_excluding(:app_guid),
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1254,10 +1352,11 @@ module VCAP::Services::ServiceBrokers::V2
           it 'includes the optional credential_client_id parameter' do
             client.bind(binding)
 
-            expect(http_client).to have_received(:put).
-              with(anything,
-                hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } })
-              )
+            expect(http_client).to have_received(:put).with(
+              anything,
+              hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } }),
+              { user_guid: nil }
+            )
           end
         end
 
@@ -1269,20 +1368,22 @@ module VCAP::Services::ServiceBrokers::V2
           it 'does NOT include the optional credential_client_id parameter' do
             client.bind(binding)
 
-            expect(http_client).to have_received(:put).
-              with(anything,
-                hash_excluding({ bind_resource: { credential_client_id: anything } })
-              )
+            expect(http_client).to have_received(:put).with(
+              anything,
+              hash_excluding({ bind_resource: { credential_client_id: anything } }),
+              { user_guid: nil }
+            )
           end
         end
 
         it 'does not send the app_guid in the request' do
           client.bind(binding)
 
-          expect(http_client).to have_received(:put).
-            with(anything,
-              hash_excluding(:app_guid)
-            )
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_excluding(:app_guid),
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1490,8 +1591,6 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#unbind' do
       let(:binding) { VCAP::CloudController::ServiceBinding.make }
 
-      let(:arbitrary_parameters) { {} }
-
       let(:response_data) { {} }
 
       let(:path) { "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}" }
@@ -1508,7 +1607,11 @@ module VCAP::Services::ServiceBrokers::V2
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything, nil)
+          with(
+            "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+            anything,
+            { user_guid: nil }
+          )
       end
 
       it 'makes a delete request with correct message' do
@@ -1520,15 +1623,16 @@ module VCAP::Services::ServiceBrokers::V2
               plan_id: binding.service_plan.broker_provided_id,
               service_id: binding.service.broker_provided_id,
             },
-            nil
+            { user_guid: nil }
           )
       end
 
-      context 'with a user_guid' do
-        let(:user_guid) { 'some-guid' }
+      context 'when the caller provides user_guid' do
+        let(:user_guid) { Sham.guid }
+
         it 'makes a delete request with the correct user_guid' do
-          client.unbind(binding, user_guid)
-          expect(http_client).to have_received(:delete).with(anything, anything, user_guid)
+          client.unbind(binding, user_guid: user_guid)
+          expect(http_client).to have_received(:delete).with(anything, anything, { user_guid: user_guid })
         end
       end
 
@@ -1577,16 +1681,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the caller provides accepts_incomplete' do
-        let(:user_guid) { 'some-guid' }
-
         before do
-          client.unbind(binding, user_guid, accepts_incomplete)
+          client.unbind(binding, accepts_incomplete: accepts_incomplete)
         end
 
         context 'when accepts_incomplete=true' do
           let(:accepts_incomplete) { true }
 
-          it 'make a put request with accepts_incomplete true' do
+          it 'makes a put request with accepts_incomplete true' do
             expect(http_client).to have_received(:delete).with(/accepts_incomplete=true/, anything, anything)
           end
 
@@ -1602,7 +1704,7 @@ module VCAP::Services::ServiceBrokers::V2
               let(:response_data) { { operation: '123' } }
 
               it 'returns the operation attribute' do
-                response = client.unbind(binding, arbitrary_parameters, accepts_incomplete)
+                response = client.unbind(binding, accepts_incomplete: accepts_incomplete)
                 expect(response[:operation]).to eq('123')
               end
             end
@@ -1612,7 +1714,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when accepts_incomplete=false' do
           let(:accepts_incomplete) { false }
 
-          it 'make a put request without the accepts_incomplete query parameter' do
+          it 'makes a put request without the accepts_incomplete query parameter' do
             expect(http_client).to have_received(:delete).with(/^((?!accepts_incomplete).)*$/, anything, anything)
           end
         end
@@ -1656,8 +1758,11 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a delete request with the correct path' do
         client.deprovision(instance)
 
-        expect(http_client).to have_received(:delete).
-          with("/v2/service_instances/#{instance.guid}", anything)
+        expect(http_client).to have_received(:delete).with(
+          "/v2/service_instances/#{instance.guid}",
+          anything,
+          { user_guid: nil }
+        )
       end
 
       it 'makes a delete request with correct message' do
@@ -1668,7 +1773,8 @@ module VCAP::Services::ServiceBrokers::V2
           {
             service_id: instance.service.broker_provided_id,
             plan_id: instance.service_plan.broker_provided_id
-          }
+          },
+          { user_guid: nil }
         )
       end
 
@@ -1689,8 +1795,11 @@ module VCAP::Services::ServiceBrokers::V2
         it 'adds the flag to the path of the service broker request' do
           client.deprovision(instance, accepts_incomplete: true)
 
-          expect(http_client).to have_received(:delete).
-            with(path, hash_including(accepts_incomplete: true))
+          expect(http_client).to have_received(:delete).with(
+            path,
+            hash_including(accepts_incomplete: true),
+            { user_guid: nil }
+          )
         end
 
         context 'when the broker returns a 202' do
@@ -1740,6 +1849,20 @@ module VCAP::Services::ServiceBrokers::V2
               }
             })
           end
+        end
+      end
+
+      context 'when the caller passes the user_guid flag' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.deprovision(instance, user_guid: user_guid)
+
+          expect(http_client).to have_received(:delete).with(
+            path,
+            anything,
+            { user_guid: user_guid }
+          )
         end
       end
 
@@ -1804,7 +1927,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.new(
+        VCAP::CloudController::ServiceBinding.make(
           service_instance: instance,
           app: app,
           type: 'app'
@@ -1819,13 +1942,27 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'makes a get request with the correct path' do
         client.fetch_service_binding(binding)
-        expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}")
+        expect(http_client).to have_received(:get).with(
+          "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+          { user_guid: nil }
+        )
       end
 
       it 'returns the broker response' do
         response = client.fetch_service_binding(binding)
         expect(response).to eq({ foo: 'bar' })
+      end
+
+      context 'with a user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.fetch_service_binding(binding, user_guid: user_guid)
+          expect(http_client).to have_received(:get).with(
+            "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+            { user_guid: user_guid }
+          )
+        end
       end
     end
 
@@ -1839,13 +1976,27 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'makes a get request with the correct path' do
         client.fetch_service_instance(instance)
-        expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{instance.guid}")
+        expect(http_client).to have_received(:get).with(
+          "/v2/service_instances/#{instance.guid}",
+          { user_guid: nil }
+        )
       end
 
       it 'returns the broker response' do
         response = client.fetch_service_instance(instance)
         expect(response).to eq({ foo: 'bar' })
+      end
+
+      context 'with a user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.fetch_service_instance(instance, user_guid: user_guid)
+          expect(http_client).to have_received(:get).with(
+            "/v2/service_instances/#{instance.guid}",
+            { user_guid: user_guid }
+          )
+        end
       end
     end
 
@@ -1872,6 +2023,23 @@ module VCAP::Services::ServiceBrokers::V2
         expect(response).to eq({ last_operation: { state: 'in progress', description: '10%' } })
       end
 
+      context 'with a user_guid' do
+        let(:user_guid) { Sham.guid }
+
+        it 'makes a request with the correct user_guid' do
+          client.fetch_service_binding_last_operation(service_binding, user_guid: user_guid)
+
+          service_id = service_binding.service_instance.service_plan.service.broker_provided_id
+          plan_id = service_binding.service_instance.service_plan.broker_provided_id
+          query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
+          expect(http_client).to have_received(:get).with(
+            "/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}",
+            { user_guid: user_guid }
+          )
+        end
+      end
+
       context 'when the broker does not provide operation data' do
         it 'makes a get request with the correct path' do
           client.fetch_service_binding_last_operation(service_binding)
@@ -1880,8 +2048,10 @@ module VCAP::Services::ServiceBrokers::V2
           plan_id = service_binding.service_instance.service_plan.broker_provided_id
           query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
 
-          expect(http_client).to have_received(:get).
-            with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+          expect(http_client).to have_received(:get).with(
+            "/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}",
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1895,8 +2065,10 @@ module VCAP::Services::ServiceBrokers::V2
           plan_id = service_binding.service_instance.service_plan.broker_provided_id
           query_params = "?operation=123&plan_id=#{plan_id}&service_id=#{service_id}"
 
-          expect(http_client).to have_received(:get).
-            with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+          expect(http_client).to have_received(:get).with(
+            "/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}",
+            { user_guid: nil }
+          )
         end
       end
 
@@ -1947,7 +2119,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    describe '#fetch_service_binding_create_last_operation' do
+    describe '#fetch_and_handle_service_binding_last_operation' do
       let(:response_data) do
         {
           'state' => 'in progress',
@@ -1981,8 +2153,10 @@ module VCAP::Services::ServiceBrokers::V2
             plan_id = service_binding.service_instance.service_plan.broker_provided_id
             query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
 
-            expect(http_client).to have_received(:get).
-              with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+            expect(http_client).to have_received(:get).with(
+              "/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}",
+              { user_guid: nil }
+            )
           end
         end
 
@@ -1996,8 +2170,19 @@ module VCAP::Services::ServiceBrokers::V2
             plan_id = service_binding.service_instance.service_plan.broker_provided_id
             query_params = "?operation=#{binding_operation.broker_provided_operation}&plan_id=#{plan_id}&service_id=#{service_id}"
 
-            expect(http_client).to have_received(:get).
-              with("/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}")
+            expect(http_client).to have_received(:get).with(
+              "/v2/service_instances/#{service_binding.service_instance.guid}/service_bindings/#{service_binding.guid}/last_operation#{query_params}",
+              { user_guid: nil }
+            )
+          end
+        end
+
+        context 'with a user_guid' do
+          let(:user_guid) { Sham.guid }
+
+          it 'makes a request with the correct user_guid' do
+            client.fetch_and_handle_service_binding_last_operation(service_binding, user_guid: user_guid)
+            expect(http_client).to have_received(:get).with(anything, { user_guid: user_guid })
           end
         end
       end

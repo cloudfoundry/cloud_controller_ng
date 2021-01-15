@@ -36,7 +36,7 @@ module VCAP::CloudController
                           " Instance guid: #{binding_info.service_instance_guid}, Binding guid #{binding_info.guid}")
 
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
-          client.unbind(binding_info.to_binding, nil, true)
+          client.unbind(binding_info.to_binding, accepts_incomplete: true)
         end
 
         def job_name_in_configuration

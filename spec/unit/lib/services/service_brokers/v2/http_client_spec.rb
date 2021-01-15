@@ -144,7 +144,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'X-Broker-Api-Originating-Identity' do
-        context 'when user guid is set' do
+        context 'when user guid is set in the SecurityContext' do
           before do
             allow(VCAP::CloudController::SecurityContext).to receive(:current_user_guid).and_return('some-user-id')
           end
@@ -152,6 +152,21 @@ module VCAP::Services::ServiceBrokers::V2
           it 'sets the X-Broker-API-Originating-Identity' do
             make_request
             expected_header = Base64.strict_encode64('{"user_id":"some-user-id"}')
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth: basic_auth).
+              with(query: hash_including({})).
+              with(headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{expected_header}" })).
+              to have_been_made
+          end
+        end
+
+        context 'when user_guid is specified as a parameter' do
+          let(:user_guid) { Sham.guid }
+
+          it 'sets the X-Broker-API-Originating-Identity' do
+            make_request
+            expected_header = Base64.strict_encode64("{\"user_id\":\"#{user_guid}\"}")
 
             expect(a_request(http_method, full_url).
               with(basic_auth: basic_auth).
@@ -335,7 +350,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:http_method) { :get }
 
       describe 'http request' do
-        let(:make_request) { client.get(path) }
+        let(:user_guid) { nil }
+        let(:make_request) { client.get(path, user_guid: user_guid) }
         let(:response_body) { {}.to_json }
 
         before do
@@ -405,7 +421,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'http request' do
-        let(:make_request) { client.put(path, message) }
+        let(:user_guid) { nil }
+        let(:make_request) { client.put(path, message, user_guid: user_guid) }
         let(:response_body) { {}.to_json }
 
         before do
@@ -478,7 +495,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'http request' do
-        let(:make_request) { client.patch(path, message) }
+        let(:user_guid) { nil }
+        let(:make_request) { client.patch(path, message, user_guid: user_guid) }
         let(:response_body) { {}.to_json }
 
         before do
@@ -546,7 +564,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'http request' do
-        let(:make_request) { client.delete(path, message) }
+        let(:user_guid) { nil }
+        let(:make_request) { client.delete(path, message, user_guid: user_guid) }
         let(:response_body) { {}.to_json }
 
         before do
