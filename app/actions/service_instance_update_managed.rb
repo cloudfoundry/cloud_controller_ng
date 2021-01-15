@@ -19,7 +19,11 @@ module VCAP::CloudController
       updater.raise_if_cannot_proceed!
 
       begin
-        return updater.metadata_sync, nil unless is_deleting?(service_instance) || !updater.only_metadata?
+        unless is_deleting?(service_instance) || !updater.only_metadata?
+          si = updater.metadata_sync
+          service_event_repository.record_service_instance_event(:update, si, message.audit_hash)
+          return si, nil
+        end
 
         lock = UpdaterLock.new(service_instance)
         lock.lock!
