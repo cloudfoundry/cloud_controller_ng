@@ -419,7 +419,6 @@ includes:
   - upgrade_guide/changed_resources/security_groups_in_v3
   - upgrade_guide/changed_resources/service_brokers_in_v3
   - upgrade_guide/changed_resources/service_instances_in_v3
-  - upgrade_guide/changed_resources/service_instance_route_bindings_in_v3
   - upgrade_guide/changed_resources/service_offerings_in_v3
   - upgrade_guide/changed_resources/service_plans_in_v3
   - upgrade_guide/changed_resources/service_plan_visibility_in_v3
