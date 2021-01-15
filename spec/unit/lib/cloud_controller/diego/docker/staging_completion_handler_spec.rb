@@ -73,7 +73,7 @@ module VCAP::CloudController
                 expect(droplet.process_types).to eq(data)
               end
 
-              context 'when process_types is empty' do
+              context 'when process_types is empty and the process has no command' do
                 before do
                   payload[:result][:process_types] = nil
                 end
@@ -87,7 +87,7 @@ module VCAP::CloudController
                 it 'logs an error for the CF user' do
                   handler.staging_complete(payload)
 
-                  expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /No process types returned from stager/)
+                  expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Start command not specified/)
                 end
               end
 
