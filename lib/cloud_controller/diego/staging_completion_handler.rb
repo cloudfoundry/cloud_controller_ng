@@ -74,6 +74,7 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
+      # rubocop:todo Metrics/CyclomaticComplexity
       # with_start is true when v2 staging causes apps to start
       def handle_success(payload, with_start)
         begin
@@ -133,6 +134,7 @@ module VCAP::CloudController
           BitsExpiration.new.expire_droplets!(app)
         end
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       def handle_missing_droplet!(payload)
         raise NotImplementedError
