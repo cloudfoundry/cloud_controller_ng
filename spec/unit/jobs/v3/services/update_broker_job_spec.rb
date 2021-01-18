@@ -63,8 +63,10 @@ module VCAP
 
           let(:previous_state) { ServiceBrokerStateEnum::AVAILABLE }
 
+          let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
+
           subject(:job) do
-            UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+            UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
@@ -127,7 +129,7 @@ module VCAP
 
             it 'updates the name without refreshing the catalog' do
               update_broker_request = ServiceBrokerUpdateRequest.create(name: 'new-name', service_broker_id: broker.id)
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
 
               job.perform
 
@@ -145,7 +147,7 @@ module VCAP
                 broker_url: 'http://example.org/new-broker-url',
                 service_broker_id: broker.id
               )
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
 
               job.perform
 
@@ -163,7 +165,7 @@ module VCAP
                 authentication: '{"credentials":{"username":"new-admin","password":"welcome"}}',
                 service_broker_id: broker.id
               )
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
 
               job.perform
 

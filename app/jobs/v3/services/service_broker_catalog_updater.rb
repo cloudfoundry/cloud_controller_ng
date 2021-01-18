@@ -3,16 +3,19 @@ module VCAP::CloudController
     class ServiceBrokerCatalogUpdater
       attr_reader :warnings
 
-      def initialize(broker)
+      def initialize(broker, user_audit_info:)
         @broker = broker
         @formatter = VCAP::Services::ServiceBrokers::ValidationErrorsFormatter.new
-        @service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
+        @service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
         @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, service_event_repository)
         @service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
       end
 
       def refresh
-        catalog = VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, broker_client.catalog)
+        catalog = VCAP::Services::ServiceBrokers::V2::Catalog.new(
+          broker,
+          broker_client.catalog(user_guid: service_event_repository.user_audit_info.user_guid)
+        )
 
         raise fail_with_invalid_catalog(catalog.validation_errors) unless catalog.valid?
         raise fail_with_incompatible_catalog(catalog.incompatibility_errors) unless catalog.compatible?

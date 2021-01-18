@@ -18,9 +18,10 @@ module VCAP
             )
           end
           let(:service_manager_factory) { Services::ServiceBrokers::ServiceManager }
+          let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
 
           subject(:job) do
-            SynchronizeBrokerCatalogJob.new(broker.guid)
+            SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: user_audit_info)
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }

@@ -6,9 +6,11 @@ module VCAP
   module CloudController
     RSpec.describe 'ServiceBrokerCreate' do
       let(:dummy) { double('dummy').as_null_object }
+      let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
         allow(dbl).to receive(:record_broker_event_with_request)
+        allow(dbl).to receive(:user_audit_info).and_return(user_audit_info)
         dbl
       end
 

@@ -161,7 +161,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
         end
 
-        context 'when user_guid is specified as a parameter' do
+        context 'when user guid is specified as a parameter' do
           let(:user_guid) { Sham.guid }
 
           it 'sets the X-Broker-API-Originating-Identity' do
@@ -188,6 +188,25 @@ module VCAP::Services::ServiceBrokers::V2
               with(basic_auth: basic_auth).
               with(query: hash_including({})).
               with(&no_user_guid)).to have_been_made
+          end
+        end
+
+        context 'when user guid is specified as a parameter and in SecurityContext' do
+          let(:user_guid) { Sham.guid }
+
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:current_user_guid).and_return(Sham.guid)
+          end
+
+          it 'sets the X-Broker-API-Originating-Identity from the parameter' do
+            make_request
+            expected_header = Base64.strict_encode64("{\"user_id\":\"#{user_guid}\"}")
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth: basic_auth).
+              with(query: hash_including({})).
+              with(headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{expected_header}" })).
+              to have_been_made
           end
         end
       end

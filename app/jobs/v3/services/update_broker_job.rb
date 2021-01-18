@@ -6,14 +6,15 @@ module VCAP::CloudController
     class UpdateBrokerJob < VCAP::CloudController::Jobs::CCJob
       attr_reader :warnings
 
-      def initialize(update_request_guid, broker_guid, previous_broker_state)
+      def initialize(update_request_guid, broker_guid, previous_broker_state, user_audit_info:)
         @update_request_guid = update_request_guid
         @broker_guid = broker_guid
         @previous_broker_state = previous_broker_state
+        @user_audit_info = user_audit_info
       end
 
       def perform
-        @warnings = Perform.new(@update_request_guid, @previous_broker_state).perform
+        @warnings = Perform.new(update_request_guid, previous_broker_state, user_audit_info: user_audit_info).perform
       end
 
       def job_name_in_configuration
@@ -38,17 +39,17 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :update_request_guid, :broker_guid
+      attr_reader :update_request_guid, :broker_guid, :previous_broker_state, :user_audit_info
 
       class Perform
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
-        def initialize(update_request_guid, previous_broker_state)
+        def initialize(update_request_guid, previous_broker_state, user_audit_info:)
           @update_request_guid = update_request_guid
           @update_request = ServiceBrokerUpdateRequest.find(guid: update_request_guid)
           @broker = ServiceBroker.find(id: @update_request.service_broker_id)
           @previous_broker_state = previous_broker_state
-          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker)
+          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info: user_audit_info)
         end
 
         def perform

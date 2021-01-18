@@ -20,9 +20,11 @@ module VCAP
         )
       end
 
+      let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
         allow(dbl).to receive(:record_broker_event_with_request)
+        allow(dbl).to receive(:user_audit_info).and_return(user_audit_info)
         dbl
       end
 
@@ -159,7 +161,8 @@ module VCAP
           expect(VCAP::CloudController::V3::UpdateBrokerJob).to have_received(:new).with(
             service_broker_update_request.guid,
             existing_service_broker.guid,
-            previous_state
+            previous_state,
+            user_audit_info: user_audit_info
           ).once
         end
 
@@ -257,7 +260,8 @@ module VCAP
             expect(VCAP::CloudController::V3::UpdateBrokerJob).to have_received(:new).with(
               service_broker_update_request.guid,
               existing_service_broker.guid,
-              ''
+              '',
+              user_audit_info: user_audit_info
             ).once
           end
         end

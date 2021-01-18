@@ -5,12 +5,13 @@ module VCAP::CloudController
     class SynchronizeBrokerCatalogJob < VCAP::CloudController::Jobs::CCJob
       attr_reader :warnings
 
-      def initialize(broker_guid)
+      def initialize(broker_guid, user_audit_info:)
         @broker_guid = broker_guid
+        @user_audit_info = user_audit_info
       end
 
       def perform
-        @warnings = Perform.new(@broker_guid).perform
+        @warnings = Perform.new(broker_guid, user_audit_info: user_audit_info).perform
       end
 
       def job_name_in_configuration
@@ -35,12 +36,12 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :broker_guid
+      attr_reader :broker_guid, :user_audit_info
 
       class Perform
-        def initialize(broker_guid)
+        def initialize(broker_guid, user_audit_info:)
           @broker = ServiceBroker.find(guid: broker_guid)
-          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker)
+          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info: user_audit_info)
         end
 
         def perform
