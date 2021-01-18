@@ -267,11 +267,17 @@ includes:
   - resources/service_brokers/jobs
   - resources/service_instances/header
   - resources/service_instances/object
+  - resources/service_instances/create
   - resources/service_instances/list
-  - resources/service_instances/list_shared_spaces
+  - resources/service_instances/get
+  - resources/service_instances/credentials
+  - resources/service_instances/parameters
   - resources/service_instances/update
+  - resources/service_instances/delete
+  - resources/service_instances/list_shared_spaces
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
+  - resources/service_instances/get_shared_spaces_usage_summary
   - resources/service_offerings/header
   - resources/service_offerings/visibility
   - resources/service_offerings/object
@@ -373,13 +379,6 @@ includes:
   - experimental_resources/service_credential_bindings/delete
   - experimental_resources/service_credential_bindings/details
   - experimental_resources/service_credential_bindings/parameters
-  - experimental_resources/service_instances/header
-  - experimental_resources/service_instances/create
-  - experimental_resources/service_instances/get
-  - experimental_resources/service_instances/credentials
-  - experimental_resources/service_instances/parameters
-  - experimental_resources/service_instances/delete
-  - experimental_resources/service_instances/get_shared_spaces_usage_summary
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

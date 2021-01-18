@@ -118,11 +118,11 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** (*experimental*)| _string_ | Name of the service instance
-**tags** (*experimental*)| _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
-**parameters** (*experimental*)| _object_ | A JSON object that is passed to the service broker
-**relationships.service_plan** (*experimental*)| [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance
-**maintenance_info** (*experimental*)| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
+**name** | _string_ | Name of the service instance
+**tags** | _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**parameters** | _object_ | A JSON object that is passed to the service broker
+**relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance
+**maintenance_info** | _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service_instance
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service_instance
 
@@ -141,13 +141,13 @@ Otherwise the response will be synchronous.
 
 Name | Type | Description |
 ---- | ---- | ----------- |
-**name** (*experimental*)| _string_ | Name of the service instance
-**tags** (*experimental*)| _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
-**credentials** (*experimental*)| _object_ | A JSON object that is made available to apps bound to this service instance
-**syslog_drain_url** (*experimental*)| _string_ | URL to which logs for bound applications will be streamed
-**route_service_url** (*experimental*)| _string_ | URL to which requests for bound routes will be forwarded; must use the `https` protocol
-**metadata.labels** (*experimental*)| [_label object_](#labels) | Labels applied to the service_instance
-**metadata.annotations** (*experimental*)| [_annotation object_](#annotations) | Annotations applied to the service_instance
+**name** | _string_ | Name of the service instance
+**tags** | _list of strings_ | Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+**credentials** | _object_ | A JSON object that is made available to apps bound to this service instance
+**syslog_drain_url** | _string_ | URL to which logs for bound applications will be streamed
+**route_service_url** | _string_ | URL to which requests for bound routes will be forwarded; must use the `https` protocol
+**metadata.labels** | [_label object_](#labels) | Labels applied to the service_instance
+**metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the service_instance
 
 #### Permitted roles
  |
