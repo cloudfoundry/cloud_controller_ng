@@ -66,14 +66,6 @@ module OPI
 
     private
 
-    def add_command(task)
-      if task.command.presence
-        ['/bin/sh', '-c', task.command]
-      else
-        []
-      end
-    end
-
     def add_lifecycle(task)
       case task.droplet.lifecycle_type
       when VCAP::CloudController::Lifecycles::BUILDPACK
@@ -85,12 +77,29 @@ module OPI
           }
         }
       when VCAP::CloudController::Lifecycles::DOCKER
+        command = if task.command.present?
+                    ['/bin/sh', '-c', task.command]
+                  else
+                    []
+                  end
         {
           docker_lifecycle: {
             image: task.droplet.docker_receipt_image,
-            command: add_command(task),
+            command: command,
             registry_username: task.droplet.docker_receipt_username,
             registry_password: task.droplet.docker_receipt_password
+          }
+        }
+      when VCAP::CloudController::Lifecycles::KPACK
+        command = if task.command.present?
+                    [OPI::Client::KpackLifecycle::CNB_LAUNCHER_PATH, task.command]
+                  else
+                    []
+                  end
+        {
+          docker_lifecycle: {
+            image: task.droplet.docker_receipt_image,
+            command: command
           }
         }
       end
