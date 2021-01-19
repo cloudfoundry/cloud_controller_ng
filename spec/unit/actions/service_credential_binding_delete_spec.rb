@@ -5,7 +5,8 @@ require 'support/shared_examples/v3_service_binding_delete'
 module VCAP::CloudController
   module V3
     RSpec.describe V3::ServiceCredentialBindingDelete do
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:action) { described_class.new(type, user_audit_info) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
       let(:space) { Space.make }

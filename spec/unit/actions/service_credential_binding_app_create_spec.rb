@@ -14,7 +14,8 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:app) { AppModel.make(space: space) }
       let(:binding_details) {}
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
       let(:name) { 'foo' }
       let(:message) {

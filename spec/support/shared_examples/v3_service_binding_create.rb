@@ -58,6 +58,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
             precursor,
             arbitrary_parameters: { foo: 'bar' },
             accepts_incomplete: false,
+            user_guid: user_guid
           )
         end
       end
@@ -75,6 +76,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
           precursor,
           arbitrary_parameters: {},
           accepts_incomplete: true,
+          user_guid: user_guid
         )
 
         binding = precursor.reload
@@ -133,7 +135,7 @@ RSpec.shared_examples 'polling service binding creation' do
     it 'fetches the last operation' do
       action.poll(binding)
 
-      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding)
+      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid: user_guid)
     end
 
     context 'last operation state is complete' do
@@ -157,7 +159,7 @@ RSpec.shared_examples 'polling service binding creation' do
       it 'fetches the service binding' do
         action.poll(binding)
 
-        expect(broker_client).to have_received(:fetch_service_binding).with(binding)
+        expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid: user_guid)
       end
 
       context 'fails while fetching binding' do
@@ -299,7 +301,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
         it 'fetches the service binding and updates only the credentials, volume_mounts and syslog_drain_url' do
           action.poll(binding)
 
-          expect(broker_client).to have_received(:fetch_service_binding).with(binding)
+          expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid: user_guid)
 
           binding.reload
           expect(binding.credentials).to eq(credentials)

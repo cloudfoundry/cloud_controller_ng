@@ -18,7 +18,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
     it 'makes the right call to the broker client' do
       action.delete(binding)
 
-      expect(broker_client).to have_received(:unbind).with(binding, { accepts_incomplete: true })
+      expect(broker_client).to have_received(:unbind).with(
+        binding,
+        accepts_incomplete: true,
+        user_guid: user_guid
+      )
     end
 
     context 'unbind fails with generic error' do
@@ -189,7 +193,7 @@ RSpec.shared_examples 'polling service binding deletion' do
     it 'fetches the last operation' do
       action.poll(binding)
 
-      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding)
+      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid: user_guid)
     end
 
     context 'last operation state is complete' do
