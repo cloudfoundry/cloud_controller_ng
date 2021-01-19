@@ -2,6 +2,7 @@ require 'db_spec_helper'
 require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/create_service_instance_job'
 require 'cloud_controller/errors/api_error'
+require 'cloud_controller/user_audit_info'
 
 module VCAP
   module CloudController
@@ -13,7 +14,8 @@ module VCAP
         let(:params) { { some_data: 'some_value' } }
         let(:plan) { ServicePlan.make(maintenance_info: maintenance_info) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: plan) }
-        let(:user_info) { instance_double(Object) }
+        let(:user_guid) { Sham.uaa_id }
+        let(:user_info) { instance_double(UserAuditInfo, { user_guid: user_guid }) }
         let(:subject) {
           described_class.new(
             service_instance.guid,
@@ -44,7 +46,8 @@ module VCAP
               service_instance,
               accepts_incomplete: true,
               arbitrary_parameters: params,
-              maintenance_info: maintenance_info
+              maintenance_info: maintenance_info,
+              user_guid: user_guid
             )
           end
 

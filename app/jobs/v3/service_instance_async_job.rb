@@ -94,7 +94,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :service_instance_guid
+      attr_reader :service_instance_guid, :user_audit_info
 
       def execute_request(client)
         broker_response = send_broker_request(client)
@@ -132,7 +132,10 @@ module VCAP::CloudController
       end
 
       def fetch_last_operation(client)
-        last_operation_result = client.fetch_service_instance_last_operation(service_instance)
+        last_operation_result = client.fetch_service_instance_last_operation(
+          service_instance,
+          user_guid: user_audit_info.user_guid
+        )
         self.polling_interval_seconds = last_operation_result[:retry_after].to_i if last_operation_result[:retry_after]
 
         operation_failed!(last_operation_result[:last_operation][:description]) if last_operation_result[:http_status_code] == HTTP::Status::BAD_REQUEST

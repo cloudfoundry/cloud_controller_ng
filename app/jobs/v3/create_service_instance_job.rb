@@ -12,6 +12,7 @@ module VCAP::CloudController
         super(service_instance_guid, user_audit_info)
         @request_attr = request_attr
         @arbitrary_parameters = arbitrary_parameters
+        @user_audit_info = user_audit_info
       end
 
       def operation
@@ -26,10 +27,15 @@ module VCAP::CloudController
         client.provision(
           service_instance,
           accepts_incomplete: true,
-          arbitrary_parameters: @arbitrary_parameters,
-          maintenance_info: service_instance.service_plan.maintenance_info
+          arbitrary_parameters: arbitrary_parameters,
+          maintenance_info: service_instance.service_plan.maintenance_info,
+          user_guid: user_audit_info.user_guid
         )
       end
+
+      private
+
+      attr_reader :arbitrary_parameters, :user_audit_info
     end
   end
 end

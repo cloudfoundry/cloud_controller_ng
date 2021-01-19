@@ -1,15 +1,18 @@
 require 'db_spec_helper'
 require 'actions/v3/service_instance_delete'
+require 'cloud_controller/user_audit_info'
 
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceInstanceDelete do
       subject(:action) { described_class.new(service_instance, event_repository) }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: user_guid }) }
       let(:event_repository) do
-        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
+        dbl = double(Repositories::ServiceEventRepository)
         allow(dbl).to receive(:record_user_provided_service_instance_event)
         allow(dbl).to receive(:record_service_instance_event)
-        allow(dbl).to receive(:user_audit_info)
+        allow(dbl).to receive(:user_audit_info).and_return(user_audit_info)
         dbl
       end
 
@@ -92,7 +95,11 @@ module VCAP::CloudController
             action.delete
 
             expect(VCAP::Services::ServiceClientProvider).to have_received(:provide).with(instance: service_instance)
-            expect(client).to have_received(:deprovision).with(service_instance, accepts_incomplete: true)
+            expect(client).to have_received(:deprovision).with(
+              service_instance,
+              accepts_incomplete: true,
+              user_guid: user_guid
+            )
           end
 
           it 'deletes it from the database' do
@@ -216,7 +223,11 @@ module VCAP::CloudController
             action.delete
 
             expect(VCAP::Services::ServiceClientProvider).to have_received(:provide).with(instance: service_instance)
-            expect(client).to have_received(:deprovision).with(service_instance, accepts_incomplete: true)
+            expect(client).to have_received(:deprovision).with(
+              service_instance,
+              accepts_incomplete: true,
+              user_guid: user_guid
+            )
           end
 
           context 'when the client succeeds synchronously' do
@@ -568,7 +579,10 @@ module VCAP::CloudController
         it 'sends a poll to the client' do
           action.poll
 
-          expect(client).to have_received(:fetch_service_instance_last_operation).with(service_instance)
+          expect(client).to have_received(:fetch_service_instance_last_operation).with(
+            service_instance,
+            user_guid: user_guid
+          )
         end
 
         context 'when the operation is still in progress' do
