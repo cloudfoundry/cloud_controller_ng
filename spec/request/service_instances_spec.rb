@@ -568,6 +568,17 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
+    it 'sends the correct request to the service broker' do
+      get "/v3/service_instances/#{instance.guid}/parameters", nil, headers_for(user, scopes: %w(cloud_controller.admin))
+
+      encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+      expect(a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+        with(
+          headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+        )
+      ).to have_been_made.once
+    end
+
     context 'when the instance does not support retrievable instances' do
       let(:service) { VCAP::CloudController::Service.make(instances_retrievable: false) }
 
@@ -1169,28 +1180,31 @@ RSpec.describe 'V3 service instances' do
         it 'sends a provision request with the right arguments to the service broker' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-          expect(
-            a_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
-              with(query: { accepts_incomplete: true },
-                body: {
-                  service_id: service_plan.service.unique_id,
-                  plan_id: service_plan.unique_id,
-                  context: {
-                    platform: 'cloudfoundry',
-                    organization_guid: org.guid,
-                    organization_name: org.name,
-                    space_guid: space.guid,
-                    space_name: space.name,
-                    instance_name: instance.name
-                  },
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+          expect(a_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+            with(
+              query: { accepts_incomplete: true },
+              body: {
+                service_id: service_plan.service.unique_id,
+                plan_id: service_plan.unique_id,
+                context: {
+                  platform: 'cloudfoundry',
                   organization_guid: org.guid,
+                  organization_name: org.name,
                   space_guid: space.guid,
-                  parameters: {
-                    foo: 'bar',
-                    baz: 'qux'
-                  },
-                  maintenance_info: maintenance_info
-                })
+                  space_name: space.name,
+                  instance_name: instance.name
+                },
+                organization_guid: org.guid,
+                space_guid: space.guid,
+                parameters: {
+                  foo: 'bar',
+                  baz: 'qux'
+                },
+                maintenance_info: maintenance_info
+              },
+              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+            )
           ).to have_been_made.once
         end
 
@@ -1238,6 +1252,7 @@ RSpec.describe 'V3 service instances' do
           end
 
           it 'calls last operation immediately' do
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
             expect(
               a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
@@ -1246,7 +1261,9 @@ RSpec.describe 'V3 service instances' do
                     operation: 'task12',
                     service_id: service_plan.service.unique_id,
                     plan_id: service_plan.unique_id,
-                  })
+                  },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                )
             ).to have_been_made.once
           end
 
@@ -1713,6 +1730,7 @@ RSpec.describe 'V3 service instances' do
           it 'sends a UPDATE request with the right arguments to the service broker' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:patch, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
                 with(
@@ -1739,7 +1757,8 @@ RSpec.describe 'V3 service instances' do
                       foo: 'bar',
                       baz: 'qux'
                     },
-                  }
+                  },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
                 )
             ).to have_been_made.once
           end
@@ -1803,6 +1822,7 @@ RSpec.describe 'V3 service instances' do
             end
 
             it 'calls last operation immediately' do
+              encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(
                 a_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
@@ -1811,7 +1831,9 @@ RSpec.describe 'V3 service instances' do
                       operation: 'task12',
                       service_id: service_instance.service_plan.service.unique_id,
                       plan_id: service_instance.service_plan.unique_id,
-                    })
+                    },
+                    headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  )
               ).to have_been_made.once
             end
 
@@ -2649,17 +2671,21 @@ RSpec.describe 'V3 service instances' do
 
       describe 'the pollable job' do
         it 'sends a delete request with the right arguments to the service broker' do
-          api_call.call(admin_headers)
+          api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
           expect(
             a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
-              with(query: {
+              with(
+                query: {
                 accepts_incomplete: true,
                 service_id: instance.service.broker_provided_id,
                 plan_id: instance.service_plan.broker_provided_id
-              })
+              },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              )
           ).to have_been_made.once
         end
 
@@ -2730,8 +2756,10 @@ RSpec.describe 'V3 service instances' do
           end
 
           it 'calls last operation immediately' do
-            api_call.call(admin_headers)
+            api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
                 with(
@@ -2739,7 +2767,9 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  })
+                  },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                )
             ).to have_been_made.once
           end
 

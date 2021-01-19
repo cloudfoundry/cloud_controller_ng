@@ -4,6 +4,8 @@ require 'jobs/v3/update_service_instance_job'
 require 'cloud_controller/errors/api_error'
 require 'cloud_controller/user_audit_info'
 require 'messages/service_instance_update_managed_message'
+require 'support/matchers/have_labels'
+require 'support/matchers/have_annotations'
 
 module VCAP
   module CloudController
@@ -100,6 +102,7 @@ module VCAP
                 maintenance_info: nil,
                 name: service_instance.name,
                 previous_values: previous_values,
+                user_guid: user_audit_info.user_guid,
               )
             end
           end
@@ -121,6 +124,7 @@ module VCAP
                 arbitrary_parameters: {},
                 maintenance_info: nil,
                 previous_values: previous_values,
+                user_guid: user_audit_info.user_guid,
               )
             end
           end
@@ -156,6 +160,7 @@ module VCAP
                 maintenance_info: { version: '2.1.0' },
                 name: service_instance.name,
                 previous_values: previous_values,
+                user_guid: user_audit_info.user_guid,
               )
             end
           end
@@ -178,6 +183,7 @@ module VCAP
                 maintenance_info: { version: '2.2.0' },
                 name: service_instance.name,
                 previous_values: previous_values,
+                user_guid: user_audit_info.user_guid,
               )
             end
           end

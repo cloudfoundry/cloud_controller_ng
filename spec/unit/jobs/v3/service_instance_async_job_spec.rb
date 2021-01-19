@@ -30,7 +30,8 @@ module VCAP::CloudController
         si.save_with_new_operation({}, { type: operation, state: 'in progress' })
         si.reload
       }
-      let(:audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:audit_info) { UserAuditInfo.new(user_guid: user_guid, user_name: Sham.name, user_email: 'foo@example.com') }
       let(:guid) { service_instance.guid }
       let(:job) do
         FakeAsyncOperation.new(guid, audit_info).tap do |j|
@@ -266,7 +267,10 @@ module VCAP::CloudController
 
           it 'fetches the last operation' do
             job.perform
-            expect(client).to have_received(:fetch_service_instance_last_operation).with(service_instance).twice
+            expect(client).to have_received(:fetch_service_instance_last_operation).with(
+              service_instance,
+              user_guid: user_guid
+            ).twice
           end
         end
 

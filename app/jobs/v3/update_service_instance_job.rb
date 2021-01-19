@@ -14,6 +14,7 @@ module VCAP::CloudController
         @message = message
         @update_response = {}
         @request_attr = request_attr
+        @user_audit_info = user_audit_info
       end
 
       def operation
@@ -26,6 +27,8 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :message, :user_audit_info
+
       def send_broker_request(client)
         @update_response, err = client.update(
           service_instance,
@@ -35,6 +38,7 @@ module VCAP::CloudController
           previous_values: previous_values,
           maintenance_info: maintenance_info,
           name: message.requested?(:name) ? message.name : service_instance.name,
+          user_guid: user_audit_info.user_guid
         )
         raise err if err
 
@@ -53,8 +57,6 @@ module VCAP::CloudController
           MetadataUpdate.update(service_instance, message)
         end
       end
-
-      attr_reader :message
 
       def service_plan_gone!
         raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotFound', service_instance_guid)

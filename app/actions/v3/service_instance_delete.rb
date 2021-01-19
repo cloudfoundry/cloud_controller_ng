@@ -54,7 +54,10 @@ module VCAP::CloudController
       end
 
       def poll
-        result = client.fetch_service_instance_last_operation(service_instance)
+        result = client.fetch_service_instance_last_operation(
+          service_instance,
+          user_guid: service_event_repository.user_audit_info.user_guid
+        )
         case result[:last_operation][:state]
         when 'in progress'
           update_last_operation_with_description(result[:last_operation][:description])
@@ -98,7 +101,11 @@ module VCAP::CloudController
       end
 
       def send_deprovison_to_broker
-        result = client.deprovision(service_instance, accepts_incomplete: true)
+        result = client.deprovision(
+          service_instance,
+          accepts_incomplete: true,
+          user_guid: service_event_repository.user_audit_info.user_guid
+        )
         return DeleteComplete if result[:last_operation][:state] == 'succeeded'
 
         DeleteStarted.call(result[:last_operation][:broker_provided_operation])

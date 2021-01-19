@@ -105,7 +105,6 @@ class ServiceInstancesV3Controller < ApplicationController
   def destroy
     service_instance = fetch_writable_service_instance(hashed_params[:guid])
     purge = params['purge'] == 'true'
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
 
     if purge
       ServiceInstancePurge.new(service_event_repository).purge(service_instance)
@@ -228,8 +227,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_user_provided(message)
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-
     instance = ServiceInstanceCreateUserProvided.new(service_event_repository).create(message)
 
     render status: :created, json: Presenters::V3::ServiceInstancePresenter.new(instance)
@@ -238,7 +235,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_managed(message, space:)
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
@@ -256,7 +252,6 @@ class ServiceInstancesV3Controller < ApplicationController
     message = ServiceInstanceUpdateUserProvidedMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
     render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
   rescue ServiceInstanceUpdateUserProvided::UnprocessableUpdate => api_err
@@ -273,7 +268,6 @@ class ServiceInstancesV3Controller < ApplicationController
       invalid_service_plan_relation! unless service_plan.service == service_instance.service
     end
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     service_instance, job = ServiceInstanceUpdateManaged.new(service_event_repository).update(service_instance, message)
 
     if job.nil?
@@ -373,6 +367,10 @@ class ServiceInstancesV3Controller < ApplicationController
     service_plan &&
       visible_to_current_user?(plan: service_plan) &&
       service_plan.visible_in_space?(space)
+  end
+
+  def service_event_repository
+    VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
   end
 
   def service_instance_not_found!
