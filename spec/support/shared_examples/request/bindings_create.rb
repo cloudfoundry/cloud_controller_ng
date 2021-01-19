@@ -46,12 +46,12 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       let(:app_binding_attributes) {
         if check_app
           {
-                      app_guid: app_to_bind_to.guid,
-                      bind_resource: {
-                        app_guid: app_to_bind_to.guid,
-                        space_guid: service_instance.space.guid
-                      }
-                  }
+            app_guid: app_to_bind_to.guid,
+            bind_resource: {
+              app_guid: app_to_bind_to.guid,
+              space_guid: service_instance.space.guid
+            }
+          }
         else
           {}
         end
@@ -74,7 +74,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       end
 
       before do
-        api_call.call(admin_headers)
+        api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
         expect(last_response).to have_status_code(202)
 
         stub_request(:put, broker_bind_url).
@@ -85,11 +85,13 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       it 'sends a bind request with the right arguments to the service broker' do
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+        encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
         expect(
           a_request(:put, broker_bind_url).
             with(
               body: client_body,
-              query: { accepts_incomplete: true }
+              query: { accepts_incomplete: true },
+              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
             )
         ).to have_been_made.once
       end
@@ -184,13 +186,17 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         it 'polls the last operation endpoint' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
           expect(
             a_request(:get, broker_binding_last_operation_url).
-              with(query: {
-                operation: operation,
-                service_id: service_instance.service_plan.service.unique_id,
-                plan_id: service_instance.service_plan.unique_id,
-              })
+              with(
+                query: {
+                  operation: operation,
+                  service_id: service_instance.service_plan.service.unique_id,
+                  plan_id: service_instance.service_plan.unique_id,
+                },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              )
           ).to have_been_made.once
         end
 
@@ -227,13 +233,17 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           Timecop.travel(Time.now + 1.minute)
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
           expect(
             a_request(:get, broker_binding_last_operation_url).
-              with(query: {
+              with(
+                query: {
                 operation: operation,
                 service_id: service_instance.service_plan.service.unique_id,
                 plan_id: service_instance.service_plan.unique_id,
-              })
+              },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              )
           ).to have_been_made.twice
         end
 
@@ -270,8 +280,11 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           it 'fetches the binding' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
-              a_request(:get, broker_bind_url)
+              a_request(:get, broker_bind_url).with(
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              )
             ).to have_been_made.once
           end
 

@@ -58,7 +58,8 @@ module VCAP::CloudController
           { type: last_operation_type, state: last_operation_state }
         )
       end
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
       let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }

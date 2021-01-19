@@ -14,7 +14,12 @@ module VCAP::CloudController
 
       def bind(binding, parameters: {}, accepts_incomplete: false)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.bind(binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
+        details = client.bind(
+          binding,
+          arbitrary_parameters: parameters,
+          accepts_incomplete: accepts_incomplete,
+          user_guid: @user_audit_info.user_guid
+        )
 
         if details[:async]
           not_retrievable! unless bindings_retrievable?(binding)
@@ -30,11 +35,11 @@ module VCAP::CloudController
 
       def poll(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.fetch_and_handle_service_binding_last_operation(binding)
+        details = client.fetch_and_handle_service_binding_last_operation(binding, user_guid: @user_audit_info.user_guid)
 
         case details[:last_operation][:state]
         when 'succeeded'
-          params = client.fetch_service_binding(binding)
+          params = client.fetch_service_binding(binding, user_guid: @user_audit_info.user_guid)
           complete_binding_and_save(binding, params, details[:last_operation])
           return PollingFinished
         when 'in progress'
