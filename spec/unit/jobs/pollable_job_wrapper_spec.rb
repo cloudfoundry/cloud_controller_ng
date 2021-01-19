@@ -120,7 +120,8 @@ module VCAP::CloudController::Jobs
         )
       }
 
-      let(:job) { VCAP::CloudController::V3::SynchronizeBrokerCatalogJob.new(broker.guid) }
+      let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo, { user_guid: Sham.guid }) }
+      let(:job) { VCAP::CloudController::V3::SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: user_audit_info) }
 
       before do
         allow_any_instance_of(VCAP::CloudController::V3::SynchronizeBrokerCatalogJob).

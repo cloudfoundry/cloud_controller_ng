@@ -581,6 +581,29 @@ RSpec.describe 'V3 service brokers' do
         expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
       end
 
+      describe 'the pollable job' do
+        before do
+          stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
+            to_return(status: 200, body: catalog(global_broker_id).to_json, headers: {})
+        end
+
+        it 'makes the correct request to get the service broker catalog' do
+          patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, headers_for(user, scopes: %w(cloud_controller.admin)))
+          expect(last_response).to have_status_code(202)
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+          expect(
+            a_request(:get, 'http://example.org/new-broker-url/v2/catalog').with(
+              headers: {
+                'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}"
+              }
+            )
+          ).to have_been_made.once
+        end
+      end
+
       context 'when a broker with the same name exists' do
         before do
           VCAP::CloudController::ServiceBroker.make(name: 'another broker')
@@ -870,6 +893,20 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.service_plans.map(&:name)).to include('plan_name-1')
       expect(broker.service_plans.map(&:name)).to include('plan_name-2')
       expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+    end
+
+    it 'makes the correct request to get the service broker catalog' do
+      create_broker_successfully(global_broker_request_body, with: headers_for(user, scopes: %w(cloud_controller.admin)), execute_all_jobs: true)
+
+      encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+
+      expect(
+        a_request(:get, 'http://example.org/broker-url/v2/catalog').with(
+          headers: {
+            'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}"
+          }
+        )
+      ).to have_been_made.once
     end
 
     it 'reports service events' do

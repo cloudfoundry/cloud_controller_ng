@@ -114,7 +114,7 @@ class ServiceBrokersController < ApplicationController
   private
 
   def service_event_repository
-    VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
   end
 
   def broker_has_instances!(broker_name)

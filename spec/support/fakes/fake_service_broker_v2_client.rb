@@ -11,7 +11,7 @@ class FakeServiceBrokerV2Client
     @parameters = {}
   end
 
-  def catalog
+  def catalog(user_guid: nil)
     {
       'services' => [{
         'id'          => 'service_id',
@@ -94,7 +94,7 @@ class FakeServiceBrokerV2Client
   end
 
   class WithConflictingUAAClient < FakeServiceBrokerV2Client
-    def catalog
+    def catalog(user_guid: nil)
       {
         'services' => [{
           'id'          => 'service_id',
