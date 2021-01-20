@@ -35,6 +35,17 @@ module VCAP::CloudController
         )
       end
 
+      def record_update(service_binding, user_audit_info, request, manifest_triggered: false)
+        attrs = censor_request_attributes(request)
+
+        record_event(
+          type:            "audit.#{@actee_name}.update",
+          service_binding: service_binding,
+          user_audit_info: user_audit_info,
+          metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
+        )
+      end
+
       def record_start_delete(service_binding, user_audit_info)
         record_event(
           type: "audit.#{@actee_name}.start_delete",

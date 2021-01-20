@@ -1553,8 +1553,9 @@ RSpec.describe 'v3 service credential bindings' do
       let(:binding) do
         VCAP::CloudController::ServiceKey.make(service_instance: instance) { |binding| operate_on(binding) }
       end
+      let(:binding_name) { binding.name }
 
-      it_behaves_like 'metadata update for service binding'
+      it_behaves_like 'metadata update for service binding', 'service_key'
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -1564,8 +1565,9 @@ RSpec.describe 'v3 service credential bindings' do
       let(:binding) do
         VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) { |binding| operate_on(binding) }
       end
+      let(:binding_name) { '' }
 
-      it_behaves_like 'metadata update for service binding'
+      it_behaves_like 'metadata update for service binding', 'service_binding'
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end

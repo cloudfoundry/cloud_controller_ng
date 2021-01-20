@@ -1599,8 +1599,9 @@ RSpec.describe 'v3 service route bindings' do
         }
       }
     }
+    let(:binding_name) { '' }
 
-    it_behaves_like 'metadata update for service binding'
+    it_behaves_like 'metadata update for service binding', 'service_route_binding'
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:response_object) {
