@@ -77,8 +77,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/service_instances"
           },
           'service_credential_bindings' => {
-            'href' => "#{link_prefix}/v3/service_credential_bindings",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/service_credential_bindings"
           },
           'service_offerings' => {
             'href' => "#{link_prefix}/v3/service_offerings"

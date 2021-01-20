@@ -5,7 +5,7 @@
 In v2, two different endpoints `/v2/service_bindings` and `/v2/service_keys`
 were used to perform bindings operations for service instances.
 
-In v3, all service bindings that are not route bindings are performed using the [service credential bindings](#service-credential-binding-experimental) resource.
+In v3, all service bindings that are not route bindings are performed using the [service credential bindings](#service-credential-binding) resource.
 Service credential bindings can be of type `app` when it is a binding between a [service instance](#service-instances) and an [application](#apps)
 or `key` when it only retrieves the credentials of the service instance. 
 The `type` filter can be used to list separately each type.
@@ -42,4 +42,4 @@ When operating on service credential bindings of `managed` service instances the
 Audit events of type `audit.service_key.start_create` and  `audit.service_key.start_delete` have been added to track when 
 an async create or delete `key` service credential binding operation has started. 
 
-Read more about the [service credential binding resource](#service-credential-binding-experimental).
+Read more about the [service credential binding resource](#service-credential-binding).
