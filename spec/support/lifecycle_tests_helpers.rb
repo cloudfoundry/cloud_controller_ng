@@ -2,7 +2,7 @@ module LifecycleSpecHelper
   BINDINGS_ENDPOINT = '/v3/service_credential_bindings/'.freeze
 
   def create_org
-    org_request_body = {name: 'my-organization'}
+    org_request_body = { name: 'my-organization' }
 
     post '/v3/organizations', org_request_body.to_json, admin_headers
     expect(last_response).to have_status_code(201)
@@ -197,7 +197,6 @@ module LifecycleSpecHelper
       }
     }
   end
-
 
   def get_route_service_plan(using:)
     get_service_plan_with(name: 'route_plan', using: using)
