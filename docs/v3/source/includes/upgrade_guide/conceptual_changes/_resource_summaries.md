@@ -42,6 +42,9 @@ Same queries are available on request for single resource.
 | services[].service_plan.service.guid | fields[service_plan.service_offering]=guid | resources[].included.service_offerings[].guid |
 | services[].service_plan.service.label | fields[service_plan.service_offering]=name | resources[].included.service_offerings[].name |
 | services[].service_broker_name | fields[service_plan.service_offering.service_broker]=name | resources[].included.service_brokers[].name | 
+| shared_from.space_guid | fields[space]=guid | resources[].included.spaces[].guid |
+| shared_from.space_name | fields[space]=name | resources[].included.spaces[].name |
+| shared_from.organization_name | fields[space.organization]=name | resources[].included.organizations[].name |
 
 The table below describes the query parameters needed to retrieve the sharing information using `/v3/service_instances/:guid/relationships/shared_spaces` endpoint.
 
