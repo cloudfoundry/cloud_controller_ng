@@ -42,4 +42,6 @@ When operating on service credential bindings of `managed` service instances the
 Audit events of type `audit.service_key.start_create` and  `audit.service_key.start_delete` have been added to track when 
 an async create or delete `key` service credential binding operation has started. 
 
+Audit events of type `audit.service_binding.update` and `audit.service_key.update` are recorded when metadata update is requested. 
+
 Read more about the [service credential binding resource](#service-credential-binding-experimental).
