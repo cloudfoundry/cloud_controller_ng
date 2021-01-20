@@ -22,7 +22,8 @@ module VCAP::CloudController
       }
 
       let(:audit_hash) { { some_info: 'some_value' } }
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
 
       before do
@@ -311,7 +312,7 @@ module VCAP::CloudController
             it 'fetches the service binding and updates the route_services_url' do
               action.poll(binding)
 
-              expect(broker_client).to have_received(:fetch_service_binding).with(binding)
+              expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid: user_guid)
 
               binding.reload
               expect(binding.route_service_url).to eq(route_service_url)

@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       def poll(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.fetch_and_handle_service_binding_last_operation(binding)
+        details = client.fetch_and_handle_service_binding_last_operation(binding, user_guid: @user_audit_info.user_guid)
 
         case details[:last_operation][:state]
         when 'in progress'
@@ -70,7 +70,11 @@ module VCAP::CloudController
 
       def send_unbind_to_client(binding)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.unbind(binding, accepts_incomplete: true)
+        details = client.unbind(
+          binding,
+          accepts_incomplete: true,
+          user_guid: @user_audit_info.user_guid
+        )
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
         broker_concurrency_error!

@@ -1,4 +1,4 @@
-## Service Credential Binding (experimental)
+## Service Credential Binding
 
 Service credential bindings are used to make the details of the connection to a service instance available to an app or a developer.
 

@@ -855,9 +855,22 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
-        context 'when the broker returns params' do
+        context 'when the broker will returns params' do
           before do
             stub_param_broker_request_for_binding(binding, binding_params)
+          end
+
+          it 'sends a request to the broker including the identity header' do
+            api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+
+            broker_binding_url = "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+            expect(
+              a_request(:get, broker_binding_url).
+                with(
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                )
+            ).to have_been_made.once
           end
 
           it 'returns the params in the response body' do
@@ -888,19 +901,27 @@ RSpec.describe 'v3 service credential bindings' do
       context 'when the service allows bindings to be fetched' do
         before do
           instance.service.update(bindings_retrievable: true)
+          stub_param_broker_request_for_binding(binding, binding_params)
         end
 
-        context 'when the broker returns params' do
-          before do
-            stub_param_broker_request_for_binding(binding, binding_params)
-          end
+        it 'sends a request to the broker including the identity header' do
+          api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
 
-          it 'returns the params in the response body' do
-            api_call.call(admin_headers)
+          broker_binding_url = "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+          expect(
+            a_request(:get, broker_binding_url).
+              with(
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              )
+          ).to have_been_made.once
+        end
 
-            expect(last_response).to have_status_code(200)
-            expect(parsed_response).to eq(binding_params)
-          end
+        it 'returns the params in the response body' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to eq(binding_params)
         end
       end
     end
@@ -1685,10 +1706,12 @@ RSpec.describe 'v3 service credential bindings' do
         it 'sends an unbind request with the right arguments to the service broker' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+          encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
           expect(
             a_request(:delete, broker_unbind_url).
               with(
                 query: query,
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
               )
           ).to have_been_made.once
         end
@@ -1750,13 +1773,17 @@ RSpec.describe 'v3 service credential bindings' do
           it 'polls the last operation endpoint' do
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, broker_binding_last_operation_url).
-                with(query: {
+                with(
+                  query: {
                   operation: operation,
                   service_id: service_instance.service_plan.service.unique_id,
                   plan_id: service_instance.service_plan.unique_id,
-                })
+                },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                )
             ).to have_been_made.once
           end
 
@@ -1798,13 +1825,17 @@ RSpec.describe 'v3 service credential bindings' do
             Timecop.travel(Time.now + 1.minute)
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
+            encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, broker_binding_last_operation_url).
-                with(query: {
+                with(
+                  query: {
                   operation: operation,
                   service_id: service_instance.service_plan.service.unique_id,
                   plan_id: service_instance.service_plan.unique_id,
-                })
+                },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                )
             ).to have_been_made.twice
           end
 

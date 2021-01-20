@@ -116,6 +116,7 @@ each_run_block = proc do
     rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec acceptance))
     rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec request))
     rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec request))
+    rspec_config.include LifecycleSpecHelper, file_path: EscapedPath.join(%w(spec request lifecycle))
     rspec_config.include ApiDsl, type: :api
     rspec_config.include LegacyApiDsl, type: :legacy_api
 

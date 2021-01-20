@@ -283,12 +283,8 @@ module VCAP::CloudController
 
               it 'return an error that a service binding is being deleted asynchronously' do
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
-                  expect(err.underlying_errors).to match_array(
-                    [
-                      AppDelete::AsyncBindingDeletionsTriggered.new(
-                        "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
-                      )
-                    ]
+                  expect(err.underlying_errors.map(&:message)).to contain_exactly(
+                    "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
                   )
                 end
               end
@@ -311,15 +307,9 @@ module VCAP::CloudController
 
               it 'returns some errors describing that the service bindings are being deleted asynchronously' do
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
-                  expect(err.underlying_errors).to match_array(
-                    [
-                      AppDelete::AsyncBindingDeletionsTriggered.new(
+                  expect(err.underlying_errors.map(&:message)).to contain_exactly(
+                    "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress.",
                         "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
-                      ),
-                      AppDelete::AsyncBindingDeletionsTriggered.new(
-                        "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress."
-                      )
-                    ]
                   )
                 end
               end
@@ -327,14 +317,22 @@ module VCAP::CloudController
           end
 
           context 'when service binding delete returns errors' do
+            let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+            let!(:binding2) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+
             before do
-              allow_any_instance_of(ServiceBindingDelete).to receive(:delete).and_return([[StandardError.new('first'), StandardError.new('second')], []])
+              binding_delete_action = V3::ServiceCredentialBindingDelete
+              call_number = 0
+              allow_any_instance_of(binding_delete_action).to receive(:delete) do
+                call_number += 1
+                raise StandardError.new("error #{call_number}")
+              end
             end
 
             it 'raises the first error in the list' do
               expect {
                 app_delete.delete(app_dataset)
-              }.to raise_error(StandardError, 'first')
+              }.to raise_error(StandardError, 'error 1')
             end
           end
         end

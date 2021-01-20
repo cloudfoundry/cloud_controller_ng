@@ -8,7 +8,8 @@ module VCAP::CloudController
       subject(:action) { described_class.new(user_audit_info, audit_hash) }
 
       let(:audit_hash) { { some_info: 'some_value' } }
-      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: '100_000') }
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:binding_details) {}
