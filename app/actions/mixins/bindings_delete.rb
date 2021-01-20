@@ -10,13 +10,13 @@ module VCAP::CloudController
 
       def delete_bindings(bindings, user_audit_info:)
         type = nil
-        action = nil
+        binding_delete_action = nil
 
         bindings.each_with_object([]) do |binding, errors|
           type ||= DeleteServiceBindingFactory.type_of(binding)
-          action ||= DeleteServiceBindingFactory.action(type, user_audit_info)
+          binding_delete_action ||= DeleteServiceBindingFactory.action(type, user_audit_info)
 
-          result = action.delete(binding)
+          result = binding_delete_action.delete(binding)
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info: user_audit_info)
             Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable

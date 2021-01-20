@@ -321,8 +321,9 @@ module VCAP::CloudController
             let!(:binding2) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
 
             before do
+              binding_delete_action = V3::ServiceCredentialBindingDelete
               call_number = 0
-              allow_any_instance_of(V3::ServiceBindingDelete).to receive(:delete) do
+              allow_any_instance_of(binding_delete_action).to receive(:delete) do
                 call_number += 1
                 raise StandardError.new("error #{call_number}")
               end
