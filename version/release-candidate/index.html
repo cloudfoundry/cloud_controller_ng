@@ -655,8 +655,8 @@ or <code class="prettyprint">/v3/service_instances?fields[space.organization]=na
          </span><span class="p">},</span><span class="w">
          </span><span class="p">{</span><span class="w">
             </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00b76d5c-5176-4cbc-be5d-0bd76363dca9"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"space2"</span><span class="w">
-            </span><span class="s2">"relationships"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"space2"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b56fbd01-296b-442b-8faf-a559aebf985e"</span><span class="w">
@@ -32137,7 +32137,7 @@ needed.</p>
 deliberately disallowed. Instead, clients are encouraged to think more carefully
 about which information they need and to fetch that information with
 multiple API calls and/or by making use of the <a href="#including-associated-resources"><code class="prettyprint">include</code>
-parameter</a> on certain endpoints.</p>
+parameter</a> or <a href="#fields">the <code class="prettyprint">fields</code> parameter</a> on certain endpoints.</p>
 
 <p>In V2, summary endpoints provided a way to fetch all resources associated with a
 parent resource. In V3, fetch the summary though the associated resource and
@@ -32148,11 +32148,101 @@ filter by the parent resource. See below for examples of summaries in V3.</p>
 <ul>
 <li>To fetch all apps in a space, use <code class="prettyprint">GET /v3/apps?space_guids=&lt;space-guid&gt;</code>.
 Passing <code class="prettyprint">include=space</code> will include the space resource in the response body.</li>
+<li>To fetch all service offerings in a space use <code class="prettyprint">GET
+/v3/service_offerings?space_guids=&lt;space-guid&gt;</code>. Use the
+experimental <code class="prettyprint">fields</code> parameter to include related information in the response
+body.</li>
 <li>To fetch all service instances in a space use <code class="prettyprint">GET
 /v3/service_instances?space_guids=&lt;space-guid&gt;</code>. Use the
 experimental <code class="prettyprint">fields</code> parameter to include related information in the response
 body.</li>
 </ul>
+
+<h5 id="replacing-the-space-summary-response-for-service-instances">Replacing the space summary response for service instances</h5>
+
+<p>Similar fields to what <code class="prettyprint">/v2/spaces/:guid/summary</code> was offering for services are available from v3 endpoints.</p>
+
+<p>The table below describes the query parameters needed to retrieve some of those fields using <code class="prettyprint">/v3/service_instances</code> endpoint.
+Same query parameters are available on the request for a single resource.</p>
+
+<table><thead>
+<tr>
+<th><strong>V2 summary fields</strong></th>
+<th><strong>V3 query</strong></th>
+<th><strong>V3 response fields</strong></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>services[].service_plan.guid</td>
+<td>fields[service_plan]=guid</td>
+<td>resources[].included.service_plans[].guid</td>
+</tr>
+<tr>
+<td>services[].service_plan.name</td>
+<td>fields[service_plan]=name</td>
+<td>resources[].included.service_plans[].name</td>
+</tr>
+<tr>
+<td>services[].service_plan.service.guid</td>
+<td>fields[service_plan.service_offering]=guid</td>
+<td>resources[].included.service_offerings[].guid</td>
+</tr>
+<tr>
+<td>services[].service_plan.service.label</td>
+<td>fields[service_plan.service_offering]=name</td>
+<td>resources[].included.service_offerings[].name</td>
+</tr>
+<tr>
+<td>services[].service_broker_name</td>
+<td>fields[service_plan.service_offering.service_broker]=name</td>
+<td>resources[].included.service_brokers[].name</td>
+</tr>
+<tr>
+<td>shared_from.space_guid</td>
+<td>fields[space]=guid</td>
+<td>resources[].included.spaces[].guid</td>
+</tr>
+<tr>
+<td>shared_from.space_name</td>
+<td>fields[space]=name</td>
+<td>resources[].included.spaces[].name</td>
+</tr>
+<tr>
+<td>shared_from.organization_name</td>
+<td>fields[space.organization]=name</td>
+<td>resources[].included.organizations[].name</td>
+</tr>
+</tbody></table>
+
+<p>The table below describes the query parameters needed to retrieve the sharing information using <code class="prettyprint">/v3/service_instances/:guid/relationships/shared_spaces</code> endpoint.</p>
+
+<table><thead>
+<tr>
+<th><strong>V2 summary fields</strong></th>
+<th><strong>V3 query</strong></th>
+<th><strong>V3 response fields</strong></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>shared_to.space_guid</td>
+<td>fields[space]=guid</td>
+<td>included.spaces[].guid</td>
+</tr>
+<tr>
+<td>shared_to.space_name</td>
+<td>fields[space]=name</td>
+<td>included.spaces[].name</td>
+</tr>
+<tr>
+<td>shared_to.organization_name</td>
+<td>fields[space.organization]=name</td>
+<td>included.organizations[].name</td>
+</tr>
+</tbody></table>
+
+<p>The existing <code class="prettyprint">bound_app_count</code> field can be found by using the <a href="#get-usage-summary-in-shared-spaces">usage summary endpoint</a></p>
+
+<p>Read more about <a href="#fields">the <code class="prettyprint">fields</code> parameter</a>.</p>
 
 <h4 id="replacing-the-user-summary-endpoint">Replacing the user summary endpoint</h4>
 
