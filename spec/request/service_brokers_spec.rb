@@ -527,6 +527,11 @@ RSpec.describe 'V3 service brokers' do
             end
           end
         end
+
+        it_behaves_like 'Permissions when organization is suspended' do
+          let(:expected_codes) {}
+          let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
+        end
       end
     end
 
@@ -1053,6 +1058,11 @@ RSpec.describe 'V3 service brokers' do
           end
         end
       end
+
+      it_behaves_like 'Permissions when organization is suspended' do
+        let(:expected_codes) {}
+        let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
+      end
     end
 
     context 'when job succeeds with warnings' do
@@ -1384,6 +1394,17 @@ RSpec.describe 'V3 service brokers' do
             Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 202 }
               h['space_developer'] = { code: 202 }
+              h['org_auditor'] = { code: 404 }
+              h['org_billing_manager'] = { code: 404 }
+              h['no_role'] = { code: 404 }
+            end
+          }
+        end
+
+        it_behaves_like 'Permissions when organization is suspended' do
+          let(:expected_codes) {
+            Hash.new(code: 403).tap do |h|
+              h['admin'] = { code: 202 }
               h['org_auditor'] = { code: 404 }
               h['org_billing_manager'] = { code: 404 }
               h['no_role'] = { code: 404 }
