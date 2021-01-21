@@ -106,6 +106,15 @@ class ServiceRouteBindingsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
+
+    Repositories::ServiceGenericBindingEventRepository.
+      new(Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).
+      record_update(
+        @route_binding,
+        user_audit_info,
+        message.audit_hash
+      )
+
     render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
   end
 

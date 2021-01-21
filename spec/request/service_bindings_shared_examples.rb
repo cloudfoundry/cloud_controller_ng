@@ -2,11 +2,24 @@
 # - api_call (lambda)
 # - guid
 # - update_request_body
-RSpec.shared_examples 'metadata update for service binding' do
+# - binding_name
+RSpec.shared_examples 'metadata update for service binding' do |audit_name|
   it 'can update labels and annotations' do
     api_call.call(admin_headers)
     expect(last_response).to have_status_code(200)
     expect(parsed_response.deep_symbolize_keys).to include(update_request_body)
+  end
+
+  it 'logs an audit event' do
+    api_call.call(admin_headers)
+
+    event = VCAP::CloudController::Event.find(type: "audit.#{audit_name}.update")
+    expect(event).not_to be_nil
+    expect(event.actee).to eq(binding.guid)
+    expect(event.actee_name).to eq(binding_name)
+    expect(event.data).to include({
+      'request' => update_request_body.with_indifferent_access
+    })
   end
 
   context 'when some labels are invalid' do

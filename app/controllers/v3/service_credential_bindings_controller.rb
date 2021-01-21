@@ -77,6 +77,19 @@ class ServiceCredentialBindingsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     updated_binding = TransactionalMetadataUpdate.update(service_credential_binding, message)
+
+    type = if service_credential_binding.is_a?(ServiceKey)
+             Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING
+           else
+             Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+           end
+
+    Repositories::ServiceGenericBindingEventRepository.new(type).record_update(
+      service_credential_binding,
+      user_audit_info,
+      message.audit_hash
+    )
+
     render status: :ok, json: Presenters::V3::ServiceCredentialBindingPresenter.new(updated_binding).to_hash
   end
 
