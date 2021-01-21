@@ -838,6 +838,22 @@ query param can be used with a single resource or a list of resources.</p>
 <td><code class="prettyprint">space.organization</code>, <code class="prettyprint">service_offering</code></td>
 </tr>
 <tr>
+<td><strong>service_credential_bindings</strong></td>
+<td><code class="prettyprint">app</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
+<td><strong>service_credential_bindings/[:guid]</strong></td>
+<td><code class="prettyprint">app</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
+<td><strong>service_route_bindings</strong></td>
+<td><code class="prettyprint">route</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
+<td><strong>service_route_bindings/[:guid]</strong></td>
+<td><code class="prettyprint">route</code>, <code class="prettyprint">service_instance</code></td>
+</tr>
+<tr>
 <td><strong>spaces</strong></td>
 <td><code class="prettyprint">organization</code></td>
 </tr>
@@ -32303,7 +32319,8 @@ droplet for an app</li>
 
 <p>Creation/Deletion of these bindings is therefore done via that endpoint in v3.</p>
 
-<p>This resource also supports metadata both in create and update requests.</p>
+<p>This resource also supports metadata both in create and update requests.
+Audit event of type <code class="prettyprint">audit.service_route_binding.update</code> is recorded when metadata update is requested.</p>
 
 <p>It has a nested resource for fetching binding parameters from the broker. Parameters are only set during creation.</p>
 
@@ -32703,6 +32720,8 @@ If the type is <code class="prettyprint">app</code> the object will contain a re
 
 <p>Audit events of type <code class="prettyprint">audit.service_key.start_create</code> and  <code class="prettyprint">audit.service_key.start_delete</code> have been added to track when 
 an async create or delete <code class="prettyprint">key</code> service credential binding operation has started. </p>
+
+<p>Audit events of type <code class="prettyprint">audit.service_binding.update</code> and <code class="prettyprint">audit.service_key.update</code> are recorded when metadata update is requested. </p>
 
 <p>Read more about the <a href="#service-credential-binding">service credential binding resource</a>.</p>
 <h3 id="service-offerings-in-v3">Service Offerings in V3</h3>
