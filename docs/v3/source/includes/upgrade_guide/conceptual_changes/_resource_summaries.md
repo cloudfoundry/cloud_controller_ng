@@ -22,7 +22,9 @@ filter by the parent resource. See below for examples of summaries in V3.
 - To fetch all apps in a space, use `GET /v3/apps?space_guids=<space-guid>`.
   Passing `include=space` will include the space resource in the response body.
 - To fetch all service offerings in a space use `GET
-  /v3/service_offerings?space_guids=<space-guid>`. 
+  /v3/service_offerings?space_guids=<space-guid>`. Use the
+  experimental `fields` parameter to include related information in the response
+  body.
 - To fetch all service instances in a space use `GET
   /v3/service_instances?space_guids=<space-guid>`. Use the
   experimental `fields` parameter to include related information in the response
@@ -30,10 +32,10 @@ filter by the parent resource. See below for examples of summaries in V3.
   
 ##### Replacing the space summary response for service instances
 
-Similar fields to what `/v2/spaces/:guid/summary` was offering for services are available in using endpoint in v3.
+Similar fields to what `/v2/spaces/:guid/summary` was offering for services are available from v3 endpoints.
 
-The table below describes the query parameters needed to retrieve some of those fields using `/v3/service_instances` endpoint. 
-Same queries are available on request for single resource.
+The table below describes the query parameters needed to retrieve some of those fields using `/v3/service_instances` endpoint.
+Same query parameters are available on the request for a single resource.
 
 |**V2 summary fields**|**V3 query**|**V3 response fields**|
 |---|---|---|
