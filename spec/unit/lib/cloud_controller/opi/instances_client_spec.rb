@@ -12,7 +12,12 @@ RSpec.describe(OPI::InstancesClient) do
     )
   end
 
-  let(:process) { double(guid: 'my-process-guid', version: 'my-version-guid') }
+  let(:process) { VCAP::CloudController::ProcessModel.make(
+    guid: 'my-process-guid',
+    version: 'my-version-guid',
+    state: VCAP::CloudController::ProcessModel::STARTED
+  )
+  }
 
   context 'when request executes successfully' do
     subject(:actual_lrps) { client.lrp_instances(process) }
@@ -113,20 +118,21 @@ RSpec.describe(OPI::InstancesClient) do
       end
     end
 
-    context 'when there are no running instances' do
+    context 'when there is an error' do
       let(:response_body) do
-        { error: 'no-running-instances' }.to_json
+        { error: 'some-error' }.to_json
       end
 
-      it 'raises NoRunningInstances error' do
-        expect { client.lrp_instances(process) }.to raise_error(CloudController::Errors::NoRunningInstances)
+      it 'raises an error' do
+        allow(Kernel).to receive(:sleep)
+        expect { client.lrp_instances(process) }.to raise_error(OPI::InstancesClient::Error)
         expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(5)
       end
     end
 
-    context 'when the instances are not initially availalbe' do
+    context 'when the instances are not initially available' do
       let(:error_response_body) do
-        { error: 'no-running-instances' }.to_json
+        { error: 'errrrrrr' }.to_json
       end
 
       before do
@@ -138,8 +144,31 @@ RSpec.describe(OPI::InstancesClient) do
       end
 
       it 'should succeed after several retries' do
+        allow(Kernel).to receive(:sleep)
         client.lrp_instances(process)
         expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(4)
+      end
+
+      context 'when the process is stopped' do
+        let(:process) { VCAP::CloudController::ProcessModel.make(state: VCAP::CloudController::ProcessModel::STOPPED) }
+
+        it 'raises an error' do
+          expect { client.lrp_instances(process) }.to raise_error(OPI::InstancesClient::Error)
+          expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(1)
+        end
+      end
+    end
+
+    context 'when the process is stopped and no instances are found' do
+      let(:process) { VCAP::CloudController::ProcessModel.make(state: VCAP::CloudController::ProcessModel::STOPPED) }
+      let(:response_body) do
+        { error: 'failed to get instances for app: not found' }.to_json
+      end
+
+      it 'does not error, retry, or wait' do
+        expect(Kernel).not_to receive(:sleep)
+        client.lrp_instances(process)
+        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(1)
       end
     end
   end
