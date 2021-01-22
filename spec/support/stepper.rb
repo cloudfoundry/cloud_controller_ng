@@ -102,7 +102,7 @@ class Stepper
   MAX_RETRIES = 1500
   attr_reader :errors
 
-  def initialize(example, random: Random::DEFAULT, debug: false)
+  def initialize(example, random: Random.new, debug: false)
     @example = example
     @defined_orders = []
     @starts = []
