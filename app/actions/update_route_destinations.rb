@@ -116,6 +116,7 @@ module VCAP::CloudController
                             end
           end
 
+          process.skip_process_version_update = true
           ProcessRouteHandler.new(process).update_route_information(
             perform_validation: false,
             updated_ports: updated_ports

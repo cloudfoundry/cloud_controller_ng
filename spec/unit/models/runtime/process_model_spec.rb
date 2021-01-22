@@ -1218,6 +1218,11 @@ module VCAP::CloudController
             process.health_check_http_endpoint = '/two'
             expect { process.save }.not_to change(process, :version)
           end
+
+          it 'should not update the version for changes to the port' do
+            process.ports = [8081]
+            expect { process.save }.not_to change(process, :version)
+          end
         end
 
         it 'should update the version when changing :memory' do
