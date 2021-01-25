@@ -9,6 +9,13 @@ module VCAP::CloudController
       class ServicePlanPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super + [:service_plan_visibilities, { service: :service_broker }]
+          end
+        end
+
         def to_hash
           hash = {
             guid: service_plan.guid,

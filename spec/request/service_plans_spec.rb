@@ -607,6 +607,18 @@ RSpec.describe 'V3 service plans' do
       end
     end
 
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::ServicePlanListFetcher).to receive(:fetch).with(
+          an_instance_of(VCAP::CloudController::ServicePlansListMessage),
+          hash_including(eager_loaded_associations: [:labels, :annotations, { service: :service_broker }])
+        ).and_call_original
+
+        get '/v3/service_plans', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::ServicePlan }
       let(:api_call) do
