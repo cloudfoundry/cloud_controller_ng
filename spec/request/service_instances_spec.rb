@@ -738,6 +738,10 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
+    it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
+      let(:expected_codes) {}
+    end
+
     context 'when service_instance_creation flag is disabled' do
       before do
         VCAP::CloudController::FeatureFlag.create(name: 'service_instance_creation', enabled: false)
@@ -756,30 +760,6 @@ RSpec.describe 'V3 service instances' do
       end
 
       it 'does not impact admins ability create services' do
-        api_call.call(admin_headers)
-        expect(last_response).to have_status_code(201)
-      end
-    end
-
-    context 'when the target organization is suspended' do
-      before do
-        org.status = VCAP::CloudController::Organization::SUSPENDED
-        org.save
-      end
-
-      it 'makes non-admins unable to create any type of service' do
-        api_call.call(space_dev_headers)
-        expect(last_response).to have_status_code(403)
-        expect(parsed_response['errors']).to include(
-          include({
-            'detail' => 'You are not authorized to perform the requested action',
-            'title' => 'CF-NotAuthorized',
-            'code' => 10003,
-          })
-        )
-      end
-
-      it 'does not impact admins ability to create services' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(201)
       end
@@ -1511,6 +1491,11 @@ RSpec.describe 'V3 service instances' do
           h['org_auditor'] = { code: 404 }
         end
       end
+    end
+
+    it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
+      let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
+      let(:expected_codes) {}
     end
 
     context 'service instance does not exist' do
@@ -2575,17 +2560,21 @@ RSpec.describe 'V3 service instances' do
         }
       }
 
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = { code: 204 }
-          h['admin'] = { code: 204 }
-          h['no_role'] = { code: 404 }
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['space_developer'] = { code: 204 }
+            h['admin'] = { code: 204 }
+            h['no_role'] = { code: 404 }
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+          end
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
+        let(:expected_codes) {}
+      end
     end
 
     context 'user provided service instances' do
