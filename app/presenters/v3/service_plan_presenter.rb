@@ -83,12 +83,16 @@ module VCAP::CloudController
         end
 
         def parse_schema(schema)
+          return {} unless schema
+
           { parameters: JSON.parse(schema) }
         rescue JSON::ParserError
           {}
         end
 
         def parse(json)
+          return {} unless json
+
           JSON.parse(json).deep_symbolize_keys
         rescue JSON::ParserError
           {}
