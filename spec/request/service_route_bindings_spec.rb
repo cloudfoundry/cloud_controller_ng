@@ -893,6 +893,12 @@ RSpec.describe 'v3 service route bindings' do
             end
           end
         end
+
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
+            let(:expected_codes) {}
+          end
+        end
       end
 
       context 'service offering not configured for route binding' do
@@ -973,15 +979,23 @@ RSpec.describe 'v3 service route bindings' do
 
       it_behaves_like 'create route binding'
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['admin'] = { code: 201 }
-            h['space_developer'] = { code: 201 }
+      context 'permissions' do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) do
+            Hash.new(code: 403).tap do |h|
+              h['admin'] = { code: 201 }
+              h['space_developer'] = { code: 201 }
 
-            h['no_role'] = { code: 422 }
-            h['org_auditor'] = { code: 422 }
-            h['org_billing_manager'] = { code: 422 }
+              h['no_role'] = { code: 422 }
+              h['org_auditor'] = { code: 422 }
+              h['org_billing_manager'] = { code: 422 }
+            end
+          end
+        end
+
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
+            let(:expected_codes) {}
           end
         end
       end

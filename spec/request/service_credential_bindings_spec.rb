@@ -1103,6 +1103,12 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
+            let(:expected_codes) {}
+          end
+        end
+
         it_behaves_like 'validation of credential binding'
 
         describe 'a successful creation' do
@@ -1226,6 +1232,12 @@ RSpec.describe 'v3 service credential bindings' do
             end
           end
 
+          context 'when the organization is suspended' do
+            it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
+              let(:expected_codes) {}
+            end
+          end
+
           context 'users in the space where the SI has been shared to' do
             let(:orginal_org) { VCAP::CloudController::Organization.make }
             let(:original_space) { VCAP::CloudController::Space.make(organization: orginal_org) }
@@ -1327,6 +1339,12 @@ RSpec.describe 'v3 service credential bindings' do
                 h['org_auditor'] = { code: 422 }
                 h['no_role'] = { code: 422 }
               end
+            end
+          end
+
+          context 'when the organization is suspended' do
+            it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
+              let(:expected_codes) {}
             end
           end
         end
@@ -1579,6 +1597,12 @@ RSpec.describe 'v3 service credential bindings' do
       it_behaves_like 'metadata update for service binding', 'service_key'
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the organization is suspended' do
+        it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
+          let(:expected_codes) {}
+        end
+      end
     end
 
     context 'app credential binding' do
@@ -1591,6 +1615,12 @@ RSpec.describe 'v3 service credential bindings' do
       it_behaves_like 'metadata update for service binding', 'service_binding'
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the organization is suspended' do
+        it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
+          let(:expected_codes) {}
+        end
+      end
     end
   end
 
@@ -1959,6 +1989,12 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
+            let(:expected_codes) {}
+          end
+        end
       end
 
       context 'app bindings' do
@@ -2014,6 +2050,12 @@ RSpec.describe 'v3 service credential bindings' do
                 h['admin'] = h['space_developer'] = { code: 202 }
                 h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
               end
+            end
+          end
+
+          context 'when the organization is suspended' do
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
+              let(:expected_codes) {}
             end
           end
         end

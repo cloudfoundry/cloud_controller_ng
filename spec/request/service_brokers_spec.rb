@@ -528,8 +528,18 @@ RSpec.describe 'V3 service brokers' do
           end
         end
 
-        it_behaves_like 'Permissions when organization is suspended' do
-          let(:expected_codes) {}
+        it_behaves_like 'permissions for update endpoint when organization is suspended', 202 do
+          let(:expected_codes) do
+            Hash.new(code: 422).tap do |h|
+              h['admin'] = { code: 202 }
+              h['admin_read_only'] = { code: 403 }
+              h['global_auditor'] = { code: 403 }
+              h['space_developer'] = { code: 403 }
+              h['space_auditor'] = { code: 403 }
+              h['space_manager'] = { code: 403 }
+              h['org_manager'] = { code: 403 }
+            end
+          end
           let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
         end
       end
@@ -1059,7 +1069,7 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
-      it_behaves_like 'Permissions when organization is suspended' do
+      it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
         let(:expected_codes) {}
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
       end
@@ -1401,15 +1411,8 @@ RSpec.describe 'V3 service brokers' do
           }
         end
 
-        it_behaves_like 'Permissions when organization is suspended' do
-          let(:expected_codes) {
-            Hash.new(code: 403).tap do |h|
-              h['admin'] = { code: 202 }
-              h['org_auditor'] = { code: 404 }
-              h['org_billing_manager'] = { code: 404 }
-              h['no_role'] = { code: 404 }
-            end
-          }
+        it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
+          let(:expected_codes) {}
         end
       end
 
