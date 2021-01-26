@@ -171,6 +171,21 @@ RSpec.describe(OPI::InstancesClient) do
         expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(1)
       end
     end
+
+    context 'when the process has 0 desired instances and no actual instances are found' do
+      let(:process) do
+        VCAP::CloudController::ProcessModel.make(state: VCAP::CloudController::ProcessModel::STARTED, instances: 0)
+      end
+      let(:response_body) do
+        { error: 'failed to get instances for app: not found' }.to_json
+      end
+
+      it 'does not error, retry, or wait' do
+        expect(Kernel).not_to receive(:sleep)
+        client.lrp_instances(process)
+        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(1)
+      end
+    end
   end
 
   context '#desired_lrp_instance' do
