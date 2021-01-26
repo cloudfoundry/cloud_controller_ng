@@ -80,7 +80,6 @@ class ServiceInstancesV3Controller < ApplicationController
 
     space = Space.first(guid: message.space_guid)
     unprocessable_space! unless space && can_read_space?(space)
-    unauthorized! if space&.in_suspended_org? && !admin?
     unauthorized! unless can_write_space?(space)
 
     case message.type
