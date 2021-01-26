@@ -40,7 +40,7 @@ module VCAP::CloudController
         expect(dataset.all).to contain_exactly(msi_2, ssi)
       end
 
-      it 'eager loads the specified resources for the processes' do
+      it 'eager loads the specified resources' do
         dataset = fetcher.fetch(message, omniscient: true, eager_loaded_associations: [:labels])
 
         expect(dataset.all.first.associations.key?(:labels)).to be true

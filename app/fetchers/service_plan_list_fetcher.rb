@@ -3,8 +3,8 @@ require 'fetchers/base_service_list_fetcher'
 module VCAP::CloudController
   class ServicePlanListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_space_guids: [], readable_org_guids: [])
-        dataset = ServicePlan.dataset
+      def fetch(message, omniscient: false, readable_space_guids: [], readable_org_guids: [], eager_loaded_associations: [])
+        dataset = ServicePlan.dataset.eager(eager_loaded_associations)
 
         dataset = join_tables(dataset, message, omniscient)
 
