@@ -1,3 +1,4 @@
+require 'messages/service_credential_binding_create_message'
 module VCAP::CloudController
   class ServiceCredentialBindingCreateMessage < MetadataBaseMessage
     register_allowed_keys [:type, :name, :relationships, :parameters]
