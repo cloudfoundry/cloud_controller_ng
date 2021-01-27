@@ -9,6 +9,13 @@ module VCAP::CloudController
       class ServiceOfferingPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super + [:service_broker]
+          end
+        end
+
         def to_hash
           metadata = broker_metadata
 
@@ -62,6 +69,8 @@ module VCAP::CloudController
         end
 
         def broker_metadata
+          return {} unless service_offering.extra
+
           JSON.parse(service_offering.extra)
         rescue JSON::ParserError
           {}

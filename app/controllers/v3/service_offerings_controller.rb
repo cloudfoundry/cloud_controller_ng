@@ -21,14 +21,22 @@ class ServiceOfferingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if !current_user
-                ServiceOfferingListFetcher.fetch(message)
+                ServiceOfferingListFetcher.fetch(
+                  message,
+                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources
+                )
               elsif permission_queryer.can_read_globally?
-                ServiceOfferingListFetcher.fetch(message, omniscient: true)
+                ServiceOfferingListFetcher.fetch(
+                  message,
+                  omniscient: true,
+                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                )
               else
                 ServiceOfferingListFetcher.fetch(
                   message,
                   readable_org_guids: permission_queryer.readable_org_guids,
                   readable_space_guids: permission_queryer.readable_space_scoped_space_guids,
+                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
                 )
               end
 
