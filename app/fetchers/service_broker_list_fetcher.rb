@@ -4,13 +4,13 @@ require 'fetchers/label_selector_query_generator'
 module VCAP::CloudController
   class ServiceBrokerListFetcher < BaseListFetcher
     class << self
-      def fetch(message:, permitted_space_guids: nil)
+      def fetch(message:, permitted_space_guids: nil, eager_loaded_associations: [])
         if permitted_space_guids
           dataset = ServiceBroker.dataset.where(Sequel[:service_brokers][:space_id] => spaces_from(permitted_space_guids))
           return filter(message, dataset)
         end
 
-        dataset = ServiceBroker.dataset
+        dataset = ServiceBroker.dataset.eager(eager_loaded_associations)
         filter(message, dataset)
       end
 

@@ -315,6 +315,19 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::ServiceBrokerListFetcher).to receive(:fetch).with(
+          hash_including(
+            eager_loaded_associations: [:labels, :annotations]
+          )
+        ).and_call_original
+
+        get '/v3/service_brokers', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     def expect_filtered_brokers(filter, list)
       get("/v3/service_brokers?#{filter}", {}, admin_headers)
 
