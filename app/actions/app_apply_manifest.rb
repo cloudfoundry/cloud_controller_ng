@@ -2,6 +2,8 @@ require 'actions/process_create'
 require 'actions/process_scale'
 require 'actions/process_update'
 require 'actions/service_binding_create'
+require 'actions/service_credential_binding_app_create'
+require 'actions/service_credential_binding_delete'
 require 'actions/manifest_route_update'
 require 'cloud_controller/strategies/manifest_strategy'
 require 'cloud_controller/app_manifest/manifest_route'
@@ -12,7 +14,7 @@ module VCAP::CloudController
     class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
     class ServiceBindingError < StandardError; end
-
+    class ServiceBrokerRespondedAsyncWhenNotAllowed < StandardError; end
     SERVICE_BINDING_TYPE = 'app'.freeze
 
     def initialize(user_audit_info)
@@ -136,21 +138,50 @@ module VCAP::CloudController
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
-      action = ServiceBindingCreate.new(@user_audit_info, manifest_triggered: true)
+      action = V3::ServiceCredentialBindingAppCreate.new(@user_audit_info, {})
       manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
         next if binding_exists?(service_instance, app)
 
         begin
-          action.create(
-            app,
+          binding = action.precursor(
             service_instance,
-            ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
-            volume_services_enabled?,
-            false
-          )
+            app: app,
+            volume_mount_services_enabled: volume_services_enabled?,
+            message: ServiceCredentialAppBindingCreateMessage.new(
+              type: SERVICE_BINDING_TYPE,
+              parameters: manifest_service_binding.parameters,
+              relationships: {
+                service_instance: {
+                  data: {
+                    guid: service_instance.guid
+                  }
+                },
+                app: {
+                  data: {
+                    guid: app.guid
+                  }
+                }
+              }
+            ))
+
+          begin
+            result = action.bind(binding)
+            if result[:async]
+              raise ServiceBrokerRespondedAsyncWhenNotAllowed
+            end
+          rescue ServiceBrokerRespondedAsyncWhenNotAllowed,
+            V3::ServiceBindingCreate::BindingNotRetrievable
+
+            raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously, but async bindings are not supported.')
+          end
         rescue => e
+          if binding
+            deleteAction = V3::ServiceCredentialBindingDelete.new(:credential, @user_audit_info)
+            deleteAction.delete(binding)
+          end
+
           error_message = "For service '#{service_instance.name}': #{e.message}"
           raise ServiceBindingError.new(error_message)
         end
