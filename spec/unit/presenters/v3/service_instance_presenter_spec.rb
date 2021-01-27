@@ -101,6 +101,9 @@ module VCAP::CloudController::Presenters::V3
             },
             service_route_bindings: {
               href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
+            },
+            shared_spaces: {
+              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces"
             }
           }
         })

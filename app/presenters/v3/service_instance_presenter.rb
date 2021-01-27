@@ -95,6 +95,9 @@ module VCAP::CloudController
               },
               parameters: {
                 href: url_builder.build_url(path: "/v3/service_instances/#{service_instance.guid}/parameters")
+              },
+              shared_spaces: {
+                href: url_builder.build_url(path: "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces")
               }
             }
           }
