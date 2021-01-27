@@ -38,9 +38,9 @@ module VCAP::CloudController
 
       def invalid_value_error!(error)
         if error.wrapped_exception.is_a?(Mysql2::Error) && error.wrapped_exception.error_number == MYSQL_INVALID_VALUE_ERROR
-          if /column 'name'/ =~ error.message
+          if /column.*name/ =~ error.message
             error!('Security group name contains invalid characters.')
-          elsif /column 'rules'/ =~ error.message
+          elsif /column.*rules/ =~ error.message
             error!('Security group rules contain invalid characters.')
           end
         end

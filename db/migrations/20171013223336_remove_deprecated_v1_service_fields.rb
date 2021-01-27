@@ -1,7 +1,9 @@
 Sequel.migration do
   up do
     alter_table :services do
-      drop_column :provider
+      if @db.class.to_s.include? 'Mysql'
+        drop_column :provider
+      end
       drop_column :url
       drop_column :version
     end

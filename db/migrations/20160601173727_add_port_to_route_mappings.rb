@@ -5,8 +5,9 @@ Sequel.migration do
     alter_table :route_mappings do
       if @db.class.to_s.include? 'Mysql'
         drop_constraint(:app_guid, type: :unique)
+      else
+        drop_constraint(:route_mappings_app_guid_route_guid_process_type_key)
       end
-      drop_constraint(:route_mappings_app_guid_route_guid_process_type_key)
       add_unique_constraint [:app_guid, :route_guid, :process_type, :app_port], name: :route_mappings_app_guid_route_guid_process_type_app_port_key
     end
   end
