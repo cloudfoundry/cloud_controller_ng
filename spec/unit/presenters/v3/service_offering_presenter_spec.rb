@@ -200,6 +200,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
         end
       end
     end
+
     context 'when `metadata` is not set' do
       let(:extra) { nil }
 

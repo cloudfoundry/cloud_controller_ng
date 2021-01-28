@@ -3,34 +3,16 @@ require 'fetchers/base_service_list_fetcher'
 module VCAP::CloudController
   class ServiceOfferingListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_space_guids: [], readable_org_guids: [])
-        dataset = Service.dataset
-
-        dataset = join_tables(dataset, message, omniscient)
-
+      def fetch(message, omniscient: false, readable_space_guids: [], readable_org_guids: [], eager_loaded_associations: [])
         dataset = select_readable(
-          dataset,
+          Service.dataset.eager(eager_loaded_associations),
+          message,
           omniscient: omniscient,
           readable_org_guids: readable_org_guids,
           readable_space_guids: readable_space_guids,
         )
 
-        if message.requested?(:space_guids)
-          dataset = filter_spaces(
-            dataset,
-            filtered_space_guids: message.space_guids,
-            readable_space_guids: readable_space_guids,
-            omniscient: omniscient,
-          )
-        end
-
-        dataset = filter_orgs(dataset, message.organization_guids) if message.requested?(:organization_guids)
-
-        dataset = filter(message, dataset)
-
-        dataset.
-          select_all(:services).
-          distinct
+        filter(message, dataset).select_all(:services).distinct
       end
 
       def join_tables(dataset, message, omniscient)

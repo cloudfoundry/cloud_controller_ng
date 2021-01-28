@@ -5,6 +5,7 @@ require 'messages/service_offerings_list_message'
 module VCAP::CloudController
   RSpec.describe ServiceOfferingListFetcher do
     let(:message) { ServiceOfferingsListMessage.from_params({}) }
+    let(:fetcher) { described_class }
 
     describe '#fetch' do
       context 'when there are no offerings' do
@@ -39,14 +40,14 @@ module VCAP::CloudController
 
         context 'when no authorization is specified' do
           it 'only fetches public plans' do
-            service_offerings = described_class.fetch(message).all
+            service_offerings = fetcher.fetch(message).all
             expect(service_offerings).to contain_exactly(public_offering_1, public_offering_2)
           end
         end
 
         context 'when the `omniscient` flag is true' do
           it 'fetches all plans' do
-            service_offerings = described_class.fetch(message, omniscient: true).all
+            service_offerings = fetcher.fetch(message, omniscient: true).all
             expect(service_offerings).to contain_exactly(
               public_offering_1,
               public_offering_2,
@@ -66,7 +67,7 @@ module VCAP::CloudController
 
         context 'when `readable_org_guids` are specified' do
           it 'includes public plans and ones for those orgs' do
-            service_offerings = described_class.fetch(
+            service_offerings = fetcher.fetch(
               message,
               readable_org_guids: [org_1.guid, org_3.guid],
               readable_space_guids: [],
@@ -84,7 +85,7 @@ module VCAP::CloudController
 
         context 'when both `readable_space_guids` and `readable_org_guids` are specified' do
           it 'includes public plans, ones for those spaces and ones for those orgs' do
-            service_offerings = described_class.fetch(
+            service_offerings = fetcher.fetch(
               message,
               readable_space_guids: [space_3.guid],
               readable_org_guids: [org_3.guid],
@@ -411,6 +412,17 @@ module VCAP::CloudController
           it 'filters the matching service offerings' do
             expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
           end
+        end
+      end
+
+      describe 'eager loading' do
+        let!(:offering) { make_public_offering }
+
+        it 'eager loads the specified resources for the processes' do
+          dataset = fetcher.fetch(message, eager_loaded_associations: [:labels])
+
+          expect(dataset.all.first.associations.key?(:labels)).to be true
+          expect(dataset.all.first.associations.key?(:annotations)).to be false
         end
       end
     end
