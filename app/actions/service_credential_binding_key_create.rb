@@ -26,11 +26,13 @@ module VCAP::CloudController
         }
 
         ServiceKey.new.tap do |b|
-          b.save_with_attributes_and_new_operation(
-            binding_details,
-            CREATE_IN_PROGRESS_OPERATION
-          )
-          MetadataUpdate.update(b, message)
+          ServiceKey.db.transaction do
+            b.save_with_attributes_and_new_operation(
+              binding_details,
+              CREATE_IN_PROGRESS_OPERATION
+            )
+            MetadataUpdate.update(b, message)
+          end
         end
       rescue Sequel::ValidationFailed => e
         key_validation_error!(

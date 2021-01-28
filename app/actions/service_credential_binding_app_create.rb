@@ -31,12 +31,14 @@ module VCAP::CloudController
         }
 
         ServiceBinding.new.tap do |b|
-          b.save_with_attributes_and_new_operation(
-            binding_details,
-            CREATE_IN_PROGRESS_OPERATION
-          )
+          ServiceBinding.db.transaction do
+            b.save_with_attributes_and_new_operation(
+              binding_details,
+              CREATE_IN_PROGRESS_OPERATION
+            )
 
-          MetadataUpdate.update(b, message)
+            MetadataUpdate.update(b, message)
+          end
         end
       rescue Sequel::ValidationFailed, Sequel::UniqueConstraintViolation => e
         already_bound! if e.message =~ /The app is already bound to the service|unique_service_binding_service_instance_guid_app_guid/
