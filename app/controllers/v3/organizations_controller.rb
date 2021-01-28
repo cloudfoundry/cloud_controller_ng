@@ -1,6 +1,7 @@
 require 'actions/organization_create'
 require 'actions/organization_update'
 require 'actions/organization_delete'
+require 'actions/role_create'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'
@@ -8,6 +9,7 @@ require 'messages/organization_update_message'
 require 'messages/organization_create_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
+require 'models/helpers/role_types'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/organization_presenter'
 require 'presenters/v3/organization_usage_summary_presenter'
@@ -47,7 +49,18 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(message, current_user)
+    org = OrganizationCreate.new(user_audit_info: user_audit_info).create(message)
+
+    if !roles.admin?
+      [
+        RoleTypes::ORGANIZATION_USER,
+        RoleTypes::ORGANIZATION_MANAGER,
+      ].each do |role|
+        RoleCreate.new(message, user_audit_info).create_organization_role(type: role,
+                                                                   user: current_user,
+                                                                   organization: org)
+      end
+    end
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e

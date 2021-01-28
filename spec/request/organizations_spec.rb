@@ -140,7 +140,7 @@ module VCAP::CloudController
             }
           )
         end
-        it 'gives the user all org roles associated with the new org' do
+        it 'gives the user org manager and org user roles associated with the new org' do
           expect {
             post '/v3/organizations', request_body, user_header
           }.to change {
@@ -149,9 +149,29 @@ module VCAP::CloudController
 
           created_org = Organization.last
           expect(OrganizationManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
-          expect(OrganizationBillingManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
-          expect(OrganizationAuditor.first(organization_id: created_org.id, user_id: user.id)).to be_present
           expect(OrganizationUser.first(organization_id: created_org.id, user_id: user.id)).to be_present
+
+          expect(created_org.users.count).to be(1)
+          expect(created_org.managers.count).to be(1)
+          expect(created_org.billing_managers.count).to be(0)
+          expect(created_org.auditors.count).to be(0)
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'when acting as an admin user' do
+        it 'does not give the user any roles associated with the new org' do
+          expect {
+            post '/v3/organizations', request_body, admin_header
+          }.to change {
+            Organization.count
+          }.by 1
+
+          created_org = Organization.last
+          expect(created_org.users.count).to be(0)
+          expect(created_org.managers.count).to be(0)
+          expect(created_org.billing_managers.count).to be(0)
+          expect(created_org.auditors.count).to be(0)
           expect(last_response.status).to eq(201)
         end
       end

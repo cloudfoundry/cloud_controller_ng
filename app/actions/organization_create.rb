@@ -5,12 +5,11 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    def initialize(perm_client:, user_audit_info:)
-      @perm_client = perm_client
+    def initialize(user_audit_info:)
       @user_audit_info = user_audit_info
     end
 
-    def create(message, user)
+    def create(message)
       org = nil
       Organization.db.transaction do
         org = VCAP::CloudController::Organization.create(
@@ -19,12 +18,6 @@ module VCAP::CloudController
         )
 
         MetadataUpdate.update(org, message)
-      end
-
-      VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.each do |role|
-        VCAP::CloudController::RoleCreate.new(message, @user_audit_info).create_organization_role(type: role,
-                                                                   user: user,
-                                                                   organization: org)
       end
 
       Repositories::OrganizationEventRepository.new.record_organization_create(org, @user_audit_info, message.audit_hash)

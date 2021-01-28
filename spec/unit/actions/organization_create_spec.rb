@@ -7,9 +7,8 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-      let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
       let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
-      subject(:org_create) { OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info) }
+      subject(:org_create) { OrganizationCreate.new(user_audit_info: user_audit_info) }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
@@ -36,7 +35,7 @@ module VCAP::CloudController
         end
 
         it 'creates a organization' do
-          organization = org_create.create(message, user)
+          organization = org_create.create(message)
 
           expect(organization.name).to eq('my-organization')
 
@@ -52,8 +51,8 @@ module VCAP::CloudController
         end
 
         it 'creates an audit event' do
-          created_org = org_create.create(message, user)
-          expect(VCAP::CloudController::Event.count).to eq(5)
+          created_org = org_create.create(message)
+          expect(VCAP::CloudController::Event.count).to eq(1)
           org_create_event = VCAP::CloudController::Event.find(type: 'audit.organization.create')
           expect(org_create_event).to exist
           expect(org_create_event.values).to include(
@@ -77,7 +76,7 @@ module VCAP::CloudController
           name: 'my-organization',
           suspended: true
         })
-        organization = org_create.create(message, user)
+        organization = org_create.create(message)
 
         expect(organization.name).to eq('my-organization')
         expect(organization.suspended?).to be true
@@ -92,7 +91,7 @@ module VCAP::CloudController
 
           message = VCAP::CloudController::OrganizationUpdateMessage.new(name: 'foobar')
           expect {
-            org_create.create(message, user)
+            org_create.create(message)
           }.to raise_error(OrganizationCreate::Error, 'blork is busted')
         end
 
@@ -106,7 +105,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = VCAP::CloudController::OrganizationUpdateMessage.new(name: name)
             expect {
-              org_create.create(message, user)
+              org_create.create(message)
             }.to raise_error(OrganizationCreate::Error, "Organization '#{name}' already exists.")
           end
         end
