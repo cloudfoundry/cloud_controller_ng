@@ -233,7 +233,7 @@ module VCAP::CloudController
               it 'should log audit start_create' do
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
-                precursor,
+                  precursor,
                 user_audit_info,
                 audit_hash,
                 manifest_triggered: false
@@ -246,7 +246,7 @@ module VCAP::CloudController
                 it 'logs an audit event with manifest triggered in true' do
                   action.bind(precursor)
                   expect(binding_event_repo).to have_received(:record_start_create).with(
-                  precursor,
+                    precursor,
                   user_audit_info,
                   audit_hash,
                   manifest_triggered: true

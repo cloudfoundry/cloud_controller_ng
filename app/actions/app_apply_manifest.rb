@@ -141,7 +141,7 @@ module VCAP::CloudController
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
-      manifest_service_bindings_message.manifest_service_bindings.each do  |manifest_service_binding|
+      manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
         binding_being_deleted!(service_instance, app)
@@ -162,7 +162,7 @@ module VCAP::CloudController
               raise ServiceBrokerRespondedAsyncWhenNotAllowed
             end
           rescue ServiceBrokerRespondedAsyncWhenNotAllowed,
-            V3::ServiceBindingCreate::BindingNotRetrievable
+                 V3::ServiceBindingCreate::BindingNotRetrievable
 
             raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously, but async bindings are not supported.')
           end
