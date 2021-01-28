@@ -4,13 +4,13 @@ module VCAP
   module CloudController
     class RouteBindingListFetcher < BaseListFetcher
       class << self
-        def fetch_all(message)
-          filter(message, all_bindings).
+        def fetch_all(message, eager_loaded_associations: [])
+          filter(message, all_bindings(eager_loaded_associations)).
             select_all(:route_bindings)
         end
 
-        def fetch_some(message, space_guids:)
-          bindings = all_bindings.
+        def fetch_some(message, space_guids:, eager_loaded_associations: [])
+          bindings = all_bindings(eager_loaded_associations).
                      join(:spaces, id: Sequel[:service_instances][:space_id]).
                      where { Sequel[:spaces][:guid] =~ space_guids }
 
@@ -49,8 +49,8 @@ module VCAP
           super(message, bindings, RouteBinding)
         end
 
-        def all_bindings
-          RouteBinding.dataset.
+        def all_bindings(eager_loaded_associations)
+          RouteBinding.dataset.eager(eager_loaded_associations).
             join(:service_instances, id: Sequel[:route_bindings][:service_instance_id]).
             join(:routes, id: Sequel[:route_bindings][:route_id])
         end

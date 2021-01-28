@@ -10,6 +10,17 @@ module VCAP
           include VCAP::CloudController::Presenters::Mixins::LastOperationHelper
           include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+          class << self
+            # :labels and :annotations come from MetadataPresentationHelpers
+            def associated_resources
+              super + [
+                :route_binding_operation,
+                :service_instance,
+                :route,
+              ]
+            end
+          end
+
           def to_hash
             base.merge(decorations)
           end
