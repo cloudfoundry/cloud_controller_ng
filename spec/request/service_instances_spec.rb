@@ -3827,7 +3827,10 @@ RSpec.describe 'V3 service instances' do
         },
         service_route_bindings: {
           href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{instance.guid}"
-        }
+        },
+        shared_spaces: {
+          href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces"
+        },
       },
     }
   end
