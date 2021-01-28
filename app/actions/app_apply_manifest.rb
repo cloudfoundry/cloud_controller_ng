@@ -1,3 +1,4 @@
+require 'actions/mixins/bindings_delete'
 require 'actions/process_create'
 require 'actions/process_scale'
 require 'actions/process_update'
@@ -11,6 +12,8 @@ require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
+    include V3::BindingsDeleteMixin
+
     class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
     class ServiceBindingError < StandardError; end
@@ -138,33 +141,20 @@ module VCAP::CloudController
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
-      action = V3::ServiceCredentialBindingAppCreate.new(@user_audit_info, {})
-      manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
+      manifest_service_bindings_message.manifest_service_bindings.each do  |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
+        binding_being_deleted!(service_instance, app)
         next if binding_exists?(service_instance, app)
 
         begin
+          binding_message = create_binding_message(service_instance.guid, app.guid, manifest_service_binding)
+          action = V3::ServiceCredentialBindingAppCreate.new(@user_audit_info, binding_message.audit_hash, manifest_triggered: true)
           binding = action.precursor(
             service_instance,
             app: app,
             volume_mount_services_enabled: volume_services_enabled?,
-            message: ServiceCredentialAppBindingCreateMessage.new(
-              type: SERVICE_BINDING_TYPE,
-              parameters: manifest_service_binding.parameters,
-              relationships: {
-                service_instance: {
-                  data: {
-                    guid: service_instance.guid
-                  }
-                },
-                app: {
-                  data: {
-                    guid: app.guid
-                  }
-                }
-              }
-            ))
+            message: binding_message)
 
           begin
             result = action.bind(binding)
@@ -178,18 +168,47 @@ module VCAP::CloudController
           end
         rescue => e
           if binding
-            deleteAction = V3::ServiceCredentialBindingDelete.new(:credential, @user_audit_info)
-            deleteAction.delete(binding)
+            delete_bindings([binding], user_audit_info: @user_audit_info)
           end
 
-          error_message = "For service '#{service_instance.name}': #{e.message}"
-          raise ServiceBindingError.new(error_message)
+          raise_binding_error!(service_instance, e.message)
         end
       end
     end
 
+    def create_binding_message(service_instance_guid, app_guid, manifest_service_binding)
+      ServiceCredentialAppBindingCreateMessage.new(
+        type: SERVICE_BINDING_TYPE,
+        parameters: manifest_service_binding.parameters,
+        relationships: {
+          service_instance: {
+            data: {
+              guid: service_instance_guid
+            }
+          },
+          app: {
+            data: {
+              guid: app_guid
+            }
+          }
+        }
+      )
+    end
+
+    def raise_binding_error!(service_instance, message)
+      error_message = "For service '#{service_instance.name}': #{message}"
+      raise ServiceBindingError.new(error_message)
+    end
+
     def binding_exists?(service_instance, app)
       ServiceBinding.where(service_instance: service_instance, app: app).present?
+    end
+
+    def binding_being_deleted!(service_instance, app)
+      binding = ServiceBinding.first(service_instance: service_instance, app: app)
+      if binding && binding.operation_in_progress? && binding.last_operation.type == 'delete'
+        raise_binding_error!(service_instance, 'An existing binding is being deleted. Try recreating the binding later.')
+      end
     end
 
     def app_instance_not_found!(app_guid)

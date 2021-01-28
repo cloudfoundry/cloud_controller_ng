@@ -718,7 +718,6 @@ module VCAP::CloudController
           let(:space) { Space.make }
           let(:app) { AppModel.make(space: space) }
 
-
           before do
             TestConfig.override(volume_services_enabled: false)
           end
@@ -735,90 +734,82 @@ module VCAP::CloudController
             before do
               allow(ServiceCredentialAppBindingCreateMessage).to receive(:new).and_return(service_binding_create_message_1, service_binding_create_message_2)
               allow(service_cred_binding_create).to receive(:bind).and_return({async: false})
+              allow(service_cred_binding_create).to receive(:precursor).and_return(ServiceBinding.make)
+              allow(service_binding_create_message_1).to receive(:audit_hash).and_return({foo: 'bar-1'})
+              allow(service_binding_create_message_2).to receive(:audit_hash).and_return({foo: 'bar-2'})
             end
 
-            context 'new code' do
-              it 'calls precursor with the correct arguments' do
-                  app_apply_manifest.apply(app.guid, message)
+            it 'creates an action with the right arguments' do
+              app_apply_manifest.apply(app.guid, message)
 
-                  expect(V3::ServiceCredentialBindingAppCreate).to have_received(:new).with(user_audit_info, { })
+              expect(V3::ServiceCredentialBindingAppCreate).to have_received(:new).with(user_audit_info, {foo: 'bar-1'}, manifest_triggered: true)
+              expect(V3::ServiceCredentialBindingAppCreate).to have_received(:new).with(user_audit_info, {foo: 'bar-2'}, manifest_triggered: true)
+            end
 
-                  expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
-                    type: AppApplyManifest::SERVICE_BINDING_TYPE,
-                    parameters: {},
-                    relationships: {
-                      service_instance: {
-                        data: {
-                          guid: service_instance.guid
-                        }
-                      },
-                      app: {
-                        data: {
-                          guid: app.guid
-                        }
-                      }
-                    }
-                  )
-                  expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
-                    type: AppApplyManifest::SERVICE_BINDING_TYPE,
-                    parameters: { foo: 'bar' },
-                    relationships: {
-                      service_instance: {
-                        data: {
-                          guid: service_instance_2.guid
-                        }
-                      },
-                      app: {
-                        data: {
-                          guid: app.guid
-                        }
-                      }
-                    }
-                  )
-
-                  expect(service_cred_binding_create).to have_received(:precursor).
-                    with(service_instance, app: app, volume_mount_services_enabled: false, message: service_binding_create_message_1)
-
-                  expect(service_cred_binding_create).to have_received(:precursor).
-                    with(service_instance_2, app: app, volume_mount_services_enabled: false, message: service_binding_create_message_2)
-                end
-
-              it 'calls bind with the right arguments' do
-                service_binding_1 = instance_double(ServiceBinding)
-                service_binding_2 = instance_double(ServiceBinding)
-
-                allow(service_cred_binding_create).to receive(:precursor).and_return(
-                  service_binding_1,
-                  service_binding_2,
-                )
-
+            it 'calls precursor with the correct arguments for each binding' do
                 app_apply_manifest.apply(app.guid, message)
 
-                expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1)
-                expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2)
+                expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
+                  type: AppApplyManifest::SERVICE_BINDING_TYPE,
+                  parameters: {},
+                  relationships: {
+                    service_instance: {
+                      data: {
+                        guid: service_instance.guid
+                      }
+                    },
+                    app: {
+                      data: {
+                        guid: app.guid
+                      }
+                    }
+                  }
+                )
+                expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
+                  type: AppApplyManifest::SERVICE_BINDING_TYPE,
+                  parameters: { foo: 'bar' },
+                  relationships: {
+                    service_instance: {
+                      data: {
+                        guid: service_instance_2.guid
+                      }
+                    },
+                    app: {
+                      data: {
+                        guid: app.guid
+                      }
+                    }
+                  }
+                )
+
+                expect(service_cred_binding_create).to have_received(:precursor).
+                  with(service_instance, app: app, volume_mount_services_enabled: false, message: service_binding_create_message_1)
+
+                expect(service_cred_binding_create).to have_received(:precursor).
+                  with(service_instance_2, app: app, volume_mount_services_enabled: false, message: service_binding_create_message_2)
               end
 
-              it 'wraps the error when precursor errors' do
-                allow(service_cred_binding_create).to receive(:precursor).and_raise('fake binding error')
+            it 'calls bind with the right arguments' do
+              service_binding_1 = instance_double(ServiceBinding)
+              service_binding_2 = instance_double(ServiceBinding)
 
-                expect {
-                  app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
-              end
+              allow(service_cred_binding_create).to receive(:precursor).and_return(
+                service_binding_1,
+                service_binding_2,
+              )
 
-              context 'bind happens async' do
-                before do
-                  allow(service_cred_binding_create).to receive(:bind).and_return({async: true})
-                end
+              app_apply_manifest.apply(app.guid, message)
 
-                it 'raises an error and requests unbind' do
-                  expect {
-                    app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1)
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2)
+            end
 
-                  expect(service_cred_binding_delete).to have_received(:delete)
-                end
-              end
+            it 'wraps the error when precursor errors' do
+              allow(service_cred_binding_create).to receive(:precursor).and_raise('fake binding error')
+
+              expect {
+                app_apply_manifest.apply(app.guid, message)
+              }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
             end
 
             context 'service binding already exists' do
@@ -847,42 +838,85 @@ module VCAP::CloudController
             end
 
             context 'service binding errors' do
-              before do
-                allow(service_cred_binding_create).to receive(:bind).and_raise('fake binding error')
-              end
+              context 'bind happens async' do
 
-              it 'decorates the error with the name of the service instance' do
-                expect {
-                  app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
-              end
+                context 'action starts async binding' do
+                  before do
+                    allow(service_cred_binding_create).to receive(:bind).and_return({async: true})
+                    allow(service_cred_binding_delete).to receive(:delete).and_return({finished: true})
+                  end
 
-              context 'bind fails with BindingNotRetrievable' do
-                before do
-                  allow(service_cred_binding_create).to receive(:bind).and_raise(V3::ServiceBindingCreate::BindingNotRetrievable)
+                  it 'raises an error and requests unbind' do
+                    expect {
+                      app_apply_manifest.apply(app.guid, message)
+                    }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+
+                    expect(service_cred_binding_delete).to have_received(:delete)
+                  end
+
+                  context 'delete happens async' do
+                    before do
+                      allow(service_cred_binding_delete).to receive(:delete).and_return({finished: false})
+                    end
+
+                    it 'creates a job to follow up' do
+                      expect {
+                        app_apply_manifest.apply(app.guid, message)
+                      }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+
+                      expect(service_cred_binding_delete).to have_received(:delete)
+                      expect(Delayed::Job.all).to have(1).job
+                    end
+                  end
+
+                  context
+
                 end
-                it 'fails with async error and attempt delete' do
+
+                context 'bind fails with BindingNotRetrievable' do
+                  before do
+                    allow(service_cred_binding_create).to receive(:bind).and_raise(V3::ServiceBindingCreate::BindingNotRetrievable)
+                  end
+                  it 'fails with async error and attempt delete' do
+                    expect {
+                      app_apply_manifest.apply(app.guid, message)
+                    }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+
+                    expect(service_cred_binding_delete).to have_received(:delete)
+                  end
+                end
+              end
+
+              context 'generic binding errors' do
+                before do
+                  allow(service_cred_binding_create).to receive(:bind).and_raise('fake binding error')
+                end
+
+                it 'decorates the error with the name of the service instancev and delete the binding' do
                   expect {
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
 
                   expect(service_cred_binding_delete).to have_received(:delete)
                 end
+
+              end
+            end
+
+            context 'when a delete is in progress for the same binding' do
+              let!(:binding) do
+                binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+                binding
               end
 
+              it 'fails with a service binding error' do
+                expect {
+                  app_apply_manifest.apply(app.guid, message)
+                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': An existing binding is being deleted. Try recreating the binding later./)
 
-            end
-
-            it 'fails whith aysn error when BindingNotRetrievable' do
-
-            end
-
-            it 'deletes the bindign if error happend and it was creaated ' do
-
-            end
-
-            it 'fail when delete is in progress for the same binding' do
-
+                expect(service_cred_binding_delete).to_not have_received(:delete)
+              end
             end
           end
         end
