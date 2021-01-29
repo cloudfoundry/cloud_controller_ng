@@ -11,6 +11,13 @@ module SpaceRestrictedResponseGenerators
     )
   end
 
+  def self.default_write_permitted_roles
+    %w(
+      admin
+      space_developer
+    )
+  end
+
   def self.org_suspended_permitted_roles
     %w(
       admin
@@ -88,22 +95,24 @@ module SpaceRestrictedResponseGenerators
   end
 
   def responses_for_space_restricted_delete_endpoint(
-    permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
+    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
     )
-    Hash.new(code: 404).tap do |h|
+    Hash.new(code: 403).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 204 }
       end
+      h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
     end
   end
 
   def responses_for_space_restricted_async_delete_endpoint(
-    permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
+    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
   )
-    Hash.new(code: 404).tap do |h|
+    Hash.new(code: 403).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 202 }
       end
+      h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
     end
   end
 end
