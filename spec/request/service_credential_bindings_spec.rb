@@ -442,6 +442,17 @@ RSpec.describe 'v3 service credential bindings' do
           }))
         end
       end
+
+      describe 'eager loading' do
+        it 'eager loads associated resources that the presenter specifies' do
+          expect(VCAP::CloudController::ServiceCredentialBindingListFetcher).to receive(:fetch).with(
+            hash_including(eager_loaded_associations: [:service_instance_sti_eager_load, :labels_sti_eager_load, :annotations_sti_eager_load, :operation_sti_eager_load])
+          ).and_call_original
+
+          get '/v3/service_credential_bindings', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+        end
+      end
     end
   end
 

@@ -36,6 +36,13 @@ module VCAP
         let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, **key_details) }
         let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_binding_details) }
 
+        it 'eager loads the specified resources' do
+          dataset = fetcher.fetch(space_guids: :all, message: message, eager_loaded_associations: [:labels_sti_eager_load])
+
+          expect(dataset.all.first.associations.key?(:labels)).to be true
+          expect(dataset.all.first.associations.key?(:annotations)).to be false
+        end
+
         context 'when getting everything' do
           it 'returns both key and app bindings' do
             bindings = fetcher.fetch(space_guids: :all, message: message).all

@@ -18,13 +18,15 @@ module VCAP
           service_offering_guid
         }.freeze
 
-        def fetch(space_guids:, message: nil)
+        def fetch(space_guids:, message: nil, eager_loaded_associations: [])
           dataset = case space_guids
                     when :all
                       ServiceCredentialBinding::View.dataset
                     else
                       ServiceCredentialBinding::View.where { Sequel[:space_guid] =~ space_guids }
                     end
+
+          dataset = dataset.eager(eager_loaded_associations)
 
           return dataset if message.nil?
 
