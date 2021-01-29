@@ -91,6 +91,7 @@ module VCAP
             'key' => 'VCAP::CloudController::ServiceKey'
           }
 
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
         many_to_one :service_instance_sti_eager_load,
           dataset: -> { raise 'Must be used for eager loading' },
           eager_loader_key: nil, # set up id_map ourselves
@@ -117,6 +118,7 @@ module VCAP
             end
           }
 
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
         one_to_many :labels_sti_eager_load,
           dataset: -> { raise 'Must be used for eager loading' },
           eager_loader_key: nil, # set up id_map ourselves
@@ -140,6 +142,7 @@ module VCAP
             end
           }
 
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
         one_to_many :annotations_sti_eager_load,
           dataset: -> { raise 'Must be used for eager loading' },
           eager_loader_key: nil, # set up id_map ourselves
@@ -163,6 +166,7 @@ module VCAP
             end
           }
 
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
         one_to_many :operation_sti_eager_load,
           dataset: -> { raise 'Must be used for eager loading' },
           eager_loader_key: nil, # set up id_map ourselves

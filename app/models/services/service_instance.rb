@@ -44,6 +44,8 @@ module VCAP::CloudController
     many_to_many :routes, join_table: :route_bindings
 
     many_to_one :space, after_set: :validate_space
+
+    # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
     many_to_one :service_plan_sti_eager_load,
                 class: 'VCAP::CloudController::ServicePlan',
                 dataset: -> { raise 'Must be used for eager loading' },
