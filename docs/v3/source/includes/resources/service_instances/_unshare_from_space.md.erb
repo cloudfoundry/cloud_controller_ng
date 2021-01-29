@@ -18,7 +18,8 @@ Example Response
 HTTP/1.1 204 No Content
 ```
 
-This endpoint unshares the service instance with the specified space. This will automatically unbind any applications bound to this service instance in the specified space.
+This endpoint unshares the service instance from the specified space. This will automatically unbind any applications bound to this service instance in the specified space.
+Unsharing a service instance from a space will not delete any service keys.
 
 #### Definition
 `DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid`
