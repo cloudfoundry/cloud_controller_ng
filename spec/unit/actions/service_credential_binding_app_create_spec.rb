@@ -7,8 +7,9 @@ require 'repositories/service_generic_binding_event_repository'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingAppCreate do
-      subject(:action) { described_class.new(user_audit_info, audit_hash) }
+      subject(:action) { described_class.new(user_audit_info, audit_hash, manifest_triggered: manifest_triggered) }
 
+      let(:manifest_triggered) { false }
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:volume_mount_services_enabled) { true }
       let(:space) { Space.make }
@@ -210,6 +211,20 @@ module VCAP::CloudController
 
             it_behaves_like 'the sync credential binding', ServiceBinding, true
 
+            context 'manifest triggered' do
+              let(:manifest_triggered) { true }
+
+              it 'logs an audit event with manifest triggered in true' do
+                action.bind(precursor)
+                expect(binding_event_repo).to have_received(:record_create).with(
+                  precursor,
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: true
+                )
+              end
+            end
+
             context 'asynchronous binding' do
               let(:broker_provided_operation) { Sham.guid }
               let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
@@ -219,9 +234,24 @@ module VCAP::CloudController
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
-                  user_audit_info,
-                  audit_hash
+                user_audit_info,
+                audit_hash,
+                manifest_triggered: false
                 )
+              end
+
+              context 'manifest triggered' do
+                let(:manifest_triggered) { true }
+
+                it 'logs an audit event with manifest triggered in true' do
+                  action.bind(precursor)
+                  expect(binding_event_repo).to have_received(:record_start_create).with(
+                    precursor,
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: true
+                  )
+                end
               end
             end
           end
@@ -237,6 +267,20 @@ module VCAP::CloudController
             let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
             it_behaves_like 'the sync credential binding', ServiceBinding, true
+
+            context 'manifest triggered' do
+              let(:manifest_triggered) { true }
+
+              it 'logs an audit event with manifest triggered in true' do
+                action.bind(precursor)
+                expect(binding_event_repo).to have_received(:record_create).with(
+                  precursor,
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: true
+                )
+              end
+            end
           end
         end
       end

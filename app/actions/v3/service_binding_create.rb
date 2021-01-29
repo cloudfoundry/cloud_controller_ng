@@ -86,7 +86,8 @@ module VCAP::CloudController
         event_repository.record_create(
           binding,
           @user_audit_info,
-          @audit_hash
+          @audit_hash,
+          manifest_triggered: @manifest_triggered
         )
       end
 
@@ -111,7 +112,7 @@ module VCAP::CloudController
             broker_provided_operation: broker_operation
           }
         )
-        event_repository.record_start_create(binding, @user_audit_info, @audit_hash)
+        event_repository.record_start_create(binding, @user_audit_info, @audit_hash, manifest_triggered: @manifest_triggered)
       end
 
       def post_bind_action(binding); end

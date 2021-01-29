@@ -11,10 +11,11 @@ module VCAP::CloudController
       class Unimplemented < StandardError
       end
 
-      def initialize(user_audit_info, audit_hash)
+      def initialize(user_audit_info, audit_hash, manifest_triggered: false)
         super()
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
+        @manifest_triggered = manifest_triggered
       end
 
       PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze

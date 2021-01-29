@@ -170,6 +170,7 @@ RSpec.describe 'Space Manifests' do
       it 'returns an appropriate error when fail to bind' do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         allow(client).to receive(:bind).and_raise('Failed')
+        allow(client).to receive(:unbind).and_return({ async: false })
 
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
         Delayed::Worker.new.work_off

@@ -12,6 +12,7 @@ module VCAP::CloudController
         super()
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
+        @manifest_triggered = false
       end
 
       PERMITTED_BINDING_ATTRIBUTES = [:credentials].freeze
