@@ -137,6 +137,19 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         post :create, params: { name: 'anarchy-reigns' }, as: :json
         expect(response.status).to eq(201), "Got #{response.status}"
       end
+
+      context 'when the RoleCreate returns an error' do
+        before do
+          allow_any_instance_of(VCAP::CloudController::RoleCreate).to receive(:create_organization_role).
+            and_raise(VCAP::CloudController::RoleCreate::Error.new('ya done goofed'))
+        end
+
+        it 'does not create the org and fails' do
+          post :create, params: { name: 'bad-org' }, as: :json
+          expect(response.status).to eq(422), "Got #{response.status}"
+          expect(VCAP::CloudController::Organization.first(name: 'bad-org')).to be(nil)
+        end
+      end
     end
 
     context 'when the user is admin' do

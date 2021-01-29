@@ -48,22 +48,25 @@ class OrganizationsV3Controller < ApplicationController
 
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+    org = nil
 
-    org = OrganizationCreate.new(user_audit_info: user_audit_info).create(message)
+    Organization.db.transaction do
+      org = OrganizationCreate.new(user_audit_info: user_audit_info).create(message)
 
-    if !roles.admin?
-      [
-        RoleTypes::ORGANIZATION_USER,
-        RoleTypes::ORGANIZATION_MANAGER,
-      ].each do |role|
-        RoleCreate.new(message, user_audit_info).create_organization_role(type: role,
-                                                                   user: current_user,
-                                                                   organization: org)
+      if !roles.admin?
+        [
+          RoleTypes::ORGANIZATION_USER,
+          RoleTypes::ORGANIZATION_MANAGER,
+        ].each do |role|
+          RoleCreate.new(message, user_audit_info).create_organization_role(type: role,
+                                                                            user: current_user,
+                                                                            organization: org)
+        end
       end
     end
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
-  rescue OrganizationCreate::Error => e
+  rescue OrganizationCreate::Error, RoleCreate::Error => e
     unprocessable!(e.message)
   end
 
