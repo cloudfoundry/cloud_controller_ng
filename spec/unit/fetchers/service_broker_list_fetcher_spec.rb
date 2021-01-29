@@ -16,7 +16,7 @@ module VCAP::CloudController
       let(:space_3) { Space.make }
       let(:space_scoped_broker_3) { ServiceBroker.make(space_guid: space_3.guid, name: 'broker-3') }
 
-      let(:fetcher) { ServiceBrokerListFetcher }
+      let(:fetcher) { described_class }
       let(:message) { ServiceBrokersListMessage.from_params(filters) }
 
       before do
@@ -37,6 +37,13 @@ module VCAP::CloudController
           expect(brokers).to contain_exactly(
             broker, space_scoped_broker_1, space_scoped_broker_2, space_scoped_broker_3
           )
+        end
+
+        it 'eager loads the specified resources' do
+          dataset = fetcher.fetch(message: message, eager_loaded_associations: [:labels])
+
+          expect(dataset.all.first.associations.key?(:labels)).to be true
+          expect(dataset.all.first.associations.key?(:annotations)).to be false
         end
       end
 

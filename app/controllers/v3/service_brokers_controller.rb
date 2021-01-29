@@ -12,9 +12,16 @@ class ServiceBrokersController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ServiceBrokerListFetcher.fetch(message: message)
+                ServiceBrokerListFetcher.fetch(
+                  message: message,
+                  eager_loaded_associations: Presenters::V3::ServiceBrokerPresenter.associated_resources,
+                )
               else
-                ServiceBrokerListFetcher.fetch(message: message, permitted_space_guids: permission_queryer.readable_secret_space_guids)
+                ServiceBrokerListFetcher.fetch(
+                  message: message,
+                  eager_loaded_associations: Presenters::V3::ServiceBrokerPresenter.associated_resources,
+                  permitted_space_guids: permission_queryer.readable_secret_space_guids
+                )
               end
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
