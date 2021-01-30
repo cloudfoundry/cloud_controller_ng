@@ -247,6 +247,18 @@ RSpec.describe 'v3 service route bindings' do
         let(:resource_klass) { VCAP::CloudController::RouteBinding }
       end
     end
+
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::RouteBindingListFetcher).to receive(:fetch_all).with(
+          an_instance_of(VCAP::CloudController::ServiceRouteBindingsListMessage),
+          hash_including(eager_loaded_associations: [:labels, :annotations, :route_binding_operation, :service_instance, :route])
+        ).and_call_original
+
+        get '/v3/service_route_bindings', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
   end
 
   describe 'GET /v3/service_route_bindings/:guid' do

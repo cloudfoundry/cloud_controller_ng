@@ -49,6 +49,16 @@ module VCAP
           expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
         end
 
+        it 'eager loads the specified resources' do
+          dataset = fetcher.fetch_all(
+            ServiceRouteBindingsListMessage.from_params({}),
+            eager_loaded_associations: [:labels]
+          )
+
+          expect(dataset.all.first.associations.key?(:labels)).to be true
+          expect(dataset.all.first.associations.key?(:annotations)).to be false
+        end
+
         context 'can be filtered by label selector' do
           before do
             RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[0])
@@ -136,6 +146,19 @@ module VCAP
           )
 
           expect_binding_guids(fetched_route_bindings, filtered_route_bindings)
+        end
+
+        it 'eager loads the specified resources' do
+          RouteBinding.make(service_instance: UserProvidedServiceInstance.make(:routing, space: target_space))
+
+          dataset = fetcher.fetch_some(
+            ServiceRouteBindingsListMessage.from_params({}),
+            space_guids: [target_space.guid],
+            eager_loaded_associations: [:labels]
+          )
+
+          expect(dataset.all.first.associations.key?(:labels)).to be true
+          expect(dataset.all.first.associations.key?(:annotations)).to be false
         end
 
         def make_other_route_bindings

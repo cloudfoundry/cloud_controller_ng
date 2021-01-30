@@ -168,9 +168,16 @@ class ServiceRouteBindingsController < ApplicationController
 
   def fetch_route_bindings(message)
     if permission_queryer.can_read_globally?
-      RouteBindingListFetcher.fetch_all(message)
+      RouteBindingListFetcher.fetch_all(
+        message,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+      )
     else
-      RouteBindingListFetcher.fetch_some(message, space_guids: space_guids)
+      RouteBindingListFetcher.fetch_some(
+        message,
+        space_guids: space_guids,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+      )
     end
   end
 
