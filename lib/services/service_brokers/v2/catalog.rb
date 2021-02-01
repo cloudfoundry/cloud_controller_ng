@@ -22,6 +22,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_services
       validate_all_service_ids_are_unique
       validate_all_service_names_are_unique
+      validate_all_plan_ids_are_unique
       validate_all_service_dashboard_clients_are_unique
       validation_errors.empty?
     end
@@ -73,6 +74,37 @@ module VCAP::Services::ServiceBrokers::V2
         taken_names = taken_names(new_services_names)
         if !taken_names.empty?
           validation_errors.add("Service names must be unique within a broker. Services with names #{taken_names} already exist")
+        end
+      end
+    end
+
+    def validate_all_plan_ids_are_unique
+      catalog_plans = {}
+      services.each do |s|
+        s.plans.each do |p|
+          if catalog_plans[p.broker_provided_id]
+            validation_errors.add('Plan ids must be unique. ' \
+              "Unable to register plan with id '#{p.broker_provided_id}' " \
+              "(plan name '#{p.name}', service name '#{s.name}') " \
+              'because it uses the same id as another plan in the catalog ' \
+              "(plan name '#{catalog_plans[p.broker_provided_id][:plan].name}', service name '#{catalog_plans[p.broker_provided_id][:service].name}')"
+            )
+          end
+          catalog_plans[p.broker_provided_id] = { service: s, plan: p }
+        end
+      end
+
+      service_broker.service_plans.each do |p|
+        if catalog_plans[p.unique_id] && !updating_service?(catalog_plans[p.unique_id][:service], p.service)
+          validation_errors.add('Plan ids must be unique. ' \
+                  "Unable to register plan with id '#{p.unique_id}' " \
+                  "(plan name '#{catalog_plans[p.unique_id][:plan].name}', " \
+                  "service name '#{catalog_plans[p.unique_id][:service].name}') " \
+                  'because it uses the same id as an existing plan ' \
+                  "(plan name '#{p.name}', " \
+                  "service name '#{p.service.name}', " \
+                  "broker name '#{p.service_broker.name}')"
+          )
         end
       end
     end

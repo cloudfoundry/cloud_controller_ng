@@ -131,7 +131,7 @@ module VCAP::Services::ServiceBrokers::V2
       duplicate_plans = find_duplicate_plans :broker_provided_id
       if duplicate_plans
         duplicate_plans.each do |plan|
-          errors.add("Plan ids must be unique within a service. Service #{name} already has a plan with id '#{plan}'")
+          errors.add("Plan ids must be unique. Service #{name} already has a plan with id '#{plan}'")
         end
       end
     end
