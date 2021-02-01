@@ -3,7 +3,6 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class ServiceBindingListFetcher < BaseListFetcher
     class << self
-
       def fetch_service_instance_bindings_in_space(service_instance_guid, space_guid)
         ServiceBinding.select_all(ServiceBinding.table_name).
           join(:apps, guid: :app_guid).
