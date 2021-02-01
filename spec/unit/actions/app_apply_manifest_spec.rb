@@ -12,7 +12,6 @@ module VCAP::CloudController
       let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
       let(:process_update) { instance_double(ProcessUpdate) }
       let(:process_create) { instance_double(ProcessCreate) }
-      let(:service_binding_create) { instance_double(ServiceBindingCreate) }
       let(:service_cred_binding_create) { instance_double(V3::ServiceCredentialBindingAppCreate) }
       let(:service_cred_binding_delete) { instance_double(V3::ServiceCredentialBindingDelete) }
       let(:random_route_generator) { instance_double(RandomRouteGenerator, route: 'spiffy/donut') }
@@ -45,10 +44,6 @@ module VCAP::CloudController
           allow(RouteMappingDelete).
             to receive(:new).and_return(route_mapping_delete)
           allow(route_mapping_delete).to receive(:delete)
-
-          allow(ServiceBindingCreate).
-            to receive(:new).and_return(service_binding_create)
-          allow(service_binding_create).to receive(:create)
 
           allow(V3::ServiceCredentialBindingAppCreate).
             to receive(:new).and_return(service_cred_binding_create)
@@ -813,12 +808,13 @@ module VCAP::CloudController
             end
 
             context 'service binding already exists' do
-              let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) }
+              let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name] }) }
               let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
 
               it 'does not create the binding' do
                 app_apply_manifest.apply(app.guid, message)
-                expect(service_binding_create).to_not have_received(:create)
+
+                expect(service_cred_binding_create).to_not have_received(:bind)
               end
             end
 
