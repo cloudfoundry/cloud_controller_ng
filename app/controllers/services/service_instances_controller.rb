@@ -420,7 +420,6 @@ module VCAP::CloudController
       end
 
       def serialize(controller, space, opts, orphans=nil)
-        # bound_app_count = ServiceCredentialBindingFetcher.fetch(@service_instance.guid, space.guid).count
         bound_app_count = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(@service_instance.guid, space.guid).count
         CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space, bound_app_count)
       end

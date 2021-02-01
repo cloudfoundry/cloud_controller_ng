@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/service_binding_create'
+require 'actions/v2/services/service_binding_create'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingCreate do
