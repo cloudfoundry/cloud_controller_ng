@@ -186,7 +186,7 @@ module VCAP::CloudController
       end
 
       context 'when only updating the health_check http enpoint' do
-        let(:health_check) { { data: { 'endpoint': '/two' } } }
+        let(:health_check) { { data: { endpoint: '/two' } } }
 
         it 'does not create a new process version' do
           old_version = process.version

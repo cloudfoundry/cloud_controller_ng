@@ -109,7 +109,7 @@ module VCAP::CloudController
                   run_job(job)
                 end
 
-                let(:binding_response) { { 'credentials': { 'a': 'b' } } }
+                let(:binding_response) { { credentials: { a: 'b' } } }
 
                 it 'should not enqueue another fetch job' do
                   expect(Delayed::Job.count).to eq 0
@@ -127,7 +127,7 @@ module VCAP::CloudController
                   run_job(job)
                 end
 
-                let(:binding_response) { { 'syslog_drain_url': 'syslog://example.com/awesome-syslog' } }
+                let(:binding_response) { { syslog_drain_url: 'syslog://example.com/awesome-syslog' } }
 
                 it 'should not enqueue another fetch job' do
                   expect(Delayed::Job.count).to eq 0
@@ -147,15 +147,15 @@ module VCAP::CloudController
 
                 let(:binding_response) do
                   {
-                    'volume_mounts': [{
-                      'driver': 'cephdriver',
-                      'container_dir': '/data/images',
-                      'mode': 'r',
-                      'device_type': 'shared',
-                      'device': {
-                        'volume_id': 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-                        'mount_config': {
-                          'key': 'value'
+                    volume_mounts: [{
+                      driver: 'cephdriver',
+                      container_dir: '/data/images',
+                      mode: 'r',
+                      device_type: 'shared',
+                      device: {
+                        volume_id: 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                        mount_config: {
+                          key: 'value'
                         }
                       }
                     }]
@@ -190,7 +190,7 @@ module VCAP::CloudController
                     body: {}.to_json,
                   )
                 }
-                let(:binding_response) { { 'credentials': 'invalid' } }
+                let(:binding_response) { { credentials: 'invalid' } }
                 let(:response_malformed_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(nil, nil, broker_response, nil) }
 
                 before do
@@ -246,7 +246,7 @@ module VCAP::CloudController
                     body: {}.to_json,
                   )
                 }
-                let(:binding_response) { { 'credentials': '{}' } }
+                let(:binding_response) { { credentials: '{}' } }
                 let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
 
                 before do
@@ -287,7 +287,7 @@ module VCAP::CloudController
                     body: {}.to_json,
                   )
                 }
-                let(:binding_response) { { 'credentials': '{}' } }
+                let(:binding_response) { { credentials: '{}' } }
                 let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new(nil, nil, broker_response) }
 
                 before do
@@ -326,7 +326,7 @@ module VCAP::CloudController
                   run_job(job)
                 end
 
-                let(:binding_response) { { 'credentials': { 'a': 'b' }, 'parameters': { 'c': 'd' } } }
+                let(:binding_response) { { credentials: { a: 'b' }, parameters: { c: 'd' } } }
 
                 it 'should update the service binding' do
                   service_binding.reload

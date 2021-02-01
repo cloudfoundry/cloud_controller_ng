@@ -163,7 +163,7 @@ RSpec.describe 'v3 service bindings' do
       let(:service_instance) do
         VCAP::CloudController::UserProvidedServiceInstance.make(
           space: space,
-          credentials: { 'username': 'user_provided_username' },
+          credentials: { username: 'user_provided_username' },
           syslog_drain_url: 'syslog://drain.url.com',
           name: 'service-instance-name'
         )

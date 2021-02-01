@@ -537,7 +537,7 @@ module VCAP::CloudController
       end
 
       context 'when the maintenance_info.version provided is the same as the one on the service instance' do
-        let(:service_instance) { ManagedServiceInstance.make(maintenance_info: new_maintenance_info.merge({ 'description': 'some description' })) }
+        let(:service_instance) { ManagedServiceInstance.make(maintenance_info: new_maintenance_info.merge({ description: 'some description' })) }
 
         it 'does NOT make a call to the broker' do
           service_instance_update.update_service_instance(service_instance, request_attrs)

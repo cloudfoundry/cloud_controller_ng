@@ -57,7 +57,7 @@ module VCAP::CloudController
       context 'when process_types are specified' do
         let(:message) { DropletCreateMessage.new({
           relationships: { app: { data: { guid: app.guid } } },
-          process_types: { "web": 'ptype' },
+          process_types: { web: 'ptype' },
         })
         }
 

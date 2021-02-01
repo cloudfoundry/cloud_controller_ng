@@ -14,11 +14,11 @@ module VCAP::CloudController
 
       let(:params) do
         {
-          'name': 'quota1',
-          'relationships': {
-            'organizations': {
-              'data': [
-                { 'guid': org.guid },
+          name: 'quota1',
+          relationships: {
+            organizations: {
+              data: [
+                { guid: org.guid },
               ]
             }
           }
@@ -51,7 +51,7 @@ module VCAP::CloudController
           },
           relationships: {
             organizations: {
-              data: [{ 'guid': 'organization-guid' }],
+              data: [{ guid: 'organization-guid' }],
             }
           },
           links: {
@@ -86,58 +86,58 @@ module VCAP::CloudController
       context 'using provided params' do
         let(:params) do
           {
-            'name': 'org1',
-            'apps': {
-              'total_memory_in_mb': 5120,
-              'per_process_memory_in_mb': 1024,
-              'total_instances': 10,
-              'per_app_tasks': 5
+            name: 'org1',
+            apps: {
+              total_memory_in_mb: 5120,
+              per_process_memory_in_mb: 1024,
+              total_instances: 10,
+              per_app_tasks: 5
             },
-            "services": {
-              "paid_services_allowed": false,
-              "total_service_instances": 10,
-              "total_service_keys": 20
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 10,
+              total_service_keys: 20
             },
-            "routes": {
-              "total_routes": 8,
-              "total_reserved_ports": 4
+            routes: {
+              total_routes: 8,
+              total_reserved_ports: 4
             },
-            'domains': {
-              'total_domains': 7,
+            domains: {
+              total_domains: 7,
             },
           }
         end
 
         let(:expected_response) do
           {
-            'guid': UUID_REGEX,
-            'created_at': iso8601,
-            'updated_at': iso8601,
-            'name': 'org1',
-            'apps': {
-              'total_memory_in_mb': 5120,
-              'per_process_memory_in_mb': 1024,
-              'total_instances': 10,
-              'per_app_tasks': 5
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: 'org1',
+            apps: {
+              total_memory_in_mb: 5120,
+              per_process_memory_in_mb: 1024,
+              total_instances: 10,
+              per_app_tasks: 5
             },
-            'services': {
-              "paid_services_allowed": false,
-              "total_service_instances": 10,
-              "total_service_keys": 20
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 10,
+              total_service_keys: 20
             },
-            'routes': {
-              "total_routes": 8,
-              "total_reserved_ports": 4
+            routes: {
+              total_routes: 8,
+              total_reserved_ports: 4
             },
-            'domains': {
-              'total_domains': 7,
+            domains: {
+              total_domains: 7,
             },
-            'relationships': {
-              'organizations': {
-                'data': [],
+            relationships: {
+              organizations: {
+                data: [],
               },
             },
-            'links': {
+            links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
             }
           }
@@ -198,8 +198,8 @@ module VCAP::CloudController
 
       context 'when listing organization_quotas' do
         let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
-        let(:other_org_response) { { 'guid': 'other-organization-guid' } }
-        let(:org_response) { { 'guid': 'organization-guid' } }
+        let(:other_org_response) { { guid: 'other-organization-guid' } }
+        let(:org_response) { { guid: 'organization-guid' } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 200, response_objects: generate_org_quota_list_response([org_response], false))
@@ -265,8 +265,8 @@ module VCAP::CloudController
 
       context 'when getting an organization_quota' do
         let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
-        let(:other_org_response) { { 'guid': 'other-organization-guid' } }
-        let(:org_response) { { 'guid': 'organization-guid' } }
+        let(:other_org_response) { { guid: 'other-organization-guid' } }
+        let(:org_response) { { guid: 'organization-guid' } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 200, response_object: generate_org_quota_single_response([org_response]))
@@ -314,24 +314,24 @@ module VCAP::CloudController
 
       let(:params) do
         {
-          "name": 'don-quixote',
-          "apps": {
-            "total_memory_in_mb": 5120,
-            "per_process_memory_in_mb": 1024,
-            "total_instances": nil,
-            "per_app_tasks": 5
+          name: 'don-quixote',
+          apps: {
+            total_memory_in_mb: 5120,
+            per_process_memory_in_mb: 1024,
+            total_instances: nil,
+            per_app_tasks: 5
           },
-          "services": {
-            "paid_services_allowed": false,
-            "total_service_instances": 10,
-            "total_service_keys": 20,
+          services: {
+            paid_services_allowed: false,
+            total_service_instances: 10,
+            total_service_keys: 20,
           },
-          "routes": {
-            "total_routes": 8,
-            "total_reserved_ports": 4
+          routes: {
+            total_routes: 8,
+            total_reserved_ports: 4
           },
-          "domains": {
-            "total_domains": 7
+          domains: {
+            total_domains: 7
           }
         }
       end
@@ -362,7 +362,7 @@ module VCAP::CloudController
           },
           relationships: {
             organizations: {
-              data: [{ 'guid': 'organization-guid' }],
+              data: [{ guid: 'organization-guid' }],
             }
           },
           links: {
@@ -402,14 +402,14 @@ module VCAP::CloudController
         }
         let(:partial_params) do
           {
-            "name": 'don-quixote',
-            "apps": {
-              "per_app_tasks": 9,
-              "total_memory_in_mb": nil,
+            name: 'don-quixote',
+            apps: {
+              per_app_tasks: 9,
+              total_memory_in_mb: nil,
             },
-            "services": {
-              "total_service_instances": 14,
-              "paid_services_allowed": false,
+            services: {
+              total_service_instances: 14,
+              paid_services_allowed: false,
             },
           }
         end
@@ -627,7 +627,7 @@ def generate_default_org_quota_response(global_read)
   # our request specs are seeded with an org that uses the default org quota
   # the visibility of this org depends on the user's permissions
   seeded_org_guid = VCAP::CloudController::Organization.where(name: 'the-system_domain-org-name').first.guid
-  seeded_org = global_read ? [{ 'guid': seeded_org_guid }] : []
+  seeded_org = global_read ? [{ guid: seeded_org_guid }] : []
 
   default_quota = VCAP::CloudController::QuotaDefinition.default
   {

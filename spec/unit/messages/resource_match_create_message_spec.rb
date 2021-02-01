@@ -5,18 +5,18 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
   describe 'creation with v3' do
     let(:valid_v3_params) do
       {
-        "resources": [
+        resources: [
           {
-            "checksum": { "value": '002d760bea1be268e27077412e11a320d0f164d3' },
-            "size_in_bytes": 36,
-            "path": '/path/to/first',
-            "mode": '123'
+            checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+            size_in_bytes: 36,
+            path: '/path/to/first',
+            mode: '123'
           },
           {
-            "checksum": { "value": 'a9993e364706816aba3e25717850c26c9cd0d89d' },
-            "size_in_bytes": 1,
-            "path": 'C:\\Program Files (x86)\\yep',
-            "mode": '644'
+            checksum: { value: 'a9993e364706816aba3e25717850c26c9cd0d89d' },
+            size_in_bytes: 1,
+            path: 'C:\\Program Files (x86)\\yep',
+            mode: '644'
           }
         ]
       }
@@ -30,16 +30,16 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
       message = described_class.new(valid_v3_params)
       expect(message.v2_fingerprints_body.string).to eq([
         {
-          "sha1": '002d760bea1be268e27077412e11a320d0f164d3',
-          "size": 36,
-          "fn": '/path/to/first',
-          "mode": '123'
+          sha1: '002d760bea1be268e27077412e11a320d0f164d3',
+          size: 36,
+          fn: '/path/to/first',
+          mode: '123'
         },
         {
-          "sha1": 'a9993e364706816aba3e25717850c26c9cd0d89d',
-          "size": 1,
-          "fn": 'C:\\Program Files (x86)\\yep',
-          "mode": '644'
+          sha1: 'a9993e364706816aba3e25717850c26c9cd0d89d',
+          size: 1,
+          fn: 'C:\\Program Files (x86)\\yep',
+          mode: '644'
         }
       ].to_json)
     end

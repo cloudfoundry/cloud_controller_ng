@@ -75,21 +75,21 @@ module VCAP::CloudController
 
       let(:params) do
         {
-          "name": 'don-quixote',
-          "apps": {
-            "total_memory_in_mb": 5120,
-            "per_process_memory_in_mb": 1024,
-            "total_instances": nil,
-            "per_app_tasks": 5
+          name: 'don-quixote',
+          apps: {
+            total_memory_in_mb: 5120,
+            per_process_memory_in_mb: 1024,
+            total_instances: nil,
+            per_app_tasks: 5
           },
-          "services": {
-            "paid_services_allowed": false,
-            "total_service_instances": 10,
-            "total_service_keys": 20,
+          services: {
+            paid_services_allowed: false,
+            total_service_instances: 10,
+            total_service_keys: 20,
           },
-          "routes": {
-            "total_routes": 8,
-            "total_reserved_ports": 4
+          routes: {
+            total_routes: 8,
+            total_reserved_ports: 4
           }
         }
       end
@@ -163,14 +163,14 @@ module VCAP::CloudController
 
         let(:partial_params) do
           {
-            "name": 'don-quixote',
-            "apps": {
-              "per_app_tasks": 9,
-              "total_memory_in_mb": nil,
+            name: 'don-quixote',
+            apps: {
+              per_app_tasks: 9,
+              total_memory_in_mb: nil,
             },
-            "services": {
-              "total_service_instances": 14,
-              "paid_services_allowed": false,
+            services: {
+              total_service_instances: 14,
+              paid_services_allowed: false,
             },
           }
         end
@@ -360,10 +360,10 @@ module VCAP::CloudController
       let(:api_call) { lambda { |user_headers| post '/v3/space_quotas', params.to_json, user_headers } }
       let(:params) do
         {
-          'name': 'quota1',
-          'relationships': {
-            'organization': {
-              'data': { 'guid': org.guid }
+          name: 'quota1',
+          relationships: {
+            organization: {
+              data: { guid: org.guid }
             }
           }
         }
@@ -393,7 +393,7 @@ module VCAP::CloudController
             },
             relationships: {
               organization: {
-                data: { 'guid': org.guid },
+                data: { guid: org.guid },
               },
               spaces: {
                 data: []
@@ -435,13 +435,13 @@ module VCAP::CloudController
       context 'passing empty limit objects' do
         let(:params) do
           {
-            'name': 'quota1',
-            'apps': {},
-            'services': {},
-            'routes': {},
-            'relationships': {
-              'organization': {
-                'data': { 'guid': org.guid }
+            name: 'quota1',
+            apps: {},
+            services: {},
+            routes: {},
+            relationships: {
+              organization: {
+                data: { guid: org.guid }
               }
             }
           }
@@ -470,7 +470,7 @@ module VCAP::CloudController
             },
             relationships: {
               organization: {
-                data: { 'guid': org.guid },
+                data: { guid: org.guid },
               },
               spaces: {
                 data: []
@@ -512,29 +512,29 @@ module VCAP::CloudController
       context 'specifying all possible params' do
         let(:params) do
           {
-            'name': 'my-space-quota',
-            'apps': {
-              'total_memory_in_mb': 5120,
-              'per_process_memory_in_mb': 1024,
-              'total_instances': 10,
-              'per_app_tasks': 5
+            name: 'my-space-quota',
+            apps: {
+              total_memory_in_mb: 5120,
+              per_process_memory_in_mb: 1024,
+              total_instances: 10,
+              per_app_tasks: 5
             },
-            'services': {
-              'paid_services_allowed': false,
-              'total_service_instances': 11,
-              'total_service_keys': 12
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 11,
+              total_service_keys: 12
             },
             routes: {
               total_routes: 47,
               total_reserved_ports: 2
             },
-            'relationships': {
-              'organization': {
-                'data': { 'guid': org.guid }
+            relationships: {
+              organization: {
+                data: { guid: org.guid }
               },
-              'spaces': {
-                'data': [
-                  { 'guid': space.guid }
+              spaces: {
+                data: [
+                  { guid: space.guid }
                 ]
               }
             }
@@ -543,38 +543,38 @@ module VCAP::CloudController
 
         let(:expected_response) do
           {
-            'guid': UUID_REGEX,
-            'created_at': iso8601,
-            'updated_at': iso8601,
-            'name': 'my-space-quota',
-            'apps': {
-              'total_memory_in_mb': 5120,
-              'per_process_memory_in_mb': 1024,
-              'total_instances': 10,
-              'per_app_tasks': 5
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: 'my-space-quota',
+            apps: {
+              total_memory_in_mb: 5120,
+              per_process_memory_in_mb: 1024,
+              total_instances: 10,
+              per_app_tasks: 5
             },
-            'services': {
-              'paid_services_allowed': false,
-              'total_service_instances': 11,
-              'total_service_keys': 12
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 11,
+              total_service_keys: 12
             },
             routes: {
               total_routes: 47,
               total_reserved_ports: 2
             },
-            'relationships': {
-              'organization': {
-                'data': {
-                  'guid': org.guid
+            relationships: {
+              organization: {
+                data: {
+                  guid: org.guid
                 }
               },
-              'spaces': {
-                'data': [
-                  { 'guid': space.guid }
+              spaces: {
+                data: [
+                  { guid: space.guid }
                 ]
               }
             },
-            'links': {
+            links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{params[:guid]}) },
               organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
             }

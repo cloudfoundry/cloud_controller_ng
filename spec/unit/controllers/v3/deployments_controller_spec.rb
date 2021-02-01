@@ -719,7 +719,7 @@ RSpec.describe DeploymentsController, type: :controller do
           {
             metadata: {
               labels: {
-                "key": 'value'
+                key: 'value'
               }
             }
           }

@@ -1692,7 +1692,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     it 'paginates with query parameters' do
-      get :builds, params: { guid: app_model.guid, states: 'STAGED', 'per_page': 1 }
+      get :builds, params: { guid: app_model.guid, states: 'STAGED', per_page: 1 }
 
       expect(response.status).to eq(200), response.body
       expect(parsed_body['resources'].size).to eq(1)

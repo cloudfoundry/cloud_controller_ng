@@ -145,7 +145,7 @@ RSpec.describe 'ServiceInstances' do
     before do
       service_instance.dashboard_url   = 'someurl.com'
       service_instance.service_plan_id = service_plan.id
-      service_instance.maintenance_info = { 'version': '2.0', 'description': 'Test description' }
+      service_instance.maintenance_info = { version: '2.0', description: 'Test description' }
       service_instance.save
     end
 
@@ -561,7 +561,7 @@ RSpec.describe 'ServiceInstances' do
         space_guid:        space.guid,
         tags:              ['no-sql', 'georeplicated'],
         syslog_drain_url:  'syslog://example.com',
-        credentials:       { 'somekey': 'somevalue' },
+        credentials:       { somekey: 'somevalue' },
         route_service_url: 'https://logger.example.com',
       })
 
@@ -603,7 +603,7 @@ RSpec.describe 'ServiceInstances' do
         space_guid:        space.guid,
         tags:              ['no-sql', 'georeplicated'],
         syslog_drain_url:  'syslog://example.com',
-        credentials:       { 'somekey': 'somevalue' },
+        credentials:       { somekey: 'somevalue' },
         route_service_url: 'https://logger.example.com',
       })
 

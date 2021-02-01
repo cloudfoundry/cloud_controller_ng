@@ -8,7 +8,7 @@ module VCAP::CloudController
         'relationships' => {
           'app' => { 'data' => { 'guid' => 'some-app-guid' } }
         },
-        'process_types' => { 'web': 'web-type' }
+        'process_types' => { web: 'web-type' }
       }
     end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
 
         it 'is not valid when process_types has a non-string value' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 'app-guid' } } },
-            process_types: { "web": 867 } })
+            process_types: { web: 867 } })
           expect(message.process_types).not_to be_nil
           expect(message).not_to be_valid
           expect(message.errors_on(:process_types)).to include('value must be a string')

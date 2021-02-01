@@ -437,7 +437,7 @@ module VCAP::CloudController
 
           context 'when there is an error during service instance delete' do
             before do
-              stub_deprovision(service_instance, accepts_incomplete: true, status: 422, body: { 'error': 'ConcurrencyError' }.to_json)
+              stub_deprovision(service_instance, accepts_incomplete: true, status: 422, body: { error: 'ConcurrencyError' }.to_json)
             end
 
             it 'does not update the operation type' do

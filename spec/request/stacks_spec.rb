@@ -505,11 +505,11 @@ RSpec.describe 'Stacks Request' do
     let(:request_body) do
       {
         metadata: {
-          "labels": {
-            "potato": 'yam'
+          labels: {
+            potato: 'yam'
           },
-          "annotations": {
-            "potato": 'idaho'
+          annotations: {
+            potato: 'idaho'
           }
         }
       }.to_json

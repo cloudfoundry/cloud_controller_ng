@@ -55,7 +55,7 @@ module CloudController::Presenters::V2
         end
 
         context 'when maintenance_info is available as Hash' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(maintenance_info: { 'version': '3.0' }) }
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(maintenance_info: { version: '3.0' }) }
 
           it 'includes `maintenance_info` in the entity' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq(

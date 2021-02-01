@@ -8,7 +8,7 @@ RSpec.describe 'ServicePlans' do
   let!(:service_plan) do
     VCAP::CloudController::ServicePlan.make(
       service: service,
-      maintenance_info: { 'version': '2.0', 'description': 'Test description' },
+      maintenance_info: { version: '2.0', description: 'Test description' },
     )
   end
 

@@ -632,7 +632,7 @@ RSpec.describe 'Domains Request' do
 
       let(:matching_route_json) do
         {
-          "matching_route": false
+          matching_route: false
         }
       end
 
@@ -660,7 +660,7 @@ RSpec.describe 'Domains Request' do
 
         let(:matching_route_json) do
           {
-            "matching_route": true
+            matching_route: true
           }
         end
 
@@ -687,7 +687,7 @@ RSpec.describe 'Domains Request' do
 
         let(:matching_route_json) do
           {
-            "matching_route": false
+            matching_route: false
           }
         end
 
@@ -729,7 +729,7 @@ RSpec.describe 'Domains Request' do
 
         let(:matching_route_json) do
           {
-            "matching_route": true
+            matching_route: true
           }
         end
 

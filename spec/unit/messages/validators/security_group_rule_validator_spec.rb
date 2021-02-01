@@ -38,7 +38,7 @@ module VCAP::CloudController::Validators
       let(:rules) do
         [
           {
-            'protocol': 'blah',
+            protocol: 'blah',
           },
           {
             'not-a-field': true,
@@ -68,8 +68,8 @@ module VCAP::CloudController::Validators
       let(:rules) do
         [
           {
-            'blork': 'busted',
-            'blark': 'also busted',
+            blork: 'busted',
+            blark: 'also busted',
           }
         ]
       end
@@ -85,9 +85,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '10.10.10.0/24',
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '10.10.10.0/24',
+              ports: '8080'
             },
           ]
         end
@@ -101,8 +101,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': 42
+              protocol: 'udp',
+              destination: 42
             },
           ]
         end
@@ -117,8 +117,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': nil,
+              protocol: 'udp',
+              destination: nil,
             }
           ]
         end
@@ -133,8 +133,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '10.10.10.10 ',
+              protocol: 'udp',
+              destination: '10.10.10.10 ',
             }
           ]
         end
@@ -149,8 +149,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '1010',
+              protocol: 'udp',
+              destination: '1010',
             }
           ]
         end
@@ -165,9 +165,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'tcp',
-              'destination': '192.168.10.2-192.168.105',
-              'ports': '8080',
+              protocol: 'tcp',
+              destination: '192.168.10.2-192.168.105',
+              ports: '8080',
             }
           ]
         end
@@ -182,8 +182,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2-192.168.5.254',
+              protocol: 'udp',
+              destination: '192.168.10.2-192.168.5.254',
             }
           ]
         end
@@ -198,8 +198,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/240',
+              protocol: 'udp',
+              destination: '192.168.10.2/240',
             }
           ]
         end
@@ -214,9 +214,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2',
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '192.168.10.2',
+              ports: '8080'
             }
           ]
         end
@@ -230,9 +230,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2-192.168.15.254',
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '192.168.10.2-192.168.15.254',
+              ports: '8080'
             }
           ]
         end
@@ -246,9 +246,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: '8080'
             }
           ]
         end
@@ -264,10 +264,10 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'description': 'a description',
-              'ports': '8080',
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              description: 'a description',
+              ports: '8080',
             },
           ]
         end
@@ -281,8 +281,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'description': 42
+              protocol: 'udp',
+              description: 42
             },
           ]
         end
@@ -299,10 +299,10 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'log': true,
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              log: true,
+              ports: '8080'
             },
           ]
         end
@@ -316,9 +316,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'log': 42,
-              'ports': '8080'
+              protocol: 'udp',
+              log: 42,
+              ports: '8080'
             },
           ]
         end
@@ -332,7 +332,7 @@ module VCAP::CloudController::Validators
 
     describe 'protocol validation' do
       context 'the protocol is not a string' do
-        let(:rules) { [{ 'protocol': 4 }] }
+        let(:rules) { [{ protocol: 4 }] }
 
         it 'adds an error' do
           expect(subject).to be_invalid
@@ -341,7 +341,7 @@ module VCAP::CloudController::Validators
       end
 
       context 'when the protocol field is nil' do
-        let(:rules) { [{ 'protocol': nil }] }
+        let(:rules) { [{ protocol: nil }] }
 
         it 'is not valid' do
           expect(subject).to be_invalid
@@ -350,7 +350,7 @@ module VCAP::CloudController::Validators
       end
 
       context 'when the protocol field is an unknown type' do
-        let(:rules) { [{ 'protocol': 'arp' }] }
+        let(:rules) { [{ protocol: 'arp' }] }
 
         it 'adds an error' do
           expect(subject).to be_invalid
@@ -363,11 +363,11 @@ module VCAP::CloudController::Validators
           let(:rules) do
             [
               {
-                'protocol': proto,
-                'destination': '10.10.10.0/24',
-                'ports': (proto == 'all' ? nil : '8080'),
-                'type': (proto == 'icmp' ? -1 : nil),
-                'code': (proto == 'icmp' ? 255 : nil)
+                protocol: proto,
+                destination: '10.10.10.0/24',
+                ports: (proto == 'all' ? nil : '8080'),
+                type: (proto == 'icmp' ? -1 : nil),
+                code: (proto == 'icmp' ? 255 : nil)
               }
             ]
           end
@@ -385,9 +385,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': '8080'
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: '8080'
             },
           ]
         end
@@ -401,9 +401,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': '3000,8888',
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: '3000,8888',
             },
           ]
         end
@@ -417,9 +417,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': '4000-5000',
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: '4000-5000',
             },
           ]
         end
@@ -433,8 +433,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
             },
           ]
         end
@@ -451,9 +451,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': '6000-5000',
+              protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: '6000-5000',
             },
           ]
         end
@@ -469,9 +469,9 @@ module VCAP::CloudController::Validators
       context 'when the ports are not a string' do
         let(:rules) do
           [
-            { 'protocol': 'udp',
-              'destination': '192.168.10.2/24',
-              'ports': 42
+            { protocol: 'udp',
+              destination: '192.168.10.2/24',
+              ports: 42
             },
           ]
         end
@@ -488,9 +488,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'all',
-              'destination': '192.168.10.2/24',
-              'ports': '6000',
+              protocol: 'all',
+              destination: '192.168.10.2/24',
+              ports: '6000',
             },
           ]
         end
@@ -507,10 +507,10 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'icmp',
-              'destination': '10.10.10.0/24',
-              'type': -1,
-              'code': 255
+              protocol: 'icmp',
+              destination: '10.10.10.0/24',
+              type: -1,
+              code: 255
             },
           ]
         end
@@ -528,8 +528,8 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'icmp',
-              'destination': '10.10.10.0/24',
+              protocol: 'icmp',
+              destination: '10.10.10.0/24',
             },
           ]
         end
@@ -545,9 +545,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'icmp',
-              'type': -2,
-              'code': 256
+              protocol: 'icmp',
+              type: -2,
+              code: 256
             },
           ]
         end
@@ -563,9 +563,9 @@ module VCAP::CloudController::Validators
         let(:rules) do
           [
             {
-              'protocol': 'icmp',
-              'type': 'not an int',
-              'code': 'not an int'
+              protocol: 'icmp',
+              type: 'not an int',
+              code: 'not an int'
             },
           ]
         end

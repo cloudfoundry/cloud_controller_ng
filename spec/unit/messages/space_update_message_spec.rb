@@ -6,9 +6,9 @@ module VCAP::CloudController
     let(:body) do
       {
         'name' => 'my-space',
-        "metadata": {
-          "labels": {
-            "potato": 'mashed'
+        metadata: {
+          labels: {
+            potato: 'mashed'
           }
         }
       }

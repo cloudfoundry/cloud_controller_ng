@@ -64,55 +64,55 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
 
     it 'presents the service offering as JSON' do
       expect(result).to match({
-        'guid': guid,
-        'name': name,
-        'description': description,
-        'available': available,
-        'tags': tags,
-        'requires': requires,
-        'created_at': created_at,
-        'updated_at': service_offering.updated_at,
-        'shareable': false,
-        'documentation_url': '',
-        'broker_catalog': {
-          'id': id,
-          'metadata': {
-            'foo': 'bar',
-            'baz': {
-              'answer': 42,
+        guid: guid,
+        name: name,
+        description: description,
+        available: available,
+        tags: tags,
+        requires: requires,
+        created_at: created_at,
+        updated_at: service_offering.updated_at,
+        shareable: false,
+        documentation_url: '',
+        broker_catalog: {
+          id: id,
+          metadata: {
+            foo: 'bar',
+            baz: {
+              answer: 42,
             }
           },
-          'features': {
-            'plan_updateable': updateable,
-            'bindable': bindable,
-            'instances_retrievable': instances_retrievable,
-            'bindings_retrievable': bindings_retrievable,
-            'allow_context_updates': allow_context_updates,
+          features: {
+            plan_updateable: updateable,
+            bindable: bindable,
+            instances_retrievable: instances_retrievable,
+            bindings_retrievable: bindings_retrievable,
+            allow_context_updates: allow_context_updates,
           }
         },
-        'metadata': {
-          'labels': {
+        metadata: {
+          labels: {
             'canberra.au/potato': 'mashed'
           },
-          'annotations': {
-            'altitude': '14,412'
+          annotations: {
+            altitude: '14,412'
           }
         },
-        'links': {
-          'self': {
-            'href': "#{link_prefix}/v3/service_offerings/#{guid}"
+        links: {
+          self: {
+            href: "#{link_prefix}/v3/service_offerings/#{guid}"
           },
-          'service_plans': {
-            'href': "#{link_prefix}/v3/service_plans?service_offering_guids=#{guid}"
+          service_plans: {
+            href: "#{link_prefix}/v3/service_plans?service_offering_guids=#{guid}"
           },
-          'service_broker': {
-            'href': "#{link_prefix}/v3/service_brokers/#{service_broker.guid}"
+          service_broker: {
+            href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}"
           },
         },
-        'relationships': {
-          'service_broker': {
-            'data': {
-              'guid': service_broker.guid
+        relationships: {
+          service_broker: {
+            data: {
+              guid: service_broker.guid
             }
           }
         }

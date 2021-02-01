@@ -4,7 +4,7 @@ Sequel.migration do
       primary_key :id
       VCAP::Migration.guid(self, 'usage_events')
       Timestamp :created_at, null: false
-      index :created_at, name: 'created_at_index'.to_sym
+      index :created_at, name: :created_at_index
       String :state, null: false
       String :org_guid, null: false
       String :space_guid, null: false

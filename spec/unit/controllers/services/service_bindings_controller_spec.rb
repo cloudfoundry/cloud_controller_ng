@@ -788,7 +788,7 @@ module VCAP::CloudController
           end
 
           context 'when the broker returns a volume_mounts and the service does not require one' do
-            let(:bind_body) { { 'volume_mounts' => [{ 'thing': 'other thing' }] } }
+            let(:bind_body) { { 'volume_mounts' => [{ thing: 'other thing' }] } }
 
             it 'returns CF-VolumeMountServiceDisabled' do
               make_request

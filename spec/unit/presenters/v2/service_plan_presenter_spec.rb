@@ -25,7 +25,7 @@ module CloudController::Presenters::V2
         )
       end
 
-      let(:maintenance_info) { { 'version': '2.0' } }
+      let(:maintenance_info) { { version: '2.0' } }
 
       let(:create_instance_schema) { nil }
       let(:update_instance_schema) { nil }

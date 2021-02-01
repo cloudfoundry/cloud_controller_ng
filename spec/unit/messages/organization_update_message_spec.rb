@@ -110,9 +110,9 @@ module VCAP::CloudController
         context 'when the annotations params are valid' do
           let(:params) do
             {
-              'metadata': {
-                'annotations': {
-                  'potato': 'mashed'
+              metadata: {
+                annotations: {
+                  potato: 'mashed'
                 }
               }
             }
@@ -121,15 +121,15 @@ module VCAP::CloudController
           it 'is valid and correctly parses the annotations' do
             message = OrganizationUpdateMessage.new(params)
             expect(message).to be_valid
-            expect(message.annotations).to include('potato': 'mashed')
+            expect(message.annotations).to include(potato: 'mashed')
           end
         end
 
         context 'when the annotations params are not valid' do
           let(:params) do
             {
-              'metadata': {
-                'annotations': 'timmyd'
+              metadata: {
+                annotations: 'timmyd'
               }
             }
           end

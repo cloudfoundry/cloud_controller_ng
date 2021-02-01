@@ -6,7 +6,7 @@ RSpec.describe 'Deployments' do
   let(:space) { app_model.space }
   let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
-  let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
+  let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
   let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
@@ -164,7 +164,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'when a revision is supplied with the request' do
-      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
+      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
       let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
       let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
 
@@ -526,7 +526,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'telemetry' do
-      let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webboo' }) }
+      let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webboo' }) }
       let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
       let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
 

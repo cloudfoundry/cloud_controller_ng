@@ -51,7 +51,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'when the request is invalid' do
       it 'returns a 422' do
-        post :create, params: { source_guid: source_droplet_guid, body: { 'super_duper': 'bad_request' } }, as: :json
+        post :create, params: { source_guid: source_droplet_guid, body: { super_duper: 'bad_request' } }, as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -598,7 +598,7 @@ RSpec.describe DropletsController, type: :controller do
           {
             metadata: {
               labels: {
-                "key": 'value'
+                key: 'value'
               }
             }
           }

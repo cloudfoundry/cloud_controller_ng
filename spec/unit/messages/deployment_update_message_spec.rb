@@ -17,26 +17,26 @@ module VCAP::CloudController
       it 'can parse labels and annotations' do
         params =
           {
-            "metadata": {
-              "labels": {
-                "potato": 'mashed'
+            metadata: {
+              labels: {
+                potato: 'mashed'
               },
-              "annotations": {
-                "eating": 'potatoes'
+              annotations: {
+                eating: 'potatoes'
               }
             }
           }
         message = DeploymentUpdateMessage.new(params)
         expect(message).to be_valid
-        expect(message.labels).to include("potato": 'mashed')
-        expect(message.annotations).to include("eating": 'potatoes')
+        expect(message.labels).to include(potato: 'mashed')
+        expect(message.annotations).to include(eating: 'potatoes')
       end
 
       it 'validates both bad labels and bad annotations' do
         params = {
-          "metadata": {
-            "annotations": 'potato',
-            "labels": 'fries'
+          metadata: {
+            annotations: 'potato',
+            labels: 'fries'
           }
         }
         message = DeploymentUpdateMessage.new(params)

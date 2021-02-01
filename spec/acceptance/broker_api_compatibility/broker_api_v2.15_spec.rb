@@ -559,7 +559,7 @@ RSpec.describe 'Service Broker API integration' do
         context 'broker rejects the unbind request' do
           it 'raise concurrency error' do
             service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
-            expect(unbind_service(status: 422, response_body: { "error": 'ConcurrencyError' })).to have_status_code(409)
+            expect(unbind_service(status: 422, response_body: { error: 'ConcurrencyError' })).to have_status_code(409)
 
             expect(a_request(:delete, unbind_url(service_binding))).to have_been_made
 

@@ -439,10 +439,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let(:org_guid) { org.guid }
     let(:req_body) do
       {
-        'name':          name,
-        'relationships': {
-          'organization': {
-            'data': { 'guid': org_guid }
+        name:          name,
+        relationships: {
+          organization: {
+            data: { guid: org_guid }
           }
         }
       }
@@ -541,10 +541,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when there is an invalid annotation' do
       let(:request_body) do
         {
-          'name':          name,
-          'relationships': {
-            'organization': {
-              'data': { 'guid': org_guid }
+          name:          name,
+          relationships: {
+            organization: {
+              data: { guid: org_guid }
             }
           },
           metadata: {
@@ -565,10 +565,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when there are too many annotations' do
       let(:request_body) do
         {
-          'name':          name,
-          'relationships': {
-            'organization': {
-              'data': { 'guid': org_guid }
+          name:          name,
+          relationships: {
+            organization: {
+              data: { guid: org_guid }
             }
           },
           metadata: {
@@ -709,7 +709,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           {
             metadata: {
               labels: {
-                'key': 'value'
+                key: 'value'
               }
             }
           }

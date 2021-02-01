@@ -190,7 +190,7 @@ module VCAP::CloudController
         end
 
         describe 'updating environment variables' do
-          let(:message) { AppManifestMessage.create_from_yml({ env: { 'foo': 'bar' } }) }
+          let(:message) { AppManifestMessage.create_from_yml({ env: { foo: 'bar' } }) }
           let(:app_update_environment_variables_message) { message.app_update_environment_variables_message }
           let(:app) { AppModel.make }
 
@@ -457,7 +457,7 @@ module VCAP::CloudController
         end
 
         describe 'updating routes' do
-          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', routes: [{ 'route': 'http://tater.tots.com/tabasco' }] }) }
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', routes: [{ route: 'http://tater.tots.com/tabasco' }] }) }
           let(:manifest_routes_update_message) { message.manifest_routes_update_message }
           let(:process) { ProcessModel.make }
           let(:app) { process.app }

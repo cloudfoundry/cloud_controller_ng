@@ -1481,13 +1481,13 @@ RSpec.describe 'V3 service brokers' do
               with(
                 body: [
                   {
-                    "client_id": uaa_client_id,
-                    "client_secret": nil,
-                    "redirect_uri": nil,
-                    "scope": %w(openid cloud_controller_service_permissions.read),
-                    "authorities": ['uaa.resource'],
-                    "authorized_grant_types": ['authorization_code'],
-                    "action": 'delete'
+                    client_id: uaa_client_id,
+                    client_secret: nil,
+                    redirect_uri: nil,
+                    scope: %w(openid cloud_controller_service_permissions.read),
+                    authorities: ['uaa.resource'],
+                    authorized_grant_types: ['authorization_code'],
+                    action: 'delete'
                   }
                 ].to_json
               )).to have_been_made
@@ -1616,13 +1616,13 @@ RSpec.describe 'V3 service brokers' do
       with(
         body: [
           {
-            "client_id": "#{broker_id}-uaa-id",
-            "client_secret": 'my-dashboard-secret',
-            "redirect_uri": 'http://example.org',
-            "scope": %w(openid cloud_controller_service_permissions.read),
-            "authorities": ['uaa.resource'],
-            "authorized_grant_types": ['authorization_code'],
-            "action": 'add'
+            client_id: "#{broker_id}-uaa-id",
+            client_secret: 'my-dashboard-secret',
+            redirect_uri: 'http://example.org',
+            scope: %w(openid cloud_controller_service_permissions.read),
+            authorities: ['uaa.resource'],
+            authorized_grant_types: ['authorization_code'],
+            action: 'add'
           }
         ].to_json
       ).
@@ -1632,13 +1632,13 @@ RSpec.describe 'V3 service brokers' do
       with(
         body: [
           {
-            "client_id": "#{broker_id}-uaa-id",
-            "client_secret": nil,
-            "redirect_uri": nil,
-            "scope": %w(openid cloud_controller_service_permissions.read),
-            "authorities": ['uaa.resource'],
-            "authorized_grant_types": ['authorization_code'],
-            "action": 'delete'
+            client_id: "#{broker_id}-uaa-id",
+            client_secret: nil,
+            redirect_uri: nil,
+            scope: %w(openid cloud_controller_service_permissions.read),
+            authorities: ['uaa.resource'],
+            authorized_grant_types: ['authorization_code'],
+            action: 'delete'
           }
         ].to_json
       ).
@@ -1648,13 +1648,13 @@ RSpec.describe 'V3 service brokers' do
       with(
         body: [
           {
-            "client_id": "#{broker_id}-uaa-id",
-            "client_secret": 'my-dashboard-secret',
-            "redirect_uri": 'http://example.org',
-            "scope": %w(openid cloud_controller_service_permissions.read),
-            "authorities": ['uaa.resource'],
-            "authorized_grant_types": ['authorization_code'],
-            "action": 'update,secret'
+            client_id: "#{broker_id}-uaa-id",
+            client_secret: 'my-dashboard-secret',
+            redirect_uri: 'http://example.org',
+            scope: %w(openid cloud_controller_service_permissions.read),
+            authorities: ['uaa.resource'],
+            authorized_grant_types: ['authorization_code'],
+            action: 'update,secret'
           }
         ].to_json
       )

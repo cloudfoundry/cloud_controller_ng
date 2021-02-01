@@ -94,7 +94,7 @@ RSpec.describe(OPI::StagerClient) do
 
       context 'when staging details includes env vars' do
         before do
-          staging_details.environment_variables = { 'GOPACKAGE': 'github.com/some/go/pkg' }
+          staging_details.environment_variables = { GOPACKAGE: 'github.com/some/go/pkg' }
         end
 
         it 'should include the staging details env vars in the request' do

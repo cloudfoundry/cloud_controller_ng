@@ -15,7 +15,7 @@ module VCAP::CloudController
       let!(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
 
       context 'when space guid, name and relationship.organizations are requested' do
-        let(:decorator) { described_class.new({ 'space': ['relationships.organization', 'guid', 'name'] }) }
+        let(:decorator) { described_class.new({ space: ['relationships.organization', 'guid', 'name'] }) }
 
         it 'decorates the given hash with spaces guids and relationships to orgs from service instances' do
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       context 'when only space guids are requested' do
         it 'decorates the given hash with spaces guids' do
-          decorator = described_class.new({ 'space': ['guid'] })
+          decorator = described_class.new({ space: ['guid'] })
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
       context 'when only space names are requested' do
         it 'decorates the given hash with spaces names' do
-          decorator = described_class.new({ 'space': ['name'] })
+          decorator = described_class.new({ space: ['name'] })
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
       context 'when only relationships.organization is requested' do
         it 'decorates the given hash with relationships to orgs' do
-          decorator = described_class.new({ 'space': ['relationships.organization'] })
+          decorator = described_class.new({ space: ['relationships.organization'] })
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
       end
 
       context 'when instances share a space' do
-        let(:decorator) { described_class.new({ 'space': ['guid'] }) }
+        let(:decorator) { described_class.new({ space: ['guid'] }) }
         let!(:service_instance_3) { ManagedServiceInstance.make(space: space1) }
 
         it 'does not duplicate the space' do
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
       context 'decorating relationships' do
         it 'includes the related resource correctly' do
-          decorator = described_class.new({ 'space': ['guid'] })
+          decorator = described_class.new({ space: ['guid'] })
           undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
           relationship = [space1, space2, space1]
 

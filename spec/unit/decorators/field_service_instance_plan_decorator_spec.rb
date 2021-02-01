@@ -13,7 +13,7 @@ module VCAP::CloudController
 
       it 'decorated the given hash with plan guid and name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_plan': ['guid', 'name', 'foo'] })
+        decorator = described_class.new({ service_plan: ['guid', 'name', 'foo'] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       it 'decorated the given hash with plan relationships to offering' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_plan': ['relationships.service_offering'] })
+        decorator = described_class.new({ service_plan: ['relationships.service_offering'] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
         let!(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan1) }
 
         it 'does not duplicate the plan' do
-          decorator = described_class.new({ 'service_plan': ['guid'] })
+          decorator = described_class.new({ service_plan: ['guid'] })
           hash = decorator.decorate({}, [service_instance_1, service_instance_3])
           expect(hash[:included][:service_plans]).to have(1).element
         end
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         it 'should return the unchanged hash' do
           undecorated_hash = { foo: 'bar' }
-          decorator = described_class.new({ 'service_plan': ['relationships.service_offering'] })
+          decorator = described_class.new({ service_plan: ['relationships.service_offering'] })
 
           hash = decorator.decorate(undecorated_hash, [service_instance_3])
           expect(hash[:included]).to be_nil

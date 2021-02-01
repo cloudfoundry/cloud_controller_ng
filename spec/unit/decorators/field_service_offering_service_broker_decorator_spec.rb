@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       it 'decorated the given hash with broker name and guid' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_broker': ['name', 'guid'] })
+        decorator = described_class.new({ service_broker: ['name', 'guid'] })
 
         hash = decorator.decorate(undecorated_hash, [offering1, offering2])
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
         let(:offering3) { Service.make(service_broker: offering1.service_broker) }
 
         it 'does not duplicate the broker' do
-          decorator = described_class.new({ 'service_broker': ['name'] })
+          decorator = described_class.new({ service_broker: ['name'] })
           hash = decorator.decorate({}, [offering1, offering3])
           expect(hash[:included][:service_brokers]).to have(1).element
         end

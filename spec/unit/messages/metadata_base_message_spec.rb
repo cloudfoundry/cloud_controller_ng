@@ -13,21 +13,21 @@ module VCAP::CloudController
         it 'can parse labels' do
           params =
             {
-              "metadata": {
-                "labels": {
-                  "potato": 'mashed'
+              metadata: {
+                labels: {
+                  potato: 'mashed'
                 }
               }
             }
           message = fake_class.new(params)
           expect(message).to be_valid
-          expect(message.labels).to include("potato": 'mashed')
+          expect(message.labels).to include(potato: 'mashed')
         end
 
         it 'validates labels' do
           params = {
-            "metadata": {
-              "labels": 'potato',
+            metadata: {
+              labels: 'potato',
             }
           }
           message = fake_class.new(params)
@@ -40,21 +40,21 @@ module VCAP::CloudController
         it 'can parse annotations' do
           params =
             {
-              "metadata": {
-                "annotations": {
-                  "potato": 'mashed'
+              metadata: {
+                annotations: {
+                  potato: 'mashed'
                 }
               }
             }
           message = fake_class.new(params)
           expect(message).to be_valid
-          expect(message.annotations).to include("potato": 'mashed')
+          expect(message.annotations).to include(potato: 'mashed')
         end
 
         it 'validates annotations' do
           params = {
-            "metadata": {
-              "annotations": 'potato',
+            metadata: {
+              annotations: 'potato',
             }
           }
           message = fake_class.new(params)

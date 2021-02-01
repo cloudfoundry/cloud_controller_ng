@@ -224,8 +224,8 @@ module VCAP::CloudController::Presenters::V3
               expect(application[:buildpacks]).to be_nil
               expect(application[:stack]).to be_nil
               expect(application[:docker]).to eq({
-                'image': 'my-image:my-tag',
-                'username': 'xXxMyL1ttlePwnyxXx'
+                image: 'my-image:my-tag',
+                username: 'xXxMyL1ttlePwnyxXx'
               })
             end
 
@@ -239,7 +239,7 @@ module VCAP::CloudController::Presenters::V3
                 expect(application[:buildpacks]).to be_nil
                 expect(application[:stack]).to be_nil
                 expect(application[:docker]).to eq({
-                  'image': 'my-image:my-tag',
+                  image: 'my-image:my-tag',
                 })
               end
             end

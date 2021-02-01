@@ -327,8 +327,8 @@ module VCAP::CloudController
       end
 
       context 'when maintenence info is present' do
-        let(:maintenance_info) { { 'version': '2.0.0' } }
-        let(:service_instance_maintenance_info) { { 'version': '1.0.0' } }
+        let(:maintenance_info) { { version: '2.0.0' } }
+        let(:service_instance_maintenance_info) { { version: '1.0.0' } }
 
         it 'returns the maintenanca_info on service instance and plan' do
           service_instance_summary = service_instance.as_summary_json

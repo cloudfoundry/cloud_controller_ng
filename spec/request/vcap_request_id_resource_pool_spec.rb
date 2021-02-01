@@ -15,7 +15,7 @@ RSpec.describe 'making several resource_match requests when bits-service in enab
       ids << VCAP::Request.current_id
       double('FakeResourcePool', matches: double('FakeMatch', body: ''))
     }
-    3.times { put '/v2/resource_match', [{ "fn": 'some-file', "mode": '644', "sha1": 'irrelevant', "size": 1 }].to_json, user_header }
+    3.times { put '/v2/resource_match', [{ fn: 'some-file', mode: '644', sha1: 'irrelevant', size: 1 }].to_json, user_header }
     expect(ids.uniq.length).to eq(3)
   end
 end

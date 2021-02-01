@@ -76,7 +76,7 @@ module VCAP::CloudController
 
       context 'when service instances is not an array' do
         let(:body) {
-          { 'services': 'service' }
+          { services: 'service' }
         }
 
         it 'is not valid' do
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
       context 'when service instances is a nested array' do
         let(:body) {
-          { 'services': [['s1', 's2'], 's3'] }
+          { services: [['s1', 's2'], 's3'] }
         }
 
         it 'is not valid' do
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
       context 'when unexpected keys are requested' do
         let(:body) {
-          { 'services': ['s1', 's2'], 'surprise_key': 'surprise' }
+          { services: ['s1', 's2'], surprise_key: 'surprise' }
         }
 
         it 'is not valid' do

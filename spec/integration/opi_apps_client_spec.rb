@@ -38,7 +38,7 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
       app: app,
       desired_droplet: droplet,
       specified_or_detected_command: 'ls -la',
-      environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
+      environment_json: { PORT: 8080, FOO: 'BAR' },
       health_check_type: 'port',
       health_check_http_endpoint: '/healthz',
       health_check_timeout: 420,

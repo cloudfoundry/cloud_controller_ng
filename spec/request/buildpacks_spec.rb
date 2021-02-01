@@ -723,11 +723,11 @@ RSpec.describe 'buildpacks' do
             enabled: false,
             locked: true,
             metadata: {
-              "labels": {
-                "potato": 'yam'
+              labels: {
+                potato: 'yam'
               },
-              "annotations": {
-                "potato": 'idaho'
+              annotations: {
+                potato: 'idaho'
               }
             },
           }

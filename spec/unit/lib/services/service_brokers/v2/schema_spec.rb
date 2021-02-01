@@ -9,7 +9,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:raw_schema) {
         {
           '$schema' => 'http://json-schema.org/draft-04/schema#',
-          :properties => { 'foo': { 'type': 'string' } },
+          :properties => { foo: { type: 'string' } },
           :required => ['foo']
         }
       }
@@ -49,9 +49,9 @@ module VCAP::Services::ServiceBrokers::V2
         let(:raw_schema) {
           {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
-            'properties': {
-              'foo': { 'type': 'integer' },
-              'bar': { '$ref': '#/properties/foo' }
+            properties: {
+              foo: { type: 'integer' },
+              bar: { '$ref': '#/properties/foo' }
             }
           }
         }
@@ -64,7 +64,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'metaschema errors' do
         context 'when JSON::Validator returns an error' do
-          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'properties': true } }
+          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', properties: true } }
 
           before do
             allow(JSON::Validator).to receive(:fully_validate).and_return([{ message: 'whoops' }])
@@ -78,7 +78,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'when JSON::Validator raises an error' do
-          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'properties': true } }
+          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', properties: true } }
 
           before do
             allow(JSON::Validator).to receive(:fully_validate).and_raise('uh oh')
@@ -92,7 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'when there are multiple errors' do
-          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'properties': true, 'anyOf': true } }
+          let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', properties: true, anyOf: true } }
 
           it 'should have more than one error message' do
             expect(schema.validate).to be false
