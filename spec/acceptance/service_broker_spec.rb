@@ -261,6 +261,9 @@ RSpec.describe 'Service Broker' do
           "Service broker catalog is invalid: \n" \
           "Service ids must be unique\n" \
           "Service names must be unique within a broker\n" \
+          "Plan ids must be unique. Unable to register plan with id 'plan-b' (plan name 'large', " \
+          "service name 'service-2') because it uses the same id as another plan in the catalog " \
+          "(plan name 'small', service name 'service-2')\n" \
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
@@ -275,7 +278,7 @@ RSpec.describe 'Service Broker' do
           "The property '#/properties' of type boolean did not match the following type: object in schema "\
           "http://json-schema.org/draft-04/schema#\n" \
           "Service service-2\n" \
-          "  Plan ids must be unique within a service. Service service-2 already has a plan with id 'plan-b'\n" \
+          "  Plan ids must be unique. Service service-2 already has a plan with id 'plan-b'\n" \
           "  Plan large\n" \
           "    Plan description is required\n" \
           "Service service-3\n" \
