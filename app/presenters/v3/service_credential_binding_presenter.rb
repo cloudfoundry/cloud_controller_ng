@@ -10,6 +10,17 @@ module VCAP
           include VCAP::CloudController::Presenters::Mixins::LastOperationHelper
           include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+          class << self
+            def associated_resources
+              [
+                :service_instance_sti_eager_load,
+                :labels_sti_eager_load,
+                :annotations_sti_eager_load,
+                :operation_sti_eager_load
+              ]
+            end
+          end
+
           def to_hash
             base_hash.merge(extra).merge(decorations)
           end

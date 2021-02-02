@@ -20,7 +20,11 @@ class ServiceCredentialBindingsController < ApplicationController
     message = ServiceCredentialBindingListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    results = list_fetcher.fetch(space_guids: space_guids, message: message)
+    results = list_fetcher.fetch(
+      space_guids: space_guids,
+      message: message,
+      eager_loaded_associations: Presenters::V3::ServiceCredentialBindingPresenter.associated_resources,
+    )
 
     default_order_by_overriden = override_default_order_by(message)
     page_results = SequelPaginator.new.get_page(results, message.try(:pagination_options))

@@ -85,11 +85,111 @@ module VCAP
 
       class View < Sequel::Model(VIEW)
         plugin :single_table_inheritance,
-               :type,
-               model_map: {
-                 'app' => 'VCAP::CloudController::ServiceBinding',
-                 'key' => 'VCAP::CloudController::ServiceKey'
-               }
+          :type,
+          model_map: {
+            'app' => 'VCAP::CloudController::ServiceBinding',
+            'key' => 'VCAP::CloudController::ServiceKey'
+          }
+
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
+        many_to_one :service_instance_sti_eager_load,
+          dataset: -> { raise 'Must be used for eager loading' },
+          eager_loader_key: nil, # set up id_map ourselves
+          eager_loader: proc { |eo|
+            service_instance_id_to_keys = {}
+            service_instance_guid_to_bindings = {}
+            eo[:rows].each do |scb|
+              scb.associations[:service_instance] = nil
+              case scb # keys are joined by ID and bindings by GUID
+              when ServiceKey
+                service_instance_id_to_keys[scb.service_instance_id] ||= []
+                service_instance_id_to_keys[scb.service_instance_id] << scb
+              when ServiceBinding
+                service_instance_guid_to_bindings[scb.service_instance_guid] ||= []
+                service_instance_guid_to_bindings[scb.service_instance_guid] << scb
+              end
+            end
+            ds = ServiceInstance.where(id: service_instance_id_to_keys.keys).or(guid: service_instance_guid_to_bindings.keys)
+            ds = ds.eager(eo[:associations]) if eo[:associations]
+            ds = eo[:eager_block].call(ds) if eo[:eager_block]
+            ds.all do |service_instance|
+              service_instance_id_to_keys[service_instance.id]&.each { |binding| binding.associations[:service_instance] = service_instance }
+              service_instance_guid_to_bindings[service_instance.guid]&.each { |binding| binding.associations[:service_instance] = service_instance }
+            end
+          }
+
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
+        one_to_many :labels_sti_eager_load,
+          dataset: -> { raise 'Must be used for eager loading' },
+          eager_loader_key: nil, # set up id_map ourselves
+          eager_loader: proc { |eo|
+            service_keys = {}
+            service_bindings = {}
+            eo[:rows].each do |scb|
+              scb.associations[:labels] = []
+              case scb
+              when ServiceKey
+                service_keys[scb.guid] = scb
+              when ServiceBinding
+                service_bindings[scb.guid] = scb
+              end
+            end
+            ServiceKeyLabelModel.where(resource_guid: service_keys.keys).all do |label|
+              service_keys[label.resource_guid].associations[:labels] << label if service_keys[label.resource_guid]
+            end
+            ServiceBindingLabelModel.where(resource_guid: service_bindings.keys).all do |label|
+              service_bindings[label.resource_guid].associations[:labels] << label if service_bindings[label.resource_guid]
+            end
+          }
+
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
+        one_to_many :annotations_sti_eager_load,
+          dataset: -> { raise 'Must be used for eager loading' },
+          eager_loader_key: nil, # set up id_map ourselves
+          eager_loader: proc { |eo|
+            service_keys = {}
+            service_bindings = {}
+            eo[:rows].each do |scb|
+              scb.associations[:annotations] = []
+              case scb
+              when ServiceKey
+                service_keys[scb.guid] = scb
+              when ServiceBinding
+                service_bindings[scb.guid] = scb
+              end
+            end
+            ServiceKeyAnnotationModel.where(resource_guid: service_keys.keys).all do |annotation|
+              service_keys[annotation.resource_guid].associations[:annotations] << annotation if service_keys[annotation.resource_guid]
+            end
+            ServiceBindingAnnotationModel.where(resource_guid: service_bindings.keys).all do |annotation|
+              service_bindings[annotation.resource_guid].associations[:annotations] << annotation if service_bindings[annotation.resource_guid]
+            end
+          }
+
+        # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
+        one_to_many :operation_sti_eager_load,
+          dataset: -> { raise 'Must be used for eager loading' },
+          eager_loader_key: nil, # set up id_map ourselves
+          eager_loader: proc { |eo|
+            service_keys = {}
+            service_bindings = {}
+            eo[:rows].each do |scb|
+              case scb
+              when ServiceKey
+                scb.associations[:service_key_operation] = nil
+                service_keys[scb.id] = scb
+              when ServiceBinding
+                scb.associations[:service_binding_operation] = nil
+                service_bindings[scb.id] = scb
+              end
+            end
+            ServiceKeyOperation.where(service_key_id: service_keys.keys).all do |operation|
+              service_keys[operation.service_key_id].associations[:service_key_operation] = operation
+            end
+            ServiceBindingOperation.where(service_binding_id: service_bindings.keys).all do |operation|
+              service_bindings[operation.service_binding_id].associations[:service_binding_operation] = operation
+            end
+          }
       end
     end
 
