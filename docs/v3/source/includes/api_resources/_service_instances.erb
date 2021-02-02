@@ -99,6 +99,13 @@
       "type": "user-provided",
       "syslog_drain_url": "http://logs.com",
       "route_service_url": "https://routes.com",
+      "last_operation": {
+        "type": "update",
+        "state": "succeeded",
+        "description": "Operation succeeded",
+        "updated_at": "2020-03-10T15:59:32Z",
+        "created_at": "2020-03-10T15:59:29Z"
+      },
       "relationships": {
         "space": {
           "data": {
@@ -199,6 +206,13 @@
   "guid": "88ce23e5-27c3-4381-a2df-32a28ec43133",
   "created_at": "2020-03-10T15:56:08Z",
   "updated_at": "2020-03-10T15:56:08Z",
+  "last_operation": {
+    "type": <%= metadata.fetch(:operation, "create").to_json %>,
+    "state": "succeeded",
+    "description": "Operation succeeded",
+    "updated_at": "2020-03-10T15:49:32Z",
+    "created_at": "2020-03-10T15:49:29Z"
+  },
   "name": "my-user-provided-instance",
   "tags": ["sql"],
   "type": "user-provided",
