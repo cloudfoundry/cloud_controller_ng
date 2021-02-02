@@ -151,8 +151,40 @@ module VCAP::CloudController
       end
     end
 
-    it 'pretends it can #save_with_new_operation' do
-      service_instance.save_with_new_operation({ foo: 'bar' }, { baz: 'bot' })
+    describe '#save_with_new_operation' do
+      it 'creates a new last_operation object and associates it with the service instance' do
+        instance = { syslog_drain_url: 'https://some-url.com' }
+        last_operation = {
+          type: 'create',
+          state: 'succeeded',
+          description: 'Operation succeeded'
+        }
+
+        service_instance.save_with_new_operation(instance, last_operation)
+
+        service_instance.reload
+        expect(service_instance.syslog_drain_url).to eq 'https://some-url.com'
+        expect(service_instance.last_operation.type).to eq 'create'
+        expect(service_instance.last_operation.state).to eq 'succeeded'
+        expect(service_instance.last_operation.description).to eq 'Operation succeeded'
+      end
+
+      context 'when the instance already has a last operation' do
+        before do
+          last_operation = { state: 'created' }
+          service_instance.save_with_new_operation({}, last_operation)
+          service_instance.reload
+          @old_guid = service_instance.last_operation.guid
+        end
+
+        it 'creates a new operation' do
+          last_operation = {  type: 'update', state: 'succeeded' }
+          service_instance.save_with_new_operation({}, last_operation)
+
+          service_instance.reload
+          expect(service_instance.last_operation.guid).not_to eq(@old_guid)
+        end
+      end
     end
   end
 end

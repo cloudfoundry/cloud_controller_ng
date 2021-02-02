@@ -14,15 +14,23 @@ module VCAP::CloudController
 
     def create(message)
       instance = nil
+      attributes = {
+        name: message.name,
+        space_guid: message.space_guid,
+        tags: message.tags,
+        credentials: message.credentials,
+        syslog_drain_url: message.syslog_drain_url,
+        route_service_url: message.route_service_url,
+      }
+      last_operation = {
+        type: 'create',
+        state: 'succeeded',
+        description: 'Operation succeeded',
+      }
+
       UserProvidedServiceInstance.db.transaction do
-        instance = UserProvidedServiceInstance.create({
-          name: message.name,
-          space_guid: message.space_guid,
-          tags: message.tags,
-          credentials: message.credentials,
-          syslog_drain_url: message.syslog_drain_url,
-          route_service_url: message.route_service_url,
-        })
+        instance = UserProvidedServiceInstance.new
+        instance.save_with_new_operation(attributes, last_operation)
         MetadataUpdate.update(instance, message)
         service_event_repository.record_user_provided_service_instance_event(:create, instance, message.audit_hash)
       end

@@ -17,38 +17,55 @@ module VCAP::CloudController
       end
 
       describe '#blocking_operation_in_progress?' do
-        let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make.tap do |si|
-            si.save_with_new_operation({}, { type: last_operation_type, state: last_operation_state })
+        describe 'managed service instance' do
+          let!(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make.tap do |si|
+              si.save_with_new_operation({}, { type: last_operation_type, state: last_operation_state })
+            end
+          end
+
+          describe 'delete in progress' do
+            let(:last_operation_type) { 'delete' }
+            let(:last_operation_state) { 'in progress' }
+
+            it 'is blocking' do
+              expect(action.blocking_operation_in_progress?).to be_truthy
+            end
+          end
+
+          describe 'create in progress' do
+            let(:last_operation_type) { 'create' }
+            let(:last_operation_state) { 'in progress' }
+
+            it 'is not blocking' do
+              expect(action.blocking_operation_in_progress?).to be_falsey
+            end
+          end
+
+          describe 'operation not in progress' do
+            let(:last_operation_type) { 'delete' }
+            let(:last_operation_state) { 'failed' }
+
+            it 'is not blocking' do
+              expect(action.blocking_operation_in_progress?).to be_falsey
+            end
           end
         end
 
-        describe 'delete in progress' do
-          let(:last_operation_type) { 'delete' }
-          let(:last_operation_state) { 'in progress' }
-
-          it 'is blocking' do
-            expect(action.blocking_operation_in_progress?).to be_truthy
+        describe 'user provided service instances' do
+          let!(:service_instance) do
+            VCAP::CloudController::UserProvidedServiceInstance.make.tap do |si|
+              si.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
+            end
           end
-        end
-
-        describe 'create in progress' do
-          let(:last_operation_type) { 'create' }
-          let(:last_operation_state) { 'in progress' }
 
           it 'is not blocking' do
             expect(action.blocking_operation_in_progress?).to be_falsey
           end
         end
 
-        describe 'operation not in progress' do
-          let(:last_operation_type) { 'delete' }
-          let(:last_operation_state) { 'failed' }
 
-          it 'is not blocking' do
-            expect(action.blocking_operation_in_progress?).to be_falsey
-          end
-        end
+
       end
 
       describe '#delete' do
@@ -76,6 +93,7 @@ module VCAP::CloudController
               VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
               VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
             ]
+            si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'update', state: 'succeeded')
             si
           end
           let(:deprovision_response) do
