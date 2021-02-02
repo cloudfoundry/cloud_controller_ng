@@ -129,6 +129,5 @@ module VCAP::CloudController
         it_behaves_like 'delete service instance'
       end
     end
-
   end
 end

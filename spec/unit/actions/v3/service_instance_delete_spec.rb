@@ -63,9 +63,6 @@ module VCAP::CloudController
             expect(action.blocking_operation_in_progress?).to be_falsey
           end
         end
-
-
-
       end
 
       describe '#delete' do

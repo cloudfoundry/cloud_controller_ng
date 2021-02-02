@@ -861,7 +861,6 @@ RSpec.describe 'V3 service instances' do
         expect(instance.last_operation.state).to eq('succeeded')
         expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
-
       end
 
       context 'when the name has already been taken' do

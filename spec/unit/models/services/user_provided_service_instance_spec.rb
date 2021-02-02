@@ -178,7 +178,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new operation' do
-          last_operation = {  type: 'update', state: 'succeeded' }
+          last_operation = { type: 'update', state: 'succeeded' }
           service_instance.save_with_new_operation({}, last_operation)
 
           service_instance.reload
