@@ -24,6 +24,7 @@ module VCAP::CloudController
     serialize_attributes :json, :tags
 
     one_to_one :service_instance_operation
+    add_association_dependencies service_instance_operation: :destroy
 
     one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
     one_to_many :service_keys

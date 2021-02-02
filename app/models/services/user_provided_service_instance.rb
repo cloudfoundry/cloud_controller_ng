@@ -7,7 +7,6 @@ module VCAP::CloudController
     strip_attributes :name, :syslog_drain_url, :route_service_url
 
     add_association_dependencies service_bindings: :destroy
-    add_association_dependencies service_instance_operation: :destroy
 
     def route_service?
       !(route_service_url.nil? || route_service_url.empty?)
