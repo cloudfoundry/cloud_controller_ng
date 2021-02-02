@@ -1269,6 +1269,12 @@ RSpec.describe 'v3 service credential bindings' do
                 end
               end
             end
+
+            context 'when the organization it has been shared to is suspended' do
+              it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
+                let(:expected_codes) {}
+              end
+            end
           end
         end
 
@@ -1630,6 +1636,23 @@ RSpec.describe 'v3 service credential bindings' do
       context 'when the organization is suspended' do
         it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
           let(:expected_codes) {}
+        end
+      end
+
+      context 'when the service instance has been shared to the organization' do
+        let(:original_space) { VCAP::CloudController::Space.make }
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+        before do
+          instance.add_shared_space(space)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
+            let(:expected_codes) {}
+          end
         end
       end
     end
@@ -2086,6 +2109,12 @@ RSpec.describe 'v3 service credential bindings' do
                 h['admin'] = h['space_developer'] = { code: 202 }
                 h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
               end
+            end
+          end
+
+          context 'when the organization is suspended' do
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
+              let(:expected_codes) {}
             end
           end
         end
