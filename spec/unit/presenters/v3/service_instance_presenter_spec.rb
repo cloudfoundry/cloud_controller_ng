@@ -169,12 +169,17 @@ module VCAP::CloudController::Presenters::V3
 
     context 'user-provided service instance' do
       let(:service_instance) do
-        VCAP::CloudController::UserProvidedServiceInstance.make(
+        si = VCAP::CloudController::UserProvidedServiceInstance.make(
           name: 'yu-db',
           tags: ['tag3', 'tag4'],
           syslog_drain_url: 'https://syslog-drain.com',
           route_service_url: 'https://route-service.com',
         )
+        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
+          type: 'create',
+          state: 'succeeded'
+        )
+        si
       end
 
       it 'presents the user-provided service instance' do
@@ -185,6 +190,13 @@ module VCAP::CloudController::Presenters::V3
           updated_at: service_instance.updated_at,
           type: 'user-provided',
           tags: ['tag3', 'tag4'],
+          last_operation: {
+            created_at: service_instance.last_operation.created_at,
+            updated_at: service_instance.last_operation.updated_at,
+            state: 'succeeded',
+            type: 'create',
+            description: 'description goes here'
+          },
           syslog_drain_url: 'https://syslog-drain.com',
           route_service_url: 'https://route-service.com',
           metadata: {
