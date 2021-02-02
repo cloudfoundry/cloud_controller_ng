@@ -834,7 +834,14 @@ RSpec.describe 'V3 service instances' do
           create_user_provided_json(
             VCAP::CloudController::ServiceInstance.last,
             labels: { baz: 'qux' },
-            annotations: { foo: 'bar' }
+            annotations: { foo: 'bar' },
+            last_operation: {
+              type: 'create',
+              state: 'succeeded',
+              description: 'Operation succeeded',
+              created_at: iso8601,
+              updated_at: iso8601,
+            }
           )
         )
       end
@@ -850,6 +857,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.credentials).to match({ 'foo' => 'bar', 'baz' => 'qux' })
         expect(instance.space).to eq(space)
+        expect(instance.last_operation.type).to eq('create')
+        expect(instance.last_operation.state).to eq('succeeded')
         expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
       end
@@ -2440,6 +2449,7 @@ RSpec.describe 'V3 service instances' do
       it 'allows updates' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(200)
+
         expect(parsed_response).to match_json_response(
           create_user_provided_json(
             service_instance.reload,
@@ -2451,8 +2461,31 @@ RSpec.describe 'V3 service instances' do
               alpha: 'beta',
               'pre.fix/fox': 'bushy'
             },
+            last_operation: {
+              type: 'update',
+              state: 'succeeded',
+              description: 'Operation succeeded',
+              created_at: iso8601,
+              updated_at: iso8601,
+            }
           )
         )
+      end
+
+      it 'updates the a service instance in the database' do
+        api_call.call(space_dev_headers)
+
+        instance = VCAP::CloudController::ServiceInstance.last
+
+        expect(instance.name).to eq(new_name)
+        expect(instance.syslog_drain_url).to eq('https://foo2.com')
+        expect(instance.route_service_url).to eq('https://bar2.com')
+        expect(instance.tags).to contain_exactly('accounting', 'couchbase', 'nosql')
+        expect(instance.space).to eq(space)
+        expect(instance.last_operation.type).to eq('update')
+        expect(instance.last_operation.state).to eq('succeeded')
+        expect(instance).to have_labels({ prefix: 'pre.fix', key: 'tail', value: 'fluffy' }, { prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'fox', value: 'bushy' }, { prefix: nil, key: 'alpha', value: 'beta' })
       end
 
       context 'when the request is invalid' do
@@ -2578,7 +2611,11 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'user provided service instances' do
-      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/') }
+      let!(:instance) do
+        si = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/')
+        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+        si
+      end
       let(:instance_labels) { VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance) }
       let(:instance_annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance) }
 
@@ -2669,10 +2706,10 @@ RSpec.describe 'V3 service instances' do
             a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
               with(
                 query: {
-                accepts_incomplete: true,
-                service_id: instance.service.broker_provided_id,
-                plan_id: instance.service_plan.broker_provided_id
-              },
+                  accepts_incomplete: true,
+                  service_id: instance.service.broker_provided_id,
+                  plan_id: instance.service_plan.broker_provided_id
+                },
                 headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
               )
           ).to have_been_made.once
@@ -3835,13 +3872,14 @@ RSpec.describe 'V3 service instances' do
     }
   end
 
-  def create_user_provided_json(instance, labels: {}, annotations: {})
+  def create_user_provided_json(instance, labels: {}, annotations: {}, last_operation: {})
     {
       guid: instance.guid,
       name: instance.name,
       created_at: iso8601,
       updated_at: iso8601,
       type: 'user-provided',
+      last_operation: last_operation,
       syslog_drain_url: instance.syslog_drain_url,
       route_service_url: instance.route_service_url,
       tags: instance.tags,

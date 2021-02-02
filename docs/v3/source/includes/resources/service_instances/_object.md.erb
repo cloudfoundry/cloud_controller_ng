@@ -27,7 +27,7 @@ Name | Type | Description
 **maintenance_info** | _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance; only shown when type is `managed`
 **upgrade_available** | _bool_ | Whether or not an upgrade of this service instance is available on the current Service Plan; details are available in the maintenance_info object; Only shown when type is `managed`
 **dashboard_url** | _string_ | The URL to the service instance dashboard (or null if there is none); only shown when type is `managed`
-**last_operation** | _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance; only shown when type is `managed`
+**last_operation** | _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance
 **relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan the service instance relates to; only shown when type is `managed`
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the service instance is contained in
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service instance
