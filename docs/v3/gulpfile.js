@@ -107,6 +107,7 @@ gulp.task('checkV3docs', gulp.series('build', done => {
     checkLinks: true,
     summary: true,
     terse: true,
+    onlySameDomain: true,
     pageUrls: ['http://localhost:8001/'],
     linksToIgnore: ['http://localhost:8001/version/release-candidate']
   }, done);
@@ -126,6 +127,7 @@ gulp.task('checkV2docs', done => {
       checkLinks: true,
       summary: true,
       terse: true,
+      onlySameDomain: true,
       pageUrls: ['http://localhost:8001/'].concat(fixedFiles)
     }, done);
   });
