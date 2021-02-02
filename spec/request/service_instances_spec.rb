@@ -727,15 +727,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = { code: 201 }
-          h['admin'] = { code: 201 }
-          h['no_role'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
-          h['org_auditor'] = { code: 422 }
-        end
-      end
+      let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 201) }
     end
 
     it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
@@ -1491,15 +1483,7 @@ RSpec.describe 'V3 service instances' do
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = { code: 200 }
-          h['admin'] = { code: 200 }
-          h['no_role'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['org_auditor'] = { code: 404 }
-        end
-      end
+      let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
     end
 
     it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
@@ -2594,15 +2578,7 @@ RSpec.describe 'V3 service instances' do
       }
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 204 }
-            h['admin'] = { code: 204 }
-            h['no_role'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-          end
-        end
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
       it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
@@ -3309,13 +3285,21 @@ RSpec.describe 'V3 service instances' do
 
     describe 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 200 }
-            h['admin'] = { code: 200 }
-            h['no_role'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
+        let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
+      end
+
+      context 'sharing to a suspended org' do
+        let(:target_space_1) do
+          space = VCAP::CloudController::Space.make
+          space.organization.add_user(user)
+          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
+          space.organization.save
+          space
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) do
+            responses_for_org_suspended_space_restricted_update_endpoint(success_code: 200).merge({ 'space_developer' => { code: 422 } })
           end
         end
       end
@@ -3526,15 +3510,11 @@ RSpec.describe 'V3 service instances' do
       }
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 204 }
-            h['admin'] = { code: 204 }
-            h['no_role'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
-          end
-        end
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
+      end
+
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', ALL_PERMISSIONS do
+        let(:expected_codes) { responses_for_org_suspended_space_restricted_delete_endpoint(success_code: 204) }
       end
     end
 
