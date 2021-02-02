@@ -13,7 +13,7 @@ module VCAP::CloudController
             eager_loaded_service_credential_bindings = nil
             expect {
               eager_loaded_service_credential_bindings = View.eager(:service_instance_sti_eager_load).all.to_a
-            }.to have_queried_db_times(/select \* from "service_instances" where/i, 1)
+            }.to have_queried_db_times(/select \* from .service_instances. where/i, 1)
 
             expect {
               eager_loaded_service_credential_bindings.each(&:service_instance)
