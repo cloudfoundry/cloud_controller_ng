@@ -22212,6 +22212,13 @@ or <code class="prettyprint">user-provided</code> when it describes an instance 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
@@ -22314,7 +22321,7 @@ or <code class="prettyprint">user-provided</code> when it describes an instance 
 <tr>
 <td><strong>last_operation</strong></td>
 <td><em><a href="#the-last-operation-object-for-service-instances">last operation object</a></em></td>
-<td>The last operation of this service instance; only shown when type is <code class="prettyprint">managed</code></td>
+<td>The last operation of this service instance</td>
 </tr>
 <tr>
 <td><strong>relationships.service_plan</strong></td>
@@ -22484,6 +22491,13 @@ or <code class="prettyprint">user-provided</code> when it describes an instance 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
@@ -22769,6 +22783,13 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"syslog_drain_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://logs.com"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"route_service_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://routes.com"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:59:32Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:59:29Z"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -23010,6 +23031,13 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
@@ -23381,6 +23409,13 @@ This endpoint is not available for User-Provided Service Instances.</p>
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
