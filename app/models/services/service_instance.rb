@@ -187,10 +187,6 @@ module VCAP::CloudController
       end
     end
 
-    def last_operation
-      nil
-    end
-
     def operation_in_progress?
       false
     end
@@ -227,6 +223,24 @@ module VCAP::CloudController
       VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end
 
+    def last_operation
+      service_instance_operation
+    end
+
+    def save_with_new_operation(instance_attributes, last_operation)
+      update_attributes(instance_attributes)
+
+      if self.last_operation
+        self.last_operation.destroy
+      end
+
+      # it is important to create the service instance operation with the service instance
+      # instead of doing self.service_instance_operation = x
+      # because mysql will deadlock when requests happen concurrently otherwise.
+      ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
+      self.service_instance_operation(reload: true)
+    end
+
     private
 
     def validate_service_binding(service_binding)
@@ -253,6 +267,11 @@ module VCAP::CloudController
       if columns_updated.key?(:syslog_drain_url)
         service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
       end
+    end
+
+    def update_attributes(instance_attrs)
+      set(instance_attrs)
+      save_changes
     end
   end
 end

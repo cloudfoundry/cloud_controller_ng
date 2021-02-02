@@ -13,20 +13,6 @@ module VCAP::CloudController
       !(route_service_url.nil? || route_service_url.empty?)
     end
 
-    def save_with_new_operation(instance_attributes, last_operation)
-      update_attributes(instance_attributes)
-
-      if self.last_operation
-        self.last_operation.destroy
-      end
-
-      # it is important to create the service instance operation with the service instance
-      # instead of doing self.service_instance_operation = x
-      # because mysql will deadlock when requests happen concurrently otherwise.
-      ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
-      self.service_instance_operation(reload: true)
-    end
-
     def validate
       validate_route_service_url
       super
@@ -42,16 +28,7 @@ module VCAP::CloudController
       end
     end
 
-    def last_operation
-      service_instance_operation
-    end
-
     private
-
-    def update_attributes(instance_attrs)
-      set(instance_attrs)
-      save_changes
-    end
 
     def invalid_url?
       begin
