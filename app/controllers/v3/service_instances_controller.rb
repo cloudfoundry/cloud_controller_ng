@@ -253,13 +253,14 @@ class ServiceInstancesV3Controller < ApplicationController
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
-    action = V3::ServiceInstanceCreate.new(user_audit_info)
+    action = V3::ServiceInstanceCreate.new(user_audit_info, message.audit_hash)
     instance = action.precursor(message: message)
 
     provision_job = VCAP::CloudController::V3::CreateServiceInstanceJobNew.new(
       instance.guid,
       arbitrary_parameters: message.parameters,
-      user_audit_info: user_audit_info
+      user_audit_info: user_audit_info,
+      audit_hash: message.audit_hash
     )
     pollable_job = Jobs::Enqueuer.new(provision_job, queue: Jobs::Queues.generic).enqueue_pollable
 

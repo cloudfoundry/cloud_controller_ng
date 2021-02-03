@@ -9,19 +9,21 @@ module VCAP::CloudController
       def initialize(
         service_instance_guid,
         arbitrary_parameters: {},
-        user_audit_info:
+        user_audit_info:,
+        audit_hash:
       )
         super()
         @service_instance_guid = service_instance_guid
         @arbitrary_parameters = arbitrary_parameters
         @user_audit_info = user_audit_info
+        @audit_hash = audit_hash
         @warnings = []
         @first_time = true
         @attempts = 0
       end
 
       def action
-        V3::ServiceInstanceCreate.new(@user_audit_info)
+        V3::ServiceInstanceCreate.new(@user_audit_info, @audit_hash)
       end
 
       def operation

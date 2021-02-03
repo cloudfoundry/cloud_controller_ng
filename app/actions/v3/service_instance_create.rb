@@ -1,5 +1,6 @@
 require 'services/service_brokers/service_client_provider'
 require 'actions/mixins/service_instance_create'
+require 'actions/metadata_update'
 
 module VCAP::CloudController
   module V3
@@ -9,7 +10,7 @@ module VCAP::CloudController
     class ServiceInstanceCreate
       include ServiceInstanceCreateMixin
 
-      class InvalidManagedServiceInstance < ::StandardError
+      class InvalidManagedServiceInstance < StandardError
       end
 
       PollingStatus = Struct.new(:finished, :retry_after).freeze
@@ -18,13 +19,14 @@ module VCAP::CloudController
 
       CREATE_IN_PROGRESS_OPERATION = { type: 'create', state: 'in progress' }.freeze
 
-      def initialize(user_audit_info)
+      def initialize(user_audit_info, audit_hash)
         @user_audit_info = user_audit_info
+        @audit_hash = audit_hash
       end
 
       def precursor(message:)
         service_plan = ServicePlan.first(guid: message.service_plan_guid)
-        raise InvalidManagedServiceInstance.new('Service plan not found.') unless service_plan
+        plan_not_found! unless service_plan
 
         broker_unavailable! unless service_plan.service_broker.available?
 
@@ -61,7 +63,7 @@ module VCAP::CloudController
           instance,
           arbitrary_parameters: parameters,
           accepts_incomplete: accepts_incomplete,
-          maintenance_info: maintenance_info(instance),
+          maintenance_info: instance.service_plan.maintenance_info,
           user_guid: @user_audit_info.user_guid
         )
 
@@ -108,15 +110,7 @@ module VCAP::CloudController
       private
 
       def event_repository
-        @event_repository ||= Repositories::ServiceEventRepository.new(@user_audit_info)
-      end
-
-      def maintenance_info(instance)
-        if instance.is_a? VCAP::CloudController::UserProvidedServiceInstance
-          nil
-        else
-          instance.service_plan.maintenance_info
-        end
+        Repositories::ServiceEventRepository.new(@user_audit_info)
       end
 
       def save_failed_state(instance, e)
@@ -170,7 +164,11 @@ module VCAP::CloudController
 
       def broker_unavailable!
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-'The service instance cannot be created because there is an operation in progress for the service broker')
+          'The service instance cannot be created because there is an operation in progress for the service broker.')
+      end
+
+      def plan_not_found!
+        raise InvalidManagedServiceInstance.new('Service plan not found.')
       end
 
       class ValidationErrorHandler
