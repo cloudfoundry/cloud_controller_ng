@@ -1316,6 +1316,40 @@ RSpec.describe 'v3 service credential bindings' do
           let(:route_service_url) { 'http://route.example.com/wow' }
 
           it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceBinding, true, 'service_binding', 'service_bindings'
+
+          describe 'telemetry' do
+            let(:broker_base_url) { service_instance.service_broker.broker_url }
+            let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+            let(:broker_response) { { credentials: { 'password' => 'special sauce' } } }
+
+            before do
+              api_call.call(space_dev_headers)
+              expect(last_response).to have_status_code(202)
+
+              stub_request(:put, broker_bind_url).
+                with(query: { accepts_incomplete: true }).
+                to_return(status: 201, body: broker_response.to_json, headers: {})
+            end
+
+            it 'logs telemetry' do
+              Timecop.freeze do
+                expected_json = {
+                  'telemetry-source' => 'cloud_controller_ng',
+                  'telemetry-time' => Time.now.to_datetime.rfc3339,
+                  'bind-service' => {
+                    'api-version' => 'v3',
+                    'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
+                    'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                    'app-id' => Digest::SHA256.hexdigest(app_guid),
+                    'user-id' => Digest::SHA256.hexdigest(user.guid),
+                  }
+                }
+                expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
         end
       end
     end

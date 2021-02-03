@@ -1,6 +1,7 @@
 require 'repositories/service_generic_binding_event_repository'
 require 'services/service_brokers/service_client_provider'
 require 'actions/v3/service_binding_create'
+require 'cloud_controller/telemetry_logger'
 
 module VCAP::CloudController
   module V3
@@ -44,6 +45,18 @@ module VCAP::CloudController
       rescue Sequel::ValidationFailed, Sequel::UniqueConstraintViolation => e
         already_bound! if e.message =~ /The app is already bound to the service|unique_service_binding_service_instance_guid_app_guid/
         raise UnprocessableCreate.new(e.full_message)
+      end
+
+      def post_bind_action(binding)
+        TelemetryLogger.v3_emit(
+          'bind-service',
+          {
+            'service-id' =>  binding.service_instance.managed_instance? ? binding.service_instance.service_plan.service.guid : 'user-provided',
+            'service-instance-id' => binding.service_instance.guid,
+            'app-id' => binding.app.guid,
+            'user-id' => @user_audit_info.user_guid,
+          }
+        )
       end
 
       private
