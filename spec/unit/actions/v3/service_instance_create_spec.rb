@@ -344,147 +344,155 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        # let!(:service_instance) do
-        #   VCAP::CloudController::ManagedServiceInstance.make.tap do |i|
-        #     i.save_with_new_operation(
-        #       {},
-        #       {
-        #         type: 'delete',
-        #         state: 'in progress',
-        #         broker_provided_operation: operation_id
-        #       }
-        #     )
-        #   end
-        # end
-        #
-        # let(:operation_id) { Sham.guid }
-        # let(:poll_response) do
-        #   {
-        #     last_operation: {
-        #       state: 'in progress'
-        #     }
-        #   }
-        # end
-        # let(:client) do
-        #   instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-        #     fetch_service_instance_last_operation: poll_response,
-        #   })
-        # end
-        #
-        # before do
-        #   allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        # end
-        #
-        # it 'sends a poll to the client' do
-        #   action.poll
-        #
-        #   expect(client).to have_received(:fetch_service_instance_last_operation).with(
-        #     service_instance,
-        #     user_guid: user_guid
-        #   )
-        # end
-        #
-        # context 'when the operation is still in progress' do
-        #   let(:description) { Sham.description }
-        #   let(:retry_after) { 42 }
-        #   let(:poll_response) do
-        #     {
-        #       last_operation: {
-        #         state: 'in progress',
-        #         description: description
-        #       },
-        #       retry_after: retry_after
-        #     }
-        #   end
-        #
-        #   it 'updates the last operation description' do
-        #     action.poll
-        #
-        #     expect(ServiceInstance.first.last_operation.type).to eq('delete')
-        #     expect(ServiceInstance.first.last_operation.state).to eq('in progress')
-        #     expect(ServiceInstance.first.last_operation.broker_provided_operation).to eq(operation_id)
-        #     expect(ServiceInstance.first.last_operation.description).to eq(description)
-        #   end
-        #
-        #   it 'returns the correct data' do
-        #     result = action.poll
-        #
-        #     expect(result[:finished]).to be_falsey
-        #     expect(result[:retry_after]).to eq(retry_after)
-        #   end
-        # end
-        #
-        # context 'when the has finished successfully' do
-        #   let(:description) { Sham.description }
-        #   let(:poll_response) do
-        #     {
-        #       last_operation: {
-        #         state: 'succeeded',
-        #         description: description
-        #       },
-        #     }
-        #   end
-        #
-        #   it 'removes the service instance from the database' do
-        #     action.poll
-        #
-        #     expect(ServiceInstance.all).to be_empty
-        #   end
-        #
-        #   it 'creates an audit event' do
-        #     action.poll
-        #
-        #     expect(event_repository).to have_received(:record_service_instance_event).with(
-        #       :delete,
-        #       instance_of(ManagedServiceInstance)
-        #     )
-        #   end
-        #
-        #   it 'returns finished' do
-        #     result = action.poll
-        #
-        #     expect(result[:finished]).to be_truthy
-        #   end
-        # end
-        #
-        # context 'when the operation has failed' do
-        #   let(:description) { Sham.description }
-        #   let(:poll_response) do
-        #     {
-        #       last_operation: {
-        #         state: 'failed',
-        #         description: description
-        #       },
-        #     }
-        #   end
-        #
-        #   it 'raises and updates the last operation description' do
-        #     expect {
-        #       action.poll
-        #     }.to raise_error(CloudController::Errors::ApiError, "delete could not be completed: #{description}")
-        #
-        #     expect(ServiceInstance.first.last_operation.type).to eq('delete')
-        #     expect(ServiceInstance.first.last_operation.state).to eq('failed')
-        #     expect(ServiceInstance.first.last_operation.broker_provided_operation).to be_nil
-        #     expect(ServiceInstance.first.last_operation.description).to eq(description)
-        #   end
-        # end
-        #
-        # context 'when the client raises' do
-        #   before do
-        #     allow(client).to receive(:fetch_service_instance_last_operation).and_raise(StandardError, 'boom')
-        #   end
-        #
-        #   it 'updates the last operation description and continues to poll' do
-        #     result = action.poll
-        #     expect(result[:finished]).to be_falsey
-        #
-        #     expect(ServiceInstance.first.last_operation.type).to eq('delete')
-        #     expect(ServiceInstance.first.last_operation.state).to eq('failed')
-        #     expect(ServiceInstance.first.last_operation.broker_provided_operation).to be_nil
-        #     expect(ServiceInstance.first.last_operation.description).to eq('boom')
-        #   end
-        # end
+        let!(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make.tap do |i|
+            i.save_with_new_operation(
+              {},
+              {
+                type: 'delete',
+                state: 'in progress',
+                broker_provided_operation: operation_id
+              }
+            )
+          end
+        end
+
+        let(:operation_id) { Sham.guid }
+        let(:poll_response) do
+          {
+            last_operation: {
+              state: 'in progress'
+            }
+          }
+        end
+        let(:client) do
+          instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
+            fetch_service_instance_last_operation: poll_response,
+          })
+        end
+
+        before do
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        end
+
+        it 'sends a poll to the client' do
+          action.poll(service_instance)
+
+          expect(client).to have_received(:fetch_service_instance_last_operation).with(
+            service_instance,
+            user_guid: user_guid
+          )
+        end
+
+        context 'when the operation is still in progress' do
+          let(:description) { Sham.description }
+          let(:retry_after) { 42 }
+          let(:poll_response) do
+            {
+              last_operation: {
+                state: 'in progress',
+                description: description
+              },
+              retry_after: retry_after
+            }
+          end
+
+          it 'updates the last operation description' do
+            action.poll(service_instance)
+
+            expect(ServiceInstance.first.last_operation.type).to eq('create')
+            expect(ServiceInstance.first.last_operation.state).to eq('in progress')
+            expect(ServiceInstance.first.last_operation.broker_provided_operation).to eq(operation_id)
+            expect(ServiceInstance.first.last_operation.description).to eq(description)
+          end
+
+          it 'returns the correct data' do
+            result = action.poll(service_instance)
+
+            expect(result[:finished]).to be_falsey
+            expect(result[:retry_after]).to eq(retry_after)
+          end
+        end
+
+        context 'when the has finished successfully' do
+          let(:description) { Sham.description }
+          let(:poll_response) do
+            {
+              last_operation: {
+                state: 'succeeded',
+                description: description
+              },
+            }
+          end
+
+          it 'updates last operation' do
+            action.poll(service_instance)
+
+            service_instance.reload
+            expect(service_instance).to_not be_nil
+            expect(service_instance.last_operation.type).to eq('create')
+            expect(service_instance.last_operation.state).to eq('succeeded')
+          end
+
+          it 'creates an audit event' do
+            action.poll(service_instance)
+
+            expect(event_repository).to have_received(:record_service_instance_event).with(
+              :create,
+              instance_of(ManagedServiceInstance),
+              audit_hash
+            )
+          end
+
+          it 'returns finished' do
+            result = action.poll(service_instance)
+
+            expect(result[:finished]).to be_truthy
+          end
+        end
+
+        context 'when the operation has failed' do
+          let(:description) { Sham.description }
+          let(:poll_response) do
+            {
+              last_operation: {
+                state: 'failed',
+                description: description
+              },
+            }
+          end
+
+          it 'raises and updates the last operation description' do
+            expect {
+              action.poll(service_instance)
+            }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+
+            expect(ServiceInstance.first.last_operation.type).to eq('create')
+            expect(ServiceInstance.first.last_operation.state).to eq('failed')
+            expect(ServiceInstance.first.last_operation.broker_provided_operation).to eq(operation_id)
+            expect(ServiceInstance.first.last_operation.description).to eq(description)
+          end
+        end
+
+        context 'when the client raises' do
+          before do
+            allow(client).to receive(:fetch_service_instance_last_operation).and_raise(StandardError, 'boom')
+          end
+
+          it 'updates the last operation description' do
+            expect {
+              action.poll(service_instance)
+            }.to raise_error(
+              StandardError,
+              'boom'
+            )
+
+            expect(ServiceInstance.first.last_operation.type).to eq('create')
+            expect(ServiceInstance.first.last_operation.state).to eq('failed')
+            expect(ServiceInstance.first.last_operation.broker_provided_operation).to be_nil
+            expect(ServiceInstance.first.last_operation.description).to eq('boom')
+          end
+        end
       end
     end
   end
