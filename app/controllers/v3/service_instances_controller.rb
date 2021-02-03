@@ -18,6 +18,7 @@ require 'actions/service_instance_update_managed'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
+require 'actions/v3/service_instance_create'
 require 'actions/service_instance_create_managed'
 require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
@@ -27,6 +28,7 @@ require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
+require 'jobs/v3/create_service_instance_job_new'
 
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
@@ -86,7 +88,7 @@ class ServiceInstancesV3Controller < ApplicationController
     when 'user-provided'
       create_user_provided(message)
     when 'managed'
-      create_managed(message, space: space)
+      create_managed_1(message, space: space)
     end
   end
 
@@ -244,6 +246,26 @@ class ServiceInstancesV3Controller < ApplicationController
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   rescue ServiceInstanceCreateManaged::UnprocessableCreate,
          ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
+    unprocessable!(e.message)
+  end
+
+  def create_managed_1(message, space:)
+    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
+
+    action = V3::ServiceInstanceCreate.new(user_audit_info)
+    instance = action.precursor(message: message)
+
+    provision_job = VCAP::CloudController::V3::CreateServiceInstanceJobNew.new(
+      instance.guid,
+      arbitrary_parameters: message.parameters,
+      user_audit_info: user_audit_info
+    )
+    pollable_job = Jobs::Enqueuer.new(provision_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  rescue ServiceInstanceCreateManaged::UnprocessableCreate,
+         V3::ServiceInstanceCreate::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
   end
 

@@ -1,0 +1,156 @@
+require 'jobs/v3/service_instance_async_job'
+
+module VCAP::CloudController
+  module V3
+    class CreateServiceInstanceJobNew < Jobs::ReoccurringJob
+      MAX_RETRIES = 3
+      attr_reader :warnings
+
+      def initialize(
+        service_instance_guid,
+        arbitrary_parameters: {},
+        user_audit_info:
+      )
+        super()
+        @service_instance_guid = service_instance_guid
+        @arbitrary_parameters = arbitrary_parameters
+        @user_audit_info = user_audit_info
+        @warnings = []
+        @first_time = true
+        @attempts = 0
+      end
+
+      def action
+        V3::ServiceInstanceCreate.new(@user_audit_info)
+      end
+
+      def operation
+        :provision
+      end
+
+      def operation_type
+        'create'
+      end
+
+      def max_attempts
+        1
+      end
+
+      def display_name
+        'service_instance.create'
+      end
+
+      def resource_type
+        'service_instances'
+      end
+
+      def resource_guid
+        @service_instance_guid
+      end
+
+      def perform
+        not_found! unless service_instance
+
+        raise_if_other_operations_in_progress!
+
+        compute_maximum_duration
+
+        begin
+          if @first_time
+            @first_time = false
+            action.provision(service_instance, parameters: @arbitrary_parameters, accepts_incomplete: true)
+
+            # TODO: get the warning from the action?
+            compatibility_checks
+            return finish if service_instance.reload.terminal_state?
+          end
+
+          polling_status = action.poll(service_instance)
+
+          if polling_status[:finished]
+            finish
+          end
+
+          if polling_status[:retry_after].present?
+            self.polling_interval_seconds = polling_status[:retry_after]
+          end
+        rescue LastOperationStateFailed => err
+          raise err unless restart_on_failure?
+
+          restart_job(err.message || 'no error description returned by the broker')
+        rescue OperationCancelled
+          cancelled!(service_instance.last_operation&.type)
+        rescue => e
+          # fail!(err)
+          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'provision', e.message)
+        end
+      end
+
+      def handle_timeout
+        service_instance.save_and_update_operation(
+          last_operation: {
+            state: 'failed',
+            description: "Service Broker failed to #{operation} within the required time.",
+          }
+        )
+      end
+
+      # def job_name_in_configuration
+      #   "service_instance_#{operation_type}"
+      # end
+
+      def compatibility_checks
+        if service_instance.service_plan.service.volume_service? && volume_services_disabled?
+          @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING })
+        end
+
+        if service_instance.service_plan.service.route_service? && route_services_disabled?
+          @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
+        end
+      end
+
+      def volume_services_disabled?
+        !VCAP::CloudController::Config.config.get(:volume_services_enabled)
+      end
+
+      def route_services_disabled?
+        !VCAP::CloudController::Config.config.get(:route_services_enabled)
+      end
+
+      def restart_on_failure?
+        false
+      end
+
+      private
+
+      attr_reader :arbitrary_parameters, :user_audit_info
+
+      def service_instance
+        ManagedServiceInstance.first(guid: @service_instance_guid)
+      end
+
+      def raise_if_other_operations_in_progress!
+        last_operation_type = service_instance.last_operation&.type
+
+        return if operation_type == 'delete' && last_operation_type == 'create'
+
+        if service_instance.operation_in_progress? && last_operation_type != operation_type
+          cancelled!(last_operation_type)
+        end
+      end
+
+      def compute_maximum_duration
+        max_poll_duration_on_plan = service_instance.service_plan.try(:maximum_polling_duration)
+        self.maximum_duration_seconds = max_poll_duration_on_plan
+      end
+
+      def not_found!
+        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The service instance could not be found: #{service_instance_guid}")
+      end
+
+      def cancelled!(operation_in_progress)
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, "#{operation_in_progress} in progress")
+      end
+    end
+  end
+end
