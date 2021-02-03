@@ -142,7 +142,7 @@ module VCAP::CloudController
         expect { action.create(message) }.
           to raise_error(
             ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-            "The service instance name is taken: #{name}"
+            "The service instance name is taken: #{name}."
           )
       end
     end

@@ -134,7 +134,7 @@ module VCAP
               expect { action.create(message) }.
                 to raise_error(
                   ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
-                     "The service instance name is taken: #{name}"
+                     "The service instance name is taken: #{name}."
                    )
             end
           end

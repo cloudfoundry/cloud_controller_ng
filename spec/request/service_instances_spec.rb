@@ -2506,7 +2506,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{new_name}",
+              'detail' => "The service instance name is taken: #{new_name}.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             })

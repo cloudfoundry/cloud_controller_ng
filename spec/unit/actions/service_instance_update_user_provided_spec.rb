@@ -165,7 +165,7 @@ module VCAP::CloudController
                 action.update(service_instance, message)
               }.to raise_error(
                 ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
-                'The service instance name is taken: already_taken',
+                'The service instance name is taken: already_taken.',
               )
             end
           end
