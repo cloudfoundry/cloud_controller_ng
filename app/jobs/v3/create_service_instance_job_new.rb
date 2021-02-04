@@ -2,7 +2,7 @@ require 'jobs/v3/service_instance_async_job'
 
 module VCAP::CloudController
   module V3
-    class CreateServiceInstanceJobNew < Jobs::ReoccurringJob
+    class CreateServiceInstanceJobNew < VCAP::CloudController::Jobs::ReoccurringJob
       MAX_RETRIES = 3
       attr_reader :warnings
 
@@ -61,9 +61,7 @@ module VCAP::CloudController
           if @first_time
             @first_time = false
             action.provision(service_instance, parameters: @arbitrary_parameters, accepts_incomplete: true)
-
-            # TODO: get the warning from the action?
-            compatibility_checks
+            compatibility_checks # TODO: get the warning from the action?
             return finish if service_instance.reload.terminal_state?
           end
 
@@ -76,30 +74,27 @@ module VCAP::CloudController
           if polling_status[:retry_after].present?
             self.polling_interval_seconds = polling_status[:retry_after]
           end
-        rescue LastOperationStateFailed => err
-          raise err unless restart_on_failure?
-
-          restart_job(err.message || 'no error description returned by the broker')
-        rescue OperationCancelled
-          cancelled!(service_instance.last_operation&.type)
+        rescue LastOperationStateFailed => e
+          raise e
+        rescue CloudController::Errors::ApiError => e
+          save_failure(e)
+          raise e
         rescue => e
-          # fail!(err)
+          save_failure(e)
           raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'provision', e.message)
         end
       end
 
       def handle_timeout
-        service_instance.save_and_update_operation(
-          last_operation: {
+        service_instance.save_with_new_operation(
+          {},
+          {
+            type: 'create',
             state: 'failed',
             description: "Service Broker failed to #{operation} within the required time.",
           }
         )
       end
-
-      # def job_name_in_configuration
-      #   "service_instance_#{operation_type}"
-      # end
 
       def compatibility_checks
         if service_instance.service_plan.service.volume_service? && volume_services_disabled?
@@ -119,13 +114,14 @@ module VCAP::CloudController
         !VCAP::CloudController::Config.config.get(:route_services_enabled)
       end
 
-      def restart_on_failure?
-        false
-      end
-
       private
 
-      attr_reader :arbitrary_parameters, :user_audit_info
+      attr_reader :user_audit_info
+
+      def create_in_progress?
+        service_instance.last_operation&.type == 'create' &&
+          service_instance.last_operation&.state == 'in progress'
+      end
 
       def service_instance
         ManagedServiceInstance.first(guid: @service_instance_guid)
@@ -146,8 +142,21 @@ module VCAP::CloudController
         self.maximum_duration_seconds = max_poll_duration_on_plan
       end
 
+      def save_failure(error_message)
+        if service_instance.reload.last_operation.state != 'failed'
+          service_instance.save_with_new_operation(
+            {},
+            {
+              type: 'create',
+              state: 'failed',
+              description: error_message,
+            }
+          )
+        end
+      end
+
       def not_found!
-        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The service instance could not be found: #{service_instance_guid}")
+        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The service instance could not be found: #{@service_instance_guid}.")
       end
 
       def cancelled!(operation_in_progress)

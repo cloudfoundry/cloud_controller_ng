@@ -98,7 +98,7 @@ module VCAP::CloudController
           ContinuePolling.call(details[:retry_after])
         when 'failed'
           save_last_operation(instance, details)
-          raise LastOperationFailedState
+          raise LastOperationFailedState.new(details[:last_operation][:description])
         end
       rescue LastOperationFailedState => e
         raise e
