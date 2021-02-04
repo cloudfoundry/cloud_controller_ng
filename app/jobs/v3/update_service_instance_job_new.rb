@@ -2,18 +2,18 @@ require 'jobs/v3/service_instance_async_job'
 
 module VCAP::CloudController
   module V3
-    class CreateServiceInstanceJobNew < VCAP::CloudController::Jobs::ReoccurringJob
+    class UpdateServiceInstanceJobNew < VCAP::CloudController::Jobs::ReoccurringJob
       attr_reader :warnings
 
       def initialize(
         service_instance_guid,
-        arbitrary_parameters: {},
+        message:,
         user_audit_info:,
         audit_hash:
       )
         super()
         @service_instance_guid = service_instance_guid
-        @arbitrary_parameters = arbitrary_parameters
+        @message = message
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
         @warnings = []
@@ -21,15 +21,15 @@ module VCAP::CloudController
       end
 
       def action
-        V3::ServiceInstanceCreate.new(@user_audit_info, @audit_hash)
+        V3::ServiceInstanceUpdate.new(service_instance, @message, @user_audit_info, @audit_hash)
       end
 
       def operation
-        :provision
+        :update
       end
 
       def operation_type
-        'create'
+        'update'
       end
 
       def max_attempts
@@ -37,7 +37,7 @@ module VCAP::CloudController
       end
 
       def display_name
-        'service_instance.create'
+        'service_instance.update'
       end
 
       def resource_type
@@ -58,12 +58,12 @@ module VCAP::CloudController
         begin
           if @first_time
             @first_time = false
-            action.provision(service_instance, parameters: @arbitrary_parameters, accepts_incomplete: true)
-            compatibility_checks # TODO: get the warning from the action?
+            action.update(accepts_incomplete: true)
+            compatibility_checks
             return finish if service_instance.reload.terminal_state?
           end
 
-          polling_status = action.poll(service_instance)
+          polling_status = action.poll
 
           if polling_status[:finished]
             finish
@@ -79,7 +79,7 @@ module VCAP::CloudController
           raise e
         rescue => e
           save_failure(e)
-          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'provision', e.message)
+          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
         end
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
         service_instance.save_with_new_operation(
           {},
           {
-            type: 'create',
+            type: operation_type,
             state: 'failed',
             description: "Service Broker failed to #{operation} within the required time.",
           }
@@ -140,7 +140,7 @@ module VCAP::CloudController
           service_instance.save_with_new_operation(
             {},
             {
-              type: 'create',
+              type: operation_type,
               state: 'failed',
               description: error_message,
             }

@@ -17,8 +17,6 @@ module VCAP::CloudController
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
-      CREATE_IN_PROGRESS_OPERATION = { type: 'create', state: 'in progress' }.freeze
-
       def initialize(user_audit_info, audit_hash)
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash

@@ -19,7 +19,7 @@ require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
 require 'actions/v3/service_instance_create'
-require 'actions/service_instance_create_managed'
+require 'actions/v3/service_instance_update'
 require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
@@ -29,6 +29,7 @@ require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
 require 'jobs/v3/create_service_instance_job_new'
+require 'jobs/v3/update_service_instance_job_new'
 
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
@@ -97,7 +98,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     case service_instance
     when ManagedServiceInstance
-      update_managed(service_instance)
+      update_managed_1(service_instance)
     when UserProvidedServiceInstance
       update_user_provided(service_instance)
     end
@@ -289,6 +290,32 @@ class ServiceInstancesV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
   end
 
+  def update_managed_1(service_instance)
+    message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    raise_if_invalid_service_plan!(service_instance, message)
+
+    action = V3::ServiceInstanceUpdate.new(service_instance, message, user_audit_info, message.audit_hash)
+    service_instance, continue_async = action.precursor
+
+    if continue_async
+      update_job = VCAP::CloudController::V3::UpdateServiceInstanceJobNew.new(
+        service_instance.guid,
+        message: message,
+        user_audit_info: user_audit_info,
+        audit_hash: message.audit_hash
+      )
+      pollable_job = Jobs::Enqueuer.new(update_job, queue: Jobs::Queues.generic).enqueue_pollable
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+    else
+      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+    end
+  rescue V3::ServiceInstanceUpdate::UnprocessableUpdate => api_err
+    unprocessable!(api_err.message)
+  rescue LockCheck::ServiceBindingLockedError => e
+    raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
+  end
+
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
     unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
     unwriteable_spaces = found_spaces.reject { |s| can_write_space?(s) || unreadable_spaces.include?(s) }
@@ -377,6 +404,14 @@ class ServiceInstancesV3Controller < ApplicationController
       service_plan.visible_in_space?(space)
   end
 
+  def raise_if_invalid_service_plan!(service_instance, message)
+    if message.service_plan_guid
+      service_plan = ServicePlan.first(guid: message.service_plan_guid)
+      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+      invalid_service_plan_relation! unless service_plan.service == service_instance.service
+    end
+  end
+
   def service_event_repository
     VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
   end
@@ -391,10 +426,6 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def unprocessable_service_plan!
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
-  end
-
-  def broker_unavailable!
-    unprocessable!('The service instance cannot be created because there is an operation in progress for the service broker')
   end
 
   def invalid_service_plan_relation!
