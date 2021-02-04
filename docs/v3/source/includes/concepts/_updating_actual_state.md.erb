@@ -1,0 +1,24 @@
+## Updating Actual State
+
+The Cloud Controller is primarily responsible for the desired state of apps and processes. Most endpoints will
+only update the desired states of your apps and processes within Cloud Controller in order
+to provide users with the opportunity to incur zero downtime when updating apps. Restarting
+the app will be required for the desired state changes to become the actual state.
+
+The [stats endpoint](#get-stats-for-a-process) can be used at any time to determine the actual
+(running) state of a process, and by proxy, an app.
+
+#### Endpoints that will affect runtime
+
+The following endpoints will immediately affect runtime:
+
+- `PATCH /v3/spaces/:guid/features/ssh`
+- `POST /v3/processes/:guid/actions/scale` (only when updating the instances field)
+- `POST /v3/apps/:guid/processes/:type/actions/scale` (only when updating the instances field)
+- `DELETE /v3/routes/:guid/destinations/:destination_guid`
+- `POST /v3/routes/:guid/destinations` (when not adding a destination with a port)
+- `PATCH /v3/routes/:guid/destinations` (when not replacing the port field)
+
+All other changes will not affect running apps until they are [restarted](#restart-an-app).
+
+
