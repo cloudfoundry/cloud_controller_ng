@@ -7,6 +7,9 @@ module VCAP::CloudController
       class UnprocessableUpdate < CloudController::Errors::ApiError
       end
 
+      class InvalidServiceInstance < StandardError
+      end
+
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
@@ -46,6 +49,8 @@ module VCAP::CloudController
             return service_instance, false
           end
           lock.asynchronous_unlock!
+        rescue Sequel::ValidationFailed => e
+          raise InvalidServiceInstance.new(e.message)
         ensure
           lock.unlock_and_fail! if lock.present? && lock.needs_unlock?
         end
