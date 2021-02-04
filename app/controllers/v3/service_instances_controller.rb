@@ -88,7 +88,7 @@ class ServiceInstancesV3Controller < ApplicationController
     when 'user-provided'
       create_user_provided(message)
     when 'managed'
-      create_managed_1(message, space: space)
+      create_managed(message, space: space)
     end
   end
 
@@ -236,20 +236,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_managed(message, space:)
-    service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
-
-    broker_unavailable! unless service_plan.service_broker.available?
-
-    job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
-
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
-  rescue ServiceInstanceCreateManaged::UnprocessableCreate,
-         ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
-    unprocessable!(e.message)
-  end
-
-  def create_managed_1(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
