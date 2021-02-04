@@ -70,7 +70,7 @@ module VCAP::CloudController
         if details[:last_operation][:state] == 'in progress' && details[:last_operation][:type] == 'create'
           save_incomplete_instance(instance, details)
         else
-          complete_instance_and_save(instance, details[:instance], details[:last_operation])
+          complete_instance_and_save(instance, details)
         end
       rescue => e
         save_failed_state(instance, e)
@@ -86,18 +86,13 @@ module VCAP::CloudController
         when 'succeeded'
           # TODO: If instance retrievable update dashboard
           # params = client.fetch_service_instance(instance, user_guid: @user_audit_info.user_guid)
-          last_operation = {
-            state: details[:last_operation][:state],
-            type: 'create',
-            description: details[:last_operation][:description]
-          }
-          complete_instance_and_save(instance, {}, last_operation)
+          complete_instance_and_save(instance, parse_response(details))
           return PollingFinished
         when 'in progress'
-          save_last_operation(instance, details)
+          save_last_operation(instance, details[:last_operation])
           ContinuePolling.call(details[:retry_after])
         when 'failed'
-          save_last_operation(instance, details)
+          save_last_operation(instance, details[:last_operation])
           raise LastOperationFailedState.new(details[:last_operation][:description])
         end
       rescue LastOperationFailedState => e
@@ -113,40 +108,17 @@ module VCAP::CloudController
         Repositories::ServiceEventRepository.new(@user_audit_info)
       end
 
-      def save_failed_state(instance, e)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'create',
-            state: 'failed',
-            description: e.message,
-          }
-        )
-      end
-
-      def complete_instance_and_save(instance, broker_instance_response, last_operation)
+      def complete_instance_and_save(instance, broker_response)
         instance.db.transaction do
           instance.lock!
           instance.last_operation.lock! if instance.last_operation
           instance.save_with_new_operation(
-            broker_instance_response || {},
-            last_operation || {}
+            broker_response[:instance] || {},
+            broker_response[:last_operation] || {}
           )
         end
 
         event_repository.record_service_instance_event(:create, instance, @audit_hash)
-      end
-
-      def save_last_operation(instance, details)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'create',
-            state: details[:last_operation][:state],
-            description: details[:last_operation][:description],
-            broker_provided_operation: instance.last_operation.broker_provided_operation
-          }
-        )
       end
 
       def save_incomplete_instance(instance, broker_response)
@@ -160,6 +132,40 @@ module VCAP::CloudController
         end
 
         event_repository.record_service_instance_event(:start_create, instance, @audit_hash)
+      end
+
+      def save_failed_state(instance, e)
+        instance.save_with_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'failed',
+            description: e.message,
+          }
+        )
+      end
+
+      def save_last_operation(instance, last_operation)
+        instance.save_with_new_operation(
+          {},
+          {
+            type: 'create',
+            state: last_operation[:state],
+            description: last_operation[:description],
+            broker_provided_operation: instance.last_operation.broker_provided_operation
+          }
+        )
+      end
+
+      def parse_response(details)
+        {
+          instance: {},
+          last_operation: {
+            state: details[:last_operation][:state],
+            type: 'create',
+            description: details[:last_operation][:description]
+          }
+        }
       end
 
       def broker_unavailable!

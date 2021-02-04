@@ -19,7 +19,6 @@ module VCAP::CloudController
         @audit_hash = audit_hash
         @warnings = []
         @first_time = true
-        @attempts = 0
       end
 
       def action
