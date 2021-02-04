@@ -24,9 +24,8 @@ module VCAP::CloudController
       class DeleteOrphanedBinding < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :binding_info
 
-        def initialize(name, client_attrs, binding_info)
+        def initialize(name, binding_info)
           @name                  = name
-          @client_attrs          = client_attrs
           @binding_info          = binding_info
         end
 
@@ -35,7 +34,8 @@ module VCAP::CloudController
           logger.info('There was an error during service binding creation. Attempting to delete potentially orphaned binding.' \
                           " Instance guid: #{binding_info.service_instance_guid}, Binding guid #{binding_info.guid}")
 
-          client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
+          service_instance = ManagedServiceInstance.find(guid: binding_info.service_instance_guid)
+          client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
           client.unbind(binding_info.to_binding, accepts_incomplete: true)
         end
 

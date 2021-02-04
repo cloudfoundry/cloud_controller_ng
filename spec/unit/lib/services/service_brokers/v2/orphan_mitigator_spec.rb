@@ -3,8 +3,6 @@ require 'spec_helper'
 module VCAP::Services
   module ServiceBrokers::V2
     RSpec.describe OrphanMitigator do
-      let(:client_attrs) { { uri: 'broker.com' } }
-
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
@@ -17,14 +15,13 @@ module VCAP::Services
           mock_enqueuer = double(:enqueuer, enqueue: nil)
           allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
 
-          OrphanMitigator.new.cleanup_failed_provision(client_attrs, service_instance)
+          OrphanMitigator.new.cleanup_failed_provision(service_instance)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
 
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance
             expect(job.name).to eq 'service-instance-deprovision'
-            expect(job.client_attrs).to eq client_attrs
             expect(job.service_instance_guid).to eq service_instance.guid
             expect(job.service_plan_guid).to eq service_instance.service_plan.guid
           end
@@ -35,7 +32,7 @@ module VCAP::Services
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
           now = Time.now
 
-          OrphanMitigator.new.cleanup_failed_provision(client_attrs, service_instance)
+          OrphanMitigator.new.cleanup_failed_provision(service_instance)
           job = Delayed::Job.first.payload_object
           expect(job).to respond_to :reschedule_at
 
@@ -51,7 +48,7 @@ module VCAP::Services
 
           before do
             allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
-            OrphanMitigator.new.cleanup_failed_bind(client_attrs, binding)
+            OrphanMitigator.new.cleanup_failed_bind(binding)
           end
 
           it 'enqueues an unbind job' do
@@ -60,7 +57,6 @@ module VCAP::Services
 
               expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
               expect(job.name).to eq 'service-instance-unbind'
-              expect(job.client_attrs).to eq client_attrs
               expect(job.binding_info.guid).to eq binding.guid
               expect(job.binding_info.service_instance_guid).to eq binding.service_instance.guid
             end
@@ -82,7 +78,7 @@ module VCAP::Services
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
           now = Time.now
 
-          OrphanMitigator.new.cleanup_failed_bind(client_attrs, service_binding)
+          OrphanMitigator.new.cleanup_failed_bind(service_binding)
           job = Delayed::Job.first.payload_object
           expect(job).to respond_to :reschedule_at
 
@@ -97,14 +93,13 @@ module VCAP::Services
           mock_enqueuer = double(:enqueuer, enqueue: nil)
           allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
 
-          OrphanMitigator.new.cleanup_failed_key(client_attrs, service_key)
+          OrphanMitigator.new.cleanup_failed_key(service_key)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
 
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedKey
             expect(job.name).to eq 'service-key-delete'
-            expect(job.client_attrs).to eq client_attrs
             expect(job.key_guid).to eq service_key.guid
             expect(job.service_instance_guid).to eq service_key.service_instance.guid
           end
@@ -115,7 +110,7 @@ module VCAP::Services
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
           now = Time.now
 
-          OrphanMitigator.new.cleanup_failed_key(client_attrs, service_key)
+          OrphanMitigator.new.cleanup_failed_key(service_key)
           job = Delayed::Job.first.payload_object
           expect(job).to respond_to :reschedule_at
 

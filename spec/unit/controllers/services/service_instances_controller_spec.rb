@@ -1056,7 +1056,6 @@ module VCAP::CloudController
                 orphan_mitigation_job = Delayed::Job.first
                 expect(orphan_mitigation_job).not_to be_nil
                 expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
-
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
                 expect(a_request(:get, %r{#{service_broker_url_regex}/last_operation})).not_to have_been_made.times(1)

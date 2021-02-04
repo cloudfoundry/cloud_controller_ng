@@ -3,13 +3,12 @@ module VCAP::Services::ServiceBrokers::V2
     CATALOG_PATH = '/v2/catalog'.freeze
     PLATFORM = 'cloudfoundry'.freeze
 
-    attr_reader :orphan_mitigator, :attrs
+    attr_reader :orphan_mitigator
 
     def initialize(attrs)
       http_client_attrs = attrs.slice(:url, :auth_username, :auth_password)
-      @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
-      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
-      @attrs = attrs
+      @http_client      = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
+      @response_parser  = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
       @config = VCAP::CloudController::Config.config
     end
@@ -36,7 +35,7 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
-        @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
+        @orphan_mitigator.cleanup_failed_provision(instance)
         raise e
       end
 
@@ -59,10 +58,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       return_values
     rescue Errors::ServiceBrokerBadResponse => e
-      @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
+      @orphan_mitigator.cleanup_failed_provision(instance)
       raise e
     rescue Errors::ServiceBrokerResponseMalformed => e
-      @orphan_mitigator.cleanup_failed_provision(@attrs, instance) unless e.status == 200
+      @orphan_mitigator.cleanup_failed_provision(instance) unless e.status == 200
       raise e
     end
 
@@ -81,7 +80,7 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
-        @orphan_mitigator.cleanup_failed_key(@attrs, key)
+        @orphan_mitigator.cleanup_failed_key(key)
         raise e
       end
 
@@ -90,7 +89,7 @@ module VCAP::Services::ServiceBrokers::V2
       { credentials: parsed_response['credentials'] }
     rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerResponseMalformed => e
-      @orphan_mitigator.cleanup_failed_key(@attrs, key)
+      @orphan_mitigator.cleanup_failed_key(key)
       raise e
     end
 
@@ -109,7 +108,7 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         response = @http_client.put(path, body, user_guid: user_guid)
       rescue Errors::HttpClientTimeout => e
-        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+        @orphan_mitigator.cleanup_failed_bind(binding)
         raise e
       end
 
@@ -141,7 +140,7 @@ module VCAP::Services::ServiceBrokers::V2
            Errors::ServiceBrokerInvalidSyslogDrainUrl,
            Errors::ServiceBrokerResponseMalformed => e
       unless e.instance_of?(Errors::ServiceBrokerResponseMalformed) && e.status == 200
-        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+        @orphan_mitigator.cleanup_failed_bind(binding)
       end
 
       raise e
