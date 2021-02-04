@@ -104,7 +104,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :event_repository, :service_instance, :message
+      attr_reader :service_instance, :message
 
       def event_repository
         Repositories::ServiceEventRepository.new(@user_audit_info)
