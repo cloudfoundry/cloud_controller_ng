@@ -18,9 +18,8 @@ module VCAP::CloudController
       private
 
       def service_instances(bindings)
-        bindings.map(&:service_instance).
-          uniq.
-          sort_by(&:created_at)
+        ServiceInstance.where(guid: bindings.map(&:service_instance_guid).uniq).order(:created_at).
+          eager(Presenters::V3::ServiceInstancePresenter.associated_resources).all
       end
     end
   end

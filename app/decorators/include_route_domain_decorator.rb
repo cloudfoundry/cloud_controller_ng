@@ -8,7 +8,8 @@ module VCAP::CloudController
       def decorate(hash, routes)
         hash[:included] ||= {}
         domain_guids = routes.map(&:domain_guid).uniq
-        domains = Domain.where(guid: domain_guids).order(:name)
+        domains = Domain.where(guid: domain_guids).order(:name).
+                  eager(Presenters::V3::DomainPresenter.associated_resources).all
 
         hash[:included][:domains] = domains.map { |domain| Presenters::V3::DomainPresenter.new(domain).to_hash }
         hash
