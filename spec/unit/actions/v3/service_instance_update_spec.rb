@@ -26,7 +26,7 @@ module VCAP::CloudController
       let(:original_plan_guid) { original_service_plan.guid }
       let(:original_name) { 'si-test-name' }
       let(:new_name) { 'new-si-test-name' }
-      let(:original_dashboard_url) {'http://your-og-instance.com'}
+      let(:original_dashboard_url) { 'http://your-og-instance.com' }
 
       let!(:original_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
@@ -913,8 +913,10 @@ module VCAP::CloudController
             expect(instance.last_operation.type).to eq('update')
             expect(instance.last_operation.state).to eq('succeeded')
 
-            expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"}, {:prefix=>"seriouseats.com", :key=>"potato", :value=>"fried"})
-            expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"}, {:prefix=>nil, :key=>"release", :value=>"stable"})
+            expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+{ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
+            expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+{ prefix: nil, key: 'release', value: 'stable' })
           end
 
           it 'logs an audit event' do
@@ -965,8 +967,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
-                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
               end
             end
 
@@ -985,7 +987,7 @@ module VCAP::CloudController
                   original_instance,
                   original_service_plan,
                   accepts_incomplete: true,
-                  arbitrary_parameters: { },
+                  arbitrary_parameters: {},
                   maintenance_info: nil,
                   name: new_name,
                   previous_values: previous_values,
@@ -1007,8 +1009,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
-                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
               end
             end
 
@@ -1017,7 +1019,8 @@ module VCAP::CloudController
                 service: original_service_offering,
                 maintenance_info: { version: '2.2.0' },
                 public: true
-              ) }
+              )
+              }
               let(:body) do
                 {
                   relationships: {
@@ -1037,7 +1040,7 @@ module VCAP::CloudController
                   original_instance,
                   new_service_plan,
                   accepts_incomplete: true,
-                  arbitrary_parameters: { },
+                  arbitrary_parameters: {},
                   maintenance_info: { version: '2.2.0' },
                   name: original_name,
                   previous_values: previous_values,
@@ -1060,13 +1063,13 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
-                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
               end
             end
 
             context 'when maintenance info is changing' do
-              let(:new_maintenance_info) {  { version: '2.2.0' } }
+              let(:new_maintenance_info) { { version: '2.2.0' } }
               let(:body) do
                 {
                   maintenance_info: new_maintenance_info
@@ -1080,7 +1083,7 @@ module VCAP::CloudController
                   original_instance,
                   original_service_plan,
                   accepts_incomplete: true,
-                  arbitrary_parameters: { },
+                  arbitrary_parameters: {},
                   maintenance_info: { version: '2.2.0' },
                   name: original_name,
                   previous_values: previous_values,
@@ -1098,13 +1101,13 @@ module VCAP::CloudController
                 expect(instance.service_plan).to eq(original_service_plan)
                 expect(instance.space).to eq(space)
                 expect(instance.dashboard_url).to eq(updated_dashboard_url)
-                expect(instance.maintenance_info).to eq({"version"=>"2.2.0"})
+                expect(instance.maintenance_info).to eq({ 'version' => '2.2.0' })
 
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
-                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
               end
             end
 

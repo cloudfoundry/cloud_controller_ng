@@ -337,8 +337,6 @@ module VCAP::CloudController
         plan_change_requested || message.maintenance_info
       end
 
-
-
       def parse_response(details)
         {
           instance: {},

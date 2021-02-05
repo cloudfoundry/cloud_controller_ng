@@ -1,6 +1,5 @@
 module VCAP::CloudController
   module ServiceInstanceCreateMixin
-
     class UnprocessableOperation < CloudController::Errors::ApiError
     end
 
