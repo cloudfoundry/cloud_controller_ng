@@ -16,7 +16,8 @@ module VCAP::CloudController
       private
 
       def apps(bindings)
-        AppModel.where(guid: bindings.map { |x| x[:app_guid] }.uniq).order(:created_at)
+        AppModel.where(guid: bindings.map { |x| x[:app_guid] }.uniq).order(:created_at).
+          eager(Presenters::V3::AppPresenter.associated_resources).all
       end
     end
   end
