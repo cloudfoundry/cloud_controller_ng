@@ -14,7 +14,6 @@ require 'presenters/v3/service_instance_presenter'
 require 'presenters/v3/shared_spaces_usage_summary_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
-require 'actions/service_instance_update_managed'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
@@ -98,7 +97,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     case service_instance
     when ManagedServiceInstance
-      update_managed_1(service_instance)
+      update_managed(service_instance)
     when UserProvidedServiceInstance
       update_user_provided(service_instance)
     end
@@ -268,29 +267,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def update_managed(service_instance)
-    message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    if message.service_plan_guid
-      service_plan = ServicePlan.first(guid: message.service_plan_guid)
-      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
-      invalid_service_plan_relation! unless service_plan.service == service_instance.service
-    end
-
-    service_instance, job = ServiceInstanceUpdateManaged.new(service_event_repository).update(service_instance, message)
-
-    if job.nil?
-      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
-    else
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
-    end
-  rescue ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
-    unprocessable!(api_err.message)
-  rescue LockCheck::ServiceBindingLockedError => e
-    raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
-  end
-
-  def update_managed_1(service_instance)
     message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     raise_if_invalid_service_plan!(service_instance, message)
