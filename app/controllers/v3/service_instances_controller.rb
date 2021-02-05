@@ -252,7 +252,7 @@ class ServiceInstancesV3Controller < ApplicationController
     pollable_job = Jobs::Enqueuer.new(provision_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
-  rescue ServiceInstanceCreateManaged::UnprocessableCreate,
+  rescue VCAP::CloudController::ServiceInstanceCreateMixin::UnprocessableOperation,
          V3::ServiceInstanceCreate::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
   end

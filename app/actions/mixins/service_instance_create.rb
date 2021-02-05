@@ -1,5 +1,9 @@
 module VCAP::CloudController
   module ServiceInstanceCreateMixin
+
+    class UnprocessableOperation < CloudController::Errors::ApiError
+    end
+
     private
 
     def validate_quotas!(errors)
@@ -16,7 +20,7 @@ module VCAP::CloudController
                'ServiceInstanceServicePlanNotAllowed'
              end
 
-      raise VCAP::CloudController::ServiceInstanceCreateManaged::UnprocessableCreate.new_from_details(code) unless code.nil?
+      raise UnprocessableOperation.new_from_details(code) unless code.nil?
     end
 
     def validation_error!(
