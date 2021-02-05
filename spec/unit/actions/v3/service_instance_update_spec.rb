@@ -26,6 +26,7 @@ module VCAP::CloudController
       let(:original_plan_guid) { original_service_plan.guid }
       let(:original_name) { 'si-test-name' }
       let(:new_name) { 'new-si-test-name' }
+      let(:original_dashboard_url) {'http://your-og-instance.com'}
 
       let!(:original_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
@@ -33,7 +34,8 @@ module VCAP::CloudController
           name: original_name,
           tags: %w(accounting mongodb),
           space: space,
-          maintenance_info: original_maintenance_info
+          maintenance_info: original_maintenance_info,
+          dashboard_url: original_dashboard_url
         )
         si.label_ids = [
           VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
@@ -811,6 +813,499 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      describe '#update' do
+        let(:update_response) do
+          {
+            last_operation: {
+              type: 'update',
+              state: 'succeeded',
+            }
+          }
+        end
+        let(:client) do
+          instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
+            update: [update_response, nil],
+          })
+        end
+        let(:new_plan) { ServicePlan.make }
+        let(:new_name) { 'new-name' }
+        let(:new_tags) { %w(bar quz) }
+        let(:arbitrary_parameters) { { foo: 'bar' } }
+
+        let(:body) do
+          {
+            name: new_name,
+            parameters: arbitrary_parameters,
+            tags: new_tags,
+            relationships: {
+              service_plan: {
+                data: {
+                  guid: new_plan.guid
+                }
+              }
+            },
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                'seriouseats.com/potato': 'fried'
+              }
+            }
+          }
+        end
+        let(:previous_values) {
+          {
+            plan_id: original_service_plan.broker_provided_id,
+            service_id: original_service_offering.broker_provided_id,
+            organization_id: org.guid,
+            space_id: space.guid,
+            maintenance_info: original_service_plan.maintenance_info.stringify_keys,
+          }
+        }
+
+        before do
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        end
+
+        it 'sends the operation request to the broker' do
+          action.update(accepts_incomplete: true)
+
+          expect(VCAP::Services::ServiceClientProvider).to have_received(:provide).with(instance: original_instance)
+          expect(client).to have_received(:update).with(
+            original_instance,
+            new_plan,
+            accepts_incomplete: true,
+            arbitrary_parameters: { foo: 'bar' },
+            maintenance_info: nil,
+            name: new_name,
+            previous_values: previous_values,
+            user_guid: user_guid,
+          )
+        end
+
+        context 'when update is sync' do
+          let(:updated_dashboard_url) { 'http://your-instance.com' }
+          let(:update_response) do
+            {
+              dashboard_url: updated_dashboard_url,
+              last_operation: {
+                type: 'update',
+                state: 'succeeded',
+              }
+            }
+          end
+
+          it 'saves the updated instance' do
+            action.update(accepts_incomplete: true)
+
+            instance = original_instance.reload
+            expect(instance).to_not be_nil
+            expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+            expect(instance.name).to eq(new_name)
+            expect(instance.tags).to eq(new_tags)
+            expect(instance.service_plan).to eq(new_plan)
+            expect(instance.space).to eq(space)
+            expect(instance.dashboard_url).to eq(updated_dashboard_url)
+
+            expect(instance.last_operation.type).to eq('update')
+            expect(instance.last_operation.state).to eq('succeeded')
+
+            expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"}, {:prefix=>"seriouseats.com", :key=>"potato", :value=>"fried"})
+            expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"}, {:prefix=>nil, :key=>"release", :value=>"stable"})
+          end
+
+          it 'logs an audit event' do
+            action.update(accepts_incomplete: true)
+
+            expect(event_repository).to have_received(:record_service_instance_event).with(
+              :update,
+              instance_of(ManagedServiceInstance),
+              audit_hash
+            )
+          end
+
+          describe 'individual property changes' do
+            context 'when arbitrary parameters are changing' do
+              let(:arbitrary_parameters) { { some_data: 'some_value' } }
+              let(:body) do
+                {
+                  parameters: arbitrary_parameters
+                }
+              end
+
+              it 'calls the broker client with the right arguments' do
+                action.update(accepts_incomplete: true)
+
+                expect(client).to have_received(:update).with(
+                  original_instance,
+                  original_service_plan,
+                  accepts_incomplete: true,
+                  arbitrary_parameters: arbitrary_parameters,
+                  maintenance_info: nil,
+                  name: original_name,
+                  previous_values: previous_values,
+                  user_guid: user_guid,
+                )
+              end
+
+              it 'saves the updated instance' do
+                action.update(accepts_incomplete: true)
+
+                instance = original_instance.reload
+                expect(instance).to_not be_nil
+                expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+                expect(instance.name).to eq(original_name)
+                expect(instance.service_plan).to eq(original_service_plan)
+                expect(instance.space).to eq(space)
+                expect(instance.dashboard_url).to eq(updated_dashboard_url)
+
+                expect(instance.last_operation.type).to eq('update')
+                expect(instance.last_operation.state).to eq('succeeded')
+
+                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
+                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+              end
+            end
+
+            context 'when name is changing' do
+              let(:new_name) { 'new-name' }
+              let(:body) do
+                {
+                  name: new_name
+                }
+              end
+
+              it 'calls the broker client with the right arguments' do
+                action.update(accepts_incomplete: true)
+
+                expect(client).to have_received(:update).with(
+                  original_instance,
+                  original_service_plan,
+                  accepts_incomplete: true,
+                  arbitrary_parameters: { },
+                  maintenance_info: nil,
+                  name: new_name,
+                  previous_values: previous_values,
+                  user_guid: user_guid,
+                )
+              end
+
+              it 'saves the updated instance' do
+                action.update(accepts_incomplete: true)
+
+                instance = original_instance.reload
+                expect(instance).to_not be_nil
+                expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+                expect(instance.name).to eq(new_name)
+                expect(instance.service_plan).to eq(original_service_plan)
+                expect(instance.space).to eq(space)
+                expect(instance.dashboard_url).to eq(updated_dashboard_url)
+
+                expect(instance.last_operation.type).to eq('update')
+                expect(instance.last_operation.state).to eq('succeeded')
+
+                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
+                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+              end
+            end
+
+            context 'when service plan is changing' do
+              let(:new_service_plan) { ServicePlan.make(
+                service: original_service_offering,
+                maintenance_info: { version: '2.2.0' },
+                public: true
+              ) }
+              let(:body) do
+                {
+                  relationships: {
+                    service_plan: {
+                      data: {
+                        guid: new_service_plan.guid
+                      }
+                    }
+                  }
+                }
+              end
+
+              it 'calls the broker client with the right arguments' do
+                action.update(accepts_incomplete: true)
+
+                expect(client).to have_received(:update).with(
+                  original_instance,
+                  new_service_plan,
+                  accepts_incomplete: true,
+                  arbitrary_parameters: { },
+                  maintenance_info: { version: '2.2.0' },
+                  name: original_name,
+                  previous_values: previous_values,
+                  user_guid: user_guid,
+                )
+              end
+
+              it 'saves the updated instance' do
+                action.update(accepts_incomplete: true)
+
+                instance = original_instance.reload
+                expect(instance).to_not be_nil
+                expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+                expect(instance.name).to eq(original_name)
+                expect(instance.service_plan).to eq(new_service_plan)
+                expect(instance.space).to eq(space)
+                expect(instance.dashboard_url).to eq(updated_dashboard_url)
+                expect(instance.maintenance_info).to eq(new_service_plan.maintenance_info)
+
+                expect(instance.last_operation.type).to eq('update')
+                expect(instance.last_operation.state).to eq('succeeded')
+
+                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
+                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+              end
+            end
+
+            context 'when maintenance info is changing' do
+              let(:new_maintenance_info) {  { version: '2.2.0' } }
+              let(:body) do
+                {
+                  maintenance_info: new_maintenance_info
+                }
+              end
+
+              it 'calls the broker client with the right arguments' do
+                action.update(accepts_incomplete: true)
+
+                expect(client).to have_received(:update).with(
+                  original_instance,
+                  original_service_plan,
+                  accepts_incomplete: true,
+                  arbitrary_parameters: { },
+                  maintenance_info: { version: '2.2.0' },
+                  name: original_name,
+                  previous_values: previous_values,
+                  user_guid: user_guid,
+                )
+              end
+
+              it 'saves the updated instance' do
+                action.update(accepts_incomplete: true)
+
+                instance = original_instance.reload
+                expect(instance).to_not be_nil
+                expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+                expect(instance.name).to eq(original_name)
+                expect(instance.service_plan).to eq(original_service_plan)
+                expect(instance.space).to eq(space)
+                expect(instance.dashboard_url).to eq(updated_dashboard_url)
+                expect(instance.maintenance_info).to eq({"version"=>"2.2.0"})
+
+                expect(instance.last_operation.type).to eq('update')
+                expect(instance.last_operation.state).to eq('succeeded')
+
+                expect(instance).to have_annotations({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"fox", :value=>"bushy"})
+                expect(instance).to have_labels({:prefix=>"pre.fix", :key=>"to_delete", :value=>"value"}, {:prefix=>"pre.fix", :key=>"tail", :value=>"fluffy"})
+              end
+            end
+
+            context 'when the service plan no longer exists' do
+              let(:body) do
+                {
+                  relationships: { service_plan: { data: { guid: 'fake-plan' } } }
+                }
+              end
+
+              it 'raises an error and records failure' do
+                expect { action.update(accepts_incomplete: true)
+                }.to raise_error(
+                  ::CloudController::Errors::ApiError,
+                  /The service plan could not be found/
+                )
+
+                instance = original_instance.reload
+                expect(instance.last_operation.type).to eq('update')
+                expect(instance.last_operation.state).to eq('failed')
+                expect(instance.last_operation.description).to eq('The service plan could not be found: fake-plan')
+              end
+            end
+          end
+
+          context 'when update does not return dashboard_url' do
+            let(:update_response) do
+              {
+                last_operation: {
+                  type: 'update',
+                  state: 'succeeded',
+                }
+              }
+            end
+
+            it 'saves the updated instance last operation' do
+              action.update(accepts_incomplete: true)
+
+              instance = original_instance.reload
+              expect(instance).to_not be_nil
+              expect(instance.dashboard_url).to eq(original_dashboard_url)
+
+              expect(instance.last_operation.type).to eq('update')
+              expect(instance.last_operation.state).to eq('succeeded')
+            end
+          end
+        end
+
+        context 'when update raises an error' do
+          before do
+            allow(client).to receive(:update).and_return([{}, StandardError.new('boom')])
+          end
+
+          it 'raises an error and records failure' do
+            expect { action.update(accepts_incomplete: true)
+            }.to raise_error(
+              StandardError,
+              'boom'
+            )
+
+            instance = original_instance.reload
+            expect(instance.last_operation.type).to eq('update')
+            expect(instance.last_operation.state).to eq('failed')
+            expect(instance.last_operation.description).to eq('boom')
+          end
+        end
+
+        context 'when update is async' do
+          let(:broker_provided_operation) { Sham.guid }
+          let(:updated_dashboard_url) { 'http://your-instance.com' }
+          let(:update_response) do
+            {
+              dashboard_url: updated_dashboard_url,
+              last_operation: {
+                type: 'update',
+                state: 'in progress',
+                description: 'some description',
+                broker_provided_operation: broker_provided_operation
+              }
+            }
+          end
+
+          it 'saves the updated instance last operation' do
+            action.update(accepts_incomplete: true)
+
+            instance = original_instance.reload
+            expect(instance).to_not be_nil
+            expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
+            expect(instance.name).to eq(original_name)
+            expect(instance.service_plan).to eq(original_service_plan)
+            expect(instance.space).to eq(space)
+            expect(instance.dashboard_url).to eq(updated_dashboard_url)
+
+            expect(instance.last_operation.type).to eq('update')
+            expect(instance.last_operation.state).to eq('in progress')
+            expect(instance.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+          end
+
+          it 'logs a start update audit event' do
+            action.update(accepts_incomplete: true)
+
+            expect(event_repository).to have_received(:record_service_instance_event).with(
+              :start_update,
+              instance_of(ManagedServiceInstance),
+              audit_hash
+            )
+          end
+
+          context 'when update does not return dashboard_url' do
+            let(:update_response) do
+              {
+                last_operation: {
+                  type: 'update',
+                  state: 'in progress',
+                  description: 'some description',
+                  broker_provided_operation: broker_provided_operation
+                }
+              }
+            end
+
+            it 'saves the updated instance last operation' do
+              action.update(accepts_incomplete: true)
+
+              instance = original_instance.reload
+              expect(instance).to_not be_nil
+              expect(instance.dashboard_url).to eq(original_dashboard_url)
+
+              expect(instance.last_operation.type).to eq('update')
+              expect(instance.last_operation.state).to eq('in progress')
+              expect(instance.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+            end
+          end
+        end
+
+        # context 'when sending the operation request fails' do
+        #   before do
+        #     allow_any_instance_of(FakeAsyncOperation).to receive(:send_broker_request).and_raise(RuntimeError, 'not today')
+        #   end
+        #
+        #   it 'raises the error and fails the last operation' do
+        #     expect { job.perform }.to raise_error(RuntimeError, 'not today')
+        #
+        #     expect(service_instance.last_operation.type).to eq(operation)
+        #     expect(service_instance.last_operation.state).to eq('failed')
+        #     expect(service_instance.last_operation.description).to eq('not today')
+        #   end
+        # end
+        #
+        # context 'when the broker responds synchronously' do
+        #   let(:operation_response) {
+        #     { last_operation: { state: 'succeeded', type: operation } }
+        #   }
+        #
+        #   before do
+        #     job.perform
+        #   end
+        #
+        #   it 'does not fetch last operation' do
+        #     expect(client).not_to have_received(:fetch_service_instance_last_operation)
+        #   end
+        #
+        #   it 'finishes the job' do
+        #     expect(job.finished).to eq(true)
+        #   end
+        #
+        #   it 'updates the service instance' do
+        #     service_instance.reload
+        #
+        #     expect(service_instance.last_operation.type).to eq(operation)
+        #     expect(service_instance.last_operation.state).to eq('succeeded')
+        #   end
+        # end
+        #
+        # context 'when the broker responds asynchronously' do
+        #   let(:operation_response) {
+        #     { last_operation: { state: 'in progress', type: operation, description: 'abc' } }
+        #   }
+        #   let(:last_operation_response) {
+        #     { last_operation: { state: 'some state', type: operation } }
+        #   }
+        #
+        #   before do
+        #     allow(client).to receive(:fetch_service_instance_last_operation).and_return(
+        #       last_operation_response,
+        #     )
+        #     job.perform
+        #   end
+        #
+        #   it 'immediately fetches the last operation' do
+        #     expect(client).to have_received(:fetch_service_instance_last_operation)
+        #   end
+        #
+        #   it 'updates the service instance state' do
+        #     expect(service_instance.last_operation.type).to eq(operation)
+        #     expect(service_instance.last_operation.state).to eq('some state')
+        #   end
+        #
+        #   it 'does not finish the job' do
+        #     expect(job.finished).to eq(false)
+        #   end
+        # end
       end
 
       # describe '#update' do

@@ -115,6 +115,63 @@ module VCAP::CloudController
         Repositories::ServiceEventRepository.new(@user_audit_info)
       end
 
+      def complete_instance_and_save(instance, broker_response)
+        updates = message.updates.tap do |u|
+          u[:service_plan_guid] = service_plan.guid
+          u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+          u[:maintenance_info] = maintenance_info if maintenance_info_updated?
+        end
+
+        ServiceInstance.db.transaction do
+          service_instance.save_with_new_operation(
+            updates,
+            broker_response[:last_operation] || {}
+          )
+          MetadataUpdate.update(service_instance, message)
+        end
+
+        event_repository.record_service_instance_event(:update, instance, @audit_hash)
+      end
+
+      def save_incomplete_instance(instance, broker_response)
+        attributes_to_update = {}
+        attributes_to_update[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+
+        ManagedServiceInstance.db.transaction do
+          instance.lock!
+          instance.last_operation.lock! if instance.last_operation
+          instance.save_with_new_operation(
+            attributes_to_update,
+            broker_response[:last_operation] || {}
+          )
+        end
+
+        event_repository.record_service_instance_event(:start_update, instance, @audit_hash)
+      end
+
+      def save_failed_state(instance, e)
+        instance.save_with_new_operation(
+          {},
+          {
+            type: 'update',
+            state: 'failed',
+            description: e.message,
+          }
+        )
+      end
+
+      def save_last_operation(instance, last_operation)
+        instance.save_with_new_operation(
+          {},
+          {
+            type: 'update',
+            state: last_operation[:state],
+            description: last_operation[:description],
+            broker_provided_operation: instance.last_operation.broker_provided_operation
+          }
+        )
+      end
+
       def is_deleting?(service_instance)
         service_instance.operation_in_progress? && service_instance.last_operation[:type] == 'delete'
       end
@@ -142,8 +199,12 @@ module VCAP::CloudController
                  service_instance.service_plan
                end
 
-        service_plan_gone! unless plan
+        service_plan_gone!(message.service_plan_guid) unless plan
         plan
+      end
+
+      def service_plan_gone!(plan_id)
+        raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotFound', plan_id)
       end
 
       def previous_values
@@ -259,24 +320,6 @@ module VCAP::CloudController
         message.maintenance_info_version == object.maintenance_info['version']
       end
 
-      def complete_instance_and_save(instance, broker_response)
-        updates = message.updates.tap do |u|
-          u[:service_plan_guid] = service_plan.guid
-          u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
-          u[:maintenance_info] = maintenance_info if maintenance_info_updated?
-        end
-
-        ServiceInstance.db.transaction do
-          service_instance.save_with_new_operation(
-            updates,
-              broker_response[:last_operation] || {}
-          )
-          MetadataUpdate.update(service_instance, message)
-        end
-
-        event_repository.record_service_instance_event(:update, instance, @audit_hash)
-      end
-
       def maintenance_info
         plan_change_requested = service_plan.guid != service_instance.service_plan.guid
 
@@ -294,43 +337,7 @@ module VCAP::CloudController
         plan_change_requested || message.maintenance_info
       end
 
-      def save_incomplete_instance(instance, broker_response)
-        ManagedServiceInstance.db.transaction do
-          instance.lock!
-          instance.last_operation.lock! if instance.last_operation
-          instance.save_with_new_operation(
-            {
-              dashboard_url: broker_response[:dashboard_url]
-            },
-            broker_response[:last_operation] || {}
-          )
-        end
 
-        event_repository.record_service_instance_event(:start_update, instance, @audit_hash)
-      end
-
-      def save_failed_state(instance, e)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'update',
-            state: 'failed',
-            description: e.message,
-          }
-        )
-      end
-
-      def save_last_operation(instance, last_operation)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'update',
-            state: last_operation[:state],
-            description: last_operation[:description],
-            broker_provided_operation: instance.last_operation.broker_provided_operation
-          }
-        )
-      end
 
       def parse_response(details)
         {
