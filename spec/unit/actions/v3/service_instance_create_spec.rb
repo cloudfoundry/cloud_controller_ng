@@ -349,7 +349,7 @@ module VCAP::CloudController
             i.save_with_new_operation(
               {},
               {
-                type: 'delete',
+                type: 'create',
                 state: 'in progress',
                 broker_provided_operation: operation_id
               }
