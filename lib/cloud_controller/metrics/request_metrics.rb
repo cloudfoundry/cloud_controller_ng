@@ -10,13 +10,13 @@ module VCAP::CloudController
 
       def start_request
         @counter += 1
-        @statsd.gauge('cc.requests.outstanding.total', @counter)
+        @statsd.gauge('cc.requests.outstanding.gauge', @counter)
         @statsd.increment 'cc.requests.outstanding'
       end
 
       def complete_request(status)
         @counter -= 1
-        @statsd.gauge('cc.requests.outstanding.total', @counter)
+        @statsd.gauge('cc.requests.outstanding.gauge', @counter)
         @statsd.batch do |batch|
           batch.decrement 'cc.requests.outstanding'
           batch.increment 'cc.requests.completed'
