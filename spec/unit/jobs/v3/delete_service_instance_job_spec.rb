@@ -32,7 +32,7 @@ module VCAP::CloudController
           allow(VCAP::CloudController::V3::ServiceInstanceDelete).to receive(:new).and_return(action)
         end
 
-        it 'passes the correct parameters to create the action' do
+        it 'passes the correct parameters to delete the action' do
           job.perform
 
           expect(VCAP::CloudController::V3::ServiceInstanceDelete).to have_received(:new).with(

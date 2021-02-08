@@ -3,296 +3,366 @@ require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/update_service_instance_job'
 require 'cloud_controller/errors/api_error'
 require 'cloud_controller/user_audit_info'
+require 'actions/v3/service_instance_update_managed'
 require 'messages/service_instance_update_managed_message'
-require 'support/matchers/have_labels'
-require 'support/matchers/have_annotations'
 
-module VCAP
-  module CloudController
-    module V3
-      RSpec.describe UpdateServiceInstanceJob do
-        it_behaves_like 'delayed job', described_class
+module VCAP::CloudController
+  module V3
+    RSpec.describe UpdateServiceInstanceJob do
+      it_behaves_like 'delayed job', described_class
 
-        let(:arbitrary_parameters) { {} }
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
-        let(:service_offering) { Service.make }
-        let(:service_plan) {
-          ServicePlan.make(
-            service: service_offering,
-            maintenance_info: { version: '2.0.0' },
-            public: true
-          )
-        }
-        let(:original_name) { 'old name' }
-        let(:service_instance) do
-          si = ManagedServiceInstance.make(
-            name: original_name,
-            service_plan: service_plan,
-            space: space,
-            maintenance_info: { version: '2.0.0' }
-          )
-          si.label_ids = [
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ]
-          si.annotation_ids = [
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-          ]
-          si.reload
-          si
-        end
+      it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
 
-        let(:metadata) {
+      let(:params) { { some_data: 'some_value' } }
+      let(:maintenance_info) { { 'version' => '1.2.0' } }
+      let(:plan) { ServicePlan.make(maintenance_info: maintenance_info) }
+      let(:service_instance) do
+        si = ManagedServiceInstance.make(service_plan: plan)
+        si.save_with_new_operation(
+          {},
           {
-            labels: { foo: 'bar', 'pre.fix/to_delete': nil },
-            annotations: { baz: 'quz', 'pre.fix/to_delete': nil }
+            type: 'update',
+            state: 'in progress'
+          }
+        )
+        si
+      end
+      let(:user_guid) { Sham.uaa_id }
+      let(:user_info) { instance_double(UserAuditInfo, { user_guid: user_guid }) }
+      let(:audit_hash) { { request: 'some_value' } }
+
+      let(:arbitrary_parameters) { { foo: 'bar' } }
+      let(:new_tags) { %w(bar quz) }
+      let(:new_plan) { ServicePlan.make }
+
+      let(:message) { ServiceInstanceUpdateManagedMessage.new({
+        name: 'new_name',
+        parameters: arbitrary_parameters,
+        tags: new_tags,
+        relationships: {
+          service_plan: {
+            data: {
+              guid: new_plan.guid
+            }
           }
         }
-        let(:message) {
-          ServiceInstanceUpdateManagedMessage.new({
-            tags: %w(foo bar),
-            parameters: arbitrary_parameters,
-            metadata: metadata,
+      })
+      }
+
+      let(:job) {
+        described_class.new(
+          service_instance.guid,
+          message: message,
+          user_audit_info: user_info,
+          audit_hash: audit_hash
+        )
+      }
+
+      describe '#perform' do
+        let(:update_response) {}
+        let(:poll_response) { { finished: false } }
+        let(:action) do
+          double(VCAP::CloudController::V3::ServiceInstanceUpdateManaged, {
+            update: update_response,
+            poll: poll_response
           })
-        }
-        let(:previous_values) {
-          {
-            plan_id: service_plan.broker_provided_id,
-            service_id: service_offering.broker_provided_id,
-            organization_id: org.guid,
-            space_id: space.guid,
-            maintenance_info: service_plan.maintenance_info.stringify_keys,
-          }
-        }
-        let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
-        let(:subject) { described_class.new(service_instance.guid, user_audit_info: user_audit_info, message: message) }
-        let(:update_response) { { some_key: 'some value' } }
-        let(:client) { double('BrokerClient', update: update_response) }
+        end
 
         before do
-          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+          allow(VCAP::CloudController::V3::ServiceInstanceUpdateManaged).to receive(:new).and_return(action)
         end
 
-        describe '#operation' do
-          it 'returns "update"' do
-            expect(subject.operation).to eq(:update)
-          end
+        it 'passes the correct parameters to update the action' do
+          job.perform
+
+          expect(VCAP::CloudController::V3::ServiceInstanceUpdateManaged).to have_received(:new).with(
+            service_instance,
+            message,
+            user_info,
+            audit_hash
+          ).at_least(:once)
         end
 
-        describe '#operation_type' do
-          it 'returns "update"' do
-            expect(subject.operation_type).to eq('update')
-          end
+        it 'raises if the service instance no longer exists' do
+          service_instance.destroy
+
+          expect { job.perform }.to raise_error(
+            CloudController::Errors::ApiError,
+            /The service instance could not be found: #{service_instance.guid}./,
+          )
         end
 
-        describe 'broker interactions' do
-          context 'when paramaters are changing' do
-            let(:arbitrary_parameters) { { some_data: 'some_value' } }
-
-            it 'calls the broker client with the right arguments' do
-              subject.perform
-
-              expect(client).to have_received(:update).with(
-                service_instance,
-                service_plan,
-                accepts_incomplete: true,
-                arbitrary_parameters: { some_data: 'some_value' },
-                maintenance_info: nil,
-                name: service_instance.name,
-                previous_values: previous_values,
-                user_guid: user_audit_info.user_guid,
-              )
-            end
-          end
-
-          context 'when name is changing' do
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                name: 'new name'
-              })
-            }
-            it 'calls the broker client with the right arguments' do
-              subject.perform
-
-              expect(client).to have_received(:update).with(
-                service_instance,
-                service_plan,
-                name: 'new name',
-                accepts_incomplete: true,
-                arbitrary_parameters: {},
-                maintenance_info: nil,
-                previous_values: previous_values,
-                user_guid: user_audit_info.user_guid,
-              )
-            end
-          end
-
-          context 'when plan has changed' do
-            let(:new_service_plan) {
-              ServicePlan.make(
-                service: service_offering,
-                maintenance_info: { version: '2.1.0' },
-                public: true
-              )
-            }
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                relationships: {
-                  service_plan: {
-                    data: {
-                      guid: new_service_plan.guid
-                    }
-                  }
-                }
-              })
-            }
-
-            it 'calls the broker client with the right arguments' do
-              subject.perform
-
-              expect(client).to have_received(:update).with(
-                service_instance,
-                new_service_plan,
-                accepts_incomplete: true,
-                arbitrary_parameters: {},
-                maintenance_info: { version: '2.1.0' },
-                name: service_instance.name,
-                previous_values: previous_values,
-                user_guid: user_audit_info.user_guid,
-              )
-            end
-          end
-
-          context 'when maintenance info is changing' do
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                maintenance_info: { version: '2.2.0' }
-              })
-            }
-
-            it 'calls the broker client with the right arguments' do
-              subject.perform
-
-              expect(client).to have_received(:update).with(
-                service_instance,
-                service_plan,
-                accepts_incomplete: true,
-                arbitrary_parameters: {},
-                maintenance_info: { version: '2.2.0' },
-                name: service_instance.name,
-                previous_values: previous_values,
-                user_guid: user_audit_info.user_guid,
-              )
-            end
-          end
-
-          context 'when the service plan no longer exists' do
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                relationships: { service_plan: { data: { guid: 'fake-plan' } } } }
-              )
-            }
-
-            it 'raises an error' do
-              expect { subject.perform }.to raise_error(
-                ::CloudController::Errors::ApiError,
-                /The service plan could not be found/
-              )
-            end
-          end
-        end
-
-        describe 'when operation is successful' do
-          let(:message) {
-            ServiceInstanceUpdateManagedMessage.new({
-              tags: %w(foo bar),
-              metadata: metadata,
-              name: 'new name'
-            })
-          }
-
-          let(:update_response) do
-            {
-              last_operation: { state: 'succeeded', type: :update }
-            }
-          end
-
+        context 'when there is another operation in progress' do
           before do
-            subject.perform
+            service_instance.save_with_new_operation({}, { type: 'some-other-operation', state: 'in progress', description: 'barz' })
+          end
+
+          it 'raises an error' do
+            expect { job.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              /update could not be completed: some-other-operation in progress/
+            )
+
             service_instance.reload
+            expect(service_instance.last_operation.type).to eq('some-other-operation')
+            expect(service_instance.last_operation.state).to eq('in progress')
+            expect(service_instance.last_operation.description).to eq('barz')
           end
+        end
 
-          context 'when dashboard url changed' do
-            let(:new_dashboard_url) { 'https://example.com/new-dashboard' }
-            let(:update_response) do
-              {
-                dashboard_url: new_dashboard_url,
-                last_operation: { state: 'succeeded', type: :update }
-              }
+        context 'first time' do
+          context 'runs compatibility checks' do
+            context 'volume mount' do
+              let(:service_offering) { Service.make(requires: %w(volume_mount)) }
+              let(:plan) { ServicePlan.make(service: service_offering) }
+
+              it 'adds to the warnings required but disabled' do
+                TestConfig.config[:volume_services_enabled] = false
+                job.perform
+                expect(job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::VOLUME_SERVICE_WARNING)
+              end
+
+              it 'does not warn if enabled' do
+                TestConfig.config[:volume_services_enabled] = true
+                job.perform
+                expect(job.warnings).to be_empty
+              end
             end
 
-            it 'updates the service instance dashboard url' do
-              expect(service_instance.dashboard_url).to eq(new_dashboard_url)
+            context 'route forwarding' do
+              let(:service_offering) { Service.make(requires: %w(route_forwarding)) }
+              let(:plan) { ServicePlan.make(service: service_offering) }
+
+              it 'adds to the warnings required but disabled' do
+                TestConfig.config[:route_services_enabled] = false
+                job.perform
+                expect(job.warnings.to_json).to include(VCAP::CloudController::ServiceInstance::ROUTE_SERVICE_WARNING)
+              end
+
+              it 'does not warn if enabled' do
+                TestConfig.config[:route_services_enabled] = true
+                job.perform
+                expect(job.warnings).to be_empty
+              end
             end
           end
 
-          context 'when maintenance info changed' do
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                maintenance_info: { version: '2.2.0' }
+          context 'computes the maximum duration' do
+            before do
+              TestConfig.override({
+                broker_client_max_async_poll_duration_minutes: 90009
               })
-            }
+              job.perform
+            end
 
-            it 'updates the service instance maintenance info' do
-              expect(service_instance.maintenance_info).to eq({ 'version' => '2.2.0' })
+            it 'sets to the default value' do
+              expect(job.maximum_duration_seconds).to eq(90009.minutes)
+            end
+
+            context 'when the plan defines a duration' do
+              let(:maximum_polling_duration) { 7465 }
+              let(:plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration) }
+
+              it 'sets to the plan value' do
+                expect(job.maximum_duration_seconds).to eq(7465)
+              end
             end
           end
 
-          context 'when the service plan changed' do
-            let(:new_service_plan) {
-              ServicePlan.make(
-                service: service_offering,
-                maintenance_info: { version: '2.1.0' },
-                public: true
+          context 'synchronous response' do
+            before do
+              service_instance.save_with_new_operation({}, { type: 'update', state: 'succeeded' })
+            end
+
+            it 'calls update and then finishes' do
+              job.perform
+
+              expect(action).to have_received(:update).with(
+                accepts_incomplete: true,
               )
-            }
-            let(:message) {
-              ServiceInstanceUpdateManagedMessage.new({
-                relationships: {
-                  service_plan: {
-                    data: {
-                      guid: new_service_plan.guid
-                    }
-                  }
-                }
-              })
-            }
 
-            it 'updates the service instance plan' do
-              expect(service_instance.service_plan).to eq(new_service_plan)
+              expect(job.finished).to be_truthy
+            end
+
+            it 'does not poll' do
+              job.perform
+
+              expect(action).not_to have_received(:poll)
             end
           end
 
-          it 'updates the service instance' do
-            expect(service_instance.name).to eq('new name')
-            expect(service_instance.tags).to eq(%w(foo bar))
-            expect(service_instance.service_plan).to eq(service_plan)
-            expect(service_instance).to have_labels(
-              { prefix: nil, key: 'foo', value: 'bar' },
-              { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
+          context 'asynchronous response' do
+            it 'calls update and then poll' do
+              job.perform
+
+              expect(action).to have_received(:update).with(
+                accepts_incomplete: true,
+              )
+
+              expect(action).to have_received(:poll)
+
+              expect(job.finished).to be_falsey
+            end
+          end
+
+          context 'update fails' do
+            it 'raises an API error' do
+              allow(action).to receive(:update).and_raise(StandardError)
+
+              expect { job.perform }.to raise_error(
+                CloudController::Errors::ApiError,
+                'update could not be completed: StandardError',
+              )
+
+              service_instance.reload
+              expect(service_instance.last_operation.type).to eq('update')
+              expect(service_instance.last_operation.state).to eq('failed')
+              expect(service_instance.last_operation.description).to eq('StandardError')
+            end
+          end
+        end
+
+        context 'subsequent times' do
+          before do
+            service_instance.save_with_new_operation({}, {
+              type: 'update',
+              state: 'in progress',
+              broker_provided_operation: Sham.guid,
+            })
+            job.perform
+          end
+
+          it 'only calls poll' do
+            job.perform
+
+            expect(action).to have_received(:update).once
+            expect(action).to have_received(:poll).twice
+            expect(job.finished).to be_falsey
+          end
+
+          context 'poll indicates update complete' do
+            let(:poll_response) { { finished: true } }
+
+            it 'finishes the job' do
+              job.perform
+
+              expect(job.finished).to be_truthy
+            end
+          end
+
+          context 'when retry_after is returned in the broker response' do
+            def test_retry_after(value, expected)
+              allow(action).to receive(:poll).and_return({ finished: false, retry_after: value })
+              job.perform
+              expect(job.polling_interval_seconds).to eq(expected)
+            end
+
+            it 'updates the polling interval' do
+              test_retry_after(10, 60) # below default
+              test_retry_after(65, 65)
+              test_retry_after(1.hour, 1.hour)
+              test_retry_after(25.hours, 24.hours) # above limit
+            end
+          end
+
+          context 'the maximum duration' do
+            it 'recomputes the value' do
+              job.maximum_duration_seconds = 90009
+              TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+
+              job.perform
+
+              expect(job.maximum_duration_seconds).to eq(8088.minutes)
+            end
+
+            context 'when the plan value changes between calls' do
+              before do
+                job.maximum_duration_seconds = 90009
+                plan.update(maximum_polling_duration: 5000)
+
+                job.perform
+              end
+
+              it 'sets to the new plan value' do
+                expect(job.maximum_duration_seconds).to eq(5000)
+              end
+            end
+          end
+        end
+
+        context 'poll fails' do
+          it 're-raises LastOperationFailedState errors' do
+            allow(action).to receive(:poll).and_raise(
+              VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState.new('Something went wrong')
             )
-            expect(service_instance).to have_annotations(
-              { prefix: nil, key: 'baz', value: 'quz' },
-              { prefix: 'pre.fix', key: 'fox', value: 'bushy' }
+
+            expect { job.perform }.to raise_error(
+              VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState,
+              'Something went wrong',
             )
           end
 
-          it 'logs an audit event with the original service instance as the target' do
-            last_audit_event = Event.find(type: 'audit.service_instance.update')
-            expect(last_audit_event.target_name).to eql(original_name)
+          it 're-raises API errors' do
+            allow(action).to receive(:poll).and_raise(
+              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+            )
+
+            expect { job.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              "An operation for service instance #{service_instance.name} is in progress.",
+            )
           end
+
+          it 'wraps other errors' do
+            allow(action).to receive(:poll).and_raise(StandardError, 'bad thing')
+
+            expect { job.perform }.to raise_error(
+              CloudController::Errors::ApiError,
+              'update could not be completed: bad thing',
+            )
+          end
+        end
+      end
+
+      describe '#handle_timeout' do
+        it 'updates the service instance last operation' do
+          job.handle_timeout
+
+          service_instance.reload
+
+          expect(service_instance.last_operation.type).to eq('update')
+          expect(service_instance.last_operation.state).to eq('failed')
+          expect(service_instance.last_operation.description).to eq('Service Broker failed to update within the required time.')
+        end
+      end
+
+      describe '#operation' do
+        it 'returns "update"' do
+          expect(job.operation).to eq(:update)
+        end
+      end
+
+      describe '#operation_type' do
+        it 'returns "update"' do
+          expect(job.operation_type).to eq('update')
+        end
+      end
+
+      describe '#resource_type' do
+        it 'returns "service_instances"' do
+          expect(job.resource_type).to eq('service_instances')
+        end
+      end
+
+      describe '#resource_guid' do
+        it 'returns the service instance guid' do
+          expect(job.resource_guid).to eq(service_instance.guid)
+        end
+      end
+
+      describe '#display_name' do
+        it 'returns the display name' do
+          expect(job.display_name).to eq('service_instance.update')
         end
       end
     end

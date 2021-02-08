@@ -1,5 +1,10 @@
+require 'cloud_controller/errors/api_error'
+
 module VCAP::CloudController
   module ServiceInstanceCreateMixin
+    class UnprocessableOperation < CloudController::Errors::ApiError
+    end
+
     private
 
     def validate_quotas!(errors)
@@ -16,7 +21,7 @@ module VCAP::CloudController
                'ServiceInstanceServicePlanNotAllowed'
              end
 
-      raise VCAP::CloudController::ServiceInstanceCreateManaged::UnprocessableCreate.new_from_details(code) unless code.nil?
+      raise UnprocessableOperation.new_from_details(code) unless code.nil?
     end
 
     def validation_error!(
@@ -28,7 +33,7 @@ module VCAP::CloudController
       validate_quotas!(errors)
 
       if errors.on(:name)&.include?(:unique)
-        validation_error_handler.error!("The service instance name is taken: #{name}")
+        validation_error_handler.error!("The service instance name is taken: #{name}.")
       end
 
       validation_error_handler.error!(exception.message)
