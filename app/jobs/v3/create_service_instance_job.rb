@@ -60,7 +60,7 @@ module VCAP::CloudController
           if @first_time
             @first_time = false
             action.provision(service_instance, parameters: @arbitrary_parameters, accepts_incomplete: true)
-            compatibility_checks # TODO: get the warning from the action?
+            compatibility_checks
             return finish if service_instance.reload.terminal_state?
           end
 

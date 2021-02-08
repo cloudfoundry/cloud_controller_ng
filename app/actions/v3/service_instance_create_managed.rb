@@ -62,7 +62,7 @@ module VCAP::CloudController
           user_guid: @user_audit_info.user_guid
         )
 
-        if details[:last_operation][:state] == 'in progress' && details[:last_operation][:type] == 'create'
+        if details[:last_operation][:state] == 'in progress'
           save_incomplete_instance(instance, details)
         else
           complete_instance_and_save(instance, details)
@@ -104,19 +104,41 @@ module VCAP::CloudController
       end
 
       def complete_instance_and_save(instance, broker_response)
-        instance.db.transaction do
-          instance.lock!
-          instance.last_operation.lock! if instance.last_operation
-          instance.save_with_new_operation(
-            broker_response[:instance] || {},
-            broker_response[:last_operation] || {}
-          )
-        end
-
+        save_instance(broker_response, instance)
         event_repository.record_service_instance_event(:create, instance, @audit_hash)
       end
 
       def save_incomplete_instance(instance, broker_response)
+        save_instance(broker_response, instance)
+        event_repository.record_service_instance_event(:start_create, instance, @audit_hash)
+      end
+
+      def save_failed_state(instance, e)
+        save_instance(
+          {
+            last_operation: {
+              type: 'create',
+              state: 'failed',
+              description: e.message,
+            }
+          }, instance
+        )
+      end
+
+      def save_last_operation(instance, last_operation)
+        save_instance(
+          {
+            last_operation: {
+              type: 'create',
+              state: last_operation[:state],
+              description: last_operation[:description],
+              broker_provided_operation: instance.last_operation.broker_provided_operation
+            }
+          }, instance
+        )
+      end
+
+      def save_instance(broker_response, instance)
         ManagedServiceInstance.db.transaction do
           instance.lock!
           instance.last_operation.lock! if instance.last_operation
@@ -125,31 +147,6 @@ module VCAP::CloudController
             broker_response[:last_operation] || {}
           )
         end
-
-        event_repository.record_service_instance_event(:start_create, instance, @audit_hash)
-      end
-
-      def save_failed_state(instance, e)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'create',
-            state: 'failed',
-            description: e.message,
-          }
-        )
-      end
-
-      def save_last_operation(instance, last_operation)
-        instance.save_with_new_operation(
-          {},
-          {
-            type: 'create',
-            state: last_operation[:state],
-            description: last_operation[:description],
-            broker_provided_operation: instance.last_operation.broker_provided_operation
-          }
-        )
       end
 
       def parse_response(details)

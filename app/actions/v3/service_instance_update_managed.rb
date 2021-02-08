@@ -78,7 +78,7 @@ module VCAP::CloudController
         )
         raise err if err
 
-        if details[:last_operation][:state] == 'in progress' && details[:last_operation][:type] == 'update'
+        if details[:last_operation][:state] == 'in progress'
           save_incomplete_instance(service_instance, details)
         else
           complete_instance_and_save(service_instance, details)
@@ -128,7 +128,7 @@ module VCAP::CloudController
           u[:maintenance_info] = maintenance_info if maintenance_info_updated?
         end
 
-        ServiceInstance.db.transaction do
+        ManagedServiceInstance.db.transaction do
           service_instance.save_with_new_operation(
             updates,
             broker_response[:last_operation] || {}
