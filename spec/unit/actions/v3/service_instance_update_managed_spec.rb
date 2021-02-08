@@ -1280,7 +1280,7 @@ module VCAP::CloudController
             }
           }
         end
-        let(:fetch_instance_response) { { } }
+        let(:fetch_instance_response) { {} }
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
             fetch_service_instance_last_operation: poll_response,
@@ -1460,7 +1460,7 @@ module VCAP::CloudController
               context 'when fetch does not return dashboard_url' do
                 let(:fetch_instance_response) do
                   {
-                    parameters: { foo: 'bar'}
+                    parameters: { foo: 'bar' }
                   }
                 end
 

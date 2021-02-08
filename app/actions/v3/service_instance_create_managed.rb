@@ -98,8 +98,6 @@ module VCAP::CloudController
 
       private
 
-
-
       def event_repository
         Repositories::ServiceEventRepository.new(@user_audit_info)
       end
