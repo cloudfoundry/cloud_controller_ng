@@ -41,8 +41,8 @@ module VCAP::CloudController
               port:       get_default_port(actual_lrp.actual_lrp_net_info),
               net_info:   actual_lrp.actual_lrp_net_info.to_h,
               uptime:     nanoseconds_to_seconds(current_time * 1e9 - actual_lrp.since),
-              mem_quota:  process[:memory] * 1024 * 1024,
-              disk_quota: process[:disk_quota] * 1024 * 1024,
+              mem_quota:  desired_lrp.memory_mb * 1024 * 1024,
+              disk_quota: desired_lrp.disk_mb * 1024 * 1024,
               fds_quota:  process.file_descriptors,
               usage:      stats[actual_lrp.actual_lrp_key.index] || {
                 time: formatted_current_time,
