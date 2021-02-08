@@ -1,3 +1,5 @@
+require 'cloud_controller/errors/api_error'
+
 module VCAP::CloudController
   module ServiceInstanceCreateMixin
     class UnprocessableOperation < CloudController::Errors::ApiError

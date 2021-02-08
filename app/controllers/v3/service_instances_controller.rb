@@ -27,8 +27,8 @@ require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
-require 'jobs/v3/create_service_instance_job_new'
-require 'jobs/v3/update_service_instance_job_new'
+require 'jobs/v3/create_service_instance_job'
+require 'jobs/v3/update_service_instance_job'
 
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
@@ -242,7 +242,7 @@ class ServiceInstancesV3Controller < ApplicationController
     action = V3::ServiceInstanceCreate.new(user_audit_info, message.audit_hash)
     instance = action.precursor(message: message)
 
-    provision_job = VCAP::CloudController::V3::CreateServiceInstanceJobNew.new(
+    provision_job = VCAP::CloudController::V3::CreateServiceInstanceJob.new(
       instance.guid,
       arbitrary_parameters: message.parameters,
       user_audit_info: user_audit_info,
@@ -275,7 +275,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance, continue_async = action.precursor
 
     if continue_async
-      update_job = VCAP::CloudController::V3::UpdateServiceInstanceJobNew.new(
+      update_job = VCAP::CloudController::V3::UpdateServiceInstanceJob.new(
         service_instance.guid,
         message: message,
         user_audit_info: user_audit_info,

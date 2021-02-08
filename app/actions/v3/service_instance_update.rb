@@ -1,14 +1,14 @@
 require 'services/service_brokers/service_client_provider'
 require 'actions/metadata_update'
+require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   module V3
     class ServiceInstanceUpdate
-      class UnprocessableUpdate < CloudController::Errors::ApiError
-      end
-
+      class UnprocessableUpdate < CloudController::Errors::ApiError; end
       class InvalidServiceInstance < StandardError
       end
+      class LastOperationFailedState < StandardError; end
 
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze

@@ -1,20 +1,28 @@
-require 'jobs/v3/service_instance_async_job'
-require 'actions/metadata_update'
+require 'jobs/reoccurring_job'
+require 'actions/v3/service_instance_update'
 
 module VCAP::CloudController
   module V3
-    class UpdateServiceInstanceJob < ServiceInstanceAsyncJob
+    class UpdateServiceInstanceJob < VCAP::CloudController::Jobs::ReoccurringJob
+      attr_reader :warnings
+
       def initialize(
         service_instance_guid,
-        user_audit_info:,
         message:,
-        request_attr: {}
+        user_audit_info:,
+        audit_hash:
       )
-        super(service_instance_guid, user_audit_info)
+        super()
+        @service_instance_guid = service_instance_guid
         @message = message
-        @update_response = {}
-        @request_attr = request_attr
         @user_audit_info = user_audit_info
+        @audit_hash = audit_hash
+        @warnings = []
+        @first_time = true
+      end
+
+      def action
+        V3::ServiceInstanceUpdate.new(service_instance, @message, @user_audit_info, @audit_hash)
       end
 
       def operation
@@ -25,79 +33,128 @@ module VCAP::CloudController
         'update'
       end
 
+      def max_attempts
+        1
+      end
+
+      def display_name
+        'service_instance.update'
+      end
+
+      def resource_type
+        'service_instances'
+      end
+
+      def resource_guid
+        @service_instance_guid
+      end
+
+      def perform
+        not_found! unless service_instance
+
+        raise_if_other_operations_in_progress!
+
+        compute_maximum_duration
+
+        begin
+          if @first_time
+            @first_time = false
+            action.update(accepts_incomplete: true)
+            compatibility_checks
+            return finish if service_instance.reload.terminal_state?
+          end
+
+          polling_status = action.poll
+
+          if polling_status[:finished]
+            finish
+          end
+
+          if polling_status[:retry_after].present?
+            self.polling_interval_seconds = polling_status[:retry_after]
+          end
+        rescue ServiceInstanceUpdate::LastOperationFailedState => e
+          raise e
+        rescue CloudController::Errors::ApiError => e
+          save_failure(e)
+          raise e
+        rescue => e
+          save_failure(e)
+          raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
+        end
+      end
+
+      def handle_timeout
+        service_instance.save_with_new_operation(
+          {},
+          {
+            type: operation_type,
+            state: 'failed',
+            description: "Service Broker failed to #{operation} within the required time.",
+          }
+        )
+      end
+
+      def compatibility_checks
+        if service_instance.service_plan.service.volume_service? && volume_services_disabled?
+          @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING })
+        end
+
+        if service_instance.service_plan.service.route_service? && route_services_disabled?
+          @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
+        end
+      end
+
+      def volume_services_disabled?
+        !VCAP::CloudController::Config.config.get(:volume_services_enabled)
+      end
+
+      def route_services_disabled?
+        !VCAP::CloudController::Config.config.get(:route_services_enabled)
+      end
+
       private
 
-      attr_reader :message, :user_audit_info
+      attr_reader :user_audit_info
 
-      def send_broker_request(client)
-        @update_response, err = client.update(
-          service_instance,
-          service_plan,
-          accepts_incomplete: true,
-          arbitrary_parameters: message.parameters || {},
-          previous_values: previous_values,
-          maintenance_info: maintenance_info,
-          name: message.requested?(:name) ? message.name : service_instance.name,
-          user_guid: user_audit_info.user_guid
-        )
-        raise err if err
-
-        @update_response
+      def service_instance
+        ManagedServiceInstance.first(guid: @service_instance_guid)
       end
 
-      def operation_succeeded
-        updates = message.updates.tap do |u|
-          u[:service_plan_guid] = service_plan.guid
-          u[:dashboard_url] = @update_response[:dashboard_url] if @update_response.key?(:dashboard_url)
-          u[:maintenance_info] = maintenance_info if maintenance_info_updated?
-        end
+      def raise_if_other_operations_in_progress!
+        last_operation_type = service_instance.last_operation&.type
 
-        ServiceInstance.db.transaction do
-          service_instance.update_service_instance(updates)
-          MetadataUpdate.update(service_instance, message)
+        return if operation_type == 'delete' && last_operation_type == 'create'
+
+        if service_instance.operation_in_progress? && last_operation_type != operation_type
+          cancelled!(last_operation_type)
         end
       end
 
-      def service_plan_gone!
-        raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotFound', service_instance_guid)
+      def compute_maximum_duration
+        max_poll_duration_on_plan = service_instance.service_plan.try(:maximum_polling_duration)
+        self.maximum_duration_seconds = max_poll_duration_on_plan
       end
 
-      def service_plan
-        plan = if message.service_plan_guid
-                 ServicePlan.first(guid: message.service_plan_guid)
-               else
-                 service_instance.service_plan
-               end
-
-        service_plan_gone! unless plan
-        plan
+      def save_failure(error_message)
+        if service_instance.reload.last_operation.state != 'failed'
+          service_instance.save_with_new_operation(
+            {},
+            {
+              type: operation_type,
+              state: 'failed',
+              description: error_message,
+            }
+          )
+        end
       end
 
-      def previous_values
-        {
-          plan_id: service_instance.service_plan.broker_provided_id,
-          service_id: service_instance.service.broker_provided_id,
-          organization_id: service_instance.organization.guid,
-          space_id: service_instance.space.guid,
-          maintenance_info: service_instance.maintenance_info
-        }
+      def not_found!
+        raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "The service instance could not be found: #{@service_instance_guid}.")
       end
 
-      def maintenance_info_updated?
-        plan_change_requested = service_plan.guid != service_instance.service_plan.guid
-        plan_change_requested || message.maintenance_info
-      end
-
-      def maintenance_info
-        plan_change_requested = service_plan.guid != service_instance.service_plan.guid
-
-        info = if plan_change_requested
-                 service_plan.maintenance_info&.symbolize_keys
-               else
-                 message.maintenance_info
-               end
-
-        info&.slice(:version)
+      def cancelled!(operation_in_progress)
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, "#{operation_in_progress} in progress")
       end
     end
   end

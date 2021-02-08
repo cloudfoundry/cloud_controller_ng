@@ -4,14 +4,11 @@ require 'actions/metadata_update'
 
 module VCAP::CloudController
   module V3
-    class LastOperationFailedState < StandardError
-    end
-
     class ServiceInstanceCreate
       include ServiceInstanceCreateMixin
 
-      class InvalidManagedServiceInstance < StandardError
-      end
+      class InvalidManagedServiceInstance < StandardError; end
+      class LastOperationFailedState < StandardError; end
 
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze
