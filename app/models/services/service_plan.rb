@@ -169,7 +169,7 @@ module VCAP::CloudController
 
       return ServicePlanVisibilityTypes::SPACE if broker_space_scoped?
 
-      return ServicePlanVisibilityTypes::ORGANIZATION if service_plan_visibilities.any?
+      return ServicePlanVisibilityTypes::ORGANIZATION unless service_plan_visibilities_dataset.empty?
 
       return ServicePlanVisibilityTypes::ADMIN
     end
