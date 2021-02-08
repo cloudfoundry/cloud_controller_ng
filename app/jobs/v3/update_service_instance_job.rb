@@ -1,5 +1,5 @@
 require 'jobs/reoccurring_job'
-require 'actions/v3/service_instance_update'
+require 'actions/v3/service_instance_update_managed'
 
 module VCAP::CloudController
   module V3
@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       def action
-        V3::ServiceInstanceUpdate.new(service_instance, @message, @user_audit_info, @audit_hash)
+        V3::ServiceInstanceUpdateManaged.new(service_instance, @message, @user_audit_info, @audit_hash)
       end
 
       def operation
@@ -73,7 +73,7 @@ module VCAP::CloudController
           if polling_status[:retry_after].present?
             self.polling_interval_seconds = polling_status[:retry_after]
           end
-        rescue ServiceInstanceUpdate::LastOperationFailedState => e
+        rescue ServiceInstanceUpdateManaged::LastOperationFailedState => e
           raise e
         rescue CloudController::Errors::ApiError => e
           save_failure(e)

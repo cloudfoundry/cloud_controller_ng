@@ -4,7 +4,7 @@ require 'actions/metadata_update'
 
 module VCAP::CloudController
   module V3
-    class ServiceInstanceCreate
+    class ServiceInstanceCreateManaged
       include ServiceInstanceCreateMixin
 
       class InvalidManagedServiceInstance < StandardError; end

@@ -17,8 +17,8 @@ require 'actions/service_instance_unshare'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
-require 'actions/v3/service_instance_create'
-require 'actions/v3/service_instance_update'
+require 'actions/v3/service_instance_create_managed'
+require 'actions/v3/service_instance_update_managed'
 require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
@@ -239,7 +239,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
-    action = V3::ServiceInstanceCreate.new(user_audit_info, message.audit_hash)
+    action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
     instance = action.precursor(message: message)
 
     provision_job = VCAP::CloudController::V3::CreateServiceInstanceJob.new(
@@ -252,7 +252,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   rescue VCAP::CloudController::ServiceInstanceCreateMixin::UnprocessableOperation,
-         V3::ServiceInstanceCreate::InvalidManagedServiceInstance => e
+         V3::ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
   end
 
@@ -271,7 +271,7 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
     raise_if_invalid_service_plan!(service_instance, message)
 
-    action = V3::ServiceInstanceUpdate.new(service_instance, message, user_audit_info, message.audit_hash)
+    action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     service_instance, continue_async = action.precursor
 
     if continue_async
@@ -286,7 +286,7 @@ class ServiceInstancesV3Controller < ApplicationController
     else
       render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
     end
-  rescue V3::ServiceInstanceUpdate::UnprocessableUpdate => api_err
+  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
     unprocessable!(api_err.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)

@@ -3,7 +3,7 @@ require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/update_service_instance_job'
 require 'cloud_controller/errors/api_error'
 require 'cloud_controller/user_audit_info'
-require 'actions/v3/service_instance_update'
+require 'actions/v3/service_instance_update_managed'
 require 'messages/service_instance_update_managed_message'
 
 module VCAP::CloudController
@@ -62,20 +62,20 @@ module VCAP::CloudController
         let(:update_response) {}
         let(:poll_response) { { finished: false } }
         let(:action) do
-          double(VCAP::CloudController::V3::ServiceInstanceUpdate, {
+          double(VCAP::CloudController::V3::ServiceInstanceUpdateManaged, {
             update: update_response,
             poll: poll_response
           })
         end
 
         before do
-          allow(VCAP::CloudController::V3::ServiceInstanceUpdate).to receive(:new).and_return(action)
+          allow(VCAP::CloudController::V3::ServiceInstanceUpdateManaged).to receive(:new).and_return(action)
         end
 
         it 'passes the correct parameters to update the action' do
           job.perform
 
-          expect(VCAP::CloudController::V3::ServiceInstanceUpdate).to have_received(:new).with(
+          expect(VCAP::CloudController::V3::ServiceInstanceUpdateManaged).to have_received(:new).with(
             service_instance,
             message,
             user_info,
@@ -293,11 +293,11 @@ module VCAP::CloudController
         context 'poll fails' do
           it 're-raises LastOperationFailedState errors' do
             allow(action).to receive(:poll).and_raise(
-              VCAP::CloudController::V3::ServiceInstanceUpdate::LastOperationFailedState.new('Something went wrong')
+              VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState.new('Something went wrong')
             )
 
             expect { job.perform }.to raise_error(
-              VCAP::CloudController::V3::ServiceInstanceUpdate::LastOperationFailedState,
+              VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState,
               'Something went wrong',
             )
           end

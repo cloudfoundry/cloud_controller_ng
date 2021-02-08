@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'cloud_controller/user_audit_info'
-require 'actions/v3/service_instance_update'
+require 'actions/v3/service_instance_update_managed'
 require 'messages/service_instance_update_managed_message'
 
 module VCAP::CloudController
   module V3
-    RSpec.describe ServiceInstanceUpdate do
+    RSpec.describe ServiceInstanceUpdateManaged do
       subject(:action) { described_class.new(original_instance, message, user_audit_info, audit_hash) }
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: user_guid, user_email: 'example@email.com', user_name: 'best_user' }) }
@@ -455,7 +455,7 @@ module VCAP::CloudController
                   and_raise(Sequel::ValidationFailed.new(errors))
 
                 expect { action.precursor }.
-                  to raise_error(V3::ServiceInstanceUpdate::InvalidServiceInstance, 'blork is busted')
+                  to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
 
                 expect(original_instance.reload.last_operation.type).to eq('update')
                 expect(original_instance.reload.last_operation.state).to eq('failed')
@@ -1427,7 +1427,7 @@ module VCAP::CloudController
           it 'raises and updates the last operation description' do
             expect {
               action.poll
-            }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+            }.to raise_error(VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState)
 
             expect(ServiceInstance.first.last_operation.type).to eq('update')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')

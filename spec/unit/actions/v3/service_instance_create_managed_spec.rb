@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'cloud_controller/user_audit_info'
-require 'actions/v3/service_instance_create'
+require 'actions/v3/service_instance_create_managed'
 require 'messages/service_instance_create_managed_message'
 
 module VCAP::CloudController
   module V3
-    RSpec.describe ServiceInstanceCreate do
+    RSpec.describe ServiceInstanceCreateManaged do
       subject(:action) { described_class.new(user_audit_info, audit_hash) }
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: user_guid, user_email: 'example@email.com', user_name: 'best_user' }) }
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
           it 'should raise' do
             expect { action.precursor(message: message) }.to raise_error(
-              ServiceInstanceCreate::InvalidManagedServiceInstance,
+              ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
               'Service plan not found.'
             )
           end
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
           it 'should raise' do
             expect { action.precursor(message: message) }.to raise_error(
-              ServiceInstanceCreate::InvalidManagedServiceInstance,
+              ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
               'The service instance name is taken: si-test-name.'
             )
           end
@@ -125,7 +125,7 @@ module VCAP::CloudController
               and_raise(Sequel::ValidationFailed.new(errors))
 
             expect { action.precursor(message: message) }.
-              to raise_error(ServiceInstanceCreate::InvalidManagedServiceInstance, 'blork is busted')
+              to raise_error(ServiceInstanceCreateManaged::InvalidManagedServiceInstance, 'blork is busted')
           end
         end
 
@@ -465,7 +465,7 @@ module VCAP::CloudController
           it 'raises and updates the last operation description' do
             expect {
               action.poll(service_instance)
-            }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+            }.to raise_error(VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState)
 
             expect(ServiceInstance.first.last_operation.type).to eq('create')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')

@@ -4,7 +4,7 @@ require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   module V3
-    class ServiceInstanceUpdate
+    class ServiceInstanceUpdateManaged
       class UnprocessableUpdate < CloudController::Errors::ApiError; end
       class InvalidServiceInstance < StandardError
       end

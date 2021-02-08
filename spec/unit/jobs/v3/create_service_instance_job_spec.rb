@@ -3,7 +3,7 @@ require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/create_service_instance_job'
 require 'cloud_controller/errors/api_error'
 require 'cloud_controller/user_audit_info'
-require 'actions/v3/service_instance_create'
+require 'actions/v3/service_instance_create_managed'
 
 module VCAP::CloudController
   module V3
@@ -43,20 +43,20 @@ module VCAP::CloudController
         let(:provision_response) {}
         let(:poll_response) { { finished: false } }
         let(:action) do
-          double(VCAP::CloudController::V3::ServiceInstanceCreate, {
+          double(VCAP::CloudController::V3::ServiceInstanceCreateManaged, {
             provision: provision_response,
             poll: poll_response
           })
         end
 
         before do
-          allow(VCAP::CloudController::V3::ServiceInstanceCreate).to receive(:new).and_return(action)
+          allow(VCAP::CloudController::V3::ServiceInstanceCreateManaged).to receive(:new).and_return(action)
         end
 
         it 'passes the correct parameters to create the action' do
           job.perform
 
-          expect(VCAP::CloudController::V3::ServiceInstanceCreate).to have_received(:new).with(
+          expect(VCAP::CloudController::V3::ServiceInstanceCreateManaged).to have_received(:new).with(
             user_info,
             audit_hash
           ).at_least(:once)
@@ -276,11 +276,11 @@ module VCAP::CloudController
         context 'poll fails' do
           it 're-raises LastOperationFailedState errors' do
             allow(action).to receive(:poll).and_raise(
-              VCAP::CloudController::V3::ServiceInstanceCreate::LastOperationFailedState.new('Something went wrong')
+              VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState.new('Something went wrong')
             )
 
             expect { job.perform }.to raise_error(
-              VCAP::CloudController::V3::ServiceInstanceCreate::LastOperationFailedState,
+              VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState,
               'Something went wrong',
             )
           end
