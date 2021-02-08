@@ -23,10 +23,16 @@ module VCAP::CloudController
         @audit_hash = audit_hash
       end
 
-      def precursor
-        raise_if_cannot_proceed!
+      def preflight!
+        raise_if_invalid_update!
+        raise_if_renaming_shared_service_instance!
+        raise_if_invalid_plan_change!
+        raise_if_invalid_maintenance_info_change!
+        raise_if_cannot_update!
+      end
 
-        unless is_deleting?(service_instance) || !only_metadata?
+      def try_update_sync
+        if update_metadata_only?
           service_instance.db.transaction do
             MetadataUpdate.update(service_instance, message)
           end
@@ -170,6 +176,10 @@ module VCAP::CloudController
             broker_provided_operation: instance.last_operation.broker_provided_operation
           }
         )
+      end
+
+      def update_metadata_only?
+        !is_deleting?(service_instance) && only_metadata?
       end
 
       def is_deleting?(service_instance)

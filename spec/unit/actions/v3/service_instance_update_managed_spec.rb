@@ -55,252 +55,241 @@ module VCAP::CloudController
         allow(Repositories::ServiceEventRepository).to receive(:new).and_return(event_repository)
       end
 
-      describe '#precursor' do
-        describe 'validation' do
-          describe 'invalid name updates' do
-            context 'when the new name is already taken' do
-              let(:instance_in_same_space) { ServiceInstance.make(space: original_instance.space) }
-              let(:body) { { name: instance_in_same_space.name } }
+      describe '#preflight!' do
+        describe 'invalid name updates' do
+          context 'when the new name is already taken' do
+            let(:instance_in_same_space) { ServiceInstance.make(space: original_instance.space) }
+            let(:body) { { name: instance_in_same_space.name } }
 
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServiceInstanceNameTaken')
-                end
-              end
-            end
-
-            context 'when changing the name of a shared service instance' do
-              let(:shared_space) { Space.make }
-              let(:body) { { name: 'funky-new-name' } }
-
-              it 'raises' do
-                original_instance.add_shared_space(shared_space)
-
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
-                end
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceNameTaken')
               end
             end
           end
 
-          describe 'invalid plan updates' do
-            let(:body) do
-              {
-                relationships: {
-                  service_plan: {
-                    data: {
-                      guid: new_service_plan.guid
-                    }
-                  }
-                }
-              }
-            end
+          context 'when changing the name of a shared service instance' do
+            let(:shared_space) { Space.make }
+            let(:body) { { name: 'funky-new-name' } }
 
-            context 'when changing the plan and plan_updateable=false' do
-              let(:original_service_plan) { ServicePlan.make(service: original_service_offering, plan_updateable: false) }
-              let(:new_service_plan) { ServicePlan.make(service: original_service_offering) }
+            it 'raises' do
+              original_instance.add_shared_space(shared_space)
 
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServicePlanNotUpdateable')
-                end
-              end
-            end
-
-            context 'when the space does not allow paid services' do
-              before do
-                quota = SpaceQuotaDefinition.make(
-                  non_basic_services_allowed: false,
-                  organization: org,
-                )
-                quota.add_space(space)
-              end
-
-              let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
-              let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
-
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
-                end
-              end
-            end
-
-            context 'when the org does not allow paid services' do
-              before do
-                quota = QuotaDefinition.make(non_basic_services_allowed: false)
-                quota.add_organization(org)
-              end
-
-              let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
-              let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
-
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
-                end
-              end
-            end
-
-            context 'when changing to a non-bindable plan' do
-              let(:new_service_plan) { ServicePlan.make(service: original_service_offering, bindable: false) }
-
-              before do
-                ServiceBinding.make(
-                  app: AppModel.make(space: space),
-                  service_instance: original_instance
-                )
-              end
-
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServicePlanInvalid')
-                  expect(err.message).to eq('The service plan is invalid: cannot switch to non-bindable plan when service bindings exist')
-                end
-              end
-            end
-          end
-
-          describe 'invalid maintenance_info updates' do
-            let(:body) do
-              {
-                maintenance_info: {
-                  version: '3.1.1'
-                }
-              }
-            end
-
-            context 'when current plan does not support maintenance_info' do
-              let(:original_service_plan) { ServicePlan.make(service: original_service_offering) }
-
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('MaintenanceInfoNotSupported')
-                end
-              end
-            end
-
-            context 'when does not match the version in the plan' do
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('MaintenanceInfoConflict')
-                end
-              end
-            end
-
-            context 'when changing plan and maintenance_info at the same time' do
-              let(:body) do
-                {
-                  maintenance_info: {
-                    version: '4.2.1'
-                  },
-                  relationships: {
-                    service_plan: {
-                      data: {
-                        guid: new_plan.guid
-                      }
-                    }
-                  }
-                }
-              end
-
-              let(:new_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: { version: '4.2.1' }) }
-
-              it 'raises' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('MaintenanceInfoNotUpdatableWhenChangingPlan')
-                end
-              end
-            end
-          end
-
-          describe 'when the plan is inactive' do
-            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: original_maintenance_info, active: false) }
-
-            context 'when updating parameters' do
-              let(:body) { { parameters: { param1: 'value' } } }
-              it 'raises error' do
-                expect {
-                  action.precursor
-                }.to raise_error CloudController::Errors::ApiError do |err|
-                  expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
-                  expect(err.message).to eq('Cannot update parameters of a service instance that belongs to inaccessible plan')
-                end
-              end
-            end
-
-            context 'when updating maintenance_info' do
-              context 'but it is not actually changing it' do
-                let(:body) { { maintenance_info: original_maintenance_info } }
-
-                it 'succeeds' do
-                  expect { action.precursor }.not_to raise_error
-                end
-              end
-
-              context 'and the maintenance_info is changing' do
-                let(:body) { { maintenance_info: { version: '99.0.0' } } }
-
-                it 'raises an error' do
-                  original_service_plan.update({ maintenance_info: { version: '99.0.0' } })
-                  expect {
-                    action.precursor
-                  }.to raise_error CloudController::Errors::ApiError do |err|
-                    expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
-                    expect(err.message).to eq('Cannot update maintenance_info of a service instance that belongs to inaccessible plan')
-                  end
-                end
-              end
-            end
-
-            context 'when updating name' do
-              let(:body) { { name: 'new name' } }
-
-              context 'when the offering allows context updates' do
-                let(:original_service_offering) { Service.make(allow_context_updates: true) }
-
-                it 'raises an error' do
-                  expect {
-                    action.precursor
-                  }.to raise_error CloudController::Errors::ApiError do |err|
-                    expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
-                    expect(err.message).to eq('Cannot update name of a service instance that belongs to inaccessible plan')
-                  end
-                end
-              end
-
-              context 'when the offering does not allow context updates' do
-                let(:original_service_offering) { Service.make(allow_context_updates: false) }
-
-                it 'succeeds' do
-                  expect { action.precursor }.not_to raise_error
-
-                  original_instance.reload
-                  expect(original_instance.name).to eq('new name')
-                end
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
               end
             end
           end
         end
 
+        describe 'invalid plan updates' do
+          let(:body) do
+            {
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_service_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          context 'when changing the plan and plan_updateable=false' do
+            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, plan_updateable: false) }
+            let(:new_service_plan) { ServicePlan.make(service: original_service_offering) }
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServicePlanNotUpdateable')
+              end
+            end
+          end
+
+          context 'when the space does not allow paid services' do
+            before do
+              quota = SpaceQuotaDefinition.make(
+                non_basic_services_allowed: false,
+                organization: org,
+              )
+              quota.add_space(space)
+            end
+
+            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
+            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+              end
+            end
+          end
+
+          context 'when the org does not allow paid services' do
+            before do
+              quota = QuotaDefinition.make(non_basic_services_allowed: false)
+              quota.add_organization(org)
+            end
+
+            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
+            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
+              end
+            end
+          end
+
+          context 'when changing to a non-bindable plan' do
+            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, bindable: false) }
+
+            before do
+              ServiceBinding.make(
+                app: AppModel.make(space: space),
+                service_instance: original_instance
+              )
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServicePlanInvalid')
+                expect(err.message).to eq('The service plan is invalid: cannot switch to non-bindable plan when service bindings exist')
+              end
+            end
+          end
+        end
+
+        describe 'invalid maintenance_info updates' do
+          let(:body) do
+            {
+              maintenance_info: {
+                version: '3.1.1'
+              }
+            }
+          end
+
+          context 'when current plan does not support maintenance_info' do
+            let(:original_service_plan) { ServicePlan.make(service: original_service_offering) }
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('MaintenanceInfoNotSupported')
+              end
+            end
+          end
+
+          context 'when does not match the version in the plan' do
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('MaintenanceInfoConflict')
+              end
+            end
+          end
+
+          context 'when changing plan and maintenance_info at the same time' do
+            let(:body) do
+              {
+                maintenance_info: {
+                  version: '4.2.1'
+                },
+                relationships: {
+                  service_plan: {
+                    data: {
+                      guid: new_plan.guid
+                    }
+                  }
+                }
+              }
+            end
+
+            let(:new_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: { version: '4.2.1' }) }
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('MaintenanceInfoNotUpdatableWhenChangingPlan')
+              end
+            end
+          end
+        end
+
+        describe 'when the plan is inactive' do
+          let(:original_service_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: original_maintenance_info, active: false) }
+
+          context 'when updating parameters' do
+            let(:body) { { parameters: { param1: 'value' } } }
+            it 'raises error' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+                expect(err.message).to eq('Cannot update parameters of a service instance that belongs to inaccessible plan')
+              end
+            end
+          end
+
+          context 'when updating maintenance_info' do
+            context 'but it is not actually changing it' do
+              let(:body) { { maintenance_info: original_maintenance_info } }
+
+              it 'succeeds' do
+                expect { action.preflight! }.not_to raise_error
+              end
+            end
+
+            context 'and the maintenance_info is changing' do
+              let(:body) { { maintenance_info: { version: '99.0.0' } } }
+
+              it 'raises an error' do
+                original_service_plan.update({ maintenance_info: { version: '99.0.0' } })
+                expect {
+                  action.preflight!
+                }.to raise_error CloudController::Errors::ApiError do |err|
+                  expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+                  expect(err.message).to eq('Cannot update maintenance_info of a service instance that belongs to inaccessible plan')
+                end
+              end
+            end
+          end
+
+          context 'when updating name' do
+            let(:body) { { name: 'new name' } }
+
+            context 'when the offering allows context updates' do
+              let(:original_service_offering) { Service.make(allow_context_updates: true) }
+
+              it 'raises an error' do
+                expect {
+                  action.preflight!
+                }.to raise_error CloudController::Errors::ApiError do |err|
+                  expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
+                  expect(err.message).to eq('Cannot update name of a service instance that belongs to inaccessible plan')
+                end
+              end
+            end
+          end
+        end
+      end
+
+      describe '#try_update_sync' do
         describe 'no-op maintenance_info updates' do
           let(:body) do
             {
@@ -317,7 +306,7 @@ module VCAP::CloudController
           }
 
           it 'returns the current instance unchanged instance' do
-            si, continue_async = action.precursor
+            si, continue_async = action.try_update_sync
 
             expect(si).to eq(original_instance)
             expect(continue_async).to be_falsey
@@ -342,7 +331,7 @@ module VCAP::CloudController
             end
 
             it 'updates the values in the service instance in the database' do
-              action.precursor
+              action.try_update_sync
 
               original_instance.reload
 
@@ -357,7 +346,7 @@ module VCAP::CloudController
             end
 
             it 'creates an audit event' do
-              action.precursor
+              action.try_update_sync
 
               expect(event_repository).
                 to have_received(:record_service_instance_event).with(
@@ -394,7 +383,7 @@ module VCAP::CloudController
             end
 
             it 'updates the values in the service instance in the database' do
-              action.precursor
+              action.try_update_sync
 
               original_instance.reload
 
@@ -411,20 +400,20 @@ module VCAP::CloudController
             end
 
             it 'does not update the maintenance_info when it is unchanged' do
-              action.precursor
+              action.try_update_sync
               original_instance.reload
               expect(original_instance.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
             end
 
             it 'returns the updated service instance and no need to continue async' do
-              si, continue_async = action.precursor
+              si, continue_async = action.try_update_sync
 
               expect(si).to eq(original_instance.reload)
               expect(continue_async).to be_falsey
             end
 
             it 'sets last operation to update succeeded' do
-              action.precursor
+              action.try_update_sync
 
               original_instance.reload
 
@@ -433,7 +422,7 @@ module VCAP::CloudController
             end
 
             it 'creates an audit event' do
-              action.precursor
+              action.try_update_sync
 
               expect(event_repository).
                 to have_received(:record_service_instance_event).with(
@@ -447,6 +436,19 @@ module VCAP::CloudController
                 )
             end
 
+            context 'when updating name' do
+              context 'when the offering does not allow context updates' do
+                let(:original_service_offering) { Service.make(allow_context_updates: false) }
+
+                it 'succeeds' do
+                  expect { action.try_update_sync }.not_to raise_error
+
+                  original_instance.reload
+                  expect(original_instance.name).to eq('different-name')
+                end
+              end
+            end
+
             context 'SQL validation fails' do
               it 'raises an error and marks the update as failed' do
                 errors = Sequel::Model::Errors.new
@@ -454,7 +456,7 @@ module VCAP::CloudController
                 expect_any_instance_of(ManagedServiceInstance).to receive(:update).
                   and_raise(Sequel::ValidationFailed.new(errors))
 
-                expect { action.precursor }.
+                expect { action.try_update_sync }.
                   to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
 
                 expect(original_instance.reload.last_operation.type).to eq('update')
@@ -469,7 +471,7 @@ module VCAP::CloudController
             end
 
             it 'succeeds' do
-              si, continue_async = action.precursor
+              si, continue_async = action.try_update_sync
 
               expect(si).to eq(original_instance.reload)
               expect(continue_async).to be_falsey
@@ -502,7 +504,7 @@ module VCAP::CloudController
                 end
 
                 it 'should return continue async' do
-                  _, continue_async = action.precursor
+                  _, continue_async = action.try_update_sync
 
                   expect(continue_async).to be_truthy
                   original_instance.reload
@@ -525,7 +527,7 @@ module VCAP::CloudController
                 end
 
                 it 'should return continue async' do
-                  _, continue_async = action.precursor
+                  _, continue_async = action.try_update_sync
 
                   expect(continue_async).to be_truthy
                   original_instance.reload
@@ -555,7 +557,7 @@ module VCAP::CloudController
                   end
 
                   it 'should return continue async' do
-                    _, continue_async = action.precursor
+                    _, continue_async = action.try_update_sync
 
                     expect(continue_async).to be_truthy
                     original_instance.reload
@@ -570,7 +572,7 @@ module VCAP::CloudController
                   end
 
                   it 'should return continue async false' do
-                    _, continue_async = action.precursor
+                    _, continue_async = action.try_update_sync
 
                     expect(continue_async).to be_falsey
                   end
@@ -599,7 +601,7 @@ module VCAP::CloudController
                 end
 
                 it 'should return continue async' do
-                  _, continue_async = action.precursor
+                  _, continue_async = action.try_update_sync
 
                   expect(continue_async).to be_truthy
                   original_instance.reload
@@ -625,7 +627,7 @@ module VCAP::CloudController
                   end
 
                   it 'should return continue async' do
-                    _, continue_async = action.precursor
+                    _, continue_async = action.try_update_sync
 
                     expect(continue_async).to be_truthy
                     original_instance.reload
@@ -645,7 +647,7 @@ module VCAP::CloudController
                   end
 
                   it 'should return continue async' do
-                    _, continue_async = action.precursor
+                    _, continue_async = action.try_update_sync
 
                     expect(continue_async).to be_truthy
                     original_instance.reload
@@ -657,7 +659,7 @@ module VCAP::CloudController
             end
 
             it 'does not update any attributes' do
-              _, continue_async = action.precursor
+              _, continue_async = action.try_update_sync
 
               expect(continue_async).to be_truthy
 
@@ -668,7 +670,7 @@ module VCAP::CloudController
             end
 
             it 'locks the service instance' do
-              action.precursor
+              action.try_update_sync
 
               original_instance.reload
               expect(original_instance.last_operation.type).to eq('update')
@@ -686,7 +688,7 @@ module VCAP::CloudController
 
           it 'raises' do
             expect {
-              action.precursor
+              action.try_update_sync
             }.to raise_error CloudController::Errors::ApiError do |err|
               expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
             end
@@ -708,7 +710,7 @@ module VCAP::CloudController
             }
             it 'raises' do
               expect {
-                action.precursor
+                action.try_update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
@@ -737,7 +739,7 @@ module VCAP::CloudController
             }
 
             it 'allows metadata updates' do
-              expect { action.precursor }.not_to raise_error
+              expect { action.try_update_sync }.not_to raise_error
 
               original_instance.reload
 
@@ -757,7 +759,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor
+                action.try_update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
@@ -786,7 +788,7 @@ module VCAP::CloudController
             }
 
             it 'allows metadata updates' do
-              expect { action.precursor }.not_to raise_error
+              expect { action.try_update_sync }.not_to raise_error
 
               original_instance.reload
 
@@ -806,7 +808,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor
+                action.try_update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end

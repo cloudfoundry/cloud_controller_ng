@@ -272,7 +272,8 @@ class ServiceInstancesV3Controller < ApplicationController
     raise_if_invalid_service_plan!(service_instance, message)
 
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
-    service_instance, continue_async = action.precursor
+    action.preflight!
+    service_instance, continue_async = action.try_update_sync
 
     if continue_async
       update_job = VCAP::CloudController::V3::UpdateServiceInstanceJob.new(
