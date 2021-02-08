@@ -34,6 +34,18 @@ module VCAP::CloudController
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
+
+        context 'when the scalar halves cpu weight' do
+          let(:memory) { (min_cpu_proxy + max_cpu_proxy) / 2 }
+          before do
+            TestConfig.override(cpu_weight_scalar: 0.5)
+          end
+
+          it 'returns half the regular precentage' do
+            expected_weight = 0.5 * (100 * memory) / max_cpu_proxy
+            expect(calculator.calculate).to eq(expected_weight)
+          end
+        end
       end
     end
   end

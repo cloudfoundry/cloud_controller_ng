@@ -9,11 +9,16 @@ module VCAP
           @memory_in_mb = memory_in_mb
         end
 
+        def config
+          @config ||= VCAP::CloudController::Config.config
+        end
+
         def calculate
-          return 100 if memory_in_mb > MAX_CPU_PROXY
+          scalar = config.get(:cpu_weight_scalar)
+          return (100 * scalar) if memory_in_mb > MAX_CPU_PROXY
 
           numerator = [MIN_CPU_PROXY, memory_in_mb].max
-          100 * numerator / MAX_CPU_PROXY
+          scalar * 100 * numerator / MAX_CPU_PROXY
         end
 
         private
