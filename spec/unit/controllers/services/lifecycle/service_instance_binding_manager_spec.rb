@@ -240,7 +240,7 @@ module VCAP::CloudController
 
         context 'and the bind request does not return a route_service_url' do
           before do
-            stub_bind(service_instance, body: { credentials: 'credentials' }.to_json)
+            stub_bind(service_instance, body: { credentials: { 'user' => 'pass' } }.to_json)
             stub_unbind_for_instance(service_instance)
           end
 
