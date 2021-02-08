@@ -15,10 +15,10 @@ module VCAP
 
         def calculate
           scalar = config.get(:cpu_weight_scalar)
-          return (100 * scalar) if memory_in_mb > MAX_CPU_PROXY
+          return (100 * scalar).floor if memory_in_mb > MAX_CPU_PROXY
 
           numerator = [MIN_CPU_PROXY, memory_in_mb].max
-          scalar * 100 * numerator / MAX_CPU_PROXY
+          (scalar * 100).floor * numerator / MAX_CPU_PROXY
         end
 
         private
