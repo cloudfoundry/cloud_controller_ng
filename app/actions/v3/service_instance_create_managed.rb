@@ -75,20 +75,19 @@ module VCAP::CloudController
 
       def poll(instance)
         client = VCAP::Services::ServiceClientProvider.provide(instance: instance)
-        details = client.fetch_service_instance_last_operation(instance, user_guid: @user_audit_info.user_guid)
+        last_operation_result = client.fetch_service_instance_last_operation(instance, user_guid: @user_audit_info.user_guid)
 
-        case details[:last_operation][:state]
+        case last_operation_result[:last_operation][:state]
         when 'succeeded'
-          # TODO: If instance retrievable update dashboard
-          # params = client.fetch_service_instance(instance, user_guid: @user_audit_info.user_guid)
-          complete_instance_and_save(instance, parse_response(details))
+          fetch_result = fetch_service_instance(client, instance)
+          complete_instance_and_save(instance, parse_response(fetch_result, last_operation_result))
           return PollingFinished
         when 'in progress'
-          save_last_operation(instance, details[:last_operation])
-          ContinuePolling.call(details[:retry_after])
+          save_last_operation(instance, last_operation_result[:last_operation])
+          ContinuePolling.call(last_operation_result[:retry_after])
         when 'failed'
-          save_last_operation(instance, details[:last_operation])
-          raise LastOperationFailedState.new(details[:last_operation][:description])
+          save_last_operation(instance, last_operation_result[:last_operation])
+          raise LastOperationFailedState.new(last_operation_result[:last_operation][:description])
         end
       rescue LastOperationFailedState => e
         raise e
@@ -99,8 +98,14 @@ module VCAP::CloudController
 
       private
 
+
+
       def event_repository
         Repositories::ServiceEventRepository.new(@user_audit_info)
+      end
+
+      def instances_retrievable?(instance)
+        instance.service.instances_retrievable
       end
 
       def complete_instance_and_save(instance, broker_response)
@@ -149,13 +154,29 @@ module VCAP::CloudController
         end
       end
 
-      def parse_response(details)
+      def fetch_service_instance(client, instance)
+        logger = Steno.logger('cc.action.service_instance_create_managed')
+
+        result = {}
+        begin
+          if instance.service.instances_retrievable
+            fetch_result = client.fetch_service_instance(instance, user_guid: @user_audit_info.user_guid)
+            result[:dashboard_url] = fetch_result[:dashboard_url] if fetch_result.key?(:dashboard_url)
+          end
+        rescue => e
+          logger.info('fetch-service-instance-failed', error: e.class.name, error_message: e.message)
+        end
+
+        result
+      end
+
+      def parse_response(fetch_instance, last_operation)
         {
-          instance: {},
+          instance: fetch_instance,
           last_operation: {
-            state: details[:last_operation][:state],
+            state: last_operation[:last_operation][:state],
             type: 'create',
-            description: details[:last_operation][:description]
+            description: last_operation[:last_operation][:description]
           }
         }
       end

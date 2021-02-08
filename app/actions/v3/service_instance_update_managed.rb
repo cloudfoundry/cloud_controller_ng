@@ -95,9 +95,8 @@ module VCAP::CloudController
 
         case details[:last_operation][:state]
         when 'succeeded'
-          # TODO: If instance retrievable update dashboard
-          # params = client.fetch_service_instance(instance, user_guid: @user_audit_info.user_guid)
-          complete_instance_and_save(service_instance, parse_response(details))
+          fetch_result = fetch_service_instance(client)
+          complete_instance_and_save(service_instance, parse_response(fetch_result, details))
           return PollingFinished
         when 'in progress'
           save_last_operation(service_instance, details[:last_operation])
@@ -124,9 +123,9 @@ module VCAP::CloudController
       def complete_instance_and_save(instance, broker_response)
         updates = message.updates.tap do |u|
           u[:service_plan_guid] = service_plan.guid
-          u[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
           u[:maintenance_info] = maintenance_info if maintenance_info_updated?
         end
+        updates[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
 
         ManagedServiceInstance.db.transaction do
           service_instance.save_with_new_operation(
@@ -176,6 +175,21 @@ module VCAP::CloudController
             broker_provided_operation: instance.last_operation.broker_provided_operation
           }
         )
+      end
+
+      def fetch_service_instance(client)
+        logger = Steno.logger('cc.action.service_instance_update_managed')
+
+        fetch_result = {}
+        begin
+          if service_plan.service.instances_retrievable
+            fetch_result = client.fetch_service_instance(service_instance, user_guid: @user_audit_info.user_guid)
+          end
+        rescue => e
+          logger.info('fetch-service-instance-failed', error: e.class.name, error_message: e.message)
+        end
+
+        fetch_result
       end
 
       def update_metadata_only?
@@ -347,15 +361,16 @@ module VCAP::CloudController
         plan_change_requested || message.maintenance_info
       end
 
-      def parse_response(details)
-        {
-          instance: {},
+      def parse_response(fetch_instance, last_operation)
+        response = {
           last_operation: {
-            state: details[:last_operation][:state],
+            state: last_operation[:last_operation][:state],
             type: 'update',
-            description: details[:last_operation][:description]
+            description: last_operation[:last_operation][:description]
           }
         }
+        response[:dashboard_url] = fetch_instance[:dashboard_url] if fetch_instance.key?(:dashboard_url)
+        response
       end
 
       def unprocessable_service_plan!

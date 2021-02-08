@@ -344,10 +344,14 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
+        let(:provision_dashboard_url) { 'http://your-instance.com' }
         let!(:service_instance) do
           VCAP::CloudController::ManagedServiceInstance.make.tap do |i|
             i.save_with_new_operation(
-              {},
+              {
+                service_plan: service_plan,
+                dashboard_url: 'http://your-instance.com'
+              },
               {
                 type: 'create',
                 state: 'in progress',
@@ -365,9 +369,12 @@ module VCAP::CloudController
             }
           }
         end
+        let(:fetch_instance_response) do { }
+        end
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
             fetch_service_instance_last_operation: poll_response,
+            fetch_service_instance: fetch_instance_response
           })
         end
 
@@ -448,6 +455,87 @@ module VCAP::CloudController
             result = action.poll(service_instance)
 
             expect(result[:finished]).to be_truthy
+          end
+
+          context 'retrieving service instance' do
+            context 'when service instance is not retrievable' do
+              let(:service_offering) { Service.make(instances_retrievable: false) }
+              let(:service_plan) { ServicePlan.make(service: service_offering) }
+
+              it 'should not call fetch service instance' do
+                action.poll(service_instance)
+
+                expect(client).not_to have_received(:fetch_service_instance)
+              end
+            end
+
+            context 'when service instance is retrievable' do
+              let(:service) { Service.make(instances_retrievable: true) }
+              let(:service_plan) { ServicePlan.make(service: service) }
+
+              it 'should fetch service instance' do
+                action.poll(service_instance)
+
+                expect(client).to have_received(:fetch_service_instance).with(
+                  service_instance,
+                  user_guid: user_guid
+                )
+              end
+
+              context 'when fetch returns dashboard_url' do
+                let(:fetch_dashboard_url) { 'http://some-dashboard-url.com' }
+
+                let(:fetch_instance_response) do
+                  {
+                    dashboard_url: fetch_dashboard_url
+                  }
+                end
+
+                it 'updates the dashboard url' do
+                  action.poll(service_instance)
+
+                  service_instance.reload
+                  expect(service_instance).to_not be_nil
+                  expect(service_instance.dashboard_url).to eq(fetch_dashboard_url)
+                  expect(service_instance.last_operation.type).to eq('create')
+                  expect(service_instance.last_operation.state).to eq('succeeded')
+                end
+              end
+
+              context 'when fetch does not return dashboard_url' do
+                let(:fetch_instance_response) do
+                  {
+                    parameters: { foo: 'bar'}
+                  }
+                end
+
+                it 'does not update the dashboard url' do
+                  action.poll(service_instance)
+
+                  service_instance.reload
+                  expect(service_instance).to_not be_nil
+                  expect(service_instance.dashboard_url).to eq(provision_dashboard_url)
+                  expect(service_instance.last_operation.type).to eq('create')
+                  expect(service_instance.last_operation.state).to eq('succeeded')
+                end
+              end
+
+              context 'when fetch raises' do
+                before do
+                  allow(client).to receive(:fetch_service_instance).and_raise(StandardError, 'boom')
+                end
+
+                it 'does not fair or update the dashboard url' do
+                  action.poll(service_instance)
+
+                  service_instance.reload
+                  expect(service_instance).to_not be_nil
+                  expect(service_instance.dashboard_url).to eq(provision_dashboard_url)
+                  expect(service_instance.last_operation.type).to eq('create')
+                  expect(service_instance.last_operation.state).to eq('succeeded')
+                end
+              end
+            end
           end
         end
 
