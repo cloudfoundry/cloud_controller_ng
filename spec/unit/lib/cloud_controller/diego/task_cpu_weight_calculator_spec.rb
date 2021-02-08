@@ -42,7 +42,7 @@ module VCAP::CloudController
           end
 
           it 'returns half the regular precentage' do
-            expected_weight = 0.5 * (100 * memory) / max_cpu_proxy
+            expected_weight = (0.5 * 100).floor * memory / max_cpu_proxy
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
