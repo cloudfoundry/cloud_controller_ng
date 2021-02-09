@@ -709,7 +709,6 @@ module VCAP::CloudController
         end
 
         describe 'creating service bindings' do
-          let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name', { name: 'name', parameters: { 'foo' => 'bar' } }] }) } # why defined here?
           let(:space) { Space.make }
           let(:app) { AppModel.make(space: space) }
 
@@ -720,8 +719,8 @@ module VCAP::CloudController
           context 'valid request with list of services' do
             let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
             let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
-
-            let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name, { 'name' => service_instance_2.name, parameters: { 'foo' => 'bar' } }] }) }
+            let(:binding_name) {Sham.name}
+            let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name, { 'name' => service_instance_2.name, parameters: { 'foo' => 'bar' }, binding_name: binding_name }] }) }
 
             let(:service_binding_create_message_1) { instance_double(ServiceCredentialAppBindingCreateMessage) }
             let(:service_binding_create_message_2) { instance_double(ServiceCredentialAppBindingCreateMessage) }
@@ -746,6 +745,7 @@ module VCAP::CloudController
 
               expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
                 type: AppApplyManifest::SERVICE_BINDING_TYPE,
+                name: nil,
                 parameters: {},
                 relationships: {
                   service_instance: {
@@ -762,6 +762,7 @@ module VCAP::CloudController
               )
               expect(ServiceCredentialAppBindingCreateMessage).to have_received(:new).with(
                 type: AppApplyManifest::SERVICE_BINDING_TYPE,
+                name: binding_name,
                 parameters: { foo: 'bar' },
                 relationships: {
                   service_instance: {
