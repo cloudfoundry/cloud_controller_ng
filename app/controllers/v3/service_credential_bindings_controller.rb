@@ -14,6 +14,7 @@ require 'decorators/include_binding_app_decorator'
 require 'decorators/include_binding_service_instance_decorator'
 require 'jobs/v3/create_service_credential_binding_job_actor'
 require 'jobs/v3/delete_binding_job'
+require 'cloud_controller/telemetry_logger'
 
 class ServiceCredentialBindingsController < ApplicationController
   def index
@@ -203,6 +204,7 @@ class ServiceCredentialBindingsController < ApplicationController
       volume_mount_services_enabled: volume_services_enabled?,
       message: message,
     )
+    log_telemetry(binding)
 
     case service_instance
     when ManagedServiceInstance
@@ -212,6 +214,18 @@ class ServiceCredentialBindingsController < ApplicationController
       action.bind(binding)
       render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
     end
+  end
+
+  def log_telemetry(binding)
+    TelemetryLogger.v3_emit(
+      'bind-service',
+      {
+        'service-id' =>  binding.service_instance.managed_instance? ? binding.service_instance.service_plan.service.guid : 'user-provided',
+        'service-instance-id' => binding.service_instance.guid,
+        'app-id' => binding.app.guid,
+        'user-id' => user_audit_info.user_guid,
+      }
+    )
   end
 
   def enqueue_bind_job(type, binding_guid, message)
