@@ -719,8 +719,11 @@ module VCAP::CloudController
           context 'valid request with list of services' do
             let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
             let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
-            let(:binding_name) {Sham.name}
-            let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name, { 'name' => service_instance_2.name, parameters: { 'foo' => 'bar' }, binding_name: binding_name }] }) }
+            let(:binding_name) { Sham.name }
+            let(:message) {
+              AppManifestMessage.create_from_yml({ services: [service_instance.name,
+                                                              { 'name' => service_instance_2.name, parameters: { 'foo' => 'bar' }, binding_name: binding_name }] })
+            }
 
             let(:service_binding_create_message_1) { instance_double(ServiceCredentialAppBindingCreateMessage) }
             let(:service_binding_create_message_2) { instance_double(ServiceCredentialAppBindingCreateMessage) }

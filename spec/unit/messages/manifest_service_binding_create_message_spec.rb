@@ -186,7 +186,7 @@ module VCAP::CloudController
           expect(result[0].binding_name).to eq('my-binding-name')
 
           expect(result[1].name).to eq('instance-name-2')
-          expect(result[1].parameters).to eq( { } )
+          expect(result[1].parameters).to eq({})
           expect(result[1].binding_name).to be_nil
 
           expect(result[2].name).to eq('instance-name-3')
