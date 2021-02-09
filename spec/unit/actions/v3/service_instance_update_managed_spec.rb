@@ -27,7 +27,6 @@ module VCAP::CloudController
       let(:original_name) { 'si-test-name' }
       let(:new_name) { 'new-si-test-name' }
       let(:original_dashboard_url) { 'http://your-og-instance.com' }
-
       let!(:original_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: original_service_plan,
@@ -47,7 +46,6 @@ module VCAP::CloudController
         ]
         si
       end
-
       let(:new_arbitrary_parameters) { { foo: 'bar' } }
       let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
 
@@ -1282,9 +1280,11 @@ module VCAP::CloudController
             }
           }
         end
+        let(:fetch_instance_response) { {} }
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
             fetch_service_instance_last_operation: poll_response,
+            fetch_service_instance: fetch_instance_response
           })
         end
 
@@ -1412,6 +1412,85 @@ module VCAP::CloudController
             result = action.poll
 
             expect(result[:finished]).to be_truthy
+          end
+
+          context 'retrieving service instance' do
+            context 'when service instance is not retrievable' do
+              let(:service_offering) { Service.make(instances_retrievable: false) }
+              let(:new_plan) { ServicePlan.make(service: service_offering) }
+
+              it 'should not call fetch service instance' do
+                action.poll
+
+                expect(client).not_to have_received(:fetch_service_instance)
+              end
+            end
+
+            context 'when service instance is retrievable' do
+              let(:service) { Service.make(instances_retrievable: true) }
+              let(:new_plan) { ServicePlan.make(service: service) }
+
+              it 'should fetch service instance' do
+                action.poll
+
+                expect(client).to have_received(:fetch_service_instance).with(
+                  original_instance,
+                  user_guid: user_guid
+                )
+              end
+
+              context 'when fetch returns dashboard_url' do
+                let(:fetch_instance_response) do
+                  {
+                    dashboard_url: 'http://some-dashboard-url.com'
+                  }
+                end
+
+                it 'updates the dashboard url' do
+                  action.poll
+
+                  instance = original_instance.reload
+                  expect(instance).to_not be_nil
+                  expect(instance.dashboard_url).to eq('http://some-dashboard-url.com')
+                  expect(instance.last_operation.type).to eq('update')
+                  expect(instance.last_operation.state).to eq('succeeded')
+                end
+              end
+
+              context 'when fetch does not return dashboard_url' do
+                let(:fetch_instance_response) do
+                  {
+                    parameters: { foo: 'bar' }
+                  }
+                end
+
+                it 'does not update the dashboard url' do
+                  action.poll
+
+                  instance = original_instance.reload
+                  expect(instance).to_not be_nil
+                  expect(instance.dashboard_url).to eq(original_dashboard_url)
+                  expect(instance.last_operation.type).to eq('update')
+                  expect(instance.last_operation.state).to eq('succeeded')
+                end
+              end
+
+              context 'when fetch raises' do
+                before do
+                  allow(client).to receive(:fetch_service_instance).and_raise(StandardError, 'boom')
+                end
+
+                it 'does not fair or update the dashboard url' do
+                  action.poll
+
+                  instance = original_instance.reload
+                  expect(instance).to_not be_nil
+                  expect(instance.dashboard_url).to eq(original_dashboard_url)
+                  expect(instance.last_operation.type).to eq('update')
+                  expect(instance.last_operation.state).to eq('succeeded')
+                end
+              end
+            end
           end
         end
 

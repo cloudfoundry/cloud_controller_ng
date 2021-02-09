@@ -1254,6 +1254,8 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when last operation eventually returns `create succeeded`' do
+            let(:dashboard_url) { '' }
+
             before do
               stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
                 with(
@@ -1264,6 +1266,9 @@ RSpec.describe 'V3 service instances' do
                   }).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
+
+              stub_request(:get, "#{instance.service.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+                to_return(status: 200, body: { dashboard_url: dashboard_url }.to_json)
 
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
@@ -1281,6 +1286,18 @@ RSpec.describe 'V3 service instances' do
             it 'sets the service instance last operation to create succeeded' do
               expect(instance.last_operation.type).to eq('create')
               expect(instance.last_operation.state).to eq('succeeded')
+            end
+
+            context 'it fetches dashboard url' do
+              let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+              let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service) }
+              let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
+
+              it 'sets the service instance dashboard url' do
+                instance.reload
+
+                expect(instance.dashboard_url).to eq(dashboard_url)
+              end
             end
           end
 
@@ -1782,6 +1799,7 @@ RSpec.describe 'V3 service instances' do
             let(:broker_response) { { operation: 'task12' } }
             let(:last_operation_status_code) { 200 }
             let(:last_operation_response) { { state: 'in progress' } }
+            let(:dashboard_url) {}
 
             before do
               stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
@@ -1792,6 +1810,9 @@ RSpec.describe 'V3 service instances' do
                     plan_id: service_instance.service_plan.unique_id,
                   }).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+
+              stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
+                to_return(status: 200, body: { dashboard_url: dashboard_url }.to_json)
             end
 
             it 'marks the job state as polling' do
@@ -1851,6 +1872,16 @@ RSpec.describe 'V3 service instances' do
               it 'sets the service instance last operation to create succeeded' do
                 expect(service_instance.last_operation.type).to eq('update')
                 expect(service_instance.last_operation.state).to eq('succeeded')
+              end
+
+              context 'it fetches dashboard url' do
+                let(:service_offering) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+                let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
+
+                it 'sets the service instance dashboard url' do
+                  service_instance.reload
+                  expect(service_instance.dashboard_url).to eq(dashboard_url)
+                end
               end
             end
 
