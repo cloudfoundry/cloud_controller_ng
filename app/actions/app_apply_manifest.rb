@@ -178,6 +178,7 @@ module VCAP::CloudController
     def create_binding_message(service_instance_guid, app_guid, manifest_service_binding)
       ServiceCredentialAppBindingCreateMessage.new(
         type: SERVICE_BINDING_TYPE,
+        name: manifest_service_binding.binding_name,
         parameters: manifest_service_binding.parameters,
         relationships: {
           service_instance: {
