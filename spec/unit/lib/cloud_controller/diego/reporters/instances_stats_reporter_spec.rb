@@ -34,8 +34,6 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::DesiredLRP.new(
             PlacementTags: placement_tags,
             metric_tags: metrics_tags,
-            memory_mb: 512,
-            disk_mb: 1024,
           )
         end
         let(:placement_tags) { ['isolation-segment-name'] }
@@ -91,8 +89,8 @@ module VCAP::CloudController
                 port:       2222,
                 net_info:   lrp_1_net_info.to_h,
                 uptime:     two_days_in_seconds,
-                mem_quota:  bbs_desired_lrp_response.memory_mb * 1024 * 1024,
-                disk_quota: bbs_desired_lrp_response.disk_mb * 1024 * 1024,
+                mem_quota:  process.memory * 1024 * 1024,
+                disk_quota: process.disk_quota * 1024 * 1024,
                 fds_quota:  process.file_descriptors,
                 usage:      {
                   time: formatted_current_time,
