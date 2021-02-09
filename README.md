@@ -9,7 +9,7 @@
 
 * [V3 API Docs](http://v3-apidocs.cloudfoundry.org)
 * [V2 API Docs](http://apidocs.cloudfoundry.org)
-* [Continuous Integration Pipelines](https://capi.ci.cf-app.com)
+* [Continuous Integration Pipelines](https://ci.cake.capi.land/)
 * [Notes on V3 Architecture](https://github.com/cloudfoundry/cloud_controller_ng/wiki/Notes-on-V3-Architecture)
 * [capi-release](https://github.com/cloudfoundry/capi-release) - The bosh release used to deploy cloud controller
 * [cf-for-k8s](https://github.com/cloudfoundry/cf-for-k8s) - How Cloud Foundry (including Cloud Controller) is deployed against Kubernetes
