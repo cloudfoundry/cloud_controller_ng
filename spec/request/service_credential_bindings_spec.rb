@@ -1196,6 +1196,25 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
+        it 'logs telemetry' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'api-version' => 'v3',
+                'service-id' => Digest::SHA256.hexdigest('user-provided'),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            api_call.call(space_dev_headers)
+          end
+        end
+
         context 'parameters are specified' do
           let(:request_extra) do
             {
@@ -1322,6 +1341,25 @@ RSpec.describe 'v3 service credential bindings' do
           let(:route_service_url) { 'http://route.example.com/wow' }
 
           it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceBinding, true, 'service_binding', 'service_bindings'
+        end
+
+        it 'logs telemetry' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'api-version' => 'v3',
+                'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            api_call.call(space_dev_headers)
+          end
         end
       end
     end
