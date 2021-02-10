@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/service_binding_read'
+require 'actions/v2/services/service_binding_read'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingRead do

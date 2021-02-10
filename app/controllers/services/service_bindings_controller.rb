@@ -1,7 +1,9 @@
 require 'vcap/services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 require 'models/helpers/process_types'
-require 'actions/service_binding_read'
+require 'actions/v2/services/service_binding_read'
+require 'actions/v2/services/service_binding_create'
+require 'fetchers/service_binding_create_fetcher'
 
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController

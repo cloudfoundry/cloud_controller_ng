@@ -1,4 +1,6 @@
 require 'actions/services/locks/lock_check'
+require 'repositories/service_binding_event_repository'
+require 'jobs/v2/services/service_binding_state_fetch'
 
 module VCAP::CloudController
   class ServiceBindingDelete
