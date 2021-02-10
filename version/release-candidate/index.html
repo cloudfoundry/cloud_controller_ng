@@ -1734,18 +1734,53 @@ the app will be required for the desired state changes to become the actual stat
 
 <h4 id="endpoints-that-will-affect-runtime">Endpoints that will affect runtime</h4>
 
-<p>The following endpoints will immediately affect runtime:</p>
+<p>The following endpoints will immediately take effect without needing to <a href="#restart-an-app">restart the app</a></p>
 
-<ul>
-<li><code class="prettyprint">PATCH /v3/spaces/:guid/features/ssh</code></li>
-<li><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code> (only when updating the instances field)</li>
-<li><code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code> (only when updating the instances field)</li>
-<li><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></li>
-<li><code class="prettyprint">POST /v3/routes/:guid/destinations</code> (when not adding a destination with a port)</li>
-<li><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code> (when not replacing the port field)</li>
-</ul>
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#get-ssh-enabled-for-an-app"><code class="prettyprint">PATCH /v3/spaces/:guid/features/ssh</code></a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code></a></td>
+<td>Only when exclusively updating the instances field</td>
+</tr>
+<tr>
+<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code></a></td>
+<td>Only when exclusively updating the instances field</td>
+</tr>
+<tr>
+<td><a href="#remove-destination-for-a-route"><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></a></td>
+<td></td>
+</tr>
+</tbody></table>
 
-<p>All other changes will not affect running apps until they are <a href="#restart-an-app">restarted</a>.</p>
+<p>The following endpoints will take effect only when the specified field is not included in the request.</p>
+
+<p>If the field is specified, the running processes&rsquo;s state will not change in any way until the app is restarted.</p>
+
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#insert-destinations-for-a-route"><code class="prettyprint">POST /v3/routes/:guid/destinations</code></a></td>
+<td>When not adding a destination with a port</td>
+</tr>
+<tr>
+<td><a href="#replace-all-destinations-for-a-route"><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></a></td>
+<td>When not replacing the port field <br/> <br/>  <em>Note: If the port is specified, this endpoint will unmap any route not listed in the body but will not map any of the new routes in the request body. For this reason we caution against using the endpoint for most circumstances. A combination of <a href="#insert-destinations-for-a-route">adding ports</a> and <a href="#remove-destination-for-a-route">removing ports</a> will generally suit your needs better.</em></td>
+</tr>
+</tbody></table>
+
+<p>All other changes will not take effect on running apps until they are restarted.</p>
 <h2 id="warnings">Warnings</h2>
 <pre class="highlight plaintext"><code>Example Warnings
 </code></pre>
