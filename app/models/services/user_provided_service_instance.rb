@@ -12,8 +12,6 @@ module VCAP::CloudController
       !(route_service_url.nil? || route_service_url.empty?)
     end
 
-    def save_with_new_operation(_, _); end
-
     def validate
       validate_route_service_url
       super

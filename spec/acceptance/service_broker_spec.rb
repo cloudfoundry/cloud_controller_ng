@@ -261,6 +261,9 @@ RSpec.describe 'Service Broker' do
           "Service broker catalog is invalid: \n" \
           "Service ids must be unique\n" \
           "Service names must be unique within a broker\n" \
+          "Plan ids must be unique. Unable to register plan with id 'plan-b' (plan name 'large', " \
+          "service name 'service-2') because it uses the same id as another plan in the catalog " \
+          "(plan name 'small', service name 'service-2')\n" \
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
@@ -275,7 +278,7 @@ RSpec.describe 'Service Broker' do
           "The property '#/properties' of type boolean did not match the following type: object in schema "\
           "http://json-schema.org/draft-04/schema#\n" \
           "Service service-2\n" \
-          "  Plan ids must be unique within a service. Service service-2 already has a plan with id 'plan-b'\n" \
+          "  Plan ids must be unique. Service service-2 already has a plan with id 'plan-b'\n" \
           "  Plan large\n" \
           "    Plan description is required\n" \
           "Service service-3\n" \
@@ -400,7 +403,7 @@ RSpec.describe 'Service Broker' do
           end
 
           context "of type #{test[:type]} and action #{schema_action} has a valid schema" do
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', 'type': 'object' } } } } }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -450,7 +453,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions)" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', 'properties': true } } } } }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -484,8 +487,8 @@ RSpec.describe 'Service Broker' do
                   schema_action => {
                     'parameters' => {
                       '$schema': 'http://json-schema.org/draft-04/schema#',
-                      'properties': true,
-                      'anyOf': true }
+                      properties: true,
+                      anyOf: true }
                   }
                 }
               }
@@ -518,7 +521,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} has an external schema" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://example.com/schema', 'type': 'object' } } } } }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://example.com/schema', type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -584,7 +587,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} has no $schema" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object' } } } } }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))

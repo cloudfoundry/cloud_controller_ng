@@ -55,6 +55,10 @@ module VCAP
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.space).to eq(space)
 
+        expect(instance.last_operation.type).to eq 'create'
+        expect(instance.last_operation.state).to eq 'succeeded'
+        expect(instance.last_operation.description).to eq 'Operation succeeded'
+
         expect(instance.labels[0].key_name).to eq('potato')
         expect(instance.labels[0].value).to eq('mashed')
         expect(instance.annotations[0].key_name).to eq('cheese')
@@ -130,7 +134,7 @@ module VCAP
               expect { action.create(message) }.
                 to raise_error(
                   ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
-                     "The service instance name is taken: #{name}"
+                     "The service instance name is taken: #{name}."
                    )
             end
           end

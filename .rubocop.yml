@@ -526,3 +526,18 @@ Lint/RedundantDirGlobSort: # (new in 1.8)
 
 Style/EndlessMethod: # (new in 1.8)
   Enabled: true
+
+Lint/NumberedParameterAssignment: # (new in 1.9)
+  Enabled: true
+
+Lint/OrAssignmentToConstant: # (new in 1.9)
+  Enabled: false
+
+Lint/SymbolConversion: # (new in 1.9)
+  Enabled: true
+
+Lint/TripleQuotes: # (new in 1.9)
+  Enabled: true
+
+Style/IfWithBooleanLiteralBranches: # (new in 1.9)
+  Enabled: true

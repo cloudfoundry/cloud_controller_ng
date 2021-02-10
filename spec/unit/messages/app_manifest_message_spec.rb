@@ -1055,13 +1055,13 @@ module VCAP::CloudController
 
         context 'when hash' do
           let(:parsed_yaml) do
-            { name: 'blah', processes: { 'web': { 'woop-de': 'doop' } } }
+            { name: 'blah', processes: { web: { 'woop-de': 'doop' } } }
           end
 
           it 'does NOT raise an error, but does not underscore anything' do
             expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
               { name: 'blah',
-                processes: { 'web': { 'woop-de': 'doop' } }
+                processes: { web: { 'woop-de': 'doop' } }
               }
             )
           end

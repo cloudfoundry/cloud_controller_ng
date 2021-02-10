@@ -25,20 +25,20 @@ RSpec.describe 'Security_Groups Request' do
 
       let(:params) do
         {
-          'name': security_group_name,
-          'globally_enabled': {
-            'running': true,
-            'staging': false
+          name: security_group_name,
+          globally_enabled: {
+            running: true,
+            staging: false
           },
-          'rules': rules,
-          'relationships': {
-            'staging_spaces': {
-              'data': [
-                { 'guid': space.guid },
+          rules: rules,
+          relationships: {
+            staging_spaces: {
+              data: [
+                { guid: space.guid },
               ]
             },
-            'running_spaces': {
-              'data': []
+            running_spaces: {
+              data: []
             }
           },
         }
@@ -51,8 +51,8 @@ RSpec.describe 'Security_Groups Request' do
           updated_at: iso8601,
           name: security_group_name,
           globally_enabled: {
-            'running': true,
-            'staging': false
+            running: true,
+            staging: false
           },
           rules: [],
           relationships: {
@@ -86,16 +86,16 @@ RSpec.describe 'Security_Groups Request' do
         let(:rules) do
           [
             {
-              'protocol': 'tcp',
-              'destination': '10.10.10.0/24',
-              'ports': '443,80,8080'
+              protocol: 'tcp',
+              destination: '10.10.10.0/24',
+              ports: '443,80,8080'
             },
             {
-              'protocol': 'icmp',
-              'destination': '10.10.10.0/24',
-              'type': 8,
-              'code': 0,
-              'description': 'Allow ping requests to private services'
+              protocol: 'icmp',
+              destination: '10.10.10.0/24',
+              type: 8,
+              code: 0,
+              description: 'Allow ping requests to private services'
             },
           ]
         end
@@ -107,8 +107,8 @@ RSpec.describe 'Security_Groups Request' do
             updated_at: iso8601,
             name: security_group_name,
             globally_enabled: {
-              'running': true,
-              'staging': false
+              running: true,
+              staging: false
             },
             rules: [
               {
@@ -166,7 +166,7 @@ RSpec.describe 'Security_Groups Request' do
             {
               name: 'bad-rules',
               rules: [
-                { "protocol": 'all', "destination": '0.0.0.0', "description": 'asd🐞f' }
+                { protocol: 'all', destination: '0.0.0.0', description: 'asd🐞f' }
               ]
             }
           end
@@ -207,8 +207,8 @@ RSpec.describe 'Security_Groups Request' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -249,8 +249,8 @@ RSpec.describe 'Security_Groups Request' do
         let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -291,8 +291,8 @@ RSpec.describe 'Security_Groups Request' do
 
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -334,8 +334,8 @@ RSpec.describe 'Security_Groups Request' do
       context 'when the space is invalid' do
         let(:params) do
           {
-            'data': [
-              { 'guid': 'non-existent-space' },
+            data: [
+              { guid: 'non-existent-space' },
             ]
           }
         end
@@ -358,8 +358,8 @@ RSpec.describe 'Security_Groups Request' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -400,8 +400,8 @@ RSpec.describe 'Security_Groups Request' do
         let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -442,8 +442,8 @@ RSpec.describe 'Security_Groups Request' do
 
         let(:params) do
           {
-            'data': [
-              { 'guid': space.guid },
+            data: [
+              { guid: space.guid },
             ]
           }
         end
@@ -485,8 +485,8 @@ RSpec.describe 'Security_Groups Request' do
       context 'when the space is invalid' do
         let(:params) do
           {
-            'data': [
-              { 'guid': 'non-existent-space' },
+            data: [
+              { guid: 'non-existent-space' },
             ]
           }
         end
@@ -945,12 +945,12 @@ RSpec.describe 'Security_Groups Request' do
 
     let(:params) do
       {
-        'name': 'updated-name',
-        'globally_enabled': {
-          'running': false,
-          'staging': true,
+        name: 'updated-name',
+        globally_enabled: {
+          running: false,
+          staging: true,
         },
-        'rules': [
+        rules: [
           {
             'protocol' => 'udp',
             'ports' => '8080',
@@ -1106,8 +1106,8 @@ RSpec.describe 'Security_Groups Request' do
     context 'performing a partial update' do
       let(:params) do
         {
-          'globally_enabled': {
-            'staging': true,
+          globally_enabled: {
+            staging: true,
           },
         }
       end
@@ -1146,7 +1146,7 @@ RSpec.describe 'Security_Groups Request' do
 
     context 'when updating to a name that is already taken' do
       let!(:another_security_group) { VCAP::CloudController::SecurityGroup.make(name: 'already-taken') }
-      let(:params) { { 'name': 'already-taken' } }
+      let(:params) { { name: 'already-taken' } }
 
       it 'returns a 422 with a helpful message' do
         patch "/v3/security_groups/#{security_group.guid}", params.to_json, admin_header
@@ -1178,7 +1178,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             rules: [
-              { "protocol": 'all', "destination": '0.0.0.0', "description": 'asd🐞f' }
+              { protocol: 'all', destination: '0.0.0.0', description: 'asd🐞f' }
             ]
           }
         end

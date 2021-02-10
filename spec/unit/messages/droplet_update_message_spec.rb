@@ -18,28 +18,28 @@ module VCAP::CloudController
       it 'can parse labels and annotations' do
         params =
           {
-            "image": 'new-image-reference',
-            "metadata": {
-              "labels": {
-                "potato": 'mashed'
+            image: 'new-image-reference',
+            metadata: {
+              labels: {
+                potato: 'mashed'
               },
-              "annotations": {
-                "eating": 'potatoes'
+              annotations: {
+                eating: 'potatoes'
               }
             }
           }
         message = DropletUpdateMessage.new(params)
         expect(message).to be_valid
-        expect(message.labels).to include("potato": 'mashed')
-        expect(message.annotations).to include("eating": 'potatoes')
+        expect(message.labels).to include(potato: 'mashed')
+        expect(message.annotations).to include(eating: 'potatoes')
         expect(message.image).to eq('new-image-reference')
       end
 
       it 'validates both bad labels and bad annotations' do
         params = {
-          "metadata": {
-            "annotations": 'potato',
-            "labels": 'fries'
+          metadata: {
+            annotations: 'potato',
+            labels: 'fries'
           }
         }
         message = DropletUpdateMessage.new(params)
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       it 'validates bad image references' do
         params = {
-          "image": { 'blah': 34234 }
+          image: { blah: 34234 }
         }
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid

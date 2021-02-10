@@ -549,12 +549,12 @@ RSpec.describe 'Users Request' do
           origin: 'uaa',
           metadata: {
             labels: {
-              'potato': 'yam',
-              'style': 'casserole',
+              potato: 'yam',
+              style: 'casserole',
             },
             annotations: {
-              'potato': 'russet',
-              'style': 'french',
+              potato: 'russet',
+              style: 'french',
             },
           },
           links: {
@@ -569,12 +569,12 @@ RSpec.describe 'Users Request' do
             guid: params[:guid],
             metadata: {
               labels: {
-                'potato': 'yam',
-                'style': 'casserole',
+                potato: 'yam',
+                style: 'casserole',
               },
               annotations: {
-                'potato': 'russet',
-                'style': 'french',
+                potato: 'russet',
+                style: 'french',
               }
             }
           }.to_json, admin_header
@@ -800,12 +800,12 @@ RSpec.describe 'Users Request' do
             {
               metadata: {
                 labels: {
-                  'potato': 'yam',
-                  'style': 'casserole',
+                  potato: 'yam',
+                  style: 'casserole',
                 },
                 annotations: {
-                  'potato': 'russet',
-                  'style': 'french',
+                  potato: 'russet',
+                  style: 'french',
                 }
               }
             }.to_json,
@@ -823,12 +823,12 @@ RSpec.describe 'Users Request' do
           origin: 'uaa',
           metadata: {
             labels: {
-              'potato': 'yam',
-              'style': 'casserole',
+              potato: 'yam',
+              style: 'casserole',
             },
             annotations: {
-              'potato': 'russet',
-              'style': 'french',
+              potato: 'russet',
+              style: 'french',
             }
           },
           links: {

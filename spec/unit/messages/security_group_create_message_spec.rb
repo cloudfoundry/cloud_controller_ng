@@ -149,7 +149,7 @@ module VCAP::CloudController
           let(:rules) do
             [
               {
-                'protocol': 'blah',
+                protocol: 'blah',
               },
               {
                 'not-a-field': true,

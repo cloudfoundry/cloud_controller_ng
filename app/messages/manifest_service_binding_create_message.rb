@@ -17,7 +17,7 @@ module VCAP::CloudController
         if service.is_a?(String)
           ManifestServiceBinding.new(name: service)
         else
-          ManifestServiceBinding.new(name: service[:name], parameters: service[:parameters])
+          ManifestServiceBinding.new(name: service[:name], parameters: service[:parameters], binding_name: service[:binding_name])
         end
       end
     end
@@ -31,12 +31,15 @@ module VCAP::CloudController
     end
 
     def has_valid_hash_keys(service)
-      valid_service_binding_keys = [:name, :parameters]
+      valid_service_binding_keys = [:name, :parameters, :binding_name]
       return false unless service.is_a?(Hash)
       return false unless service.length <= valid_service_binding_keys.length && service.keys.all? { |key| valid_service_binding_keys.include?(key) }
       return false unless service.key?(:name)
 
-      has_valid_optional_parameters(service)
+      return false unless has_valid_optional_parameters(service)
+      return false unless has_valid_optional_binding_name(service)
+
+      true
     end
 
     def has_valid_optional_parameters(service)
@@ -45,14 +48,22 @@ module VCAP::CloudController
 
       true
     end
+
+    def has_valid_optional_binding_name(service)
+      return true unless service.key?(:binding_name)
+      return false unless service[:binding_name].is_a?(String)
+
+      true
+    end
   end
 
   class ManifestServiceBinding
-    attr_accessor :name, :parameters
+    attr_accessor :name, :parameters, :binding_name
 
-    def initialize(name:, parameters: {})
+    def initialize(name:, parameters: {}, binding_name: nil)
       @name = name
       @parameters = parameters
+      @binding_name = binding_name
     end
   end
 end

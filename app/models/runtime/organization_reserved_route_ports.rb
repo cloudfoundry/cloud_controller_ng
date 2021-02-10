@@ -15,8 +15,8 @@ module VCAP::CloudController
         join(:spaces, id: :space_id).
         join(:domains, id: :routes__domain_id).
         where(spaces__organization_id: @organization.id).
-        exclude("domains__router_group_guid": nil).
-        exclude("routes__port": nil)
+        exclude(domains__router_group_guid: nil).
+        exclude(routes__port: nil)
     end
   end
 end

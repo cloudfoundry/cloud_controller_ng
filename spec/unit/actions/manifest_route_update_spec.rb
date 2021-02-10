@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:message) do
       ManifestRoutesUpdateMessage.new(
         routes: [
-          { 'route': 'http://potato.tomato.avocado-toast.com/some-path' }
+          { route: 'http://potato.tomato.avocado-toast.com/some-path' }
         ]
       )
     end
@@ -90,7 +90,7 @@ module VCAP::CloudController
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
-                  { 'route': 'http://tomato.tomato.avocado-toast.com/some-path' }
+                  { route: 'http://tomato.tomato.avocado-toast.com/some-path' }
                 ]
               )
             end
@@ -114,7 +114,7 @@ module VCAP::CloudController
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
-                  { 'route': 'http://private.avocado-toast.com' }
+                  { route: 'http://private.avocado-toast.com' }
                 ]
               )
             end
@@ -141,7 +141,7 @@ module VCAP::CloudController
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
-                  { 'route': 'http://*.private.avocado-toast.com' }
+                  { route: 'http://*.private.avocado-toast.com' }
                 ]
               )
             end
@@ -168,7 +168,7 @@ module VCAP::CloudController
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
-                  { 'route': 'http://*.tomato.avocado-toast.com' }
+                  { route: 'http://*.tomato.avocado-toast.com' }
                 ]
               )
             end
@@ -187,7 +187,7 @@ module VCAP::CloudController
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
-                  { 'route': 'http://tcp.tomato.avocado-toast.com:1234' }
+                  { route: 'http://tcp.tomato.avocado-toast.com:1234' }
                 ]
               )
             end
@@ -296,7 +296,7 @@ module VCAP::CloudController
         let(:message) do
           ManifestRoutesUpdateMessage.new(
             routes: [
-              { 'route': 'http://not good host 🌝.avocado-toast.com/some-path' }
+              { route: 'http://not good host 🌝.avocado-toast.com/some-path' }
             ]
           )
         end

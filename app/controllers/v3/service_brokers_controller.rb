@@ -75,9 +75,10 @@ class ServiceBrokersController < ApplicationController
 
     if service_broker.space_guid
       space = service_broker.space
-      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      broker_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
     else
+      broker_not_found! unless permission_queryer.can_read_globally?
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     end
 

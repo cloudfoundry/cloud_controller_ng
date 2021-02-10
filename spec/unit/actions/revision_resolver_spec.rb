@@ -120,7 +120,7 @@ module VCAP::CloudController
           version: 1,
           droplet: droplet,
           app: app,
-          environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' }
+          environment_variables: { BISH: 'BASH', FOO: 'BAR' }
         )
       end
 

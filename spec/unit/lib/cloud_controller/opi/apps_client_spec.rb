@@ -38,7 +38,7 @@ RSpec.describe(OPI::Client) do
                                              droplet: droplet,
                                              enable_ssh: false,
                                              space: space,
-                                             environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
+                                             environment_variables: { BISH: 'BASH', FOO: 'BAR' })
     }
 
     let(:lrp) do
@@ -115,9 +115,9 @@ RSpec.describe(OPI::Client) do
             organization_name: 'org-name',
             organization_guid: 'org-guid',
             environment: {
-              'BISH': 'BASH',
-              'FOO': 'BAR',
-              'VCAP_APPLICATION': %{
+              BISH: 'BASH',
+              FOO: 'BAR',
+              VCAP_APPLICATION: %{
                   {
                     "cf_api": "http://api2.vcap.me",
                     "limits": {
@@ -139,11 +139,11 @@ RSpec.describe(OPI::Client) do
                     "version": "#{lrp.version}",
                     "application_version": "#{lrp.version}"
                   }}.delete(' ').delete("\n"),
-              'MEMORY_LIMIT': '128m',
-              'VCAP_SERVICES': '{}',
-              'PORT': '8080',
-              'VCAP_APP_PORT': '8080',
-              'VCAP_APP_HOST': '0.0.0.0'
+              MEMORY_LIMIT: '128m',
+              VCAP_SERVICES: '{}',
+              PORT: '8080',
+              VCAP_APP_PORT: '8080',
+              VCAP_APP_HOST: '0.0.0.0'
             },
             instances: 21,
             memory_mb: 128,

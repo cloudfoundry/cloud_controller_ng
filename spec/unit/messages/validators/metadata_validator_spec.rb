@@ -107,7 +107,7 @@ module VCAP::CloudController::Validators
               'a-' => 'value2',
               '-' => 'value3',
               '.a' => 'value5',
-              '_a': 'value4',
+              _a: 'value4',
           }
         end
         it 'is invalid' do
@@ -313,7 +313,7 @@ module VCAP::CloudController::Validators
       context 'validating message with annotations' do
         let(:annotations) do
           {
-            "contacts": 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
             "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)": 'contacts',
             ('a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE) => ('b' * MetadataValidator::MAX_ANNOTATION_VALUE_SIZE)
           }

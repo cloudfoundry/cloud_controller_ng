@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
 
         def lifecycle_bundle_key
-          'docker'.to_sym
+          :docker
         end
 
         def cached_dependencies

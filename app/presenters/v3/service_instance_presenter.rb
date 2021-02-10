@@ -41,6 +41,7 @@ module VCAP::CloudController
             updated_at: service_instance.updated_at,
             name: service_instance.name,
             tags: service_instance.tags,
+            last_operation: last_operation,
             relationships: {
               space: {
                 data: {
@@ -81,7 +82,6 @@ module VCAP::CloudController
             maintenance_info: maintenance_info,
             upgrade_available: upgrade_available,
             dashboard_url: service_instance.dashboard_url,
-            last_operation: last_operation,
             relationships: {
               service_plan: {
                 data: {

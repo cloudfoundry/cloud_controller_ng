@@ -69,7 +69,7 @@ class DomainsController < ApplicationController
       matching_route = true
     end
 
-    render status: :ok, json: { "matching_route": matching_route }
+    render status: :ok, json: { matching_route: matching_route }
   end
 
   def show

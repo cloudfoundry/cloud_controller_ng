@@ -4,24 +4,29 @@ module VCAP::CloudController
   module Jobs::Services
     RSpec.describe DeleteOrphanedKey, job_context: :worker do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
-      let(:service_instance_guid) { 'fake-instance-guid' }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_instance_guid) { service_instance.guid }
       let(:key_guid) { 'fake-key-guid' }
-
-      let(:service_key) { instance_double('VCAP::CloudController::ServiceKey') }
+      let(:service_key_name) { 'fake-service-key-name' }
+      let(:empty_credentials) { {} }
+      let(:service_key) { VCAP::CloudController::ServiceKey.create(name: service_key_name, service_instance: service_instance, credentials: empty_credentials) }
       before do
         allow(VCAP::CloudController::ServiceKey).to receive(:new).and_return(service_key)
       end
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedKey.new(name, {}, key_guid, service_instance_guid) }
+      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedKey.new(name, key_guid, service_instance_guid) }
 
       describe '#perform' do
         before do
           allow(client).to receive(:unbind).with(service_key)
-          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
         it 'deletes the key' do
+          expect(VCAP::Services::ServiceClientProvider).to receive(:provide).
+            with(instance: service_instance)
+
           Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 

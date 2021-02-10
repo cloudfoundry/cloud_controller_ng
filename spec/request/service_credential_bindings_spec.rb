@@ -442,6 +442,17 @@ RSpec.describe 'v3 service credential bindings' do
           }))
         end
       end
+
+      describe 'eager loading' do
+        it 'eager loads associated resources that the presenter specifies' do
+          expect(VCAP::CloudController::ServiceCredentialBindingListFetcher).to receive(:fetch).with(
+            hash_including(eager_loaded_associations: [:service_instance_sti_eager_load, :labels_sti_eager_load, :annotations_sti_eager_load, :operation_sti_eager_load])
+          ).and_call_original
+
+          get '/v3/service_credential_bindings', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+        end
+      end
     end
   end
 
@@ -1185,6 +1196,25 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
+        it 'logs telemetry' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'api-version' => 'v3',
+                'service-id' => Digest::SHA256.hexdigest('user-provided'),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            api_call.call(space_dev_headers)
+          end
+        end
+
         context 'parameters are specified' do
           let(:request_extra) do
             {
@@ -1258,6 +1288,12 @@ RSpec.describe 'v3 service credential bindings' do
                 end
               end
             end
+
+            context 'when the organization it has been shared to is suspended' do
+              it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
+                let(:expected_codes) {}
+              end
+            end
           end
         end
 
@@ -1305,6 +1341,25 @@ RSpec.describe 'v3 service credential bindings' do
           let(:route_service_url) { 'http://route.example.com/wow' }
 
           it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceBinding, true, 'service_binding', 'service_bindings'
+        end
+
+        it 'logs telemetry' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'api-version' => 'v3',
+                'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            api_call.call(space_dev_headers)
+          end
         end
       end
     end
@@ -1619,6 +1674,23 @@ RSpec.describe 'v3 service credential bindings' do
       context 'when the organization is suspended' do
         it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
           let(:expected_codes) {}
+        end
+      end
+
+      context 'when the service instance has been shared to the organization' do
+        let(:original_space) { VCAP::CloudController::Space.make }
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+        before do
+          instance.add_shared_space(space)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when the organization is suspended' do
+          it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
+            let(:expected_codes) {}
+          end
         end
       end
     end
@@ -2075,6 +2147,12 @@ RSpec.describe 'v3 service credential bindings' do
                 h['admin'] = h['space_developer'] = { code: 202 }
                 h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
               end
+            end
+          end
+
+          context 'when the organization is suspended' do
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
+              let(:expected_codes) {}
             end
           end
         end

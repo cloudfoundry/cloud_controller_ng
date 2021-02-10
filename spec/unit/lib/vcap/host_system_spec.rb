@@ -18,12 +18,12 @@ RSpec.describe VCAP::HostSystem do
     end
 
     it 'is true with a running process' do
-      expect(subject).to receive(:'`').with('ps -o rss= -p 12').and_return('some output')
+      expect(subject).to receive(:`).with('ps -o rss= -p 12').and_return('some output')
       expect(subject.process_running?(12)).to be_truthy
     end
 
     it 'is false without a running process' do
-      expect(subject).to receive(:'`').with('ps -o rss= -p 12').and_return('')
+      expect(subject).to receive(:`).with('ps -o rss= -p 12').and_return('')
       expect(subject.process_running?(12)).to be_falsey
     end
   end

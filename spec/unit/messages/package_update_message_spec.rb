@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe PackageUpdateMessage do
     let(:body) do
       {
-        "metadata": {
-          "labels": {
-            "potato": 'mashed'
+        metadata: {
+          labels: {
+            potato: 'mashed'
           },
-          "annotations": {
-            "cheese": 'bono'
+          annotations: {
+            cheese: 'bono'
           }
         }
       }
@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       it 'complains about bogus metadata fields' do
-        newbody = body.merge({ "metadata": { "choppers": 3 } })
+        newbody = body.merge({ metadata: { choppers: 3 } })
         message = PackageUpdateMessage.new(newbody)
 
         expect(message).not_to be_valid

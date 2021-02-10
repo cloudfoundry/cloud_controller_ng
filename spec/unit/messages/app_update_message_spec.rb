@@ -167,21 +167,21 @@ module VCAP::CloudController
         it 'can parse labels' do
           params =
             {
-                "metadata": {
-                    "labels": {
-                        "potato": 'mashed'
+                metadata: {
+                    labels: {
+                        potato: 'mashed'
                     }
                 }
             }
           message = AppUpdateMessage.new(params)
           expect(message).to be_valid
-          expect(message.labels).to include("potato": 'mashed')
+          expect(message.labels).to include(potato: 'mashed')
         end
 
         it 'validates labels' do
           params = {
-              "metadata": {
-                  "labels": 'potato',
+              metadata: {
+                  labels: 'potato',
               }
           }
           message = AppUpdateMessage.new(params)
@@ -191,23 +191,23 @@ module VCAP::CloudController
         it 'can parse annotations' do
           params =
             {
-              "metadata": {
-                "annotations": {
-                  "potato": 'mashed',
-                  "delete": nil,
+              metadata: {
+                annotations: {
+                  potato: 'mashed',
+                  delete: nil,
                 }
               }
             }
           message = AppUpdateMessage.new(params)
           expect(message).to be_valid
-          expect(message.annotations).to include("potato": 'mashed')
-          expect(message.annotations).to include("delete": nil)
+          expect(message.annotations).to include(potato: 'mashed')
+          expect(message.annotations).to include(delete: nil)
         end
 
         it 'validates annotations' do
           params = {
-            "metadata": {
-              "annotations": 'potato',
+            metadata: {
+              annotations: 'potato',
             }
           }
           message = AppUpdateMessage.new(params)

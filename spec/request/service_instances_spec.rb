@@ -727,15 +727,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = { code: 201 }
-          h['admin'] = { code: 201 }
-          h['no_role'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
-          h['org_auditor'] = { code: 422 }
-        end
-      end
+      let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 201) }
     end
 
     it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
@@ -834,7 +826,14 @@ RSpec.describe 'V3 service instances' do
           create_user_provided_json(
             VCAP::CloudController::ServiceInstance.last,
             labels: { baz: 'qux' },
-            annotations: { foo: 'bar' }
+            annotations: { foo: 'bar' },
+            last_operation: {
+              type: 'create',
+              state: 'succeeded',
+              description: 'Operation succeeded',
+              created_at: iso8601,
+              updated_at: iso8601,
+            }
           )
         )
       end
@@ -850,6 +849,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.tags).to contain_exactly('foo', 'bar', 'baz')
         expect(instance.credentials).to match({ 'foo' => 'bar', 'baz' => 'qux' })
         expect(instance.space).to eq(space)
+        expect(instance.last_operation.type).to eq('create')
+        expect(instance.last_operation.state).to eq('succeeded')
         expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
       end
@@ -862,7 +863,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{name}",
+              'detail' => "The service instance name is taken: #{name}.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             })
@@ -971,7 +972,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{name}",
+              'detail' => "The service instance name is taken: #{name}.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             })
@@ -1025,7 +1026,7 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
                   'title' => 'CF-UnprocessableEntity',
                   'code' => 10008,
                 })
@@ -1040,7 +1041,7 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker',
+                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
                   'title' => 'CF-UnprocessableEntity',
                   'code' => 10008,
                 })
@@ -1253,6 +1254,8 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when last operation eventually returns `create succeeded`' do
+            let(:dashboard_url) { '' }
+
             before do
               stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/last_operation").
                 with(
@@ -1263,6 +1266,9 @@ RSpec.describe 'V3 service instances' do
                   }).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
+
+              stub_request(:get, "#{instance.service.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+                to_return(status: 200, body: { dashboard_url: dashboard_url }.to_json)
 
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
@@ -1280,6 +1286,18 @@ RSpec.describe 'V3 service instances' do
             it 'sets the service instance last operation to create succeeded' do
               expect(instance.last_operation.type).to eq('create')
               expect(instance.last_operation.state).to eq('succeeded')
+            end
+
+            context 'it fetches dashboard url' do
+              let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+              let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service) }
+              let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
+
+              it 'sets the service instance dashboard url' do
+                instance.reload
+
+                expect(instance.dashboard_url).to eq(dashboard_url)
+              end
             end
           end
 
@@ -1482,15 +1500,7 @@ RSpec.describe 'V3 service instances' do
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['space_developer'] = { code: 200 }
-          h['admin'] = { code: 200 }
-          h['no_role'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['org_auditor'] = { code: 404 }
-        end
-      end
+      let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
     end
 
     it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
@@ -1789,6 +1799,7 @@ RSpec.describe 'V3 service instances' do
             let(:broker_response) { { operation: 'task12' } }
             let(:last_operation_status_code) { 200 }
             let(:last_operation_response) { { state: 'in progress' } }
+            let(:dashboard_url) {}
 
             before do
               stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
@@ -1799,6 +1810,9 @@ RSpec.describe 'V3 service instances' do
                     plan_id: service_instance.service_plan.unique_id,
                   }).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
+
+              stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
+                to_return(status: 200, body: { dashboard_url: dashboard_url }.to_json)
             end
 
             it 'marks the job state as polling' do
@@ -1858,6 +1872,16 @@ RSpec.describe 'V3 service instances' do
               it 'sets the service instance last operation to create succeeded' do
                 expect(service_instance.last_operation.type).to eq('update')
                 expect(service_instance.last_operation.state).to eq('succeeded')
+              end
+
+              context 'it fetches dashboard url' do
+                let(:service_offering) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+                let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
+
+                it 'sets the service instance dashboard url' do
+                  service_instance.reload
+                  expect(service_instance.dashboard_url).to eq(dashboard_url)
+                end
               end
             end
 
@@ -2440,6 +2464,7 @@ RSpec.describe 'V3 service instances' do
       it 'allows updates' do
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(200)
+
         expect(parsed_response).to match_json_response(
           create_user_provided_json(
             service_instance.reload,
@@ -2451,8 +2476,31 @@ RSpec.describe 'V3 service instances' do
               alpha: 'beta',
               'pre.fix/fox': 'bushy'
             },
+            last_operation: {
+              type: 'update',
+              state: 'succeeded',
+              description: 'Operation succeeded',
+              created_at: iso8601,
+              updated_at: iso8601,
+            }
           )
         )
+      end
+
+      it 'updates the a service instance in the database' do
+        api_call.call(space_dev_headers)
+
+        instance = VCAP::CloudController::ServiceInstance.last
+
+        expect(instance.name).to eq(new_name)
+        expect(instance.syslog_drain_url).to eq('https://foo2.com')
+        expect(instance.route_service_url).to eq('https://bar2.com')
+        expect(instance.tags).to contain_exactly('accounting', 'couchbase', 'nosql')
+        expect(instance.space).to eq(space)
+        expect(instance.last_operation.type).to eq('update')
+        expect(instance.last_operation.state).to eq('succeeded')
+        expect(instance).to have_labels({ prefix: 'pre.fix', key: 'tail', value: 'fluffy' }, { prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'fox', value: 'bushy' }, { prefix: nil, key: 'alpha', value: 'beta' })
       end
 
       context 'when the request is invalid' do
@@ -2489,7 +2537,7 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{new_name}",
+              'detail' => "The service instance name is taken: #{new_name}.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             })
@@ -2561,15 +2609,7 @@ RSpec.describe 'V3 service instances' do
       }
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 204 }
-            h['admin'] = { code: 204 }
-            h['no_role'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-          end
-        end
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
       it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
@@ -2578,7 +2618,11 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'user provided service instances' do
-      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/') }
+      let!(:instance) do
+        si = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/')
+        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+        si
+      end
       let(:instance_labels) { VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance) }
       let(:instance_annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance) }
 
@@ -2669,10 +2713,10 @@ RSpec.describe 'V3 service instances' do
             a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
               with(
                 query: {
-                accepts_incomplete: true,
-                service_id: instance.service.broker_provided_id,
-                plan_id: instance.service_plan.broker_provided_id
-              },
+                  accepts_incomplete: true,
+                  service_id: instance.service.broker_provided_id,
+                  plan_id: instance.service_plan.broker_provided_id
+                },
                 headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
               )
           ).to have_been_made.once
@@ -3272,13 +3316,21 @@ RSpec.describe 'V3 service instances' do
 
     describe 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 200 }
-            h['admin'] = { code: 200 }
-            h['no_role'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
+        let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
+      end
+
+      context 'sharing to a suspended org' do
+        let(:target_space_1) do
+          space = VCAP::CloudController::Space.make
+          space.organization.add_user(user)
+          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
+          space.organization.save
+          space
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) do
+            responses_for_org_suspended_space_restricted_update_endpoint(success_code: 200).merge({ 'space_developer' => { code: 422 } })
           end
         end
       end
@@ -3489,15 +3541,11 @@ RSpec.describe 'V3 service instances' do
       }
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
-            h['space_developer'] = { code: 204 }
-            h['admin'] = { code: 204 }
-            h['no_role'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['org_auditor'] = { code: 404 }
-          end
-        end
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
+      end
+
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', ALL_PERMISSIONS do
+        let(:expected_codes) { responses_for_org_suspended_space_restricted_delete_endpoint(success_code: 204) }
       end
     end
 
@@ -3835,13 +3883,14 @@ RSpec.describe 'V3 service instances' do
     }
   end
 
-  def create_user_provided_json(instance, labels: {}, annotations: {})
+  def create_user_provided_json(instance, labels: {}, annotations: {}, last_operation: {})
     {
       guid: instance.guid,
       name: instance.name,
       created_at: iso8601,
       updated_at: iso8601,
       type: 'user-provided',
+      last_operation: last_operation,
       syslog_drain_url: instance.syslog_drain_url,
       route_service_url: instance.route_service_url,
       tags: instance.tags,

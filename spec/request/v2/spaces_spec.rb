@@ -255,7 +255,7 @@ RSpec.describe 'Spaces' do
     let!(:space) { VCAP::CloudController::Space.make(organization: org) }
     let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', app: app_model) }
-    let(:maintenance_info) { { 'version': '1.0.0', 'desciption': 'this is description about the maintenance' } }
+    let(:maintenance_info) { { version: '1.0.0', desciption: 'this is description about the maintenance' } }
     let!(:service_plan) { VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info) }
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, maintenance_info: maintenance_info) }
     let(:build_client) { instance_double(HTTPClient, post: nil) }

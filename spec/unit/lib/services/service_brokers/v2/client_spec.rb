@@ -203,8 +203,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'passes the maintenance_info to the broker' do
-        client.provision(instance, maintenance_info: { 'version': '2.0.0' })
-        expect(http_client).to have_received(:put).with(path, hash_including(maintenance_info: { 'version': '2.0.0' }), { user_guid: nil })
+        client.provision(instance, maintenance_info: { version: '2.0.0' })
+        expect(http_client).to have_received(:put).with(path, hash_including(maintenance_info: { version: '2.0.0' }), { user_guid: nil })
       end
 
       context 'when the caller passes the user_guid flag' do
@@ -225,7 +225,7 @@ module VCAP::Services::ServiceBrokers::V2
             client.provision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-          expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+          expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(instance)
         end
       end
 
@@ -306,7 +306,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::HttpClientTimeout)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(instance)
             end
           end
         end
@@ -339,7 +339,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(instance)
             end
           end
 
@@ -363,7 +363,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(instance)
             end
 
             context 'when the status code was a 200' do
@@ -374,7 +374,7 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
                 }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
-                expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+                expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision).with(instance)
               end
             end
           end
@@ -1418,7 +1418,7 @@ module VCAP::Services::ServiceBrokers::V2
               client.bind(binding)
             }.to raise_error(Errors::ServiceBrokerInvalidSyslogDrainUrl)
 
-            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(binding)
           end
         end
       end
@@ -1474,7 +1474,7 @@ module VCAP::Services::ServiceBrokers::V2
               client.bind(binding)
             }.to raise_error(Errors::ServiceBrokerInvalidVolumeMounts)
 
-            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(binding)
           end
         end
       end
@@ -1501,7 +1501,7 @@ module VCAP::Services::ServiceBrokers::V2
 
               it 'propagates the error and cleans up the failed binding' do
                 expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
-                  with(client_attrs, binding)
+                  with(binding)
               end
             end
           end
@@ -1534,7 +1534,7 @@ module VCAP::Services::ServiceBrokers::V2
                   client.bind(binding)
                 }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-                expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+                expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(binding)
               end
             end
 
@@ -1569,7 +1569,7 @@ module VCAP::Services::ServiceBrokers::V2
                     client.bind(binding)
                   }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
-                  expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+                  expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(binding)
                 end
               end
             end

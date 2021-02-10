@@ -461,13 +461,13 @@ module VCAP::CloudController
         end
 
         context 'when the plan has maintenance_info' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
 
           it 'should pass along the maintenance_info to the service broker' do
             create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response).to have_status_code(201)
             expect(a_request(:put, service_broker_url_regex).
-              with(body: hash_including(maintenance_info: { 'version': '2.0.0' }))).
+              with(body: hash_including(maintenance_info: { version: '2.0.0' }))).
               to have_been_made.times(1)
           end
         end
@@ -1056,7 +1056,6 @@ module VCAP::CloudController
                 orphan_mitigation_job = Delayed::Job.first
                 expect(orphan_mitigation_job).not_to be_nil
                 expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
-
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
                 expect(a_request(:get, %r{#{service_broker_url_regex}/last_operation})).not_to have_been_made.times(1)
@@ -1105,7 +1104,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker returns "maintenance_info" in the catalog' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
 
           it 'should store it on a service instance level' do
             create_managed_service_instance
@@ -2611,7 +2610,7 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info is NOT provided in the request, but it exists for the new plan' do
-          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '1.0.0' }) }
+          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '1.0.0' }) }
           let(:status) { 202 }
 
           context 'when the delayed job finishes successfully' do
@@ -2662,7 +2661,7 @@ module VCAP::CloudController
           { maintenance_info: { version: '2.0.0' } }.to_json
         end
         let(:old_maintenance_info) { { 'version' => '1.0.0' } }
-        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
+        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: plan, maintenance_info: old_maintenance_info) }
 
         context 'when the broker responds synchronously' do

@@ -94,14 +94,14 @@ module VCAP::CloudController
 
       describe 'metadata' do
         it 'is invalid when there are bogus metadata fields' do
-          body.merge!({ "metadata": { "choppers": 3 } })
+          body.merge!({ metadata: { choppers: 3 } })
           expect(message).not_to be_valid
         end
       end
 
       describe 'relationships' do
         it 'is invalid when there is no space relationship' do
-          body['relationships'] = { 'foo': {} }
+          body['relationships'] = { foo: {} }
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include("Relationships Space can't be blank")

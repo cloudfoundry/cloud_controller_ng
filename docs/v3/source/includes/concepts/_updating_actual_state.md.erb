@@ -1,0 +1,33 @@
+## Updating Actual State
+
+The Cloud Controller is primarily responsible for the desired state of apps and processes. Most endpoints will
+only update the desired states of your apps and processes within Cloud Controller in order
+to provide users with the opportunity to incur zero downtime when updating apps. Restarting
+the app will be required for the desired state changes to become the actual state.
+
+The [stats endpoint](#get-stats-for-a-process) can be used at any time to determine the actual
+(running) state of a process, and by proxy, an app.
+
+#### Endpoints that will affect runtime
+
+The following endpoints will immediately take effect without needing to [restart the app](#restart-an-app)
+
+|Endpoint| Notes|
+|------|------|
+|[`PATCH /v3/spaces/:guid/features/ssh`](#get-ssh-enabled-for-an-app)|
+|[`POST /v3/processes/:guid/actions/scale`](#scale-a-process)| Only when exclusively updating the instances field |
+|[`POST /v3/apps/:guid/processes/:type/actions/scale`](#scale-a-process)| Only when exclusively updating the instances field|
+|[`DELETE /v3/routes/:guid/destinations/:destination_guid`](#remove-destination-for-a-route)|
+
+The following endpoints will take effect only when the specified field is not included in the request.
+
+If the field is specified, the running processes's state will not change in any way until the app is restarted.
+
+|Endpoint| Notes|
+|------|------|
+|[`POST /v3/routes/:guid/destinations`](#insert-destinations-for-a-route)| When not adding a destination with a port|
+|[`PATCH /v3/routes/:guid/destinations`](#replace-all-destinations-for-a-route)| When not replacing the port field <br/> <br/>  *Note: If the port is specified, this endpoint will unmap any route not listed in the body but will not map any of the new routes in the request body. For this reason we caution against using the endpoint for most circumstances. A combination of [adding ports](#insert-destinations-for-a-route) and [removing ports](#remove-destination-for-a-route) will generally suit your needs better.*|
+
+All other changes will not take effect on running apps until they are restarted.
+
+

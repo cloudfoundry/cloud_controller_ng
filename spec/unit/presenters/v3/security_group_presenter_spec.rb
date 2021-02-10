@@ -10,9 +10,9 @@ module VCAP::CloudController::Presenters::V3
         running_default: true,
         rules: [
           {
-            'protocol': 'tcp',
-            'destination': '10.10.10.0/24',
-            'ports': '443,80,8080'
+            protocol: 'tcp',
+            destination: '10.10.10.0/24',
+            ports: '443,80,8080'
           },
         ]
       )

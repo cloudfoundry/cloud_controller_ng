@@ -23,7 +23,7 @@ module CloudController::Presenters::V2
           name:             'utako',
           space:            space,
           stack:            stack,
-          environment_json: { 'UNICORNS': 'RAINBOWS' },
+          environment_json: { UNICORNS: 'RAINBOWS' },
           memory:           1024,
           disk_quota:       1024,
           ports:            [1234],

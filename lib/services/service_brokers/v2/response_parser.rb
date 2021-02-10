@@ -45,10 +45,11 @@ module VCAP::Services
             case unvalidated_response.code
             when 200, 201
               JsonObjectValidator.new(@logger,
-                SyslogDrainValidator.new(opts[:service_guid],
-                  RouteServiceURLValidator.new(
-                    VolumeMountsValidator.new(opts[:service_guid],
-                      SuccessValidator.new(state: 'succeeded')))))
+                CredentialsValidator.new(
+                  SyslogDrainValidator.new(opts[:service_guid],
+                    RouteServiceURLValidator.new(
+                      VolumeMountsValidator.new(opts[:service_guid],
+                        SuccessValidator.new(state: 'succeeded'))))))
             when 202
               JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
             when 409
@@ -457,6 +458,25 @@ module VCAP::Services
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+        end
+
+        class CredentialsValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+            if parsed_response['credentials'] && !parsed_response['credentials'].is_a?(Hash)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_message)
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          def error_message
+            'expected credentials to be a valid JSON object'
           end
         end
 

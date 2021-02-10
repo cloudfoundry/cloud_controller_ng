@@ -118,7 +118,7 @@ RSpec.describe 'V3 service route bindings synoptic' do
   end
 
   def create_domain
-    post '/v3/domains', { 'name': 'example.com', 'internal': false }.to_json, admin_headers
+    post '/v3/domains', { name: 'example.com', internal: false }.to_json, admin_headers
     expect(last_response).to have_status_code(201)
     parsed_response['guid']
   end

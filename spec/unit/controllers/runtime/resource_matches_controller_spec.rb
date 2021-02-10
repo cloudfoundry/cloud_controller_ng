@@ -99,7 +99,7 @@ module VCAP::CloudController
           }
         }
       end
-      let(:resources) { [{ 'sha1': '12345' }, { 'sha1': '56789' }] }
+      let(:resources) { [{ sha1: '12345' }, { sha1: '56789' }] }
 
       before do
         TestConfig.override(bits_service_config)

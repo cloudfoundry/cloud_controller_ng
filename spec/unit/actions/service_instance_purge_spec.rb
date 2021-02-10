@@ -7,9 +7,7 @@ module VCAP::CloudController
     let(:event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
     subject { described_class.new(event_repository) }
 
-    describe '#purge' do
-      let(:service_instance) { ManagedServiceInstance.make }
-
+    RSpec.shared_examples 'delete service instance' do
       it 'deletes the service instance' do
         subject.purge(service_instance)
         expect(service_instance).not_to exist
@@ -54,7 +52,6 @@ module VCAP::CloudController
       context 'when there are route bindings' do
         let(:route_1) { Route.make(space: service_instance.space) }
         let(:route_2) { Route.make(space: service_instance.space) }
-        let!(:service_instance) { ManagedServiceInstance.make(:routing) }
         let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance, route: route_1) }
         let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance, route: route_2) }
 
@@ -75,43 +72,61 @@ module VCAP::CloudController
           expect(route_binding_2).not_to exist
         end
       end
+    end
 
-      context 'when there are service keys' do
-        let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
-        let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
+    describe '#purge' do
+      context 'managed service instance' do
+        let(:service_instance) { ManagedServiceInstance.make(:routing) }
 
-        it 'records the service key delete event' do
-          subject.purge(service_instance)
+        it_behaves_like 'delete service instance'
 
-          events          = Event.where(type: 'audit.service_key.delete').all
-          event_key_guids = events.collect(&:actee)
+        context 'when there are service keys' do
+          let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
+          let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
 
-          expect(events.length).to eq(2)
-          expect(event_key_guids).to match_array([service_key_1.guid, service_key_2.guid])
+          it 'records the service key delete event' do
+            subject.purge(service_instance)
+
+            events          = Event.where(type: 'audit.service_key.delete').all
+            event_key_guids = events.collect(&:actee)
+
+            expect(events.length).to eq(2)
+            expect(event_key_guids).to match_array([service_key_1.guid, service_key_2.guid])
+          end
+
+          it 'deletes the service keys' do
+            subject.purge(service_instance)
+
+            expect(service_key_1).not_to exist
+            expect(service_key_2).not_to exist
+          end
         end
 
-        it 'deletes the service keys' do
-          subject.purge(service_instance)
+        context 'when the service instance has shared spaces' do
+          let(:target_space) { Space.make }
 
-          expect(service_key_1).not_to exist
-          expect(service_key_2).not_to exist
+          before { service_instance.add_shared_space(target_space) }
+
+          it 'records an unshare service event' do
+            subject.purge(service_instance)
+
+            events = Event.where(type: 'audit.service_instance.unshare').all
+            event_key_guid = events.collect(&:actee)
+
+            expect(events.length).to eq(1)
+            expect(event_key_guid).to match_array([service_instance.guid])
+          end
         end
       end
 
-      context 'when the service instance has shared spaces' do
-        let(:target_space) { Space.make }
-
-        before { service_instance.add_shared_space(target_space) }
-
-        it 'records an unshare service event' do
-          subject.purge(service_instance)
-
-          events = Event.where(type: 'audit.service_instance.unshare').all
-          event_key_guid = events.collect(&:actee)
-
-          expect(events.length).to eq(1)
-          expect(event_key_guid).to match_array([service_instance.guid])
+      context 'user provided service instance' do
+        let(:service_instance) do
+          si = UserProvidedServiceInstance.make(:routing)
+          si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+          si
         end
+
+        it_behaves_like 'delete service instance'
       end
     end
   end

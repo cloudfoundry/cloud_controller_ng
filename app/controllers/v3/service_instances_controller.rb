@@ -14,11 +14,11 @@ require 'presenters/v3/service_instance_presenter'
 require 'presenters/v3/shared_spaces_usage_summary_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
-require 'actions/service_instance_update_managed'
 require 'actions/service_instance_update_user_provided'
 require 'actions/service_instance_create_user_provided'
 require 'actions/v3/service_instance_delete'
-require 'actions/service_instance_create_managed'
+require 'actions/v3/service_instance_create_managed'
+require 'actions/v3/service_instance_update_managed'
 require 'actions/service_instance_purge'
 require 'fetchers/service_instance_list_fetcher'
 require 'decorators/field_service_instance_space_decorator'
@@ -27,6 +27,8 @@ require 'decorators/field_service_instance_offering_decorator'
 require 'decorators/field_service_instance_broker_decorator'
 require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
+require 'jobs/v3/create_service_instance_job'
+require 'jobs/v3/update_service_instance_job'
 
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
@@ -237,13 +239,20 @@ class ServiceInstancesV3Controller < ApplicationController
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
-    broker_unavailable! unless service_plan.service_broker.available?
+    action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
+    instance = action.precursor(message: message)
 
-    job = ServiceInstanceCreateManaged.new(service_event_repository).create(message)
+    provision_job = VCAP::CloudController::V3::CreateServiceInstanceJob.new(
+      instance.guid,
+      arbitrary_parameters: message.parameters,
+      user_audit_info: user_audit_info,
+      audit_hash: message.audit_hash
+    )
+    pollable_job = Jobs::Enqueuer.new(provision_job, queue: Jobs::Queues.generic).enqueue_pollable
 
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
-  rescue ServiceInstanceCreateManaged::UnprocessableCreate,
-         ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  rescue VCAP::CloudController::ServiceInstanceCreateMixin::UnprocessableOperation,
+         V3::ServiceInstanceCreateManaged::InvalidManagedServiceInstance => e
     unprocessable!(e.message)
   end
 
@@ -260,21 +269,25 @@ class ServiceInstancesV3Controller < ApplicationController
   def update_managed(service_instance)
     message = ServiceInstanceUpdateManagedMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+    raise_if_invalid_service_plan!(service_instance, message)
 
-    if message.service_plan_guid
-      service_plan = ServicePlan.first(guid: message.service_plan_guid)
-      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
-      invalid_service_plan_relation! unless service_plan.service == service_instance.service
-    end
+    action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
+    action.preflight!
+    service_instance, continue_async = action.try_update_sync
 
-    service_instance, job = ServiceInstanceUpdateManaged.new(service_event_repository).update(service_instance, message)
-
-    if job.nil?
-      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
+    if continue_async
+      update_job = VCAP::CloudController::V3::UpdateServiceInstanceJob.new(
+        service_instance.guid,
+        message: message,
+        user_audit_info: user_audit_info,
+        audit_hash: message.audit_hash
+      )
+      pollable_job = Jobs::Enqueuer.new(update_job, queue: Jobs::Queues.generic).enqueue_pollable
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
     else
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+      render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
     end
-  rescue ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
+  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
     unprocessable!(api_err.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
@@ -368,6 +381,14 @@ class ServiceInstancesV3Controller < ApplicationController
       service_plan.visible_in_space?(space)
   end
 
+  def raise_if_invalid_service_plan!(service_instance, message)
+    if message.service_plan_guid
+      service_plan = ServicePlan.first(guid: message.service_plan_guid)
+      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+      invalid_service_plan_relation! unless service_plan.service == service_instance.service
+    end
+  end
+
   def service_event_repository
     VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
   end
@@ -382,10 +403,6 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def unprocessable_service_plan!
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
-  end
-
-  def broker_unavailable!
-    unprocessable!('The service instance cannot be created because there is an operation in progress for the service broker')
   end
 
   def invalid_service_plan_relation!

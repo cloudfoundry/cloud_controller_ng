@@ -784,7 +784,7 @@ module VCAP::Services::ServiceBrokers
 
           context 'when the plan has maintenance_info' do
             before do
-              plan.update(maintenance_info: { 'version': '1.1' })
+              plan.update(maintenance_info: { version: '1.1' })
             end
 
             context 'when maintenance_info was deleted from the catalog for the plan' do
@@ -793,7 +793,7 @@ module VCAP::Services::ServiceBrokers
               end
 
               it 'should remove the maintenance_info information for the updated plan' do
-                expect(plan.maintenance_info).to eq({ 'version': '1.1' })
+                expect(plan.maintenance_info).to eq({ version: '1.1' })
 
                 service_manager.sync_services_and_plans(catalog)
                 plan.reload

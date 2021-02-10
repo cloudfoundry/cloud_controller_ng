@@ -741,7 +741,7 @@ module VCAP::CloudController
           end
 
           context 'when the broker returns invalid json as per the spec' do
-            let(:body) { { "parameters": 'blahblah' }.to_json }
+            let(:body) { { parameters: 'blahblah' }.to_json }
 
             it 'returns 502' do
               get "/v2/service_keys/#{service_key.guid}/parameters"

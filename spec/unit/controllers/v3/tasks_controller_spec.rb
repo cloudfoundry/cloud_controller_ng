@@ -17,9 +17,9 @@ RSpec.describe TasksController, type: :controller do
 
     let(:request_body) do
       {
-        "name": 'mytask',
-        "command": 'rake db:migrate && true',
-        "memory_in_mb": 2048,
+        name: 'mytask',
+        command: 'rake db:migrate && true',
+        memory_in_mb: 2048,
       }
     end
 
@@ -311,9 +311,9 @@ RSpec.describe TasksController, type: :controller do
 
         it 'successfully creates a task on the specifed droplet' do
           post :create, params: { app_guid: app_model.guid }.merge(
-            "name": 'mytask',
-            "command": 'rake db:migrate && true',
-            "droplet_guid": custom_droplet.guid
+            name: 'mytask',
+            command: 'rake db:migrate && true',
+            droplet_guid: custom_droplet.guid
           ), as: :json
 
           expect(response.status).to eq 202
@@ -324,9 +324,9 @@ RSpec.describe TasksController, type: :controller do
         context 'and the droplet is not found' do
           it 'returns a 404' do
             post :create, params: { app_guid: app_model.guid }.merge(
-              "name": 'mytask',
-              "command": 'rake db:migrate && true',
-              "droplet_guid": 'fake-droplet-guid'
+              name: 'mytask',
+              command: 'rake db:migrate && true',
+              droplet_guid: 'fake-droplet-guid'
             ), as: :json
 
             expect(response.status).to eq 404
@@ -340,9 +340,9 @@ RSpec.describe TasksController, type: :controller do
 
           it 'returns a 404' do
             post :create, params: { app_guid: app_model.guid }.merge(
-              "name": 'mytask',
-              "command": 'rake db:migrate && true',
-              "droplet_guid": custom_droplet.guid
+              name: 'mytask',
+              command: 'rake db:migrate && true',
+              droplet_guid: custom_droplet.guid
             ), as: :json
 
             expect(response.status).to eq 404

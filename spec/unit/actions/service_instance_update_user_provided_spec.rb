@@ -52,6 +52,7 @@ module VCAP::CloudController
           VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
           VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
         ]
+        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
         si
       end
       let(:message) { ServiceInstanceUpdateUserProvidedMessage.new(body) }
@@ -66,6 +67,11 @@ module VCAP::CloudController
         expect(service_instance.syslog_drain_url).to eq('https://foo2.com')
         expect(service_instance.route_service_url).to eq('https://bar2.com')
         expect(service_instance.tags).to eq(%w(accounting couchbase nosql))
+
+        expect(service_instance.last_operation.state).to eq('succeeded')
+        expect(service_instance.last_operation.type).to eq('update')
+        expect(service_instance.last_operation.description).to eq('Operation succeeded')
+
         expect(service_instance).to have_labels(
           { prefix: nil, key: 'foo', value: 'bar' },
           { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
@@ -76,6 +82,22 @@ module VCAP::CloudController
         )
       end
 
+      context 'last operation was not set' do
+        before do
+          service_instance.service_instance_operation = nil
+          service_instance.reload
+        end
+
+        it 'should set last operation on update' do
+          action.update(service_instance, message)
+
+          service_instance.reload
+
+          expect(service_instance.last_operation.state).to eq('succeeded')
+          expect(service_instance.last_operation.type).to eq('update')
+          expect(service_instance.last_operation.description).to eq('Operation succeeded')
+        end
+      end
       it 'returns the updated service instance' do
         si = action.update(service_instance, message)
         expect(si).to eq(service_instance.reload)
@@ -143,7 +165,7 @@ module VCAP::CloudController
                 action.update(service_instance, message)
               }.to raise_error(
                 ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
-                'The service instance name is taken: already_taken',
+                'The service instance name is taken: already_taken.',
               )
             end
           end

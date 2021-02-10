@@ -13,7 +13,9 @@ RSpec.describe 'Space Manifests' do
 
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance_1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:binding_name) { Sham.name }
     let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'Tryggvi', space: space) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
     let(:app2_model) { VCAP::CloudController::AppModel.make(name: 'Sigurlaug', space: space) }
@@ -41,7 +43,12 @@ RSpec.describe 'Space Manifests' do
               { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
             ],
             'services' => [
-              service_instance.name
+              service_instance_1.name,
+              {
+                'name' => service_instance_2.name,
+                'parameters' => { 'foo' => 'bar' },
+                'binding_name' => binding_name
+              }
             ],
             'metadata' => {
               'annotations' => {
@@ -76,7 +83,7 @@ RSpec.describe 'Space Manifests' do
               { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
             ],
             'services' => [
-              service_instance.name
+              service_instance_1.name
             ],
             'metadata' => {
               'annotations' => {
@@ -99,7 +106,8 @@ RSpec.describe 'Space Manifests' do
       space.add_developer(user)
       TestConfig.override(kubernetes: {})
 
-      stub_bind(service_instance)
+      stub_bind(service_instance_1)
+      stub_bind(service_instance_2)
       VCAP::CloudController::LabelsUpdate.update(app1_model, { 'potato' => 'french',
                                                                'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(app1_model, { 'potato' => 'baked',
@@ -138,8 +146,9 @@ RSpec.describe 'Space Manifests' do
       )
       expect(app1_model.routes).to match_array([route, second_route])
 
-      expect(app1_model.service_bindings.length).to eq 1
-      expect(app1_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app1_model.service_bindings.map(&:service_instance)).to contain_exactly(service_instance_1, service_instance_2)
+      expect(service_instance_1.service_bindings.first.name).to be_nil
+      expect(service_instance_2.service_bindings.first.name).to eq(binding_name)
       expect(app1_model).to have_labels({ key: 'potato', value: 'yam' }, { prefix: 'myspace.com', key: 'songs', value: 'missing' })
       expect(app1_model).to have_annotations({ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' })
 
@@ -155,7 +164,7 @@ RSpec.describe 'Space Manifests' do
       expect(app2_model.routes).to match_array([route, second_route])
 
       expect(app2_model.service_bindings.length).to eq 1
-      expect(app2_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app2_model.service_bindings.first.service_instance).to eq service_instance_1
       expect(app2_model).to have_labels(
         { key: 'potato', value: 'yam' }
       )
@@ -180,7 +189,7 @@ RSpec.describe 'Space Manifests' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(VCAP::CloudController::ServiceBinding.count).to eq(0)
-        expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance.name}': Failed")
+        expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance_1.name}': Failed")
       end
     end
 
@@ -208,7 +217,7 @@ RSpec.describe 'Space Manifests' do
                 { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
               ],
               'services' => [
-                service_instance.name
+                service_instance_1.name
               ]
             },
             { 'name' => 'some-other-app',
@@ -227,7 +236,7 @@ RSpec.describe 'Space Manifests' do
                 'k3' => 'watermelon'
               },
               'services' => [
-                service_instance.name
+                service_instance_1.name
               ]
             }
           ]
@@ -268,7 +277,7 @@ RSpec.describe 'Space Manifests' do
         )
 
         expect(new_app.service_bindings.length).to eq 1
-        expect(new_app.service_bindings.first.service_instance).to eq service_instance
+        expect(new_app.service_bindings.first.service_instance).to eq service_instance_1
       end
     end
 
@@ -429,7 +438,7 @@ RSpec.describe 'Space Manifests' do
                 { 'route' => "https://pants.#{second_route.domain.name}/path" }
               ],
               'services' => [
-                service_instance.name
+                service_instance_1.name
               ]
             }
           ]

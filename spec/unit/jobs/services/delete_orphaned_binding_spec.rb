@@ -8,15 +8,18 @@ module VCAP::CloudController
       let(:binding_info) { OrphanedBindingInfo.new(service_binding) }
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(name, {}, binding_info) }
+      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(name, binding_info) }
 
       describe '#perform' do
         before do
           allow(client).to receive(:unbind).with(binding_info.to_binding, accepts_incomplete: true)
-          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
+          allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
         it 'unbinds the binding' do
+          expect(VCAP::Services::ServiceClientProvider).to receive(:provide).
+            with(instance: service_binding.service_instance)
+
           Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 

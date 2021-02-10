@@ -486,10 +486,10 @@ RSpec.describe 'Droplets' do
         checksum: nil,
         buildpacks: [
           {
-            "name": buildpack.name,
-            "detect_output": nil,
-            "buildpack_name": nil,
-            "version": nil
+            name: buildpack.name,
+            detect_output: nil,
+            buildpack_name: nil,
+            version: nil
           }
         ],
         stack: droplet1.lifecycle_data.try(:stack),
@@ -537,10 +537,10 @@ RSpec.describe 'Droplets' do
         checksum: { type: 'sha256', value: 'droplet-checksum-sha256' },
         buildpacks: [
           {
-            "name": 'http://buildpack.git.url.com',
-            "detect_output": nil,
-            "buildpack_name": nil,
-            "version": nil
+            name: 'http://buildpack.git.url.com',
+            detect_output: nil,
+            buildpack_name: nil,
+            version: nil
           }
         ],
         stack: droplet2.lifecycle_data.try(:stack),

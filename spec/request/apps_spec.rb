@@ -2609,15 +2609,15 @@ RSpec.describe 'Apps' do
 
     let(:read_all_response) do
       {
-        "read_basic_data": true,
-        "read_sensitive_data": true
+        read_basic_data: true,
+        read_sensitive_data: true
       }
     end
 
     let(:read_basic_response) do
       {
-        "read_basic_data": true,
-        "read_sensitive_data": false
+        read_basic_data: true,
+        read_sensitive_data: false
       }
     end
 

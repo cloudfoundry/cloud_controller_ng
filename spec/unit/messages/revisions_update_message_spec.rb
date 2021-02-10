@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       it 'complains about bogus metadata fields' do
-        newbody = body.merge({ "metadata": { "choppers": 3 } })
+        newbody = body.merge({ metadata: { choppers: 3 } })
         message = RevisionsUpdateMessage.new(newbody)
 
         expect(message).not_to be_valid

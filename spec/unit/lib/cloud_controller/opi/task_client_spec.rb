@@ -189,7 +189,7 @@ RSpec.describe(OPI::TaskClient) do
 
   describe 'can fetch a task' do
     let(:expected_body) {
-      { 'guid': 'foo' }.to_json
+      { guid: 'foo' }.to_json
     }
 
     before(:each) do
@@ -232,7 +232,7 @@ RSpec.describe(OPI::TaskClient) do
 
   describe 'can fetch all tasks' do
     let(:expected_body) {
-      [{ 'guid': 'foo' }, { 'guid': 'bar' }].to_json
+      [{ guid: 'foo' }, { guid: 'bar' }].to_json
     }
 
     before(:each) do
