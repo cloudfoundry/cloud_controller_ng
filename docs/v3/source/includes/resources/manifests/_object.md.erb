@@ -26,6 +26,7 @@ applications:
   - my-service1
   - my-service2
   - name: my-service-with-arbitrary-params
+    binding_name: my-binding
     parameters:
       key1: value1
       key2: value2
@@ -124,6 +125,7 @@ take either an array of service instance name strings or an array of the followi
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | **(Required)** The name of the service instance to be bound to
+**binding_name** | _string_ | The name of the service binding to be created
 **parameters** | _object_ | A map of arbitrary key/value pairs to send to the service broker during binding
 
 
