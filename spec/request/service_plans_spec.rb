@@ -567,12 +567,10 @@ RSpec.describe 'V3 service plans' do
         expect(last_response).to have_status_code(200)
 
         expect(parsed_response['included']['spaces']).to have(2).elements
-        expect(parsed_response['included']['spaces'][0]['guid']).to eq(space_1.guid)
-        expect(parsed_response['included']['spaces'][1]['guid']).to eq(space_2.guid)
+        expect(parsed_response['included']['spaces'].map { |o| o['guid'] }).to contain_exactly(space_1.guid, space_2.guid)
 
         expect(parsed_response['included']['organizations']).to have(2).elements
-        expect(parsed_response['included']['organizations'][0]['guid']).to eq(space_1.organization.guid)
-        expect(parsed_response['included']['organizations'][1]['guid']).to eq(space_2.organization.guid)
+        expect(parsed_response['included']['organizations'].map { |o| o['guid'] }).to contain_exactly(space_1.organization.guid, space_2.organization.guid)
       end
 
       it 'can include `service_offering`' do
@@ -586,8 +584,7 @@ RSpec.describe 'V3 service plans' do
         expect(last_response).to have_status_code(200)
 
         expect(parsed_response['included']['service_offerings']).to have(2).elements
-        expect(parsed_response['included']['service_offerings'][0]['guid']).to eq(offering_1.guid)
-        expect(parsed_response['included']['service_offerings'][1]['guid']).to eq(offering_2.guid)
+        expect(parsed_response['included']['service_offerings'].map { |o| o['guid'] }).to contain_exactly(offering_1.guid, offering_2.guid)
       end
     end
 
@@ -600,10 +597,8 @@ RSpec.describe 'V3 service plans' do
         expect(last_response).to have_status_code(200)
 
         expect(parsed_response['included']['service_brokers']).to have(2).elements
-        expect(parsed_response['included']['service_brokers'][0]['guid']).to eq(plan_1.service.service_broker.guid)
-        expect(parsed_response['included']['service_brokers'][0]['name']).to eq(plan_1.service.service_broker.name)
-        expect(parsed_response['included']['service_brokers'][1]['guid']).to eq(plan_2.service.service_broker.guid)
-        expect(parsed_response['included']['service_brokers'][1]['name']).to eq(plan_2.service.service_broker.name)
+        expect(parsed_response['included']['service_brokers'].map { |o| o['guid'] }).to contain_exactly(plan_1.service.service_broker.guid, plan_2.service.service_broker.guid)
+        expect(parsed_response['included']['service_brokers'].map { |o| o['name'] }).to contain_exactly(plan_1.service.service_broker.name, plan_2.service.service_broker.name)
       end
     end
 
