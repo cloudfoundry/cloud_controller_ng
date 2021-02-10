@@ -38,7 +38,11 @@ module OPI
     end
 
     def lrp_instances(process)
-      return confirm_not_running(process) if process_has_no_desired_instances?(process)
+      if process_has_no_desired_instances?(process)
+        confirm_not_running(process)
+        # return zero instances
+        return []
+      end
 
       parsed_response = get_instances(process)
       parsed_response['instances'].map do |instance|
@@ -60,9 +64,12 @@ module OPI
 
     def confirm_not_running(process)
       parsed_response = JSON.parse(client.get(instances_path(process)).body)
-      raise Error.new("expected no instances for stopped process: #{parsed_response['error']}") unless parsed_response['error'].include?('not found')
+      possible_error = parsed_response['error']
 
-      []
+      # we are _only_ ok with receiving no errors or a 404-esque error
+      if !possible_error.blank? && !possible_error.include?('not found')
+        raise Error.new("expected no instances for stopped process: #{possible_error}")
+      end
     end
 
     def get_instances(process)
