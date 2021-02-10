@@ -10742,6 +10742,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">my-service-with-arbitrary-params</span>
+    <span class="s">binding_name</span><span class="pi">:</span> <span class="s">my-binding</span>
     <span class="s">parameters</span><span class="pi">:</span>
       <span class="s">key1</span><span class="pi">:</span> <span class="s">value1</span>
       <span class="s">key2</span><span class="pi">:</span> <span class="s">value2</span>
@@ -10974,6 +10975,11 @@ take either an array of service instance name strings or an array of the followi
 <td><strong>(Required)</strong> The name of the service instance to be bound to</td>
 </tr>
 <tr>
+<td><strong>binding_name</strong></td>
+<td><em>string</em></td>
+<td>The name of the service binding to be created</td>
+</tr>
+<tr>
 <td><strong>parameters</strong></td>
 <td><em>object</em></td>
 <td>A map of arbitrary key/value pairs to send to the service broker during binding</td>
@@ -11070,6 +11076,8 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 applications:
 - name: my-app
   stack: cflinuxfs3
+  services:
+  - my-service
   routes:
   - route: my-app.example.com
   processes:
