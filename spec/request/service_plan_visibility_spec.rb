@@ -405,7 +405,7 @@ RSpec.describe 'V3 service plan visibility' do
         post api_url, body.to_json, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['type']).to eq 'organization'
-        expect(parsed_response['organizations']).to match_array(expected_orgs)
+        expect(parsed_response).not_to have_key('organizations')
 
         get api_url, {}, admin_headers
         expect(parsed_response['type']).to eq 'organization'
@@ -433,7 +433,7 @@ RSpec.describe 'V3 service plan visibility' do
         post api_url, body, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response['type']).to eq 'organization'
-        expect(parsed_response['organizations']).to match_array(expected_orgs)
+        expect(parsed_response).not_to have_key('organizations')
 
         get api_url, {}, admin_headers
         expect(parsed_response['type']).to eq 'organization'
@@ -457,7 +457,7 @@ RSpec.describe 'V3 service plan visibility' do
           post api_url, body.to_json, admin_headers
 
           expect(parsed_response['type']).to eq 'organization'
-          expect(parsed_response['organizations']).to contain_exactly({ 'guid' => org.guid, 'name' => org.name })
+          expect(parsed_response).not_to have_key('organizations')
         end
 
         it 'creates an audit event' do
@@ -541,13 +541,7 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'permissions' do
       let(:req_body) { { type: 'organization', organizations: [{ guid: third_org.guid }] } }
-      let(:org_response) { [
-        { name: org.name, guid: org.guid },
-        { name: other_org.name, guid: other_org.guid },
-        { name: third_org.name, guid: third_org.guid }
-      ]
-      }
-      let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
+      let(:successful_response) { { code: 200, response_object: { type: 'organization' } } }
       let(:expected_codes_and_responses) do
         Hash.new(code: 403).tap do |h|
           h['admin'] = successful_response

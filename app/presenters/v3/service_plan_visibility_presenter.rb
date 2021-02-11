@@ -19,7 +19,7 @@ module VCAP::CloudController
             }
           end
 
-          if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::ORGANIZATION
+          if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::ORGANIZATION && !@visible_in_orgs.nil?
             visibility[:organizations] = @visible_in_orgs.map { |org| { guid: org.guid, name: org.name } }
           end
 

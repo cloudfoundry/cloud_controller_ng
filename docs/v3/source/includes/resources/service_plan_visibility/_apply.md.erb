@@ -25,7 +25,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :service_plan_visibility_with_new_org %>
+<%= yield_content :service_plan_visibility_response %>
 ```
 
 This endpoint applies a service plan visibility. It behaves similar to the [PATCH service plan visibility endpoint](#update-a-service-plan-visibility) but this endpoint will append to the existing list of organizations when the service plan is `organization` visible.
