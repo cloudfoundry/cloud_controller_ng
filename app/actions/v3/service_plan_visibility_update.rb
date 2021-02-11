@@ -37,20 +37,33 @@ module VCAP::CloudController
       private
 
       def update_service_plan_visibilities(service_plan, requested_org_guids, append_organizations)
-        visibility_objects = service_plan.service_plan_visibilities
-        current_org_guids = visibility_objects.map(&:organization_guid)
-
-        unless append_organizations
-          org_guids_not_in_request = (current_org_guids - requested_org_guids)
-          visibility_ids_to_delete = visibility_objects.map { |v| v.id if org_guids_not_in_request.include?(v.organization_guid) }
-
-          ServicePlanVisibility.where(id: visibility_ids_to_delete).delete
+        if append_organizations
+          append_service_plan_visibilities(service_plan, requested_org_guids)
+        else
+          replace_service_plan_visibilities(service_plan, requested_org_guids)
         end
+      end
 
-        org_guids_to_add = (requested_org_guids - current_org_guids)
-        org_guids_to_add.each do |org_guid|
+      def append_service_plan_visibilities(service_plan, requested_org_guids)
+        requested_org_guids.each do |org_guid|
+          unless already_has_visibility?(service_plan, org_guid)
+            service_plan.add_service_plan_visibility(organization_guid: org_guid)
+          end
+        end
+      end
+
+      def replace_service_plan_visibilities(service_plan, requested_org_guids)
+        service_plan.remove_all_service_plan_visibilities
+        requested_org_guids.each do |org_guid|
           service_plan.add_service_plan_visibility(organization_guid: org_guid)
         end
+      end
+
+      def already_has_visibility?(service_plan, org_guid)
+        service_plan.service_plan_visibilities_dataset.
+          join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
+          where(Sequel[:organizations][:guid] =~ org_guid).
+          any?
       end
 
       def error!(message)

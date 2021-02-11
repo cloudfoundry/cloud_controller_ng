@@ -22,11 +22,18 @@ class ServicePlanVisibilityController < ApplicationController
   end
 
   def update
-    update_visibility
+    updated_service_plan = update_visibility
+    visible_in_orgs = ServicePlanVisibilityFetcher.new(permission_queryer).fetch_orgs(
+      service_plan_guids: [updated_service_plan.guid]
+    )
+    presenter = Presenters::V3::ServicePlanVisibilityPresenter.new(updated_service_plan, visible_in_orgs)
+    render status: :ok, json: presenter.to_json
   end
 
   def apply
-    update_visibility(append_organizations: true)
+    updated_service_plan = update_visibility(append_organizations: true)
+    presenter = Presenters::V3::ServicePlanVisibilityPresenter.new(updated_service_plan, nil)
+    render status: :ok, json: presenter.to_json
   end
 
   def destroy
@@ -62,12 +69,7 @@ class ServicePlanVisibilityController < ApplicationController
 
     updated_service_plan = V3::ServicePlanVisibilityUpdate.new.update(service_plan, message, opts)
     event_repository.record_service_plan_update_visibility_event(service_plan, message.audit_hash)
-
-    visible_in_orgs = ServicePlanVisibilityFetcher.new(permission_queryer).fetch_orgs(
-      service_plan_guids: [service_plan.guid]
-    )
-    presenter = Presenters::V3::ServicePlanVisibilityPresenter.new(updated_service_plan, visible_in_orgs)
-    render status: :ok, json: presenter.to_json
+    updated_service_plan
   rescue V3::ServicePlanVisibilityUpdate::UnprocessableRequest => e
     unprocessable!(e.message)
   end
