@@ -153,7 +153,7 @@ RSpec.describe(OPI::InstancesClient) do
         let(:process) { VCAP::CloudController::ProcessModel.make(state: VCAP::CloudController::ProcessModel::STOPPED) }
 
         it 'raises an error' do
-          expect { client.lrp_instances(process) }.to raise_error(OPI::InstancesClient::Error)
+          expect { client.lrp_instances(process) }.to raise_error(OPI::InstancesClient::NotRunningProcessError)
           expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(1)
         end
       end

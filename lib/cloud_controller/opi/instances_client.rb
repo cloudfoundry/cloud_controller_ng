@@ -8,6 +8,7 @@ require 'cloud_controller/opi/base_client'
 module OPI
   class InstancesClient < BaseClient
     class Error < StandardError; end
+    class NotRunningProcessError < StandardError; end
 
     LRP_INSTANCES_RETRIES = 5
     ActualLRPKey = Struct.new(:index, :process_guid)
@@ -38,15 +39,19 @@ module OPI
     end
 
     def lrp_instances(process)
-      if process_has_no_desired_instances?(process)
-        confirm_not_running(process)
-        # return zero instances
-        return []
-      end
+      Retryable.retryable(sleep: exponential_backoff_from_500ms, tries: LRP_INSTANCES_RETRIES, not: [NotRunningProcessError], log_method: log_method) do
+        parsed_response = JSON.parse(client.get(instances_path(process)).body)
 
-      parsed_response = get_instances(process)
-      parsed_response['instances'].map do |instance|
-        ActualLRP.new(instance, parsed_response['process_guid'])
+        if process_has_no_desired_instances?(process)
+          raise_non_404_error(parsed_response)
+          # return zero instances
+          return []
+        end
+        raise_error(parsed_response)
+
+        parsed_response['instances'].map do |instance|
+          ActualLRP.new(instance, parsed_response['process_guid'])
+        end
       end
     end
 
@@ -60,24 +65,6 @@ module OPI
 
     def process_has_no_desired_instances?(process)
       process.stopped? || process.instances == 0
-    end
-
-    def confirm_not_running(process)
-      parsed_response = JSON.parse(client.get(instances_path(process)).body)
-      possible_error = parsed_response['error']
-
-      # we are _only_ ok with receiving no errors or a 404-esque error
-      if !possible_error.blank? && !possible_error.include?('not found')
-        raise Error.new("expected no instances for stopped process: #{possible_error}")
-      end
-    end
-
-    def get_instances(process)
-      Retryable.retryable(sleep: exponential_backoff_from_500ms, tries: LRP_INSTANCES_RETRIES, log_method: log_method) do
-        parsed_response = JSON.parse(client.get(instances_path(process)).body)
-        raise_error(parsed_response)
-        return parsed_response
-      end
     end
 
     def instances_path(process)
@@ -100,6 +87,13 @@ module OPI
 
     def raise_error(parsed_response)
       raise Error.new(parsed_response['error']) if parsed_response['error']
+    end
+
+    def raise_non_404_error(parsed_response)
+      error = parsed_response['error']
+      if !error.blank? && !error.include?('not found')
+        raise NotRunningProcessError.new("expected no instances for stopped process: #{error}")
+      end
     end
 
     def logger
