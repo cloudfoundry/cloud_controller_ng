@@ -53,6 +53,54 @@ module CloudFoundry
           end
         end
 
+        context 'when the rate limiter returns 429' do
+          let(:app) { double(:app, call: [429, { 'X-RateLimit-Remaining' => '0' }, 'a body']) }
+
+          context 'when token is valid' do
+            before do
+              allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_return(true)
+            end
+
+            it 'forwards the response from the rate limiter' do
+              status, headers, body = middleware.call(env)
+              expect(status).to eq(429)
+              expect(headers).to eq({ 'X-RateLimit-Remaining' => '0' })
+              expect(body).to eq('a body')
+            end
+          end
+          context 'when token is invalid' do
+            before do
+              allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_return(false)
+              allow(VCAP::CloudController::SecurityContext).to receive(:missing_token?).and_return(false)
+            end
+
+            it 'changes the response to 401' do
+              status, headers, body = middleware.call(env)
+              expect(status).to eq(401)
+              expect(headers).to eq({ 'Content-Length' => '189', 'Content-Type' => 'application/json', 'X-RateLimit-Remaining' => '0' })
+              json_body = JSON.parse(body.first)
+              expect(json_body).to include(
+                'code' => 1000,
+                'description' => 'Invalid Auth Token',
+                'error_code' => 'CF-InvalidAuthToken',
+              )
+            end
+          end
+          context 'when token is missing' do
+            before do
+              allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_return(false)
+              allow(VCAP::CloudController::SecurityContext).to receive(:missing_token?).and_return(true)
+            end
+
+            it 'forwards the response from the rate limiter' do
+              status, headers, body = middleware.call(env)
+              expect(status).to eq(429)
+              expect(headers).to eq({ 'X-RateLimit-Remaining' => '0' })
+              expect(body).to eq('a body')
+            end
+          end
+        end
+
         context 'when Uaa is unavailable' do
           before do
             allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_raise(VCAP::CloudController::UaaUnavailable)
