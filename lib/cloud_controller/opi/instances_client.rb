@@ -1,3 +1,4 @@
+require 'retryable'
 require 'httpclient'
 require 'json'
 require 'cloud_controller/errors/instances_unavailable'
@@ -6,6 +7,10 @@ require 'cloud_controller/opi/base_client'
 
 module OPI
   class InstancesClient < BaseClient
+    class Error < StandardError; end
+    class NotRunningProcessError < StandardError; end
+
+    LRP_INSTANCES_RETRIES = 5
     ActualLRPKey = Struct.new(:index, :process_guid)
     ActualLRPNetInfo = Struct.new(:address, :ports)
     PortMapping = Struct.new(:container_port, :host_port)
@@ -34,20 +39,19 @@ module OPI
     end
 
     def lrp_instances(process)
-      path = "/apps/#{process.guid}/#{process.version}/instances"
-      begin
-        retries ||= 0
-        resp = client.get(path)
-        resp_json = JSON.parse(resp.body)
-        handle_error(resp_json)
-      rescue CloudController::Errors::NoRunningInstances => e
-        sleep(1)
-        retry if (retries += 1) < 5
-        raise e
-      end
-      process_guid = resp_json['process_guid']
-      resp_json['instances'].map do |instance|
-        ActualLRP.new(instance, process_guid)
+      Retryable.retryable(sleep: exponential_backoff_from_500ms, tries: LRP_INSTANCES_RETRIES, not: [NotRunningProcessError], log_method: log_method) do
+        parsed_response = JSON.parse(client.get(instances_path(process)).body)
+
+        if process_has_no_desired_instances?(process)
+          raise_non_404_error(parsed_response)
+          # return zero instances
+          return []
+        end
+        raise_error(parsed_response)
+
+        parsed_response['instances'].map do |instance|
+          ActualLRP.new(instance, parsed_response['process_guid'])
+        end
       end
     end
 
@@ -59,11 +63,41 @@ module OPI
 
     private
 
-    def handle_error(response_body)
-      error = response_body['error']
-      return unless error
+    def process_has_no_desired_instances?(process)
+      process.stopped? || process.instances == 0
+    end
 
-      raise CloudController::Errors::NoRunningInstances.new('No running instances')
+    def instances_path(process)
+      "/apps/#{process.guid}/#{process.version}/instances"
+    end
+
+    def exponential_backoff_from_500ms
+      lambda { |try| 2**(try - 2) }
+    end
+
+    def log_method
+      lambda do |retries, exception|
+        if retries.zero?
+          logger.error("Failed to fetch instances after #{LRP_INSTANCES_RETRIES} retries, giving up. exception: #{exception}")
+        else
+          logger.info("Failed fetching lrp instances, retrying. exception: #{exception}")
+        end
+      end
+    end
+
+    def raise_error(parsed_response)
+      raise Error.new(parsed_response['error']) if parsed_response['error']
+    end
+
+    def raise_non_404_error(parsed_response)
+      error = parsed_response['error']
+      if !error.blank? && !error.include?('not found')
+        raise NotRunningProcessError.new("expected no instances for stopped process: #{error}")
+      end
+    end
+
+    def logger
+      Steno.logger('opi.instances_client')
     end
   end
 end
