@@ -693,8 +693,15 @@ RSpec.describe 'V3 service instances' do
     context 'when the instance is user-provided' do
       it 'responds with 404' do
         upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space)
+
         get "/v3/service_instances/#{upsi.guid}/parameters", nil, admin_headers
-        expect(last_response).to have_status_code(404)
+
+        expect(last_response).to have_status_code(400)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'This service does not support fetching service instance parameters.',
+          'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
+          'code' => 120004,
+        }))
       end
     end
   end

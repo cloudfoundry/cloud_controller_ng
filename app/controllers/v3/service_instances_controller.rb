@@ -200,7 +200,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def parameters
-    service_instance = ManagedServiceInstance.first(guid: hashed_params[:guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_read_space?(service_instance.space)
 
