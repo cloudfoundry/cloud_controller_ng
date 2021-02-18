@@ -1733,49 +1733,53 @@ the app will be required for the desired state changes to become the actual stat
 
 <h4 id="endpoints-that-will-affect-runtime">Endpoints that will affect runtime</h4>
 
-<p>The following endpoints will immediately take effect without needing to <a href="#restart-an-app">restart the app</a></p>
+<p>The following endpoints will immediately impact the runtime of the app, and the desired changes will take effect without needing to <a href="#restart-an-app">restart the app</a>.</p>
 
 <table><thead>
 <tr>
 <th>Endpoint</th>
-<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td><a href="#get-ssh-enabled-for-an-app"><code class="prettyprint">PATCH /v3/spaces/:guid/features/ssh</code></a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code></a></td>
-<td>Only when exclusively updating the instances field</td>
-</tr>
-<tr>
-<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code></a></td>
-<td>Only when exclusively updating the instances field</td>
 </tr>
 <tr>
 <td><a href="#remove-destination-for-a-route"><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></a></td>
-<td></td>
 </tr>
 </tbody></table>
 
-<p>The following endpoints will take effect only when the specified field is not included in the request.</p>
-
-<p>If the field is specified, the running processes&rsquo;s state will not change in any way until the app is restarted.</p>
+<p>The following endpoints will immediately impact runtime and take effect when <strong>only</strong> the <code class="prettyprint">instances</code> field is updated. If any other fields are updated, the app will need to be restarted in order for any desired changes to take effect, including instance count changes.</p>
 
 <table><thead>
 <tr>
 <th>Endpoint</th>
-<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code></a></td>
+</tr>
+<tr>
+<td><a href="#scale-a-process"><code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code></a></td>
+</tr>
+</tbody></table>
+
+<p>The following endpoints will immediately impact runtime and the the desired changes will take effect if the specified fields are <strong>not</strong> included in the request.</p>
+
+<p>If the field is specified, the app will need to be restarted in order for any desired changes to take effect.</p>
+
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Changes requiring a restart</th>
 </tr>
 </thead><tbody>
 <tr>
 <td><a href="#insert-destinations-for-a-route"><code class="prettyprint">POST /v3/routes/:guid/destinations</code></a></td>
-<td>When not adding a destination with a port</td>
+<td>Adding a destination with a port</td>
 </tr>
 <tr>
 <td><a href="#replace-all-destinations-for-a-route"><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></a></td>
-<td>When not replacing the port field <br/> <br/>  <em>Note: If the port is specified, this endpoint will unmap any route not listed in the body but will not map any of the new routes in the request body. For this reason we caution against using the endpoint for most circumstances. A combination of <a href="#insert-destinations-for-a-route">adding ports</a> and <a href="#remove-destination-for-a-route">removing ports</a> will generally suit your needs better.</em></td>
+<td>Replacing the port field <br/> <br/>  <em>Note: If the port is specified, this endpoint will unmap any route not listed in the body but will not map any of the new routes in the request body. For this reason we caution against using the endpoint in most circumstances. A combination of <a href="#insert-destinations-for-a-route">adding ports</a> and <a href="#remove-destination-for-a-route">removing ports</a> will better fit most use cases.</em></td>
 </tr>
 </tbody></table>
 
@@ -23280,8 +23284,7 @@ This endpoint is not available for managed service instances.</p>
 
 <p>Queries the Service Broker for the parameters associated with this service instance.
 The broker catalog must have enabled the <code class="prettyprint">instances_retrievable</code> feature for the Service Offering.
-Check the <a href="#the-service-offering-object">Service Offering object</a> for the value of this feature flag.
-This endpoint is not available for User-Provided Service Instances.</p>
+Check the <a href="#the-service-offering-object">Service Offering object</a> for the value of this feature flag.</p>
 
 <h4 id="definition">Definition</h4>
 
