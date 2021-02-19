@@ -34,6 +34,16 @@ module VCAP::CloudController
           expect(job.queue).to eq(Jobs::Queues.generic)
           expect(job.guid).not_to be_nil
         end
+
+        it 'first deletes the database record and afterwards the blob' do
+          expect(buildpack).to receive(:destroy).ordered
+          expect(Jobs::Runtime::BlobstoreDelete).to receive(:new).ordered
+          enqueue_job_dbl = double("Jobs::Enqueuer")
+          expect(Jobs::Enqueuer).to receive(:new).and_return(enqueue_job_dbl).ordered
+          expect(enqueue_job_dbl).to receive(:enqueue).ordered
+
+          buildpack_delete.delete([buildpack])
+        end
       end
 
       context 'when the buildpack has associated metadata' do
