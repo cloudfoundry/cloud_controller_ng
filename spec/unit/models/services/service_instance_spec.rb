@@ -44,8 +44,8 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      context 'when the name is longer than 50 characters' do
-        let(:very_long_name) { 's' * 51 }
+      context 'when the name is longer than 255 characters' do
+        let(:very_long_name) { 's' * 256 }
         it 'refuses to create this service instance' do
           service_instance_attrs[:name] = very_long_name
           expect { service_instance }.to raise_error Sequel::ValidationFailed
