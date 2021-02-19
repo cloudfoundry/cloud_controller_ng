@@ -883,10 +883,10 @@ module VCAP::CloudController
           end
         end
 
-        context 'creating a service instance with a name over 50 characters' do
-          let(:very_long_name) { 's' * 51 }
+        context 'creating a service instance with a name over 255 characters' do
+          let(:very_long_name) { 's' * 256 }
 
-          it 'returns an error if the service instance name is over 50 characters' do
+          it 'returns an error if the service instance name is over 255 characters' do
             req = MultiJson.dump(
               name: very_long_name,
               space_guid: space.guid,
@@ -1770,7 +1770,7 @@ module VCAP::CloudController
 
           context 'when the updated service instance name is too long' do
             it 'fails and returns service instance name too long message correctly' do
-              new_long_instance_name = 'a' * 51
+              new_long_instance_name = 'a' * 256
               put "/v2/service_instances/#{service_instance.guid}",
                 MultiJson.dump({ name: new_long_instance_name })
 
@@ -5256,7 +5256,7 @@ module VCAP::CloudController
 
       it 'returns service plan name too long message correctly' do
         service_instance_params = {
-          name: 'n' * 51,
+          name: 'n' * 256,
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }

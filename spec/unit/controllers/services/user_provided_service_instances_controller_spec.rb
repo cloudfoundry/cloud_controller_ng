@@ -354,10 +354,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'creating a service instance with a name over 50 characters' do
-        let(:very_long_name) { 's' * 51 }
+      context 'creating a service instance with a name over 255 characters' do
+        let(:very_long_name) { 's' * 256 }
 
-        it 'returns an error if the service instance name is over 50 characters' do
+        it 'returns an error if the service instance name is over 255 characters' do
           post '/v2/user_provided_service_instances', {
             name: very_long_name,
             space_guid: space.guid,

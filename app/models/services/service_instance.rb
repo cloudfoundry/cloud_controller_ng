@@ -115,7 +115,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :space
       validates_unique :name, where: name_clashes
-      validates_max_length 50, :name
+      validates_max_length 255, :name
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
       validate_tags_length
     end
