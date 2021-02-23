@@ -20,16 +20,26 @@ module VCAP::CloudController
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         desired_lrp = bbs_instances_client.desired_lrp_instance(process)
 
-        stats = envelopes(desired_lrp, process).
-                map { |e|
-                  [
-                    e.containerMetric.instanceIndex,
-                    converted_container_metrics(e.containerMetric, formatted_current_time),
-                  ]
-                }.to_h
+        log_cache_data = envelopes(desired_lrp, process)
+        stats = log_cache_data.
+                map.to_h { |e|
+          [
+            e.containerMetric.instanceIndex,
+            converted_container_metrics(e.containerMetric, formatted_current_time),
+          ]
+        }
+
+        quota_stats = log_cache_data.
+                      to_h { |e|
+                        [
+                          e.containerMetric.instanceIndex,
+                          e.containerMetric,
+                        ]
+                      }
 
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
-          next unless actual_lrp.actual_lrp_key.index < process.instances
+          index = actual_lrp.actual_lrp_key.index
+          next unless index < process.instances
 
           info = {
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
@@ -41,10 +51,10 @@ module VCAP::CloudController
               port:       get_default_port(actual_lrp.actual_lrp_net_info),
               net_info:   actual_lrp.actual_lrp_net_info.to_h,
               uptime:     nanoseconds_to_seconds(current_time * 1e9 - actual_lrp.since),
-              mem_quota:  process[:memory] * 1024 * 1024,
-              disk_quota: process[:disk_quota] * 1024 * 1024,
+              mem_quota:  quota_stats[index]&.memoryBytesQuota,
+              disk_quota: quota_stats[index]&.diskBytesQuota,
               fds_quota:  process.file_descriptors,
-              usage:      stats[actual_lrp.actual_lrp_key.index] || {
+              usage:      stats[index] || {
                 time: formatted_current_time,
                 cpu:  0,
                 mem:  0,

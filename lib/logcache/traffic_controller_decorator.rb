@@ -91,6 +91,12 @@ module Logcache
         if e.gauge.metrics.has_key?('disk')
           tc_envelope.containerMetric.diskBytes = e.gauge.metrics['disk'].value
         end
+        if e.gauge.metrics.has_key?('disk_quota')
+          tc_envelope.containerMetric.diskBytesQuota = e.gauge.metrics['disk_quota'].value
+        end
+        if e.gauge.metrics.has_key?('memory_quota')
+          tc_envelope.containerMetric.memoryBytesQuota = e.gauge.metrics['memory_quota'].value
+        end
         # rubocop:enable Style/PreferredHashMethods
 
         tags.merge!(e.tags.to_h)

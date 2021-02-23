@@ -213,6 +213,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
               'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
               'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
               'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+              'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
+              'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
             }),
             instance_id: '1'
           )]
@@ -225,6 +227,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
         expect(subject.first.containerMetric.memoryBytes).to eq(11)
         expect(subject.first.containerMetric.diskBytes).to eq(12)
+        expect(subject.first.containerMetric.diskBytesQuota).to eq(24)
+        expect(subject.first.containerMetric.memoryBytesQuota).to eq(25)
       end
     end
 
@@ -261,6 +265,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
+                 'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
               }),
               instance_id: '1',
               tags: {
@@ -274,7 +280,9 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
-              }),
+                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 34),
+                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 35),
+             }),
               instance_id: '2',
               tags: {
                 'source_id' => process.app.guid,
@@ -287,7 +295,9 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
-              }),
+                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 44),
+                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 45),
+            }),
               instance_id: '3',
               tags: {
                 'source_id' => process.app.guid,
@@ -305,6 +315,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
         expect(subject.first.containerMetric.memoryBytes).to eq(11)
         expect(subject.first.containerMetric.diskBytes).to eq(12)
+        expect(subject.first.containerMetric.diskBytesQuota).to eq(24)
+        expect(subject.first.containerMetric.memoryBytesQuota).to eq(25)
 
         expect(subject.first.tags[0].key).to eq('source_id')
         expect(subject.first.tags[0].value).to eq(process.app.guid)
@@ -316,6 +328,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(subject.second.containerMetric.cpuPercentage).to eq(20)
         expect(subject.second.containerMetric.memoryBytes).to eq(21)
         expect(subject.second.containerMetric.diskBytes).to eq(22)
+        expect(subject.second.containerMetric.diskBytesQuota).to eq(34)
+        expect(subject.second.containerMetric.memoryBytesQuota).to eq(35)
 
         cm = subject[2].containerMetric
         expect(cm.applicationId).to eq(process_guid)
@@ -323,6 +337,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(cm.cpuPercentage).to eq(30)
         expect(cm.memoryBytes).to eq(31)
         expect(cm.diskBytes).to eq(32)
+        expect(cm.diskBytesQuota).to eq(44)
+        expect(cm.memoryBytesQuota).to eq(45)
       end
     end
 

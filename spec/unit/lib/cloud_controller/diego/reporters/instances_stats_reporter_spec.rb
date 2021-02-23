@@ -71,6 +71,8 @@ module VCAP::CloudController
                 cpuPercentage: 3.92,
                 memoryBytes:   564,
                 diskBytes:     5000,
+                memoryBytesQuota:   1234,
+                diskBytesQuota:     10234,
               ),
               tags: [::TrafficController::Models::Envelope::TagsEntry.new(key: 'process_id', value: process.guid)],
             ),
@@ -89,8 +91,8 @@ module VCAP::CloudController
                 port:       2222,
                 net_info:   lrp_1_net_info.to_h,
                 uptime:     two_days_in_seconds,
-                mem_quota:  process.memory * 1024 * 1024,
-                disk_quota: process.disk_quota * 1024 * 1024,
+                mem_quota:  1234,
+                disk_quota: 10234,
                 fds_quota:  process.file_descriptors,
                 usage:      {
                   time: formatted_current_time,
@@ -170,6 +172,8 @@ module VCAP::CloudController
                   cpuPercentage: 3.92,
                   memoryBytes:   564,
                   diskBytes:     5000,
+                  memoryBytesQuota:   1234,
+                  diskBytesQuota:     10234,
                 ),
               ),
             ]
