@@ -9,11 +9,13 @@ module VCAP::CloudController::Metrics
     describe '#start_request' do
       before do
         allow(statsd_client).to receive(:increment)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'increments outstanding requests for statsd' do
         request_metrics.start_request
 
+        expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', 1)
         expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
       end
     end
@@ -24,6 +26,7 @@ module VCAP::CloudController::Metrics
 
       before do
         allow(statsd_client).to receive(:batch).and_yield(batch)
+        allow(statsd_client).to receive(:gauge)
         allow(batch).to receive(:increment)
         allow(batch).to receive(:decrement)
       end
@@ -31,6 +34,7 @@ module VCAP::CloudController::Metrics
       it 'increments completed, decrements outstanding, increments status for statsd' do
         request_metrics.complete_request(status)
 
+        expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', -1)
         expect(batch).to have_received(:decrement).with('cc.requests.outstanding')
         expect(batch).to have_received(:increment).with('cc.requests.completed')
         expect(batch).to have_received(:increment).with('cc.http_status.2XX')
