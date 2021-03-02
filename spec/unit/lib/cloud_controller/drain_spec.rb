@@ -67,6 +67,20 @@ module VCAP::CloudController
           expect(log).to match(/\w+ not running/)
         end
       end
+
+      it 'times out after 10 * 3s = 30s (default)' do
+        allow(File).to receive(:exist?).with(pid_path).and_return(true)
+        expect(drain).to receive(:sleep).with(3).exactly(10).times
+
+        drain.shutdown_nginx(pid_path)
+      end
+
+      it 'times out after 20 * 3s = 60s if timeout parameter is set to 60' do
+        allow(File).to receive(:exist?).with(pid_path).and_return(true)
+        expect(drain).to receive(:sleep).with(3).exactly(20).times
+
+        drain.shutdown_nginx(pid_path, 60)
+      end
     end
 
     describe '#shutdown_cc' do
