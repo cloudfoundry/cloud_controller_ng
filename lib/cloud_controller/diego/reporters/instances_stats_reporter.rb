@@ -22,20 +22,20 @@ module VCAP::CloudController
 
         log_cache_data = envelopes(desired_lrp, process)
         stats = log_cache_data.
-                map.to_h { |e|
+                map { |e|
           [
             e.containerMetric.instanceIndex,
             converted_container_metrics(e.containerMetric, formatted_current_time),
           ]
-        }
+        }.to_h
 
         quota_stats = log_cache_data.
-                      to_h { |e|
+                      map { |e|
                         [
                           e.containerMetric.instanceIndex,
                           e.containerMetric,
                         ]
-                      }
+                      }.to_h
 
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           index = actual_lrp.actual_lrp_key.index

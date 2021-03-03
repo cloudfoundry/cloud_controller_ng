@@ -90,7 +90,7 @@ module Logcache
           it 'returns an empty envelope' do
             expect(
               client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-            ).to be_a(Loggregator::V2::EnvelopeBatch)
+            ).to be_a(Logcache::EmptyEnvelope)
           end
 
           # TODO: fix calling the function under test separately
