@@ -12,8 +12,8 @@ module VCAP
         log_info("Drain invoked with #{args.map(&:inspect).join(' ')}")
       end
 
-      def shutdown_nginx(pid_path)
-        nginx_timeout = 30
+      def shutdown_nginx(pid_path, timeout=30)
+        nginx_timeout = timeout
         nginx_interval = 3
         send_signal(pid_path, 'QUIT', 'Nginx') # request nginx graceful shutdown
         wait_for_pid(pid_path, nginx_timeout, nginx_interval) # wait until nginx is shut down
