@@ -56,7 +56,7 @@ module Logcache
       if @temporary_ignore_server_unavailable_errors && e.is_a?(GRPC::BadStatus) && e.to_status.code == 14
         logger.warn("rescuing GRPC Unavailable error: #{e.to_status}")
 
-        return EmptyEnvelope.new(source_guid)
+        return EmptyEnvelope.new(source_guid).envelopes
       end
 
       raise e
