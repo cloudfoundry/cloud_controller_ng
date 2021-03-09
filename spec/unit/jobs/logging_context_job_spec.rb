@@ -151,6 +151,25 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the error is a compound error' do
+          let(:error) do
+            CloudController::Errors::CompoundError.new([
+              CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'message')
+            ])
+          end
+
+          before do
+            allow(ErrorPresenter).to receive(:new).and_call_original
+          end
+
+          it 'renders the exception in V3 error format' do
+            expect(YAML).to receive(:dump).with(hash_including({
+              'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
+            }))
+            logging_context_job.error(job, error)
+          end
+        end
+
         describe 'job priority' do
           context 'when the job priority starts at 0' do
             before do
