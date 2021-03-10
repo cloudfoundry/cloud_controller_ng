@@ -39,11 +39,18 @@ module VCAP::CloudController
             },
             schemas: {
               service_instance: {
-                create: parse_schema(service_plan.create_instance_schema),
-                update: parse_schema(service_plan.update_instance_schema)
+                create:
+                  {
+                    parameters: parse_schema(service_plan.create_instance_schema)
+                  },
+                update: {
+                  parameters: parse_schema(service_plan.update_instance_schema)
+                }
               },
               service_binding: {
-                create: parse_schema(service_plan.create_binding_schema)
+                create: {
+                  parameters: parse_schema(service_plan.create_binding_schema)
+                }
               }
             },
             relationships: relationships,
@@ -90,9 +97,9 @@ module VCAP::CloudController
         end
 
         def parse_schema(schema)
-          return { parameters: {} } unless schema
+          return {} unless schema
 
-          { parameters: JSON.parse(schema) }
+          JSON.parse(schema)
         rescue JSON::ParserError
           {}
         end
