@@ -885,21 +885,7 @@ RSpec.describe 'V3 service plans' do
           plan_updateable: match(boolean)
         }
       },
-      schemas: {
-        service_instance: {
-          create: {
-            parameters: {}
-          },
-          update: {
-            parameters: {}
-          }
-        },
-        service_binding: {
-          create: {
-            parameters: {}
-          }
-        }
-      },
+      schemas: schemas,
       maintenance_info: maintenance_info,
       relationships: {
         service_offering: {
@@ -931,6 +917,24 @@ RSpec.describe 'V3 service plans' do
     end
 
     plan
+  end
+
+  def schemas
+    {
+      service_instance: {
+        create: {
+          parameters: {}
+        },
+        update: {
+          parameters: {}
+        }
+      },
+      service_binding: {
+        create: {
+          parameters: {}
+        }
+      }
+    }
   end
 
   def check_filtered_plans(*plans)
