@@ -887,11 +887,17 @@ RSpec.describe 'V3 service plans' do
       },
       schemas: {
         service_instance: {
-          create: {},
-          update: {}
+          create: {
+            parameters: {}
+          },
+          update: {
+            parameters: {}
+          }
         },
         service_binding: {
-          create: {}
+          create: {
+            parameters: {}
+          }
         }
       },
       maintenance_info: maintenance_info,

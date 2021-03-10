@@ -59,11 +59,17 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         },
         schemas: {
           service_instance: {
-            create: {},
-            update: {}
+            create: {
+              parameters: {}
+            },
+            update: {
+              parameters: {}
+            }
           },
           service_binding: {
-            create: {}
+            create: {
+              parameters: {}
+            }
           }
         },
         metadata: {
@@ -380,8 +386,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
         it 'presents the service plan create service_instance with the schema' do
           expect(result[:schemas][:service_instance][:create][:parameters]).to eq(parsed_schema)
-          expect(result[:schemas][:service_instance][:update]).to be_empty
-          expect(result[:schemas][:service_binding][:create]).to be_empty
+          expect(result[:schemas][:service_instance][:update][:parameters]).to be_empty
+          expect(result[:schemas][:service_binding][:create][:parameters]).to be_empty
         end
       end
 
@@ -392,8 +398,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
         it 'presents the service plan update service_instance with the schema' do
           expect(result[:schemas][:service_instance][:update][:parameters]).to eq(parsed_schema)
-          expect(result[:schemas][:service_instance][:create]).to be_empty
-          expect(result[:schemas][:service_binding][:create]).to be_empty
+          expect(result[:schemas][:service_instance][:create][:parameters]).to be_empty
+          expect(result[:schemas][:service_binding][:create][:parameters]).to be_empty
         end
       end
 
@@ -403,8 +409,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         end
 
         it 'presents the service plan update service_instance with the schema' do
-          expect(result[:schemas][:service_instance][:update]).to be_empty
-          expect(result[:schemas][:service_instance][:create]).to be_empty
+          expect(result[:schemas][:service_instance][:update][:parameters]).to be_empty
+          expect(result[:schemas][:service_instance][:create][:parameters]).to be_empty
           expect(result[:schemas][:service_binding][:create][:parameters]).to eq(parsed_schema)
         end
       end
