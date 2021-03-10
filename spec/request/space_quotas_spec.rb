@@ -717,6 +717,18 @@ module VCAP::CloudController
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
+      context 'when applying a space quota with fewer resources than what is currently running on the space' do
+        let(:smol_space_quota) {  VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'smol-space-quota-guid', organization: org, total_services: 1) }
+        let!(:service_instance_1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+        let!(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+        it 'returns a 422 with a helpful message' do
+          post "/v3/space_quotas/#{smol_space_quota.guid}/relationships/spaces", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('The quota contains insufficient resources for the current amount of service instances')
+        end
+      end
+
       context 'when a space does not exist' do
         let(:params) do
           {
