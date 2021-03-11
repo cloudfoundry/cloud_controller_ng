@@ -41,15 +41,17 @@ module VCAP::CloudController
         expect(Process).to have_received(:kill).with('QUIT', pid)
       end
 
-      it 'sleeps while it waits for the pid file to be deleted' do
-        expect(File).to receive(:exist?).with(pid_path).and_return(true, true, false)
+      it 'sleeps while it waits for the process to stop' do
+        getpgid_returns = [1, 1, nil, nil]
+        allow(Process).to receive(:getpgid).with(pid) { getpgid_returns.shift || raise(Errno::ESRCH) }
         expect(drain).to receive(:sleep).exactly(2).times
 
         drain.shutdown_nginx(pid_path)
       end
 
-      it 'logs while it waits for the pid file to be deleted' do
-        expect(File).to receive(:exist?).with(pid_path).and_return(true, true, false)
+      it 'logs while it waits for the process to stop' do
+        getpgid_returns = [1, 1, nil, nil]
+        allow(Process).to receive(:getpgid).with(pid) { getpgid_returns.shift || raise(Errno::ESRCH) }
 
         drain.shutdown_nginx(pid_path)
 
@@ -59,25 +61,28 @@ module VCAP::CloudController
       end
 
       it 'logs that the process has stopped running when its pid file is deleted' do
-        expect(File).to receive(:exist?).with(pid_path).and_return(true, false)
+        getpgid_returns = [1, nil, nil]
+        allow(Process).to receive(:getpgid).with(pid) { getpgid_returns.shift || raise(Errno::ESRCH) }
 
         drain.shutdown_nginx(pid_path)
 
         log_contents do |log|
-          expect(log).to match(/\w+ not running/)
+          expect(log).to match(/\w+ with pid '#{pid}' not running/)
         end
       end
 
-      it 'times out after 10 * 3s = 30s (default)' do
-        allow(File).to receive(:exist?).with(pid_path).and_return(true)
-        expect(drain).to receive(:sleep).with(3).exactly(10).times
+      it 'times out after 30 * 1s = 30s (default)' do
+        allow(Process).to receive(:getpgid).with(pid).and_return(1)
+        expect(drain).to receive(:sleep).with(1).exactly(30).times
+        expect(Process).to receive(:kill).with('TERM', pid)
 
         drain.shutdown_nginx(pid_path)
       end
 
-      it 'times out after 20 * 3s = 60s if timeout parameter is set to 60' do
-        allow(File).to receive(:exist?).with(pid_path).and_return(true)
-        expect(drain).to receive(:sleep).with(3).exactly(20).times
+      it 'times out after 60 * 1s = 60s if timeout parameter is set to 60' do
+        allow(Process).to receive(:getpgid).with(pid).and_return(1)
+        expect(drain).to receive(:sleep).with(1).exactly(60).times
+        expect(Process).to receive(:kill).with('TERM', pid)
 
         drain.shutdown_nginx(pid_path, 60)
       end
