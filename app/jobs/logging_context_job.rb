@@ -21,7 +21,11 @@ module VCAP::CloudController
       end
 
       def error(job, e)
-        error_presenter = ErrorPresenter.new(e)
+        error_presenter = if e.instance_of?(CloudController::Errors::CompoundError)
+                            ErrorPresenter.new(e, false, V3ErrorHasher.new(e))
+                          else
+                            ErrorPresenter.new(e)
+                          end
         log_error(error_presenter, job)
         save_error(error_presenter, job)
         super(job, e)
