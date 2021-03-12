@@ -641,24 +641,20 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     context 'opi is enabled' do
+
       before do
         TestConfig.override({
           opi: {
             enabled: true,
             url: 'http://custom-opi-url.service.cf.internal'
           }
-        })
+        }.merge(generate_test_kubeconfig))
         allow(::Diego::Client).to receive(:new)
       end
 
       it 'uses the opi apps client' do
         expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-        expect(::OPI::Client).to receive(:new)
-        locator.bbs_apps_client
-      end
-
-      it 'uses the configured opi url' do
-        expect(::OPI::Client).to receive(:new).with(locator.config)
+        expect(::OPI::Client).to receive(:new).with(locator.config, instance_of(Kubernetes::EiriniClient))
         locator.bbs_apps_client
       end
     end
@@ -753,15 +749,7 @@ RSpec.describe CloudController::DependencyLocator do
       token_file.write('token')
       token_file.close
 
-      TestConfig.override({
-        kubernetes: {
-          host_url: 'https://my.kubernetes.io',
-          service_account: {
-            token_file: token_file.path,
-          },
-          ca_file: ca_file.path
-        }
-      })
+      TestConfig.override(generate_test_kubeconfig)
     end
 
     it 'creates a k8s client from config' do
@@ -793,4 +781,24 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.k8s_api_client).not_to eq(locator.k8s_api_client)
     end
   end
+end
+
+def generate_test_kubeconfig
+  ca_file = Tempfile.new('k8s_node_ca.crt')
+  ca_file.write('my crt')
+  ca_file.close
+
+  token_file = Tempfile.new('token.token')
+  token_file.write('token')
+  token_file.close
+
+  {
+    kubernetes: {
+      host_url: 'https://my.kubernetes.io',
+      service_account: {
+        token_file: token_file.path,
+      },
+      ca_file: ca_file.path
+    },
+  }
 end

@@ -11,10 +11,15 @@ module OPI
   PROMETHEUS_PREFIX = 'prometheus.io'.freeze
 
   class Client < BaseClient
+    def initialize(config, eirini_kube_client)
+      super(config)
+      @eirini_kube_client = eirini_kube_client
+    end
+
     def desire_app(process)
       process_guid = process_guid(process)
       path = "/apps/#{process_guid}"
-      client.put(path, body: desire_body(process))
+      @eirini_kube_client.create_lrp(desire_body(process))
     end
 
     def fetch_scheduling_infos
@@ -78,28 +83,10 @@ module OPI
                     []
                   end
         {
-          docker_lifecycle: {
-            command: command,
-            image: @process.desired_droplet.docker_receipt_image,
-            registry_username: @process.desired_droplet.docker_receipt_username,
-            registry_password: @process.desired_droplet.docker_receipt_password,
-          }
-        }
-      end
-    end
-
-    class BuildpackLifecycle
-      def initialize(process)
-        @process = process
-      end
-
-      def to_hash
-        {
-          buildpack_lifecycle: {
-            start_command: @process.specified_or_detected_command,
-            droplet_hash: @process.desired_droplet.droplet_hash,
-            droplet_guid: @process.desired_droplet.guid,
-          }
+          command: command,
+          image: @process.desired_droplet.docker_receipt_image,
+          registry_username: @process.desired_droplet.docker_receipt_username,
+          registry_password: @process.desired_droplet.docker_receipt_password,
         }
       end
     end
@@ -118,10 +105,8 @@ module OPI
                     []
                   end
         {
-          docker_lifecycle: {
-            command: command,
-            image: @process.desired_droplet.docker_receipt_image,
-          }
+          command: command,
+          image: @process.desired_droplet.docker_receipt_image,
         }
       end
     end
@@ -132,8 +117,6 @@ module OPI
         DockerLifecycle.new(process)
       when VCAP::CloudController::Lifecycles::KPACK
         KpackLifecycle.new(process)
-      when VCAP::CloudController::Lifecycles::BUILDPACK
-        BuildpackLifecycle.new(process)
       else
         raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")
       end
@@ -142,37 +125,51 @@ module OPI
     def desire_body(process)
       timeout_ms = (process.health_check_timeout || 0) * 1000
       cpu_weight = VCAP::CloudController::Diego::TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate
-      lifecycle = lifecycle_for(process)
-      body = {
-        guid: process.guid,
-        version: process.version,
-        process_guid: process_guid(process),
-        process_type: process.type,
-        app_guid: process.app.guid,
-        app_name: process.app.name,
-        space_guid: process.space.guid,
-        space_name: process.space.name,
-        organization_guid: process.organization.guid,
-        organization_name: process.organization.name,
-        environment: hash_values_to_s(environment_variables(process)),
-        egress_rules: VCAP::CloudController::Diego::EgressRules.new.running_protobuf_rules(process),
-        placement_tags: Array(VCAP::CloudController::IsolationSegmentSelector.for_space(process.space)),
-        instances: process.desired_instances,
-        memory_mb: process.memory,
-        disk_mb: process.disk_quota,
-        cpu_weight: cpu_weight,
-        health_check_type: process.health_check_type,
-        health_check_http_endpoint: process.health_check_http_endpoint,
-        health_check_timeout_ms: timeout_ms,
-        start_timeout_ms: health_check_timeout_in_seconds(process) * 1000,
-        last_updated: process.updated_at.to_f.to_s,
-        volume_mounts: generate_volume_mounts(process),
-        ports: process.open_ports,
-        routes: routes(process),
-        lifecycle: lifecycle.to_hash,
-        user_defined_annotations: filter_annotations(process.app.annotations)
-      }
-      MultiJson.dump(body)
+      lifecycle = lifecycle_for(process).to_hash
+      lrp = Kubeclient::Resource.new({
+        metadata: {
+          name: process.app.name,
+          namespace: @config.kubernetes_workloads_namespace,
+        },
+        spec: {
+          GUID: process.guid,
+          version: process.version,
+          processType: process.type,
+          appGUID: process.app.guid,
+          appName: process.app.name,
+          spaceGUID: process.space.guid,
+          spaceName: process.space.name,
+          orgGUID: process.organization.guid,
+          orgName: process.organization.name,
+          command: lifecycle[:command],
+          image: lifecycle[:image],
+          env: hash_values_to_s(environment_variables(process)),
+          instances: process.desired_instances,
+          memoryMB: process.memory,
+          cpuWeight: cpu_weight,
+          diskMB: process.disk_quota,
+          health: {
+            type: process.health_check_type,
+            timeoutMs: timeout_ms,
+          },
+          lastUpdated: process.updated_at.to_f.to_s,
+          volumeMounts: generate_volume_mounts(process),
+          ports: process.open_ports,
+          appRoutes: routes(process),
+          userDefinedAnnotations: filter_annotations(process.app.annotations)
+        }
+      })
+      lrp.spec.health.port = process.open_ports.first unless process.open_ports.empty?
+      lrp.spec.health.endpoint = process.health_check_http_endpoint unless process.health_check_http_endpoint.nil?
+
+      if !(lifecycle[:registry_username].to_s.empty? || lifecycle[:registry_password].to_s.empty?)
+        lrp.spec.privateRegistry = {
+          username: lifecycle[:registry_username],
+          password: lifecycle[:registry_password],
+        }
+      end
+
+      lrp
     end
 
     def filter_annotations(annotations)
@@ -194,7 +191,7 @@ module OPI
         version: process.version,
         update: {
           instances: process.desired_instances,
-          routes: routes(process),
+          routes: {"cf-router": routes(process)},
           annotation: process.updated_at.to_f.to_s
         }
       }
@@ -203,14 +200,12 @@ module OPI
 
     def routes(process)
       routing_info = VCAP::CloudController::Diego::Protocol::RoutingInfo.new(process).routing_info
-      http_routes = (routing_info['http_routes'] || []).map do |i|
+      (routing_info['http_routes'] || []).map do |i|
         {
           hostname: i['hostname'],
           port: i['port']
         }
       end
-
-      { 'cf-router' => http_routes }
     end
 
     def environment_variables(process)
@@ -249,8 +244,8 @@ module OPI
       app_volume_mounts.each do |volume_mount|
         if volume_mount['device']['mount_config'].present? && volume_mount['device']['mount_config']['name'].present?
           proto_volume_mount = {
-            volume_id: volume_mount['device']['mount_config']['name'],
-            mount_dir: volume_mount['container_dir']
+            claimName: volume_mount['device']['mount_config']['name'],
+            mountPath: volume_mount['container_dir']
           }
           proto_volume_mounts.append(proto_volume_mount)
         end

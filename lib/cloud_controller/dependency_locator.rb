@@ -5,6 +5,7 @@ require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
 require 'kubernetes/api_client'
+require 'kubernetes/eirini_client'
 require 'kubernetes/route_resource_manager'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
@@ -408,6 +409,17 @@ module CloudController
       )
     end
 
+    def k8s_eirini_client
+      eirini_kube_client = Kubernetes::KubeClientBuilder.build(
+        api_group_url: "#{config.kubernetes_host_url}/apis/eirini.cloudfoundry.org",
+        version: 'v1',
+        service_account_token: config.kubernetes_service_account_token,
+        ca_crt: config.kubernetes_ca_cert,
+      )
+
+      Kubernetes::EiriniClient.new(eirini_kube_client: eirini_kube_client)
+    end
+
     def route_resource_manager
       Kubernetes::RouteResourceManager.new(k8s_api_client)
     end
@@ -449,7 +461,7 @@ module CloudController
     end
 
     def build_opi_apps_client
-      ::OPI::Client.new(config)
+      ::OPI::Client.new(config, k8s_eirini_client)
     end
 
     def build_bbs_apps_client
