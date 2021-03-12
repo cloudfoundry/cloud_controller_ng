@@ -23,7 +23,9 @@ module Kubernetes
       raise MalformedBlockError if block.arity != 1
 
       retry_on_conflict do
-        @client.update_image(block.call(@client.get_image(name, namespace)))
+        VCAP::CloudController::DropletModel.db.transaction do
+          @client.update_image(block.call(@client.get_image(name, namespace)))
+        end
       end
     end
 
@@ -40,7 +42,7 @@ module Kubernetes
     def retry_on_conflict
       # maybe exponential backoff would be nice
       Retryable.retryable(sleep: 0, tries: UPDATE_CONFLICT_RETRIES, on: ApiClient::ConflictError) do |retries, exception|
-        logger.error("Failed to resolve update conflicts after #{UPDATE_CONFLICT_RETRIES} retries: #{exception}") if retries.zero?
+        logger.error("Failed to resolve update conflicts after #{UPDATE_CONFLICT_RETRIES} retries: #{exception}") if retries == UPDATE_CONFLICT_RETRIES
         yield(retries, exception)
       end
     end
