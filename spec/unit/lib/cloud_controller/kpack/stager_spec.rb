@@ -357,6 +357,30 @@ module Kpack
           allow(client).to receive(:get_image).with(package.app.guid, 'namespace').and_return(existing_image)
         end
 
+        context 'when at least one attempt to update image resource fails', isolation: :truncation do
+          before do
+            allow_any_instance_of(VCAP::CloudController::DropletCreate).to receive(:create_kpack_droplet).with(build).and_call_original
+
+            update_call_count = 0
+            allow(client).to receive(:update_image) do
+              if update_call_count == 0
+                update_call_count += 1
+                # raise CloudController::Errors::ApiError
+                raise Kubernetes::ApiClient::ConflictError
+              end
+            end
+
+            # ensure build has no droplets associated with it to start (blueprint puts one on we think)
+            VCAP::CloudController::DropletModel.where(build: build).delete
+          end
+
+          it 'rolls back the droplet it made' do
+            subject.stage(staging_details)
+
+            expect(VCAP::CloudController::DropletModel.where(build: build).count).to eq(1)
+          end
+        end
+
         it 'updates the existing Image resource' do
           updated_image = Kubeclient::Resource.new(existing_image.to_hash)
           updated_image.metadata.labels[Kpack::Stager::BUILD_GUID_LABEL_KEY.to_sym] = build.guid
