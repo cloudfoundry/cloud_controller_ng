@@ -38,7 +38,7 @@ module VCAP::CloudController
           params        = { per_page: pagination_options.per_page }.merge(order_params).merge(filter_params)
 
           first_uri    = url_builder.build_url(path: @path, query: params.merge({ page: 1 }).to_query)
-          last_uri     = url_builder.build_url(path: @path, query: params.merge({ page: last_page }).to_query)
+          last_uri     = url_builer.build_url(path: @path, query: params.merge({ page: last_page }).to_query)
           next_uri     = url_builder.build_url(path: @path, query: params.merge({ page: next_page }).to_query)
           previous_uri = url_builder.build_url(path: @path, query: params.merge({ page: previous_page }).to_query)
 

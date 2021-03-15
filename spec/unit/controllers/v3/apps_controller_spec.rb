@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'spec_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
@@ -287,6 +288,167 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'ResourceNotFound'
         end
       end
+    end
+  end
+
+  describe '#full_summary' do
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      @num_services  = 2
+      @free_mem_size = 128
+
+      @shared_domain = VCAP::CloudController::SharedDomain.make
+      @shared_domain.save
+
+      @space = VCAP::CloudController::Space.make
+      @environment_json = { 'HELLO' => 'WORLD' }
+      @route1 = VCAP::CloudController::Route.make(space: @space)
+      @route2 = VCAP::CloudController::Route.make(space: @space)
+      @services = []
+
+      @process = VCAP::CloudController::ProcessModelFactory.make(
+        space:      @space,
+        production: false,
+        instances:  1,
+        memory:     @free_mem_size,
+        state:      'STARTED',
+        environment_json: @environment_json
+      )
+
+      @num_services.times do
+        instance                            = VCAP::CloudController::ManagedServiceInstance.make(space: @space)
+        instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
+          type:        'create',
+          state:       'in progress',
+          description: 'description goes here'
+        )
+        @services << instance
+        VCAP::CloudController::ServiceBinding.make(app: @process.app, service_instance: instance)
+      end
+
+      VCAP::CloudController::RouteMappingModel.make(app: @process.app, route: @route1, process_type: @process.type)
+      VCAP::CloudController::RouteMappingModel.make(app: @process.app, route: @route2, process_type: @process.type)
+
+      set_current_user_as_admin
+    end
+
+    before do
+      set_current_user(user)
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_secret_access(user, space: space)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+    end
+
+    it 'returns a 200 and the app' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      expect(response.status).to eq 200
+      expect(parsed_body['guid']).to eq(app_model.guid)
+    end
+
+    # these tests come from v2 app_summaries_controller_spec
+    it 'should contain the basic app attributes' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['guid']).to eq(@process.app.guid)
+      expect(parsed_body['environment_json']).to eq({ 'HELLO' => 'WORLD' })
+
+      parse(MultiJson.dump(@process.to_hash)).each do |k, v|
+        expect(v).to eql(parsed_body[k.to_s]), "value of field #{k} expected to eql #{v}"
+      end
+    end
+
+    it 'should return the app routes' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      expect(parsed_body['routes']).to eq([{
+        'guid'   => @route1.guid,
+        'host'   => @route1.host,
+        'port'   => @route1.port,
+        'path'   => @route1.path,
+        'domain' => {
+          'guid' => @route1.domain.guid,
+          'name' => @route1.domain.name
+        }
+      }, {
+        'guid'   => @route2.guid,
+        'host'   => @route2.host,
+        'port'   => @route2.port,
+        'path'   => @route2.path,
+        'domain' => {
+          'guid' => @route2.domain.guid,
+          'name' => @route2.domain.name }
+      }])
+    end
+
+    it 'should contain the running instances' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      expect(parsed_body['running_instances']).to eq(@process.instances)
+    end
+
+    it 'should contain list of both private domains and shared domains' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      domains = @process.space.organization.private_domains
+      expect(domains.count > 0).to eq(true)
+
+      private_domains = domains.collect do |domain|
+        { 'guid'                     => domain.guid,
+          'name'                     => domain.name,
+          'owning_organization_guid' =>
+        domain.owning_organization.guid
+        }
+      end
+
+      shared_domains = VCAP::CloudController::SharedDomain.all.collect do |domain|
+        { 'guid'              => domain.guid,
+          'name'              => domain.name,
+          'internal' => domain.internal,
+          'router_group_guid' => domain.router_group_guid,
+          'router_group_type' => domain.router_group_type,
+        }
+      end
+
+      expect(parsed_body['available_domains']).to match_array(private_domains + shared_domains)
+    end
+
+    it 'should return the correct info for services' do
+      get :full_summary, params: { guid: app_model.guid }
+
+      expect(parsed_body['services'].size).to eq(@num_services)
+      svc_resp = parsed_body['services'][0]
+      svc      = @services.find { |s| s.guid == svc_resp['guid'] }
+
+      expect(svc_resp).to include({
+        'guid'            => svc.guid,
+        'name'            => svc.name,
+        'bound_app_count' => 1,
+        'dashboard_url'   => svc.dashboard_url,
+        'service_plan'    => {
+          'guid'    => svc.service_plan.guid,
+          'name'    => svc.service_plan.name,
+          'maintenance_info' => {},
+          'service' => {
+            'guid'     => svc.service_plan.service.guid,
+            'label'    => svc.service_plan.service.label,
+            'provider' => svc.service_plan.service.provider,
+            'version'  => svc.service_plan.service.version,
+          }
+        }
+      })
+
+      expect(svc_resp['last_operation']).to include({
+        'type'        => 'create',
+        'state'       => 'in progress',
+        'description' => 'description goes here',
+      })
+
+      expect(svc_resp['last_operation']['updated_at']).to be
     end
   end
 

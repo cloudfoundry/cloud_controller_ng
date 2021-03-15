@@ -81,6 +81,39 @@ class AppsV3Controller < ApplicationController
     )
   end
 
+  def full_summary
+    message = AppShowMessage.from_params(query_params)
+
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
+    dataset = readable_route_dataset.eager(eager_loaded_associations).qualify
+    destinations_route_guids = RouteMappingModel.where(app_guid: app.guid).select(:route_guid)
+    routes = dataset.where(guid: destinations_route_guids)
+
+    app_info = {
+      'guid'              => process.app_guid,
+      'name'              => process.name,
+      'routes'            => process.routes.map(&:as_summary_json),
+      'running_instances' => instances_reporters.number_of_starting_and_running_instances_for_process(process),
+      'services'          => process.service_bindings.map { |service_binding| service_binding.service_instance.as_summary_json },
+      'available_domains' => (process.space.organization.private_domains + SharedDomain.all).map(&:as_summary_json)
+    }.merge(process.to_hash)
+
+    decorators = []
+    decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
+    decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
+
+    render status: :ok, json: Presenters::V3::AppFullSummaryPresenter.new(
+      app_info,
+      routes,
+      show_secrets: permission_queryer.can_read_secrets_in_space?(space.guid, org.guid),
+      decorators: decorators
+    )
+  end
+
   def create
     message = AppCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
