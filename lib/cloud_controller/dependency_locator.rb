@@ -31,6 +31,7 @@ require 'cloud_controller/packager/bits_service_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
+require 'cloud_controller/opi/apps_rest_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
 require 'cloud_controller/opi/task_client'
@@ -461,7 +462,12 @@ module CloudController
     end
 
     def build_opi_apps_client
-      ::OPI::Client.new(config, k8s_eirini_client)
+      opi_apps_client = ::OPI::Client.new(config)
+      if config.get(:opi, :experimental_enable_crds)
+        ::OPI::KubernetesClient.new(config, k8s_eirini_client, opi_apps_client)
+      else
+        opi_apps_client
+      end
     end
 
     def build_bbs_apps_client

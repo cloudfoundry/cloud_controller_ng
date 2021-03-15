@@ -654,8 +654,27 @@ RSpec.describe CloudController::DependencyLocator do
 
       it 'uses the opi apps client' do
         expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-        expect(::OPI::Client).to receive(:new).with(locator.config, instance_of(Kubernetes::EiriniClient))
+        expect(::OPI::Client).to receive(:new).with(locator.config)
+        expect(::OPI::KubernetesClient).to_not receive(:new)
         locator.bbs_apps_client
+      end
+
+      context 'experimental crds are enabled' do
+        before do
+          TestConfig.override({
+            opi: {
+              enabled: true,
+              experimental_enable_crds: true,
+              url: 'http://custom-opi-url.service.cf.internal'
+            }
+          }.merge(generate_test_kubeconfig))
+        end
+
+        it 'uses the opi kubernetes client' do
+          expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
+          expect(::OPI::KubernetesClient).to receive(:new).with(locator.config, instance_of(Kubernetes::EiriniClient), instance_of(::OPI::Client))
+          locator.bbs_apps_client
+        end
       end
     end
   end
