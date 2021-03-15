@@ -3,6 +3,7 @@ require 'models/helpers/process_types'
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     include Serializer
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     plugin :after_initialize
 
@@ -114,8 +115,10 @@ module VCAP::CloudController
     end
 
     def required_parameters
-      { app_guid: app_guid,
-        space_guid: space.guid
+      {
+        app_guid: app_guid,
+        space_guid: space.guid,
+        app_annotations: hashified_annotations(app.annotations)
       }
     end
 

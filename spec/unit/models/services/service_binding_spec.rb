@@ -364,8 +364,22 @@ module VCAP::CloudController
       it 'returns the required params' do
         expect(service_binding.required_parameters).to eq(
           app_guid: app.guid,
-          space_guid: app.space.guid
+          space_guid: app.space.guid,
+          app_annotations: {}
         )
+      end
+
+      describe 'when app annotations are set' do
+        let!(:annotation1) { AppAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: app.guid) }
+        let!(:annotation2) { AppAnnotationModel.make(key_name: 'prefix-here.org/foo', value: 'bar', resource_guid: app.guid) }
+
+        it 'returns the required params with app annotations' do
+          expect(service_binding.required_parameters).to eq(
+            app_guid: app.guid,
+            space_guid: app.space.guid,
+            app_annotations: { 'baz' => 'wow', 'prefix-here.org/foo' => 'bar' }
+          )
+        end
       end
     end
 
@@ -452,10 +466,10 @@ module VCAP::CloudController
       let(:binding) {
         ServiceBinding.new(
           service_instance: service_instance,
-          app:              app,
-          credentials:      {},
-          type:             'app',
-          name:             'foo',
+          app: app,
+          credentials: {},
+          type: 'app',
+          name: 'foo',
         )
       }
 
@@ -543,7 +557,7 @@ module VCAP::CloudController
               },
               endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
               route_services_url: 'http://route.example.com'
-          ))
+            ))
           }.not_to raise_error
         end
       end
