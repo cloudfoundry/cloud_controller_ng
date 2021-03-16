@@ -14601,12 +14601,12 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>mem_quota</strong></td>
 <td><em>integer</em></td>
-<td>The maximum memory the instance is allowed to use</td>
+<td>The current maximum memory allocated for the instance</td>
 </tr>
 <tr>
 <td><strong>disk_quota</strong></td>
 <td><em>integer</em></td>
-<td>The maximum disk the instance is allowed to use</td>
+<td>The current maximum disk allocated for the instance</td>
 </tr>
 <tr>
 <td><strong>fds_quota</strong></td>
@@ -32720,6 +32720,8 @@ an async create or delete <code class="prettyprint">key</code> service credentia
 <p>The user resource remains largely unchanged from the v2 API. On v2, <code class="prettyprint">GET /v2/users</code> was restricted to admins, and other users needed to use nested endpoints (<code class="prettyprint">GET /v2/organizations/:guid/user</code> and <code class="prettyprint">GET /v2/spaces/:guid/user</code>) to view user resources. On v3, <code class="prettyprint">GET /v3/users</code> is now available for all users, similar to other resources. Note that this does not change what user resources are visible.</p>
 
 <p>In V2, roles were modeled as associations between organization and space endpoints. In V3, roles have a dedicated resource: <code class="prettyprint">/v3/roles</code>. This has changed the manner in which roles are assigned. For example, in V2, to assign a user the <code class="prettyprint">org_manager</code> role, one would <code class="prettyprint">PUT /v2/organizations/:org_guid/managers/:user_id</code>. In V3, one would <code class="prettyprint">POST /v3/roles</code> with the role type and relationships to the user and organization.</p>
+
+<p>In the v2, when an Org Manager gives a person an Org or Space role, that person automatically receives Org User status in that org. This is no longer the case in the v3 API.</p>
 
 <p>Read more about <a href="#users">users</a> and <a href="#roles">roles</a>.</p>
 <h2 id="deprecated-endpoints">Deprecated Endpoints</h2>
