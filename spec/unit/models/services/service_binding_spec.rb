@@ -356,33 +356,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#required_parameters' do
-      let(:service_instance) { ManagedServiceInstance.make }
-      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
-      let(:app) { service_binding.app }
-
-      it 'returns the required params' do
-        expect(service_binding.required_parameters).to eq(
-          app_guid: app.guid,
-          space_guid: app.space.guid,
-          app_annotations: {}
-        )
-      end
-
-      describe 'when app annotations are set' do
-        let!(:annotation1) { AppAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: app.guid) }
-        let!(:annotation2) { AppAnnotationModel.make(key_name: 'prefix-here.org/foo', value: 'bar', resource_guid: app.guid) }
-
-        it 'returns the required params with app annotations' do
-          expect(service_binding.required_parameters).to eq(
-            app_guid: app.guid,
-            space_guid: app.space.guid,
-            app_annotations: { 'baz' => 'wow', 'prefix-here.org/foo' => 'bar' }
-          )
-        end
-      end
-    end
-
     describe 'is_created?' do
       let(:service_instance) { ManagedServiceInstance.make }
       let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }

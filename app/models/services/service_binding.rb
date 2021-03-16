@@ -1,10 +1,8 @@
 require 'models/helpers/process_types'
-require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     include Serializer
-    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     plugin :after_initialize
 
@@ -113,14 +111,6 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       { app: AppModel.user_visible(user) }
-    end
-
-    def required_parameters
-      {
-        app_guid: app_guid,
-        space_guid: space.guid,
-        app_annotations: hashified_annotations(app.annotations)
-      }
     end
 
     def last_operation

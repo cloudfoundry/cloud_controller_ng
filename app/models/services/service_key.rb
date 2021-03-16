@@ -98,10 +98,6 @@ module VCAP::CloudController
       !!service_key_operation && service_key_operation.state == 'in progress'
     end
 
-    def required_parameters
-      nil
-    end
-
     def save_with_attributes_and_new_operation(attributes, operation)
       ServiceKey.db.transaction do
         self.lock!

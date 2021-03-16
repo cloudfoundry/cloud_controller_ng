@@ -38,10 +38,6 @@ module VCAP::CloudController
       validate_space_match
     end
 
-    def required_parameters
-      { route: route.uri }
-    end
-
     def last_operation
       route_binding_operation
     end
