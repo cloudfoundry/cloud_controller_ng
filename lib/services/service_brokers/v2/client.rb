@@ -344,7 +344,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def context_hash_with_instance_name(service_instance, name: service_instance.name)
-      context_hash(service_instance).merge(instance_name: name)
+      context_hash(service_instance).merge(
+        instance_name: name,
+        instance_annotations: hashified_annotations(service_instance.annotations)
+      )
     end
 
     def context_hash(service_instance)
@@ -353,7 +356,9 @@ module VCAP::Services::ServiceBrokers::V2
         organization_guid: service_instance.organization.guid,
         space_guid: service_instance.space.guid,
         organization_name: service_instance.organization.name,
-        space_name: service_instance.space.name
+        space_name: service_instance.space.name,
+        organization_annotations: hashified_annotations(service_instance.organization.annotations),
+        space_annotations: hashified_annotations(service_instance.space.annotations)
       }
     end
 

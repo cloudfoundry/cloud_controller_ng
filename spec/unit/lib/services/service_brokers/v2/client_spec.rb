@@ -154,12 +154,42 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               instance_name: instance.name,
+              instance_annotations: {},
               organization_name: instance.organization.name,
-              space_name: instance.space.name
+              space_name: instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             }
           },
           { user_guid: nil }
         )
+      end
+
+      context 'when annotations are set' do
+        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+
+        it 'sends the annotations in the context' do
+          client.provision(instance)
+
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_including(
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: instance.organization.guid,
+                space_guid: instance.space_guid,
+                instance_name: instance.name,
+                instance_annotations: { 'pre.fix/baz' => 'wow' },
+                organization_name: instance.organization.name,
+                space_name: instance.space.name,
+                organization_annotations: { 'foo' => 'bar' },
+                space_annotations: { 'bar' => 'wow'}
+              }),
+            { user_guid: nil }
+          )
+        end
       end
 
       describe 'return values' do
@@ -633,8 +663,11 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               instance_name: 'fake_name',
+              instance_annotations: {},
               organization_name: instance.organization.name,
-              space_name: instance.space.name
+              space_name: instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             }
           }),
           { user_guid: nil }
@@ -652,12 +685,42 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               instance_name: instance.name,
+              instance_annotations: {},
               organization_name: instance.organization.name,
-              space_name: instance.space.name
+              space_name: instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             }
           }),
           { user_guid: nil }
         )
+      end
+
+      context 'when annotations are set' do
+        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+
+        it 'sends the annotations in the context' do
+          client.update(instance, new_plan, previous_values: { plan_id: '1234' })
+
+          expect(http_client).to have_received(:patch).with(
+            anything,
+            hash_including(
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: instance.organization.guid,
+                space_guid: instance.space_guid,
+                instance_name: instance.name,
+                instance_annotations: { 'pre.fix/baz' => 'wow' },
+                organization_name: instance.organization.name,
+                space_name: instance.space.name,
+                organization_annotations: { 'foo' => 'bar' },
+                space_annotations: { 'bar' => 'wow'}
+              }),
+            { user_guid: nil }
+          )
+        end
       end
 
       it 'makes a patch request to the correct path' do
@@ -1024,7 +1087,9 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: key.service_instance.organization.guid,
               space_guid: key.service_instance.space.guid,
               organization_name: key.service_instance.organization.name,
-              space_name: key.service_instance.space.name
+              space_name: key.service_instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             },
             bind_resource: {
               credential_client_id: cc_service_key_client_name,
@@ -1239,11 +1304,38 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               organization_name: instance.organization.name,
-              space_name: instance.space.name
+              space_name: instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             }
           },
           { user_guid: nil }
         )
+      end
+
+      context 'when annotations are set' do
+        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+
+        it 'sends the annotations in the context' do
+          client.bind(binding)
+
+          expect(http_client).to have_received(:put).with(
+            anything,
+            hash_including(
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: instance.organization.guid,
+                space_guid: instance.space_guid,
+                organization_name: instance.organization.name,
+                space_name: instance.space.name,
+                organization_annotations: { 'foo' => 'bar' },
+                space_annotations: { 'bar' => 'wow'}
+              }),
+            { user_guid: nil }
+          )
+        end
       end
 
       it 'sets the credentials on the binding' do
