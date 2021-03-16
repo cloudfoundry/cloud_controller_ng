@@ -356,19 +356,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#required_parameters' do
-      let(:service_instance) { ManagedServiceInstance.make }
-      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
-      let(:app) { service_binding.app }
-
-      it 'returns the required params' do
-        expect(service_binding.required_parameters).to eq(
-          app_guid: app.guid,
-          space_guid: app.space.guid
-        )
-      end
-    end
-
     describe 'is_created?' do
       let(:service_instance) { ManagedServiceInstance.make }
       let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
@@ -452,10 +439,10 @@ module VCAP::CloudController
       let(:binding) {
         ServiceBinding.new(
           service_instance: service_instance,
-          app:              app,
-          credentials:      {},
-          type:             'app',
-          name:             'foo',
+          app: app,
+          credentials: {},
+          type: 'app',
+          name: 'foo',
         )
       }
 
@@ -543,7 +530,7 @@ module VCAP::CloudController
               },
               endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
               route_services_url: 'http://route.example.com'
-          ))
+            ))
           }.not_to raise_error
         end
       end

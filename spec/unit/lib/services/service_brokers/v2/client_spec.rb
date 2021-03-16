@@ -1229,7 +1229,11 @@ module VCAP::Services::ServiceBrokers::V2
             plan_id: binding.service_plan.broker_provided_id,
             service_id: binding.service.broker_provided_id,
             app_guid: binding.app_guid,
-            bind_resource: binding.required_parameters,
+            bind_resource: {
+              app_guid: app.guid,
+              space_guid: app.space.guid,
+              app_annotations: {}
+            },
             context: {
               platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
@@ -1331,59 +1335,110 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when the binding does not have an app_guid' do
-        let(:binding) { VCAP::CloudController::RouteBinding.make }
+      describe 'bind resource object' do
+        context 'app service binding' do
+          context 'when the app does not annotations' do
+            it 'sends empty annotations object' do
+              client.bind(binding)
 
-        it 'does not send the app_guid in the request' do
-          client.bind(binding)
+              expect(http_client).to have_received(:put).with(
+                anything,
+                hash_including(
+                  bind_resource: {
+                    app_guid: app.guid,
+                    space_guid: app.space.guid,
+                    app_annotations: {}
+                  }),
+                { user_guid: nil }
+              )
+            end
+          end
 
-          expect(http_client).to have_received(:put).with(
-            anything,
-            hash_excluding(:app_guid),
-            { user_guid: nil }
-          )
+          context 'when the app has annotations' do
+            let!(:annotation1) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'baz', value: 'wow', app: app) }
+            let!(:annotation2) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'prefix-here.org/foo', value: 'bar', app: app) }
+
+            it 'sends empty annotations object' do
+              client.bind(binding)
+
+              expect(http_client).to have_received(:put).with(
+                anything,
+                hash_including(
+                  bind_resource: {
+                    app_guid: app.guid,
+                    space_guid: app.space.guid,
+                    app_annotations: { 'baz' => 'wow', 'prefix-here.org/foo' => 'bar' }
+                  }),
+                { user_guid: nil }
+              )
+            end
+          end
         end
-      end
 
-      context 'when the binding is of type key' do
-        let(:binding) { VCAP::CloudController::ServiceKey.make }
+        context 'key service binding' do
+          let(:binding) { VCAP::CloudController::ServiceKey.make }
 
-        context 'when cc_service_key_client is configured' do
-          it 'includes the optional credential_client_id parameter' do
+          context 'when cc_service_key_client is configured' do
+            it 'includes the optional credential_client_id parameter' do
+              client.bind(binding)
+
+              expect(http_client).to have_received(:put).with(
+                anything,
+                hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } }),
+                { user_guid: nil }
+              )
+            end
+          end
+
+          context 'when cc_service_key_client is NOT present' do
+            before do
+              TestConfig.override(cc_service_key_client_name: nil)
+            end
+
+            it 'does NOT include the optional credential_client_id parameter' do
+              client.bind(binding)
+
+              expect(http_client).to have_received(:put).with(
+                anything,
+                hash_excluding({ bind_resource: { credential_client_id: anything } }),
+                { user_guid: nil }
+              )
+            end
+          end
+
+          it 'does not send the app_guid in the request' do
             client.bind(binding)
 
             expect(http_client).to have_received(:put).with(
               anything,
-              hash_including({ bind_resource: { credential_client_id: 'cc_service_key_client' } }),
+              hash_excluding(:app_guid),
               { user_guid: nil }
             )
           end
         end
 
-        context 'when cc_service_key_client is NOT present' do
-          before do
-            TestConfig.override(cc_service_key_client_name: nil)
-          end
+        context 'route service binding' do
+          let(:binding) { VCAP::CloudController::RouteBinding.make }
 
-          it 'does NOT include the optional credential_client_id parameter' do
+          it 'sends route bind resource' do
             client.bind(binding)
 
             expect(http_client).to have_received(:put).with(
               anything,
-              hash_excluding({ bind_resource: { credential_client_id: anything } }),
+              hash_including(bind_resource: { route: binding.route.uri }),
               { user_guid: nil }
             )
           end
-        end
 
-        it 'does not send the app_guid in the request' do
-          client.bind(binding)
+          it 'does not send the app_guid in the request' do
+            client.bind(binding)
 
-          expect(http_client).to have_received(:put).with(
-            anything,
-            hash_excluding(:app_guid),
-            { user_guid: nil }
-          )
+            expect(http_client).to have_received(:put).with(
+              anything,
+              hash_excluding(:app_guid),
+              { user_guid: nil }
+            )
+          end
         end
       end
 

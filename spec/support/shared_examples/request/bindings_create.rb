@@ -49,7 +49,8 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             app_guid: app_to_bind_to.guid,
             bind_resource: {
               app_guid: app_to_bind_to.guid,
-              space_guid: service_instance.space.guid
+              space_guid: service_instance.space.guid,
+              app_annotations: { foo: 'bar' }
             }
           }
         else

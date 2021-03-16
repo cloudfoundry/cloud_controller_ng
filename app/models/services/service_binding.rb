@@ -113,12 +113,6 @@ module VCAP::CloudController
       { app: AppModel.user_visible(user) }
     end
 
-    def required_parameters
-      { app_guid: app_guid,
-        space_guid: space.guid
-      }
-    end
-
     def last_operation
       service_binding_operation
     end

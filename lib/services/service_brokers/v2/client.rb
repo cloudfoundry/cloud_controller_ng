@@ -1,5 +1,9 @@
+require 'presenters/mixins/metadata_presentation_helpers'
+
 module VCAP::Services::ServiceBrokers::V2
   class Client
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     CATALOG_PATH = '/v2/catalog'.freeze
     PLATFORM = 'cloudfoundry'.freeze
 
@@ -99,7 +103,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_id: binding.service.broker_provided_id,
         plan_id: binding.service_plan.broker_provided_id,
         app_guid: binding.try(:app_guid),
-        bind_resource: binding_required_parameters(binding),
+        bind_resource: bind_resource(binding),
         context: context_hash(binding.service_instance)
       }
       body = body.compact
@@ -318,12 +322,25 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def binding_required_parameters(binding)
-      if binding.is_a?(VCAP::CloudController::ServiceKey) && @config.get(:cc_service_key_client_name).present?
-        service_key_parameters = { credential_client_id: @config.get(:cc_service_key_client_name) }
-      end
+    def bind_resource(binding)
+      case binding
+      when VCAP::CloudController::ServiceBinding
+        {
+          app_guid: binding.app_guid,
+          space_guid: binding.space.guid,
+          app_annotations: hashified_annotations(binding.app.annotations)
+        }
+      when VCAP::CloudController::ServiceKey
+        if @config.get(:cc_service_key_client_name).present?
+          return { credential_client_id: @config.get(:cc_service_key_client_name) }
+        end
 
-      binding.required_parameters || service_key_parameters || {}
+        {}
+      when VCAP::CloudController::RouteBinding
+        { route: binding.route.uri }
+      else
+        {}
+      end
     end
 
     def context_hash_with_instance_name(service_instance, name: service_instance.name)
