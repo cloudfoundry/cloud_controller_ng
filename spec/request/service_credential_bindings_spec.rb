@@ -951,6 +951,7 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'creating a credential binding to an app' do
       let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:app_annotations) { VCAP::CloudController::AppAnnotationModel.make(app: app_to_bind_to, key: 'foo', value: 'bar') }
       let(:app_guid) { app_to_bind_to.guid }
       let(:binding_name) { 'some-name' }
       let(:create_body) {

@@ -1,4 +1,5 @@
 require 'models/helpers/process_types'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model

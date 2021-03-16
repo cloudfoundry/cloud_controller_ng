@@ -382,7 +382,7 @@ module VCAP::CloudController
               service_id: service_instance.service.broker_provided_id,
               plan_id: service_instance.service_plan.broker_provided_id,
               app_guid: process.guid,
-              bind_resource: { app_guid: process.guid, space_guid: process.space.guid },
+              bind_resource: { app_guid: process.guid, space_guid: process.space.guid, app_annotations: {} },
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
@@ -545,7 +545,7 @@ module VCAP::CloudController
               service_id: service_instance.service.broker_provided_id,
               plan_id: service_instance.service_plan.broker_provided_id,
               app_guid: process.guid,
-              bind_resource: { app_guid: process.guid, space_guid: process.space.guid },
+              bind_resource: { app_guid: process.guid, space_guid: process.space.guid, app_annotations: {}},
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
