@@ -17,13 +17,13 @@ module Logcache
           "#{host}:#{port}",
           GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
           channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
-          grpc_timeout: 250
+          timeout: 250
         )
       else
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
           :this_channel_is_insecure,
-          grpc_timeout: 250
+          timeout: 250
         )
       end
 

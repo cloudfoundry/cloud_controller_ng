@@ -37,7 +37,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, timeout: 250).
             and_return(logcache_service)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
         end
@@ -69,7 +69,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, timeout: 250).
             and_return(logcache_service)
           allow(client).to receive(:sleep)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
@@ -124,7 +124,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, timeout: 250).
             and_return(logcache_service)
           allow(client).to receive(:sleep)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
@@ -156,7 +156,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, timeout: 250).
             and_return(logcache_service)
           allow(client).to receive(:sleep)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
@@ -184,7 +184,7 @@ module Logcache
         before do
           expect(GRPC::Core::ChannelCredentials).not_to receive(:new)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", :this_channel_is_insecure, grpc_timeout: 250).
+            with("#{host}:#{port}", :this_channel_is_insecure, timeout: 250).
             and_return(logcache_service)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
         end
