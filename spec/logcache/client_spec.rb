@@ -18,11 +18,7 @@ module Logcache
       let(:client_cert_path) { File.join(Paths::FIXTURES, 'certs/log_cache.crt') }
       let(:client_key_path) { File.join(Paths::FIXTURES, 'certs/log_cache.key') }
       let(:credentials) { instance_double(GRPC::Core::ChannelCredentials) }
-      let(:channel_arg_hash) do
-        {
-            channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name }
-        }
-      end
+      let(:channel_arg_hash) { { GRPC::Core::Channel::SSL_TARGET => tls_subject_name } }
       let(:client) do
         Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
                              client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
@@ -41,7 +37,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_arg_hash).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
             and_return(logcache_service)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
         end
@@ -73,7 +69,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_arg_hash).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
             and_return(logcache_service)
           allow(client).to receive(:sleep)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
@@ -118,6 +114,38 @@ module Logcache
         end
       end
 
+      describe 'when logcache does not respond in a reasonable amount of time' do
+        let(:instance_count) { 0 }
+        let(:timeout_status) { GRPC::DeadlineExceeded.new }
+        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+
+        before do
+          expect(GRPC::Core::ChannelCredentials).to receive(:new).
+            with(client_ca, client_key, client_cert).
+            and_return(credentials)
+          expect(Logcache::V1::Egress::Stub).to receive(:new).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
+            and_return(logcache_service)
+          allow(client).to receive(:sleep)
+          allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
+          allow(logcache_service).to receive(:read).and_raise(timeout_status)
+        end
+
+        let(:client) do
+          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                               temporary_ignore_server_unavailable_errors: false)
+        end
+
+        it 'raises an exception' do
+          expect {
+            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          }.to raise_error(Logcache::Client::LogcacheTimeoutReached, /Connection to Log Cache timed out/)
+
+          expect(logcache_service).to have_received(:read).with(logcache_request).exactly(1).times
+        end
+      end
+
       describe 'when the logcache service has any other error' do
         let(:bad_status) { GRPC::BadStatus.new(13) }
         let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
@@ -128,7 +156,7 @@ module Logcache
             with(client_ca, client_key, client_cert).
             and_return(credentials)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", credentials, channel_arg_hash).
+            with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, grpc_timeout: 250).
             and_return(logcache_service)
           allow(client).to receive(:sleep)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
@@ -156,7 +184,7 @@ module Logcache
         before do
           expect(GRPC::Core::ChannelCredentials).not_to receive(:new)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
-            with("#{host}:#{port}", :this_channel_is_insecure).
+            with("#{host}:#{port}", :this_channel_is_insecure, grpc_timeout: 250).
             and_return(logcache_service)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
         end

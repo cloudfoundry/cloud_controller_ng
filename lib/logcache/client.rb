@@ -3,6 +3,7 @@ require 'logcache/v2/envelope_pb'
 
 module Logcache
   class Client
+    class LogcacheTimeoutReached < StandardError; end
     MAX_LIMIT = 1000
     DEFAULT_LIMIT = 100
 
@@ -15,12 +16,14 @@ module Logcache
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
           GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
-          channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name }
+          channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
+          grpc_timeout: 250
         )
       else
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
-          :this_channel_is_insecure
+          :this_channel_is_insecure,
+          grpc_timeout: 250
         )
       end
 
@@ -48,6 +51,10 @@ module Logcache
       tries ||= 3
       yield
     rescue => e
+      if e.is_a?(GRPC::DeadlineExceeded)
+        raise LogcacheTimeoutReached.new('Connection to Log Cache timed out')
+      end
+
       if (tries -= 1) > 0
         sleep 0.1
         retry
