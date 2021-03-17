@@ -3,7 +3,6 @@ require 'logcache/v2/envelope_pb'
 
 module Logcache
   class Client
-    class LogcacheTimeoutReached < StandardError; end
     MAX_LIMIT = 1000
     DEFAULT_LIMIT = 100
 
@@ -52,7 +51,7 @@ module Logcache
       yield
     rescue => e
       if e.is_a?(GRPC::DeadlineExceeded)
-        raise LogcacheTimeoutReached.new('Connection to Log Cache timed out')
+        raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out')
       end
 
       if (tries -= 1) > 0

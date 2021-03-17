@@ -72,6 +72,10 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances({}, process)
       rescue StandardError => e
         logger.error('stats_for_app.error', error: e.to_s)
+        if e.is_a?(CloudController::Errors::ApiError) && e.name == 'ServiceUnavailable'
+          raise e
+        end
+
         exception = CloudController::Errors::InstancesUnavailable.new(e.message)
         exception.set_backtrace(e.backtrace)
         raise exception

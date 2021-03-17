@@ -260,6 +260,19 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a LogcacheTimeoutReached is thrown' do
+          let(:error) { CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') }
+          let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+          before do
+            allow(traffic_controller_client).to receive(:container_metrics).and_raise(error)
+            allow(instances_reporter).to receive(:logger).and_return(mock_logger)
+          end
+
+          it 'raises a timeout error' do
+            expect { instances_reporter.stats_for_app(process) }.to raise_error(error)
+          end
+        end
+
         context 'client data mismatch' do
           context 'when number of actual lrps < desired number of instances' do
             let(:bbs_actual_lrps_response) { [] }

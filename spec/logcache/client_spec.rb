@@ -140,7 +140,7 @@ module Logcache
         it 'raises an exception' do
           expect {
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          }.to raise_error(Logcache::Client::LogcacheTimeoutReached, /Connection to Log Cache timed out/)
+          }.to raise_error(CloudController::Errors::ApiError, /Connection to Log Cache timed out/)
 
           expect(logcache_service).to have_received(:read).with(logcache_request).exactly(1).times
         end
