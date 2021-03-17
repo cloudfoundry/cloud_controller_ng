@@ -64,6 +64,9 @@ module VCAP::Services
         user_guid = user_guid(options)
         opts[:header][VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY] = IdentityEncoder.encode(user_guid) if user_guid
 
+        opts[:header][VCAP::Request::HEADER_ZIPKIN_B3_TRACEID] = VCAP::Request.b3_trace_id if VCAP::Request.b3_trace_id
+        opts[:header][VCAP::Request::HEADER_ZIPKIN_B3_SPANID] = VCAP::Request.b3_span_id if VCAP::Request.b3_span_id
+
         headers = client.default_header.merge(opts[:header])
 
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"

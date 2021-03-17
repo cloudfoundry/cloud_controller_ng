@@ -22,6 +22,18 @@ module VCAP
       end
     end
 
+    describe '::HEADER_ZIPKIN_B3_TRACEID' do
+      it 'constant is expected header name' do
+        expect(Request::HEADER_ZIPKIN_B3_TRACEID).to eq 'X-B3-TraceId'
+      end
+    end
+
+    describe '::HEADER_ZIPKIN_B3_SPANID' do
+      it 'constant is expected header name' do
+        expect(Request::HEADER_ZIPKIN_B3_SPANID).to eq 'X-B3-SpanId'
+      end
+    end
+
     describe '.current_id' do
       after do
         Request.current_id = nil
@@ -52,6 +64,46 @@ module VCAP
         Request.current_id = request_id
 
         expect(Thread.current[:vcap_request_id]).to eq(request_id)
+      end
+    end
+
+    describe '.b3_trace_id' do
+      after do
+        Request.b3_trace_id = nil
+      end
+
+      let(:trace_id) { SecureRandom.hex(8) }
+
+      it 'sets the new b3_trace_id value' do
+        Request.b3_trace_id = trace_id
+
+        expect(Request.b3_trace_id).to eq trace_id
+      end
+
+      it 'uses the :b3_trace_id thread local' do
+        Request.b3_trace_id = trace_id
+
+        expect(Thread.current[:b3_trace_id]).to eq(trace_id)
+      end
+    end
+
+    describe '.b3_span_id' do
+      after do
+        Request.b3_span_id = nil
+      end
+
+      let(:span_id) { SecureRandom.hex(8) }
+
+      it 'sets the new b3_span_id value' do
+        Request.b3_span_id = span_id
+
+        expect(Request.b3_span_id).to eq span_id
+      end
+
+      it 'uses the :b3_span_id thread local' do
+        Request.b3_span_id = span_id
+
+        expect(Thread.current[:b3_span_id]).to eq(span_id)
       end
     end
   end
