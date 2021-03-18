@@ -100,6 +100,23 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the model errors' do
+          let(:smol_space_quota) {  VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'smol-space-quota-guid', organization: space.organization, total_services: 1) }
+
+          before do
+            ManagedServiceInstance.make(service_plan: old_service_plan, space: space)
+            smol_space_quota.add_space(space)
+          end
+          let(:update_attrs) { { 'name' => 'new name' } }
+
+          it 'raises a validation error with the specific message' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(CloudController::Errors::ApiError, /Service instance space quota exceeded/)
+          end
+
+        end
+
         context 'when the requested plan is not bindable' do
           let(:new_service_plan) { ServicePlan.make(:v2, service: service, bindable: false) }
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }

@@ -114,7 +114,7 @@ module VCAP::CloudController
       def unable_to_update_to_nonfree_plan!(service_instance)
         raise CloudController::Errors::ApiError.new_from_details(
           'ServiceInstanceServicePlanNotAllowed',
-          "cannot update service-instance #{service_instance.name} when quota disallows paid service plans"
+          service_instance.errors.full_messages.join(', ')
         )
       end
 

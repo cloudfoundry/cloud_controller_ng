@@ -231,7 +231,7 @@
 60007:
   name: ServiceInstanceServicePlanNotAllowed
   http_code: 400
-  message: "The service instance cannot be created because paid service plans are not allowed."
+  message: "The service instance cannot be created/updated because %s."
 
 60008:
   name: ServiceInstanceDuplicateNotAllowed
