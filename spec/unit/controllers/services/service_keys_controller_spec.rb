@@ -202,6 +202,8 @@ module VCAP::CloudController
               space_guid: instance.space.guid,
               organization_name: instance.organization.name,
               space_name: instance.space.name,
+              organization_annotations: {},
+              space_annotations: {}
             }
           }.to_json
 

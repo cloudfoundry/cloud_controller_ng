@@ -7,7 +7,7 @@ RSpec.describe 'v3 service credential bindings' do
   let(:org) { VCAP::CloudController::Organization.make }
   let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'baz', value: 'wow', space: space) }
   let(:other_space) { VCAP::CloudController::Space.make }
   let(:space_dev_headers) do
     org.add_user(user)
