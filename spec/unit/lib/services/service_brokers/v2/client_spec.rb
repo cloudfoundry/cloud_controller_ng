@@ -185,7 +185,7 @@ module VCAP::Services::ServiceBrokers::V2
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
                 organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow'}
+                space_annotations: { 'bar' => 'wow' }
               }),
             { user_guid: nil }
           )
@@ -663,7 +663,6 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               instance_name: 'fake_name',
-              instance_annotations: {},
               organization_name: instance.organization.name,
               space_name: instance.space.name,
               organization_annotations: {},
@@ -685,7 +684,6 @@ module VCAP::Services::ServiceBrokers::V2
               organization_guid: instance.organization.guid,
               space_guid: instance.space_guid,
               instance_name: instance.name,
-              instance_annotations: {},
               organization_name: instance.organization.name,
               space_name: instance.space.name,
               organization_annotations: {},
@@ -712,11 +710,10 @@ module VCAP::Services::ServiceBrokers::V2
                 organization_guid: instance.organization.guid,
                 space_guid: instance.space_guid,
                 instance_name: instance.name,
-                instance_annotations: { 'pre.fix/baz' => 'wow' },
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
                 organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow'}
+                space_annotations: { 'bar' => 'wow' }
               }),
             { user_guid: nil }
           )
@@ -1331,7 +1328,7 @@ module VCAP::Services::ServiceBrokers::V2
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
                 organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow'}
+                space_annotations: { 'bar' => 'wow' }
               }),
             { user_guid: nil }
           )

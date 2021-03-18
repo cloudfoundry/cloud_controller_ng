@@ -4,7 +4,9 @@ require 'request_spec_shared_examples'
 RSpec.describe 'V3 service instances' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
+  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'baz', value: 'wow', space: space) }
   let(:another_space) { VCAP::CloudController::Space.make }
 
   describe 'GET /v3/service_instances/:guid' do
@@ -1179,9 +1181,12 @@ RSpec.describe 'V3 service instances' do
                   platform: 'cloudfoundry',
                   organization_guid: org.guid,
                   organization_name: org.name,
+                  organization_annotations: { foo: 'bar' },
                   space_guid: space.guid,
                   space_name: space.name,
-                  instance_name: instance.name
+                  space_annotations: { baz: 'wow' },
+                  instance_name: instance.name,
+                  instance_annotations: { foo: 'bar' }
                 },
                 organization_guid: org.guid,
                 space_guid: space.guid,
@@ -1751,9 +1756,11 @@ RSpec.describe 'V3 service instances' do
                       platform: 'cloudfoundry',
                       organization_guid: org.guid,
                       organization_name: org.name,
+                      organization_annotations: { foo: 'bar' },
                       space_guid: space.guid,
                       space_name: space.name,
-                      instance_name: 'new-name'
+                      space_annotations: { baz: 'wow' },
+                      instance_name: 'new-name',
                     },
                     parameters: {
                       foo: 'bar',
