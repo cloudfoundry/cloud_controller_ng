@@ -551,7 +551,7 @@ RSpec.describe 'Builds' do
 
   describe 'PATCH /v3/builds/:guid' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build_model) { VCAP::CloudController::BuildModel.make(package: package_model) }
+    let(:build_model) { VCAP::CloudController::BuildModel.make(app: app_model, package: package_model) }
     let(:metadata) do
       {
         labels: {
@@ -606,7 +606,7 @@ RSpec.describe 'Builds' do
 
       context 'updating state' do
         let(:build_model) { VCAP::CloudController::BuildModel.make(:kpack, package: package_model,
-          state: VCAP::CloudController::BuildModel::STAGING_STATE)
+          state: VCAP::CloudController::BuildModel::STAGING_STATE, app: app_model)
         }
         let(:request) do
           {
