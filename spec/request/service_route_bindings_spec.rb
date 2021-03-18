@@ -628,8 +628,10 @@ RSpec.describe 'v3 service route bindings' do
               platform: 'cloudfoundry',
               organization_guid: org.guid,
               organization_name: org.name,
+              organization_annotations: { foo: 'bar' },
               space_guid: space.guid,
               space_name: space.name,
+              space_annotations: { baz: 'wow' }
             },
             service_id: service_instance.service_plan.service.unique_id,
             plan_id: service_instance.service_plan.unique_id,
@@ -1705,7 +1707,9 @@ RSpec.describe 'v3 service route bindings' do
 
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
+  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'baz', value: 'wow', space: space) }
   let(:route_service_url) { 'https://route_service_url.com' }
 
   let(:space_dev_headers) do

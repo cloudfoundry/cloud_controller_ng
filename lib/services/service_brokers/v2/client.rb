@@ -11,8 +11,8 @@ module VCAP::Services::ServiceBrokers::V2
 
     def initialize(attrs)
       http_client_attrs = attrs.slice(:url, :auth_username, :auth_password)
-      @http_client      = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
-      @response_parser  = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
+      @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
+      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
       @config = VCAP::CloudController::Config.config
     end
@@ -30,7 +30,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
-        context: context_hash_with_instance_name(instance)
+        context: context_hash_with_instance_name_and_annotations(instance)
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -347,13 +347,22 @@ module VCAP::Services::ServiceBrokers::V2
       context_hash(service_instance).merge(instance_name: name)
     end
 
+    def context_hash_with_instance_name_and_annotations(service_instance, name: service_instance.name)
+      context_hash(service_instance).merge(
+        instance_name: name,
+        instance_annotations: hashified_annotations(service_instance.annotations)
+      )
+    end
+
     def context_hash(service_instance)
       {
         platform: PLATFORM,
         organization_guid: service_instance.organization.guid,
         space_guid: service_instance.space.guid,
         organization_name: service_instance.organization.name,
-        space_name: service_instance.space.name
+        space_name: service_instance.space.name,
+        organization_annotations: hashified_annotations(service_instance.organization.annotations),
+        space_annotations: hashified_annotations(service_instance.space.annotations)
       }
     end
 

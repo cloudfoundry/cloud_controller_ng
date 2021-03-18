@@ -389,6 +389,8 @@ module VCAP::CloudController
                 space_guid:        service_instance.space.guid,
                 organization_name: service_instance.organization.name,
                 space_name:        service_instance.space.name,
+                organization_annotations: {},
+                space_annotations: {}
               }
             }
 
@@ -552,6 +554,8 @@ module VCAP::CloudController
                 space_guid:        service_instance.space.guid,
                 organization_name: service_instance.organization.name,
                 space_name:        service_instance.space.name,
+                organization_annotations: {},
+                space_annotations: {}
               }
             }
 
