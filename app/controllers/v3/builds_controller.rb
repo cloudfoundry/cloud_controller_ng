@@ -76,7 +76,7 @@ class BuildsController < ApplicationController
     build = BuildModel.find(guid: hashed_params[:guid])
     build_not_found! unless build.present?
 
-    space = build.package.space
+    space = build.space
     build_not_found! unless can_read_build?(space)
 
     if hashed_params[:body].key?(:state)
