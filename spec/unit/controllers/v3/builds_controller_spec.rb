@@ -713,6 +713,28 @@ RSpec.describe BuildsController, type: :controller do
       expect(response.status).to eq(422)
     end
 
+    context 'when the build\'s package has been deleted' do
+      before do
+        build.package.destroy
+      end
+
+      it 'returns a 200 Ok response' do
+        expect(build.reload.package).to eq(nil)
+
+        patch :update, params: req_body, as: :json
+        expect(response.status).to eq(200), response.body
+        expect(parsed_body['metadata']).to eq({
+          'labels' =>   {
+            'release' => 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => {
+            'potato' => 'idaho',
+          }
+        })
+      end
+    end
+
     describe 'authorization' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do
