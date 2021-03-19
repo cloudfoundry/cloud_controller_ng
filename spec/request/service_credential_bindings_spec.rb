@@ -5,9 +5,9 @@ require 'request/service_bindings_shared_examples'
 RSpec.describe 'v3 service credential bindings' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'baz', value: 'wow', space: space) }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
   let(:other_space) { VCAP::CloudController::Space.make }
   let(:space_dev_headers) do
     org.add_user(user)
@@ -953,7 +953,7 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'creating a credential binding to an app' do
       let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
-      let!(:app_annotations) { VCAP::CloudController::AppAnnotationModel.make(app: app_to_bind_to, key: 'foo', value: 'bar') }
+      let!(:app_annotations) { VCAP::CloudController::AppAnnotationModel.make(app: app_to_bind_to, key_prefix: 'pre.fix', key: 'foo', value: 'bar') }
       let(:app_guid) { app_to_bind_to.guid }
       let(:binding_name) { 'some-name' }
       let(:create_body) {

@@ -50,7 +50,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             bind_resource: {
               app_guid: app_to_bind_to.guid,
               space_guid: service_instance.space.guid,
-              app_annotations: { foo: 'bar' }
+              app_annotations: { 'pre.fix/foo': 'bar' }
             }
           }
         else
@@ -63,10 +63,10 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             platform: 'cloudfoundry',
             organization_guid: org.guid,
             organization_name: org.name,
-            organization_annotations: { foo: 'bar' },
+            organization_annotations: { 'pre.fix/foo': 'bar' },
             space_guid: space.guid,
             space_name: space.name,
-            space_annotations: { baz: 'wow' },
+            space_annotations: { 'pre.fix/baz': 'wow' },
           },
           service_id: service_instance.service_plan.service.unique_id,
           plan_id: service_instance.service_plan.unique_id,
