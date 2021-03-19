@@ -49,6 +49,24 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_read_users?
+    science 'can_read_users' do |e|
+      e.use { db_permissions.can_read_users? }
+      e.try { perm_permissions.can_read_users? }
+
+      e.run_if { false }
+    end
+  end
+
+  def can_write_users?
+    science 'can_write_users' do |e|
+      e.use { db_permissions.can_write_users? }
+      e.try { perm_permissions.can_write_users? }
+
+      e.run_if { false }
+    end
+  end
+
   def can_read_secrets_globally?
     science 'can_read_secrets_globally' do |e|
       e.use { db_permissions.can_read_secrets_globally? }

@@ -29,7 +29,7 @@ class UsersController < ApplicationController
   end
 
   def create
-    unauthorized! unless permission_queryer.can_write_globally?
+    unauthorized! unless permission_queryer.can_write_globally? || permission_queryer.can_write_users?
 
     message = UserCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -51,7 +51,7 @@ class UsersController < ApplicationController
     user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
 
-    unauthorized! unless permission_queryer.can_write_globally?
+    unauthorized! unless permission_queryer.can_write_globally? || permission_queryer.can_write_users?
 
     delete_action = UserDeleteAction.new
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(User, user.guid, delete_action)
@@ -64,7 +64,7 @@ class UsersController < ApplicationController
     user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
 
-    unauthorized! unless permission_queryer.can_write_globally?
+    unauthorized! unless permission_queryer.can_write_globally? || permission_queryer.can_write_users?
 
     message = UserUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -77,12 +77,12 @@ class UsersController < ApplicationController
   private
 
   def fetch_readable_users(message)
-    admin_roles = permission_queryer.can_read_globally?
+    admin_roles = permission_queryer.can_read_globally? || permission_queryer.can_read_users?
     UserListFetcher.fetch_all(message, current_user.readable_users(admin_roles))
   end
 
   def fetch_user_if_readable(desired_guid)
-    readable_users = current_user.readable_users(permission_queryer.can_read_globally?)
+    readable_users = current_user.readable_users(permission_queryer.can_read_globally? || permission_queryer.can_read_users?)
     readable_users.first(guid: desired_guid)
   end
 

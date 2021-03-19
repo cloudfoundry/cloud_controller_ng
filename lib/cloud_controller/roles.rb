@@ -5,6 +5,7 @@ module VCAP::CloudController
     CLOUD_CONTROLLER_ADMIN_SCOPE = 'cloud_controller.admin'.freeze
     CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE = 'cloud_controller.admin_read_only'.freeze
     CLOUD_CONTROLLER_GLOBAL_AUDITOR = 'cloud_controller.global_auditor'.freeze
+    CLOUD_CONTROLLER_USER_ADMIN = 'cloud_controller.user_admin'.freeze
     CLOUD_CONTROLLER_BUILD_STATE_UPDATER = 'cloud_controller.update_build_state'.freeze
 
     ORG_ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
@@ -24,6 +25,10 @@ module VCAP::CloudController
 
     def global_auditor?
       @scopes.include?(CLOUD_CONTROLLER_GLOBAL_AUDITOR)
+    end
+
+    def user_admin?
+      @scopes.include?(CLOUD_CONTROLLER_USER_ADMIN)
     end
 
     def admin=(flag)

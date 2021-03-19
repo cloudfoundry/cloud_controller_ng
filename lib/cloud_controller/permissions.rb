@@ -53,8 +53,16 @@ class VCAP::CloudController::Permissions
     @user = user
   end
 
+  def can_read_users?
+    roles.user_admin?
+  end
+
+  def can_write_users?
+    roles.user_admin?
+  end
+
   def can_read_globally?
-    roles.admin? || roles.admin_read_only? || roles.global_auditor?
+    roles.admin? || roles.admin_read_only? || roles.global_auditor? || roles.user_admin?
   end
 
   def can_read_secrets_globally?

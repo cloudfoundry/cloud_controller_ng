@@ -66,9 +66,9 @@ class RolesController < ApplicationController
 
     if role.for_space?
       org_guid = Space.find(guid: role.space_guid).organization.guid
-      unauthorized! unless permission_queryer.can_update_space?(role.space_guid, org_guid)
+      unauthorized! unless permission_queryer.can_update_space?(role.space_guid, org_guid) || permission_queryer.can_write_users?
     else
-      unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
+      unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid) || permission_queryer.can_write_users?
 
       if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         org = Organization.find(id: role.organization_id)
@@ -95,7 +95,7 @@ class RolesController < ApplicationController
     unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
       !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
 
-    unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
+    unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid) || permission_queryer.can_write_users?
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)
     user = fetch_readable_user(user_guid)
@@ -111,7 +111,7 @@ class RolesController < ApplicationController
   def create_org_role(message)
     org = Organization.find(guid: message.organization_guid)
     unprocessable_organization! unless org
-    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid) || permission_queryer.can_write_users?
 
     if message.user_guid
       user_guid = message.user_guid
