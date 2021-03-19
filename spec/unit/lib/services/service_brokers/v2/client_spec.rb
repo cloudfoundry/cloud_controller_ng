@@ -167,12 +167,16 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when annotations are set' do
         let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:public_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:public_org_annotation) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
         let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
         let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
         let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
         let!(:private_instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'baz', value: 'wow', service_instance: instance) }
-        let!(:public_instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:public_instance_annotation) {
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance)
+        }
 
         it 'sends the annotations in the context' do
           client.provision(instance)
@@ -699,8 +703,12 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:public_org_annotation1) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix',key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:public_org_annotation2) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix',key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid) }
+        let!(:public_org_annotation1) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
+        let!(:public_org_annotation2) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+        }
         let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
         let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
         let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
@@ -1318,8 +1326,12 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:public_org_annotation1) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix',key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:public_org_annotation2) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix',key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid) }
+        let!(:public_org_annotation1) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
+        let!(:public_org_annotation2) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+        }
         let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
         let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
         let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
@@ -1338,7 +1350,7 @@ module VCAP::Services::ServiceBrokers::V2
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
                 organization_annotations: { 'pre.fix/foo' => 'bar', 'pre.fix/bar' => 'foo' },
-                space_annotations: { 'pre.fix/bar' => 'wow', 'pre.fix/wow' => 'bar'}
+                space_annotations: { 'pre.fix/bar' => 'wow', 'pre.fix/wow' => 'bar' }
               }),
             { user_guid: nil }
           )
