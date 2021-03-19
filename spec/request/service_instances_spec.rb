@@ -936,7 +936,8 @@ RSpec.describe 'V3 service instances' do
           tags: %w(foo bar baz),
           metadata: {
             annotations: {
-              foo: 'bar'
+              foo: 'bar',
+              'pre.fix/wow': 'baz'
             },
             labels: {
               baz: 'qux'
@@ -955,7 +956,7 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.service_plan).to eq(service_plan)
 
-        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' }, { prefix: 'pre.fix', key: 'wow', value: 'baz' })
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
 
         expect(instance.last_operation.type).to eq('create')
@@ -1186,7 +1187,7 @@ RSpec.describe 'V3 service instances' do
                   space_name: space.name,
                   space_annotations: { 'pre.fix/baz': 'wow' },
                   instance_name: instance.name,
-                  instance_annotations: { foo: 'bar' }
+                  instance_annotations: { 'pre.fix/wow': 'baz' }
                 },
                 organization_guid: org.guid,
                 space_guid: space.guid,
