@@ -328,7 +328,7 @@ module VCAP::Services::ServiceBrokers::V2
         {
           app_guid: binding.app_guid,
           space_guid: binding.space.guid,
-          app_annotations: hashified_annotations(binding.app.annotations)
+          app_annotations: hashified_public_annotations(binding.app.annotations)
         }
       when VCAP::CloudController::ServiceKey
         if @config.get(:cc_service_key_client_name).present?
@@ -350,7 +350,7 @@ module VCAP::Services::ServiceBrokers::V2
     def context_hash_with_instance_name_and_annotations(service_instance, name: service_instance.name)
       context_hash(service_instance).merge(
         instance_name: name,
-        instance_annotations: hashified_annotations(service_instance.annotations)
+        instance_annotations: hashified_public_annotations(service_instance.annotations)
       )
     end
 
@@ -361,8 +361,8 @@ module VCAP::Services::ServiceBrokers::V2
         space_guid: service_instance.space.guid,
         organization_name: service_instance.organization.name,
         space_name: service_instance.space.name,
-        organization_annotations: hashified_annotations(service_instance.organization.annotations),
-        space_annotations: hashified_annotations(service_instance.space.annotations)
+        organization_annotations: hashified_public_annotations(service_instance.organization.annotations),
+        space_annotations: hashified_public_annotations(service_instance.space.annotations)
       }
     end
 
@@ -416,6 +416,15 @@ module VCAP::Services::ServiceBrokers::V2
         path += '?accepts_incomplete=true'
       end
       path
+    end
+
+    def hashified_public_annotations(annotations)
+      public_annotations = []
+      annotations.each do |annotation, _|
+        prefix, _ = VCAP::CloudController::MetadataHelpers.extract_prefix(annotation.key)
+        public_annotations.append(annotation) if annotation.key_prefix.present? || prefix.present?
+      end
+      hashified_annotations(public_annotations)
     end
   end
 end

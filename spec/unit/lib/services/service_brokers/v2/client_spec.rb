@@ -166,9 +166,17 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:public_org_annotation) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
+        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:public_instance_annotation) {
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance)
+        }
 
         it 'sends the annotations in the context' do
           client.provision(instance)
@@ -184,8 +192,8 @@ module VCAP::Services::ServiceBrokers::V2
                 instance_annotations: { 'pre.fix/baz' => 'wow' },
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
-                organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow' }
+                organization_annotations: { 'pre.fix/foo' => 'bar' },
+                space_annotations: { 'pre.fix/bar' => 'wow', 'pre.fix/wow' => 'bar' }
               }),
             { user_guid: nil }
           )
@@ -695,9 +703,16 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:public_org_annotation1) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
+        let!(:public_org_annotation2) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+        }
+        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
+        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
 
         it 'sends the annotations in the context' do
           client.update(instance, new_plan, previous_values: { plan_id: '1234' })
@@ -712,8 +727,8 @@ module VCAP::Services::ServiceBrokers::V2
                 instance_name: instance.name,
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
-                organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow' }
+                organization_annotations: { 'pre.fix/foo' => 'bar', 'pre.fix/bar' => 'foo' },
+                space_annotations: { 'pre.fix/bar' => 'wow', 'pre.fix/wow' => 'bar' }
               }),
             { user_guid: nil }
           )
@@ -1311,9 +1326,16 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
-        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:public_org_annotation1) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+        }
+        let!(:public_org_annotation2) {
+          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+        }
+        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
+        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
 
         it 'sends the annotations in the context' do
           client.bind(binding)
@@ -1327,8 +1349,8 @@ module VCAP::Services::ServiceBrokers::V2
                 space_guid: instance.space_guid,
                 organization_name: instance.organization.name,
                 space_name: instance.space.name,
-                organization_annotations: { 'foo' => 'bar' },
-                space_annotations: { 'bar' => 'wow' }
+                organization_annotations: { 'pre.fix/foo' => 'bar', 'pre.fix/bar' => 'foo' },
+                space_annotations: { 'pre.fix/bar' => 'wow', 'pre.fix/wow' => 'bar' }
               }),
             { user_guid: nil }
           )
@@ -1445,7 +1467,8 @@ module VCAP::Services::ServiceBrokers::V2
 
           context 'when the app has annotations' do
             let!(:annotation1) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'baz', value: 'wow', app: app) }
-            let!(:annotation2) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'prefix-here.org/foo', value: 'bar', app: app) }
+            let!(:annotation2) { VCAP::CloudController::AppAnnotationModel.make(key_prefix: 'prefix-here.org', key_name: 'foo', value: 'bar', app: app) }
+            let!(:annotation3) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'prefix-here.org/wow', value: 'foo', app: app) }
 
             it 'sends empty annotations object' do
               client.bind(binding)
@@ -1456,7 +1479,7 @@ module VCAP::Services::ServiceBrokers::V2
                   bind_resource: {
                     app_guid: app.guid,
                     space_guid: app.space.guid,
-                    app_annotations: { 'baz' => 'wow', 'prefix-here.org/foo' => 'bar' }
+                    app_annotations: { 'prefix-here.org/foo' => 'bar', 'prefix-here.org/wow' => 'foo' }
                   }),
                 { user_guid: nil }
               )

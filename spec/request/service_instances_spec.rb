@@ -4,9 +4,9 @@ require 'request_spec_shared_examples'
 RSpec.describe 'V3 service instances' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'baz', value: 'wow', space: space) }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
   let(:another_space) { VCAP::CloudController::Space.make }
 
   describe 'GET /v3/service_instances/:guid' do
@@ -936,7 +936,8 @@ RSpec.describe 'V3 service instances' do
           tags: %w(foo bar baz),
           metadata: {
             annotations: {
-              foo: 'bar'
+              foo: 'bar',
+              'pre.fix/wow': 'baz'
             },
             labels: {
               baz: 'qux'
@@ -955,7 +956,7 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.service_plan).to eq(service_plan)
 
-        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
+        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' }, { prefix: 'pre.fix', key: 'wow', value: 'baz' })
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
 
         expect(instance.last_operation.type).to eq('create')
@@ -1181,12 +1182,12 @@ RSpec.describe 'V3 service instances' do
                   platform: 'cloudfoundry',
                   organization_guid: org.guid,
                   organization_name: org.name,
-                  organization_annotations: { foo: 'bar' },
+                  organization_annotations: { 'pre.fix/foo': 'bar' },
                   space_guid: space.guid,
                   space_name: space.name,
-                  space_annotations: { baz: 'wow' },
+                  space_annotations: { 'pre.fix/baz': 'wow' },
                   instance_name: instance.name,
-                  instance_annotations: { foo: 'bar' }
+                  instance_annotations: { 'pre.fix/wow': 'baz' }
                 },
                 organization_guid: org.guid,
                 space_guid: space.guid,
@@ -1756,10 +1757,10 @@ RSpec.describe 'V3 service instances' do
                       platform: 'cloudfoundry',
                       organization_guid: org.guid,
                       organization_name: org.name,
-                      organization_annotations: { foo: 'bar' },
+                      organization_annotations: { 'pre.fix/foo': 'bar' },
                       space_guid: space.guid,
                       space_name: space.name,
-                      space_annotations: { baz: 'wow' },
+                      space_annotations: { 'pre.fix/baz': 'wow' },
                       instance_name: 'new-name',
                     },
                     parameters: {
