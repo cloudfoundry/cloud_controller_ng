@@ -100,7 +100,7 @@ group :development do
   gem 'listen'
   gem 'roodi'
   gem 'ruby-debug-ide', '>= 0.7.0.beta4'
-  gem 'solargraph'
+  gem 'solargraph', '>= 0.40.4'
   gem 'spork', git: 'https://github.com/sporkrb/spork', ref: '224df49' # '~> 1.0rc'
   gem 'spring'
   gem 'spring-commands-rspec'
