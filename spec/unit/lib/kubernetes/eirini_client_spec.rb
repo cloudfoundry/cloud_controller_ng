@@ -30,7 +30,7 @@ RSpec.describe Kubernetes::EiriniClient do
       it "raises an ApiError" do
         expect { subject.create_lrp(lrp) }.to raise_error do |e|
           expect(e).to be_a(CloudController::Errors::ApiError)
-          expect(e.message).to eq("Failed to create LRP resource: 'the-error-messageee'")
+          expect(e.message).to eq("Failed to create LRP resource: 'the-error-message'")
         end
       end
     end

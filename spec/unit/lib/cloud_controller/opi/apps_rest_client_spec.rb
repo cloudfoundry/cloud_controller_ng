@@ -29,16 +29,27 @@ RSpec.describe(OPI::Client) do
     }
 
     let(:lifecycle_type) { :kpack }
+    let(:kpack_lifecycle) {
+      {
+        lifecycle: {
+          docker_lifecycle: {
+            image: 'http://example.org/image1234',
+            command: ['/cnb/lifecycle/launcher', 'ls -la']
+          }
+        }
+      }
+    }
+
     let(:org) { ::VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name') }
     let(:space) { ::VCAP::CloudController::Space.make(guid: 'space-guid', name: 'space-name', organization: org) }
     let(:app_model) {
       ::VCAP::CloudController::AppModel.make(lifecycle_type,
-                                             guid: 'app-guid',
-                                             name: 'app-name',
-                                             droplet: droplet,
-                                             enable_ssh: false,
-                                             space: space,
-                                             environment_variables: { BISH: 'BASH', FOO: 'BAR' })
+        guid: 'app-guid',
+        name: 'app-name',
+        droplet: droplet,
+        enable_ssh: false,
+        space: space,
+        environment_variables: { BISH: 'BASH', FOO: 'BAR' })
     }
 
     let(:lrp) do
@@ -76,22 +87,22 @@ RSpec.describe(OPI::Client) do
             port_range:   { 'start' => 9090, 'end' => 9095 },
             destinations: ['5.6.7.8'],
             log:          true,
-         }),
+          }),
         ]
       }
 
       before do
         routes = {
-              'http_routes' => [
-                {
-                  'hostname'          => 'numero-uno.example.com',
-                  'port'              => 8080
-                },
-                {
-                  'hostname'          => 'numero-dos.example.com',
-                  'port'              => 7777
-                }
-              ]
+          'http_routes' => [
+            {
+              'hostname'          => 'numero-uno.example.com',
+              'port'              => 8080
+            },
+            {
+              'hostname'          => 'numero-dos.example.com',
+              'port'              => 7777
+            }
+          ]
         }
 
         allow(routing_info).to receive(:routing_info).and_return(routes)
@@ -105,20 +116,20 @@ RSpec.describe(OPI::Client) do
 
       let(:expected_body) {
         {
-            guid: 'process-guid',
-            version: lrp.version.to_s,
-            process_guid: "process-guid-#{lrp.version}",
-            process_type: 'web',
-            app_guid: 'app-guid',
-            app_name: 'app-name',
-            space_guid: 'space-guid',
-            space_name: 'space-name',
-            organization_name: 'org-name',
-            organization_guid: 'org-guid',
-            environment: {
-              BISH: 'BASH',
-              FOO: 'BAR',
-              VCAP_APPLICATION: %{
+          guid: 'process-guid',
+          version: lrp.version.to_s,
+          process_guid: "process-guid-#{lrp.version}",
+          process_type: 'web',
+          app_guid: 'app-guid',
+          app_name: 'app-name',
+          space_guid: 'space-guid',
+          space_name: 'space-name',
+          organization_name: 'org-name',
+          organization_guid: 'org-guid',
+          environment: {
+            BISH: 'BASH',
+            FOO: 'BAR',
+            VCAP_APPLICATION: %{
                   {
                     "cf_api": "http://api2.vcap.me",
                     "limits": {
@@ -140,50 +151,50 @@ RSpec.describe(OPI::Client) do
                     "version": "#{lrp.version}",
                     "application_version": "#{lrp.version}"
                   }}.delete(' ').delete("\n"),
-              MEMORY_LIMIT: '128m',
-              VCAP_SERVICES: '{}',
-              PORT: '8080',
-              VCAP_APP_PORT: '8080',
-              VCAP_APP_HOST: '0.0.0.0'
+                    MEMORY_LIMIT: '128m',
+                    VCAP_SERVICES: '{}',
+                    PORT: '8080',
+                    VCAP_APP_PORT: '8080',
+                    VCAP_APP_HOST: '0.0.0.0'
+          },
+          instances: 21,
+          memory_mb: 128,
+          cpu_weight: 1,
+          disk_mb: 256,
+          health_check_type: 'port',
+          health_check_http_endpoint: nil,
+          health_check_timeout_ms: 12000,
+          start_timeout_ms: 12000,
+          placement_tags: ['placement-tag'],
+          egress_rules: [
+            {
+              protocol: 'udp',
+              destinations:  ['1.2.3.4'],
+              ports: [8080],
             },
-            instances: 21,
-            memory_mb: 128,
-            cpu_weight: 1,
-            disk_mb: 256,
-            health_check_type: 'port',
-            health_check_http_endpoint: nil,
-            health_check_timeout_ms: 12000,
-            start_timeout_ms: 12000,
-            placement_tags: ['placement-tag'],
-            egress_rules: [
+            {
+              protocol:     'tcp',
+              destinations: ['5.6.7.8'],
+              portRange:   { start: 9090, end: 9095 },
+              log:          true,
+            },
+          ],
+          last_updated: '2.0',
+          volume_mounts: [],
+          ports: [8080],
+          routes: {
+            "cf-router": [
               {
-                protocol: 'udp',
-                destinations:  ['1.2.3.4'],
-                ports: [8080],
+                hostname: 'numero-uno.example.com',
+                port: 8080
               },
               {
-                protocol:     'tcp',
-                destinations: ['5.6.7.8'],
-                portRange:   { start: 9090, end: 9095 },
-                log:          true,
-              },
-            ],
-            last_updated: '2.0',
-            volume_mounts: [],
-            ports: [8080],
-            routes: {
-              "cf-router": [
-                {
-                  hostname: 'numero-uno.example.com',
-                  port: 8080
-                },
-                {
-                  hostname: 'numero-dos.example.com',
-                  port: 7777
-                }
-              ]
-            },
-            user_defined_annotations: {}
+                hostname: 'numero-dos.example.com',
+                port: 7777
+              }
+            ]
+          },
+          user_defined_annotations: {}
         }
       }
 
@@ -240,81 +251,68 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet has a buildpack lifecycle' do
-        let(:lifecycle_type) { :buildpack }
-        let(:buildpack_lifecycle) {
-          {
-            lifecycle: {
-              buildpack_lifecycle: {
-                droplet_hash: lrp.droplet_hash,
-                droplet_guid: 'some-droplet-guid',
-                start_command: 'ls -la',
+      it 'sends a PUT request' do
+        response = client.desire_app(lrp)
+
+        expect(response.status_code).to equal(201)
+        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+          actual_body = MultiJson.load(request.body, symbolize_keys: true)
+          actual_body == expected_body.merge(kpack_lifecycle)
+        }
+      end
+
+      context 'when volume mounts are provided' do
+        let(:service_instance) { ::VCAP::CloudController::ManagedServiceInstance.make space: app_model.space }
+        let(:multiple_volume_mounts) do
+          [
+            {
+              container_dir: '/data/images',
+              mode:          'r',
+              device_type:   'shared',
+              driver:        'cephfs',
+              device:        {
+                volume_id:    'abc',
+                mount_config: {
+                  name: 'volume-one',
+                  key: 'value'
+                }
+              }
+            },
+            {
+              container_dir: '/data/pictures',
+              mode:          'r',
+              device_type:   'shared',
+              driver:        'cephfs',
+              device:        {
+                volume_id:    'abc',
+                mount_config: {
+                  key: 'value'
+                }
+              }
+            },
+            {
+              container_dir: '/data/scratch',
+              mode:          'rw',
+              device_type:   'shared',
+              driver:        'local',
+              device:        {
+                volume_id:    'def'
               }
             }
-          }
-        }
-        it 'sends a PUT request' do
-          response = client.desire_app(lrp)
-
-          expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-            actual_body = MultiJson.load(request.body, symbolize_keys: true)
-            actual_body == expected_body.merge(buildpack_lifecycle)
-          }
+          ]
         end
 
-        context 'when volume mounts are provided' do
-          let(:service_instance) { ::VCAP::CloudController::ManagedServiceInstance.make space: app_model.space }
-          let(:multiple_volume_mounts) do
-            [
-              {
-                container_dir: '/data/images',
-                mode:          'r',
-                device_type:   'shared',
-                driver:        'cephfs',
-                device:        {
-                  volume_id:    'abc',
-                  mount_config: {
-                    name: 'volume-one',
-                    key: 'value'
-                  }
-                }
-              },
-              {
-                container_dir: '/data/pictures',
-                mode:          'r',
-                device_type:   'shared',
-                driver:        'cephfs',
-                device:        {
-                  volume_id:    'abc',
-                  mount_config: {
-                    key: 'value'
-                  }
-                }
-              },
-              {
-                container_dir: '/data/scratch',
-                mode:          'rw',
-                device_type:   'shared',
-                driver:        'local',
-                device:        {
-                  volume_id:    'def'
-                }
-              }
-            ]
-          end
+        let(:binding) { ::VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts) }
+        let(:creds) {
+          system_env = SystemEnvPresenter.new([binding]).system_env
+          service_details = system_env[:VCAP_SERVICES][:"#{service_instance.service.label}"]
+          service_credentials = service_details[0].to_hash[:credentials]
+          service_credentials
+        }
 
-          let(:binding) { ::VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts) }
-          let(:creds) {
-            system_env = SystemEnvPresenter.new([binding]).system_env
-            service_details = system_env[:VCAP_SERVICES][:"#{service_instance.service.label}"]
-            service_credentials = service_details[0].to_hash[:credentials]
-            service_credentials
-          }
-
-          before do
-            creds_json = MultiJson.dump(creds)
-            expected_body[:environment][:VCAP_SERVICES] = %{{"#{service_instance.service.label}":[{
+        before do
+          creds_json = MultiJson.dump(creds)
+          expected_body[:environment][:VCAP_SERVICES] = %{{"#{service_instance.service.label}":[{
             "label": "#{service_instance.service.label}",
             "provider": null,
             "plan": "#{service_instance.service_plan.name}",
@@ -345,23 +343,22 @@ RSpec.describe(OPI::Client) do
             ]
           }]}}.delete(' ').delete("\n")
 
-            expected_body[:volume_mounts] = [
-              {
-                volume_id: 'volume-one',
-                mount_dir: '/data/images'
-              }
-            ]
-          end
-
-          it 'sends a PUT request' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              actual_body == expected_body.merge(buildpack_lifecycle)
+          expected_body[:volume_mounts] = [
+            {
+              volume_id: 'volume-one',
+              mount_dir: '/data/images'
             }
-          end
+          ]
+        end
+
+        it 'sends a PUT request' do
+          response = client.desire_app(lrp)
+
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            actual_body == expected_body.merge(kpack_lifecycle)
+          }
         end
       end
 
@@ -386,62 +383,40 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when droplet has a kpack lifecycle' do
-        let(:lifecycle_type) { :kpack }
-
-        context 'when the process has a specified start command' do
-          it 'sends a PUT request with the specified command' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
-                docker_lifecycle: {
-                  image: 'http://example.org/image1234',
-                  command: ['/cnb/lifecycle/launcher', 'ls -la']
-                }
-              })
-              actual_body == expected_body_with_lifecycle
-            }
-          end
+      context 'when the process has a detected start command' do
+        let(:lrp) do
+          lrp = ::VCAP::CloudController::ProcessModel.make(:process,
+            app:                  app_model,
+            state:                'STARTED',
+            diego:                false,
+            guid:                 'process-guid',
+            type:                 'web',
+            health_check_timeout: 12,
+            instances:            21,
+            memory:               128,
+            disk_quota:           256,
+            file_descriptors:     32,
+            health_check_type:    'port',
+            enable_ssh:           false,
+          )
+          lrp.this.update(updated_at: Time.at(2))
+          lrp.reload
         end
 
-        context 'when the process has a detected start command' do
-          let(:lrp) do
-            lrp = ::VCAP::CloudController::ProcessModel.make(:process,
-              app:                  app_model,
-              state:                'STARTED',
-              diego:                false,
-              guid:                 'process-guid',
-              type:                 'web',
-              health_check_timeout: 12,
-              instances:            21,
-              memory:               128,
-              disk_quota:           256,
-              file_descriptors:     32,
-              health_check_type:    'port',
-              enable_ssh:           false,
-            )
-            lrp.this.update(updated_at: Time.at(2))
-            lrp.reload
-          end
+        it 'sends a PUT request with the detected command' do
+          response = client.desire_app(lrp)
 
-          it 'sends a PUT request with the detected command' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
-                docker_lifecycle: {
-                  image: 'http://example.org/image1234',
-                  command: ['/cnb/lifecycle/launcher', '$HOME/boot.sh']
-                }
-              })
-              actual_body == expected_body_with_lifecycle
-            }
-          end
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            expected_body_with_lifecycle = expected_body.merge(lifecycle: {
+              docker_lifecycle: {
+                image: 'http://example.org/image1234',
+                command: ['/cnb/lifecycle/launcher', '$HOME/boot.sh']
+              }
+            })
+            actual_body == expected_body_with_lifecycle
+          }
         end
       end
     end
@@ -490,16 +465,16 @@ RSpec.describe(OPI::Client) do
 
     before do
       routes = {
-            'http_routes' => [
-              {
-                'hostname'          => 'numero-uno.example.com',
-                'port'              => 8080
-              },
-              {
-                'hostname'          => 'numero-dos.example.com',
-                'port'              => 8080
-              }
-            ]
+        'http_routes' => [
+          {
+            'hostname'          => 'numero-uno.example.com',
+            'port'              => 8080
+          },
+          {
+            'hostname'          => 'numero-dos.example.com',
+            'port'              => 8080
+          }
+        ]
       }
 
       allow(routing_info).to receive(:routing_info).and_return(routes)
@@ -512,24 +487,24 @@ RSpec.describe(OPI::Client) do
     context 'when request contains updated instances and routes' do
       let(:expected_body) {
         {
-            guid: 'guid-1234',
-            version: 'version-1234',
-            update: {
-              instances: 5,
-              routes: {
-                'cf-router' => [
-                  {
-                    'hostname' => 'numero-uno.example.com',
-                    'port' => 8080
-                  },
-                  {
-                    'hostname' => 'numero-dos.example.com',
-                    'port' => 8080
-                  }
-                ]
-              },
-              annotation: '1529064800.9'
-            }
+          guid: 'guid-1234',
+          version: 'version-1234',
+          update: {
+            instances: 5,
+            routes: {
+              'cf-router' => [
+                {
+                  'hostname' => 'numero-uno.example.com',
+                  'port' => 8080
+                },
+                {
+                  'hostname' => 'numero-dos.example.com',
+                  'port' => 8080
+                }
+              ]
+            },
+            annotation: '1529064800.9'
+          }
         }.to_json
       }
 
@@ -550,13 +525,13 @@ RSpec.describe(OPI::Client) do
     context 'when request does not contain routes' do
       let(:expected_body) {
         {
-            guid: 'guid-1234',
-            version: 'version-1234',
-            update: {
-              instances: 5,
-              routes: { 'cf-router' => [] },
-              annotation: '1529064800.9'
-            }
+          guid: 'guid-1234',
+          version: 'version-1234',
+          update: {
+            instances: 5,
+            routes: { 'cf-router' => [] },
+            annotation: '1529064800.9'
+          }
         }.to_json
       }
 

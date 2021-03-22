@@ -23,22 +23,6 @@ module OPI
     end
   end
 
-  class BuildpackLifecycle
-    def initialize(process)
-      @process = process
-    end
-
-    def to_hash
-      {
-        buildpack_lifecycle: {
-          start_command: @process.specified_or_detected_command,
-          droplet_hash: @process.desired_droplet.droplet_hash,
-          droplet_guid: @process.desired_droplet.guid,
-        }
-      }
-    end
-  end
-
   class KpackLifecycle
     CNB_LAUNCHER_PATH = '/cnb/lifecycle/launcher'.freeze
 
@@ -74,8 +58,6 @@ module OPI
       DockerLifecycle.new(process)
     when VCAP::CloudController::Lifecycles::KPACK
       KpackLifecycle.new(process)
-    when VCAP::CloudController::Lifecycles::BUILDPACK
-      BuildpackLifecycle.new(process)
     else
       raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")
     end
