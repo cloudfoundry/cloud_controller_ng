@@ -733,7 +733,9 @@ module VCAP::CloudController
               allow(service_cred_binding_create).to receive(:bind).and_return({ async: false })
               allow(service_cred_binding_create).to receive(:precursor).and_return(ServiceBinding.make)
               allow(service_binding_create_message_1).to receive(:audit_hash).and_return({ foo: 'bar-1' })
+              allow(service_binding_create_message_1).to receive(:parameters)
               allow(service_binding_create_message_2).to receive(:audit_hash).and_return({ foo: 'bar-2' })
+              allow(service_binding_create_message_2).to receive(:parameters).and_return({ 'foo' => 'bar' })
             end
 
             it 'creates an action with the right arguments' do
@@ -799,8 +801,8 @@ module VCAP::CloudController
 
               app_apply_manifest.apply(app.guid, message)
 
-              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1)
-              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2)
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
             end
 
             it 'wraps the error when precursor errors' do
