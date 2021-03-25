@@ -156,7 +156,7 @@ module VCAP::CloudController
             message: binding_message)
 
           begin
-            result = action.bind(binding)
+            result = action.bind(binding, parameters: binding_message.parameters)
             if result[:async]
               raise ServiceBrokerRespondedAsyncWhenNotAllowed
             end
