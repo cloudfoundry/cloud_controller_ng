@@ -641,7 +641,6 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     context 'opi is enabled' do
-
       before do
         TestConfig.override({
           opi: {

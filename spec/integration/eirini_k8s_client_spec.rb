@@ -6,11 +6,12 @@ RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_te
     kubeconfig = Kubeclient::Config.read(ENV['KUBECONFIG'] || "#{ENV['HOME']}/.kube/config")
     context_name = ENV['KUBE_CLUSTER_NAME']
     fail 'Please export KUBE_CLUSTER_NAME' unless context_name
+
     context = kubeconfig.context(context_name)
 
     Kubeclient::Client.new(
       "#{context.api_endpoint}/apis/eirini.cloudfoundry.org",
-      "v1",
+      'v1',
       ssl_options: context.ssl_options,
       auth_options: context.auth_options
     )
@@ -26,7 +27,7 @@ RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_te
         GUID: 'process-guid',
         version: 'process-version',
         processType: 'web',
-        command: ["/cnb/lifecycle/launcher", "ls -la"],
+        command: ['/cnb/lifecycle/launcher', 'ls -la'],
         image: 'image1234',
         instances: 1,
         memoryMB: 128,
@@ -50,13 +51,13 @@ RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_te
     it 'creates and LRP custom resource' do
       subject.create_lrp(lrp)
 
-      created_lrp = kube_client.get_lrp("app-name", "default")
+      created_lrp = kube_client.get_lrp('app-name', 'default')
       expect(created_lrp.metadata).to include(name: 'app-name', namespace: 'default')
       expect(created_lrp.spec).to include(
         GUID: 'process-guid',
         version: 'process-version',
         processType: 'web',
-        command: ["/cnb/lifecycle/launcher", "ls -la"],
+        command: ['/cnb/lifecycle/launcher', 'ls -la'],
         image: 'image1234',
         instances: 1,
         memoryMB: 128,
