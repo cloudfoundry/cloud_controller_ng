@@ -112,6 +112,13 @@ module VCAP::CloudController
       end
 
       def unable_to_update_to_nonfree_plan!(service_instance)
+        quota_errors = service_instance.errors.on(:quota).to_a
+        if quota_errors.include?(:service_instance_space_quota_exceeded)
+          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceQuotaExceeded')
+        elsif quota_errors.include?(:service_instance_quota_exceeded)
+          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceQuotaExceeded')
+        end
+
         raise CloudController::Errors::ApiError.new_from_details(
           'ServiceInstanceServicePlanNotAllowed',
           "cannot update service-instance #{service_instance.name} when quota disallows paid service plans"
