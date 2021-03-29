@@ -1,5 +1,7 @@
 require 'steno'
 require 'optparse'
+require 'puma'
+require 'puma/configuration'
 require 'cloud_controller/uaa/uaa_token_decoder'
 require 'cloud_controller/uaa/uaa_verification_keys'
 require 'app_log_emitter'
@@ -74,20 +76,30 @@ module VCAP::CloudController
     def run!
       create_pidfile
 
-      EM.run do
-        start_cloud_controller
+      start_cloud_controller
 
-        request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-        gather_periodic_metrics
+      # request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+      # gather_periodic_metrics
 
-        builder = RackAppBuilder.new
-        app     = builder.build(@config, request_metrics)
+      builder = RackAppBuilder.new
+      # app     = builder.build(@config, request_metrics)
+      app     = builder.build(@config, nil)
 
-        start_thin_server(app)
-      rescue => e
-        logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
-        raise e
-      end
+      start_thin_server(app)
+      # EM.run do
+      #   start_cloud_controller
+
+      #   request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+      #   gather_periodic_metrics
+
+      #   builder = RackAppBuilder.new
+      #   app     = builder.build(@config, request_metrics)
+
+      #   start_thin_server(app)
+      # rescue => e
+      #   logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+      #   raise e
+      # end
     end
 
     def gather_periodic_metrics
@@ -98,25 +110,29 @@ module VCAP::CloudController
     def trap_signals
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
-          EM.add_timer(0) do
-            logger.warn("Caught signal #{signal}")
-            stop!
-          end
+          logger.warn("Caught signal #{signal}")
+          stop!
+          # EM.add_timer(0) do
+          #   logger.warn("Caught signal #{signal}")
+          #   stop!
+          # end
         end
       end
 
       trap('USR1') do
-        EM.add_timer(0) do
-          logger.warn('Collecting diagnostics')
-          collect_diagnostics
-        end
+        logger.warn('Collecting diagnostics')
+        collect_diagnostics
+        # EM.add_timer(0) do
+        #   logger.warn('Collecting diagnostics')
+        #   collect_diagnostics
+        # end
       end
     end
 
     def stop!
       stop_thin_server
       logger.info('Stopping EventMachine')
-      EM.stop
+      # EM.stop
     end
 
     private
@@ -187,27 +203,41 @@ module VCAP::CloudController
     end
 
     def start_thin_server(app)
-      @thin_server = if @config.get(:nginx, :use_nginx)
-                       Thin::Server.new(@config.get(:nginx, :instance_socket), signals: false)
-                     else
-                       Thin::Server.new(@config.get(:external_host), @config.get(:external_port), signals: false)
-                     end
+      # @thin_server = if @config.get(:nginx, :use_nginx)
+      #                  Thin::Server.new(@config.get(:nginx, :instance_socket), signals: false)
+      #                else
+      #                  Thin::Server.new(@config.get(:external_host), @config.get(:external_port), signals: false)
+      #                end
+      uri = if @config.get(:nginx, :use_nginx)
+              URI::Generic.build(scheme: 'unix', path: @config.get(:nginx, :instance_socket))
+            else
+              URI::Generic.build(scheme: 'tcp', host: @config.get(:external_host), port: @config.get(:external_port))
+            end
 
-      @thin_server.app = app
+      puma_app = Puma::Rack::Builder.app(app)
+
+      puma_config = Puma::Configuration.new do |config|
+        config.app puma_app
+        config.bind uri.to_s
+      end
+      @puma_launcher = Puma::Launcher.new(puma_config)
+
+      # @thin_server.app = app
       trap_signals
 
       # The routers proxying to us handle killing inactive connections.
       # Set an upper limit just to be safe.
-      @thin_server.timeout = @config.get(:request_timeout_in_seconds)
-      @thin_server.threaded = true
-      @thin_server.threadpool_size = @config.get(:threadpool_size)
-      logger.info("Starting thin server with #{EventMachine.threadpool_size} threads")
-      @thin_server.start!
+      # @thin_server.timeout = @config.get(:request_timeout_in_seconds)
+      # @thin_server.threaded = true
+      # @thin_server.threadpool_size = @config.get(:threadpool_size)
+      # logger.info("Starting thin server with #{EventMachine.threadpool_size} threads")
+      # @thin_server.start!
+      @puma_launcher.run
     end
 
     def stop_thin_server
       logger.info('Stopping Thin Server.')
-      @thin_server.stop if @thin_server
+      @puma_launcher.stop if @puma_launcher
     end
 
     def periodic_updater

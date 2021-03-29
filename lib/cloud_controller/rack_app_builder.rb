@@ -17,7 +17,7 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
-        use CloudFoundry::Middleware::RequestMetrics, request_metrics
+        # use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
         use CloudFoundry::Middleware::VcapRequestId
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
