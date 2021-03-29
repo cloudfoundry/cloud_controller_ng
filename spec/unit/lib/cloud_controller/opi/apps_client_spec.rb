@@ -1,11 +1,10 @@
 require 'spec_helper'
-require 'kubernetes/eirini_client'
 require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/apps_rest_client'
 
 RSpec.describe(OPI::KubernetesClient) do
   let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-  let(:eirini_kube_client) { double(Kubernetes::EiriniClient) }
+  let(:eirini_kube_client) { double(Kubernetes::ApiClient) }
   let(:opi_apps_client) { double(OPI::Client) }
   let(:config) do
     TestConfig.override(

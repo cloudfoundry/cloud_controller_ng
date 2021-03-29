@@ -5,10 +5,11 @@ module Kubernetes
     class Error < StandardError; end
     class ConflictError < Error; end
 
-    def initialize(build_kube_client:, kpack_kube_client:, route_kube_client:)
+    def initialize(build_kube_client:, kpack_kube_client:, route_kube_client:, eirini_kube_client:)
       @build_kube_client = build_kube_client
       @kpack_kube_client = kpack_kube_client
       @route_kube_client = route_kube_client
+      @eirini_kube_client = eirini_kube_client
     end
 
     def create_image(resource_config)
@@ -130,6 +131,13 @@ module Kubernetes
       error = CloudController::Errors::ApiError.new_from_details('KpackBuilderError', 'get', e.message)
       error.set_backtrace(e.backtrace)
       raise error
+    end
+
+    def create_lrp(resource_config)
+      @eirini_kube_client.create_lrp(resource_config)
+    rescue Kubeclient::HttpError => e
+      logger.error('create_lrp', error: e.inspect, response: e.response, backtrace: e.backtrace, resource: resource_config)
+      raise CloudController::Errors::ApiError.new_from_details('EiriniLRPError', 'create', e.message)
     end
 
     private

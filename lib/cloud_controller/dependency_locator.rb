@@ -5,7 +5,6 @@ require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
 require 'kubernetes/api_client'
-require 'kubernetes/eirini_client'
 require 'kubernetes/route_resource_manager'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
@@ -403,14 +402,6 @@ module CloudController
         ca_crt: config.kubernetes_ca_cert,
       )
 
-      Kubernetes::ApiClient.new(
-        build_kube_client: build_kube_client,
-        kpack_kube_client: kpack_kube_client,
-        route_kube_client: route_kube_client,
-      )
-    end
-
-    def k8s_eirini_client
       eirini_kube_client = Kubernetes::KubeClientBuilder.build(
         api_group_url: "#{config.kubernetes_host_url}/apis/eirini.cloudfoundry.org",
         version: 'v1',
@@ -418,7 +409,12 @@ module CloudController
         ca_crt: config.kubernetes_ca_cert,
       )
 
-      Kubernetes::EiriniClient.new(eirini_kube_client: eirini_kube_client)
+      Kubernetes::ApiClient.new(
+        build_kube_client: build_kube_client,
+        kpack_kube_client: kpack_kube_client,
+        route_kube_client: route_kube_client,
+        eirini_kube_client: eirini_kube_client,
+      )
     end
 
     def route_resource_manager
@@ -464,7 +460,7 @@ module CloudController
     def build_opi_apps_client
       opi_apps_client = ::OPI::Client.new(config)
       if config.get(:opi, :experimental_enable_crds)
-        ::OPI::KubernetesClient.new(config, k8s_eirini_client, opi_apps_client)
+        ::OPI::KubernetesClient.new(config, k8s_api_client, opi_apps_client)
       else
         opi_apps_client
       end

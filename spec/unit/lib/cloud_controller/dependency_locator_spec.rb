@@ -671,7 +671,7 @@ RSpec.describe CloudController::DependencyLocator do
 
         it 'uses the opi kubernetes client' do
           expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-          expect(::OPI::KubernetesClient).to receive(:new).with(locator.config, instance_of(Kubernetes::EiriniClient), instance_of(::OPI::Client))
+          expect(::OPI::KubernetesClient).to receive(:new).with(locator.config, instance_of(Kubernetes::ApiClient), instance_of(::OPI::Client))
           locator.bbs_apps_client
         end
       end
@@ -774,10 +774,12 @@ RSpec.describe CloudController::DependencyLocator do
       build_kube_client_arg = nil
       kpack_kube_client_arg = nil
       route_kube_client_arg = nil
-      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:|
+      eirini_kube_client_arg = nil
+      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:, eirini_kube_client:|
         build_kube_client_arg = build_kube_client
         kpack_kube_client_arg = kpack_kube_client
         route_kube_client_arg = route_kube_client
+        eirini_kube_client_arg = eirini_kube_client
       }
 
       locator.k8s_api_client
@@ -793,6 +795,10 @@ RSpec.describe CloudController::DependencyLocator do
       expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
       expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
       expect(route_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
+
+      expect(eirini_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
+      expect(eirini_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
+      expect(eirini_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/eirini.cloudfoundry.org'
     end
 
     it 'always creates a new kpack client object from config' do

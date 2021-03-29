@@ -1,7 +1,11 @@
 require 'spec_helper'
 
 skip_eirini_tests = ENV['CF_RUN_EIRINI_SPECS'] != 'true'
-RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_tests) do
+RSpec.describe(Kubernetes::ApiClient, type: :intgration, skip: skip_eirini_tests) do
+  let(:build_kube_client) { double(Kubeclient::Client) }
+  let(:kpack_kube_client) { double(Kubeclient::Client) }
+  let(:route_kube_client) { double(Kubeclient::Client) }
+
   let(:kube_client) do
     kubeconfig = Kubeclient::Config.read(ENV['KUBECONFIG'] || "#{ENV['HOME']}/.kube/config")
     context_name = ENV['KUBE_CLUSTER_NAME']
@@ -14,6 +18,15 @@ RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_te
       'v1',
       ssl_options: context.ssl_options,
       auth_options: context.auth_options
+    )
+  end
+
+  subject(:k8s_api_client) do
+    Kubernetes::ApiClient.new(
+      build_kube_client: build_kube_client,
+      kpack_kube_client: kpack_kube_client,
+      route_kube_client: route_kube_client,
+      eirini_kube_client: eirini_kube_client
     )
   end
 
@@ -37,7 +50,14 @@ RSpec.describe(Kubernetes::EiriniClient, type: :intgration, skip: skip_eirini_te
     })
   end
 
-  subject { described_class.new(eirini_kube_client: kube_client) }
+  subject do
+    described_class.new(
+      eirini_kube_client: kube_client,
+      build_kube_client: build_kube_client,
+      kpack_kube_client: kpack_kube_client,
+      route_kube_client: route_kube_client
+    )
+  end
 
   before :all do
     WebMock.allow_net_connect!
