@@ -7,6 +7,7 @@ require 'cef_logs'
 require 'security_context_setter'
 require 'rate_limiter'
 require 'new_relic_custom_attributes'
+require 'zipkin'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -24,6 +25,7 @@ module VCAP::CloudController
         use Honeycomb::Rack::Middleware, client: Honeycomb.client if config.get(:honeycomb)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
+        use CloudFoundry::Middleware::Zipkin
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
             logger: Steno.logger('cc.rate_limiter'),
