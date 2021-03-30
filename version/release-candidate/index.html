@@ -1110,10 +1110,10 @@ This image is published to the app image registry and a <code class="prettyprint
 
 <p>Annotations are user-specified key-value pairs that are attached to <a href="#api-resource">API resources</a>. They do not affect the operation of Cloud Foundry. Annotations cannot be used in <a href="#filters">filters</a>.</p>
 
-<p>When a service instance is being created, the service broker is sent the annotations of the service instance, and the space and organization in which the service instance reside.
-When a service instance is being updated, the service broker is sent the annotations of the space and organization in which the service instance reside.
+<p>When a service instance is being created, the service broker is sent the annotations of the service instance, and the space and organization in which the service instance resides.
+When a service instance is being updated, the service broker is sent the annotations of the space and organization in which the service instance resides.
 When a service binding is being created, the service broker is sent annotations of any associated app, and the space and organization in which the binding resides.
-Only annotations with a prefix are sent.</p>
+Only annotations with a prefix (e.g. <code class="prettyprint">company.com/contacts</code>) are sent to service brokers.</p>
 
 <p>Examples may include (but are not limited to):</p>
 
