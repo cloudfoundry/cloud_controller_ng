@@ -3,6 +3,7 @@ module VCAP::CloudController
     SPACE_DEVELOPER     = 0
     SPACE_MANAGER       = 1
     SPACE_AUDITOR       = 2
+    SPACE_OPERATOR = 7
     ORG_USER            = 3
     ORG_MANAGER         = 4
     ORG_AUDITOR         = 5
@@ -44,6 +45,8 @@ module VCAP::CloudController
         case role
         when SPACE_DEVELOPER
           @user.spaces.map(&:guid)
+        when SPACE_OPERATOR
+          @user.operated_spaces.map(&:guid)
         when SPACE_MANAGER
           @user.managed_spaces.map(&:guid)
         when SPACE_AUDITOR
@@ -86,6 +89,10 @@ module VCAP::CloudController
         when SPACE_AUDITOR
           @space_auditor ||=
             @user.audited_spaces_dataset.
+            association_join(:organization).map(&:guid)
+        when SPACE_OPERATOR
+          @space_operator ||=
+            @user.operated_spaces_dataset.
             association_join(:organization).map(&:guid)
         when ORG_USER
           @org_user ||=

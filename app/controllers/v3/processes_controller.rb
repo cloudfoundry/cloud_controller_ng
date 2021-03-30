@@ -18,7 +18,7 @@ class ProcessesController < ApplicationController
   include AppSubResource
 
   before_action :find_process_and_space, except: :index
-  before_action :ensure_can_write, only: %i(update terminate scale)
+  before_action :ensure_can_operate, only: %i(update terminate scale)
 
   def index
     message = ProcessesListMessage.from_params(subresource_query_params)
@@ -116,8 +116,8 @@ class ProcessesController < ApplicationController
     end
   end
 
-  def ensure_can_write
-    unauthorized! unless permission_queryer.can_write_to_space?(@space.guid)
+  def ensure_can_operate
+    unauthorized! unless permission_queryer.can_operate_to_space?(@space.guid)
   end
 
   def process_not_found!

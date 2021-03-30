@@ -18,6 +18,7 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
+    VCAP::CloudController::Membership::SPACE_OPERATOR,
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
@@ -47,6 +48,11 @@ class VCAP::CloudController::Permissions
 
   ROLES_FOR_ROUTE_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
+  ].freeze
+
+  ROLES_FOR_SPACE_OPERATING ||= [
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_OPERATOR,
   ].freeze
 
   def initialize(user)
@@ -130,6 +136,13 @@ class VCAP::CloudController::Permissions
   def can_read_secrets_in_space?(space_guid, org_guid)
     can_read_secrets_globally? ||
       membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)
+  end
+
+  def can_operate_to_space?(space_guid)
+    return true if can_write_globally?
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_OPERATING, space_guid)
+
+    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
 
   def can_write_to_space?(space_guid)

@@ -178,6 +178,16 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_operate_to_space?(space_guid)
+    science 'can_operate_to_space' do |e|
+      e.context(space_guid: space_guid)
+      e.use { db_permissions.can_operate_to_space?(space_guid) }
+      e.try { perm_permissions.can_operate_to_space?(space_guid) }
+
+      e.run_if { !db_permissions.can_write_globally? }
+    end
+  end
+
   def can_update_space?(space_guid, org_guid)
     science 'can_update_space' do |e|
       e.context(space_guid: space_guid, org_guid: org_guid)

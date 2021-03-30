@@ -35,6 +35,11 @@ module VCAP::CloudController
       join_table: 'spaces_developers',
       right_key: :space_id, reciprocal: :developers
 
+    many_to_many :operated_spaces,
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_operators',
+      right_key: :space_id, reciprocal: :operators
+
     many_to_many :managed_spaces,
       class: 'VCAP::CloudController::Space',
       join_table: 'spaces_managers',
@@ -51,6 +56,7 @@ module VCAP::CloudController
     add_association_dependencies organizations: :nullify
     add_association_dependencies managed_organizations: :nullify
     add_association_dependencies audited_spaces: :nullify
+    add_association_dependencies operated_spaces: :nullify
     add_association_dependencies billing_managed_organizations: :nullify
     add_association_dependencies audited_organizations: :nullify
     add_association_dependencies spaces: :nullify
@@ -66,6 +72,7 @@ module VCAP::CloudController
       :billing_managed_organization_guids,
       :audited_organization_guids,
       :space_guids,
+      :operated_space_guids,
       :managed_space_guids,
       :audited_space_guids,
       :default_space_guid

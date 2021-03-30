@@ -3,6 +3,7 @@ module VCAP::CloudController
     SPACE_AUDITOR = 'space_auditor'.freeze
     SPACE_MANAGER = 'space_manager'.freeze
     SPACE_DEVELOPER = 'space_developer'.freeze
+    SPACE_OPERATOR = 'space_operator'.freeze
     ORGANIZATION_AUDITOR = 'organization_auditor'.freeze
     ORGANIZATION_MANAGER = 'organization_manager'.freeze
     ORGANIZATION_BILLING_MANAGER = 'organization_billing_manager'.freeze

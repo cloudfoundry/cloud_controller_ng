@@ -80,6 +80,17 @@ module VCAP::CloudController
         :updated_at),
       all: true,
       from_self: false
+    ).union(
+      SpaceOperator.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::SPACE_OPERATOR, :type),
+        Sequel.as(:role_guid, :guid),
+        :user_id,
+        Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
+        :space_id,
+        :created_at,
+        :updated_at),
+      all: true,
+      from_self: false
     ).from_self
   )
 
@@ -111,6 +122,8 @@ module VCAP::CloudController
         SpaceAuditor
       when VCAP::CloudController::RoleTypes::SPACE_DEVELOPER
         SpaceDeveloper
+      when VCAP::CloudController::RoleTypes::SPACE_OPERATOR
+        SpaceOperator
       when VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         OrganizationUser
       when VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR
