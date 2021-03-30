@@ -148,8 +148,8 @@ class PackagesController < ApplicationController
 
     app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
     unprocessable_app! unless app &&
-      permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid) &&
-      permission_queryer.can_write_to_space?(app.space.guid)
+      permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
     if message.type != PackageModel::DOCKER_TYPE && app.docker?
       unprocessable_non_docker_package!
@@ -166,13 +166,13 @@ class PackagesController < ApplicationController
     app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).first
     unprocessable_app! unless destination_app &&
-      permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid) &&
-      permission_queryer.can_write_to_space?(destination_app.space.guid)
+      permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
     source_package = PackageModel.where(guid: hashed_params[:source_guid]).eager(:app, :space, space: :organization).first
     unprocessable_source_package! unless source_package &&
-      permission_queryer.can_read_from_space?(source_package.space.guid, source_package.space.organization.guid) &&
-      permission_queryer.can_write_to_space?(source_package.space.guid)
+      permission_queryer.can_read_from_space?(source_package.space.guid, source_package.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(source_package.space.guid)
 
     PackageCopy.new.copy(
       destination_app_guid: app_guid,
