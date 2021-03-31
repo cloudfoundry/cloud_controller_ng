@@ -60,7 +60,7 @@ When deployed on Kubernetes, Cloud Controller uses
 
 ## Contributing
 
-Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md) and the [Cloud Foundry Code of Conduct](https://cloudfoundry.org/code-of-conduct/)
+Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/main/CONTRIBUTING.md) and the [Cloud Foundry Code of Conduct](https://cloudfoundry.org/code-of-conduct/)
 
 ### Unit Tests
 **TLDR:** Always run `bundle exec rake` before committing
