@@ -29,9 +29,9 @@ module CloudFoundry
           expect(VCAP::CloudController::SecurityContext.auth_token).to eq('auth-token')
         end
 
-        it 'sets the X-USER-GUID header' do
+        it 'adds the X-USER-GUID header' do
           _, header, _ = middleware.call(env)
-          expect(header).to include({ 'X-USER-GUID' => 'user-id-1' })
+          expect(header).to eq({ 'X-USER-GUID' => 'user-id-1' })
         end
 
         context 'when given a UAA user token' do
