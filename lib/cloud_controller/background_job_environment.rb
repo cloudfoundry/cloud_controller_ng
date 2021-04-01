@@ -39,7 +39,7 @@ class BackgroundJobEnvironment
           c.close
         end
       end
-    rescue Errno::EBADF
+    rescue Errno::EBADF, IOError
       Thread.exit
     end
   end
