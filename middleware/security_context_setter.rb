@@ -23,6 +23,8 @@ module CloudFoundry
           return invalid_token!(env, headers)
         end
 
+        headers['X-USER-GUID'] = env['cf.user_guid'] if env['cf.user_guid']
+
         return [status, headers, body]
       rescue VCAP::CloudController::UaaUnavailable => e
         logger.error("Failed communicating with UAA: #{e.message}")

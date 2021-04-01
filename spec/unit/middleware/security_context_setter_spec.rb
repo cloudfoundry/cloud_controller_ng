@@ -29,6 +29,11 @@ module CloudFoundry
           expect(VCAP::CloudController::SecurityContext.auth_token).to eq('auth-token')
         end
 
+        it 'adds the X-USER-GUID header' do
+          _, header, _ = middleware.call(env)
+          expect(header).to eq({ 'X-USER-GUID' => 'user-id-1' })
+        end
+
         context 'when given a UAA user token' do
           it 'sets user name and guid on the env' do
             middleware.call(env)
@@ -53,6 +58,17 @@ module CloudFoundry
           end
         end
 
+        context 'when there is no token (unauthenticated)' do
+          before do
+            allow(token_decoder).to receive(:decode_token)
+          end
+
+          it 'does not set the X-USER-GUID header' do
+            _, header, _ = middleware.call({})
+            expect(header).not_to include('X-USER-GUID')
+          end
+        end
+
         context 'when the rate limiter returns 429' do
           let(:app) { double(:app, call: [429, { 'X-RateLimit-Remaining' => '0' }, 'a body']) }
 
@@ -64,7 +80,7 @@ module CloudFoundry
             it 'forwards the response from the rate limiter' do
               status, headers, body = middleware.call(env)
               expect(status).to eq(429)
-              expect(headers).to eq({ 'X-RateLimit-Remaining' => '0' })
+              expect(headers).to include({ 'X-RateLimit-Remaining' => '0' })
               expect(body).to eq('a body')
             end
           end
