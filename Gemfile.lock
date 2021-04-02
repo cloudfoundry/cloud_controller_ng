@@ -430,7 +430,7 @@ GEM
     rubyzip (2.3.0)
     safe_yaml (1.0.4)
     scientist (1.1.1)
-    sequel (5.41.0)
+    sequel (5.43.0)
     sexp_processor (4.7.0)
     signet (0.11.0)
       addressable (~> 2.3)
@@ -586,7 +586,7 @@ DEPENDENCIES
   ruby-debug-ide (>= 0.7.0.beta4)
   rubyzip (>= 1.3.0)
   scientist (~> 1.1.0)
-  sequel (~> 5.41)
+  sequel (~> 5.43)
   sinatra (~> 2.0)
   sinatra-contrib
   solargraph
