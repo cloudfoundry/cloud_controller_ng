@@ -34,9 +34,7 @@ module VCAP::CloudController
     private
 
     def diego_reporter
-      @diego_reporter ||= begin
-        Diego::InstancesReporter.new(dependency_locator.bbs_instances_client)
-      end
+      @diego_reporter ||= Diego::InstancesReporter.new(dependency_locator.bbs_instances_client)
     end
 
     def diego_stats_reporter

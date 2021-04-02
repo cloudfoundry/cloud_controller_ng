@@ -284,23 +284,19 @@ module UserHelpers
 
   def permissions_double(user)
     @permissions ||= {}
-    @permissions[user.guid] ||= begin
-      instance_double(VCAP::CloudController::Permissions).tap do |permissions|
-        allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
-        allow(permissions).to receive(:can_read_globally?).and_return(false)
-      end
+    @permissions[user.guid] ||= instance_double(VCAP::CloudController::Permissions).tap do |permissions|
+      allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
+      allow(permissions).to receive(:can_read_globally?).and_return(false)
     end
   end
 
   def perm_permissions_double(user)
     @perm_permissions ||= {}
-    @perm_permissions[user.guid] ||= begin
-      instance_double(VCAP::CloudController::Perm::Permissions).tap do |permissions|
-        allow(VCAP::CloudController::Perm::Permissions).to receive(:new).
-          with(user_id: user.guid, perm_client: anything, issuer: anything, roles: anything).
-          and_return(permissions)
-        allow(permissions).to receive(:can_read_globally?).and_return(false)
-      end
+    @perm_permissions[user.guid] ||= instance_double(VCAP::CloudController::Perm::Permissions).tap do |permissions|
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).
+        with(user_id: user.guid, perm_client: anything, issuer: anything, roles: anything).
+        and_return(permissions)
+      allow(permissions).to receive(:can_read_globally?).and_return(false)
     end
   end
 end
