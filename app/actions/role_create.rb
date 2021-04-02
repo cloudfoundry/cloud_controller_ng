@@ -22,6 +22,8 @@ module VCAP::CloudController
         create_space_auditor(user, space)
       when RoleTypes::SPACE_DEVELOPER
         create_space_developer(user, space)
+      when RoleTypes::SPACE_OPERATOR
+        create_space_operator(user, space)
       when RoleTypes::SPACE_MANAGER
         create_space_manager(user, space)
       else
@@ -70,6 +72,11 @@ module VCAP::CloudController
     def create_space_manager(user, space)
       record_space_event(space, user, 'manager')
       SpaceManager.create(user_id: user.id, space_id: space.id)
+    end
+
+    def create_space_operator(user, space)
+      record_space_event(space, user, 'manager')
+      SpaceOperator.create(user_id: user.id, space_id: space.id)
     end
 
     def create_organization_user(user, organization)

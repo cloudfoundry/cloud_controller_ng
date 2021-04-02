@@ -19,6 +19,7 @@ module VCAP::CloudController
     SPACE_ROLES = [
       SPACE_AUDITOR,
       SPACE_MANAGER,
+      SPACE_OPERATOR,
       SPACE_DEVELOPER
     ].freeze
 
