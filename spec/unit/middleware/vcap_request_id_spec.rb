@@ -5,11 +5,11 @@ module CloudFoundry
   module Middleware
     RSpec.describe VcapRequestId do
       let(:middleware) { VcapRequestId.new(app) }
-      let(:app) { FakeApp.new }
+      let(:app) { VcapRequestId::FakeApp.new }
       let(:app_response) { [200, {}, 'a body'] }
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }
 
-      class FakeApp
+      class VcapRequestId::FakeApp
         attr_accessor :last_request_id, :last_env_input
 
         def call(env)

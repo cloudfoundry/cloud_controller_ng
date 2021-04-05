@@ -6,9 +6,9 @@ module CloudFoundry
   module Middleware
     RSpec.describe Zipkin do
       let(:middleware) { Zipkin.new(app) }
-      let(:app) { FakeApp.new }
+      let(:app) { Zipkin::FakeApp.new }
 
-      class FakeApp
+      class Zipkin::FakeApp
         attr_accessor :last_trace_id, :last_span_id, :last_env_input
 
         def call(env)
