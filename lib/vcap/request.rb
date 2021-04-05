@@ -1,3 +1,4 @@
+# rubocop:disable all
 module VCAP
   module Request
     HEADER_NAME = 'X-VCAP-Request-ID'.freeze
@@ -11,6 +12,7 @@ module VCAP
     class << self
       def current_id=(request_id)
         Thread.current[:vcap_request_id] = request_id
+        puts "current_id= Thread.current[:vcap_request_id]: #{Thread.current[:vcap_request_id]}" if $debugger
         if request_id.nil?
           Steno.config.context.data.delete('request_guid')
         else
@@ -19,6 +21,7 @@ module VCAP
       end
 
       def current_id
+        puts "current_id Thread.current[:vcap_request_id]: #{Thread.current[:vcap_request_id]}" if $debugger
         Thread.current[:vcap_request_id]
       end
 

@@ -1,3 +1,4 @@
+# rubocop:disable all
 require 'spec_helper'
 require 'vcap_request_id'
 
@@ -13,17 +14,22 @@ module CloudFoundry
         attr_accessor :last_request_id, :last_env_input
 
         def call(env)
+          puts "FakeApp.call Thread.current[:vcap_request_id]: #{Thread.current[:vcap_request_id]}" if $debugger
           @last_request_id = ::VCAP::Request.current_id
+          puts "FakeApp.call after set Thread.current[:vcap_request_id]: #{Thread.current[:vcap_request_id]}" if $debugger
           @last_env_input = env
           [200, {}, 'a body']
         end
       end
 
       describe 'handling the request' do
-        context 'setting the request_id in the logger' do
+        context 'setting the  request_id in the logger' do
           it 'has assigned it before passing the request' do
+            $debugger = true
             middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+            puts "NUMBER OF THREADS: #{Thread.list.select { |thread| thread.status == 'run' }.count}"
             expect(app.last_request_id).to match(/^specific-request-id::#{uuid_regex}$/)
+            $debugger = false
           end
 
           it 'nils it out after the request has been processed' do

@@ -1,3 +1,4 @@
+#rubocop:disable all
 require 'spec_helper'
 require 'zipkin'
 require 'securerandom'
@@ -12,6 +13,7 @@ module CloudFoundry
         attr_accessor :last_trace_id, :last_span_id, :last_env_input
 
         def call(env)
+          puts 'IN ZIPKIN MIDDLEWARE' if $debugger
           @last_trace_id = ::VCAP::Request.b3_trace_id
           @last_span_id = ::VCAP::Request.b3_span_id
           @last_env_input = env
