@@ -17,6 +17,13 @@ jobs:
       run: bundle install
     - name: Run Rubocop
       run: bundle exec rake rubocop
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
   test_postgres:
     runs-on: ubuntu-latest
     container:
@@ -29,6 +36,13 @@ jobs:
       run: service postgresql restart
     - name: Run tests
       run: DB=postgres bundle exec rake spec:all
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
   test_mysql:
     runs-on: ubuntu-latest
     container:
@@ -43,6 +57,13 @@ jobs:
         service mysql restart
     - name: Run tests
       run: DB=mysql bundle exec rake spec:all
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
   test_docs:
     runs-on: ubuntu-latest
     container:
@@ -57,4 +78,10 @@ jobs:
           cd -
       - name: Run docs tests
         run: bundle exec rake check_doc_links
-
+      - uses: ravsamhq/notify-slack-action@v1.1
+        if: always()
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure' # default is 'success,failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
