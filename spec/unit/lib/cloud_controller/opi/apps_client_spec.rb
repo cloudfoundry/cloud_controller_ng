@@ -1,18 +1,25 @@
 require 'spec_helper'
 require 'cloud_controller/opi/apps_client'
+require 'cloud_controller/opi/apps_rest_client'
 
-RSpec.describe(OPI::Client) do
+RSpec.describe(OPI::KubernetesClient) do
   let(:opi_url) { 'http://opi.service.cf.internal:8077' }
+  let(:eirini_kube_client) { double(Kubernetes::ApiClient) }
+  let(:opi_apps_client) { double(OPI::Client) }
   let(:config) do
     TestConfig.override(
       opi: {
         url: opi_url
       },
+      kubernetes: {
+        host_url: 'https://kubernetes.example.com',
+        workloads_namespace: 'cf-workloads',
+      }
     )
   end
 
   describe '#desire_app' do
-    subject(:client) { described_class.new(config) }
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
     let(:img_url) { 'http://example.org/image1234' }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       lifecycle_type,
@@ -28,7 +35,7 @@ RSpec.describe(OPI::Client) do
       instance_double(VCAP::CloudController::Diego::Protocol::RoutingInfo)
     }
 
-    let(:lifecycle_type) { nil }
+    let(:lifecycle_type) { :kpack }
     let(:org) { ::VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name') }
     let(:space) { ::VCAP::CloudController::Space.make(guid: 'space-guid', name: 'space-name', organization: org) }
     let(:app_model) {
@@ -52,6 +59,7 @@ RSpec.describe(OPI::Client) do
         instances:            21,
         memory:               128,
         disk_quota:           256,
+        ports:                [8080],
         command:              'ls -la',
         file_descriptors:     32,
         health_check_type:    'port',
@@ -98,23 +106,28 @@ RSpec.describe(OPI::Client) do
         allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
         allow(VCAP::CloudController::Diego::EgressRules).to receive(:new).and_return(egress_rules)
         allow(egress_rules).to receive(:running_protobuf_rules).and_return(protobuf_rules)
-
-        stub_request(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").to_return(status: 201)
+        allow(eirini_kube_client).to receive(:create_lrp)
       end
 
-      let(:expected_body) {
-        {
-            guid: 'process-guid',
+      let(:expected_lrp) {
+        Kubeclient::Resource.new({
+          metadata: {
+            name: 'app-name',
+            namespace: 'cf-workloads',
+          },
+          spec: {
+            GUID: 'process-guid',
             version: lrp.version.to_s,
-            process_guid: "process-guid-#{lrp.version}",
-            process_type: 'web',
-            app_guid: 'app-guid',
-            app_name: 'app-name',
-            space_guid: 'space-guid',
-            space_name: 'space-name',
-            organization_name: 'org-name',
-            organization_guid: 'org-guid',
-            environment: {
+            processType: 'web',
+            appGUID: 'app-guid',
+            appName: 'app-name',
+            spaceGUID: 'space-guid',
+            spaceName: 'space-name',
+            orgGUID: 'org-guid',
+            orgName: 'org-name',
+            command: ['/cnb/lifecycle/launcher', 'ls -la'],
+            image: 'http://example.org/image1234',
+            env: {
               BISH: 'BASH',
               FOO: 'BAR',
               VCAP_APPLICATION: %{
@@ -146,65 +159,36 @@ RSpec.describe(OPI::Client) do
               VCAP_APP_HOST: '0.0.0.0'
             },
             instances: 21,
-            memory_mb: 128,
-            cpu_weight: 1,
-            disk_mb: 256,
-            health_check_type: 'port',
-            health_check_http_endpoint: nil,
-            health_check_timeout_ms: 12000,
-            start_timeout_ms: 12000,
-            placement_tags: ['placement-tag'],
-            egress_rules: [
-              {
-                protocol: 'udp',
-                destinations:  ['1.2.3.4'],
-                ports: [8080],
-              },
-              {
-                protocol:     'tcp',
-                destinations: ['5.6.7.8'],
-                portRange:   { start: 9090, end: 9095 },
-                log:          true,
-              },
-            ],
-            last_updated: '2.0',
-            volume_mounts: [],
-            ports: [8080],
-            routes: {
-              "cf-router": [
-                {
-                  hostname: 'numero-uno.example.com',
-                  port: 8080
-                },
-                {
-                  hostname: 'numero-dos.example.com',
-                  port: 7777
-                }
-              ]
+            memoryMB: 128,
+            cpuWeight: 1,
+            diskMB: 256,
+            health: {
+              type: 'port',
+              timeoutMs: 12000,
+              port: 8080,
             },
-            user_defined_annotations: {}
-        }
+            lastUpdated: '2.0',
+            volumeMounts: [],
+            ports: [8080],
+            appRoutes: [
+              {
+                hostname: 'numero-uno.example.com',
+                port: 8080
+              },
+              {
+                hostname: 'numero-dos.example.com',
+                port: 7777
+              }
+            ],
+            userDefinedAnnotations: {}
+          },
+        })
       }
 
-      context 'when the process is missing a health check timeout' do
-        let(:config) do
-          TestConfig.override(
-            opi: {
-              url: opi_url
-            },
-            default_health_check_timeout: 99
-          )
-        end
-        it 'uses the default value in the config' do
-          lrp.set_fields({ health_check_timeout: nil }, [:health_check_timeout])
+      it 'creates an LRP custom resource' do
+        subject.desire_app(lrp)
 
-          client.desire_app(lrp)
-
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-            actual_body = MultiJson.load(request.body, symbolize_keys: true)
-            actual_body[:start_timeout_ms] == 99000
-          }
-        end
+        expect(eirini_kube_client).to have_received(:create_lrp).with(expected_lrp)
       end
 
       context 'when the app has annotations' do
@@ -229,37 +213,39 @@ RSpec.describe(OPI::Client) do
         end
 
         it 'propagates only those that start with prometheus.io' do
-          response = client.desire_app(lrp)
+          subject.desire_app(lrp)
 
-          expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-            actual_body = MultiJson.load(request.body, symbolize_keys: true)
-            actual_body[:user_defined_annotations] == { 'prometheus.io/port': '6666' }
-          }
+          expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+            expect(actual_lrp.spec.userDefinedAnnotations).to eq(Kubeclient::Resource.new({ 'prometheus.io/port' => '6666' }))
+          end
         end
       end
 
-      context 'when droplet has a buildpack lifecycle' do
-        let(:lifecycle_type) { :buildpack }
-        let(:buildpack_lifecycle) {
-          {
-            lifecycle: {
-              buildpack_lifecycle: {
-                droplet_hash: lrp.droplet_hash,
-                droplet_guid: 'some-droplet-guid',
-                start_command: 'ls -la',
-              }
-            }
-          }
-        }
-        it 'sends a PUT request' do
-          response = client.desire_app(lrp)
+      context 'when droplet has a docker lifecycle' do
+        let(:lifecycle_type) { :docker }
 
-          expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-            actual_body = MultiJson.load(request.body, symbolize_keys: true)
-            actual_body == expected_body.merge(buildpack_lifecycle)
-          }
+        it 'configures a private registry in the desired LRP' do
+          subject.desire_app(lrp)
+
+          expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+            expect(actual_lrp.spec.privateRegistry).to include(username: 'docker-user', password: 'docker-password')
+          end
+        end
+
+        it 'sets the image URL' do
+          subject.desire_app(lrp)
+
+          expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+            expect(actual_lrp.spec.image).to eq('http://example.org/image1234')
+          end
+        end
+
+        it 'sets the command' do
+          subject.desire_app(lrp)
+
+          expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+            expect(actual_lrp.spec.command).to eq(['/bin/sh', '-c', 'ls -la'])
+          end
         end
 
         context 'when volume mounts are provided' do
@@ -311,135 +297,79 @@ RSpec.describe(OPI::Client) do
             service_credentials
           }
 
-          before do
+          it 'configures the volume mounts and VCAP_SERVICES env var' do
             creds_json = MultiJson.dump(creds)
-            expected_body[:environment][:VCAP_SERVICES] = %{{"#{service_instance.service.label}":[{
-            "label": "#{service_instance.service.label}",
-            "provider": null,
-            "plan": "#{service_instance.service_plan.name}",
-            "name": "#{service_instance.name}",
-            "tags": [],
-            "instance_guid": "#{service_instance.guid}",
-            "instance_name": "#{service_instance.name}",
-            "binding_guid": "#{binding.guid}",
-            "binding_name": null,
-            "credentials": #{creds_json},
-            "syslog_drain_url": null,
-            "volume_mounts": [
-              {
-                "container_dir": "/data/images",
-                "mode": "r",
-                "device_type": "shared"
-              },
-              {
-                "container_dir": "/data/pictures",
-                "mode": "r",
-                "device_type": "shared"
-              },
-              {
-                "container_dir": "/data/scratch",
-                "mode": "rw",
-                "device_type": "shared"
-              }
-            ]
-          }]}}.delete(' ').delete("\n")
-
-            expected_body[:volume_mounts] = [
-              {
-                volume_id: 'volume-one',
-                mount_dir: '/data/images'
-              }
-            ]
-          end
-
-          it 'sends a PUT request' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              actual_body == expected_body.merge(buildpack_lifecycle)
-            }
-          end
-        end
-      end
-
-      context 'when droplet has a docker lifecycle' do
-        let(:lifecycle_type) { :docker }
-        it 'sends a PUT request' do
-          response = client.desire_app(lrp)
-
-          expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-            actual_body = MultiJson.load(request.body, symbolize_keys: true)
-            expected_body_with_lifecycle = expected_body.merge(lifecycle: {
-              docker_lifecycle: {
-                image: 'http://example.org/image1234',
-                registry_username: 'docker-user',
-                registry_password: 'docker-password',
-                command: ['/bin/sh', '-c', 'ls -la']
-              }
-            })
-            actual_body == expected_body_with_lifecycle
-          }
-        end
-      end
-
-      context 'when droplet has a kpack lifecycle' do
-        let(:lifecycle_type) { :kpack }
-
-        context 'when the process has a specified start command' do
-          it 'sends a PUT request with the specified command' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
-                docker_lifecycle: {
-                  image: 'http://example.org/image1234',
-                  command: ['/cnb/lifecycle/launcher', 'ls -la']
+            vcap_services = %{{"#{service_instance.service.label}":[{
+              "label": "#{service_instance.service.label}",
+              "provider": null,
+              "plan": "#{service_instance.service_plan.name}",
+              "name": "#{service_instance.name}",
+              "tags": [],
+              "instance_guid": "#{service_instance.guid}",
+              "instance_name": "#{service_instance.name}",
+              "binding_guid": "#{binding.guid}",
+              "binding_name": null,
+              "credentials": #{creds_json},
+              "syslog_drain_url": null,
+              "volume_mounts": [
+                {
+                  "container_dir": "/data/images",
+                  "mode": "r",
+                  "device_type": "shared"
+                },
+                {
+                  "container_dir": "/data/pictures",
+                  "mode": "r",
+                  "device_type": "shared"
+                },
+                {
+                  "container_dir": "/data/scratch",
+                  "mode": "rw",
+                  "device_type": "shared"
                 }
-              })
-              actual_body == expected_body_with_lifecycle
-            }
+              ]
+            }]}}.delete(' ').delete("\n")
+
+            subject.desire_app(lrp)
+
+            expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+              expect(actual_lrp.spec.env['VCAP_SERVICES']).to eq(vcap_services)
+              expect(actual_lrp.spec.volumeMounts.length).to eq(1)
+              expect(actual_lrp.spec.volumeMounts.first).to include(claimName: 'volume-one', mountPath: '/data/images')
+            end
           end
         end
+      end
 
-        context 'when the process has a detected start command' do
-          let(:lrp) do
-            lrp = ::VCAP::CloudController::ProcessModel.make(:process,
-              app:                  app_model,
-              state:                'STARTED',
-              diego:                false,
-              guid:                 'process-guid',
-              type:                 'web',
-              health_check_timeout: 12,
-              instances:            21,
-              memory:               128,
-              disk_quota:           256,
-              file_descriptors:     32,
-              health_check_type:    'port',
-              enable_ssh:           false,
+      context 'when the process has a detected start command' do
+        let(:lrp) do
+          lrp = ::VCAP::CloudController::ProcessModel.make(
+            :process,
+            app:                  app_model,
+            state:                'STARTED',
+            diego:                false,
+            guid:                 'process-guid',
+            type:                 'web',
+            health_check_timeout: 12,
+            instances:            21,
+            memory:               128,
+            disk_quota:           256,
+            file_descriptors:     32,
+            health_check_type:    'port',
+            enable_ssh:           false,
+          )
+          lrp.this.update(updated_at: Time.at(2))
+          lrp.reload
+        end
+
+        it 'includes the start command in the LRP request' do
+          subject.desire_app(lrp)
+
+          expect(eirini_kube_client).to have_received(:create_lrp) do |actual_lrp|
+            expect(actual_lrp.spec).to include(
+              image: 'http://example.org/image1234',
+              command: ['/cnb/lifecycle/launcher', '$HOME/boot.sh']
             )
-            lrp.this.update(updated_at: Time.at(2))
-            lrp.reload
-          end
-
-          it 'sends a PUT request with the detected command' do
-            response = client.desire_app(lrp)
-
-            expect(response.status_code).to equal(201)
-            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
-              actual_body = MultiJson.load(request.body, symbolize_keys: true)
-              expected_body_with_lifecycle = expected_body.merge(lifecycle: {
-                docker_lifecycle: {
-                  image: 'http://example.org/image1234',
-                  command: ['/cnb/lifecycle/launcher', '$HOME/boot.sh']
-                }
-              })
-              actual_body == expected_body_with_lifecycle
-            }
           end
         end
       end
@@ -447,239 +377,154 @@ RSpec.describe(OPI::Client) do
   end
 
   describe '#fetch_scheduling_infos' do
-    let(:expected_body) { { desired_lrp_scheduling_infos: [
-      { desired_lrp_key: { process_guid: 'guid_1234', annotation: '1111111111111.1' } },
-      { desired_lrp_key: { process_guid: 'guid_5678', annotation: '222222222222222.2' } }
-    ] }.to_json
-    }
+    let(:scheduling_infos) { double }
 
-    subject(:client) {
-      described_class.new(config)
-    }
+    before do
+      allow(opi_apps_client).to receive('fetch_scheduling_infos').and_return(scheduling_infos)
+    end
 
-    context 'when request executes successfully' do
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
+
+    it 'delegates the call to the opi apps client' do
+      actual_scheduling_infos = client.fetch_scheduling_infos
+      expect(opi_apps_client).to have_received(:fetch_scheduling_infos)
+      expect(actual_scheduling_infos).to eq(scheduling_infos)
+    end
+
+    context 'when the rest client raises an error' do
+      let(:err) {
+        CloudController::Errors::ApiError.new
+      }
+
       before do
-        stub_request(:get, "#{opi_url}/apps").
-          to_return(status: 200, body: expected_body)
+        allow(opi_apps_client).to receive(:fetch_scheduling_infos).and_raise(err)
       end
 
-      it 'returns the expected scheduling infos' do
-        scheduling_infos = client.fetch_scheduling_infos
-        expect(WebMock).to have_requested(:get, "#{opi_url}/apps")
-
-        expect(scheduling_infos).to match_array([
-          OpenStruct.new(desired_lrp_key: OpenStruct.new(process_guid: 'guid_1234', annotation: '1111111111111.1')),
-          OpenStruct.new(desired_lrp_key: OpenStruct.new(process_guid: 'guid_5678', annotation: '222222222222222.2'))
-        ])
+      it 'raises the same error' do
+        expect { client.fetch_scheduling_infos }.to raise_error(err)
+        expect(opi_apps_client).to have_received(:fetch_scheduling_infos)
       end
     end
   end
 
   describe '#update_app' do
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-    subject(:client) { described_class.new(config) }
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
 
+    let(:process) { double }
     let(:existing_lrp) { double }
-    let(:process) {
-      double(guid: 'guid-1234', version: 'version-1234', desired_instances: 5, updated_at: Time.at(1529064800.9))
-    }
-    let(:routing_info) {
-      instance_double(VCAP::CloudController::Diego::Protocol::RoutingInfo)
-    }
 
     before do
-      routes = {
-            'http_routes' => [
-              {
-                'hostname'          => 'numero-uno.example.com',
-                'port'              => 8080
-              },
-              {
-                'hostname'          => 'numero-dos.example.com',
-                'port'              => 8080
-              }
-            ]
-      }
-
-      allow(routing_info).to receive(:routing_info).and_return(routes)
-      allow(VCAP::CloudController::Diego::Protocol::RoutingInfo).to receive(:new).with(process).and_return(routing_info)
-
-      stub_request(:post, "#{opi_url}/apps/guid-1234-version-1234").
-        to_return(status: 200)
+      allow(opi_apps_client).to receive('update_app')
     end
 
-    context 'when request contains updated instances and routes' do
-      let(:expected_body) {
-        {
-            guid: 'guid-1234',
-            version: 'version-1234',
-            update: {
-              instances: 5,
-              routes: {
-                'cf-router' => [
-                  {
-                    'hostname' => 'numero-uno.example.com',
-                    'port' => 8080
-                  },
-                  {
-                    'hostname' => 'numero-dos.example.com',
-                    'port' => 8080
-                  }
-                ]
-              },
-              annotation: '1529064800.9'
-            }
-        }.to_json
-      }
-
-      it 'executes an http request with correct instances and routes' do
-        client.update_app(process, existing_lrp)
-        expect(WebMock).to have_requested(:post, "#{opi_url}/apps/guid-1234-version-1234").
-          with(body: expected_body)
-      end
-
-      it 'propagates the response' do
-        response = client.update_app(process, existing_lrp)
-
-        expect(response.status_code).to equal(200)
-        expect(response.body).to be_empty
-      end
+    it 'delegates the request to the opi apps client' do
+      client.update_app(process, existing_lrp)
+      expect(opi_apps_client).to have_received(:update_app).with(process, existing_lrp)
     end
 
-    context 'when request does not contain routes' do
-      let(:expected_body) {
-        {
-            guid: 'guid-1234',
-            version: 'version-1234',
-            update: {
-              instances: 5,
-              routes: { 'cf-router' => [] },
-              annotation: '1529064800.9'
-            }
-        }.to_json
+    context 'when the rest client raises an error' do
+      let(:err) {
+        CloudController::Errors::ApiError.new
       }
 
       before do
-        allow(routing_info).to receive(:routing_info).and_return({})
+        allow(opi_apps_client).to receive(:update_app).and_raise(err)
       end
 
-      it 'executes an http request with empty cf-router entry' do
-        client.update_app(process, existing_lrp)
-        expect(WebMock).to have_requested(:post, "#{opi_url}/apps/guid-1234-version-1234").
-          with(body: expected_body)
-      end
-
-      it 'propagates the response' do
-        response = client.update_app(process, existing_lrp)
-
-        expect(response.status_code).to equal(200)
-        expect(response.body).to be_empty
-      end
-    end
-
-    context 'when the response has an error' do
-      let(:expected_body) do
-        { error: { message: 'reasons for failure' } }.to_json
-      end
-
-      before do
-        stub_request(:post, "#{opi_url}/apps/guid-1234-version-1234").
-          to_return(status: 400, body: expected_body)
-      end
-
-      it 'raises ApiError' do
-        expect { client.update_app(process, existing_lrp) }.to raise_error(CloudController::Errors::ApiError)
+      it 'raises the same error' do
+        expect { client.update_app(process, existing_lrp) }.to raise_error(err)
+        expect(opi_apps_client).to have_received(:update_app).with(process, existing_lrp)
       end
     end
   end
 
   describe '#get_app' do
-    subject(:client) { described_class.new(config) }
-    let(:process) { double(guid: 'guid-1234', version: 'version-1234') }
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
+    let(:process) { double }
+    let(:desired_app) { double }
 
-    context 'when the app exists' do
-      let(:desired_lrp) {
-        { process_guid: 'guid-1234', instances: 5 }
-      }
-
-      let(:expected_body) {
-        { desired_lrp: desired_lrp }.to_json
-      }
-      before do
-        stub_request(:get, "#{opi_url}/apps/guid-1234/version-1234").
-          to_return(status: 200, body: expected_body)
-      end
-
-      it 'executes an HTTP request' do
-        client.get_app(process)
-        expect(WebMock).to have_requested(:get, "#{opi_url}/apps/guid-1234/version-1234")
-      end
-
-      it 'returns the desired lrp' do
-        desired_lrp = client.get_app(process)
-        expect(desired_lrp.process_guid).to eq('guid-1234')
-        expect(desired_lrp.instances).to eq(5)
-      end
+    before do
+      allow(opi_apps_client).to receive(:get_app).and_return(desired_app)
     end
 
-    context 'when the app does not exist' do
+    it 'delegates the call to the opi apps client' do
+      desired_lrp = client.get_app(process)
+      expect(opi_apps_client).to have_received(:get_app).with(process)
+      expect(desired_lrp).to eq(desired_lrp)
+    end
+
+    context 'when the rest client raises an error' do
+      let(:err) {
+        CloudController::Errors::ApiError.new
+      }
+
       before do
-        stub_request(:get, "#{opi_url}/apps/guid-1234/version-1234").
-          to_return(status: 404)
+        allow(opi_apps_client).to receive(:get_app).and_raise(err)
       end
 
-      it 'executed and HTTP request' do
-        client.get_app(process)
-        expect(WebMock).to have_requested(:get, "#{opi_url}/apps/guid-1234/version-1234")
-      end
-
-      it 'returns nil' do
-        desired_lrp = client.get_app(process)
-        expect(desired_lrp).to be_nil
+      it 'raises the same error' do
+        expect { client.get_app(process) }.to raise_error(err)
+        expect(opi_apps_client).to have_received(:get_app).with(process)
       end
     end
   end
 
   context '#stop_app' do
-    let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
-    let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
-    subject(:client) { described_class.new(config) }
+    let(:versioned_guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
 
     before do
-      stub_request(:put, "#{opi_url}/apps/#{guid}/#{version}/stop").
-        to_return(status: 200)
+      allow(opi_apps_client).to receive(:stop_app)
     end
 
-    it 'executes an HTTP request' do
-      client.stop_app("#{guid}-#{version}")
-      expect(WebMock).to have_requested(:put, "#{opi_url}/apps/#{guid}/#{version}/stop")
+    it 'delegates the call to the opi apps client' do
+      client.stop_app(versioned_guid)
+      expect(opi_apps_client).to have_received(:stop_app).with(versioned_guid)
     end
 
-    it 'returns status OK' do
-      response = client.stop_app("#{guid}-#{version}")
-      expect(response.status).to equal(200)
+    context 'when the rest client raises an error' do
+      let(:err) {
+        CloudController::Errors::ApiError.new
+      }
+
+      before do
+        allow(opi_apps_client).to receive(:stop_app).and_raise(err)
+      end
+
+      it 'raises the same error' do
+        expect { client.stop_app(versioned_guid) }.to raise_error(err)
+        expect(opi_apps_client).to have_received(:stop_app).with(versioned_guid)
+      end
     end
   end
 
   context '#stop_index' do
-    let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
-    let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
+    let(:versioned_guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
     let(:index) { 1 }
-    subject(:client) { described_class.new(config) }
+    subject(:client) { described_class.new(config, eirini_kube_client, opi_apps_client) }
 
     before do
-      stub_request(:put, "#{opi_url}/apps/#{guid}/#{version}/stop/#{index}").
-        to_return(status: 200)
+      allow(opi_apps_client).to receive(:stop_index)
     end
 
-    it 'executes an HTTP request' do
-      client.stop_index("#{guid}-#{version}", index)
-      expect(WebMock).to have_requested(:put, "#{opi_url}/apps/#{guid}/#{version}/stop/#{index}")
+    it 'delegates the call to the opi apps client' do
+      client.stop_index(versioned_guid, index)
+      expect(opi_apps_client).to have_received(:stop_index).with(versioned_guid, index)
     end
 
-    it 'returns status OK' do
-      response = client.stop_index("#{guid}-#{version}", index)
-      expect(response.status).to equal(200)
+    context 'when the rest client raises an error' do
+      let(:err) {
+        CloudController::Errors::ApiError.new
+      }
+
+      before do
+        allow(opi_apps_client).to receive(:stop_index).and_raise(err)
+      end
+
+      it 'raises the same error' do
+        expect { client.stop_index(versioned_guid, index) }.to raise_error(err)
+        expect(opi_apps_client).to have_received(:stop_index).with(versioned_guid, index)
+      end
     end
   end
 end

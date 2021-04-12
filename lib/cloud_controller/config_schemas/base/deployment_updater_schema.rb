@@ -54,6 +54,7 @@ module VCAP::CloudController
               enabled: bool,
               url: String,
               opi_staging: bool,
+              optional(:experimental_enable_crds) => bool,
             },
 
             default_app_memory: Integer,

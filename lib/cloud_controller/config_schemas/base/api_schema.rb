@@ -292,6 +292,7 @@ module VCAP::CloudController
               url: String,
               opi_staging: bool,
               cc_uploader_url: String,
+              optional(:experimental_enable_crds) => bool,
             },
 
             allow_app_ssh_access: bool,

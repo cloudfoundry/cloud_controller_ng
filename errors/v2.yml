@@ -1313,3 +1313,8 @@
   name: KpackBuilderError
   http_code: 422
   message: "Failed to %s Builder resource: '%s'"
+
+410001:
+  name: EiriniLRPError
+  http_code: 422
+  message: "Failed to %s LRP resource: '%s'"

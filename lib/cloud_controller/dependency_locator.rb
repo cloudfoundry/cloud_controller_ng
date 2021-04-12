@@ -30,6 +30,7 @@ require 'cloud_controller/packager/bits_service_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
+require 'cloud_controller/opi/apps_rest_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
 require 'cloud_controller/opi/task_client'
@@ -401,10 +402,18 @@ module CloudController
         ca_crt: config.kubernetes_ca_cert,
       )
 
+      eirini_kube_client = Kubernetes::KubeClientBuilder.build(
+        api_group_url: "#{config.kubernetes_host_url}/apis/eirini.cloudfoundry.org",
+        version: 'v1',
+        service_account_token: config.kubernetes_service_account_token,
+        ca_crt: config.kubernetes_ca_cert,
+      )
+
       Kubernetes::ApiClient.new(
         build_kube_client: build_kube_client,
         kpack_kube_client: kpack_kube_client,
         route_kube_client: route_kube_client,
+        eirini_kube_client: eirini_kube_client,
       )
     end
 
@@ -449,7 +458,12 @@ module CloudController
     end
 
     def build_opi_apps_client
-      ::OPI::Client.new(config)
+      opi_apps_client = ::OPI::Client.new(config)
+      if config.get(:opi, :experimental_enable_crds)
+        ::OPI::KubernetesClient.new(config, k8s_api_client, opi_apps_client)
+      else
+        opi_apps_client
+      end
     end
 
     def build_bbs_apps_client

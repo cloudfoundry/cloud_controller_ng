@@ -92,7 +92,7 @@ module OPI
         }
       when VCAP::CloudController::Lifecycles::KPACK
         command = if task.command.present?
-                    [OPI::Client::KpackLifecycle::CNB_LAUNCHER_PATH, task.command]
+                    [OPI::KpackLifecycle::CNB_LAUNCHER_PATH, task.command]
                   else
                     []
                   end
