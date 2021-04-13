@@ -63,7 +63,7 @@ module VCAP::CloudController
 
     def read_for_update?(app, params=nil)
       return true if admin_user?
-      return false unless create?(app, params)
+      return false unless update?(app, params)
       return true if params.nil?
 
       if %w(instances memory disk_quota).any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
@@ -74,7 +74,10 @@ module VCAP::CloudController
     end
 
     def update?(app, params=nil)
-      create?(app, params)
+      return true if admin_user?
+      return false if app.in_suspended_org?
+
+      app.space&.has_developer?(context.user) || app.space&.has_operator?(context.user)
     end
 
     def delete?(app)
@@ -103,7 +106,7 @@ module VCAP::CloudController
 
     def upload?(app)
       FeatureFlag.raise_unless_enabled!(:app_bits_upload)
-      update?(app)
+      create?(app)
     end
 
     def upload_with_token?(_)

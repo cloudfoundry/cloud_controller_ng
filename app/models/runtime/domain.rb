@@ -109,6 +109,8 @@ module VCAP::CloudController
       ).union(
         Space.dataset.join_table(:inner, :spaces_auditors, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).union(
+        Space.dataset.join_table(:inner, :spaces_operators, space_id: :spaces__id, user_id: user.id).select(:organization_id)
+      ).union(
         Space.dataset.join_table(:inner, :spaces_managers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).select(:organization_id)
 
