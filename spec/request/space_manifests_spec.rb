@@ -622,7 +622,6 @@ RSpec.describe 'Space Manifests' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-
     context 'when a default field has been removed' do
       let(:user) { make_developer_for_space(space) }
       let(:diff_json) do

@@ -91,11 +91,9 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['memory'] = '1024M'
           end
 
-
           it 'returns an empty diff' do
             expect(subject).to eq([])
           end
-
         end
       end
 
