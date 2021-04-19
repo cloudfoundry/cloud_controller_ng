@@ -97,9 +97,13 @@ module VCAP::CloudController
           if key == 'processes'
             existing_value.each_with_index do |process, i|
               manifest_app_hash_process = value.find { |hash_process| hash_process['type'] == process['type'] }
-              process.each do |k, v|
-                if manifest_app_hash_process[k].nil?
-                  existing_value[i].delete(k)
+              if manifest_app_hash_process.nil?
+                existing_value.delete_at(i)
+              else
+                process.each do |k, v|
+                  if manifest_app_hash_process[k].nil?
+                    existing_value[i].delete(k)
+                  end
                 end
               end
             end

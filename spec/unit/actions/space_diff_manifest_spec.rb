@@ -22,6 +22,13 @@ module VCAP::CloudController
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
                   'health-check-type' =>  process1.health_check_type
+                },
+                {
+                  'type' => process2.type,
+                  'instances' => process2.instances,
+                  'memory' => '1024M',
+                  'disk_quota' => '1024M',
+                  'health-check-type' =>  process2.health_check_type
                 }
               ]
             },
@@ -33,6 +40,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:app1_model) { AppModel.make(name: 'app-1', space: space) }
       let!(:process1) { ProcessModel.make(app: app1_model) }
+      let!(:process2) { ProcessModel.make(app: app1_model, type: 'worker') }
       let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
       let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
       let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
@@ -89,6 +97,16 @@ module VCAP::CloudController
         context 'when processes dont change' do
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '1024M'
+          end
+
+          it 'returns an empty diff' do
+            expect(subject).to eq([])
+          end
+        end
+
+        context 'when a process is not represented in the manifest' do
+          before do
+            default_manifest['applications'][0]['processes'].delete_at(1)
           end
 
           it 'returns an empty diff' do
