@@ -94,6 +94,16 @@ module VCAP::CloudController
           next unless recognized_top_level_keys.include?(key)
 
           existing_value = existing_app_hash[key]
+          if key == 'processes'
+            existing_value.each_with_index do |process, i|
+              manifest_app_hash_process = value.find { |hash_process| hash_process['type'] == process['type'] }
+              process.each do |k, v|
+                if manifest_app_hash_process[k].nil?
+                  existing_value[i].delete(k)
+                end
+              end
+            end
+          end
 
           key_diffs = JsonDiff.diff(
             existing_value,

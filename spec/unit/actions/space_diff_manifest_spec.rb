@@ -73,6 +73,32 @@ module VCAP::CloudController
         end
       end
 
+      context 'processes' do
+        context 'when processes are added' do
+          before do
+            default_manifest['applications'][0]['processes'][0]['memory'] = '2048M'
+          end
+
+          it 'returns the correct diff' do
+            expect(subject).to contain_exactly(
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' },
+            )
+          end
+        end
+
+        context 'when processes dont change' do
+          before do
+            default_manifest['applications'][0]['processes'][0]['memory'] = '1024M'
+          end
+
+
+          it 'returns an empty diff' do
+            expect(subject).to eq([])
+          end
+
+        end
+      end
+
       context 'metadata is added' do
         before do
           default_manifest['applications'][0]['metadata'] = {
@@ -115,15 +141,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there is a change inside of a nested hash' do
+      context 'when there is a removal inside the processes hash' do
         before do
           default_manifest['applications'][0]['processes'][0].delete('memory')
         end
 
-        it 'returns the correct diff' do
-          expect(subject).to eq([
-            { 'op' => 'remove', 'path' => '/applications/0/processes/0/memory', 'was' => '1024M' },
-          ])
+        it 'does not report a change' do
+          expect(subject).to eq([])
         end
       end
 

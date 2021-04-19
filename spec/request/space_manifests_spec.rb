@@ -498,8 +498,9 @@ RSpec.describe 'Space Manifests' do
     let(:org) { space.organization }
     let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
+    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app1_model, type: 'worker', memory: 2048, disk_quota: 2048) }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
-    let(:default_manifest) do
+    let!(:default_manifest) do
       {
         'applications' => [
           {
@@ -516,7 +517,14 @@ RSpec.describe 'Space Manifests' do
                 'instances' => process1.instances,
                 'memory' => '1024M',
                 'disk_quota' => '1024M',
-                'health-check-type' =>  process1.health_check_type
+                'health-check-type' => process1.health_check_type
+              },
+              {
+                'type' => process2.type,
+                'instances' => process2.instances,
+                'memory' => '2048M',
+                'disk_quota' => '2048M',
+                'health-check-type' => process2.health_check_type
               }
             ]
           },
@@ -568,6 +576,22 @@ RSpec.describe 'Space Manifests' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
+    context 'when there are no changes in the manifest' do
+      let(:user) { make_developer_for_space(space) }
+
+      let(:yml_manifest) do
+        default_manifest.to_yaml
+      end
+
+      it 'returns an empty array' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq({ 'diff' => [] })
+      end
+    end
+
     context 'when there are changes in the manifest' do
       let(:diff_json) do
         {
@@ -596,6 +620,60 @@ RSpec.describe 'Space Manifests' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+
+    context 'when a default field has been removed' do
+      let(:user) { make_developer_for_space(space) }
+      let(:diff_json) do
+        {
+          diff: a_collection_containing_exactly(
+            { op: 'remove', path: '/applications/0/processes/0/memory', was: '1024M' },
+          )
+        }
+      end
+
+      let(:manifest_with_removals) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'routes' => [
+                {
+                  'route' => "a_host.#{shared_domain.name}"
+                }
+              ],
+              'processes' => [
+                {
+                  'type' => process2.type,
+                  'instances' => process2.instances,
+                  'disk_quota' => '2048M',
+                  'health-check-type' => process2.health_check_type
+                },
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'disk_quota' => '1024M',
+                  'health-check-type' => process1.health_check_type
+                },
+              ]
+            },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        manifest_with_removals.to_yaml
+      end
+
+      it 'returns a diff that only contains ordering information' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq('diff' => [{ 'from' => '/0', 'op' => 'move', 'path' => '/applications/0/processes/1' }])
+      end
     end
 
     context 'when the request is invalid' do
