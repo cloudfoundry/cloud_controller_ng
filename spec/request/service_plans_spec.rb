@@ -606,7 +606,7 @@ RSpec.describe 'V3 service plans' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ServicePlanListFetcher).to receive(:fetch).with(
           an_instance_of(VCAP::CloudController::ServicePlansListMessage),
-          hash_including(eager_loaded_associations: [:labels, :annotations, :service_plan_visibilities, { service: :service_broker }, { service: { service_broker: :space } }])
+          hash_including(eager_loaded_associations: [:labels, :annotations, { service: :service_broker }, { service: { service_broker: :space } }])
         ).and_call_original
 
         get '/v3/service_plans', nil, admin_headers
