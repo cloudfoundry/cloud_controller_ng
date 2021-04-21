@@ -12,7 +12,7 @@ module VCAP::CloudController
         class << self
           # :labels and :annotations come from MetadataPresentationHelpers
           def associated_resources
-            super + [:service_plan_visibilities, { service: :service_broker }, { service: { service_broker: :space } }]
+            super + [{ service: :service_broker }, { service: { service_broker: :space } }]
           end
         end
 
