@@ -11,6 +11,7 @@ module VCAP::CloudController
             external_port: Integer,
             external_domain: String,
             temporary_disable_deployments: bool,
+            optional(:temporary_enable_space_application_supporter_role) => bool,
             temporary_use_logcache: bool,
             optional(:temporary_disable_v2_staging) => bool,
             tls_port: Integer,
