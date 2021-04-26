@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IsolationSegmentUnassign
     def unassign(isolation_segment, org)
       isolation_segment.db.transaction do
-        isolation_segment.lock!
+        isolation_segment.lock!(:share)
         org.lock!
 
         org_association_error! if is_default_segment?(isolation_segment, org)
