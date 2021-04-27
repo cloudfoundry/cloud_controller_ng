@@ -109,6 +109,15 @@ module VCAP::CloudController
             event_type: 'audit.user.space_manager_add'
           }
         end
+
+        context 'creating a space application supporter' do
+          let(:type) { RoleTypes::SPACE_APPLICATION_SUPPORTER }
+
+          it_behaves_like 'space role creation', {
+            model: VCAP::CloudController::SpaceApplicationSupporter,
+            event_type: 'audit.user.space_application_supporter_add'
+          }
+        end
       end
 
       context 'when the user does not have a role in the parent organization' do
