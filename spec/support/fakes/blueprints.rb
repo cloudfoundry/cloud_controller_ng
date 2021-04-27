@@ -262,6 +262,12 @@ module VCAP::CloudController
     organization      { Organization.make }
   end
 
+  SpaceApplicationSupporter.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    space { Space.make }
+  end
+
   SpaceAuditor.blueprint do
     guid { Sham.guid }
     user { User.make }

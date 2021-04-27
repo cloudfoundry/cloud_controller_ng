@@ -52,6 +52,14 @@ module VCAP::CloudController
         }
       end
 
+      context 'space application supporter' do
+        let!(:role) { SpaceApplicationSupporter.make(user: user_with_role) }
+
+        it_behaves_like 'deletion', {
+          event_type: 'audit.user.space_application_supporter_remove'
+        }
+      end
+
       context 'space developer' do
         let!(:role) { SpaceDeveloper.make(user: user_with_role) }
 
