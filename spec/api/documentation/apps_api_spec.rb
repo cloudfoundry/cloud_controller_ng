@@ -374,7 +374,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
       instances_reporters = double(:instances_reporters)
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
+      allow(instances_reporters).to receive(:stats_for_app).and_return([stats, []])
 
       client.get "/v2/apps/#{process.guid}/stats", {}, headers
       expect(status).to eq(200)

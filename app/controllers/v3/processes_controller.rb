@@ -98,7 +98,8 @@ class ProcessesController < ApplicationController
   end
 
   def stats
-    process_stats = instances_reporters.stats_for_app(@process)
+    process_stats, warnings = instances_reporters.stats_for_app(@process)
+    add_warning_headers(warnings)
 
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
   end

@@ -76,41 +76,18 @@ module Logcache
           allow(logcache_service).to receive(:read).and_raise(bad_status)
         end
 
-        context 'and operator has enabled temporary_ignore_server_unavailable_errors' do
-          let(:client) do
-            Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                                 client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
-                                 temporary_ignore_server_unavailable_errors: true)
-          end
-
-          it 'returns an empty envelope' do
-            expect(
-              client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-            ).to be_a(Logcache::EmptyEnvelope)
-          end
-
-          # TODO: fix calling the function under test separately
-          it 'retries the request three times' do
-            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-
-            expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
-          end
+        let(:client) do
+          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                               temporary_ignore_server_unavailable_errors: false)
         end
 
-        context 'and operator has disabled temporary_ignore_server_unavailable_errors' do
-          let(:client) do
-            Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                                 client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
-                                 temporary_ignore_server_unavailable_errors: false)
-          end
+        it 'retries the request three times and raises an exception' do
+          expect {
+            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          }.to raise_error(bad_status)
 
-          it 'retries the request three times and raises an exception' do
-            expect {
-              client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-            }.to raise_error(bad_status)
-
-            expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
-          end
+          expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
         end
       end
 

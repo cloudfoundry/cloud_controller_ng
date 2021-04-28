@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       begin
-        stats = instances_reporters.stats_for_app(process)
+        stats, _ = instances_reporters.stats_for_app(process)
         stats.each_value do |stats_hash|
           if stats_hash[:stats]
             stats_hash[:stats].delete_if { |key, _| key == :net_info }

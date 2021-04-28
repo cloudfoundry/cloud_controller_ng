@@ -1365,7 +1365,7 @@ RSpec.describe 'Apps' do
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:stats_for_app).and_return(instances_reporter_response)
+      allow(instances_reporters).to receive(:stats_for_app).and_return([instances_reporter_response, []])
     end
 
     it 'displays the stats' do

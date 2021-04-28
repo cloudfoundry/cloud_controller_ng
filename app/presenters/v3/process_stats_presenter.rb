@@ -9,7 +9,7 @@ module VCAP::CloudController
 
         def to_hash
           {
-            resources: present_stats_hash
+            resources: present_stats_hash,
           }
         end
 
@@ -35,12 +35,6 @@ module VCAP::CloudController
             type:       @type,
             index:      index,
             state:      stats[:state],
-            usage:      {
-              time: stats[:stats][:usage][:time],
-              cpu:  stats[:stats][:usage][:cpu],
-              mem:  stats[:stats][:usage][:mem],
-              disk: stats[:stats][:usage][:disk],
-            },
             host:       stats[:stats][:host],
             uptime:     stats[:stats][:uptime],
             mem_quota:  stats[:stats][:mem_quota],
@@ -48,7 +42,10 @@ module VCAP::CloudController
             fds_quota:  stats[:stats][:fds_quota],
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]
-          }.tap { |presented_stats| add_port_info(presented_stats, stats) }
+          }.tap do |presented_stats|
+            add_port_info(presented_stats, stats)
+            add_usage_info(presented_stats, stats)
+          end
         end
 
         def down_instance_stats_hash(index, stats)
@@ -68,6 +65,19 @@ module VCAP::CloudController
           else
             presented_stats[:port] = stats[:stats][:port]
           end
+        end
+
+        def add_usage_info(presented_stats, stats)
+          presented_stats[:usage] = if stats[:stats][:usage].present?
+                                      {
+                                        time: stats[:stats][:usage][:time],
+                                        cpu:  stats[:stats][:usage][:cpu],
+                                        mem:  stats[:stats][:usage][:mem],
+                                        disk: stats[:stats][:usage][:disk],
+                                      }
+                                    else
+                                      {}
+                                    end
         end
 
         def net_info_to_instance_ports(net_info_ports)

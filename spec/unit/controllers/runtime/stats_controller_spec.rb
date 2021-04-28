@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         before do
           CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
-          allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
+          allow(instances_reporters).to receive(:stats_for_app).and_return([stats, []])
         end
 
         context 'because they are a developer' do
