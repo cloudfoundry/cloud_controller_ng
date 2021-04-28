@@ -94,9 +94,10 @@ module VCAP::CloudController
           end
         end
 
-        context 'when processes dont change' do
+        context 'when processes do not change' do
+          let!(:process1) { ProcessModel.make(app: app1_model, memory: 256) }
           before do
-            default_manifest['applications'][0]['processes'][0]['memory'] = '1024M'
+            default_manifest['applications'][0]['processes'][0]['memory'] = '256M'
           end
 
           it 'returns an empty diff' do

@@ -94,7 +94,7 @@ module VCAP::CloudController
           next unless recognized_top_level_keys.include?(key)
 
           existing_value = existing_app_hash[key]
-          if key == 'processes'
+          if key == 'processes' && existing_value.present?
             existing_value.each_with_index do |process, i|
               manifest_app_hash_process = value.find { |hash_process| hash_process['type'] == process['type'] }
               if manifest_app_hash_process.nil?

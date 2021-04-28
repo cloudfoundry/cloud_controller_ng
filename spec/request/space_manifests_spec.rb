@@ -622,6 +622,54 @@ RSpec.describe 'Space Manifests' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
+    context 'when the app name has changed' do
+      let(:user) { make_developer_for_space(space) }
+      let(:manifest_with_new_app) do
+        {
+          'applications' => [
+            {
+              'name' => 'new_app',
+              'stack' => process1.stack.name,
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances,
+                  'memory' => '1024M',
+                  'disk_quota' => '1024M',
+                  'health-check-type' => process1.health_check_type
+                },
+                {
+                  'type' => process2.type,
+                  'instances' => process2.instances,
+                  'memory' => '2048M',
+                  'disk_quota' => '2048M',
+                  'health-check-type' => process2.health_check_type
+                }
+              ]
+            },
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        manifest_with_new_app.to_yaml
+      end
+
+      it 'acts as if a new app is being pushed and returns all fields of the app as additions' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq({ 'diff' => [
+          { 'op' => 'add', 'path' => '/applications/0/name', 'value' => 'new_app' },
+          { 'op' => 'add', 'path' => '/applications/0/stack', 'value' => process1.stack.name },
+          { 'op' => 'add', 'path' => '/applications/0/processes', 'value' => [
+            { 'disk_quota' => '1024M', 'health-check-type' => process1.health_check_type, 'instances' => process1.instances, 'memory' => '1024M', 'type' => process1.type },
+            { 'disk_quota' => '2048M', 'health-check-type' => process2.health_check_type, 'instances' => process2.instances, 'memory' => '2048M', 'type' => process2.type },
+          ] }] })
+      end
+    end
+
     context 'when a default field has been removed' do
       let(:user) { make_developer_for_space(space) }
       let(:diff_json) do
