@@ -21,8 +21,7 @@ module Logcache
       let(:channel_arg_hash) { { GRPC::Core::Channel::SSL_TARGET => tls_subject_name } }
       let(:client) do
         Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                             client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
-                             temporary_ignore_server_unavailable_errors: false)
+                             client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
       end
       let(:client_ca) { File.open(client_ca_path).read }
       let(:client_key) { File.open(client_key_path).read }
@@ -78,8 +77,7 @@ module Logcache
 
         let(:client) do
           Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
-                               temporary_ignore_server_unavailable_errors: false)
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
         end
 
         it 'retries the request three times and raises an exception' do
@@ -110,8 +108,7 @@ module Logcache
 
         let(:client) do
           Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
-                               temporary_ignore_server_unavailable_errors: false)
+                               client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
         end
 
         it 'raises an exception' do
@@ -150,8 +147,14 @@ module Logcache
 
     describe 'without TLS' do
       let(:client) do
-        Logcache::Client.new(host: host, port: port, temporary_ignore_server_unavailable_errors: false,
-                            client_ca_path: nil, client_cert_path: nil, client_key_path: nil, tls_subject_name: nil)
+        Logcache::Client.new(
+          host: host,
+          port: port,
+          client_ca_path: nil,
+          client_cert_path: nil,
+          client_key_path: nil,
+          tls_subject_name: nil
+        )
       end
 
       describe '#container_metrics' do

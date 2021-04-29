@@ -6,7 +6,7 @@ module Logcache
     MAX_LIMIT = 1000
     DEFAULT_LIMIT = 100
 
-    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:, temporary_ignore_server_unavailable_errors:)
+    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:)
       if client_ca_path
         client_ca = IO.read(client_ca_path)
         client_key = IO.read(client_key_path)
@@ -25,8 +25,6 @@ module Logcache
           timeout: 250
         )
       end
-
-      @temporary_ignore_server_unavailable_errors = temporary_ignore_server_unavailable_errors
     end
 
     def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT, start_time:, end_time:)
