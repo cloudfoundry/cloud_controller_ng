@@ -4,18 +4,16 @@
 require 'google/protobuf'
 
 Google::Protobuf::DescriptorPool.generated_pool.build do
-  add_file("environment_variables.proto", :syntax => :proto3) do
-    add_message "diego.bbs.models.EnvironmentVariable" do
-      optional :name, :string, 1
-      optional :value, :string, 2
-    end
+  add_message "diego.bbs.models.EnvironmentVariable" do
+    optional :name, :string, 1
+    optional :value, :string, 2
   end
 end
 
 module Diego
   module Bbs
     module Models
-      EnvironmentVariable = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.EnvironmentVariable").msgclass
+      EnvironmentVariable = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.EnvironmentVariable").msgclass
     end
   end
 end
