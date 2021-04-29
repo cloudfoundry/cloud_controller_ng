@@ -12,6 +12,7 @@ Name | Type | Description
 **type** | _string_ | Process type; a unique identifier for processes belonging to an app
 **index** | _integer_ | The zero-based index of running instances
 **state** | _string_ | The state of the instance; valid values are `RUNNING`, `CRASHED`, `STARTING`, `DOWN`
+**usage** | _object_ | Object containing actual usage data for the instance; the value is `{}` when usage data is unavailable
 **usage.time** | _[timestamp](#timestamps)_ | The time when the usage was requested
 **usage.cpu** | _number_ | The current cpu usage of the instance
 **usage.mem** | _integer_ | The current memory usage of the instance
@@ -19,8 +20,8 @@ Name | Type | Description
 **host** | _string_ | The host the instance is running on
 **instance_ports** | _object_ | JSON array of port mappings between the network-exposed port used to communicate with the app (`external`) and port opened to the running process that it can listen on (`internal`)
 **uptime** | _integer_ | The uptime in seconds for the instance
-**mem_quota** | _integer_ | The current maximum memory allocated for the instance
-**disk_quota** | _integer_ | The current maximum disk allocated for the instance
+**mem_quota** | _integer_ | The current maximum memory allocated for the instance; the value is `null` when memory quota data is unavailable
+**disk_quota** | _integer_ | The current maximum disk allocated for the instance; the value is `null` when disk quota data is unavailable
 **fds_quota** | _integer_ | The maximum file descriptors the instance is allowed to use
 **isolation_segment** | _string_ | The current isolation segment that the instance is running on; the value is `null` when the instance is not placed on a particular isolation segment
 **details** | _string_ | Information about errors placing the instance; the value is `null`  if there are no placement errors
