@@ -116,7 +116,7 @@ module VCAP::CloudController
         end
 
         it 'returns a map of stats & states per index in the correct units' do
-          expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+          expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
         end
 
         it 'passes a process_id filter' do
@@ -185,7 +185,7 @@ module VCAP::CloudController
               with(auth_token: 'my-token', source_guid: process.guid, logcache_filter: anything).
               and_return(traffic_controller_response)
 
-            expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
           end
         end
 
@@ -209,7 +209,7 @@ module VCAP::CloudController
           end
 
           it 'sets "port" to 0' do
-            result = instances_reporter.stats_for_app(process)
+            result, _ = instances_reporter.stats_for_app(process)
 
             expect(result[0][:stats][:port]).to eq(0)
           end
@@ -231,7 +231,8 @@ module VCAP::CloudController
           end
 
           it 'sets all the stats to zero' do
-            expect(instances_reporter.stats_for_app(process)[0][:stats][:usage]).to eq({
+            result, _ = instances_reporter.stats_for_app(process)
+            expect(result[0][:stats][:usage]).to eq({
               time: formatted_current_time,
               cpu:  0,
               mem:  0,
@@ -241,7 +242,7 @@ module VCAP::CloudController
         end
 
         context 'when a NoRunningInstances error is thrown' do
-          let(:error) { CloudController::Errors::NoRunningInstances.new('ruh roh') }
+          let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }
           let(:expected_stats_response) do
             {
               0 => {
@@ -256,20 +257,42 @@ module VCAP::CloudController
           end
 
           it 'shows all instances as "DOWN"' do
-            expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
           end
         end
 
         context 'when a LogcacheTimeoutReached is thrown' do
           let(:error) { CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') }
           let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+          let(:expected_stats_response) do
+            {
+              0 => {
+                state:   'RUNNING',
+                isolation_segment: 'isolation-segment-name',
+                stats:   {
+                  name:       process.name,
+                  uris:       process.uris,
+                  host:       'lrp-host',
+                  port:       2222,
+                  net_info:   lrp_1_net_info.to_h,
+                  uptime:     two_days_in_seconds,
+                  mem_quota:  nil,
+                  disk_quota: nil,
+                  fds_quota:  process.file_descriptors,
+                  usage:      {}
+                },
+                details: 'some-details',
+              },
+            }
+          end
+
           before do
             allow(traffic_controller_client).to receive(:container_metrics).and_raise(error)
             allow(instances_reporter).to receive(:logger).and_return(mock_logger)
           end
 
-          it 'raises a timeout error' do
-            expect { instances_reporter.stats_for_app(process) }.to raise_error(error)
+          it 'returns a partial response and a warning' do
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, ['Stats server temporarily unavailable.']])
           end
         end
 
@@ -287,7 +310,7 @@ module VCAP::CloudController
             end
 
             it 'provides defaults for unreported instances' do
-              expect(instances_reporter.stats_for_app(process)).to eq(expected_stats_response)
+              expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
             end
           end
 
@@ -296,7 +319,7 @@ module VCAP::CloudController
             let(:traffic_controller_response) { [] }
 
             it 'ignores superfluous instances' do
-              expect(instances_reporter.stats_for_app(process)).to eq({})
+              expect(instances_reporter.stats_for_app(process)).to eq([{}, []])
             end
           end
 
@@ -304,7 +327,7 @@ module VCAP::CloudController
             let(:traffic_controller_response) { [] }
 
             it 'provides defaults for unreported instances' do
-              result = instances_reporter.stats_for_app(process)
+              result, _ = instances_reporter.stats_for_app(process)
 
               expect(result[0][:stats][:usage]).to eq({
                 time: formatted_current_time,
@@ -359,6 +382,46 @@ module VCAP::CloudController
                 expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /ruh roh/)
               end
             end
+          end
+        end
+
+        context 'when there is an error fetching metrics envelopes' do
+          let(:error) { CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'no metrics for you') }
+          let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+          let(:expected_stats_response) do
+            {
+              0 => {
+                state:   'RUNNING',
+                isolation_segment: 'isolation-segment-name',
+                stats:   {
+                  name:       process.name,
+                  uris:       process.uris,
+                  host:       'lrp-host',
+                  port:       2222,
+                  net_info:   lrp_1_net_info.to_h,
+                  uptime:     two_days_in_seconds,
+                  mem_quota:  nil,
+                  disk_quota: nil,
+                  fds_quota:  process.file_descriptors,
+                  usage:      {}
+                },
+                details: 'some-details',
+              },
+            }
+          end
+
+          before do
+            allow(traffic_controller_client).to receive(:container_metrics).
+              with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
+              and_raise(error)
+            allow(instances_reporter).to receive(:logger).and_return(mock_logger)
+          end
+
+          it 'logs, omits metrics-driven fields, and provides a warning' do
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, ['Stats server temporarily unavailable.']])
+            expect(mock_logger).to have_received(:error).with(
+              'stats_for_app.error', { error: 'no metrics for you', backtrace: error.backtrace.join($INPUT_RECORD_SEPARATOR) }
+            ).once
           end
         end
       end

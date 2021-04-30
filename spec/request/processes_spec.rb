@@ -480,44 +480,44 @@ RSpec.describe 'Processes' do
 
     let(:expected_response) do
       {
-      'resources' => [{
-        'type'           => 'worker',
-        'index'          => 0,
-        'state'          => 'RUNNING',
-        'isolation_segment' => 'very-isolated',
-        'details' => 'some-details',
-        'usage' => {
-          'time' => usage_time,
-          'cpu'  => 80,
-          'mem'  => 128,
-          'disk' => 1024,
-        },
-        'host'           => 'toast',
-        'instance_ports' => [
-          {
-            'external' => 8080,
-            'internal' => 1234,
-            'external_tls_proxy_port' => 61002,
-            'internal_tls_proxy_port' => 61003
+        'resources' => [{
+          'type'           => 'worker',
+          'index'          => 0,
+          'state'          => 'RUNNING',
+          'isolation_segment' => 'very-isolated',
+          'details' => 'some-details',
+          'usage' => {
+            'time' => usage_time,
+            'cpu'  => 80,
+            'mem'  => 128,
+            'disk' => 1024,
           },
-          {
-            'external' => 3000,
-            'internal' => 4000,
-            'external_tls_proxy_port' => 61006,
-            'internal_tls_proxy_port' => 61007
-          }
-        ],
-        'uptime'         => 12345,
-        'mem_quota'      => 1073741824,
-        'disk_quota'     => 1073741824,
-        'fds_quota'      => 16384
-      }]
+          'host'           => 'toast',
+          'instance_ports' => [
+            {
+              'external' => 8080,
+              'internal' => 1234,
+              'external_tls_proxy_port' => 61002,
+              'internal_tls_proxy_port' => 61003
+            },
+            {
+              'external' => 3000,
+              'internal' => 4000,
+              'external_tls_proxy_port' => 61006,
+              'internal_tls_proxy_port' => 61007
+            }
+          ],
+          'uptime'         => 12345,
+          'mem_quota'      => 1073741824,
+          'disk_quota'     => 1073741824,
+          'fds_quota'      => 16384
+        }]
     }
     end
 
     before do
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
-      allow(instances_reporters).to receive(:stats_for_app).and_return(stats_for_process)
+      allow(instances_reporters).to receive(:stats_for_app).and_return([stats_for_process, []])
     end
 
     describe 'GET /v3/processes/:guid/stats' do

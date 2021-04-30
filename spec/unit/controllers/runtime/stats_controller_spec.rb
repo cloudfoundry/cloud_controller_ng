@@ -22,11 +22,12 @@ module VCAP::CloudController
             }
           }
         end
+        let(:warnings) { [] }
         let(:instances_reporters) { double(:instances_reporters) }
 
         before do
           CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
-          allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
+          allow(instances_reporters).to receive(:stats_for_app).and_return([stats, warnings])
         end
 
         context 'because they are a developer' do
@@ -55,6 +56,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
+            expect(last_response.headers['X-Cf-Warnings']).to be_nil
             expect(instances_reporters).to have_received(:stats_for_app).with(
               satisfy { |requested_app| requested_app.guid == process.app.guid })
           end
@@ -86,6 +88,40 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
+            expect(instances_reporters).to have_received(:stats_for_app).with(
+              satisfy { |requested_app| requested_app.guid == process.app.guid })
+          end
+        end
+
+        context 'when the instances reporter returns warnings' do
+          let(:warnings) { ['s0mjgnbha', 'full_moon_with_s0mjgnbha'] }
+
+          it 'should return the stats with an X-Cf-Warnings header' do
+            set_current_user(developer)
+
+            process.state     = 'STARTED'
+            process.instances = 1
+            process.save
+
+            process.refresh
+
+            expected = {
+              '0' => {
+                'state' => 'RUNNING',
+                'stats' => {},
+              },
+              '1' => {
+                'state'   => 'DOWN',
+                'details' => 'start-me',
+                'since'   => 1,
+              }
+            }
+
+            get "/v2/apps/#{process.app.guid}/stats"
+
+            expect(last_response.status).to eq(200)
+            expect(MultiJson.load(last_response.body)).to eq(expected)
+            expect(last_response.headers['X-Cf-Warnings']).to eq('s0mjgnbha,full_moon_with_s0mjgnbha')
             expect(instances_reporters).to have_received(:stats_for_app).with(
               satisfy { |requested_app| requested_app.guid == process.app.guid })
           end

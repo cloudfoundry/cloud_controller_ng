@@ -526,7 +526,6 @@ module CloudController
         client_cert_path: config.get(:logcache_tls, :cert_file),
         client_key_path: config.get(:logcache_tls, :key_file),
         tls_subject_name: config.get(:logcache_tls, :subject_name),
-        temporary_ignore_server_unavailable_errors: config.get(:logcache, :temporary_ignore_server_unavailable_errors)
       )
     end
 

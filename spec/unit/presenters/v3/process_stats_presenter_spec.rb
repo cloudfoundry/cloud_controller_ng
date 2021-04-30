@@ -5,6 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe ProcessStatsPresenter do
     subject(:presenter) { ProcessStatsPresenter.new(process.type, stats_for_process) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make }
+    let(:warnings) { [] }
 
     describe '#present_stats_hash' do
       let(:process_usage) { process.type.usage }
@@ -194,6 +195,43 @@ module VCAP::CloudController::Presenters::V3
             cpu: 80,
             mem: 128,
             disk: 1024 })
+        end
+      end
+
+      context 'the process stats are missing metrics data' do
+        let(:stats_for_process) do
+          {
+            0 => {
+              state: 'RUNNING',
+              isolation_segment: 'hecka-compliant',
+              stats: {
+                name: process.name,
+                uris: process.uris,
+                host: 'myhost',
+                net_info: net_info_1,
+                uptime: 12345,
+                fds_quota: process.file_descriptors,
+                usage: {}
+              }
+            }
+          }
+        end
+
+        it 'presents the process stats as a hash' do
+          result = presenter.present_stats_hash
+
+          expect(result[0][:type]).to eq(process.type)
+          expect(result[0][:index]).to eq(0)
+          expect(result[0][:state]).to eq('RUNNING')
+          expect(result[0][:details]).to eq(nil)
+          expect(result[0][:isolation_segment]).to eq('hecka-compliant')
+          expect(result[0][:host]).to eq('myhost')
+          expect(result[0][:instance_ports]).to eq(instance_ports_1)
+          expect(result[0][:uptime]).to eq(12345)
+          expect(result[0][:mem_quota]).to be_nil
+          expect(result[0][:disk_quota]).to be_nil
+          expect(result[0][:fds_quota]).to eq(process.file_descriptors)
+          expect(result[0][:usage]).to eq({})
         end
       end
     end

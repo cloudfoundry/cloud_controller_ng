@@ -808,11 +808,12 @@ RSpec.describe ProcessesController, type: :controller do
     let(:stats) { { 0 => { stats: { usage: {}, net_info: { ports: [] } } } } }
     let(:instances_reporters) { double(:instances_reporters) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:warnings) { [] }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
-      allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
+      allow(instances_reporters).to receive(:stats_for_app).and_return([stats, warnings])
     end
 
     it 'returns the stats for all instances for the process' do
@@ -820,6 +821,19 @@ RSpec.describe ProcessesController, type: :controller do
 
       expect(response.status).to eq(200)
       expect(parsed_body['resources'][0]['type']).to eq('potato')
+      expect(response.headers['X-Cf-Warnings']).to be_nil
+    end
+
+    context 'when the the instances reporter returns warnings' do
+      let(:warnings) { ['s0mjgnbha'] }
+
+      it 'returns the stats and a header with the warnings' do
+        get :stats, params: { process_guid: process_type.guid }
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['resources'][0]['type']).to eq('potato')
+        expect(response.headers['X-Cf-Warnings']).to eq('s0mjgnbha')
+      end
     end
 
     context 'accessed as app subresource' do

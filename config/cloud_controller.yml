@@ -102,7 +102,6 @@ loggregator:
 logcache:
   host: 'http://doppler.service.cf.internal'
   port: 8080
-  temporary_ignore_server_unavailable_errors: false
 
 logcache_tls:
   key_file: 'spec/fixtures/certs/log_cache.key'
