@@ -65,6 +65,35 @@ module VCAP::CloudController
       end
     end
 
+    describe 'maximum_result' do
+      it 'is valid if page and per_page is nil' do
+        message = ListMessage.from_params({ page: nil, per_page: nil }, [])
+        expect(message).to be_valid
+      end
+
+      it 'is valid when using default page' do
+        message = ListMessage.from_params({ page: nil, per_page: 5000 }, [])
+        expect(message).to be_valid
+      end
+
+      it 'is valid when using default per_page' do
+        message = ListMessage.from_params({ page: 20, per_page: nil }, [])
+        expect(message).to be_valid
+      end
+
+      it 'is invalid when page * default per_page exceeds DB limits' do
+        message = ListMessage.from_params({ page: 184467440737095517, per_page: nil }, [])
+        expect(message).to be_invalid
+        expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
+      end
+
+      it 'is invalid when page * per_page exceeds DB limits' do
+        message = ListMessage.from_params({ page: 9223372036854775807, per_page: 2 }, [])
+        expect(message).to be_invalid
+        expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
+      end
+    end
+
     describe 'order validations' do
       context 'when order_by is present' do
         it 'validates when order_by is `created_at`' do

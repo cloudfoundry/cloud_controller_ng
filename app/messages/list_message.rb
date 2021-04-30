@@ -52,6 +52,7 @@ module VCAP::CloudController
 
         validate_page(page, record) if !page.nil?
         validate_per_page(per_page, record) if !per_page.nil?
+        validate_maximum_result(page, per_page, record) if !page.nil? || !per_page.nil?
       end
 
       def validate_page(value, record)
@@ -63,6 +64,12 @@ module VCAP::CloudController
           record.errors.add(:per_page, 'must be between 1 and 5000') unless value.to_i <= 5000
         else
           record.errors.add(:per_page, 'must be a positive integer')
+        end
+      end
+
+      def validate_maximum_result(page, per_page, record)
+        if (page || PaginationOptions::PAGE_DEFAULT).to_i * (per_page || PaginationOptions::PER_PAGE_DEFAULT).to_i > 9223372036854775807
+          record.errors.add(:maximum_result, '(page * per_page) must be less than 9223372036854775807')
         end
       end
     end
