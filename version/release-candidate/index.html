@@ -14569,6 +14569,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The state of the instance; valid values are <code class="prettyprint">RUNNING</code>, <code class="prettyprint">CRASHED</code>, <code class="prettyprint">STARTING</code>, <code class="prettyprint">DOWN</code></td>
 </tr>
 <tr>
+<td><strong>usage</strong></td>
+<td><em>object</em></td>
+<td>Object containing actual usage data for the instance; the value is <code class="prettyprint">{}</code> when usage data is unavailable</td>
+</tr>
+<tr>
 <td><strong>usage.time</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
 <td>The time when the usage was requested</td>
@@ -14606,12 +14611,12 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>mem_quota</strong></td>
 <td><em>integer</em></td>
-<td>The current maximum memory allocated for the instance</td>
+<td>The current maximum memory allocated for the instance; the value is <code class="prettyprint">null</code> when memory quota data is unavailable</td>
 </tr>
 <tr>
 <td><strong>disk_quota</strong></td>
 <td><em>integer</em></td>
-<td>The current maximum disk allocated for the instance</td>
+<td>The current maximum disk allocated for the instance; the value is <code class="prettyprint">null</code> when disk quota data is unavailable</td>
 </tr>
 <tr>
 <td><strong>fds_quota</strong></td>
