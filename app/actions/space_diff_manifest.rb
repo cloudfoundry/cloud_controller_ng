@@ -109,10 +109,23 @@ module VCAP::CloudController
             end
           end
 
+          sim = ->(before, after) do
+            return nil unless before.is_a?(Hash) && after.is_a?(Hash)
+
+            if before.key?('type') && after.key?('type')
+              return before['type'] == after['type'] ? 1.0 : 0.0
+            elsif before.key?('name') && after.key?('name')
+              return before['name'] == after['name'] ? 1.0 : 0.0
+            end
+
+            nil
+          end
+
           key_diffs = JsonDiff.diff(
             existing_value,
             value,
             include_was: true,
+            similarity: sim
           )
 
           key_diffs.each do |diff|

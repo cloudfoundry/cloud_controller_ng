@@ -670,6 +670,110 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when several fields in a process have changed' do
+      let(:user) { make_developer_for_space(space) }
+      let(:manifest_with_changes) do
+        {
+        'applications' => [
+          {
+            'name' => app1_model.name,
+            'stack' => process1.stack.name,
+            'routes' => [
+              {
+                'route' => "a_host.#{shared_domain.name}"
+              }
+            ],
+            'processes' => [
+              {
+                'type' => process1.type,
+                'instances' => process1.instances + 2,
+                'memory' => '2000M',
+                'disk_quota' => '2000M'
+              },
+              {
+                'type' => process2.type,
+                'instances' => process2.instances + 2,
+                'memory' => '4000M',
+                'disk_quota' => '4000M'
+              }
+            ]
+          },
+        ]
+        }.to_yaml
+      end
+      let(:expected_changes) do
+        [
+          { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => '1024M', 'value' => '2000M' },
+          { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'was' => '1024M', 'value' => '2000M' },
+          { 'op' => 'replace', 'path' => '/applications/0/processes/0/instances', 'was' => process1.instances, 'value' => process1.instances + 2 },
+          { 'op' => 'replace', 'path' => '/applications/0/processes/1/memory', 'was' => '2048M', 'value' => '4000M' },
+          { 'op' => 'replace', 'path' => '/applications/0/processes/1/disk_quota', 'was' => '2048M', 'value' => '4000M' },
+          { 'op' => 'replace', 'path' => '/applications/0/processes/1/instances', 'was' => process2.instances, 'value' => process2.instances + 2 }
+        ]
+      end
+
+      it 'returns a diff with the process changes as replace ops' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", manifest_with_changes, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response['diff']).to include(*expected_changes)
+      end
+    end
+
+    context 'when several fields in a sidecar have changed' do
+      let(:user) { make_developer_for_space(space) }
+      let(:sidecar_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'routes' => [
+                {
+                  'route' => "a_host.#{shared_domain.name}"
+                }
+              ],
+              'sidecars' => [{
+                'name' => 'rollsroyce',
+                'command' => 'go',
+                'process_types' => ['pink'],
+                'memory' => '1024M'
+              }]
+            },
+          ]
+        }
+      end
+      let(:manifest_yml) { sidecar_manifest.to_yaml }
+      let(:expected_changes) do
+        [
+          { 'op' => 'replace', 'path' => '/applications/0/sidecars/0/command', 'was' => 'go', 'value' => 'stop' },
+          { 'op' => 'replace', 'path' => '/applications/0/sidecars/0/memory', 'was' => '1024M', 'value' => '512M' },
+        ]
+      end
+
+      it 'returns a diff with the sidecar changes as a replace op' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", manifest_yml, yml_headers(user_header)
+        expect(last_response).to have_status_code(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+        new_sidecars = [{
+          'name' => 'rollsroyce',
+          'command' => 'stop',
+          'process_types' => ['pink'],
+          'memory' => '512M'
+        }]
+        sidecar_manifest['applications'][0]['sidecars'] = new_sidecars
+        post "/v3/spaces/#{space.guid}/manifest_diff", sidecar_manifest.to_yaml, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response['diff']).to include(*expected_changes)
+      end
+    end
+
     context 'when a default field has been removed' do
       let(:user) { make_developer_for_space(space) }
       let(:diff_json) do
