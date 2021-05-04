@@ -357,7 +357,125 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps' do
     before do
       space.organization.add_user(user)
-      space.add_developer(user)
+    end
+
+    context 'listing all apps' do
+      let(:api_call) { lambda { |user_headers| get '/v3/apps', nil, user_headers } }
+      let(:space2) { VCAP::CloudController::Space.make(organization: org) }
+      let(:buildpack_lifecycle) { VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: 'cool-stack', app: app_model1) }
+      let(:app_model1) { VCAP::CloudController::AppModel.make(guid: 'app1_guid', name: 'name1', space: space) }
+      let(:app_model2) { VCAP::CloudController::AppModel.make(guid: 'app2_guid', name: 'name2', space: space2) }
+
+      let(:app_model1_response_object) do
+        {
+          guid: app_model1.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: app_model1.name,
+          state: 'STOPPED',
+          lifecycle: {
+            type: 'buildpack',
+            data: { buildpacks: [], stack: app_model1.lifecycle_data.stack },
+          },
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          metadata: {
+            labels: {},
+            annotations: {},
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/apps/app1_guid" },
+            environment_variables: { href: "#{link_prefix}/v3/apps/app1_guid/environment_variables" },
+            space: { href: "#{link_prefix}/v3/spaces/#{space.guid}" },
+            processes: { href: "#{link_prefix}/v3/apps/app1_guid/processes" },
+            packages: { href: "#{link_prefix}/v3/apps/app1_guid/packages" },
+            current_droplet: { href: "#{link_prefix}/v3/apps/app1_guid/droplets/current" },
+            droplets: { href: "#{link_prefix}/v3/apps/app1_guid/droplets" },
+            tasks: { href: "#{link_prefix}/v3/apps/app1_guid/tasks" },
+            start: { href: "#{link_prefix}/v3/apps/app1_guid/actions/start", method: 'POST' },
+            stop: { href: "#{link_prefix}/v3/apps/app1_guid/actions/stop", method: 'POST' },
+            revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions" },
+            deployed_revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions/deployed" },
+            features: { href: "#{link_prefix}/v3/apps/app1_guid/features" },
+          }
+        }
+      end
+
+      let(:app_model2_response_object) do
+        {
+          guid: app_model2.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: app_model2.name,
+          state: 'STOPPED',
+          lifecycle: {
+            type: 'buildpack',
+            data: { buildpacks: [], stack: app_model2.lifecycle_data.stack },
+          },
+          relationships: {
+            space: { data: { guid: space2.guid } }
+          },
+          metadata: {
+            labels: {},
+            annotations: {},
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/apps/app2_guid" },
+            environment_variables: { href: "#{link_prefix}/v3/apps/app2_guid/environment_variables" },
+            space: { href: "#{link_prefix}/v3/spaces/#{space2.guid}" },
+            processes: { href: "#{link_prefix}/v3/apps/app2_guid/processes" },
+            packages: { href: "#{link_prefix}/v3/apps/app2_guid/packages" },
+            current_droplet: { href: "#{link_prefix}/v3/apps/app2_guid/droplets/current" },
+            droplets: { href: "#{link_prefix}/v3/apps/app2_guid/droplets" },
+            tasks: { href: "#{link_prefix}/v3/apps/app2_guid/tasks" },
+            start: { href: "#{link_prefix}/v3/apps/app2_guid/actions/start", method: 'POST' },
+            stop: { href: "#{link_prefix}/v3/apps/app2_guid/actions/stop", method: 'POST' },
+            revisions: { href: "#{link_prefix}/v3/apps/app2_guid/revisions" },
+            deployed_revisions: { href: "#{link_prefix}/v3/apps/app2_guid/revisions/deployed" },
+            features: { href: "#{link_prefix}/v3/apps/app2_guid/features" },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: [app_model1_response_object, app_model2_response_object])
+
+        h['org_auditor'] = {
+          code: 200,
+          response_objects: []
+        }
+
+        h['org_billing_manager'] = {
+          code: 200,
+          response_objects: []
+        }
+
+        h['space_manager'] = {
+          code: 200,
+          response_objects: [
+            app_model1_response_object,
+          ]
+        }
+
+        h['space_auditor'] = {
+          code: 200,
+          response_objects: [
+            app_model1_response_object,
+          ]
+        }
+
+        h['space_developer'] = {
+          code: 200,
+          response_objects: [
+            app_model1_response_object,
+          ] }
+
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'query list parameters' do
@@ -386,110 +504,115 @@ RSpec.describe 'Apps' do
       end
     end
 
-    it 'returns a paginated list of apps the user has access to' do
-      buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
+    context 'pagination' do
+      before do
+        space.add_developer(user)
+      end
 
-      app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
-      app_model1.lifecycle_data.update(
-        buildpacks: [buildpack.name],
-        stack: stack.name
-      )
+      it 'returns a paginated list of apps the user has access to' do
+        buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
+        stack = VCAP::CloudController::Stack.make(name: 'stack-name')
 
-      app_model2 = VCAP::CloudController::AppModel.make(
-        :docker,
+        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
+        app_model1.lifecycle_data.update(
+          buildpacks: [buildpack.name],
+          stack: stack.name
+        )
+
+        app_model2 = VCAP::CloudController::AppModel.make(
+          :docker,
           name: 'name2',
           space: space,
           desired_state: 'STARTED'
-      )
-      VCAP::CloudController::AppModel.make(space: space)
-      VCAP::CloudController::AppModel.make
+        )
+        VCAP::CloudController::AppModel.make(space: space)
+        VCAP::CloudController::AppModel.make
 
-      get '/v3/apps?per_page=2&include=space', nil, user_header
-      expect(last_response.status).to eq(200)
+        get '/v3/apps?per_page=2&include=space', nil, user_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
             'pagination' => {
-                'total_results' => 3,
-                'total_pages' => 2,
-                'first' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=1&per_page=2" },
-                'last' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
-                'next' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
-                'previous' => nil,
+              'total_results' => 3,
+              'total_pages' => 2,
+              'first' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=1&per_page=2" },
+              'last' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
+              'next' => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
+              'previous' => nil,
             },
             'resources' => [
               {
-                    'guid' => app_model1.guid,
-                    'name' => 'name1',
-                    'state' => 'STOPPED',
-                    'lifecycle' => {
-                        'type' => 'buildpack',
-                        'data' => {
-                            'buildpacks' => ['bp-name'],
-                            'stack' => 'stack-name',
-                        }
-                    },
-                    'relationships' => {
-                        'space' => {
-                            'data' => {
-                                'guid' => space.guid
-                            }
-                        }
-                    },
-                    'created_at' => iso8601,
-                    'updated_at' => iso8601,
-                    'metadata' => { 'labels' => {}, 'annotations' => {} },
-                    'links' => {
-                        'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
-                        'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
-                        'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
-                        'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
-                        'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                        'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
-                        'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
-                        'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
-                        'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
-                        'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
-                        'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
-                        'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
-                        'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
-                    }
-                },
-              {
-                  'guid' => app_model2.guid,
-                  'name' => 'name2',
-                  'state' => 'STARTED',
-                  'lifecycle' => {
-                      'type' => 'docker',
-                      'data' => {}
-                  },
-                  'relationships' => {
-                      'space' => {
-                          'data' => {
-                              'guid' => space.guid
-                          }
-                      }
-                  },
-                  'created_at' => iso8601,
-                  'updated_at' => iso8601,
-                  'metadata' => { 'labels' => {}, 'annotations' => {} },
-                  'links' => {
-                      'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
-                      'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
-                      'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
-                      'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/environment_variables" },
-                      'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                      'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
-                      'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
-                      'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
-                      'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
-                      'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
-                      'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
-                      'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
-                      'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
+                'guid' => app_model1.guid,
+                'name' => 'name1',
+                'state' => 'STOPPED',
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                    'buildpacks' => ['bp-name'],
+                    'stack' => 'stack-name',
                   }
+                },
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => space.guid
+                    }
+                  }
+                },
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
+                }
+              },
+              {
+                'guid' => app_model2.guid,
+                'name' => 'name2',
+                'state' => 'STARTED',
+                'lifecycle' => {
+                  'type' => 'docker',
+                  'data' => {}
+                },
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => space.guid
+                    }
+                  }
+                },
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
+                }
               }
             ],
             'included' => {
@@ -526,8 +649,9 @@ RSpec.describe 'Apps' do
                 }
               }]
             }
-        }
-      )
+          }
+        )
+      end
     end
 
     context 'filtering by timestamps' do
@@ -754,6 +878,9 @@ RSpec.describe 'Apps' do
     end
 
     context 'ordering' do
+      before do
+        space.add_developer(user)
+      end
       it 'can order by name' do
         VCAP::CloudController::AppModel.make(space: space, name: 'zed')
         VCAP::CloudController::AppModel.make(space: space, name: 'alpha')
