@@ -14,6 +14,10 @@ module CloudFoundry
           expect(request_metrics).to have_received(:start_request)
         end
 
+        it 'returns the app response unaltered' do
+          expect(middleware.call({})).to eq([200, {}, 'a body'])
+        end
+
         it 'calls complete request on request metrics after the request' do
           middleware.call({})
           expect(request_metrics).to have_received(:complete_request).with(200)
