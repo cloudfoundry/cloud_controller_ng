@@ -5,6 +5,7 @@ module VCAP::CloudController
   class Space < Sequel::Model
     class InvalidDeveloperRelation < CloudController::Errors::InvalidRelation; end
     class InvalidAuditorRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidApplicationSupporterRelation < CloudController::Errors::InvalidRelation; end
     class InvalidManagerRelation < CloudController::Errors::InvalidRelation; end
     class InvalidSpaceQuotaRelation < CloudController::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
@@ -171,6 +172,12 @@ module VCAP::CloudController
       self.reload
     end
 
+    def add_application_supporter(user)
+      validate_application_supporter(user)
+      SpaceApplicationSupporter.find_or_create(user_id: user.id, space_id: id)
+      self.reload
+    end
+
     def add_manager(user)
       validate_manager(user)
       SpaceManager.find_or_create(user_id: user.id, space_id: id)
@@ -224,6 +231,10 @@ module VCAP::CloudController
 
     def validate_developer(user)
       raise InvalidDeveloperRelation.new(user.guid) unless in_organization?(user)
+    end
+
+    def validate_application_supporter(user)
+      raise InvalidApplicationSupporterRelation.new(user.guid) unless in_organization?(user)
     end
 
     def validate_manager(user)

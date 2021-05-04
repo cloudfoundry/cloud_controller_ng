@@ -1,12 +1,13 @@
 module VCAP::CloudController
   class Membership
-    SPACE_DEVELOPER     = 0
-    SPACE_MANAGER       = 1
-    SPACE_AUDITOR       = 2
-    ORG_USER            = 3
-    ORG_MANAGER         = 4
-    ORG_AUDITOR         = 5
-    ORG_BILLING_MANAGER = 6
+    SPACE_DEVELOPER             = 0
+    SPACE_MANAGER               = 1
+    SPACE_AUDITOR               = 2
+    ORG_USER                    = 3
+    ORG_MANAGER                 = 4
+    ORG_AUDITOR                 = 5
+    ORG_BILLING_MANAGER         = 6
+    SPACE_APPLICATION_SUPPORTER = 7
 
     def initialize(user)
       @user = user
@@ -48,6 +49,8 @@ module VCAP::CloudController
           @user.managed_spaces.map(&:guid)
         when SPACE_AUDITOR
           @user.audited_spaces.map(&:guid)
+        when SPACE_APPLICATION_SUPPORTER
+          @user.application_supported_spaces.map(&:guid)
         when ORG_USER
           @user.organizations_dataset.join(
             :spaces, spaces__organization_id: :organizations__id
