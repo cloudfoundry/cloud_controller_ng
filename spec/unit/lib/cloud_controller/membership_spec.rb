@@ -470,6 +470,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'space application supporter' do
+        before do
+          space.add_application_supporter(user)
+        end
+
+        it 'returns all spaces in which the user supports applications' do
+          guids = membership.space_guids_for_roles(Membership::SPACE_APPLICATION_SUPPORTER)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
       context 'org user' do
         it 'returns all spaces that the user is in the org' do
           guids = membership.space_guids_for_roles(Membership::ORG_USER)
