@@ -101,7 +101,7 @@ module Kpack
 
     def get_environment_variables(staging_details)
       staging_details.environment_variables.
-        except('VCAP_SERVICES').
+        except('VCAP_SERVICES', 'VCAP_APPLICATION').
         map { |key, value| { name: key, value: value.to_s } }
     end
 

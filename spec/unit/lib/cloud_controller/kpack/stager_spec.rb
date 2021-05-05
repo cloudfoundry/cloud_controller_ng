@@ -13,7 +13,14 @@ module Kpack
     )
     }
     let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:environment_variables) { { 'BP_JAVA_VERSION' => '8.*', 'BPL_HEAD_ROOM' => 0, 'VCAP_SERVICES' => { postgres: [] } } }
+    let(:environment_variables) {
+      {
+        'BP_JAVA_VERSION' => '8.*',
+        'BPL_HEAD_ROOM' => 0,
+        'VCAP_SERVICES' => { postgres: [] },
+        'VCAP_APPLICATION' => { limits: { fds: 16384, mem: 1024, disk: 4096 } }
+      }
+    }
     let(:staging_memory_in_mb) { 1024 }
     let(:staging_disk_in_mb) { 1024 }
     let(:blobstore_url_generator) do
