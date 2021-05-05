@@ -42,7 +42,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def space_guid_hash_for(dataset)
-      dataset.where(guid: @visible_space_guids).map { |space| { guid: space.guid } }
+      dataset.select(:guid).all.select { |space| @visible_space_guids.include? space.guid }.map { |space| { guid: space.guid } }
     end
 
     def build_links
