@@ -1246,6 +1246,7 @@ RSpec.describe 'Apps' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(
       :buildpack,
       name: 'my_app',
+      guid: 'app1_guid',
       space: space,
       desired_state: 'STARTED',
       environment_variables: { 'unicorn' => 'horn' },
@@ -1255,7 +1256,6 @@ RSpec.describe 'Apps' do
 
     before do
       space.organization.add_user(user)
-      space.add_developer(user)
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
@@ -1263,169 +1263,235 @@ RSpec.describe 'Apps' do
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
     end
 
-    it 'gets a specific app' do
-      get "/v3/apps/#{app_model.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
+    context 'when getting an app' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}", nil, user_headers } }
+      let(:buildpack_lifecycle) { VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: 'cool-stack', app: app_model) }
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
+      let(:app_model_response_object) do
         {
-            'name' => 'my_app',
-            'guid' => app_model.guid,
-            'state' => 'STARTED',
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => ['bp-name'],
-                    'stack' => 'stack-name',
-                }
-            },
-            'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
-                }
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-            }
+          guid: app_model.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: app_model.name,
+          state: 'STOPPED',
+          lifecycle: {
+            type: 'buildpack',
+            data: { buildpacks: [], stack: app_model.lifecycle_data.stack },
+          },
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          metadata: {
+            labels: {},
+            annotations: {},
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/apps/app1_guid" },
+            environment_variables: { href: "#{link_prefix}/v3/apps/app1_guid/environment_variables" },
+            space: { href: "#{link_prefix}/v3/spaces/#{space.guid}" },
+            processes: { href: "#{link_prefix}/v3/apps/app1_guid/processes" },
+            packages: { href: "#{link_prefix}/v3/apps/app1_guid/packages" },
+            current_droplet: { href: "#{link_prefix}/v3/apps/app1_guid/droplets/current" },
+            droplets: { href: "#{link_prefix}/v3/apps/app1_guid/droplets" },
+            tasks: { href: "#{link_prefix}/v3/apps/app1_guid/tasks" },
+            start: { href: "#{link_prefix}/v3/apps/app1_guid/actions/start", method: 'POST' },
+            stop: { href: "#{link_prefix}/v3/apps/app1_guid/actions/stop", method: 'POST' },
+            revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions" },
+            deployed_revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions/deployed" },
+            features: { href: "#{link_prefix}/v3/apps/app1_guid/features" },
+          }
         }
-      )
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: [app_model_response_object])
+
+        h['org_auditor'] = {
+          code: 404,
+          response_objects: []
+        }
+
+        h['org_billing_manager'] = {
+          code: 404,
+          response_objects: []
+        }
+
+        h['no_role'] = { code: 404, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    it 'gets a specific app including space' do
-      get "/v3/apps/#{app_model.guid}?include=space", nil, user_header
-      expect(last_response.status).to eq(200)
+    context 'when the user has permission to view the app' do
+      before do
+        space.add_developer(user)
+      end
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-            'name' => 'my_app',
-            'guid' => app_model.guid,
-            'state' => 'STARTED',
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => ['bp-name'],
-                    'stack' => 'stack-name',
-                }
-            },
-            'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
-                }
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-            },
-            'included' => {
-              'spaces' => [{
-                'guid' => space.guid,
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'name' => space.name,
-                'relationships' => {
-                  'organization' => {
-                    'data' => {
-                      'guid' => space.organization.guid }
-                  },
-                  'quota' => {
-                    'data' => nil
+      it 'gets a specific app' do
+        get "/v3/apps/#{app_model.guid}", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+              'name' => 'my_app',
+              'guid' => app_model.guid,
+              'state' => 'STARTED',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                      'buildpacks' => ['bp-name'],
+                      'stack' => 'stack-name',
                   }
-                },
-                'metadata' => {
-                  'labels' => {},
-                  'annotations' => {},
-                },
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
-                  },
-                  'organization' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
-                  },
-                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
-                  'apply_manifest' => {
-                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest",
-                    'method' => 'POST'
-                  },
-                }
-              }]
-            }
-        }
-      )
-    end
+              },
+              'relationships' => {
+                  'space' => {
+                      'data' => {
+                          'guid' => space.guid
+                      }
+                  }
+              },
+              'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+              }
+          }
+        )
+      end
 
-    it 'gets a specific app including space and org' do
-      get "/v3/apps/#{app_model.guid}?include=space.organization", nil, user_header
-      expect(last_response.status).to eq(200)
+      it 'gets a specific app including space' do
+        get "/v3/apps/#{app_model.guid}?include=space", nil, user_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      spaces = parsed_response['included']['spaces']
-      orgs = parsed_response['included']['organizations']
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+              'name' => 'my_app',
+              'guid' => app_model.guid,
+              'state' => 'STARTED',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                      'buildpacks' => ['bp-name'],
+                      'stack' => 'stack-name',
+                  }
+              },
+              'relationships' => {
+                  'space' => {
+                      'data' => {
+                          'guid' => space.guid
+                      }
+                  }
+              },
+              'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+              },
+              'included' => {
+                'spaces' => [{
+                  'guid' => space.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => space.name,
+                  'relationships' => {
+                    'organization' => {
+                      'data' => {
+                        'guid' => space.organization.guid }
+                    },
+                    'quota' => {
+                      'data' => nil
+                    }
+                  },
+                  'metadata' => {
+                    'labels' => {},
+                    'annotations' => {},
+                  },
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
+                    },
+                    'organization' => {
+                      'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
+                    },
+                    'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
+                    'apply_manifest' => {
+                      'href' => "#{link_prefix}/v3/spaces/#{space.guid}/actions/apply_manifest",
+                      'method' => 'POST'
+                    },
+                  }
+                }]
+              }
+          }
+        )
+      end
 
-      expect(spaces).to be_present
-      expect(orgs[0]).to be_a_response_like(
-        {
-          'guid' => org.guid,
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'name' => org.name,
-          'metadata' => {
-            'labels' => {},
-            'annotations' => {},
-          },
-          'suspended' => false,
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}",
+      it 'gets a specific app including space and org' do
+        get "/v3/apps/#{app_model.guid}?include=space.organization", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        spaces = parsed_response['included']['spaces']
+        orgs = parsed_response['included']['organizations']
+
+        expect(spaces).to be_present
+        expect(orgs[0]).to be_a_response_like(
+          {
+            'guid' => org.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'name' => org.name,
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
             },
-            'default_domain' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default",
+            'suspended' => false,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org.guid}",
+              },
+              'default_domain' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default",
+              },
+              'domains' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains",
+              },
+              'quota' => {
+                'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}"
+              }
             },
-            'domains' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains",
-            },
-            'quota' => {
-              'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}"
-            }
-          },
-          'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
-        }
-      )
+            'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
+          }
+        )
+      end
     end
   end
 
