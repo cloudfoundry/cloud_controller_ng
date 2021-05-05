@@ -1700,7 +1700,7 @@ RSpec.describe 'v3 service route bindings' do
 
     context 'when the organization is suspended' do
       it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
-        let(:expected_codes) {}
+        let(:expected_codes) { nil }
       end
     end
   end
