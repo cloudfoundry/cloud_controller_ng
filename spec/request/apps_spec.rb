@@ -1265,7 +1265,6 @@ RSpec.describe 'Apps' do
 
     context 'when getting an app' do
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}", nil, user_headers } }
-      let(:buildpack_lifecycle) { VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: 'cool-stack', app: app_model) }
 
       let(:app_model_response_object) do
         {
@@ -1273,10 +1272,10 @@ RSpec.describe 'Apps' do
           created_at: iso8601,
           updated_at: iso8601,
           name: app_model.name,
-          state: 'STOPPED',
+          state: 'STARTED',
           lifecycle: {
             type: 'buildpack',
-            data: { buildpacks: [], stack: app_model.lifecycle_data.stack },
+            data: { buildpacks: [buildpack.name], stack: app_model.lifecycle_data.stack },
           },
           relationships: {
             space: { data: { guid: space.guid } }
@@ -1304,19 +1303,10 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [app_model_response_object])
-
-        h['org_auditor'] = {
-          code: 404,
-          response_objects: []
-        }
-
-        h['org_billing_manager'] = {
-          code: 404,
-          response_objects: []
-        }
-
-        h['no_role'] = { code: 404, response_objects: [] }
+        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
         h
       end
 
@@ -1498,92 +1488,133 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps/:guid/env' do
     before do
       space.organization.add_user(user)
-      space.add_developer(user)
     end
 
-    it 'returns the environment of the app, including environment variables provided by the system' do
-      app_model = VCAP::CloudController::AppModel.make(
+    context 'when getting an apps environment variables' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/env", nil, user_headers } }
+      let!(:app_model) { VCAP::CloudController::AppModel.make(
+        :buildpack,
         name: 'my_app',
+        guid: 'app1_guid',
         space: space,
         environment_variables: { 'unicorn' => 'horn' },
       )
-
-      group = VCAP::CloudController::EnvironmentVariableGroup.staging
-      group.environment_json = { STAGING_ENV: 'staging_value' }
-      group.save
-
-      group = VCAP::CloudController::EnvironmentVariableGroup.running
-      group.environment_json = { RUNNING_ENV: 'running_value' }
-      group.save
-
-      service_instance = VCAP::CloudController::ManagedServiceInstance.make(
-        space: space,
-        name: 'si-name',
-        tags: ['50% off']
-      )
-      service_binding = VCAP::CloudController::ServiceBinding.make(
-        service_instance: service_instance,
-        app: app_model,
-        syslog_drain_url: 'https://syslog.example.com/drain',
-        credentials: { password: 'top-secret' }
-      )
-
-      get "/v3/apps/#{app_model.guid}/env", nil, user_header
-
-      expected_response = {
-          'staging_env_json' => {
-              'STAGING_ENV' => 'staging_value'
-          },
-          'running_env_json' => {
-              'RUNNING_ENV' => 'running_value'
-          },
-          'environment_variables' => {
-              'unicorn' => 'horn'
-          },
-          'system_env_json' => {
-              'VCAP_SERVICES' => {
-                  service_instance.service.label => [
-                    {
-                        'name' => 'si-name',
-                        'instance_guid' => service_instance.guid,
-                        'instance_name' => 'si-name',
-                        'binding_guid' => service_binding.guid,
-                        'binding_name' => nil,
-                        'credentials' => { 'password' => 'top-secret' },
-                        'syslog_drain_url' => 'https://syslog.example.com/drain',
-                        'volume_mounts' => [],
-                        'label' => service_instance.service.label,
-                        'provider' => nil,
-                        'plan' => service_instance.service_plan.name,
-                        'tags' => ['50% off']
-                    }
-                  ]
-              }
-          },
-          'application_env_json' => {
-              'VCAP_APPLICATION' => {
-                  'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-                  'limits' => {
-                      'fds' => 16384
-                  },
-                  'application_name' => 'my_app',
-                  'application_uris' => [],
-                  'name' => 'my_app',
-                  'organization_id' => space.organization.guid,
-                  'organization_name' => space.organization.name,
-                  'space_id' => space.guid,
-                  'space_name' => space.name,
-                'uris' => [],
-                  'users' => nil,
-                  'application_id' => app_model.guid
-              }
-          }
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      let(:app_model_response_object) do
+        {
+          environment_variables: app_model.environment_variables,
+          staging_env_json: {},
+          running_env_json: {},
+          system_env_json: { VCAP_SERVICES: {} },
+          application_env_json: anything,
+        }
+      end
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h['global_auditor'] = { code: 403 }
+        h['org_manager'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['space_manager'] = { code: 403 }
+        h['space_auditor'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when user has permission to view the app' do
+      before do
+        space.add_developer(user)
+      end
+
+      it 'returns the environment of the app, including environment variables provided by the system' do
+        app_model = VCAP::CloudController::AppModel.make(
+          name: 'my_app',
+          space: space,
+          environment_variables: { 'unicorn' => 'horn' },
+        )
+
+        group = VCAP::CloudController::EnvironmentVariableGroup.staging
+        group.environment_json = { STAGING_ENV: 'staging_value' }
+        group.save
+
+        group = VCAP::CloudController::EnvironmentVariableGroup.running
+        group.environment_json = { RUNNING_ENV: 'running_value' }
+        group.save
+
+        service_instance = VCAP::CloudController::ManagedServiceInstance.make(
+          space: space,
+          name: 'si-name',
+          tags: ['50% off']
+        )
+        service_binding = VCAP::CloudController::ServiceBinding.make(
+          service_instance: service_instance,
+          app: app_model,
+          syslog_drain_url: 'https://syslog.example.com/drain',
+          credentials: { password: 'top-secret' }
+        )
+
+        get "/v3/apps/#{app_model.guid}/env", nil, user_header
+
+        expected_response = {
+            'staging_env_json' => {
+                'STAGING_ENV' => 'staging_value'
+            },
+            'running_env_json' => {
+                'RUNNING_ENV' => 'running_value'
+            },
+            'environment_variables' => {
+                'unicorn' => 'horn'
+            },
+            'system_env_json' => {
+                'VCAP_SERVICES' => {
+                    service_instance.service.label => [
+                      {
+                          'name' => 'si-name',
+                          'instance_guid' => service_instance.guid,
+                          'instance_name' => 'si-name',
+                          'binding_guid' => service_binding.guid,
+                          'binding_name' => nil,
+                          'credentials' => { 'password' => 'top-secret' },
+                          'syslog_drain_url' => 'https://syslog.example.com/drain',
+                          'volume_mounts' => [],
+                          'label' => service_instance.service.label,
+                          'provider' => nil,
+                          'plan' => service_instance.service_plan.name,
+                          'tags' => ['50% off']
+                      }
+                    ]
+                }
+            },
+            'application_env_json' => {
+                'VCAP_APPLICATION' => {
+                    'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+                    'limits' => {
+                        'fds' => 16384
+                    },
+                    'application_name' => 'my_app',
+                    'application_uris' => [],
+                    'name' => 'my_app',
+                    'organization_id' => space.organization.guid,
+                    'organization_name' => space.organization.name,
+                    'space_id' => space.guid,
+                    'space_name' => space.name,
+                  'uris' => [],
+                    'users' => nil,
+                    'application_id' => app_model.guid
+                }
+            }
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
