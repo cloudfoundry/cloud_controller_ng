@@ -95,33 +95,12 @@ module VCAP::CloudController
 
           existing_value = existing_app_hash[key]
           if key == 'processes' && existing_value.present?
-            existing_value.each_with_index do |process, i|
-              manifest_app_hash_process = value.find { |hash_process| hash_process['type'] == process['type'] }
-              if manifest_app_hash_process.nil?
-                existing_value.delete_at(i)
-              else
-                process.each do |k, v|
-                  if manifest_app_hash_process[k].nil?
-                    existing_value[i].delete(k)
-                  end
-                end
-              end
-            end
+            remove_default_missing_fields(existing_value, 'processes', 'type', key, value)
           end
           if key == 'sidecars' && existing_value.present?
-            existing_value.each_with_index do |sidecar, i|
-              manifest_app_hash_sidecar = value.find { |hash_sidecar| hash_sidecar['name'] == sidecar['name'] }
-              if manifest_app_hash_sidecar.nil?
-                existing_value.delete_at(i)
-              else
-                sidecar.each do |k, v|
-                  if manifest_app_hash_sidecar[k].nil?
-                    existing_value[i].delete(k)
-                  end
-                end
-              end
-            end
+            remove_default_missing_fields(existing_value, 'sidecars', 'name', key, value)
           end
+
           key_diffs = JsonDiff.diff(
             existing_value,
             value,
@@ -180,6 +159,21 @@ module VCAP::CloudController
 
     def self.byte_converter
       ByteConverter.new
+    end
+
+    def self.remove_default_missing_fields(existing_value, resource_type, identifying_field, current_key, value)
+      existing_value.each_with_index do |resource, i|
+        manifest_app_hash_resource = value.find { |hash_resource| hash_resource[identifying_field] == resource[identifying_field] }
+        if manifest_app_hash_resource.nil?
+          existing_value.delete_at(i)
+        else
+          resource.each do |k, v|
+            if manifest_app_hash_resource[k].nil?
+              existing_value[i].delete(k)
+            end
+          end
+        end
+      end
     end
   end
 end
