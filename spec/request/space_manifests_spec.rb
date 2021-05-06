@@ -774,16 +774,54 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
-    context 'when a default field has been removed' do
+    context 'when a default field from a sidecar has been removed' do
       let(:user) { make_developer_for_space(space) }
-      let(:diff_json) do
+      let(:sidecar_manifest) do
         {
-          diff: a_collection_containing_exactly(
-            { op: 'remove', path: '/applications/0/processes/0/memory', was: '1024M' },
-          )
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'routes' => [
+                {
+                  'route' => "a_host.#{shared_domain.name}"
+                }
+              ],
+              'sidecars' => [{
+                'name' => 'rollsroyce',
+                'command' => 'go',
+                'process_types' => ['pink'],
+                'memory' => '1024M'
+              }]
+            },
+          ]
         }
       end
+      let(:manifest_yml) { sidecar_manifest.to_yaml }
 
+      it 'returns an empty diff' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", manifest_yml, yml_headers(user_header)
+        expect(last_response).to have_status_code(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+        new_sidecars = [{
+                'name' => 'rollsroyce',
+                'command' => 'go',
+                'process_types' => ['pink'],
+        }]
+        sidecar_manifest['applications'][0]['sidecars'] = new_sidecars
+        post "/v3/spaces/#{space.guid}/manifest_diff", sidecar_manifest.to_yaml, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq({ 'diff' => [] })
+      end
+    end
+
+    context 'when a default field from a process has been removed' do
+      let(:user) { make_developer_for_space(space) }
       let(:manifest_with_removals) do
         {
           'applications' => [

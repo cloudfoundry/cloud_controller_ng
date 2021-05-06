@@ -108,7 +108,20 @@ module VCAP::CloudController
               end
             end
           end
-
+          if key == 'sidecars' && existing_value.present?
+            existing_value.each_with_index do |sidecar, i|
+              manifest_app_hash_sidecar = value.find { |hash_sidecar| hash_sidecar['name'] == sidecar['name'] }
+              if manifest_app_hash_sidecar.nil?
+                existing_value.delete_at(i)
+              else
+                sidecar.each do |k, v|
+                  if manifest_app_hash_sidecar[k].nil?
+                    existing_value[i].delete(k)
+                  end
+                end
+              end
+            end
+          end
           key_diffs = JsonDiff.diff(
             existing_value,
             value,
