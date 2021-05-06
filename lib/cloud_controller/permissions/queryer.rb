@@ -150,6 +150,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def untrusted_can_read_from_space?(space_guid, org_guid)
+    db_permissions.untrusted_can_read_from_space?(space_guid, org_guid)
+  end
+
   def can_read_secrets_in_space?(space_guid, org_guid)
     science 'can_read_secrets_in_space' do |e|
       e.context(space_guid: space_guid, org_guid: org_guid)
