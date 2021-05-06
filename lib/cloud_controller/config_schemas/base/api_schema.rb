@@ -243,7 +243,14 @@ module VCAP::CloudController
             },
 
             request_timeout_in_seconds: Integer,
-            threadpool_size: Integer,
+            optional(:puma) => {
+              workers: Integer,
+              optional(:threads) => {
+                min: Integer,
+                max: Integer
+              }
+            },
+
             skip_cert_verify: bool,
 
             install_buildpacks: [
