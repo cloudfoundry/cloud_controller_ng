@@ -820,7 +820,7 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
-    context 'when a default field from a process has been removed' do
+    context 'when default fields from processes have been removed and proccesses have been re-ordered' do
       let(:user) { make_developer_for_space(space) }
       let(:manifest_with_removals) do
         {
@@ -856,7 +856,7 @@ RSpec.describe 'Space Manifests' do
         manifest_with_removals.to_yaml
       end
 
-      it 'returns a diff that only contains ordering information' do
+      it 'returns a diff that only contains ordering information without any removals' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
         parsed_response = MultiJson.load(last_response.body)
 
