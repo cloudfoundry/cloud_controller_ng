@@ -32,6 +32,16 @@ module VCAP::CloudController
             expect { role.reload }.to raise_error Sequel::NoExistingObject
           end
 
+          it 'deletes associated space application supporter roles' do
+            set_current_user_as_role(role: 'spaces_application_supporters', org: org, space: space, user: user)
+            role = SpaceApplicationSupporter.find(user_id: user.id, space_id: space.id)
+
+            expect {
+              user_delete.delete([user])
+            }.to change { user.application_supported_spaces.count }.by(-1)
+            expect { role.reload }.to raise_error Sequel::NoExistingObject
+          end
+
           it 'deletes associated space developer roles' do
             set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user)
             role = SpaceDeveloper.find(user_id: user.id, space_id: space.id)

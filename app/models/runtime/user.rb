@@ -55,6 +55,7 @@ module VCAP::CloudController
     add_association_dependencies audited_organizations: :nullify
     add_association_dependencies spaces: :nullify
     add_association_dependencies managed_spaces: :nullify
+    add_association_dependencies application_supported_spaces: :nullify
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
