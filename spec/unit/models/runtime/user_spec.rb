@@ -32,6 +32,29 @@ module VCAP::CloudController
       it { is_expected.to have_associated :managed_spaces, class: Space }
       it { is_expected.to have_associated :audited_spaces, class: Space }
       it { is_expected.to have_associated :application_supported_spaces, class: Space }
+
+      describe 'destroy dependent associations' do
+        let(:user) { User.make }
+
+        [
+          SpaceApplicationSupporter,
+          SpaceAuditor,
+          SpaceDeveloper,
+          SpaceManager,
+          OrganizationUser,
+          OrganizationBillingManager,
+          OrganizationAuditor,
+          OrganizationManager
+        ].each do |role_class|
+          context role_class.to_s do
+            it 'deletes the association' do
+              role_class.make(user: user)
+
+              expect { user.destroy }.to change { role_class.count }.by(-1)
+            end
+          end
+        end
+      end
     end
 
     describe 'Validations' do
