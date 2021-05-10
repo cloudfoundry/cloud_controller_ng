@@ -114,7 +114,7 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     redcarpet (3.5.1)
-    rexml (3.2.4)
+    rexml (3.2.5)
     rouge (1.11.1)
     sass (3.7.4)
       sass-listen (~> 4.0.0)
