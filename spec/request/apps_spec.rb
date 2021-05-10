@@ -2491,57 +2491,43 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{droplet_model.app_guid}/relationships/current_droplet", nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: 'example error',
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-sha256-checksum',
-        process_types: { 'web' => 'start-command' },
-      )
+    let!(:droplet_model) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+    let(:expected_response) do
+      {
+        'data' => {
+          'guid' => droplet_model.guid
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{droplet_model.app_guid}/relationships/current_droplet" },
+          'related' => { 'href' => "#{link_prefix}/v3/apps/#{droplet_model.app_guid}/droplets/current" }
+        }
+      }
     end
-    let(:app_guid) { droplet_model.app_guid }
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: expected_response)
+      h['no_role'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_auditor'] = { code: 404 }
+      h
+    end
 
     before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
       app_model.save
     end
 
-    it 'gets the current droplet relationship' do
-      get "/v3/apps/#{app_model.guid}/relationships/current_droplet", nil, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
-                                                        'data' => {
-                                                            'guid' => droplet_model.guid
-                                                        },
-                                                        'links' => {
-                                                            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
-                                                            'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" }
-                                                        }
-                                                    })
-    end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{droplet_model.app_guid}/droplets/current", nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid: app_model.guid,
         package_guid: package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
@@ -2552,33 +2538,17 @@ RSpec.describe 'Apps' do
         process_types: { 'web' => 'start-command' },
       )
     end
-    let(:app_guid) { droplet_model.app_guid }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
-      app_model.droplet_guid = droplet_model.guid
-      app_model.save
-    end
-
-    it 'gets the current droplet' do
-      get "/v3/apps/#{app_model.guid}/droplets/current", nil, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
+    let(:expected_response) do
+      {
         'guid' => droplet_model.guid,
         'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
         'error' => 'example error',
         'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {}
+          'type' => 'buildpack',
+          'data' => {}
         },
         'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil,
-                           'version' => nil }],
+        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
         'stack' => 'stack-name',
         'execution_metadata' => 'some-data',
         'process_types' => { 'web' => 'start-command' },
@@ -2587,19 +2557,32 @@ RSpec.describe 'Apps' do
         'updated_at' => iso8601,
         'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download" },
-            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
-                                          'method' => 'PATCH' },
+          'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}" },
+          'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}/download" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         },
         'metadata' => {
-          'labels' => {},
-          'annotations' => {}
-        },
-      })
+            'labels' => {},
+            'annotations' => {}
+          },
+      }
     end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: expected_response)
+      h['no_role'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_auditor'] = { code: 404 }
+      h
+    end
+    before do
+      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
+      app_model.droplet_guid = droplet_model.guid
+      app_model.save
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
