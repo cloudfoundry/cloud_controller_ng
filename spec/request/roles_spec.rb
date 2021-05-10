@@ -1070,6 +1070,21 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
+    context 'listing roles with overlapping timestamps' do
+      let!(:user_jeff) { VCAP::CloudController::User.make(guid: 'jeff-guid') }
+      let!(:role_one) { VCAP::CloudController::OrganizationAuditor.make(guid: '1', user: user_jeff, organization: org, created_at: '2019-12-25T13:00:00Z') }
+      let!(:role_two) { VCAP::CloudController::SpaceAuditor.make(guid: '2', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
+      let!(:role_three) { VCAP::CloudController::SpaceManager.make(guid: '3', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
+      it 'sorts the the roles on a secondary key and keeps the same order between calls' do
+        get('/v3/roles', nil, admin_header)
+        expect(last_response).to have_status_code(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'][0]['guid']).to match('1')
+        expect(parsed_response['resources'][1]['guid']).to match('2')
+        expect(parsed_response['resources'][2]['guid']).to match('3')
+      end
+    end
 
     context 'listing roles with include' do
       let(:other_user_response) do

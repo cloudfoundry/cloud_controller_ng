@@ -60,6 +60,21 @@ module VCAP::CloudController
 
         expect(paginated_result.total).to be > 0
       end
+
+      it 'orders by GUID as a secondary field when available' do
+      end
+
+      it 'does not order by GUID when the table has no GUID' do
+        options = { page: 1, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+        request_count_dataset = RequestCount.dataset
+        RequestCount.make.save
+        paginated_result = nil
+        expect {
+          paginated_result = paginator.get_page(request_count_dataset, pagination_options)
+        }.not_to raise_error
+        expect(paginated_result.total).to be 1
+      end
     end
   end
 end
