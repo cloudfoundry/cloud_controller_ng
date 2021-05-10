@@ -20,7 +20,7 @@ Sham.define do
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.example.com" }
   host                { |index| "host-#{index}" }
-  guid                { |_| "guid-#{SecureRandom.uuid}" }
+  guid                { |_| SecureRandom.uuid.to_s }
   extra               { |index| "extra-#{index}" }
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }

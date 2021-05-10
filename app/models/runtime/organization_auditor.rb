@@ -6,7 +6,7 @@ module VCAP::CloudController
     def_column_alias :guid, :role_guid
 
     def before_create
-      self.guid = SecureRandom.uuid
+      self.guid ||= SecureRandom.uuid
     end
 
     def validate
