@@ -808,7 +808,6 @@ RSpec.describe 'Roles Request' do
 
     let!(:space_auditor) do
       VCAP::CloudController::SpaceAuditor.make(
-        guid: 'space-role-guid',
         space: space,
         user: other_user,
         created_at: Time.now - 5.minutes,
@@ -817,7 +816,6 @@ RSpec.describe 'Roles Request' do
 
     let!(:organization_auditor) do
       VCAP::CloudController::OrganizationAuditor.make(
-        guid: 'organization-role-guid',
         organization: org,
         user: other_user,
         created_at: Time.now,

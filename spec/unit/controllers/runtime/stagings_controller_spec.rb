@@ -487,7 +487,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
 
           droplet.reload
-          expect(last_response.headers['X-Accel-Redirect']).to eq("/cc-droplets/gu/id/#{droplet.blobstore_key}")
+          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{droplet.blobstore_key}")
         end
       end
 

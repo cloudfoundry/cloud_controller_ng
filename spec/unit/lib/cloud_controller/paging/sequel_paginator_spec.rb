@@ -62,6 +62,14 @@ module VCAP::CloudController
       end
 
       it 'orders by GUID as a secondary field when available' do
+        options = { page: 1, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
+        app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')
+        app_model2.update(guid: '2', created_at: '2019-12-25T13:00:00Z')
+
+        pagination_options = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.guid).to eq(app_model1.guid)
+        expect(paginated_result.records.second.guid).to eq(app_model2.guid)
       end
 
       it 'does not order by GUID when the table has no GUID' do
