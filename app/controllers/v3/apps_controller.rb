@@ -333,7 +333,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def show_permissions
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: {
       read_basic_data: true,
