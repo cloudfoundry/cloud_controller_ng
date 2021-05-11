@@ -2343,53 +2343,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.body).to include('ResourceNotFound')
       end
     end
-
-    context 'permissions' do
-      context 'when the user does not have the read scope' do
-        before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
-        end
-
-        it 'returns a 403 NotAuthorized error' do
-          get :current_droplet, params: { guid: app_model.guid }
-
-          expect(response.status).to eq(403)
-          expect(response.body).to include('NotAuthorized')
-        end
-      end
-
-      context 'when the user can not read the space' do
-        let(:space) { droplet.space }
-        let(:org) { space.organization }
-
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404 not found' do
-          get :current_droplet, params: { guid: app_model.guid }
-
-          expect(response.status).to eq(404)
-          expect(response.body).to include('ResourceNotFound')
-        end
-      end
-
-      context 'when the user can read but not update the application' do
-        let(:space) { droplet.space }
-        let(:org) { space.organization }
-
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'returns a 200 OK' do
-          get :current_droplet, params: { guid: app_model.guid }
-
-          expect(response.status).to eq(200)
-        end
-      end
-    end
   end
 
   describe '#current_droplet_relationship' do
