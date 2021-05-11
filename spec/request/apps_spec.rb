@@ -2869,9 +2869,10 @@ RSpec.describe 'Apps' do
       h['space_manager'] = { code: 200, response_object: read_basic_response }
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
       h['space_developer'] = { code: 200, response_object: read_all_response }
+      h['space_application_supporter'] = { code: 200, response_object: read_basic_response }
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + %w(space_application_supporter)
   end
 end

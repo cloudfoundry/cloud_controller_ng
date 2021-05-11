@@ -3,69 +3,10 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
   describe '#index' do
-    let(:app_model_1) { VCAP::CloudController::AppModel.make }
-    let!(:app_model_2) { VCAP::CloudController::AppModel.make }
-    let!(:space_1) { app_model_1.space }
     let(:user) { VCAP::CloudController::User.make }
 
     before do
-      set_current_user(user)
-      allow_user_read_access_for(user, spaces: [space_1])
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-    end
-
-    it 'returns 200 and lists the apps for spaces user is allowed to read' do
-      get :index
-
-      response_guids = parsed_body['resources'].map { |r| r['guid'] }
-      expect(response.status).to eq(200)
-      expect(response_guids).to match_array([app_model_1.guid])
-    end
-
-    context 'when the user has global read access' do
-      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
-
-      before do
-        allow_user_global_read_access(user)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-      end
-
-      it 'fetches all the apps' do
-        get :index
-
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
-      end
-
-      it 'eager loads associated resources that the presenter specifies' do
-        expect(VCAP::CloudController::AppListFetcher).to receive(:fetch_all).with(
-          anything,
-          hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
-        ).and_call_original
-
-        get :index
-
-        expect(response.status).to eq(200)
-      end
-    end
-
-    context 'when the user does not have read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
-      end
-
-      it 'raises an ApiError with a 403 code' do
-        get :index
-
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
-      end
+      set_current_user_as_admin(user: user)
     end
 
     context 'query params' do
@@ -111,13 +52,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
-  end
 
-  describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
     context 'sorting' do
       before do
-        set_current_user_as_admin(user: user)
         VCAP::CloudController::AppModel.make(name: 'clem')
         VCAP::CloudController::AppModel.make(name: 'abel')
         VCAP::CloudController::AppModel.make(name: 'quartz')
@@ -195,10 +132,6 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'label_selection' do
-      before do
-        set_current_user_as_admin(user: user)
-      end
-
       it 'returns a 400 when the label_selector is invalid' do
         get :index, params: { label_selector: 'buncha nonsense' }
 
@@ -216,37 +149,14 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       set_current_user(user)
-      allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    it 'returns a 200 and the app' do
-      get :show, params: { guid: app_model.guid }
+    context 'when including an unrecognized query param' do
+      it 'includes the space' do
+        get :show, params: { guid: app_model.guid, include: :milk }
 
-      expect(response.status).to eq 200
-      expect(parsed_body['guid']).to eq(app_model.guid)
-    end
-
-    describe 'include query param' do
-      context 'when including spaces' do
-        it 'includes the space' do
-          get :show, params: { guid: app_model.guid, include: :space }
-
-          expect(response.status).to eq 200
-          expect(parsed_body['guid']).to eq(app_model.guid)
-          expect(parsed_body['included']['spaces'].first['guid']).to eq(space.guid)
-          expect(parsed_body['included']['spaces'].first['relationships']['organization']['data']['guid']).to eq(space.organization.guid)
-        end
-      end
-
-      context 'when including an unrecognized query param' do
-        it 'includes the space' do
-          get :show, params: { guid: app_model.guid, include: :milk }
-
-          expect(response.status).to eq 400
-          expect(response.body).to match('Invalid included resource: \'milk\'')
-        end
+        expect(response.status).to eq 400
+        expect(response.body).to match('Invalid included resource: \'milk\'')
       end
     end
 
@@ -270,21 +180,6 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.body).to include 'NotAuthorized'
           expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user cannot read the app' do
-        let(:space) { app_model.space }
-
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          get :show, params: { guid: app_model.guid }
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
         end
       end
     end
@@ -2314,14 +2209,6 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access_for(user, spaces: [space])
-    end
-
-    it 'returns a 200 OK and the droplet' do
-      get :current_droplet, params: { guid: app_model.guid }
-
-      expect(response.status).to eq(200)
-      expect(parsed_body['guid']).to eq(droplet.guid)
     end
 
     context 'when the application does not exist' do
@@ -2356,14 +2243,6 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
-      allow_user_read_access_for(user, spaces: [space])
-    end
-
-    it 'returns a 200 OK and describes a droplet relationship' do
-      get :current_droplet_relationship, params: { guid: app_model.guid }
-
-      expect(response.status).to eq(200)
-      expect(parsed_body['data']['guid']).to eq(droplet.guid)
     end
 
     context 'when the application does not exist' do
