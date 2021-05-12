@@ -14,7 +14,7 @@ class BuildsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 BuildListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               else
-                BuildListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_space_guids,
+                BuildListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_space_application_supporter_guids,
                   eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               end
 

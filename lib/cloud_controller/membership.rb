@@ -90,6 +90,10 @@ module VCAP::CloudController
           @space_auditor ||=
             @user.audited_spaces_dataset.
             association_join(:organization).map(&:guid)
+        when SPACE_APPLICATION_SUPPORTER
+          @space_application_supporter ||=
+            @user.application_supported_spaces_dataset.
+            association_join(:organization).map(&:guid)
         when ORG_USER
           @org_user ||=
             @user.organizations_dataset.map(&:guid)
