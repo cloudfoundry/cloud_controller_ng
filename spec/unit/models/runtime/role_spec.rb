@@ -12,6 +12,7 @@ module VCAP::CloudController
       let!(:space_developer) { SpaceDeveloper.make }
       let!(:space_auditor) { SpaceAuditor.make }
       let!(:space_manager) { SpaceManager.make }
+      let!(:space_application_supporter) { SpaceApplicationSupporter.make }
 
       it 'contains all the roles' do
         roles = VCAP::CloudController::Role.all.each_with_object({}) do |role, obj|
@@ -25,6 +26,7 @@ module VCAP::CloudController
         expect(roles[VCAP::CloudController::RoleTypes::SPACE_DEVELOPER]).to be_a_guid
         expect(roles[VCAP::CloudController::RoleTypes::SPACE_AUDITOR]).to be_a_guid
         expect(roles[VCAP::CloudController::RoleTypes::SPACE_MANAGER]).to be_a_guid
+        expect(roles[VCAP::CloudController::RoleTypes::SPACE_APPLICATION_SUPPORTER]).to be_a_guid
       end
     end
   end

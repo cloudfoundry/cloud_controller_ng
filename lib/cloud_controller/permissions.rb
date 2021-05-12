@@ -21,6 +21,14 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
+  ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING ||= [
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_MANAGER,
+    VCAP::CloudController::Membership::SPACE_AUDITOR,
+    VCAP::CloudController::Membership::ORG_MANAGER,
+    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+  ].freeze
+
   ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS ||= [
     VCAP::CloudController::Membership::ORG_MANAGER,
     VCAP::CloudController::Membership::ORG_AUDITOR,
@@ -112,6 +120,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_READING)
+    end
+  end
+
+  def readable_application_supporter_space_guids
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
     end
   end
 

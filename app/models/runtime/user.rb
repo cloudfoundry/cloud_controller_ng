@@ -45,6 +45,11 @@ module VCAP::CloudController
       join_table: 'spaces_auditors',
       right_key: :space_id, reciprocal: :auditors
 
+    many_to_many :application_supported_spaces,
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_application_supporters',
+      right_key: :space_id, reciprocal: :application_supporters
+
     one_to_many :labels, class: 'VCAP::CloudController::UserLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::UserAnnotationModel', key: :resource_guid, primary_key: :guid
 
@@ -55,6 +60,7 @@ module VCAP::CloudController
     add_association_dependencies audited_organizations: :nullify
     add_association_dependencies spaces: :nullify
     add_association_dependencies managed_spaces: :nullify
+    add_association_dependencies application_supported_spaces: :nullify
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
