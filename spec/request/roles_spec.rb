@@ -1024,11 +1024,21 @@ RSpec.describe 'Roles Request' do
           )
         }
 
+        h['space_application_supporter'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            space_auditor_response_object,
+            org_auditor_response_object,
+            make_org_role_for_current_user('organization_user'),
+            make_space_role_for_current_user('space_application_supporter')
+          )
+        }
+
         h['no_role'] = { code: 200, response_objects: [] }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -1342,14 +1352,18 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(expected_response)
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
       end
 
       before do
         org.add_user(user_with_role)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when getting a org role' do
@@ -1386,7 +1400,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the role does not exist' do
