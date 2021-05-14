@@ -40,6 +40,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_AUDITOR,
   ].freeze
 
+  SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS ||= (SPACE_ROLES + [
+    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+  ]).freeze
+
   ROLES_FOR_SPACE_SECRETS_READING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
@@ -47,6 +51,10 @@ class VCAP::CloudController::Permissions
   ROLES_FOR_SPACE_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
+
+  ROLES_FOR_SPACE_APPLICATION_SUPPORTER_WRITING ||= (ROLES_FOR_SPACE_WRITING + [
+    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+  ]).freeze
 
   ROLES_FOR_SPACE_UPDATING ||= [
     VCAP::CloudController::Membership::SPACE_MANAGER,
@@ -81,7 +89,7 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_org_guids_for_domains
+  def readable_org_guids_for_domains(include_application_supporters: false)
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
     else
@@ -89,7 +97,8 @@ class VCAP::CloudController::Permissions
       org_guids = membership.org_guids_for_roles(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS)
 
       # Getting readable orgs for space-scoped roles
-      space_guids = membership.space_guids_for_roles(SPACE_ROLES)
+      roles = include_application_supporters ? SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS : SPACE_ROLES
+      space_guids = membership.space_guids_for_roles(roles)
       org_guids_from_space_guids = space_guids.map { |guid| VCAP::CloudController::Space.find(guid: guid).organization.guid }
 
       (org_guids + org_guids_from_space_guids).uniq
@@ -146,7 +155,16 @@ class VCAP::CloudController::Permissions
 
   def can_write_to_space?(space_guid)
     return true if can_write_globally?
+
     return false unless membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
+
+    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
+  end
+
+  def untrusted_can_write_to_space?(space_guid)
+    return true if can_write_globally?
+
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_WRITING, space_guid)
 
     VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
@@ -200,6 +218,16 @@ class VCAP::CloudController::Permissions
 
     space.has_member?(@user) || @user.managed_organizations.include?(org) ||
       @user.audited_organizations.include?(org)
+  end
+
+  def untrusted_can_read_route?(space_guid, org_guid)
+    return true if can_read_globally?
+
+    space = VCAP::CloudController::Space.where(guid: space_guid).first
+    org = space.organization
+
+    space.has_member?(@user) || space.has_application_supporter?(@user) ||
+      @user.managed_organizations.include?(org) || @user.audited_organizations.include?(org)
   end
 
   def readable_app_guids

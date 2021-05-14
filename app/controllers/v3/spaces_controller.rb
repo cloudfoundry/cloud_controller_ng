@@ -134,9 +134,9 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable

@@ -650,7 +650,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'there are route matches' do
@@ -678,7 +678,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when querying with only host' do
@@ -705,7 +705,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when querying with only port' do
@@ -741,7 +741,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
         context 'when querying a TCP route without filtering the port' do
           it 'returns no matching routes' do

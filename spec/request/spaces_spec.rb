@@ -1023,10 +1023,11 @@ RSpec.describe 'Spaces' do
 
         h['admin'] = { code: 202 }
         h['space_developer'] = { code: 202 }
+        h['space_application_supporter'] = { code: 202 }
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when user does not specify unmapped query param' do
