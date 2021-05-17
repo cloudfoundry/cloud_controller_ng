@@ -506,49 +506,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
-
-    context 'permissions' do
-      context 'when the user is not a member of the requested space' do
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns an UnprocessableEntity error' do
-          post :create, params: request_body, as: :json
-
-          expect(response).to have_status_code(422)
-          expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include('Invalid space. Ensure that the space exists and you have access to it.')
-        end
-      end
-
-      context 'when the user does not have write scope' do
-        before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
-        end
-
-        it 'raises an ApiError with a 403 code' do
-          post :create, params: request_body, as: :json
-
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
-
-      context 'when the user is a space manager/org manager and thus can see the space but not create apps' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'returns an unauthorized error' do
-          post :create, params: request_body, as: :json
-
-          expect(response.status).to eq(403)
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
-    end
   end
 
   describe '#update' do

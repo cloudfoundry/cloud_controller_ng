@@ -45,37 +45,107 @@ RSpec.describe 'Apps' do
       }
     end
 
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
+    context 'permissions for creating an app' do
+      let(:api_call) { lambda { |user_headers| post '/v3/apps', create_request.to_json, user_headers } }
+      let(:app_model_response_object) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'my_app',
+          state: 'STOPPED',
+          lifecycle: {
+            type: 'buildpack',
+            data: { buildpacks: [buildpack.name], stack: stack.name },
+          },
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          metadata: {
+            labels: {
+             'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+             'release' => 'stable'
+           },
+            annotations: {
+             'dora.capi.land/stuff' => 'real gud stuff',
+             'description' => 'gud app'
+           },
+          },
+          links: {
+            self: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}) },
+            environment_variables: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/environment_variables) },
+            space: { href: %r(#{link_prefix}/v3/spaces/#{space.guid}) },
+            processes: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/processes) },
+            packages: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/packages) },
+            current_droplet: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/droplets/current) },
+            droplets: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/droplets) },
+            tasks: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/tasks) },
+            start: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/start), method: 'POST' },
+            stop: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/stop), method: 'POST' },
+            revisions: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions) },
+            deployed_revisions: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions/deployed) },
+            features: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/features) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+        h['org_billing_manager'] = { code: 422 }
+        h['org_auditor'] = { code: 422 }
+        h['no_role'] = { code: 422 }
+        h['admin'] = {
+          code: 201,
+          response_object: app_model_response_object
+        }
+        h['space_developer'] = {
+          code: 201,
+          response_object: app_model_response_object
+        }
+        h.freeze
+      end
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    it 'creates an app' do
-      post '/v3/apps', create_request.to_json, user_header
-      expect(last_response.status).to eq(201)
+    context 'when the user can create an app' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
 
-      parsed_response = MultiJson.load(last_response.body)
-      app_guid = parsed_response['guid']
+      it 'creates an app' do
+        post '/v3/apps', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
 
-      expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to be
-      expect(parsed_response).to be_a_response_like(
-        {
+        parsed_response = MultiJson.load(last_response.body)
+        app_guid = parsed_response['guid']
+
+        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to be
+        expect(parsed_response).to be_a_response_like(
+          {
             'name' => 'my_app',
             'guid' => app_guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => [buildpack.name],
-                    'stack' => stack.name,
-                }
+              'type' => 'buildpack',
+              'data' => {
+                'buildpacks' => [buildpack.name],
+                'stack' => stack.name,
+              }
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -90,265 +160,266 @@ RSpec.describe 'Apps' do
               },
             },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" },
             }
-        }
-                                 )
+          }
+        )
 
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-                                          type: 'audit.app.create',
-                                          actee: app_guid,
-                                          actee_type: 'app',
-                                          actee_name: 'my_app',
-                                          actor: user.guid,
-                                          actor_type: 'user',
-                                          actor_name: user_email,
-                                          actor_username: user_name,
-                                          space_guid: space.guid,
-                                          organization_guid: space.organization.guid,
-                                      })
-    end
-
-    it 'creates an empty web process with the same guid as the app (so it is visible on the v2 apps api)' do
-      post '/v3/apps', create_request.to_json, user_header
-      expect(last_response.status).to eq(201)
-
-      parsed_response = MultiJson.load(last_response.body)
-      app_guid = parsed_response['guid']
-      expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
-      expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
-    end
-
-    context 'telemetry' do
-      let(:logger_spy) { spy('logger') }
-
-      before do
-        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type: 'audit.app.create',
+          actee: app_guid,
+          actee_type: 'app',
+          actee_name: 'my_app',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        })
       end
 
-      it 'should log the required fields when the app is created' do
-        Timecop.freeze do
-          post '/v3/apps', create_request.to_json, user_header
+      it 'creates an empty web process with the same guid as the app (so it is visible on the v2 apps api)' do
+        post '/v3/apps', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
 
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
+        parsed_response = MultiJson.load(last_response.body)
+        app_guid = parsed_response['guid']
+        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
+        expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
+      end
 
-          expected_json = {
-            'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time' => Time.now.to_datetime.rfc3339,
-            'create-app' => {
-              'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
-            }
-          }.to_json
-          expect(logger_spy).to have_received(:info).with(expected_json)
-          expect(last_response.status).to eq(201), last_response.body
+      context 'telemetry' do
+        let(:logger_spy) { spy('logger') }
+
+        before do
+          allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+        end
+
+        it 'should log the required fields when the app is created' do
+          Timecop.freeze do
+            post '/v3/apps', create_request.to_json, user_header
+
+            parsed_response = MultiJson.load(last_response.body)
+            app_guid = parsed_response['guid']
+
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'create-app' => {
+                'api-version' => 'v3',
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }.to_json
+            expect(logger_spy).to have_received(:info).with(expected_json)
+            expect(last_response.status).to eq(201), last_response.body
+          end
         end
       end
-    end
 
-    context 'Docker app' do
-      before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
-      end
+      context 'Docker app' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        end
 
-      it 'create a docker app' do
-        create_request = {
+        it 'create a docker app' do
+          create_request = {
             name: 'my_app',
             environment_variables: { open: 'source' },
             lifecycle: {
-                type: 'docker',
-                data: {}
+              type: 'docker',
+              data: {}
             },
             relationships: {
-                space: { data: { guid: space.guid } }
+              space: { data: { guid: space.guid } }
             }
-        }
+          }
 
-        post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
-        expect(last_response.status).to eq(201), last_response.body
+          post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+          expect(last_response.status).to eq(201), last_response.body
 
-        created_app = VCAP::CloudController::AppModel.last
-        expected_response = {
+          created_app = VCAP::CloudController::AppModel.last
+          expected_response = {
             'name' => 'my_app',
             'guid' => created_app.guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'docker',
-                'data' => {}
+              'type' => 'docker',
+              'data' => {}
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
             }
-        }
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to be_a_response_like(expected_response)
 
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include(
-          type: 'audit.app.create',
-          actee: created_app.guid,
-          actee_type: 'app',
-          actee_name: 'my_app',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid,
-        )
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include(
+            type: 'audit.app.create',
+            actee: created_app.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          )
+        end
       end
-    end
 
-    context 'KpAcK app' do
-      it 'creates a kpack app' do
-        create_request = {
+      context 'KpAcK app' do
+        it 'creates a kpack app' do
+          create_request = {
             name: 'my_app',
             lifecycle: {
-                type: 'kpack',
-                data: {}
+              type: 'kpack',
+              data: {}
             },
             relationships: {
-                space: { data: { guid: space.guid } }
+              space: { data: { guid: space.guid } }
             }
-        }
+          }
 
-        post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
-        expect(last_response.status).to eq(201), last_response.body
+          post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+          expect(last_response.status).to eq(201), last_response.body
 
-        created_app = VCAP::CloudController::AppModel.last
-        expected_response = {
+          created_app = VCAP::CloudController::AppModel.last
+          expected_response = {
             'name' => 'my_app',
             'guid' => created_app.guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'kpack',
-                'data' => {
-                  'buildpacks' => []
-                },
+              'type' => 'kpack',
+              'data' => {
+                'buildpacks' => []
+              },
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
             }
-        }
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to be_a_response_like(expected_response)
 
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include(
-          type: 'audit.app.create',
-          actee: created_app.guid,
-          actee_type: 'app',
-          actee_name: 'my_app',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid,
-        )
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include(
+            type: 'audit.app.create',
+            actee: created_app.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          )
+        end
       end
-    end
 
-    context 'cc.default_app_lifecycle' do
-      let(:create_request) do
-        {
-          name: 'my_app',
-          relationships: {
-            space: {
-              data: {
-                guid: space.guid
+      context 'cc.default_app_lifecycle' do
+        let(:create_request) do
+          {
+            name: 'my_app',
+            relationships: {
+              space: {
+                data: {
+                  guid: space.guid
+                }
               }
-            }
-          },
-        }
-      end
-
-      context 'cc.default_app_lifecycle is set to buildpack' do
-        before do
-          TestConfig.override(default_app_lifecycle: 'buildpack')
+            },
+          }
         end
 
-        it 'creates an app with the buildpack lifecycle when none is specified in the request' do
-          post '/v3/apps', create_request.to_json, user_header
+        context 'cc.default_app_lifecycle is set to buildpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
 
-          expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['lifecycle']['type']).to eq('buildpack')
+          it 'creates an app with the buildpack lifecycle when none is specified in the request' do
+            post '/v3/apps', create_request.to_json, user_header
+
+            expect(last_response.status).to eq(201)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['lifecycle']['type']).to eq('buildpack')
+          end
         end
-      end
 
-      context 'cc.default_app_lifecycle is set to kpack' do
-        before do
-          TestConfig.override(default_app_lifecycle: 'kpack')
-        end
+        context 'cc.default_app_lifecycle is set to kpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'kpack')
+          end
 
-        it 'creates an app with the kpack lifecycle when none is specified in the request' do
-          post '/v3/apps', create_request.to_json, user_header
+          it 'creates an app with the kpack lifecycle when none is specified in the request' do
+            post '/v3/apps', create_request.to_json, user_header
 
-          expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['lifecycle']['type']).to eq('kpack')
+            expect(last_response.status).to eq(201)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['lifecycle']['type']).to eq('kpack')
+          end
         end
       end
     end
