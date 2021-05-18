@@ -566,6 +566,18 @@ module VCAP::CloudController
           expect(org.meets_max_task_limit?).to be true
         end
       end
+
+      context 'number of pending and running tasks exceeds the limit' do
+        before do
+          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+        end
+
+        it 'returns true' do
+          expect(org.meets_max_task_limit?).to be true
+        end
+      end
     end
 
     describe '#destroy' do

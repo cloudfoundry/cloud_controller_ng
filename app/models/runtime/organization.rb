@@ -242,7 +242,7 @@ module VCAP::CloudController
     end
 
     def meets_max_task_limit?
-      app_task_limit == running_and_pending_tasks_count
+      app_task_limit <= running_and_pending_tasks_count
     end
 
     def active?
