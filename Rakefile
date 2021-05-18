@@ -21,9 +21,7 @@ rescue LoadError
   # this isn't needed in a production environment so the gem will not exist
 end
 
-default_tasks = ['spec:all', :check_doc_links]
-
-ENV['RUBOCOP_FIRST'] ? default_tasks.unshift(:rubocop_autocorrect) : default_tasks.push(:rubocop_autocorrect)
+default_tasks = [:rubocop_autocorrect, 'spec:all', :check_doc_links]
 
 task default: default_tasks
 
