@@ -8,6 +8,7 @@ require 'fluent_emitter'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
+require 'cloud_controller/logs/request_logs'
 require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
 
@@ -80,8 +81,10 @@ module VCAP::CloudController
         request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
         gather_periodic_metrics
 
+        @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
+
         builder = RackAppBuilder.new
-        app     = builder.build(@config, request_metrics)
+        app     = builder.build(@config, request_metrics, @request_logs)
 
         start_thin_server(app)
       rescue => e
@@ -208,6 +211,7 @@ module VCAP::CloudController
     def stop_thin_server
       logger.info('Stopping Thin Server.')
       @thin_server.stop if @thin_server
+      @request_logs.log_incomplete_requests if @request_logs
     end
 
     def periodic_updater

@@ -11,7 +11,7 @@ require 'zipkin'
 
 module VCAP::CloudController
   class RackAppBuilder
-    def build(config, request_metrics)
+    def build(config, request_metrics, request_logs)
       token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa))
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
 
@@ -24,7 +24,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
         use Honeycomb::Rack::Middleware, client: Honeycomb.client if config.get(:honeycomb)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
-        use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
+        use CloudFoundry::Middleware::RequestLogs, request_logs
         use CloudFoundry::Middleware::Zipkin
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {

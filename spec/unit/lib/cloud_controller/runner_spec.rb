@@ -83,11 +83,24 @@ module VCAP::CloudController
         end
       end
 
+      it 'builds a rack app with request metrics and request logs handlers' do
+        builder = instance_double(RackAppBuilder)
+        allow(RackAppBuilder).to receive(:new).and_return(builder)
+        request_logs = double(:request_logs)
+        allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
+        expect(builder).to receive(:build).with(anything, instance_of(VCAP::CloudController::Metrics::RequestMetrics),
+                                                request_logs)
+        subject.run!
+        expect(subject.instance_variable_get(:@request_logs)).to eq(request_logs)
+      end
+
       it 'starts thin server on set up bind address' do
         allow(subject).to receive(:start_thin_server).and_call_original
         expect_any_instance_of(VCAP::HostSystem).to receive(:local_ip).and_return('some_local_ip')
-        expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(double(:thin_server).as_null_object)
+        thin_server = double(:thin_server).as_null_object
+        expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(thin_server)
         subject.run!
+        expect(subject.instance_variable_get(:@thin_server)).to eq(thin_server)
       end
 
       it 'sets up varz updates' do
@@ -154,8 +167,17 @@ module VCAP::CloudController
     end
 
     describe '#stop!' do
-      it 'should stop thin and EM' do
-        expect(subject).to receive(:stop_thin_server)
+      let(:thin_server) { double(:thin_server) }
+      let(:request_logs) { double(:request_logs) }
+
+      before do
+        subject.instance_variable_set(:@thin_server, thin_server)
+        subject.instance_variable_set(:@request_logs, request_logs)
+      end
+
+      it 'should stop thin and EM, logs incomplete requests' do
+        expect(thin_server).to receive(:stop)
+        expect(request_logs).to receive(:log_incomplete_requests)
         expect(EM).to receive(:stop)
         subject.stop!
       end
