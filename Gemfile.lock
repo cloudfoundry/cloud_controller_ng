@@ -127,8 +127,7 @@ GEM
     debase (0.2.5.beta2)
       debase-ruby_core_source (>= 0.10.12)
     debase-ruby_core_source (0.10.12)
-    declarative (0.0.10)
-    declarative-option (0.1.0)
+    declarative (0.0.20)
     delayed_job (4.1.8)
       activesupport (>= 3.0, < 6.1)
     diff-lcs (1.4.4)
@@ -146,8 +145,8 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.10.0)
     eventmachine (1.0.9.1)
-    excon (0.78.0)
-    faraday (0.15.4)
+    excon (0.81.0)
+    faraday (0.17.4)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
       faraday (>= 0.7.4)
@@ -242,7 +241,7 @@ GEM
       ffi-compiler
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.8.9)
+    i18n (1.8.10)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -254,8 +253,8 @@ GEM
     jsonpath (1.0.5)
       multi_json
       to_regexp (~> 0.2.1)
-    jwt (2.2.1)
-    kramdown (2.3.0)
+    jwt (2.2.3)
+    kramdown (2.3.1)
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
@@ -272,18 +271,18 @@ GEM
       rb-inotify (~> 0.9, >= 0.9.10)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.9.0)
+    loofah (2.9.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
     membrane (1.1.0)
-    memoist (0.16.0)
+    memoist (0.16.2)
     method_source (1.0.0)
     middleware (0.1.0)
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2020.0512)
-    mini_portile2 (2.5.0)
+    mime-types-data (3.2021.0225)
+    mini_portile2 (2.5.1)
     minitest (5.14.4)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
@@ -306,14 +305,14 @@ GEM
     netaddr (2.0.4)
     netrc (0.11.0)
     newrelic_rpm (6.15.0)
-    nokogiri (1.11.3)
+    nokogiri (1.11.4)
       mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
-    nokogiri (1.11.3-x86_64-darwin)
+    nokogiri (1.11.4-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.11.3-x86_64-linux)
+    nokogiri (1.11.4-x86_64-linux)
       racc (~> 1.4)
-    os (1.0.1)
+    os (1.1.1)
     palm_civet (1.1.0)
     parallel (1.20.1)
     parallel_tests (3.7.0)
@@ -358,9 +357,9 @@ GEM
       ffi (~> 1.0)
     recursive-open-struct (1.1.2)
     regexp_parser (2.1.1)
-    representable (3.0.4)
+    representable (3.1.1)
       declarative (< 0.1.0)
-      declarative-option (< 0.2.0)
+      trailblazer-option (>= 0.1.1, < 0.2.0)
       uber (< 0.2.0)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
@@ -432,9 +431,9 @@ GEM
     scientist (1.1.1)
     sequel (5.41.0)
     sexp_processor (4.7.0)
-    signet (0.11.0)
+    signet (0.15.0)
       addressable (~> 2.3)
-      faraday (~> 0.9)
+      faraday (>= 0.17.3, < 2.0)
       jwt (>= 1.5, < 3.0)
       multi_json (~> 1.10)
     simplecov (0.13.0)
@@ -490,6 +489,7 @@ GEM
     timecop (0.9.4)
     timeliness (0.3.10)
     to_regexp (0.2.1)
+    trailblazer-option (0.1.1)
     tzinfo (1.2.9)
       thread_safe (~> 0.1)
     uber (0.1.0)
@@ -504,7 +504,7 @@ GEM
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff
-    xml-simple (1.1.5)
+    xml-simple (1.1.8)
     yajl-ruby (1.4.1)
     yard (0.9.26)
 
@@ -536,10 +536,10 @@ DEPENDENCIES
   em-http-request (~> 1.1)
   eventmachine (~> 1.0.9)
   fluent-logger
-  fog-aliyun
-  fog-aws
+  fog-aliyun (>= 0.3.19)
+  fog-aws (>= 2.0.1)
   fog-azure-rm!
-  fog-google
+  fog-google (>= 1.7.1)
   fog-local
   fog-openstack
   googleapis-common-protos
@@ -561,7 +561,7 @@ DEPENDENCIES
   net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
-  nokogiri (>= 1.10.5)
+  nokogiri (>= 1.11.4)
   palm_civet
   parallel_tests
   pg
@@ -589,7 +589,7 @@ DEPENDENCIES
   sequel (~> 5.41)
   sinatra (~> 2.0)
   sinatra-contrib
-  solargraph
+  solargraph (>= 0.40.4)
   spork!
   spring
   spring-commands-rspec
