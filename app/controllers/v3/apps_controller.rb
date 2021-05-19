@@ -41,7 +41,8 @@ class AppsV3Controller < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
-                AppListFetcher.fetch(message, permission_queryer.readable_space_guids, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
+                AppListFetcher.fetch(message, permission_queryer.readable_application_supporter_space_guids,
+eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 
     decorators = []
@@ -68,7 +69,7 @@ class AppsV3Controller < ApplicationController
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     decorators = []
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
@@ -227,7 +228,7 @@ class AppsV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     dataset = AppBuildsListFetcher.fetch_all(app.guid, message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -307,7 +308,7 @@ class AppsV3Controller < ApplicationController
 
   def current_droplet_relationship
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
 
     droplet_not_found! unless droplet
@@ -322,7 +323,7 @@ class AppsV3Controller < ApplicationController
 
   def current_droplet
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
 
     droplet_not_found! unless droplet
@@ -332,7 +333,7 @@ class AppsV3Controller < ApplicationController
   def show_permissions
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: {
       read_basic_data: true,

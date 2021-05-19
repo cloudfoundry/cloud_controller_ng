@@ -135,6 +135,10 @@ class VCAP::CloudController::Permissions
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_READING, space_guid, org_guid)
   end
 
+  def untrusted_can_read_from_space?(space_guid, org_guid)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING, space_guid, org_guid)
+  end
+
   def can_read_secrets_in_space?(space_guid, org_guid)
     can_read_secrets_globally? ||
       membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)

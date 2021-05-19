@@ -45,37 +45,107 @@ RSpec.describe 'Apps' do
       }
     end
 
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
+    context 'permissions for creating an app' do
+      let(:api_call) { lambda { |user_headers| post '/v3/apps', create_request.to_json, user_headers } }
+      let(:app_model_response_object) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'my_app',
+          state: 'STOPPED',
+          lifecycle: {
+            type: 'buildpack',
+            data: { buildpacks: [buildpack.name], stack: stack.name },
+          },
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          metadata: {
+            labels: {
+             'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+             'release' => 'stable'
+           },
+            annotations: {
+             'dora.capi.land/stuff' => 'real gud stuff',
+             'description' => 'gud app'
+           },
+          },
+          links: {
+            self: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}) },
+            environment_variables: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/environment_variables) },
+            space: { href: %r(#{link_prefix}/v3/spaces/#{space.guid}) },
+            processes: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/processes) },
+            packages: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/packages) },
+            current_droplet: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/droplets/current) },
+            droplets: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/droplets) },
+            tasks: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/tasks) },
+            start: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/start), method: 'POST' },
+            stop: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/stop), method: 'POST' },
+            revisions: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions) },
+            deployed_revisions: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions/deployed) },
+            features: { href: %r(#{link_prefix}/v3/apps/#{UUID_REGEX}/features) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+        h['org_billing_manager'] = { code: 422 }
+        h['org_auditor'] = { code: 422 }
+        h['no_role'] = { code: 422 }
+        h['admin'] = {
+          code: 201,
+          response_object: app_model_response_object
+        }
+        h['space_developer'] = {
+          code: 201,
+          response_object: app_model_response_object
+        }
+        h.freeze
+      end
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    it 'creates an app' do
-      post '/v3/apps', create_request.to_json, user_header
-      expect(last_response.status).to eq(201)
+    context 'when the user can create an app' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
 
-      parsed_response = MultiJson.load(last_response.body)
-      app_guid = parsed_response['guid']
+      it 'creates an app' do
+        post '/v3/apps', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
 
-      expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to be
-      expect(parsed_response).to be_a_response_like(
-        {
+        parsed_response = MultiJson.load(last_response.body)
+        app_guid = parsed_response['guid']
+
+        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to be
+        expect(parsed_response).to be_a_response_like(
+          {
             'name' => 'my_app',
             'guid' => app_guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => [buildpack.name],
-                    'stack' => stack.name,
-                }
+              'type' => 'buildpack',
+              'data' => {
+                'buildpacks' => [buildpack.name],
+                'stack' => stack.name,
+              }
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -90,265 +160,266 @@ RSpec.describe 'Apps' do
               },
             },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" },
             }
-        }
-                                 )
+          }
+        )
 
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-                                          type: 'audit.app.create',
-                                          actee: app_guid,
-                                          actee_type: 'app',
-                                          actee_name: 'my_app',
-                                          actor: user.guid,
-                                          actor_type: 'user',
-                                          actor_name: user_email,
-                                          actor_username: user_name,
-                                          space_guid: space.guid,
-                                          organization_guid: space.organization.guid,
-                                      })
-    end
-
-    it 'creates an empty web process with the same guid as the app (so it is visible on the v2 apps api)' do
-      post '/v3/apps', create_request.to_json, user_header
-      expect(last_response.status).to eq(201)
-
-      parsed_response = MultiJson.load(last_response.body)
-      app_guid = parsed_response['guid']
-      expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
-      expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
-    end
-
-    context 'telemetry' do
-      let(:logger_spy) { spy('logger') }
-
-      before do
-        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type: 'audit.app.create',
+          actee: app_guid,
+          actee_type: 'app',
+          actee_name: 'my_app',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        })
       end
 
-      it 'should log the required fields when the app is created' do
-        Timecop.freeze do
-          post '/v3/apps', create_request.to_json, user_header
+      it 'creates an empty web process with the same guid as the app (so it is visible on the v2 apps api)' do
+        post '/v3/apps', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
 
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
+        parsed_response = MultiJson.load(last_response.body)
+        app_guid = parsed_response['guid']
+        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
+        expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
+      end
 
-          expected_json = {
-            'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time' => Time.now.to_datetime.rfc3339,
-            'create-app' => {
-              'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
-            }
-          }.to_json
-          expect(logger_spy).to have_received(:info).with(expected_json)
-          expect(last_response.status).to eq(201), last_response.body
+      context 'telemetry' do
+        let(:logger_spy) { spy('logger') }
+
+        before do
+          allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+        end
+
+        it 'should log the required fields when the app is created' do
+          Timecop.freeze do
+            post '/v3/apps', create_request.to_json, user_header
+
+            parsed_response = MultiJson.load(last_response.body)
+            app_guid = parsed_response['guid']
+
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'create-app' => {
+                'api-version' => 'v3',
+                'app-id' => Digest::SHA256.hexdigest(app_guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }.to_json
+            expect(logger_spy).to have_received(:info).with(expected_json)
+            expect(last_response.status).to eq(201), last_response.body
+          end
         end
       end
-    end
 
-    context 'Docker app' do
-      before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
-      end
+      context 'Docker app' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        end
 
-      it 'create a docker app' do
-        create_request = {
+        it 'create a docker app' do
+          create_request = {
             name: 'my_app',
             environment_variables: { open: 'source' },
             lifecycle: {
-                type: 'docker',
-                data: {}
+              type: 'docker',
+              data: {}
             },
             relationships: {
-                space: { data: { guid: space.guid } }
+              space: { data: { guid: space.guid } }
             }
-        }
+          }
 
-        post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
-        expect(last_response.status).to eq(201), last_response.body
+          post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+          expect(last_response.status).to eq(201), last_response.body
 
-        created_app = VCAP::CloudController::AppModel.last
-        expected_response = {
+          created_app = VCAP::CloudController::AppModel.last
+          expected_response = {
             'name' => 'my_app',
             'guid' => created_app.guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'docker',
-                'data' => {}
+              'type' => 'docker',
+              'data' => {}
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
             }
-        }
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to be_a_response_like(expected_response)
 
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include(
-          type: 'audit.app.create',
-          actee: created_app.guid,
-          actee_type: 'app',
-          actee_name: 'my_app',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid,
-        )
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include(
+            type: 'audit.app.create',
+            actee: created_app.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          )
+        end
       end
-    end
 
-    context 'KpAcK app' do
-      it 'creates a kpack app' do
-        create_request = {
+      context 'KpAcK app' do
+        it 'creates a kpack app' do
+          create_request = {
             name: 'my_app',
             lifecycle: {
-                type: 'kpack',
-                data: {}
+              type: 'kpack',
+              data: {}
             },
             relationships: {
-                space: { data: { guid: space.guid } }
+              space: { data: { guid: space.guid } }
             }
-        }
+          }
 
-        post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
-        expect(last_response.status).to eq(201), last_response.body
+          post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
+          expect(last_response.status).to eq(201), last_response.body
 
-        created_app = VCAP::CloudController::AppModel.last
-        expected_response = {
+          created_app = VCAP::CloudController::AppModel.last
+          expected_response = {
             'name' => 'my_app',
             'guid' => created_app.guid,
             'state' => 'STOPPED',
             'lifecycle' => {
-                'type' => 'kpack',
-                'data' => {
-                  'buildpacks' => []
-                },
+              'type' => 'kpack',
+              'data' => {
+                'buildpacks' => []
+              },
             },
             'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
                 }
+              }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
             }
-        }
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to be_a_response_like(expected_response)
 
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include(
-          type: 'audit.app.create',
-          actee: created_app.guid,
-          actee_type: 'app',
-          actee_name: 'my_app',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid,
-        )
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include(
+            type: 'audit.app.create',
+            actee: created_app.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          )
+        end
       end
-    end
 
-    context 'cc.default_app_lifecycle' do
-      let(:create_request) do
-        {
-          name: 'my_app',
-          relationships: {
-            space: {
-              data: {
-                guid: space.guid
+      context 'cc.default_app_lifecycle' do
+        let(:create_request) do
+          {
+            name: 'my_app',
+            relationships: {
+              space: {
+                data: {
+                  guid: space.guid
+                }
               }
-            }
-          },
-        }
-      end
-
-      context 'cc.default_app_lifecycle is set to buildpack' do
-        before do
-          TestConfig.override(default_app_lifecycle: 'buildpack')
+            },
+          }
         end
 
-        it 'creates an app with the buildpack lifecycle when none is specified in the request' do
-          post '/v3/apps', create_request.to_json, user_header
+        context 'cc.default_app_lifecycle is set to buildpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
 
-          expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['lifecycle']['type']).to eq('buildpack')
+          it 'creates an app with the buildpack lifecycle when none is specified in the request' do
+            post '/v3/apps', create_request.to_json, user_header
+
+            expect(last_response.status).to eq(201)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['lifecycle']['type']).to eq('buildpack')
+          end
         end
-      end
 
-      context 'cc.default_app_lifecycle is set to kpack' do
-        before do
-          TestConfig.override(default_app_lifecycle: 'kpack')
-        end
+        context 'cc.default_app_lifecycle is set to kpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'kpack')
+          end
 
-        it 'creates an app with the kpack lifecycle when none is specified in the request' do
-          post '/v3/apps', create_request.to_json, user_header
+          it 'creates an app with the kpack lifecycle when none is specified in the request' do
+            post '/v3/apps', create_request.to_json, user_header
 
-          expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['lifecycle']['type']).to eq('kpack')
+            expect(last_response.status).to eq(201)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['lifecycle']['type']).to eq('kpack')
+          end
         end
       end
     end
@@ -471,11 +542,17 @@ RSpec.describe 'Apps' do
             app_model1_response_object,
           ] }
 
+        h['space_application_supporter'] = {
+          code: 200,
+          response_objects: [
+            app_model1_response_object,
+          ] }
+
         h['no_role'] = { code: 200, response_objects: [] }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     describe 'query list parameters' do
@@ -1310,7 +1387,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the user has permission to view the app' do
@@ -1653,113 +1730,139 @@ RSpec.describe 'Apps' do
     )
     }
     let(:body) do
-      { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs3' } } }
+      {
+        lifecycle: {
+          type: 'buildpack',
+          data: {
+            buildpacks: ['http://github.com/myorg/awesome-buildpack'],
+            stack: 'cflinuxfs3'
+          }
+        }
+      }
     end
-    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
-    let(:per_page) { 2 }
-    let(:order_by) { '-created_at' }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
-      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(second_build)
-      build.update(state: droplet.state, error_description: droplet.error_description)
-      second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
-    end
-
-    it 'lists the builds for app' do
-      get "v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&per_page=#{per_page}", nil, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
-      expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
-      expect(parsed_response).to be_a_response_like({
-                                                        'pagination' => {
-                                                            'total_results' => 2,
-                                                            'total_pages' => 1,
-                                                            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&page=1&per_page=2" },
-                                                            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&page=1&per_page=2" },
-                                                            'next' => nil,
-                                                            'previous' => nil,
-                                                        },
-                                                        'resources' => [
-                                                          {
-                                                              'guid' => build.guid,
-                                                              'created_at' => iso8601,
-                                                              'updated_at' => iso8601,
-                                                              'state' => 'STAGED',
-                                                              'error' => nil,
-                                                              'lifecycle' => {
-                                                                  'type' => 'buildpack',
-                                                                  'data' => {
-                                                                      'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                                                                      'stack' => 'cflinuxfs3',
-                                                                  },
-                                                              },
-                                                              'package' => { 'guid' => package.guid, },
-                                                              'droplet' => {
-                                                                  'guid' => droplet.guid
-                                                              },
-                                                              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-                                                              'metadata' => { 'labels' => {}, 'annotations' => {} },
-                                                              'links' => {
-                                                                  'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
-                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
-                                                              },
-                                                              'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
-                                                          },
-                                                          {
-                                                              'guid' => second_build.guid,
-                                                              'created_at' => iso8601,
-                                                              'updated_at' => iso8601,
-                                                              'state' => 'STAGED',
-                                                              'error' => nil,
-                                                              'lifecycle' => {
-                                                                  'type' => 'buildpack',
-                                                                  'data' => {
-                                                                      'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                                                                      'stack' => 'cflinuxfs3',
-                                                                  },
-                                                              },
-                                                              'package' => { 'guid' => package.guid, },
-                                                              'droplet' => {
-                                                                  'guid' => second_droplet.guid,
-                                                              },
-                                                              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-                                                              'metadata' => { 'labels' => {}, 'annotations' => {} },
-                                                              'links' => {
-                                                                  'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
-                                                                  'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
-                                                                  'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
-                                                              },
-                                                              'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
-                                                          },
-                                                        ]
-                                                    })
-    end
-
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::BuildModel }
-      let(:additional_resource_params) { { app: app_model } }
+    describe 'permissions' do
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/builds?#{filters}", nil, headers }
+        lambda { |headers| get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
-      let(:headers) { admin_header }
+      # TODO: be a more specific on the response content
+      let(:build_response_object) { anything }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: build_response_object)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
-    it 'filters on label_selector' do
-      VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+    describe 'as a developer' do
+      let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
+      let(:per_page) { 2 }
+      let(:order_by) { '-created_at' }
 
-      get "/v3/apps/#{app_model.guid}/builds?label_selector=fruit=strawberry", {}, user_header
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+        VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
+        VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(second_build)
+        build.update(state: droplet.state, error_description: droplet.error_description)
+        second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
+      end
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources'].count).to eq(1)
-      expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+      it 'lists the builds for app' do
+        get "v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&per_page=#{per_page}", nil, user_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
+        expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
+        expect(parsed_response).to be_a_response_like({
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'next' => nil,
+            'previous' => nil,
+          },
+          'resources' => [
+            {
+              'guid' => build.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'state' => 'STAGED',
+              'error' => nil,
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' => 'cflinuxfs3',
+                },
+              },
+              'package' => { 'guid' => package.guid, },
+              'droplet' => {
+                'guid' => droplet.guid
+              },
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
+              },
+              'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
+            },
+            {
+              'guid' => second_build.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'state' => 'STAGED',
+              'error' => nil,
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' => 'cflinuxfs3',
+                },
+              },
+              'package' => { 'guid' => package.guid, },
+              'droplet' => {
+                'guid' => second_droplet.guid,
+              },
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
+                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
+              },
+              'created_by' => { 'guid' => user.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
+            },
+          ]
+        })
+      end
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::BuildModel }
+        let(:additional_resource_params) { { app: app_model } }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/builds?#{filters}", nil, headers }
+        end
+        let(:headers) { admin_header }
+      end
+
+      it 'filters on label_selector' do
+        VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+
+        get "/v3/apps/#{app_model.guid}/builds?label_selector=fruit=strawberry", {}, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+      end
     end
   end
 
@@ -2459,57 +2562,43 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{droplet_model.app_guid}/relationships/current_droplet", nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: 'example error',
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-sha256-checksum',
-        process_types: { 'web' => 'start-command' },
-      )
+    let!(:droplet_model) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+    let(:expected_response) do
+      {
+        'data' => {
+          'guid' => droplet_model.guid
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{droplet_model.app_guid}/relationships/current_droplet" },
+          'related' => { 'href' => "#{link_prefix}/v3/apps/#{droplet_model.app_guid}/droplets/current" }
+        }
+      }
     end
-    let(:app_guid) { droplet_model.app_guid }
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: expected_response)
+      h['no_role'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_auditor'] = { code: 404 }
+      h
+    end
 
     before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
       app_model.save
     end
 
-    it 'gets the current droplet relationship' do
-      get "/v3/apps/#{app_model.guid}/relationships/current_droplet", nil, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
-                                                        'data' => {
-                                                            'guid' => droplet_model.guid
-                                                        },
-                                                        'links' => {
-                                                            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
-                                                            'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" }
-                                                        }
-                                                    })
-    end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{droplet_model.app_guid}/droplets/current", nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid: app_model.guid,
         package_guid: package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
@@ -2520,33 +2609,17 @@ RSpec.describe 'Apps' do
         process_types: { 'web' => 'start-command' },
       )
     end
-    let(:app_guid) { droplet_model.app_guid }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
-      app_model.droplet_guid = droplet_model.guid
-      app_model.save
-    end
-
-    it 'gets the current droplet' do
-      get "/v3/apps/#{app_model.guid}/droplets/current", nil, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
+    let(:expected_response) do
+      {
         'guid' => droplet_model.guid,
         'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
         'error' => 'example error',
         'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {}
+          'type' => 'buildpack',
+          'data' => {}
         },
         'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil,
-                           'version' => nil }],
+        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
         'stack' => 'stack-name',
         'execution_metadata' => 'some-data',
         'process_types' => { 'web' => 'start-command' },
@@ -2555,19 +2628,32 @@ RSpec.describe 'Apps' do
         'updated_at' => iso8601,
         'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-            'download' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}/download" },
-            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
-                                          'method' => 'PATCH' },
+          'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}" },
+          'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet_model.guid}/download" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         },
         'metadata' => {
-          'labels' => {},
-          'annotations' => {}
-        },
-      })
+            'labels' => {},
+            'annotations' => {}
+          },
+      }
     end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: expected_response)
+      h['no_role'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_auditor'] = { code: 404 }
+      h
+    end
+    before do
+      droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
+      app_model.droplet_guid = droplet_model.guid
+      app_model.save
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
@@ -2854,9 +2940,10 @@ RSpec.describe 'Apps' do
       h['space_manager'] = { code: 200, response_object: read_basic_response }
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
       h['space_developer'] = { code: 200, response_object: read_all_response }
+      h['space_application_supporter'] = { code: 200, response_object: read_basic_response }
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + %w(space_application_supporter)
   end
 end
