@@ -53,9 +53,9 @@ class ServiceBrokersController < ApplicationController
       FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
       space = Space.where(guid: message.space_guid).first
       unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
-      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     else
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
+      unauthorized! unless permission_queryer.can_write_globally?
     end
 
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository)
@@ -76,10 +76,10 @@ class ServiceBrokersController < ApplicationController
     if service_broker.space_guid
       space = service_broker.space
       broker_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
-      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     else
       broker_not_found! unless permission_queryer.can_read_globally?
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
+      unauthorized! unless permission_queryer.can_write_globally?
     end
 
     service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, message, service_event_repository)
@@ -101,10 +101,10 @@ class ServiceBrokersController < ApplicationController
 
     if service_broker.space.nil?
       broker_not_found! unless permission_queryer.can_read_globally?
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
+      unauthorized! unless permission_queryer.can_write_globally?
     else
       broker_not_found! unless permission_queryer.can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
-      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
+      unauthorized! unless permission_queryer.can_write_to_space?(service_broker.space.guid)
     end
 
     broker_has_instances!(service_broker.name) if service_broker.has_service_instances?

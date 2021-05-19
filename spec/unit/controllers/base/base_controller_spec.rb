@@ -7,12 +7,7 @@ module VCAP::CloudController
     let(:env) { {} }
     let(:sinatra) { nil }
     let(:config) { double(Config, get: nil) }
-    let(:dependencies) do
-      {
-        statsd_client: double(Statsd),
-        perm_client: double(Perm::Client),
-      }
-    end
+    let(:dependencies) { {} }
 
     class TestController < RestController::BaseController
       allow_unauthenticated_access only: [:test_unauthenticated, :test_basic_auth]

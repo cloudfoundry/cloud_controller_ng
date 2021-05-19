@@ -5,12 +5,7 @@ module VCAP::CloudController
     let(:user) { User.make(admin: true, active: true) }
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }
-    let(:dependencies) do
-      {
-        perm_client: double(Perm::Client),
-        statsd_client: double(Statsd),
-      }
-    end
+    let(:dependencies) { {} }
 
     describe '#has_default_space' do
       it 'should raise NotAuthorized if the user is nil' do

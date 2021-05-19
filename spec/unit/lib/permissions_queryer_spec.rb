@@ -1,40 +1,40 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe Permissions do
+  RSpec.describe PermissionsQueryer do
     let(:user) { User.make }
     let(:space) { Space.make(organization: org) }
     let(:org) { Organization.make }
     let(:space_guid) { space.guid }
     let(:org_guid) { org.guid }
-    let(:permissions) { Permissions.new(user) }
+    let(:queryer) { PermissionsQueryer.new(user) }
 
     describe '#can_read_globally?' do
       context 'and user is an admin' do
         it 'returns true' do
           set_current_user(user, { admin: true })
-          expect(permissions.can_read_globally?).to be true
+          expect(queryer.can_read_globally?).to be true
         end
       end
 
       context 'and the user is a read only admin' do
         it 'returns true' do
           set_current_user(user, { admin_read_only: true })
-          expect(permissions.can_read_globally?).to be true
+          expect(queryer.can_read_globally?).to be true
         end
       end
 
       context 'and user is a global auditor' do
         it 'returns true' do
           set_current_user_as_global_auditor
-          expect(permissions.can_read_globally?).to be true
+          expect(queryer.can_read_globally?).to be true
         end
       end
 
       context 'and user is none of the above' do
         it 'returns false' do
           set_current_user(user)
-          expect(permissions.can_read_globally?).to be false
+          expect(queryer.can_read_globally?).to be false
         end
       end
     end
@@ -43,35 +43,35 @@ module VCAP::CloudController
       context 'and user is an admin' do
         it 'returns true' do
           set_current_user(user, { admin: true })
-          expect(permissions.can_update_build_state?).to be true
+          expect(queryer.can_update_build_state?).to be true
         end
       end
 
       context 'and the user is has the update_build_state scope' do
         it 'returns true' do
           set_current_user(user, { update_build_state: true })
-          expect(permissions.can_update_build_state?).to be true
+          expect(queryer.can_update_build_state?).to be true
         end
       end
 
       context 'and the user is a read only admin' do
         it 'returns false' do
           set_current_user(user, { admin_read_only: true })
-          expect(permissions.can_update_build_state?).to be false
+          expect(queryer.can_update_build_state?).to be false
         end
       end
 
       context 'and user is a global auditor' do
         it 'returns false' do
           set_current_user_as_global_auditor
-          expect(permissions.can_update_build_state?).to be false
+          expect(queryer.can_update_build_state?).to be false
         end
       end
 
       context 'and user is none of the above' do
         it 'returns false' do
           set_current_user(user)
-          expect(permissions.can_update_build_state?).to be false
+          expect(queryer.can_update_build_state?).to be false
         end
       end
     end
@@ -80,28 +80,28 @@ module VCAP::CloudController
       context 'and user is an admin' do
         it 'returns true' do
           set_current_user(user, { admin: true })
-          expect(permissions.can_write_globally?).to be true
+          expect(queryer.can_write_globally?).to be true
         end
       end
 
       context 'and the user is a read only admin' do
         it 'returns false' do
           set_current_user(user, { admin_read_only: true })
-          expect(permissions.can_write_globally?).to be false
+          expect(queryer.can_write_globally?).to be false
         end
       end
 
       context 'and user is a global auditor' do
         it 'returns false' do
           set_current_user_as_global_auditor
-          expect(permissions.can_write_globally?).to be false
+          expect(queryer.can_write_globally?).to be false
         end
       end
 
       context 'and user is none of the above' do
         it 'returns false' do
           set_current_user(user)
-          expect(permissions.can_write_globally?).to be false
+          expect(queryer.can_write_globally?).to be false
         end
       end
     end
@@ -109,7 +109,7 @@ module VCAP::CloudController
     describe '#readable_org_guids' do
       it 'returns all the org guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1_guid = Organization.make.guid
         org2_guid = Organization.make.guid
@@ -122,7 +122,7 @@ module VCAP::CloudController
 
       it 'returns all the org guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1_guid = Organization.make.guid
         org2_guid = Organization.make.guid
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
       it 'returns all the org guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1_guid = Organization.make.guid
         org2_guid = Organization.make.guid
@@ -150,8 +150,8 @@ module VCAP::CloudController
         org_guids = double
         membership = instance_double(Membership, org_guids_for_roles: org_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_org_guids).to eq(org_guids)
-        expect(membership).to have_received(:org_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_ORG_READING)
+        expect(queryer.readable_org_guids).to eq(org_guids)
+        expect(membership).to have_received(:org_guids_for_roles).with(VCAP::CloudController::PermissionsQueryer::ROLES_FOR_ORG_READING)
       end
     end
 
@@ -166,16 +166,16 @@ module VCAP::CloudController
 
           membership = instance_double(Membership)
           allow(membership).to receive(:org_guids_for_roles).
-            with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
+            with(PermissionsQueryer::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
             and_return([first_org_guid])
           allow(membership).to receive(:space_guids_for_roles).
-            with(Permissions::SPACE_ROLES).
+            with(PermissionsQueryer::SPACE_ROLES).
             and_return([space_guid])
           allow(Membership).to receive(:new).with(user).and_return(membership)
           allow(Space).to receive(:find).with(guid: space_guid).
             and_return(space)
 
-          expect(permissions.readable_org_guids_for_domains).
+          expect(queryer.readable_org_guids_for_domains).
             to contain_exactly(first_org_guid, second_org_guid)
         end
       end
@@ -186,28 +186,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(queryer.can_read_from_org?(org_guid)).to be true
           end
         end
 
         context 'and user is a read only admin' do
           it 'returns true' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(queryer.can_read_from_org?(org_guid)).to be true
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns true' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(queryer.can_read_from_org?(org_guid)).to be true
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_read_from_org?(org_guid)).to be false
+            expect(queryer.can_read_from_org?(org_guid)).to be false
           end
         end
       end
@@ -215,22 +215,22 @@ module VCAP::CloudController
       context 'user has valid membership' do
         it 'returns true for org user' do
           org.add_user(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(queryer.can_read_from_org?(org_guid)).to be true
         end
 
         it 'returns true for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(queryer.can_read_from_org?(org_guid)).to be true
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(queryer.can_read_from_org?(org_guid)).to be true
         end
 
         it 'returns true for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(queryer.can_read_from_org?(org_guid)).to be true
         end
       end
     end
@@ -238,7 +238,7 @@ module VCAP::CloudController
     describe '#readable_org_contents_org_guids' do
       it 'returns all the org guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         # add more organizations to database
         Organization.make.guid
@@ -259,7 +259,7 @@ module VCAP::CloudController
         end
 
         it 'returns the org guids for orgs where the user has full read access to the org contents' do
-          readable_org_guids = permissions.readable_org_contents_org_guids
+          readable_org_guids = queryer.readable_org_contents_org_guids
           expect(readable_org_guids).to eq([org_guid])
         end
       end
@@ -270,28 +270,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(queryer.can_read_from_org?(org_guid)).to be true
           end
         end
 
         context 'and user is a read only admin' do
           it 'returns false' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(queryer.can_write_to_org?(org_guid)).to be false
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(queryer.can_write_to_org?(org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(queryer.can_write_to_org?(org_guid)).to be false
           end
         end
       end
@@ -299,29 +299,29 @@ module VCAP::CloudController
       context 'user has valid membership' do
         it 'returns false for org user' do
           org.add_user(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(queryer.can_write_to_org?(org_guid)).to be false
         end
 
         it 'returns false for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(queryer.can_write_to_org?(org_guid)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be true
+          expect(queryer.can_write_to_org?(org_guid)).to be true
         end
 
         it 'returns false for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(queryer.can_write_to_org?(org_guid)).to be false
         end
 
         context 'the org is suspended' do
           it 'returns false for org manager' do
             org.add_manager(user)
             org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_org?(org_guid)).to be_falsey
+            expect(queryer.can_write_to_org?(org_guid)).to be_falsey
           end
         end
       end
@@ -330,7 +330,7 @@ module VCAP::CloudController
     describe '#readable_space_guids' do
       it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -345,7 +345,7 @@ module VCAP::CloudController
 
       it 'returns all the space guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -360,7 +360,7 @@ module VCAP::CloudController
 
       it 'returns all the space guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -377,15 +377,15 @@ module VCAP::CloudController
         space_guids = double
         membership = instance_double(Membership, space_guids_for_roles: space_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_READING)
+        expect(queryer.readable_space_guids).to eq(space_guids)
+        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::PermissionsQueryer::ROLES_FOR_SPACE_READING)
       end
     end
 
     describe '#readable_application_supporter_space_guids' do
       it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -400,7 +400,7 @@ module VCAP::CloudController
 
       it 'returns all the space guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -415,7 +415,7 @@ module VCAP::CloudController
 
       it 'returns all the space guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -432,8 +432,8 @@ module VCAP::CloudController
         space_guids = double
         membership = instance_double(Membership, space_guids_for_roles: space_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_application_supporter_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
+        expect(queryer.readable_application_supporter_space_guids).to eq(space_guids)
+        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::PermissionsQueryer::ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
       end
     end
 
@@ -442,28 +442,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and the user is a read only admin' do
           it 'returns true' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns true' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_read_from_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_read_from_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -472,24 +472,24 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns true for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_read_from_space?(space_guid, org_guid)).to be true
         end
       end
     end
@@ -499,28 +499,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user_as_admin
-            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -529,24 +529,24 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(queryer.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
       end
     end
@@ -554,7 +554,7 @@ module VCAP::CloudController
     describe '#readable_secret_space_guids' do
       it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -569,7 +569,7 @@ module VCAP::CloudController
 
       it 'returns all the space guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -584,7 +584,7 @@ module VCAP::CloudController
 
       it 'returns no space guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         Space.make(organization: org1)
@@ -601,10 +601,10 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_SECRETS_READING).
+          with(VCAP::CloudController::PermissionsQueryer::ROLES_FOR_SPACE_SECRETS_READING).
           and_return(space_guids)
 
-        actual_space_guids = permissions.readable_secret_space_guids
+        actual_space_guids = queryer.readable_secret_space_guids
 
         expect(actual_space_guids).to eq(space_guids)
       end
@@ -616,21 +616,21 @@ module VCAP::CloudController
 
       it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
-        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+        space_guids = PermissionsQueryer.new(user).readable_space_scoped_space_guids
 
         expect(space_guids).to contain_exactly(space1.guid, space2.guid)
       end
 
       it 'returns all the space guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+        space_guids = PermissionsQueryer.new(user).readable_space_scoped_space_guids
 
         expect(space_guids).to contain_exactly(space1.guid, space2.guid)
       end
 
       it 'returns all the space guids for global auditors' do
         user = set_current_user_as_global_auditor
-        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+        space_guids = PermissionsQueryer.new(user).readable_space_scoped_space_guids
 
         expect(space_guids).to contain_exactly(space1.guid, space2.guid)
       end
@@ -640,10 +640,10 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::SPACE_ROLES).
+          with(VCAP::CloudController::PermissionsQueryer::SPACE_ROLES).
           and_return(space_guids)
 
-        actual_space_guids = permissions.readable_space_scoped_space_guids
+        actual_space_guids = queryer.readable_space_scoped_space_guids
 
         expect(actual_space_guids).to eq(space_guids)
       end
@@ -654,28 +654,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_write_to_space?(space_guid)).to be true
+            expect(queryer.can_write_to_space?(space_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(queryer.can_write_to_space?(space_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(queryer.can_write_to_space?(space_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(queryer.can_write_to_space?(space_guid)).to be false
           end
         end
       end
@@ -684,7 +684,7 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be true
+          expect(queryer.can_write_to_space?(space_guid)).to be true
         end
 
         context "and the space's org is suspended" do
@@ -692,25 +692,25 @@ module VCAP::CloudController
             org.add_user(user)
             space.add_developer(user)
             org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
+            expect(queryer.can_write_to_space?(space_guid)).to be_falsey
           end
         end
 
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(queryer.can_write_to_space?(space_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(queryer.can_write_to_space?(space_guid)).to be false
         end
 
         it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(queryer.can_write_to_space?(space_guid)).to be false
         end
       end
     end
@@ -720,28 +720,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be true
+            expect(queryer.can_update_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_update_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_update_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(queryer.can_update_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -750,7 +750,7 @@ module VCAP::CloudController
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_update_space?(space_guid, org_guid)).to be true
         end
 
         context "and the space's org is suspended" do
@@ -758,25 +758,25 @@ module VCAP::CloudController
             org.add_user(user)
             space.add_developer(user)
             org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
+            expect(queryer.can_write_to_space?(space_guid)).to be_falsey
           end
         end
 
         it 'returns false for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+          expect(queryer.can_update_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+          expect(queryer.can_update_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
+          expect(queryer.can_update_space?(space_guid, org_guid)).to be true
         end
       end
     end
@@ -793,28 +793,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user_as_admin
-            expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+            expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+            expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return true' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+            expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be false
+            expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be false
           end
         end
       end
@@ -823,39 +823,39 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for org user' do
           org.add_user(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
         it 'returns true for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
+          expect(queryer.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
       end
     end
@@ -863,7 +863,7 @@ module VCAP::CloudController
     describe '#readable_route_dataset' do
       it 'returns all the routes for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -901,7 +901,7 @@ module VCAP::CloudController
         member_route = Route.make(space: member_space)
         member_org.add_user(user)
 
-        dataset = permissions.readable_route_dataset
+        dataset = queryer.readable_route_dataset
 
         expect(dataset.first(guid: manager_route.guid)).to be_present
         expect(dataset.first(guid: auditor_route.guid)).to be_present
@@ -912,7 +912,7 @@ module VCAP::CloudController
     describe '#readable_route_guids' do
       it 'returns all the route guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -931,7 +931,7 @@ module VCAP::CloudController
 
       it 'returns all the route guids for read-only admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -950,7 +950,7 @@ module VCAP::CloudController
 
       it 'returns all the route guids for global auditors' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -988,7 +988,7 @@ module VCAP::CloudController
         member_route = Route.make(space: member_space)
         member_org.add_user(user)
 
-        route_guids = permissions.readable_route_guids
+        route_guids = queryer.readable_route_guids
 
         expect(route_guids).to contain_exactly(manager_route.guid, auditor_route.guid)
         expect(route_guids).not_to include(billing_manager_route.guid)
@@ -1011,7 +1011,7 @@ module VCAP::CloudController
         auditor_route = Route.make(space: auditor_space)
         auditor_space.add_auditor(user)
 
-        route_guids = permissions.readable_route_guids
+        route_guids = queryer.readable_route_guids
 
         expect(route_guids).to contain_exactly(developer_route.guid, manager_route.guid, auditor_route.guid)
       end
@@ -1020,76 +1020,76 @@ module VCAP::CloudController
     describe '#can_read_route?' do
       it 'returns true if user is an admin' do
         set_current_user(user, { admin: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true if user is a read-only admin' do
         set_current_user(user, { admin_read_only: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true if user is a global auditor' do
         set_current_user_as_global_auditor
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true for space developer' do
         org.add_user(user)
         space.add_developer(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true for space manager' do
         org.add_user(user)
         space.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true for space auditor' do
         org.add_user(user)
         space.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true for org manager' do
         org.add_user(user)
         org.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns true for org auditor' do
         org.add_user(user)
         org.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be true
       end
 
       it 'returns false for org billing manager' do
         org.add_user(user)
         org.add_billing_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be false
       end
 
       it 'returns false for regular org user' do
         org.add_user(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be false
       end
 
       it 'returns false for other user' do
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(queryer.can_read_route?(space_guid, org_guid)).to be false
       end
     end
 
     describe '#readable_app_guids' do
       it 'returns all the app guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1106,7 +1106,7 @@ module VCAP::CloudController
 
       it 'returns all the app guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1123,7 +1123,7 @@ module VCAP::CloudController
 
       it 'returns all the app guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1159,7 +1159,7 @@ module VCAP::CloudController
         member_app = AppModel.make(space: member_space)
         member_org.add_user(user)
 
-        app_guids = permissions.readable_app_guids
+        app_guids = queryer.readable_app_guids
 
         expect(app_guids).to contain_exactly(manager_app.guid)
         expect(app_guids).not_to include(auditor_app.guid)
@@ -1183,7 +1183,7 @@ module VCAP::CloudController
         auditor_app = AppModel.make(space: auditor_space)
         auditor_space.add_auditor(user)
 
-        app_guids = permissions.readable_app_guids
+        app_guids = queryer.readable_app_guids
 
         expect(app_guids).to contain_exactly(developer_app.guid, manager_app.guid, auditor_app.guid)
       end
@@ -1192,7 +1192,7 @@ module VCAP::CloudController
     describe '#readable_route_mapping_guids' do
       it 'returns all the route mapping guids for admins' do
         user = set_current_user_as_admin
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1211,7 +1211,7 @@ module VCAP::CloudController
 
       it 'returns all the app guids for read-only admins' do
         user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1230,7 +1230,7 @@ module VCAP::CloudController
 
       it 'returns all the app guids for global auditors' do
         user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         org1 = Organization.make
         space1 = Space.make(organization: org1)
@@ -1272,7 +1272,7 @@ module VCAP::CloudController
         member_route_mapping = RouteMappingModel.make(app: member_app)
         member_org.add_user(user)
 
-        route_mapping_guids = permissions.readable_route_mapping_guids
+        route_mapping_guids = queryer.readable_route_mapping_guids
 
         expect(route_mapping_guids).to contain_exactly(manager_route_mapping.guid)
         expect(route_mapping_guids).not_to include(auditor_route_mapping.guid)
@@ -1299,7 +1299,7 @@ module VCAP::CloudController
         auditor_route_mapping = RouteMappingModel.make(app: auditor_app)
         auditor_space.add_auditor(user)
 
-        route_mapping_guids = permissions.readable_route_mapping_guids
+        route_mapping_guids = queryer.readable_route_mapping_guids
 
         expect(route_mapping_guids).to contain_exactly(developer_route_mapping.guid, manager_route_mapping.guid, auditor_route_mapping.guid)
       end
@@ -1317,7 +1317,7 @@ module VCAP::CloudController
       it 'returns all the space quota guids for any global read role' do
         global_roles = [set_current_user_as_admin, set_current_user_as_global_auditor, set_current_user_as_admin_read_only]
         global_roles.each { |user|
-          subject = Permissions.new(user)
+          subject = PermissionsQueryer.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
 
@@ -1329,7 +1329,7 @@ module VCAP::CloudController
 
       it 'returns space quota guids when the user is an org_manager' do
         user = set_current_user_as_role(role: 'org_manager', org: org1)
-        subject = Permissions.new(user)
+        subject = PermissionsQueryer.new(user)
 
         space_quota_guids = subject.readable_space_quota_guids
 
@@ -1344,7 +1344,7 @@ module VCAP::CloudController
           set_current_user_as_role(role: 'org_auditor', org: org2)
         ]
         org_roles.each { |user|
-          subject = Permissions.new(user)
+          subject = PermissionsQueryer.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
           expect(space_quota_guids).not_to include(squota1.guid)
@@ -1361,7 +1361,7 @@ module VCAP::CloudController
         ]
 
         space_roles.each { |user|
-          subject = Permissions.new(user)
+          subject = PermissionsQueryer.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
           expect(space_quota_guids).to contain_exactly(squota3.guid)

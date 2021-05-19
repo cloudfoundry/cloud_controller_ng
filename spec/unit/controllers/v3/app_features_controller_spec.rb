@@ -89,7 +89,7 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     context 'updating ssh to false' do
       it 'disables ssh for the app' do
-        expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
+        expect(VCAP::CloudController::PermissionsQueryer).to receive(:new).and_call_original.exactly(:once)
         patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json
 
         expect(response.status).to eq(200)
@@ -101,7 +101,7 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     context 'updating revisions to true' do
       it 'enables revisions for the app' do
-        expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
+        expect(VCAP::CloudController::PermissionsQueryer).to receive(:new).and_call_original.exactly(:once)
         patch :update, params: { app_guid: app_model.guid, name: 'revisions', enabled: false }, as: :json
 
         expect(response.status).to eq(200)

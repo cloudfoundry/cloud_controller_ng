@@ -51,11 +51,8 @@ module VCAP::CloudController::RestController
       @opts = common_params.parse(params, query_string)
       @sinatra = sinatra
 
-      @queryer = VCAP::CloudController::Permissions::Queryer.build(
-        dependencies.fetch(:perm_client),
-        dependencies.fetch(:statsd_client),
-        VCAP::CloudController::SecurityContext,
-        config.get(:perm, :enabled),
+      @queryer = VCAP::CloudController::PermissionsQueryer.new(
+        VCAP::CloudController::SecurityContext.current_user,
       )
       @access_context = Security::AccessContext.new(queryer)
 

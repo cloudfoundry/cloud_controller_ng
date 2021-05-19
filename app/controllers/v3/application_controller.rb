@@ -123,21 +123,13 @@ class ApplicationController < ActionController::Base
     @logger ||= Steno.logger('cc.api')
   end
 
-  def perm_client
-    @perm_client ||= CloudController::DependencyLocator.instance.perm_client
-  end
-
   def statsd_client
     @statsd_client ||= CloudController::DependencyLocator.instance.statsd_client
   end
 
   def permission_queryer
-    @permission_queryer ||= VCAP::CloudController::Permissions::Queryer.build(
-      perm_client,
-      statsd_client,
-      SecurityContext,
-      configuration.get(:perm, :enabled),
-      configuration.get(:perm, :query_raise_on_mismatch)
+    @permission_queryer ||= VCAP::CloudController::PermissionsQueryer.new(
+      VCAP::CloudController::SecurityContext.current_user,
     )
   end
 

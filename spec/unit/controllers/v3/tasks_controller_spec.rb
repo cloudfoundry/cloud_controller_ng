@@ -412,7 +412,7 @@ RSpec.describe TasksController, type: :controller do
         end
       end
 
-      context 'perm permissions' do
+      context 'permissions' do
         before do
           disallow_user_read_access(user, space: space)
           disallow_user_write_access(user, space: space)
@@ -428,7 +428,7 @@ RSpec.describe TasksController, type: :controller do
 
         context 'when the user has permission to read tasks in the app space or org' do
           before do
-            allow_user_perm_permission(:can_read_task?, space_guid: space.guid, org_guid: org.guid)
+            allow_user_read_access_for(user, spaces: [space])
           end
 
           it 'returns a 200' do
@@ -583,14 +583,16 @@ RSpec.describe TasksController, type: :controller do
       end
     end
 
-    context 'perm permissions' do
+    context 'permissions' do
       before do
-        allow_user_read_access_for(user, spaces: [])
         VCAP::CloudController::TaskModel.make(app: app_model)
         VCAP::CloudController::TaskModel.make(app: app_model)
       end
 
       context 'when the user has no permissions' do
+        before do
+          allow_user_read_access_for(user, spaces: [])
+        end
         it 'returns no tasks' do
           get :index
 
@@ -601,7 +603,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user has permission to read tasks in the app space' do
         before do
-          allow_user_perm_permission_for(:task_readable_space_guids, visible_guids: [space.guid])
+          allow_user_read_access_for(user, spaces: [space])
         end
 
         it 'returns all the tasks in that space' do

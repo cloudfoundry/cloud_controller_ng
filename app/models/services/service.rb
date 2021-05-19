@@ -74,7 +74,7 @@ module VCAP::CloudController
       end
 
       def can_read_globally?(user)
-        VCAP::CloudController::Permissions.new(user).can_read_globally?
+        VCAP::CloudController::PermissionsQueryer.new(user).can_read_globally?
       end
     end
 

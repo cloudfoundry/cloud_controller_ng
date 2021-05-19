@@ -207,99 +207,80 @@ module UserHelpers
   end
 
   def allow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
+    allow(queryer_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
   end
 
   def allow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(true)
+    allow(queryer_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(true)
   end
 
   def allow_user_read_access_for(user, orgs: [], spaces: [])
-    allow(permissions_double(user)).to receive(:can_read_from_org?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_from_org?).and_return(false)
     orgs.each do |org|
-      allow(permissions_double(user)).to receive(:can_read_from_org?).with(org.guid).and_return(true)
+      allow(queryer_double(user)).to receive(:can_read_from_org?).with(org.guid).and_return(true)
     end
     stub_readable_org_guids_for(user, orgs)
 
-    allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_from_space?).and_return(false)
     spaces.each do |space|
-      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
+      allow(queryer_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
     end
     stub_readable_space_guids_for(user, spaces)
   end
 
   def allow_user_global_read_access(user)
-    allow(permissions_double(user)).to receive(:can_read_globally?).and_return(true)
+    allow(queryer_double(user)).to receive(:can_read_globally?).and_return(true)
   end
 
   def allow_user_global_write_access(user)
-    allow(permissions_double(user)).to receive(:can_write_globally?).and_return(true)
+    allow(queryer_double(user)).to receive(:can_write_globally?).and_return(true)
   end
 
   def allow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(true)
+    allow(queryer_double(user)).to receive(:can_read_from_isolation_segment?).and_return(true)
   end
 
   def disallow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_from_isolation_segment?).and_return(false)
   end
 
   def disallow_user_global_read_access(user)
-    allow(permissions_double(user)).to receive(:can_read_globally?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_globally?).and_return(false)
   end
 
   def disallow_user_global_write_access(user)
-    allow(permissions_double(user)).to receive(:can_write_globally?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_write_globally?).and_return(false)
   end
 
   def disallow_user_read_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
   def disallow_user_build_update_access(user)
-    allow(permissions_double(user)).to receive(:can_update_build_state?).and_return(false)
+    allow(queryer_double(user)).to receive(:can_update_build_state?).and_return(false)
   end
 
   def disallow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(queryer_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
   def disallow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
+    allow(queryer_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
   end
 
   def stub_readable_space_guids_for(user, spaces)
-    allow(permissions_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
+    allow(queryer_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
   end
 
   def stub_readable_org_guids_for(user, orgs)
-    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
+    allow(queryer_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
   end
 
-  def allow_user_perm_permission(permission, space_guid:, org_guid:)
-    allow(perm_permissions_double(user)).to receive(permission).and_return(false)
-    allow(perm_permissions_double(user)).to receive(permission).with(space_guid: space_guid, org_guid: org_guid).and_return(true)
-  end
-
-  def allow_user_perm_permission_for(method, visible_guids: [])
-    allow(perm_permissions_double(user)).to receive(method).and_return(visible_guids)
-  end
-
-  def permissions_double(user)
-    @permissions ||= {}
-    @permissions[user.guid] ||= instance_double(VCAP::CloudController::Permissions).tap do |permissions|
-      allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
-      allow(permissions).to receive(:can_read_globally?).and_return(false)
-    end
-  end
-
-  def perm_permissions_double(user)
-    @perm_permissions ||= {}
-    @perm_permissions[user.guid] ||= instance_double(VCAP::CloudController::Perm::Permissions).tap do |permissions|
-      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).
-        with(user_id: user.guid, perm_client: anything, issuer: anything, roles: anything).
-        and_return(permissions)
-      allow(permissions).to receive(:can_read_globally?).and_return(false)
+  def queryer_double(user)
+    @queryer ||= {}
+    @queryer[user.guid] ||= instance_double(VCAP::CloudController::PermissionsQueryer).tap do |queryer|
+      allow(VCAP::CloudController::PermissionsQueryer).to receive(:new).with(user).and_return(queryer)
+      allow(queryer).to receive(:can_read_globally?).and_return(false)
     end
   end
 end

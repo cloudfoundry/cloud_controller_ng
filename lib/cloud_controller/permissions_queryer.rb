@@ -1,4 +1,4 @@
-class VCAP::CloudController::Permissions
+class VCAP::CloudController::PermissionsQueryer
   ROLES_FOR_ORG_READING ||= [
     VCAP::CloudController::Membership::ORG_MANAGER,
     VCAP::CloudController::Membership::ORG_AUDITOR,
@@ -216,6 +216,15 @@ class VCAP::CloudController::Permissions
 
   def can_update_build_state?
     can_write_globally? || roles.build_state_updater?
+  end
+
+  def can_read_service_broker?(service_broker)
+    can_read_globally? || can_read_space_scoped_service_broker?(service_broker)
+  end
+
+  def can_read_space_scoped_service_broker?(service_broker)
+    service_broker.space_scoped? &&
+        can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
   private

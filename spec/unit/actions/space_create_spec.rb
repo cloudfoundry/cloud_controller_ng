@@ -6,7 +6,6 @@ module VCAP::CloudController
   RSpec.describe SpaceCreate do
     describe 'create' do
       let(:org) { VCAP::CloudController::Organization.make }
-      let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
       let(:relationships) { { organization: { data: { guid: org.guid } } } }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com', user_name: 'amelia') }
 
@@ -22,7 +21,7 @@ module VCAP::CloudController
           }
         )
         }
-        let!(:space) { SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message) }
+        let!(:space) { SpaceCreate.new(user_audit_info: user_audit_info).create(org, message) }
 
         it 'creates a space' do
           expect(space.organization).to eq(org)
@@ -61,7 +60,7 @@ module VCAP::CloudController
 
           message = VCAP::CloudController::SpaceCreateMessage.new(name: 'foobar')
           expect {
-            SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
+            SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
           }.to raise_error(SpaceCreate::Error, 'blork is busted')
         end
 
@@ -75,7 +74,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
-              SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
+              SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
@@ -87,7 +86,7 @@ module VCAP::CloudController
 
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
-              SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
+              SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end

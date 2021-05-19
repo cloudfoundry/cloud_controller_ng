@@ -32,7 +32,8 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid']) unless route
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(process.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless
+        PermissionsQueryer.new(SecurityContext.current_user).can_write_to_space?(process.space.guid)
 
       route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
 
@@ -59,7 +60,8 @@ module VCAP::CloudController
       route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :processes, app: :space).first
 
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(route_mapping.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless
+        PermissionsQueryer.new(SecurityContext.current_user).can_write_to_space?(route_mapping.space.guid)
 
       RouteMappingDelete.new(UserAuditInfo.from_context(SecurityContext)).delete(route_mapping)
 

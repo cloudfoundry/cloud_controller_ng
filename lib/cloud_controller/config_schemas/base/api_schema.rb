@@ -311,15 +311,6 @@ module VCAP::CloudController
               optional(:diego_sync) => { timeout_in_seconds: Integer },
             },
 
-            perm: {
-              enabled: bool,
-              optional(:hostname) => String,
-              optional(:port) => Integer,
-              optional(:timeout_in_milliseconds) => Integer,
-              optional(:ca_cert_path) => String,
-              optional(:query_raise_on_mismatch) => bool,
-            },
-
             optional(:copilot) => {
               enabled: bool,
               optional(:host) => String,
