@@ -90,11 +90,11 @@ GEM
     middleman-syntax (2.1.0)
       middleman-core (>= 3.2)
       rouge (~> 1.0)
-    mini_portile2 (2.5.0)
+    mini_portile2 (2.5.1)
     mini_racer (0.3.1)
       libv8 (~> 8.4.255)
     minitest (5.14.2)
-    nokogiri (1.11.3)
+    nokogiri (1.11.4)
       mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
     padrino-helpers (0.13.3.4)
@@ -148,7 +148,7 @@ DEPENDENCIES
   middleman-sprockets (~> 4.1)
   middleman-syntax (= 2.1)
   mini_racer
-  nokogiri (~> 1.11.3)
+  nokogiri (~> 1.11.4)
   rake (>= 12.3.3)
   redcarpet (~> 3.5.1)
   sass
