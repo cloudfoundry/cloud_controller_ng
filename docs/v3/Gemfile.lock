@@ -80,7 +80,7 @@ GEM
       uglifier (~> 3.0)
     middleman-gh-pages (0.4.1)
       rake (> 0.9.3)
-    middleman-livereload (3.4.6)
+    middleman-livereload (3.4.7)
       em-websocket (~> 0.5.1)
       middleman-core (>= 3.3)
       rack-livereload (~> 0.3.15)
