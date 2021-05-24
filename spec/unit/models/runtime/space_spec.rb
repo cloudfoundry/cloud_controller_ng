@@ -702,8 +702,12 @@ module VCAP::CloudController
     describe '#meets_max_task_limit?' do
       let(:org) { Organization.make }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
-      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
+
+      before do
+        space.space_quota_definition = space_quota
+      end
 
       it 'returns false when the app task limit is not exceeded' do
         expect(space.meets_max_task_limit?).to be false
@@ -712,6 +716,18 @@ module VCAP::CloudController
       context 'number of pending and running tasks equals the limit' do
         before do
           TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+        end
+
+        it 'returns true' do
+          expect(space.meets_max_task_limit?).to be true
+        end
+      end
+
+      context 'number of pending and running tasks exceeds the limit' do
+        before do
+          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
         end
 
         it 'returns true' do
