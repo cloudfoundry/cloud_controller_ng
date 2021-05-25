@@ -166,7 +166,7 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the route does not exist' do
@@ -291,12 +291,13 @@ RSpec.describe 'Route Destinations Request' do
 
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
+        h['space_application_supporter'] = { code: 200, response_object: response_json }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
         let(:expected_event_hash) do
           new_destination = parsed_response['destinations'].detect { |dst| dst['guid'] != existing_destination.guid }
 
@@ -696,12 +697,13 @@ RSpec.describe 'Route Destinations Request' do
 
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
+        h['space_application_supporter'] = { code: 200, response_object: response_json }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -1100,12 +1102,13 @@ RSpec.describe 'Route Destinations Request' do
 
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
+        h['space_application_supporter'] = { code: 204 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.app.unmap-route',

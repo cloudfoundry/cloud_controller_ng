@@ -157,25 +157,38 @@ module VCAP::CloudController
 
     describe '#readable_org_guids_for_domains' do
       context 'when user has valid membership' do
-        it 'combines readable orgs for both org-scoped and space-scoped roles' do
-          first_org_guid = double(:first_org_guid)
-          second_org_guid = double(:second_org_guid)
-          space_guid = double(:space_guid)
+        let(:membership) { instance_double(Membership) }
+        let(:space_guid) { double(:space_guid) }
+        let(:first_org_guid) { double(:first_org_guid) }
+        let(:second_org_guid) { double(:second_org_guid) }
+
+        before do
           organization = double(:organization, guid: second_org_guid)
           space = double(:space, organization: organization)
 
-          membership = instance_double(Membership)
           allow(membership).to receive(:org_guids_for_roles).
             with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
             and_return([first_org_guid])
-          allow(membership).to receive(:space_guids_for_roles).
-            with(Permissions::SPACE_ROLES).
-            and_return([space_guid])
           allow(Membership).to receive(:new).with(user).and_return(membership)
           allow(Space).to receive(:find).with(guid: space_guid).
             and_return(space)
+        end
+
+        it 'combines readable orgs for both org-scoped and space-scoped roles' do
+          allow(membership).to receive(:space_guids_for_roles).
+            with(Permissions::SPACE_ROLES).
+            and_return([space_guid])
 
           expect(permissions.readable_org_guids_for_domains).
+            to contain_exactly(first_org_guid, second_org_guid)
+        end
+
+        it 'combines readable orgs for both org-scoped and space-scoped roles including application supporters' do
+          allow(membership).to receive(:space_guids_for_roles).
+            with(Permissions::SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS).
+            and_return([space_guid])
+
+          expect(permissions.readable_org_guids_for_domains(include_application_supporters: true)).
             to contain_exactly(first_org_guid, second_org_guid)
         end
       end
@@ -715,6 +728,85 @@ module VCAP::CloudController
       end
     end
 
+    describe '#untrusted_can_write_to_space?' do
+      context 'user has no membership' do
+        context 'and user is an admin' do
+          it 'returns true' do
+            set_current_user(user, { admin: true })
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be true
+          end
+        end
+
+        context 'and user is admin_read_only' do
+          it 'return false' do
+            set_current_user_as_admin_read_only
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+          end
+        end
+
+        context 'and user is global auditor' do
+          it 'return false' do
+            set_current_user_as_global_auditor
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+          end
+        end
+
+        context 'and user is not an admin' do
+          it 'return false' do
+            set_current_user(user)
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+          end
+        end
+      end
+
+      context 'user has valid membership' do
+        it 'returns true for space developer' do
+          org.add_user(user)
+          space.add_developer(user)
+          expect(permissions.untrusted_can_write_to_space?(space_guid)).to be true
+        end
+
+        it 'returns true for space application supporter' do
+          org.add_user(user)
+          space.add_application_supporter(user)
+          expect(permissions.untrusted_can_write_to_space?(space_guid)).to be true
+        end
+
+        context "and the space's org is suspended" do
+          it 'returns false for the space developer' do
+            org.add_user(user)
+            space.add_developer(user)
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be_falsey
+          end
+
+          it 'returns false for the space application supporter' do
+            org.add_user(user)
+            space.add_application_supporter(user)
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.untrusted_can_write_to_space?(space_guid)).to be_falsey
+          end
+        end
+
+        it 'returns false for space manager' do
+          org.add_user(user)
+          space.add_manager(user)
+          expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+        end
+
+        it 'returns false for space auditor' do
+          org.add_user(user)
+          space.add_auditor(user)
+          expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+        end
+
+        it 'returns false for org manager' do
+          org.add_manager(user)
+          expect(permissions.untrusted_can_write_to_space?(space_guid)).to be false
+        end
+      end
+    end
+
     describe '#can_update_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
@@ -1068,6 +1160,13 @@ module VCAP::CloudController
         expect(permissions.can_read_route?(space_guid, org_guid)).to be true
       end
 
+      it 'returns false for space application supporter' do
+        org.add_user(user)
+        space.add_application_supporter(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+      end
+
       it 'returns false for org billing manager' do
         org.add_user(user)
         org.add_billing_manager(user)
@@ -1083,6 +1182,82 @@ module VCAP::CloudController
 
       it 'returns false for other user' do
         expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+      end
+    end
+
+    describe '#untrusted_can_read_route?' do
+      it 'returns true if user is an admin' do
+        set_current_user(user, { admin: true })
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true if user is a read-only admin' do
+        set_current_user(user, { admin_read_only: true })
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true if user is a global auditor' do
+        set_current_user_as_global_auditor
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space developer' do
+        org.add_user(user)
+        space.add_developer(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space manager' do
+        org.add_user(user)
+        space.add_manager(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space auditor' do
+        org.add_user(user)
+        space.add_auditor(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space application supporter' do
+        org.add_user(user)
+        space.add_application_supporter(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for org manager' do
+        org.add_user(user)
+        org.add_manager(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for org auditor' do
+        org.add_user(user)
+        org.add_auditor(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns false for org billing manager' do
+        org.add_user(user)
+        org.add_billing_manager(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be false
+      end
+
+      it 'returns false for regular org user' do
+        org.add_user(user)
+
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be false
+      end
+
+      it 'returns false for other user' do
+        expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be false
       end
     end
 

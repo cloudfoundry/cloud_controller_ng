@@ -69,10 +69,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def readable_org_guids_for_domains
+  def readable_org_guids_for_domains(include_application_supporters: false)
     science 'readable_org_guids_for_domains' do |e|
       e.use do
-        db_permissions.readable_org_guids_for_domains
+        db_permissions.readable_org_guids_for_domains(include_application_supporters: include_application_supporters)
       end
       e.try do
         perm_permissions.readable_org_guids_for_domains
@@ -174,6 +174,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def untrusted_can_write_to_space?(space_guid)
+    db_permissions.untrusted_can_write_to_space?(space_guid)
+  end
+
   def can_update_space?(space_guid, org_guid)
     science 'can_update_space' do |e|
       e.context(space_guid: space_guid, org_guid: org_guid)
@@ -217,6 +221,10 @@ class VCAP::CloudController::Permissions::Queryer
 
       e.run_if { !db_permissions.can_read_globally? }
     end
+  end
+
+  def untrusted_can_read_route?(space_guid, org_guid)
+    db_permissions.untrusted_can_read_route?(space_guid, org_guid)
   end
 
   def readable_app_guids

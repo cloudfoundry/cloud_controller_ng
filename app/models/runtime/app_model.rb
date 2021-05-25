@@ -128,6 +128,7 @@ module VCAP::CloudController
       space_guids = Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
                     union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
                     union(Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)).
+                    union(Space.join(:spaces_application_supporters, space_id: :id, user_id: user.id).select(:spaces__guid)).
                     union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid))
       {
         apps__guid: AppModel.where(space: space_guids.all).select(:guid)
