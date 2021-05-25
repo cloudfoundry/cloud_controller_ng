@@ -30,7 +30,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'a basic successful request' do
-      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
 
       describe 'returning a correct response object' do
         subject { make_request }
@@ -73,6 +73,11 @@ module VCAP::Services::ServiceBrokers::V2
           with(query: hash_including({})).
           with(headers: { 'X-Api-Info-Location' => "#{TestConfig.config[:external_domain]}/v2/info" })).
           to have_been_made
+      end
+
+      it 'logs the URL' do
+        make_request
+        expect(fake_logger).to have_received(:info).with('request', url: match(/#{full_url}/), method: http_method)
       end
 
       it 'logs the default headers' do
@@ -307,8 +312,13 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'logging' do
-      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
       let(:response_body) { { syslog_drain_url: 'example.com/1234', credentials: { secrets: '1234' } }.to_json }
+
+      it 'logs response code' do
+        make_request
+        expect(fake_logger).to have_received(:info).with('response', status: 200)
+      end
 
       it 'redacts credentials from response body' do
         make_request
@@ -430,7 +440,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#put' do
-      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
       let(:http_method) { :put }
       let(:message) do
         {
@@ -504,7 +514,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#patch' do
-      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
       let(:http_method) { :patch }
       let(:message) do
         {
@@ -586,6 +596,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:user_guid) { nil }
         let(:make_request) { client.delete(path, message, user_guid: user_guid) }
         let(:response_body) { {}.to_json }
+        let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
 
         before do
           stub_request(:delete, full_url).
@@ -615,6 +626,11 @@ module VCAP::Services::ServiceBrokers::V2
             with(query: message).
             with { |req| expect(req.body).to be_empty }).
             to have_been_made
+        end
+
+        it 'logs query parameters' do
+          make_request
+          expect(fake_logger).to have_received(:info).with('request', url: 'http://broker.example.com/the/path?key1=value1&key2=value2', method: :delete)
         end
 
         it_behaves_like 'a basic successful request'

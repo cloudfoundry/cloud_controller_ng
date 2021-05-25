@@ -69,9 +69,11 @@ module VCAP::Services
 
         headers = client.default_header.merge(opts[:header])
 
+        logger.info 'request', method: method, url: uri.to_s
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
 
         response = client.request(method, uri, opts)
+        logger.info 'response', status: response.code
         logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{redact_credentials(response)}, HEADERS: #{response.headers.inspect}"
 
         HttpResponse.from_http_client_response(response)
