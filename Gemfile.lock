@@ -255,7 +255,7 @@ GEM
       multi_json
       to_regexp (~> 0.2.1)
     jwt (2.2.1)
-    kramdown (2.3.0)
+    kramdown (2.3.1)
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
