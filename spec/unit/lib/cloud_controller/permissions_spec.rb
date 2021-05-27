@@ -176,19 +176,10 @@ module VCAP::CloudController
 
         it 'combines readable orgs for both org-scoped and space-scoped roles' do
           allow(membership).to receive(:space_guids_for_roles).
-            with(Permissions::SPACE_ROLES).
-            and_return([space_guid])
-
-          expect(permissions.readable_org_guids_for_domains).
-            to contain_exactly(first_org_guid, second_org_guid)
-        end
-
-        it 'combines readable orgs for both org-scoped and space-scoped roles including application supporters' do
-          allow(membership).to receive(:space_guids_for_roles).
             with(Permissions::SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS).
             and_return([space_guid])
 
-          expect(permissions.readable_org_guids_for_domains(include_application_supporters: true)).
+          expect(permissions.readable_org_guids_for_domains).
             to contain_exactly(first_org_guid, second_org_guid)
         end
       end

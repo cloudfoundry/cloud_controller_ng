@@ -69,10 +69,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def readable_org_guids_for_domains(include_application_supporters: false)
+  def readable_org_guids_for_domains
     science 'readable_org_guids_for_domains' do |e|
       e.use do
-        db_permissions.readable_org_guids_for_domains(include_application_supporters: include_application_supporters)
+        db_permissions.readable_org_guids_for_domains
       end
       e.try do
         perm_permissions.readable_org_guids_for_domains
