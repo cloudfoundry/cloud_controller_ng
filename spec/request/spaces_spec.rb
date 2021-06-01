@@ -78,12 +78,10 @@ RSpec.describe 'Spaces' do
   describe 'GET /v3/spaces/:guid' do
     before do
       org.add_user(user)
-      space1.add_developer(user)
-      space2.add_developer(user)
-      space3.add_developer(user)
       TestConfig.override(kubernetes: {})
     end
     it 'returns the requested space' do
+      space1.add_developer(user)
       get "/v3/spaces/#{space1.guid}", nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -112,6 +110,8 @@ RSpec.describe 'Spaces' do
     end
 
     it 'returns the requested space including org info' do
+      space1.add_developer(user)
+
       get "/v3/spaces/#{space1.guid}?include=organization", nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -153,6 +153,7 @@ RSpec.describe 'Spaces' do
       let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space1.organization) }
 
       before do
+        space1.add_developer(user)
         space_quota.add_space(space1)
       end
 
@@ -187,6 +188,23 @@ RSpec.describe 'Spaces' do
           }
         )
       end
+    end
+
+    context 'permissions' do
+      let(:space) { space1 }
+      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}", nil, user_headers } }
+
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guid: space.guid)
+
+        h['org_auditor'] =                 { code: 404, response_guid: nil }
+        h['org_billing_manager'] =         { code: 404, response_guid: nil }
+        h['no_role'] =                     { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
