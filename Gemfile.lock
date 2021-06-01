@@ -255,7 +255,7 @@ GEM
       multi_json
       to_regexp (~> 0.2.1)
     jwt (2.2.1)
-    kramdown (2.3.0)
+    kramdown (2.3.1)
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
@@ -283,7 +283,7 @@ GEM
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2020.0512)
-    mini_portile2 (2.5.1)
+    mini_portile2 (2.5.3)
     minitest (5.14.4)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
@@ -418,7 +418,7 @@ GEM
       rubocop-ast (>= 1.5.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
-    rubocop-ast (1.5.0)
+    rubocop-ast (1.7.0)
       parser (>= 3.0.1.1)
     ruby-debug-ide (0.7.2)
       rake (>= 0.8.1)
@@ -454,7 +454,7 @@ GEM
       rack-protection (= 2.0.8.1)
       sinatra (= 2.0.8.1)
       tilt (~> 2.0)
-    solargraph (0.40.4)
+    solargraph (0.41.1)
       backport (~> 1.1)
       benchmark
       bundler (>= 1.17.2)
