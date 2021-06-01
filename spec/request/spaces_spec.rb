@@ -10,13 +10,6 @@ RSpec.describe 'Spaces' do
   let!(:space2) { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: org }
   let!(:space3) { VCAP::CloudController::Space.make name: 'Agricola', organization: org }
 
-  before do
-    org.add_user(user)
-    space1.add_developer(user)
-    space2.add_developer(user)
-    space3.add_developer(user)
-    TestConfig.override(kubernetes: {})
-  end
 
   describe 'POST /v3/spaces' do
     it 'creates a new space with the given name and org' do
@@ -83,6 +76,13 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces/:guid' do
+    before do
+      org.add_user(user)
+      space1.add_developer(user)
+      space2.add_developer(user)
+      space3.add_developer(user)
+      TestConfig.override(kubernetes: {})
+    end
     it 'returns the requested space' do
       get "/v3/spaces/#{space1.guid}", nil, user_header
       expect(last_response.status).to eq(200)
@@ -191,27 +191,44 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces' do
-    it_behaves_like 'list query endpoint' do
-      let(:request) { 'v3/spaces' }
-      let(:message) { VCAP::CloudController::SpacesListMessage }
+    context 'with space members' do
+      before do
+        org.add_user(user)
+        space1.add_developer(user)
+        space2.add_developer(user)
+        space3.add_developer(user)
+        TestConfig.override(kubernetes: {})
+      end
 
-      let(:params) do
-        {
-          names: ['foo', 'bar'],
-          organization_guids: ['foo', 'bar'],
-          guids: ['foo', 'bar'],
-          include: 'org',
-          page: '2',
-          per_page: '10',
-          order_by: 'updated_at',
-          label_selector: 'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
-        }
+      it_behaves_like 'list query endpoint' do
+        let(:request) { 'v3/spaces' }
+        let(:message) { VCAP::CloudController::SpacesListMessage }
+
+        let(:params) do
+          {
+            names: ['foo', 'bar'],
+            organization_guids: ['foo', 'bar'],
+            guids: ['foo', 'bar'],
+            include: 'org',
+            page: '2',
+            per_page: '10',
+            order_by: 'updated_at',
+            label_selector: 'foo,bar',
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
+          }
+        end
       end
     end
 
     context 'when a label_selector is not provided' do
+      before do
+        org.add_user(user)
+        space1.add_developer(user)
+        space2.add_developer(user)
+        space3.add_developer(user)
+        TestConfig.override(kubernetes: {})
+      end
       it 'returns a paginated list of spaces the user has access to' do
         get '/v3/spaces?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
@@ -408,6 +425,28 @@ RSpec.describe 'Spaces' do
         lambda { |headers, filters| get "/v3/spaces?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
+    end
+
+    context 'permissions' do
+      let(:space) { space1 }
+      let(:api_call) { lambda { |user_headers| get '/v3/spaces', nil, user_headers } }
+
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid, space3.guid])
+
+        h['org_auditor'] =                 { code: 200, response_guids: [] }
+        h['org_billing_manager'] =         { code: 200, response_guids: [] }
+        h['space_manager'] =               { code: 200, response_guids: [space1.guid] }
+        h['space_auditor'] =               { code: 200, response_guids: [space1.guid] }
+        h['space_developer'] =             { code: 200, response_guids: [space1.guid] }
+        h['space_application_supporter'] = { code: 200, response_guids: [space1.guid] }
+
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 

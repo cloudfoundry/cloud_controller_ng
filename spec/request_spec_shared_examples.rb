@@ -68,8 +68,8 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response).to have_status_code(expected_response_code)
 
-        if (200...300).cover? expected_response_code
-          expected_response_objects = expected_codes_and_responses[role][:response_objects]
+        expected_response_objects = expected_codes_and_responses[role][:response_objects]
+        if expected_response_objects
           expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
 
           expect(parsed_response['pagination']).to match_json_response({
@@ -80,6 +80,11 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
             next: anything,
             previous: anything
           })
+        end
+
+        expected_response_guids = expected_codes_and_responses[role][:response_guids]
+        if expected_response_guids
+          expect(parsed_response['resources'].map { |space| space['guid'] }).to match_array(expected_response_guids)
         end
       end
     end
