@@ -157,9 +157,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def start
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -180,8 +180,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def stop
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     AppStop.stop(app: app, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -199,9 +199,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def restart
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
