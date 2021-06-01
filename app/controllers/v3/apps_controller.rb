@@ -87,7 +87,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
-    unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+    unprocessable_space! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     # TODO: only fail if also not `kpack` app lifecycle
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
@@ -244,7 +244,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)

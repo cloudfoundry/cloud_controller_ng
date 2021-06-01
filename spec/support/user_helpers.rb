@@ -223,9 +223,12 @@ module UserHelpers
     stub_readable_org_guids_for(user, orgs)
 
     allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
+    allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).and_return(false)
     spaces.each do |space|
       allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
+      allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
     end
+
     stub_readable_space_guids_for(user, spaces)
   end
 
@@ -255,6 +258,7 @@ module UserHelpers
 
   def disallow_user_read_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
   def disallow_user_build_update_access(user)

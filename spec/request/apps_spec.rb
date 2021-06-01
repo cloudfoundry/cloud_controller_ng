@@ -111,7 +111,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the user can create an app' do
@@ -1596,11 +1596,12 @@ RSpec.describe 'Apps' do
         h['org_billing_manager'] = { code: 404 }
         h['space_manager'] = { code: 403 }
         h['space_auditor'] = { code: 403 }
+        h['space_application_supporter'] = { code: 403 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when user has permission to view the app' do
@@ -2944,6 +2945,6 @@ RSpec.describe 'Apps' do
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + %w(space_application_supporter)
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 end

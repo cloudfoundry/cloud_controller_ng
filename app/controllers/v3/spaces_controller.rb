@@ -65,7 +65,7 @@ class SpacesV3Controller < ApplicationController
 
   def update
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
@@ -80,7 +80,7 @@ class SpacesV3Controller < ApplicationController
 
   def destroy
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_org?(space.organization.guid)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)

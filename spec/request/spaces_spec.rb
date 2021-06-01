@@ -560,7 +560,7 @@ RSpec.describe 'Spaces' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -711,7 +711,7 @@ RSpec.describe 'Spaces' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -794,7 +794,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.update',
@@ -965,7 +965,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.delete-request',
