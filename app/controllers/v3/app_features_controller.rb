@@ -12,7 +12,7 @@ class AppFeaturesController < ApplicationController
 
   def index
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     resources = presented_app_features(app)
 
     render status: :ok, json: {
@@ -23,7 +23,7 @@ class AppFeaturesController < ApplicationController
 
   def show
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     resource_not_found!(:feature) unless APP_FEATURES.include?(hashed_params[:name])
 
     render status: :ok, json: feature_presenter_for(hashed_params[:name], app)
