@@ -2121,7 +2121,7 @@ RSpec.describe 'Apps' do
         app_model.save
       end
 
-      context 'it starts the app' do
+      context 'starting an app' do
         let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/start", nil, user_headers } }
         let(:app_start_response_object) do
           {
@@ -2277,7 +2277,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
       end
 
-      context 'it starts the app' do
+      context 'starting an app' do
         let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/start", nil, user_headers } }
         let(:app_start_response_object) do
           {
@@ -2371,7 +2371,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    context 'it stops the app' do
+    context 'stopping an app' do
       let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_headers } }
       let(:app_stop_response_object) do
         {
@@ -2519,7 +2519,7 @@ RSpec.describe 'Apps' do
         app_model.save
       end
 
-      context 'it restarts the app' do
+      context 'restarting an app' do
         let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_headers } }
         let(:app_restart_response_object) do
           {
@@ -2628,7 +2628,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
       end
 
-      context 'it restarts the app' do
+      context 'restarting an app' do
         let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_headers } }
         let(:app_restart_response_object) do
           {
