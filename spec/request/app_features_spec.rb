@@ -104,19 +104,6 @@ RSpec.describe 'App Features' do
 
   describe 'PATCH /v3/apps/:guid/features/:name' do
     let(:request_body) { { body: { enabled: false } } }
-    let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403)
-      %w[no_role org_auditor org_billing_manager].each do |r|
-        h[r] = { code: 404 }
-      end
-      %w[admin space_developer].each do |r|
-        h[r] = {
-          code: 200,
-          response_object: feature_response_object
-        }
-      end
-      h.freeze
-    end
 
     before do
       space.organization.add_user(user)
@@ -132,7 +119,21 @@ RSpec.describe 'App Features' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        %w[no_role org_auditor org_billing_manager].each do |r|
+          h[r] = { code: 404 }
+        end
+        %w[admin space_developer].each do |r|
+          h[r] = {
+            code: 200,
+            response_object: feature_response_object
+          }
+        end
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'revisions app feature' do
@@ -145,7 +146,21 @@ RSpec.describe 'App Features' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        %w[no_role org_auditor org_billing_manager].each do |r|
+          h[r] = { code: 404 }
+        end
+        %w[admin space_developer space_application_supporter].each do |r|
+          h[r] = {
+            code: 200,
+            response_object: feature_response_object
+          }
+        end
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end

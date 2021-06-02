@@ -8,7 +8,12 @@ require 'actions/app_feature_update'
 class AppFeaturesController < ApplicationController
   include AppSubResource
 
-  APP_FEATURES = ['ssh', 'revisions'].freeze
+  SSH_FEATURE = 'ssh'.freeze
+  REVISIONS_FEATURE = 'revisions'.freeze
+
+  TRUSTED_APP_FEATURES = [SSH_FEATURE].freeze
+  UNTRUSTED_APP_FEATURES = [REVISIONS_FEATURE].freeze
+  APP_FEATURES = (TRUSTED_APP_FEATURES + UNTRUSTED_APP_FEATURES).freeze
 
   def index
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
@@ -32,9 +37,15 @@ class AppFeaturesController < ApplicationController
   def update
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    resource_not_found!(:feature) unless APP_FEATURES.include?(hashed_params[:name])
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+
+    name = hashed_params[:name]
+    resource_not_found!(:feature) unless APP_FEATURES.include?(name)
+    if UNTRUSTED_APP_FEATURES.include?(name)
+      unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    else
+      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    end
 
     message = VCAP::CloudController::AppFeatureUpdateMessage.new(hashed_params['body'])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -67,8 +78,8 @@ class AppFeaturesController < ApplicationController
 
   def feature_presenter_for(feature_name, app)
     presenters = {
-      'ssh' => Presenters::V3::AppSshFeaturePresenter,
-      'revisions' => Presenters::V3::AppRevisionsFeaturePresenter
+      SSH_FEATURE => Presenters::V3::AppSshFeaturePresenter,
+      REVISIONS_FEATURE => Presenters::V3::AppRevisionsFeaturePresenter
     }
     presenters[feature_name].new(app)
   end
