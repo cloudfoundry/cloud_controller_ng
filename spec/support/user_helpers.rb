@@ -271,7 +271,7 @@ module UserHelpers
 
   def disallow_user_write_access(user, space:)
     allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
-    allow(permissions_double(user)).to receive(:untrusted_can_write_to_space?).with(space.guid).and_return(true)
+    allow(permissions_double(user)).to receive(:untrusted_can_write_to_space?).with(space.guid).and_return(false)
   end
 
   def stub_readable_space_guids_for(user, spaces)

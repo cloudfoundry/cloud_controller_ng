@@ -2094,7 +2094,7 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'PUT /v3/apps/:guid/start' do
+  describe 'POST /v3/apps/:guid/actions/start' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) {
       VCAP::CloudController::AppModel.make(
@@ -2104,319 +2104,6 @@ RSpec.describe 'Apps' do
         desired_state: 'STOPPED',
       )
     }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    it 'starts the app' do
-      app_model.lifecycle_data.buildpacks = ['http://example.com/git']
-      app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
-
-      droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
-      app_model.droplet = droplet
-      app_model.save
-
-      post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like({
-                                                        'name' => 'app-name',
-                                                        'guid' => app_model.guid,
-                                                        'state' => 'STARTED',
-                                                        'created_at' => iso8601,
-                                                        'updated_at' => iso8601,
-                                                        'metadata' => { 'labels' => {}, 'annotations' => {} },
-                                                        'lifecycle' => {
-                                                            'type' => 'buildpack',
-                                                            'data' => {
-                                                                'buildpacks' => ['http://example.com/git'],
-                                                                'stack' => 'stack-name',
-                                                            }
-                                                        },
-                                                        'relationships' => {
-                                                            'space' => {
-                                                                'data' => {
-                                                                    'guid' => space.guid
-                                                                }
-                                                            }
-                                                        },
-                                                        'links' => {
-                                                            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                                                            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                                                            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                                                            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                                                            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                                                            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                                                            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                                                            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                                                            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                                                            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                                                            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                                                            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                                                            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-                                                        }
-                                                    })
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-                                          type: 'audit.app.start',
-                                          actee: app_model.guid,
-                                          actee_type: 'app',
-                                          actee_name: 'app-name',
-                                          actor: user.guid,
-                                          actor_type: 'user',
-                                          actor_name: user_email,
-                                          actor_username: user_name,
-                                          space_guid: space.guid,
-                                          organization_guid: space.organization.guid,
-                                      })
-    end
-
-    context 'telemetry' do
-      it 'should log the required fields when the app starts' do
-        app_model.lifecycle_data.buildpacks = ['http://example.com/git']
-        app_model.lifecycle_data.stack = stack.name
-        app_model.lifecycle_data.save
-
-        droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
-        app_model.droplet = droplet
-        app_model.save
-
-        Timecop.freeze do
-          expected_json = {
-            'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time' => Time.now.to_datetime.rfc3339,
-            'start-app' => {
-              'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
-            }
-          }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
-          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
-
-          expect(last_response.status).to eq(200), last_response.body
-        end
-      end
-    end
-
-    describe 'when there is a new desired droplet and revision feature is turned on' do
-      let(:droplet) {
-        VCAP::CloudController::DropletModel.make(
-          app: app_model,
-          process_types: { web: 'rackup' },
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          package: VCAP::CloudController::PackageModel.make
-        )
-      }
-
-      before do
-        app_model.update(revisions_enabled: true)
-      end
-
-      it 'creates a new revision' do
-        expect {
-          patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", { data: { guid: droplet.guid } }.to_json, user_header
-          expect(last_response.status).to eq(200)
-        }.to change { VCAP::CloudController::RevisionModel.count }.by(0)
-
-        expect {
-          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
-          expect(last_response.status).to eq(200), last_response.body
-        }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
-      end
-    end
-
-    context 'when app lifecycle is kpack' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:kpack, name: 'app-name', droplet: VCAP::CloudController::DropletModel.make(:kpack), space: space) }
-
-      before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
-      end
-
-      it 'starts the app' do
-        post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like({
-          'name' => 'app-name',
-          'guid' => app_model.guid,
-          'state' => 'STARTED',
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'lifecycle' => {
-            'type' => 'kpack',
-            'data' => {
-              'buildpacks' => []
-            },
-          },
-          'relationships' => {
-            'space' => {
-              'data' => {
-                'guid' => space.guid
-              }
-            }
-          },
-          'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-          }
-        })
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type: 'audit.app.start',
-          actee: app_model.guid,
-          actee_type: 'app',
-          actee_name: 'app-name',
-          actor: user.guid,
-          actor_type: 'user',
-          actor_name: user_email,
-          actor_username: user_name,
-          space_guid: space.guid,
-          organization_guid: space.organization.guid,
-        })
-      end
-    end
-  end
-
-  describe 'POST /v3/apps/:guid/actions/stop' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
-    let(:app_model) { VCAP::CloudController::AppModel.make(
-      :buildpack,
-      name: 'app-name',
-      space: space,
-      desired_state: 'STARTED',
-    )
-    }
-    let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(:buildpack,
-        app: app_model,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
-      )
-    end
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-      app_model.lifecycle_data.buildpacks = ['http://example.com/git']
-      app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
-      app_model.droplet = droplet
-      app_model.save
-    end
-    it 'stops the app' do
-      post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-            'name' => 'app-name',
-            'guid' => app_model.guid,
-            'state' => 'STOPPED',
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => ['http://example.com/git'],
-                    'stack' => 'stack-name',
-                }
-            },
-            'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
-                }
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-            }
-        }
-      )
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-                                          type: 'audit.app.stop',
-                                          actee: app_model.guid,
-                                          actee_type: 'app',
-                                          actee_name: 'app-name',
-                                          actor: user.guid,
-                                          actor_type: 'user',
-                                          actor_name: user_email,
-                                          actor_username: user_name,
-                                          space_guid: space.guid,
-                                          organization_guid: space.organization.guid,
-                                      })
-    end
-
-    context 'telemetry' do
-      it 'should log the required fields when the app starts' do
-        Timecop.freeze do
-          expected_json = {
-            'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time' => Time.now.to_datetime.rfc3339,
-            'stop-app' => {
-              'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
-            }
-          }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
-
-          post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
-
-          expect(last_response.status).to eq(200), last_response.body
-        end
-      end
-    end
-  end
-
-  describe 'POST /v3/apps/:guid/actions/restart' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
-    let(:app_model) { VCAP::CloudController::AppModel.make(
-      :buildpack,
-        name: 'app-name',
-        space: space,
-        desired_state: 'STARTED',
-      )
-    }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
@@ -2435,66 +2122,119 @@ RSpec.describe 'Apps' do
         app_model.save
       end
 
-      it 'restarts the app' do
-        post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
+      context 'starting an app' do
+        let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/start", nil, user_headers } }
+        let(:app_start_response_object) do
           {
-              'name' => 'app-name',
-              'guid' => app_model.guid,
-              'state' => 'STARTED',
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'lifecycle' => {
-                  'type' => 'buildpack',
-                  'data' => {
-                      'buildpacks' => ['http://example.com/git'],
-                      'stack' => 'stack-name',
-                  }
-              },
-              'relationships' => {
-                  'space' => {
-                      'data' => {
-                          'guid' => space.guid
-                      }
-                  }
-              },
-              'links' => {
-                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+            'name' => 'app-name',
+            'guid' => app_model.guid,
+            'state' => 'STARTED',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'lifecycle' => {
+              'type' => 'buildpack',
+              'data' => {
+                'buildpacks' => ['http://example.com/git'],
+                'stack' => 'stack-name',
               }
+            },
+            'relationships' => {
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+            }
           }
-        )
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['no_role'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['admin'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h['space_application_supporter'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h['space_developer'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h.freeze
+        end
+
+        before do
+          space.organization.add_user(user)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
+
+      context 'events' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'should issue the required events when the app starts' do
+          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+
+          event = VCAP::CloudController::Event.last
+          expect(event.values).to include({
+            type: 'audit.app.start',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: 'app-name',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          })
+        end
+      end
+
       context 'telemetry' do
-        it 'should log the required fields when the app is restarted' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'should log the required fields when the app starts' do
           Timecop.freeze do
             expected_json = {
               'telemetry-source' => 'cloud_controller_ng',
               'telemetry-time' => Time.now.to_datetime.rfc3339,
-              'restart-app' => {
+              'start-app' => {
                 'api-version' => 'v3',
                 'app-id' => Digest::SHA256.hexdigest(app_model.guid),
                 'user-id' => Digest::SHA256.hexdigest(user.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
-
-            post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+            post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
 
             expect(last_response.status).to eq(200), last_response.body
           end
@@ -2502,25 +2242,45 @@ RSpec.describe 'Apps' do
       end
     end
 
-    context 'app lifecycle is kpack' do
-      let(:app_model) {
-        VCAP::CloudController::AppModel.make(:kpack,
-          name: 'app-name',
-          droplet: VCAP::CloudController::DropletModel.make(:kpack),
-          space: space,
-          desired_state: 'STARTED')
+    describe 'when there is a new desired droplet and revision feature is turned on' do
+      let(:droplet) {
+        VCAP::CloudController::DropletModel.make(
+          app: app_model,
+          process_types: { web: 'rackup' },
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          package: VCAP::CloudController::PackageModel.make
+        )
       }
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+        app_model.update(revisions_enabled: true)
+      end
+
+      it 'creates a new revision' do
+        expect {
+          patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", { data: { guid: droplet.guid } }.to_json, user_header
+          expect(last_response.status).to eq(200)
+        }.to change { VCAP::CloudController::RevisionModel.count }.by(0)
+
+        expect {
+          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+          expect(last_response.status).to eq(200), last_response.body
+        }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+      end
+    end
+
+    context 'app lifecycle is kpack' do
+      let(:app_model) { VCAP::CloudController::AppModel.make(:kpack, name: 'app-name', droplet: VCAP::CloudController::DropletModel.make(:kpack), space: space) }
 
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
       end
 
-      it 'restarts the app' do
-        post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
+      context 'starting an app' do
+        let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/start", nil, user_headers } }
+        let(:app_start_response_object) do
           {
             'name' => 'app-name',
             'guid' => app_model.guid,
@@ -2557,7 +2317,384 @@ RSpec.describe 'Apps' do
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             }
           }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['no_role'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['admin'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h['space_application_supporter'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h['space_developer'] = {
+            code: 200,
+            response_object: app_start_response_object
+          }
+          h.freeze
+        end
+
+        before do
+          space.organization.add_user(user)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      end
+    end
+  end
+
+  describe 'POST /v3/apps/:guid/actions/stop' do
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      :buildpack,
+      name: 'app-name',
+      space: space,
+      desired_state: 'STARTED',
+    )
+    }
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(:buildpack,
+        app: app_model,
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+    end
+
+    before do
+      app_model.lifecycle_data.buildpacks = ['http://example.com/git']
+      app_model.lifecycle_data.stack = stack.name
+      app_model.lifecycle_data.save
+      app_model.droplet = droplet
+      app_model.save
+    end
+
+    context 'stopping an app' do
+      let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_headers } }
+      let(:app_stop_response_object) do
+        {
+          'name' => 'app-name',
+          'guid' => app_model.guid,
+          'state' => 'STOPPED',
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'lifecycle' => {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpacks' => ['http://example.com/git'],
+              'stack' => 'stack-name',
+            }
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['no_role'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['admin'] = {
+          code: 200,
+          response_object: app_stop_response_object
+        }
+        h['space_application_supporter'] = {
+          code: 200,
+          response_object: app_stop_response_object
+        }
+        h['space_developer'] = {
+          code: 200,
+          response_object: app_stop_response_object
+        }
+        h.freeze
+      end
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
+
+    context 'events' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'should issue the required events when the app stops' do
+        post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type: 'audit.app.stop',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: 'app-name',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        })
+      end
+    end
+
+    context 'telemetry' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'should log the required fields when the app stops' do
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'stop-app' => {
+              'api-version' => 'v3',
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
+
+          expect(last_response.status).to eq(200), last_response.body
+        end
+      end
+    end
+  end
+
+  describe 'POST /v3/apps/:guid/actions/restart' do
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      :buildpack,
+        name: 'app-name',
+        space: space,
+        desired_state: 'STARTED',
+      )
+    }
+
+    context 'app lifecycle is buildpack' do
+      let!(:droplet) do
+        VCAP::CloudController::DropletModel.make(
+          :buildpack,
+          app: app_model,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
+      end
+
+      before do
+        app_model.lifecycle_data.buildpacks = ['http://example.com/git']
+        app_model.lifecycle_data.stack = stack.name
+        app_model.lifecycle_data.save
+        app_model.droplet = droplet
+        app_model.save
+      end
+
+      context 'restarting an app' do
+        let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_headers } }
+        let(:app_restart_response_object) do
+          {
+            'name' => 'app-name',
+            'guid' => app_model.guid,
+            'state' => 'STARTED',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'lifecycle' => {
+              'type' => 'buildpack',
+              'data' => {
+                'buildpacks' => ['http://example.com/git'],
+                'stack' => 'stack-name',
+              }
+            },
+            'relationships' => {
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['no_role'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['admin'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h['space_application_supporter'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h['space_developer'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h.freeze
+        end
+
+        before do
+          space.organization.add_user(user)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      end
+
+      context 'telemetry' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'should log the required fields when the app is restarted' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'restart-app' => {
+                'api-version' => 'v3',
+                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+
+            expect(last_response.status).to eq(200), last_response.body
+          end
+        end
+      end
+    end
+
+    context 'app lifecycle is kpack' do
+      let(:app_model) {
+        VCAP::CloudController::AppModel.make(:kpack,
+          name: 'app-name',
+          droplet: VCAP::CloudController::DropletModel.make(:kpack),
+          space: space,
+          desired_state: 'STARTED')
+      }
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+      end
+
+      context 'restarting an app' do
+        let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_headers } }
+        let(:app_restart_response_object) do
+          {
+            'name' => 'app-name',
+            'guid' => app_model.guid,
+            'state' => 'STARTED',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'lifecycle' => {
+              'type' => 'kpack',
+              'data' => {
+                'buildpacks' => []
+              },
+            },
+            'relationships' => {
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+              'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+              'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['no_role'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['admin'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h['space_application_supporter'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h['space_developer'] = {
+            code: 200,
+            response_object: app_restart_response_object
+          }
+          h.freeze
+        end
+
+        before do
+          space.organization.add_user(user)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
     end
   end
