@@ -2666,143 +2666,152 @@ RSpec.describe 'Apps' do
           desired_state: 'STOPPED',
       )
     end
+    let(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        :docker,
+        app: app_model,
+        process_types: { web: 'rackup' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package: VCAP::CloudController::PackageModel.make
+      )
+    end
+    let(:request_body) { { data: { guid: droplet.guid } } }
 
     before do
-      space.organization.add_user(user)
-      space.add_developer(user)
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
     end
 
-    it 'assigns the current droplet of the app' do
-      droplet = VCAP::CloudController::DropletModel.make(:docker,
-                                                         app: app_model,
-                                                         process_types: { web: 'rackup' },
-                                                         state: VCAP::CloudController::DropletModel::STAGED_STATE,
-                                                         package: VCAP::CloudController::PackageModel.make
-      )
-
-      request_body = { data: { guid: droplet.guid } }
-
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
-
-      expected_response = {
+    context 'assigning the current droplet of the app' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_headers } }
+      let(:current_droplet_response_object) do
+        {
           'data' => {
-              'guid' => droplet.guid
+            'guid' => droplet.guid
           },
           'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
-              'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" }
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet" },
+            'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" }
           }
-      }
+        }
+      end
 
-      parsed_response = MultiJson.load(last_response.body)
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['no_role'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['admin'] = {
+          code: 200,
+          response_object: current_droplet_response_object
+        }
+        h['space_application_supporter'] = {
+          code: 200,
+          response_object: current_droplet_response_object
+        }
+        h['space_developer'] = {
+          code: 200,
+          response_object: current_droplet_response_object
+        }
+        h.freeze
+      end
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
+      before do
+        space.organization.add_user(user)
+      end
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
-
-      droplet_event = events.find { |e| e.type == 'audit.app.droplet.mapped' }
-      expect(droplet_event.values).to include({
-                                                  type: 'audit.app.droplet.mapped',
-                                                  actee: app_model.guid,
-                                                  actee_type: 'app',
-                                                  actee_name: 'my_app',
-                                                  actor: user.guid,
-                                                  actor_type: 'user',
-                                                  actor_name: user_email,
-                                                  actor_username: user_name,
-                                                  space_guid: space.guid,
-                                                  organization_guid: space.organization.guid
-                                              })
-      expect(droplet_event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
-
-      expect(app_model.reload.processes.count).to eq(1)
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
-    it 'creates audit.app.process.create events' do
-      droplet = VCAP::CloudController::DropletModel.make(
-        app: app_model,
-        process_types: { web: 'rackup', other: 'cron' },
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
-      )
+    context 'events' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
 
-      request_body = { data: { guid: droplet.guid } }
+      it 'creates audit.app.droplet.mapped event' do
+        patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
+        events = VCAP::CloudController::Event.where(actor: user.guid).all
 
-      expect(last_response.status).to eq(200)
+        droplet_event = events.find { |e| e.type == 'audit.app.droplet.mapped' }
+        expect(droplet_event.values).to include({
+          type: 'audit.app.droplet.mapped',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: 'my_app',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid
+        })
+        expect(droplet_event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
+        expect(app_model.reload.processes.count).to eq(1)
+      end
 
-      expect(app_model.reload.processes.count).to eq(2)
-      web_process = app_model.processes.find { |i| i.type == 'web' }
-      other_process = app_model.processes.find { |i| i.type == 'other' }
-      expect(web_process).to be_present
-      expect(other_process).to be_present
+      context 'with two process types' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(
+            app: app_model,
+            process_types: { web: 'rackup', other: 'cron' },
+            state: VCAP::CloudController::DropletModel::STAGED_STATE
+          )
+        end
 
-      web_process_event = events.find { |e| e.metadata['process_guid'] == web_process.guid }
-      expect(web_process_event.values).to include({
-                                                      type: 'audit.app.process.create',
-                                                      actee: app_model.guid,
-                                                      actee_type: 'app',
-                                                      actee_name: 'my_app',
-                                                      actor: user.guid,
-                                                      actor_type: 'user',
-                                                      actor_name: user_email,
-                                                      actor_username: user_name,
-                                                      space_guid: space.guid,
-                                                      organization_guid: space.organization.guid
-                                                  })
-      expect(web_process_event.metadata).to eq({ 'process_guid' => web_process.guid, 'process_type' => 'web' })
+        it 'creates audit.app.process.create events for each process' do
+          patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
-      other_process_event = events.find { |e| e.metadata['process_guid'] == other_process.guid }
-      expect(other_process_event.values).to include({
-                                                        type: 'audit.app.process.create',
-                                                        actee: app_model.guid,
-                                                        actee_type: 'app',
-                                                        actee_name: 'my_app',
-                                                        actor: user.guid,
-                                                        actor_type: 'user',
-                                                        actor_name: user_email,
-                                                        actor_username: user_name,
-                                                        space_guid: space.guid,
-                                                        organization_guid: space.organization.guid
-                                                    })
-      expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
+          expect(last_response.status).to eq(200)
+
+          events = VCAP::CloudController::Event.where(actor: user.guid).all
+
+          expect(app_model.reload.processes.count).to eq(2)
+          web_process = app_model.processes.find { |i| i.type == 'web' }
+          other_process = app_model.processes.find { |i| i.type == 'other' }
+          expect(web_process).to be_present
+          expect(other_process).to be_present
+
+          web_process_event = events.find { |e| e.metadata['process_guid'] == web_process.guid }
+          expect(web_process_event.values).to include({
+            type: 'audit.app.process.create',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid
+          })
+          expect(web_process_event.metadata).to eq({ 'process_guid' => web_process.guid, 'process_type' => 'web' })
+
+          other_process_event = events.find { |e| e.metadata['process_guid'] == other_process.guid }
+          expect(other_process_event.values).to include({
+            type: 'audit.app.process.create',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: 'my_app',
+            actor: user.guid,
+            actor_type: 'user',
+            actor_name: user_email,
+            actor_username: user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid
+          })
+          expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
+        end
+      end
     end
 
-    it 'creates sidecars that were saved on the droplet' do
-      droplet = VCAP::CloudController::DropletModel.make(:docker,
-        app: app_model,
-        process_types: { web: 'rackup' },
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package: VCAP::CloudController::PackageModel.make,
-        sidecars:
-          [
-            {
-              name: 'sidecar_one',
-              command: 'bundle exec rackup',
-              process_types: ['web'],
-              memory_in_mb: 300,
-          }
-          ])
-
-      request_body = { data: { guid: droplet.guid } }
-
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
-
-      expect(last_response.status).to eq(200)
-
-      expect(app_model.reload.processes.count).to eq(1)
-      expect(app_model.reload.sidecars.count).to eq(1)
-    end
-
-    context 'telemetry' do
-      it 'logs the create-sidecar event' do
-        droplet = VCAP::CloudController::DropletModel.make(:docker,
+    context 'sidecars' do
+      let(:droplet) do
+        VCAP::CloudController::DropletModel.make(
+          :docker,
           app: app_model,
           process_types: { web: 'rackup' },
           state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -2815,10 +2824,25 @@ RSpec.describe 'Apps' do
                 process_types: ['web'],
                 memory: 300,
               }
-            ])
+            ]
+        )
+      end
 
-        request_body = { data: { guid: droplet.guid } }
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
 
+      it 'creates sidecars that were saved on the droplet' do
+        patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
+
+        expect(last_response.status).to eq(200)
+
+        expect(app_model.reload.processes.count).to eq(1)
+        expect(app_model.reload.sidecars.count).to eq(1)
+      end
+
+      it 'logs the create-sidecar event' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -2834,6 +2858,7 @@ RSpec.describe 'Apps' do
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
 
           patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
+
           expect(last_response.status).to eq(200), last_response.body
         end
       end

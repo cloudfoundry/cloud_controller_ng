@@ -289,8 +289,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     cannot_remove_droplet! if hashed_params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
     deployment_in_progress! if app.deploying?
 
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)
