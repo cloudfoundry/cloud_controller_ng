@@ -173,7 +173,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
 
     org = space.organization
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(

@@ -10,6 +10,9 @@ RSpec.describe 'Spaces' do
   let!(:space2) { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: org }
   let!(:space3) { VCAP::CloudController::Space.make name: 'Agricola', organization: org }
 
+  before do
+    TestConfig.override(kubernetes: {})
+  end
 
   describe 'POST /v3/spaces' do
     it 'creates a new space with the given name and org' do
@@ -193,7 +196,6 @@ RSpec.describe 'Spaces' do
     context 'permissions' do
       let(:space) { space1 }
       let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}", nil, user_headers } }
-
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guid: space.guid)
@@ -448,7 +450,6 @@ RSpec.describe 'Spaces' do
     context 'permissions' do
       let(:space) { space1 }
       let(:api_call) { lambda { |user_headers| get '/v3/spaces', nil, user_headers } }
-
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid, space3.guid])
@@ -1093,6 +1094,69 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
       end
+    end
+  end
+
+  describe 'GET /v3/spaces/:guid/relationships/isolation_segment' do
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'seg') }
+    let(:org) { VCAP::CloudController::Organization.make(name: 'iso farm') }
+    let(:space) { VCAP::CloudController::Space.make name: 'space', organization: org }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+    before do
+      assigner.assign(isolation_segment, [org])
+      org.update(default_isolation_segment_guid: isolation_segment.guid)
+      space.update(isolation_segment_guid: isolation_segment.guid)
+    end
+
+    context 'when the space does not exist' do
+      let(:guid) { 'potato' }
+
+      it 'returns a 404' do
+        get "v3/spaces/#{guid}/relationships/isolation_segment", nil, admin_headers
+
+        expect(last_response.status).to eq(404)
+        expect(last_response.body).to include('Space not found')
+      end
+    end
+
+    context 'when the space is not associated with an isolation segment' do
+      before { space.update(isolation_segment_guid: nil) }
+
+      it 'returns a 200 and no isolation segment' do
+        get "v3/spaces/#{space.guid}/relationships/isolation_segment", nil, admin_headers
+
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['data']).to eq(nil)
+      end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}/relationships/isolation_segment", nil, user_headers } }
+
+      let(:expected_response) {
+        {
+          'data' => {
+            'guid' => isolation_segment.guid
+          },
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}/relationships/isolation_segment" },
+            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+          }
+        }
+      }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+
+        h['org_auditor'] =                 { code: 404, response_guid: nil }
+        h['org_billing_manager'] =         { code: 404, response_guid: nil }
+        h['no_role'] =                     { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 

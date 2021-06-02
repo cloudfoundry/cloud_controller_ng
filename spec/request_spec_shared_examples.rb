@@ -69,7 +69,8 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         expect(last_response).to have_status_code(expected_response_code)
 
         expected_response_objects = expected_codes_and_responses[role][:response_objects]
-        if expected_response_objects
+
+        if (200...300).cover?(expected_response_code) && expected_response_objects
           expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
 
           expect(parsed_response['pagination']).to match_json_response({
@@ -116,14 +117,14 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response).to have_status_code(expected_response_code)
 
-        if expected_response_code == 202
-          job_location = last_response.headers['Location']
-          expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
-        end
+        if (200...300).cover? expected_response_code
+          if expected_response_code == 202
+            job_location = last_response.headers['Location']
+            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          end
 
-        expected_response_object = expected_codes_and_responses[role][:response_object]
+          expected_response_object = expected_codes_and_responses[role][:response_object]
 
-        if expected_response_object
           expect(parsed_response).to match_json_response(expected_response_object) unless expected_response_object.nil?
 
           after_request_check.call
@@ -143,9 +144,10 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
             expect(expected_events.call(email)).to be_reported_as_events
           end
         end
+
         expected_response_guid = expected_codes_and_responses[role][:response_guid]
         if expected_response_guid
-          expect(parsed_response['guid'] ).to eq(expected_response_guid)
+          expect(parsed_response['guid']).to eq(expected_response_guid)
         end
       end
     end
