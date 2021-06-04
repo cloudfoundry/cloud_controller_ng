@@ -865,6 +865,32 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when the memory has been changed at the app level' do
+      let(:user) { make_developer_for_space(space) }
+      let(:manifest_with_app_memory) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'memory' => '256M'
+            }
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        manifest_with_app_memory.to_yaml
+      end
+
+      it 'returns a diff that reflects the change at the app level' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq('diff' => [])
+      end
+    end
+
     context 'when the request is invalid' do
       before do
         space.organization.add_user(user)
