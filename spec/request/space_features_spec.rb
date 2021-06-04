@@ -26,10 +26,13 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(space_features_json)
+      responses_for_space_restricted_single_endpoint(
+        space_features_json,
+        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_application_supporter']
+      )
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/spaces/:guid/features/:name' do
@@ -46,10 +49,13 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(space_ssh_feature_json)
+      responses_for_space_restricted_single_endpoint(
+        space_ssh_feature_json,
+        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_application_supporter']
+      )
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'PATCH /v3/spaces/:guid/features/:name' do
