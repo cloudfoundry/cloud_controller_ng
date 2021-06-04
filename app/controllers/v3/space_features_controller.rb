@@ -6,7 +6,7 @@ class SpaceFeaturesController < ApplicationController
 
   def index
     space = Space.find(guid: hashed_params[:guid])
-    resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    resource_not_found!(:space) unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
     render status: :ok, json: {
       resources: [Presenters::V3::SpaceSshFeaturePresenter.new(space)],
@@ -15,7 +15,7 @@ class SpaceFeaturesController < ApplicationController
 
   def show
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    resource_not_found!(:space) unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
     resource_not_found!(:feature) unless SPACE_FEATURE == hashed_params[:name]
 
     render status: :ok, json: Presenters::V3::SpaceSshFeaturePresenter.new(space)

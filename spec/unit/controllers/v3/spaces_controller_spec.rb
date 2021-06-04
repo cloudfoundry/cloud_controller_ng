@@ -946,41 +946,6 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
-    context 'when the user has permissions to read from the space' do
-      before do
-        allow_user_read_access_for(user, orgs: [org], spaces: [space])
-        assigner.assign(isolation_segment_model, [org])
-        space.update(isolation_segment_guid: isolation_segment_model.guid)
-      end
-
-      it 'returns a 200 and the isolation segment associated with the space' do
-        get :show_isolation_segment, params: { guid: space.guid }
-
-        expect(response.status).to eq(200)
-        expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
-      end
-
-      context 'when the space does not exist' do
-        it 'returns a 404' do
-          get :show_isolation_segment, params: { guid: 'potato' }
-
-          expect(response.status).to eq(404)
-          expect(response.body).to include('Space not found')
-        end
-      end
-
-      context 'when the space is not associated with an isolation segment' do
-        before { space.update(isolation_segment_guid: nil) }
-
-        it 'returns a 200' do
-          get :show_isolation_segment, params: { guid: space.guid }
-
-          expect(response.status).to eq(200)
-          expect(parsed_body['data']).to eq(nil)
-        end
-      end
-    end
-
     context 'when the user does not have permissions to read from the space' do
       before { allow_user_read_access_for(user, orgs: [], spaces: []) }
 

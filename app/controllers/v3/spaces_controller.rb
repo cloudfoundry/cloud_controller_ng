@@ -37,7 +37,7 @@ class SpacesV3Controller < ApplicationController
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     message = SpaceShowMessage.from_params(query_params)
 
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
@@ -173,7 +173,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
 
     org = space.organization
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
@@ -226,7 +226,7 @@ class SpacesV3Controller < ApplicationController
         SpaceListFetcher.fetch_all(message: message, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
       end
     else
-      readable_space_guids = permission_queryer.readable_space_guids
+      readable_space_guids = permission_queryer.readable_application_supporter_space_guids
       filtered_readable_guids = message.requested?(:guids) ? readable_space_guids & message.guids : readable_space_guids
       SpaceListFetcher.fetch(message: message, guids: filtered_readable_guids, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
     end
