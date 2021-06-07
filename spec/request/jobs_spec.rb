@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Jobs' do
   let(:user) { make_user }
@@ -137,6 +138,44 @@ RSpec.describe 'Jobs' do
       def display_name
         'user.test_job'
       end
+    end
+  end
+
+  describe 'permissions' do
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:job) { VCAP::CloudController::PollableJobModel.make(
+      resource_type: 'app',
+      state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+      operation: 'app.delete',
+      )
+    }
+
+    context 'when the user is not logged in' do
+      it 'returns 401' do
+        get "/v3/jobs/#{job.guid}"
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the user does not have any scopes' do
+      let(:user_header) { headers_for(user, scopes: []) }
+
+      it 'returns 403' do
+        get "/v3/jobs/#{job.guid}", nil, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+
+    context 'when the user has a global scope or a local role' do
+      let(:api_call) { lambda { |user_headers| get "/v3/jobs/#{job.guid}", nil, user_headers } }
+      let(:expected_codes_and_responses) { Hash.new(code: 200).freeze }
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end
