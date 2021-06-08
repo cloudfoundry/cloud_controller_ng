@@ -92,6 +92,7 @@ module VCAP::CloudController
 
         manifest_app_hash.each do |key, value|
           next unless recognized_top_level_keys.include?(key)
+          next if key == 'disk-quota' || key == 'memory'
 
           existing_value = existing_app_hash[key]
           if key == 'processes' && existing_value.present?
