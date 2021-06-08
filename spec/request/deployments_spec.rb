@@ -854,19 +854,15 @@ RSpec.describe 'Deployments' do
 
   describe 'GET /v3/deployments/:guid' do
     let(:old_droplet) { VCAP::CloudController::DropletModel.make }
-
-    it 'should get and display the deployment' do
-      deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
+    let(:deployment) {
+      VCAP::CloudController::DeploymentModelTestFactory.make(
         app: app_model,
         droplet: droplet,
         previous_droplet: old_droplet
       )
-
-      get "/v3/deployments/#{deployment.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like({
+    }
+    let(:expected_response) {
+      {
         'guid' => deployment.guid,
         'status' => {
           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
@@ -909,7 +905,27 @@ RSpec.describe 'Deployments' do
             'method' => 'POST'
           }
         }
-      })
+      }
+    }
+
+    it 'should get and display the deployment' do
+      get "/v3/deployments/#{deployment.guid}", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'as a SpaceApplicationSupporter' do
+      let(:user) { make_application_supporter_for_space(space) }
+
+      it 'should get and display the deployment' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
@@ -1097,7 +1113,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1146,7 +1162,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1188,7 +1204,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
