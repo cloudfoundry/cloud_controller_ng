@@ -7,12 +7,11 @@ GIT
 
 GIT
   remote: https://github.com/fog/fog-azure-rm.git
-  revision: f21a4685d56db415b45728eeb2a688195909852b
+  revision: 79a738331538c6bdba806774cb11af8977979f8e
   branch: fog-arm-cf
   specs:
     fog-azure-rm (0.4.7)
-      azure-storage-blob (~> 1.1)
-      azure-storage-common (~> 1.1)
+      azure-storage (>= 0.11.5.preview, < 1.0)
       azure_mgmt_compute (~> 0.9.0)
       azure_mgmt_dns (~> 0.9.0)
       azure_mgmt_key_vault (~> 0.9.0)
@@ -21,8 +20,8 @@ GIT
       azure_mgmt_sql (~> 0.9.0)
       azure_mgmt_storage (~> 0.9.0)
       azure_mgmt_traffic_manager (~> 0.9.0)
-      fog-core (>= 1.43)
-      fog-json (>= 1.0.2)
+      fog-core (~> 1.43)
+      fog-json (~> 1.0.2)
       mime-types (~> 3.0)
       vhd (= 0.0.4)
 
@@ -75,13 +74,6 @@ GEM
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
       nokogiri (~> 1.6, >= 1.6.8)
-    azure-storage-blob (1.1.0)
-      azure-core (~> 0.1.13)
-      azure-storage-common (~> 1.0)
-      nokogiri (~> 1.6, >= 1.6.8)
-    azure-storage-common (1.1.0)
-      azure-core (~> 0.1.13)
-      nokogiri (~> 1.6, >= 1.6.8)
     azure_mgmt_compute (0.9.0)
       ms_rest_azure (~> 0.7.0)
     azure_mgmt_dns (0.9.0)
@@ -102,7 +94,7 @@ GEM
     backports (3.18.1)
     beefcake (1.0.0)
     benchmark (0.1.1)
-    bit-struct (0.17)
+    bit-struct (0.16)
     bits_service_client (3.4.0)
       activesupport
       statsd-ruby (~> 1.4.0)
@@ -157,8 +149,8 @@ GEM
     excon (0.78.0)
     faraday (0.15.4)
       multipart-post (>= 1.2, < 3)
-    faraday-cookie_jar (0.0.7)
-      faraday (>= 0.8.0)
+    faraday-cookie_jar (0.0.6)
+      faraday (>= 0.7.4)
       http-cookie (~> 1.0.0)
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
@@ -496,7 +488,8 @@ GEM
     thread_safe (0.3.6)
     tilt (2.0.10)
     timecop (0.9.4)
-    timeliness (0.4.4)
+    timeliness (0.3.10)
+    to_regexp (0.2.1)
     tzinfo (1.2.9)
       thread_safe (~> 0.1)
     uber (0.1.0)
