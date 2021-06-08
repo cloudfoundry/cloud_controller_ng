@@ -684,6 +684,19 @@ RSpec.describe 'buildpacks' do
         ]))
       end
     end
+
+    context 'permissions' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:api_call) { lambda { |user_headers| get '/v3/buildpacks', nil, user_headers } }
+      let(:expected_codes_and_responses) { Hash.new(code: 200).freeze }
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'POST /v3/buildpacks' do
@@ -843,49 +856,52 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:user) { VCAP::CloudController::User.make }
-      let(:headers) { headers_for(user) }
+
+      before do
+        space.organization.add_user(user)
+      end
 
       context 'the buildpack does not exist' do
-        it 'returns 404' do
-          get '/v3/buildpacks/does-not-exist', params, headers
-          expect(last_response.status).to eq(404)
-        end
+        let(:api_call) { lambda { |user_headers| get '/v3/buildpacks/does-not-exist', nil, user_headers } }
 
-        context 'the buildpack exists' do
-          it 'returns 200' do
-            get "/v3/buildpacks/#{buildpack.guid}", params, headers
-            expect(last_response.status).to eq(200)
-          end
+        let(:expected_codes_and_responses) { Hash.new(code: 404).freeze }
 
-          it 'returns the newly-created buildpack resource' do
-            get "/v3/buildpacks/#{buildpack.guid}", params, headers
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      end
 
-            expected_response = {
-              'name' => buildpack.name,
-              'state' => buildpack.state,
-              'stack' => buildpack.stack,
-              'filename' => buildpack.filename,
-              'position' => buildpack.position,
-              'enabled' => buildpack.enabled,
-              'locked' => buildpack.locked,
-              'guid' => buildpack.guid,
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
-                },
-                'upload' => {
-                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload",
-                  'method' => 'POST'
-                }
+      context 'the buildpack exists' do
+        let(:api_call) { lambda { |user_headers| get "/v3/buildpacks/#{buildpack.guid}", nil, user_headers } }
+        let(:buildpack_response) do
+          {
+            'name' => buildpack.name,
+            'state' => buildpack.state,
+            'stack' => buildpack.stack,
+            'filename' => buildpack.filename,
+            'position' => buildpack.position,
+            'enabled' => buildpack.enabled,
+            'locked' => buildpack.locked,
+            'guid' => buildpack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+              },
+              'upload' => {
+                'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload",
+                'method' => 'POST'
               }
             }
-            expect(parsed_response).to be_a_response_like(expected_response)
-          end
+          }
         end
+
+        let(:expected_codes_and_responses) { Hash.new(code: 200, response_object: buildpack_response).freeze }
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
     end
   end
