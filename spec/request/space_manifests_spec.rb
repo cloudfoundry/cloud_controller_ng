@@ -872,7 +872,8 @@ RSpec.describe 'Space Manifests' do
           'applications' => [
             {
               'name' => app1_model.name,
-              'memory' => '256M'
+              'memory' => '256M',
+              'disk_quota' => '256M',
             }
           ]
         }

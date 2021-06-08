@@ -94,6 +94,8 @@ module VCAP::CloudController
           next unless recognized_top_level_keys.include?(key)
           next if key == 'disk-quota' || key == 'memory'
 
+          next if ['disk-quota', 'memory', 'disk_quota'].include?(key)
+
           existing_value = existing_app_hash[key]
           if key == 'processes' && existing_value.present?
             remove_default_missing_fields(existing_value, 'processes', 'type', key, value)
