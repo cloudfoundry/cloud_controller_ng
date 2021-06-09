@@ -33,7 +33,7 @@ class DeploymentsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.find(guid: message.app_guid)
-    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
+    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.untrusted_can_write_to_space?(app.space.guid)
     unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
     begin

@@ -21,25 +21,8 @@ RSpec.describe 'Deployments' do
 
   describe 'POST /v3/deployments' do
     context 'when a droplet is not supplied with the request' do
-      let(:create_request) do
+      let(:expected_response) {
         {
-          relationships: {
-            app: {
-              data: {
-                guid: app_model.guid
-              }
-            },
-          }
-        }
-      end
-
-      it 'should create a deployment object using the current droplet from the app' do
-        post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
-
-        deployment = VCAP::CloudController::DeploymentModel.last
-
-        expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
@@ -85,7 +68,41 @@ RSpec.describe 'Deployments' do
               'method' => 'POST'
             }
           }
-        })
+        }
+      }
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+      let(:deployment) {
+        VCAP::CloudController::DeploymentModel.last
+      }
+
+      context 'as a SpaceDeveloper' do
+        it 'should create a deployment object using the current droplet from the app' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201)
+
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
+
+      context 'as a SpaceApplicationSupporter' do
+        let(:user) { make_application_supporter_for_space(space) }
+
+        it 'should create a deployment object using the current droplet from the app' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201)
+
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
       end
     end
 
@@ -908,12 +925,14 @@ RSpec.describe 'Deployments' do
       }
     }
 
-    it 'should get and display the deployment' do
-      get "/v3/deployments/#{deployment.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
+    context 'as a SpaceDeveloper' do
+      it 'should get and display the deployment' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(expected_response)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
 
     context 'as a SpaceApplicationSupporter' do
