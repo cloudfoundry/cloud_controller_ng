@@ -334,7 +334,7 @@ module VCAP::CloudController
             'applications' => [
               {
                 'name' => app1_model.name,
-                'memory' => '256M'
+                'instances' => 5
               }
             ]
           }
@@ -342,7 +342,7 @@ module VCAP::CloudController
 
         it 'returns the correct diff' do
           expect(subject).to match_array([
-            { 'op' => 'replace', 'path' => '/applications/0/memory', 'was' => "#{process1.memory}M", 'value' => '256M' },
+            { 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => process1.instances, 'value' => 5 },
           ])
         end
       end
