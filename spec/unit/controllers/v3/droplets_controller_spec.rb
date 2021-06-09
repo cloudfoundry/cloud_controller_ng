@@ -313,52 +313,6 @@ RSpec.describe DropletsController, type: :controller do
       allow_user_read_access_for(user, spaces: [space])
     end
 
-    it 'returns 200' do
-      get :index
-      expect(response.status).to eq(200)
-    end
-
-    it 'lists the droplets visible to the user' do
-      get :index
-
-      response_guids = parsed_body['resources'].map { |r| r['guid'] }
-      expect(response_guids).to match_array([user_droplet_1, user_droplet_2].map(&:guid))
-      expect(response_guids).not_to include(staging_droplet.guid)
-    end
-
-    it 'returns pagination links for /v3/droplets' do
-      get :index
-      expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/droplets")
-    end
-
-    context 'label_selector' do
-      let!(:label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'passionfruit', droplet: user_droplet_with_labels) }
-      let(:user_droplet_with_labels) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-
-      it 'returns only the droplets with those labels' do
-        get :index, params: { label_selector: 'fruit' }
-
-        expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([user_droplet_with_labels.guid])
-      end
-    end
-
-    context 'when pagination options are specified' do
-      let(:page) { 1 }
-      let(:per_page) { 1 }
-      let(:params) { { 'page' => page, 'per_page' => per_page } }
-
-      it 'paginates the response' do
-        get :index, params: params
-
-        parsed_response = parsed_body
-        response_guids = parsed_response['resources'].map { |r| r['guid'] }
-        expect(parsed_response['pagination']['total_results']).to eq(2)
-        expect(response_guids.length).to eq(per_page)
-      end
-    end
-
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
         app = VCAP::CloudController::AppModel.make(space: space)
@@ -508,18 +462,6 @@ RSpec.describe DropletsController, type: :controller do
           expect(response.status).to eq(200)
           response_guids = parsed_body['resources'].map { |r| r['guid'] }
           expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
-        end
-      end
-
-      context 'when the user has read access, but not write access to the space' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'returns 200' do
-          get :index
-          expect(response.status).to eq(200)
         end
       end
     end
