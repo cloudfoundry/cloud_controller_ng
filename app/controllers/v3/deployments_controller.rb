@@ -81,7 +81,7 @@ class DeploymentsController < ApplicationController
   def cancel
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
-    resource_not_found!(:deployment) unless deployment && permission_queryer.can_write_to_space?(deployment.app.space_guid)
+    resource_not_found!(:deployment) unless deployment && permission_queryer.untrusted_can_write_to_space?(deployment.app.space_guid)
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
