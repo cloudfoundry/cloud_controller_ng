@@ -1702,6 +1702,8 @@ RSpec.describe 'Apps' do
       VCAP::CloudController::BuildModel.make(
         package: package,
         app: app_model,
+        staging_memory_in_mb: 123,
+        staging_disk_in_mb: 456,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
         created_by_user_email: 'bob@loblaw.com'
@@ -1711,6 +1713,8 @@ RSpec.describe 'Apps' do
       VCAP::CloudController::BuildModel.make(
         package: package,
         app: app_model,
+        staging_memory_in_mb: 123,
+        staging_disk_in_mb: 456,
         created_at: build.created_at - 1.day,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
@@ -1796,6 +1800,8 @@ RSpec.describe 'Apps' do
               'updated_at' => iso8601,
               'state' => 'STAGED',
               'error' => nil,
+              'staging_memory_in_mb' => 123,
+              'staging_disk_in_mb' => 456,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -1822,6 +1828,8 @@ RSpec.describe 'Apps' do
               'updated_at' => iso8601,
               'state' => 'STAGED',
               'error' => nil,
+              'staging_memory_in_mb' => 123,
+              'staging_disk_in_mb' => 456,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
