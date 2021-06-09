@@ -1392,29 +1392,44 @@ RSpec.describe 'Deployments' do
   describe 'POST /v3/deployments/:guid/actions/cancel' do
     context 'when the deployment is running and has a previous droplet' do
       let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
-
-      it 'changes the deployment status_value CANCELING and rolls the droplet back' do
-        deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
+      let(:deployment) {
+        VCAP::CloudController::DeploymentModelTestFactory.make(
           app: app_model,
           droplet: droplet,
           previous_droplet: old_droplet
         )
+      }
 
-        post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
-        expect(last_response.status).to eq(200), last_response.body
+      context 'as a SpaceDeveloper' do
+        it 'succeeds' do
+          post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
+          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response.body).to be_empty
+        end
 
-        expect(last_response.body).to be_empty
-        deployment.reload
-        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
-        expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATUS_REASON)
+        it 'changes the deployment status_value CANCELING and rolls the droplet back' do
+          post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
+          deployment.reload
+          expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATUS_REASON)
+          expect(app_model.reload.droplet).to eq(old_droplet)
 
-        expect(app_model.reload.droplet).to eq(old_droplet)
+          require 'cloud_controller/deployment_updater/scheduler'
+          VCAP::CloudController::DeploymentUpdater::Updater.new(deployment, Steno.logger('blah')).cancel
+          deployment.reload
+          expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
+        end
+      end
 
-        require 'cloud_controller/deployment_updater/scheduler'
-        VCAP::CloudController::DeploymentUpdater::Updater.new(deployment, Steno.logger('blah')).cancel
-        deployment.reload
-        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
-        expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
+      context 'as a SpaceApplicationSupporter' do
+        let(:user) { make_application_supporter_for_space(space) }
+
+        it 'succeeds' do
+          post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
+          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response.body).to be_empty
+        end
       end
     end
   end
