@@ -7,7 +7,7 @@ class EventsController < ApplicationController
     message = EventsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = EventListFetcher.fetch_all(message, readable_event_dataset)
+    dataset = EventListFetcher.fetch_all(message, permission_queryer.readable_event_dataset)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::EventPresenter,
@@ -18,7 +18,7 @@ class EventsController < ApplicationController
   end
 
   def show
-    event = readable_event_dataset.first(guid: hashed_params[:guid])
+    event = permission_queryer.readable_event_dataset.first(guid: hashed_params[:guid])
     event_not_found! unless event
 
     render status: :ok, json: Presenters::V3::EventPresenter.new(event)
@@ -28,9 +28,5 @@ class EventsController < ApplicationController
 
   def event_not_found!
     resource_not_found!(:event)
-  end
-
-  def readable_event_dataset
-    Event.user_visible(current_user, permission_queryer.can_read_globally?)
   end
 end
