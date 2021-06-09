@@ -47,6 +47,8 @@ module VCAP::CloudController
         state:                 BuildModel::STAGING_STATE,
         package_guid:          package.guid,
         app:                   package.app,
+        staging_memory_in_mb:  staging_details.staging_memory_in_mb,
+        staging_disk_in_mb:    staging_details.staging_disk_in_mb,
         created_by_user_guid:  @user_audit_info.user_guid,
         created_by_user_name:  @user_audit_info.user_name,
         created_by_user_email: @user_audit_info.user_email

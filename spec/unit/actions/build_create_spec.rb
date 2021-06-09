@@ -91,6 +91,8 @@ module VCAP::CloudController
           expect(build.state).to eq(BuildModel::STAGING_STATE)
           expect(build.app_guid).to eq(app.guid)
           expect(build.package_guid).to eq(package.guid)
+          expect(build.staging_memory_in_mb).to eq(calculated_mem_limit)
+          expect(build.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
           expect(build.created_by_user_guid).to eq('1234')
           expect(build.created_by_user_name).to eq('charles')
@@ -181,22 +183,30 @@ module VCAP::CloudController
         end
 
         context 'when staging memory is not specified in the message' do
+          before do
+            allow(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org).and_return(process.memory)
+          end
           let(:staging_memory_in_mb) { nil }
 
           it 'uses the app web process memory for staging memory' do
             expect(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org)
 
-            action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            expect(build.staging_memory_in_mb).to eq(process.memory)
           end
         end
 
         context 'when staging disk is not specified in the message' do
           let(:staging_disk_in_mb) { nil }
 
+          before do
+            allow(disk_limit_calculator).to receive(:get_limit).with(process.disk_quota).and_return(process.disk_quota)
+          end
+
           it 'uses the app web process disk for staging disk' do
             expect(disk_limit_calculator).to receive(:get_limit).with(process.disk_quota)
-
-            action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            expect(build.staging_disk_in_mb).to eq(process.disk_quota)
           end
         end
 

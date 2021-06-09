@@ -20,6 +20,8 @@ module VCAP::CloudController
             created_at: build.created_at,
             updated_at: build.updated_at,
             state: build.state,
+            staging_memory_in_mb: build.staging_memory_in_mb,
+            staging_disk_in_mb: build.staging_disk_in_mb,
             error: error,
             lifecycle: {
               type: build.lifecycle_type,
