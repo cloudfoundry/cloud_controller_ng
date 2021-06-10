@@ -44,6 +44,12 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
   ]).freeze
 
+  SPACE_ROLES_FOR_EVENTS ||= [
+    VCAP::CloudController::Membership::SPACE_AUDITOR,
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER
+  ].freeze
+
   ROLES_FOR_SPACE_SECRETS_READING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
@@ -249,10 +255,21 @@ class VCAP::CloudController::Permissions
     can_write_globally? || roles.build_state_updater?
   end
 
+  def readable_event_dataset
+    return VCAP::CloudController::Event.dataset if can_read_globally?
+
+    spaces_with_permitted_roles = membership.space_guids_for_roles(SPACE_ROLES_FOR_EVENTS)
+    orgs_with_permitted_roles = membership.org_guids_for_roles(VCAP::CloudController::Membership::ORG_AUDITOR)
+    VCAP::CloudController::Event.dataset.filter(Sequel.or([
+      [:space_guid, spaces_with_permitted_roles],
+      [:organization_guid, orgs_with_permitted_roles]
+    ]))
+  end
+
   private
 
   def membership
-    VCAP::CloudController::Membership.new(@user)
+    @membership ||= VCAP::CloudController::Membership.new(@user)
   end
 
   def roles

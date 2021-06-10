@@ -318,6 +318,17 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def readable_event_dataset
+    science 'readable_security_group_guids' do |e|
+      e.use { db_permissions.readable_event_dataset }
+      e.try { perm_permissions.readable_event_dataset }
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   def can_update_build_state?
     db_permissions.can_update_build_state?
   end

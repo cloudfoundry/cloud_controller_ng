@@ -864,6 +864,61 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_event_dataset' do
+      let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+      let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org_guid, organization_guid: org_guid) }
+      let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space_guid, actee: space_guid, type: 'audit.app.restart') }
+
+      it 'returns all events for admins' do
+        user = set_current_user_as_admin
+        event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
+
+        expect(event_guids).to contain_exactly(unscoped_event.guid, org_scoped_event.guid, space_scoped_event.guid)
+      end
+
+      it 'returns all events for read-only admins' do
+        user = set_current_user_as_admin_read_only
+        event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
+
+        expect(event_guids).to contain_exactly(unscoped_event.guid, org_scoped_event.guid, space_scoped_event.guid)
+      end
+
+      it 'returns all events for global auditors' do
+        user = set_current_user_as_global_auditor
+        event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
+
+        expect(event_guids).to contain_exactly(unscoped_event.guid, org_scoped_event.guid, space_scoped_event.guid)
+      end
+
+      it 'returns event datasets from space membership' do
+        membership = instance_double(Membership)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:space_guids_for_roles).
+          with(VCAP::CloudController::Permissions::SPACE_ROLES_FOR_EVENTS).
+          and_return([space_guid])
+        expect(membership).to receive(:org_guids_for_roles).
+          with(VCAP::CloudController::Membership::ORG_AUDITOR).
+          and_return([])
+        event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
+
+        expect(event_guids).to contain_exactly(space_scoped_event.guid)
+      end
+
+      it 'returns event datasets from org membership' do
+        membership = instance_double(Membership)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:space_guids_for_roles).
+          with(VCAP::CloudController::Permissions::SPACE_ROLES_FOR_EVENTS).
+          and_return([])
+        expect(membership).to receive(:org_guids_for_roles).
+          with(VCAP::CloudController::Membership::ORG_AUDITOR).
+          and_return(org_guid)
+        event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
+
+        expect(event_guids).to contain_exactly(org_scoped_event.guid)
+      end
+    end
+
     describe '#can_read_from_isolation_segment?' do
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:assigner) { IsolationSegmentAssign.new }
