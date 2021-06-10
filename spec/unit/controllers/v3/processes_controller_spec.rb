@@ -11,31 +11,7 @@ RSpec.describe ProcessesController, type: :controller do
       allow_user_read_access_for(user, spaces: [space])
     end
 
-    it 'returns 200 and lists the processes' do
-      process1 = VCAP::CloudController::ProcessModel.make(:process, app: app)
-      process2 = VCAP::CloudController::ProcessModel.make(:process, app: app)
-      VCAP::CloudController::ProcessModel.make
-
-      get :index
-
-      response_guids = parsed_body['resources'].map { |r| r['guid'] }
-      expect(response.status).to eq(200)
-      expect(response_guids).to match_array([process1.guid, process2.guid])
-    end
-
     context 'when accessed as an app subresource' do
-      it 'uses the app as a filter' do
-        process1 = VCAP::CloudController::ProcessModel.make(:process, app: app)
-        process2 = VCAP::CloudController::ProcessModel.make(:process, app: app)
-        VCAP::CloudController::ProcessModel.make(:process)
-
-        get :index, params: { app_guid: app.guid }
-
-        expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([process1.guid, process2.guid])
-      end
-
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_for_app).with(
           an_instance_of(VCAP::CloudController::ProcessesListMessage),

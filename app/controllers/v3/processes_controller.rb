@@ -26,14 +26,14 @@ class ProcessesController < ApplicationController
 
     if app_nested?
       app, dataset = ProcessListFetcher.fetch_for_app(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
                   ProcessListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
                 else
                   ProcessListFetcher.fetch_for_spaces(
                     message,
-                    space_guids: permission_queryer.readable_space_guids,
+                    space_guids: permission_queryer.readable_application_supporter_space_guids,
                     eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources
                   )
                 end
@@ -109,11 +109,11 @@ class ProcessesController < ApplicationController
   def find_process_and_space
     if app_nested?
       @process, app, @space, org = ProcessFetcher.fetch_for_app_by_type(app_guid: hashed_params[:app_guid], process_type: hashed_params[:type])
-      app_not_found! unless app && permission_queryer.can_read_from_space?(@space.guid, org.guid)
+      app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(@space.guid, org.guid)
       process_not_found! unless @process
     else
       @process, @space, org = ProcessFetcher.fetch(process_guid: hashed_params[:process_guid])
-      process_not_found! unless @process && permission_queryer.can_read_from_space?(@space.guid, org.guid)
+      process_not_found! unless @process && permission_queryer.untrusted_can_read_from_space?(@space.guid, org.guid)
     end
   end
 

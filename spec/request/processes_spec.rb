@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Processes' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { VCAP::CloudController::Organization.make }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
   let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
@@ -51,8 +52,6 @@ RSpec.describe 'Processes' do
       )
     }
 
-    before { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
-
     it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::ProcessesListMessage }
       let(:request) { '/v3/processes' }
@@ -94,11 +93,11 @@ RSpec.describe 'Processes' do
 
       expected_response = {
         'pagination' => {
-          'total_results' => 3,
-          'total_pages'   => 2,
+          'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
-          'next'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2" },
+          'next'          => nil,
           'previous'      => nil,
         },
         'resources' => [
@@ -357,12 +356,26 @@ RSpec.describe 'Processes' do
         end
       end
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get '/v3/processes', nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: [web_process.guid, worker_process.guid])
+        h['org_auditor'] = { code: 200, response_guids: [] }
+        h['org_billing_manager'] = { code: 200, response_guids: [] }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'GET /v3/processes/:guid' do
-    it 'retrieves the process' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         revision:   revision,
@@ -372,10 +385,9 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-
-      get "/v3/processes/#{process.guid}", nil, developer_headers
-
-      expected_response = {
+    end
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
         'relationships' => {
@@ -404,6 +416,10 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+
+    it 'retrieves the process' do
+      get "/v3/processes/#{process.guid}", nil, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -412,8 +428,6 @@ RSpec.describe 'Processes' do
     end
 
     it 'redacts information for auditors' do
-      process = VCAP::CloudController::ProcessModel.make(:process, app: app_model, command: 'rackup')
-
       auditor = VCAP::CloudController::User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
@@ -424,6 +438,23 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/processes/#{process.guid}", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['admin_read_only'] = { code: 200, response_object: expected_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_object: nil }
+        h['no_role'] = { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -542,6 +573,21 @@ RSpec.describe 'Processes' do
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/processes/#{process.guid}/stats", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_object: [] }
+        h['no_role'] = { code: 404, response_object: [] }
+        h
+      end
+
+      # while this endpoint returns a list, it's easier to test as a single object since it doesn't paginate
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -1050,12 +1096,26 @@ RSpec.describe 'Processes' do
         end
       end
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/processes", nil, user_headers } }
+      let(:expected_guids) { [process1.guid, process2.guid, process3.guid, deployment_process.guid] }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: expected_guids)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_guids: nil }
+        h['no_role'] = { code: 404, response_guids: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'GET /v3/apps/:guid/processes/:type' do
-    it 'retrieves the process for an app with the requested type' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let!(:process) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         revision:   revision,
@@ -1065,10 +1125,10 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-
-      get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
-
-      expected_response = {
+    }
+    let!(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:expected_response) do
+      {
         'guid' => process.guid,
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
@@ -1097,6 +1157,9 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+    it 'retrieves the process for an app with the requested type' do
+      get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -1117,6 +1180,22 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/processes/web", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['admin_read_only'] = { code: 200, response_object: expected_response }
+        h['org_billing_manager'] = { code: 404, response_object: nil }
+        h['org_auditor'] = { code: 404, response_object: nil }
+        h['no_role'] = { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
