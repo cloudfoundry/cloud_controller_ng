@@ -555,7 +555,6 @@ RSpec.describe 'Space Manifests' do
       let(:diff_json) do
         {
           diff: a_collection_containing_exactly(
-            { op: 'replace', path: '/applications/0/memory', was: '1024M', value: '256M' },
             { op: 'replace', path: '/applications/0/disk-quota', was: '1024M', value: '2048M' },
           )
         }
@@ -568,12 +567,22 @@ RSpec.describe 'Space Manifests' do
               'name' => app1_model.name,
               'memory' => '256M',
               'disk-quota' => '2G',
+              'instances' => 5
             }
           ]
         }.to_yaml
       end
+      let(:user) { make_developer_for_space(space) }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it 'does not include memory and disk changes in the diff' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq({ 'diff' => [
+          { 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => 1, 'value' => 5 }
+        ] })
+      end
     end
 
     context 'when there are no changes in the manifest' do
@@ -862,6 +871,33 @@ RSpec.describe 'Space Manifests' do
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq('diff' => [{ 'from' => '/0', 'op' => 'move', 'path' => '/applications/0/processes/1' }])
+      end
+    end
+
+    context 'when the memory has been changed at the app level' do
+      let(:user) { make_developer_for_space(space) }
+      let(:manifest_with_app_memory) do
+        {
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'memory' => '256M',
+              'disk_quota' => '256M',
+            }
+          ]
+        }
+      end
+
+      let(:yml_manifest) do
+        manifest_with_app_memory.to_yaml
+      end
+
+      it 'returns a diff that reflects the change at the app level' do
+        post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response).to have_status_code(201)
+        expect(parsed_response).to eq('diff' => [])
       end
     end
 

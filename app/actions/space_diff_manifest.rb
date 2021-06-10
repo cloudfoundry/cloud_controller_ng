@@ -93,13 +93,19 @@ module VCAP::CloudController
         manifest_app_hash.each do |key, value|
           next unless recognized_top_level_keys.include?(key)
 
+          nested_attribute_exists = false
           existing_value = existing_app_hash[key]
           if key == 'processes' && existing_value.present?
             remove_default_missing_fields(existing_value, 'processes', 'type', key, value)
+            nested_attribute_exists = true
           end
           if key == 'sidecars' && existing_value.present?
             remove_default_missing_fields(existing_value, 'sidecars', 'name', key, value)
+            nested_attribute_exists = true
           end
+
+          # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
+          next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
           key_diffs = JsonDiff.diff(
             existing_value,
