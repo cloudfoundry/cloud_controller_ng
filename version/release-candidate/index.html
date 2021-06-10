@@ -4742,6 +4742,8 @@ resource can be created to initiate the staging process. A successful build resu
     </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
   </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -4808,6 +4810,16 @@ resource can be created to initiate the staging process. A successful build resu
 <td><strong>state</strong></td>
 <td><em>string</em></td>
 <td>State of the build; valid states are <code class="prettyprint">STAGING</code>, <code class="prettyprint">STAGED</code>, or <code class="prettyprint">FAILED</code></td>
+</tr>
+<tr>
+<td><strong>staging_memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Memory in MB allocated for staging of the build</td>
+</tr>
+<tr>
+<td><strong>staging_disk_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Disk space in MB allocated for staging of the build</td>
 </tr>
 <tr>
 <td><strong>error</strong></td>
@@ -4893,6 +4905,8 @@ resource can be created to initiate the staging process. A successful build resu
     </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
   </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -5026,6 +5040,8 @@ resource can be created to initiate the staging process. A successful build resu
     </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
   </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -5135,6 +5151,8 @@ resource can be created to initiate the staging process. A successful build resu
         </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
       </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -5281,6 +5299,8 @@ resource can be created to initiate the staging process. A successful build resu
         </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
       </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -5436,6 +5456,8 @@ resource can be created to initiate the staging process. A successful build resu
     </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
   </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
