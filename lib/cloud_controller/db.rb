@@ -28,6 +28,11 @@ module VCAP::CloudController
       if opts[:log_db_queries]
         db.logger = logger
         db.sql_log_level = opts[:log_level]
+        db.extension :caller_logging
+        db.caller_logging_ignore = /sequel_paginator/
+        db.caller_logging_formatter = lambda do |caller|
+          "(#{caller.sub(%r{^.*/cloud_controller_ng/}, '')})"
+        end
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_validator_extension(db, opts)
