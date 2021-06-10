@@ -104,6 +104,7 @@ module VCAP::CloudController
             nested_attribute_exists = true
           end
 
+          # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
           next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
           key_diffs = JsonDiff.diff(
