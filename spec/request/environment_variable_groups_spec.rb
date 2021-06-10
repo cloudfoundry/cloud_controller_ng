@@ -72,6 +72,19 @@ RSpec.describe 'Environment group variables' do
         expect(last_response.status).to eq(401)
       end
     end
+
+    context 'permissions' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:api_call) { lambda { |user_headers| get '/v3/environment_variable_groups/running', nil, user_headers } }
+      let(:expected_codes_and_responses) { Hash.new(code: 200).freeze }
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'PATCH /v3/environment_variable_groups/:name' do
@@ -239,6 +252,28 @@ RSpec.describe 'Environment group variables' do
 
         expect(last_response.status).to eq(401)
       end
+    end
+
+    context 'permissions' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:api_call) { lambda { |user_headers| patch '/v3/environment_variable_groups/running', params.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403
+        )
+        h['admin'] = {
+          code: 200
+        }
+
+        h.freeze
+      end
+
+      before do
+        space.organization.add_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end
