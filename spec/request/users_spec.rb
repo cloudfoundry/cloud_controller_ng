@@ -161,7 +161,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the actee has an org or space role' do
@@ -213,7 +213,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
     end
 
@@ -232,7 +232,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when filtering by usernames and origins' do
@@ -280,7 +280,7 @@ RSpec.describe 'Users Request' do
           )
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when filtering by usernames' do
@@ -305,7 +305,7 @@ RSpec.describe 'Users Request' do
           )
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
         context 'when UAA is disabled' do
           before do
@@ -452,7 +452,7 @@ RSpec.describe 'Users Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the actee has an org or space role' do
@@ -472,7 +472,7 @@ RSpec.describe 'Users Request' do
         org.add_user(actee)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the user is not logged in' do
@@ -484,10 +484,6 @@ RSpec.describe 'Users Request' do
 
     context 'when the user is logged in' do
       let(:user_header) { headers_for(user, scopes: %w(cloud_controller.read)) }
-
-      before do
-        set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user)
-      end
 
       it 'returns 200 when showing current user' do
         get "/v3/users/#{user.guid}", nil, user_header
