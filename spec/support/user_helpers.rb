@@ -276,6 +276,7 @@ module UserHelpers
 
   def stub_readable_space_guids_for(user, spaces)
     allow(permissions_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
+    allow(permissions_double(user)).to receive(:readable_application_supporter_space_guids).and_return(spaces.map(&:guid))
   end
 
   def stub_readable_org_guids_for(user, orgs)
