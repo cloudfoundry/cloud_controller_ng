@@ -400,7 +400,7 @@ RSpec.describe 'Packages' do
       }
 
       it 'gets all the packages' do
-        bits_package = VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid)
 
         get request, nil, user_header
         expect(last_response.status).to eq(200), JSON.parse(last_response.body)['errors'].try(:first).try(:[], 'detail')
@@ -422,7 +422,6 @@ RSpec.describe 'Packages' do
             :app_guid
           ]
         }
-  
       end
 
       it_behaves_like 'list_endpoint_with_common_filters' do
