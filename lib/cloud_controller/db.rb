@@ -116,6 +116,20 @@ class Sequel::Model
   end
 end
 
+class Sequel::Dataset
+  def post_load(all_records)
+    num_records = all_records.length
+    num_associations = all_records.map do |record|
+                         associations = record.instance_variable_get(:@associations)
+                         next 0 if associations.nil?
+                         associations.values.map { |value| value.respond_to?(:length) ? value.length : 1 }.reduce(:+)
+                       end.reduce(:+)
+
+    table_name = self.instance_variable_get(:@opts)[:model].instance_variable_get(:@simple_table)
+    self.instance_variable_get(:@db).log_info("Loaded #{num_records} records from table #{table_name} with #{num_associations} associations")
+  end
+end
+
 # Helper to create migrations.  This was added because
 # I wanted to add an index to all the Timestamps so that
 # we can enumerate by :created_at.
