@@ -73,7 +73,7 @@ RSpec.describe 'Environment group variables' do
       end
     end
 
-    context 'permissions' do
+    context 'when the user is logged in' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:api_call) { lambda { |user_headers| get '/v3/environment_variable_groups/running', nil, user_headers } }
@@ -197,7 +197,7 @@ RSpec.describe 'Environment group variables' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when request input message is invalid' do
@@ -252,28 +252,6 @@ RSpec.describe 'Environment group variables' do
 
         expect(last_response.status).to eq(401)
       end
-    end
-
-    context 'permissions' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:api_call) { lambda { |user_headers| patch '/v3/environment_variable_groups/running', params.to_json, user_headers } }
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
-        h['admin'] = {
-          code: 200
-        }
-
-        h.freeze
-      end
-
-      before do
-        space.organization.add_user(user)
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end
