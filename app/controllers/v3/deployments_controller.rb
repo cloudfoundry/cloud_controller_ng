@@ -58,8 +58,8 @@ class DeploymentsController < ApplicationController
   def update
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
     resource_not_found!(:deployment) unless deployment &&
-      permission_queryer.untrusted_can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(deployment.app.space.guid)
+      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(deployment.app.space.guid)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
