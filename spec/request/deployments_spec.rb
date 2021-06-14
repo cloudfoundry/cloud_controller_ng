@@ -816,8 +816,13 @@ RSpec.describe 'Deployments' do
         },
       }.to_json
     end
-    let(:expected_response) {
-      {
+
+    it 'updates the deployment with metadata' do
+      patch "/v3/deployments/#{deployment.guid}", update_request, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like({
         'guid' => deployment.guid,
         'status' => {
           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
@@ -860,29 +865,7 @@ RSpec.describe 'Deployments' do
             'method' => 'POST'
           }
         }
-      }
-    }
-
-    context 'as a SpaceDeveloper' do
-      it 'updates the deployment with metadata' do
-        patch "/v3/deployments/#{deployment.guid}", update_request, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
-    end
-
-    context 'as a SpaceApplicationSupporter' do
-      let(:user) { make_application_supporter_for_space(space) }
-
-      it 'updates the deployment with metadata' do
-        patch "/v3/deployments/#{deployment.guid}", update_request, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
+      })
     end
   end
 
