@@ -36,6 +36,7 @@ module VCAP::CloudController
         end
 
         db.extension(:query_length_logging)
+        db.opts[:query_size_log_threshold] = opts[:query_size_log_threshold]
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_expiration_extension(db, opts)
@@ -118,15 +119,17 @@ end
 
 class Sequel::Dataset
   def post_load(all_records)
-    num_records = all_records.length
-    num_associations = all_records.map do |record|
-                         associations = record.instance_variable_get(:@associations)
-                         next 0 if associations.nil?
-                         associations.values.map { |value| value.respond_to?(:length) ? value.length : 1 }.reduce(:+)
-                       end.reduce(:+)
+    return unless self.db.opts[:log_db_queries] && self.db.opts[:query_size_log_threshold]
 
-    table_name = self.instance_variable_get(:@opts)[:model].instance_variable_get(:@simple_table)
-    self.instance_variable_get(:@db).log_info("Loaded #{num_records} records from table #{table_name} with #{num_associations} associations")
+    num_records = all_records.length
+    return unless num_records >= self.db.opts[:query_size_log_threshold]
+
+    self.db.loggers.each do |l|
+      l.public_send(
+        self.db.sql_log_level,
+        "Loaded #{num_records} records for query #{self.sql.truncate 1000}"
+      )
+    end
   end
 end
 
