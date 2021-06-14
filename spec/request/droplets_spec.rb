@@ -1737,16 +1737,6 @@ RSpec.describe 'Droplets' do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
         let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
         let(:rebased_image_reference) { 'rebased-image-reference' }
-        let!(:og_docker_droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :kpack,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE,
-            app_guid: app_model.guid,
-            package_guid: package_model.guid,
-            droplet_hash: 'shalalala',
-            sha256_checksum: 'droplet-checksum-sha256',
-          )
-        end
         before do
           og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
         end
@@ -1795,6 +1785,25 @@ RSpec.describe 'Droplets' do
             expect(last_response.status).to eq(404), last_response.body
           end
         end
+      end
+
+      context 'permissions' do
+        let(:api_call) { lambda { |user_headers| patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, user_headers } }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+
+          h['admin'] = { code: 200, response_guid: og_droplet.guid }
+          h['space_developer'] = { code: 200, response_guid: og_droplet.guid }
+          h['space_manager'] = { code: 200, response_guid: og_droplet.guid }
+          h['org_manager'] = { code: 200, response_guid: og_droplet.guid }
+
+          h['org_billing_manager'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        # it_behaves_like 'permissions for single object endpoint', ['admin']
       end
     end
   end
