@@ -456,7 +456,7 @@ RSpec.describe 'Packages' do
     end
 
     context 'when listing all packages' do
-      let(:api_call) { lambda { |user_headers| get "/v3/packages", { per_page: per_page }, user_headers } }
+      let(:api_call) { lambda { |user_headers| get '/v3/packages', { per_page: per_page }, user_headers } }
       let(:message) { VCAP::CloudController::PackagesListMessage }
       let(:request) { '/v3/packages' }
       let(:excluded_params) {
