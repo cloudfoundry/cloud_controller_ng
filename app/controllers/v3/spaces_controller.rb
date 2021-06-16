@@ -96,7 +96,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
     unfiltered_group_guids = fetch_running_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
@@ -115,7 +115,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
     unfiltered_group_guids = fetch_staging_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
