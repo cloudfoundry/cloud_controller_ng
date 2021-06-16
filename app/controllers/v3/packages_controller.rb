@@ -22,12 +22,12 @@ class PackagesController < ApplicationController
 
     if app_nested?
       app, dataset = PackageListFetcher.fetch_for_app(message: message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
                   PackageListFetcher.fetch_all(message: message)
                 else
-                  PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
+                  PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_application_supporter_space_guids)
                 end
     end
 
@@ -102,7 +102,7 @@ class PackagesController < ApplicationController
 
   def show
     package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && permission_queryer.untrusted_can_read_from_space?(package.space.guid, package.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: permission_queryer.can_write_to_space?(package.space.guid))
   end
