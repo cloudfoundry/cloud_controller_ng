@@ -6,7 +6,8 @@ RSpec.describe 'Packages' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_name) { 'clarence' }
   let(:user_header) { headers_for(user, email: email, user_name: user_name) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space_guid) }
 
@@ -160,7 +161,6 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/apps/:guid/packages' do
-    let(:space) { VCAP::CloudController::Space.make }
     let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
@@ -168,83 +168,137 @@ RSpec.describe 'Packages' do
     let(:per_page) { 2 }
     let(:order_by) { '-created_at' }
 
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    it 'lists paginated result of all packages for an app' do
-      package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: package.created_at + 1.hour)
-
-      expected_response = {
-        'pagination' => {
-          'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-          'next'          => nil,
-          'previous'      => nil,
-        },
-        'resources' => [
-          {
-            'guid'       => package2.guid,
-            'type'       => 'bits',
-            'data'       => {
-              'checksum' => { 'type' => 'sha256', 'value' => anything },
-              'error' => nil
-            },
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
-              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/download" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
-            }
+    context 'when listing all packages for an app' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/packages", nil, user_headers } }
+      let(:packages_response_object) do
+        {
+          'pagination' => {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
           },
-          {
-            'guid'       => package.guid,
-            'type'       => 'bits',
-            'data'       => {
-              'checksum' => { 'type' => 'sha256', 'value' => anything },
-              'error' => nil
+          'resources' => [
+            {
+              'guid'       => package.guid,
+              'type'       => 'bits',
+              'data'       => {
+                'checksum' => { 'type' => 'sha256', 'value' => anything },
+                'error' => nil
+              },
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+                'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+                'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+              }
             },
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
-              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
-            }
-          },
-        ]
-      }
-
-      get "/v3/apps/#{guid}/packages?page=#{page}&per_page=#{per_page}&order_by=#{order_by}", {}, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::PackageModel }
-      let(:api_call) do
-        lambda { |headers, filters| get "/v3/apps/#{guid}/packages?#{filters}", nil, headers }
+          ]
+        }
       end
-      let(:additional_resource_params) { { app: app_model } }
-      let(:headers) { admin_headers }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: packages_response_object)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
-    context 'faceted search' do
+    context 'when listing paginated results of all packages for an app' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'lists paginated results' do
+        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: package.created_at + 1.hour)
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'       => package2.guid,
+              'type'       => 'bits',
+              'data'       => {
+                'checksum' => { 'type' => 'sha256', 'value' => anything },
+                'error' => nil
+              },
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
+                'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
+                'download' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/download" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+              }
+            },
+            {
+              'guid'       => package.guid,
+              'type'       => 'bits',
+              'data'       => {
+                'checksum' => { 'type' => 'sha256', 'value' => anything },
+                'error' => nil
+              },
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+                'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+                'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+              }
+            },
+          ]
+        }
+
+        get "/v3/apps/#{guid}/packages?page=#{page}&per_page=#{per_page}&order_by=#{order_by}", {}, user_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::PackageModel }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/apps/#{guid}/packages?#{filters}", nil, headers }
+        end
+        let(:additional_resource_params) { { app: app_model } }
+        let(:headers) { admin_headers }
+      end
+    end
+
+    context 'when listing a subset of packages for an app' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
       it 'filters by types' do
         VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
         VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
@@ -325,63 +379,36 @@ RSpec.describe 'Packages' do
     let(:docker_type) { 'docker' }
     let(:page) { 1 }
     let(:per_page) { 2 }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    it_behaves_like 'list query endpoint' do
-      let(:message) { VCAP::CloudController::PackagesListMessage }
-      let(:request) { '/v3/packages' }
-      let(:excluded_params) {
-        [
-          :app_guid
-        ]
+    let(:params) do
+      {
+        guids: ['foo', 'bar'],
+        space_guids: ['foo', 'bar'],
+        organization_guids: ['foo', 'bar'],
+        app_guids: ['foo', 'bar'],
+        states: ['foo', 'bar'],
+        types: ['foo', 'bar'],
+        page:   '2',
+        per_page:   '10',
+        order_by:   'updated_at',
+        label_selector:   'foo,bar',
+        created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+        updated_ats: { gt: Time.now.utc.iso8601 },
       }
-
-      let(:params) do
-        {
-          guids: ['foo', 'bar'],
-          space_guids: ['foo', 'bar'],
-          organization_guids: ['foo', 'bar'],
-          app_guids: ['foo', 'bar'],
-          states: ['foo', 'bar'],
-          types: ['foo', 'bar'],
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          label_selector:   'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
-        }
-      end
     end
-
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::PackageModel }
-      let(:api_call) do
-        lambda { |headers, filters| get "/v3/packages?#{filters}", nil, headers }
-      end
-      let(:headers) { admin_headers }
-    end
-
-    it 'gets all the packages' do
-      bits_package = VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid)
-      docker_package = VCAP::CloudController::PackageModel.make(
+    let(:bits_package) { VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid) }
+    let(:docker_package) do
+      VCAP::CloudController::PackageModel.make(
         type: docker_type,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         docker_image: 'http://location-of-image.com')
-      VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid, docker_image: 'http://location-of-image-2.com')
-      VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid)
-
-      expected_response =
-        {
+    end
+    let(:packages_response_object) do
+      {
         'pagination' => {
               'total_results' => 3,
               'total_pages'   => 2,
-              'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=2" },
+              'first'         => { 'href' => "#{link_prefix}/v3/pagckaes?page=1&per_page=2" },
               'last'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
               'next'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
               'previous'      => nil,
@@ -425,231 +452,258 @@ RSpec.describe 'Packages' do
             }
           }
         ]
-        }
-
-      get '/v3/packages', { per_page: per_page }, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
+      }
     end
 
-    context 'faceted search' do
-      it 'filters by types' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
+    context 'when listing all packages' do
+      let(:api_call) { lambda { |user_headers| get '/v3/packages', { per_page: per_page }, user_headers } }
+      let(:message) { VCAP::CloudController::PackagesListMessage }
+      let(:request) { '/v3/packages' }
+      let(:excluded_params) {
+        [
+          :app_guid
+        ]
+      }
 
-        another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
-        VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-
-        get '/v3/packages?types=bits', {}, user_header
-
-        expected_pagination = {
-          'total_results' => 3,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-          'next'          => nil,
-          'previous'      => nil
-        }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].count).to eq(3)
-        expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 200, response_object: packages_response_object)
       end
 
-      it 'filters by states' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
 
-        another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
-        VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-
-        get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
-
-        expected_pagination = {
-          'total_results' => 3,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'next'          => nil,
-          'previous'      => nil
-        }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].count).to eq(3)
-        expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
+    context 'when listing a subset of packages' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
       end
 
-      it 'filters by app guids' do
-        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        VCAP::CloudController::PackageModel.make
-
-        get "/v3/packages?app_guids=#{app_model.guid},#{app_model2.guid}", {}, user_header
-
-        expected_pagination = {
-          'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-          'next'          => nil,
-          'previous'      => nil
+      it_behaves_like 'list query endpoint' do
+        let(:message) { VCAP::CloudController::PackagesListMessage }
+        let(:request) { '/v3/packages' }
+        let(:excluded_params) {
+          [
+            :app_guid
+          ]
         }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
-      it 'filters by package guids' do
-        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        VCAP::CloudController::PackageModel.make
-
-        get "/v3/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
-
-        expected_pagination = {
-          'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'next'          => nil,
-          'previous'      => nil
-        }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::PackageModel }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/packages?#{filters}", nil, headers }
+        end
+        let(:headers) { admin_headers }
       end
 
-      it 'filters by space guids' do
-        package_on_space1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      context 'faceted search' do
+        it 'filters by types' do
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
 
-        space2 = VCAP::CloudController::Space.make(organization: space.organization)
-        space2.add_developer(user)
-        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
-        package_on_space2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
-        space3 = VCAP::CloudController::Space.make(organization: space.organization)
-        space3.add_developer(user)
-        app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+          get '/v3/packages?types=bits', {}, user_header
 
-        get "/v3/packages?space_guids=#{space2.guid},#{space_guid}", {}, user_header
+          expected_pagination = {
+            'total_results' => 3,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+            'next'          => nil,
+            'previous'      => nil
+          }
 
-        expected_pagination = {
-          'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
-          'next'          => nil,
-          'previous'      => nil
-        }
+          parsed_response = MultiJson.load(last_response.body)
 
-        parsed_response = MultiJson.load(last_response.body)
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].count).to eq(3)
+          expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_on_space2.guid, package_on_space1.guid])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
-      end
+        it 'filters by states' do
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
 
-      it 'filters by org guids' do
-        org1_guid = space.organization.guid
+          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
-        package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
 
-        space2 = VCAP::CloudController::Space.make
-        org2_guid = space2.organization.guid
-        app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
+          expected_pagination = {
+            'total_results' => 3,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'next'          => nil,
+            'previous'      => nil
+          }
 
-        space2.organization.add_user(user)
-        space2.add_developer(user)
+          parsed_response = MultiJson.load(last_response.body)
 
-        package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].count).to eq(3)
+          expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
 
-        space3 = VCAP::CloudController::Space.make
-        space3.organization.add_user(user)
-        space3.add_developer(user)
-        app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+        it 'filters by app guids' do
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          VCAP::CloudController::PackageModel.make
 
-        get "/v3/packages?organization_guids=#{org1_guid},#{org2_guid}", {}, user_header
+          get "/v3/packages?app_guids=#{app_model.guid},#{app_model2.guid}", {}, user_header
 
-        expected_pagination = {
-          'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
-          'next'          => nil,
-          'previous'      => nil
-        }
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
+          parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
-        expect(parsed_response['pagination']).to eq(expected_pagination)
-      end
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
 
-      it 'filters by label selectors' do
-        target = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageLabelModel.make(key_name: 'fruit', value: 'strawberry', package: target)
+        it 'filters by package guids' do
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          VCAP::CloudController::PackageModel.make
 
-        get '/v3/packages?label_selector=fruit=strawberry', {}, user_header
+          get "/v3/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
 
-        expected_pagination = {
-          'total_results' => 1,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
-          'next'          => nil,
-          'previous'      => nil
-        }
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+          }
 
-        parsed_response = MultiJson.load(last_response.body)
+          parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].count).to eq(1)
-        expect(parsed_response['resources'][0]['guid']).to eq(target.guid)
-        expect(parsed_response['pagination']).to eq(expected_pagination)
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'filters by space guids' do
+          package_on_space1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+
+          space2 = VCAP::CloudController::Space.make(organization: space.organization)
+          space2.add_developer(user)
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
+          package_on_space2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+
+          space3 = VCAP::CloudController::Space.make(organization: space.organization)
+          space3.add_developer(user)
+          app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+
+          get "/v3/packages?space_guids=#{space2.guid},#{space_guid}", {}, user_header
+
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_on_space2.guid, package_on_space1.guid])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'filters by org guids' do
+          org1_guid = space.organization.guid
+
+          package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+
+          space2 = VCAP::CloudController::Space.make
+          org2_guid = space2.organization.guid
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
+
+          space2.organization.add_user(user)
+          space2.add_developer(user)
+
+          package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+
+          space3 = VCAP::CloudController::Space.make
+          space3.organization.add_user(user)
+          space3.add_developer(user)
+          app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+
+          get "/v3/packages?organization_guids=#{org1_guid},#{org2_guid}", {}, user_header
+
+          expected_pagination = {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'filters by label selectors' do
+          target = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          VCAP::CloudController::PackageLabelModel.make(key_name: 'fruit', value: 'strawberry', package: target)
+
+          get '/v3/packages?label_selector=fruit=strawberry', {}, user_header
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].count).to eq(1)
+          expect(parsed_response['resources'][0]['guid']).to eq(target.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
       end
     end
   end
 
   describe 'GET /v3/packages/:guid' do
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:api_call) { lambda { |user_headers| get "v3/packages/#{guid}", nil, user_headers } }
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
-
     let(:guid) { package_model.guid }
-    let(:space_guid) { space.guid }
-
-    before do
-      space.organization.add_user user
-      space.add_developer user
-    end
-
-    it 'gets a package' do
-      expected_response = {
+    let(:package_model_response_object) do
+      {
         'type'       => package_model.type,
         'guid'       => guid,
         'data'       => {
@@ -668,13 +722,16 @@ RSpec.describe 'Packages' do
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
       }
-
-      get "v3/packages/#{guid}", {}, user_header
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
     end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: package_model_response_object)
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['no_role'] = { code: 404 }
+      h
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'POST /v3/packages/:guid/upload' do
