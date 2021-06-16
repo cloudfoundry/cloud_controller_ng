@@ -31,15 +31,15 @@ class DropletsController < ApplicationController
 
     if app_nested?
       app, dataset = DropletListFetcher.fetch_for_app(message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     elsif package_nested?
       package, dataset = DropletListFetcher.fetch_for_package(message)
-      package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
+      package_not_found! unless package && permission_queryer.untrusted_can_read_from_space?(package.space.guid, package.space.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
                   DropletListFetcher.fetch_all(message)
                 else
-                  DropletListFetcher.fetch_for_spaces(message, permission_queryer.readable_space_guids)
+                  DropletListFetcher.fetch_for_spaces(message, permission_queryer.readable_application_supporter_space_guids)
                 end
     end
 
@@ -53,7 +53,7 @@ class DropletsController < ApplicationController
 
   def show
     droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
     show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid)
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
   end

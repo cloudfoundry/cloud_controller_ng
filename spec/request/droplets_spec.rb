@@ -207,18 +207,8 @@ RSpec.describe 'Droplets' do
           process_types: { 'web' => 'start-command' },
         )
       end
-
-      before do
-        droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ key: 'http://buildpack.git.url.com', version: '0.3', name: 'git' }], stack: 'stack-name')
-      end
-
-      it 'gets a droplet' do
-        get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like({
+      let(:droplet_model_json) do
+        {
           'guid' => droplet_model.guid,
           'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
           'error' => 'example error',
@@ -245,23 +235,34 @@ RSpec.describe 'Droplets' do
           'metadata' => {
             'labels' => {},
             'annotations' => {},
-          },
-        })
+          }
+        }
+      end
+      let(:redacted_droplet_model_json) do
+        redacted_json = droplet_model_json.dup
+        redacted_json['execution_metadata'] = '[PRIVATE DATA HIDDEN]'
+        redacted_json['process_types'] = { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+        redacted_json
+      end
+      let(:api_call) { lambda { |user_headers| get "/v3/droplets/#{guid}", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: droplet_model_json)
+        h['global_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_application_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h.freeze
       end
 
-      it 'redacts information for auditors' do
-        auditor = VCAP::CloudController::User.make
-        space.organization.add_user(auditor)
-        space.add_auditor(auditor)
-
-        get "/v3/droplets/#{droplet_model.guid}", nil, headers_for(auditor)
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['process_types']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-        expect(parsed_response['execution_metadata']).to eq('[PRIVATE DATA HIDDEN]')
+      before do
+        droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ key: 'http://buildpack.git.url.com', version: '0.3', name: 'git' }], stack: 'stack-name')
       end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the droplet has a docker lifecycle' do
@@ -277,14 +278,8 @@ RSpec.describe 'Droplets' do
           docker_receipt_image: 'docker/foobar:baz'
         )
       end
-
-      it 'gets a droplet' do
-        get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like({
+      let(:droplet_model_json) do
+        {
           'guid' => droplet_model.guid,
           'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
           'error' => 'example error',
@@ -311,8 +306,29 @@ RSpec.describe 'Droplets' do
             'labels' => {},
             'annotations' => {}
           },
-        })
+        }
       end
+      let(:redacted_droplet_model_json) do
+        redacted_json = droplet_model_json.dup
+        redacted_json['execution_metadata'] = '[PRIVATE DATA HIDDEN]'
+        redacted_json['process_types'] = { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+        redacted_json
+      end
+      let(:api_call) { lambda { |user_headers| get "/v3/droplets/#{guid}", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: droplet_model_json)
+        h['global_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_application_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -696,7 +712,7 @@ RSpec.describe 'Droplets' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -1153,85 +1169,92 @@ RSpec.describe 'Droplets' do
       expect(returned_guids).to match_array([droplet2.guid])
     end
 
-    it 'list all droplets with a buildpack lifecycle' do
-      get "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources']).to include(hash_including('guid' => droplet1.guid))
-      expect(parsed_response['resources']).to include(hash_including('guid' => droplet2.guid))
-      expect(parsed_response).to be_a_response_like({
-        'pagination' => {
-          'total_results' => 2,
-          'total_pages' => 1,
-          'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'next' => nil,
-          'previous' => nil,
-        },
-        'resources' => [
-          {
-            'guid' => droplet2.guid,
-            'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error' => 'example-error',
-            'lifecycle' => {
-              'type' => 'buildpack',
-              'data' => {}
-            },
-            'image' => nil,
-            'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-            'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack' => 'stack-2',
-            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
-              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            },
-            'metadata' => {
-              'labels' => {
-                'seed' => 'strawberry'
-              },
-              'annotations' => {}
-            },
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, user_headers } }
+      let(:app_droplet_json) do
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+            'next' => nil,
+            'previous' => nil,
           },
-          {
-            'guid' => droplet1.guid,
-            'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error' => 'example-error',
-            'lifecycle' => {
-              'type' => 'buildpack',
-              'data' => {}
-            },
-            'image' => nil,
-            'checksum' => nil,
-            'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack' => 'stack-1',
-            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
-              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            },
-            'metadata' => {
-              'labels' => {
-                'fruit' => 'strawberry',
+          'resources' => [
+            {
+              'guid' => droplet2.guid,
+              'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+              'error' => 'example-error',
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {}
               },
-              'annotations' => {}
+              'image' => nil,
+              'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+              'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+              'stack' => 'stack-2',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+                'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
+                'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+              },
+              'metadata' => {
+                'labels' => {
+                  'seed' => 'strawberry'
+                },
+                'annotations' => {}
+              },
             },
-          }
-        ]
-      })
+            {
+              'guid' => droplet1.guid,
+              'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
+              'error' => 'example-error',
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {}
+              },
+              'image' => nil,
+              'checksum' => nil,
+              'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+              'stack' => 'stack-1',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+                'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+              },
+              'metadata' => {
+                'labels' => {
+                  'fruit' => 'strawberry',
+                },
+                'annotations' => {}
+              },
+            }
+          ]
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: app_droplet_json)
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -1341,85 +1364,92 @@ RSpec.describe 'Droplets' do
       expect(returned_guids).to match_array([droplet2.guid])
     end
 
-    it 'list all droplets with a buildpack lifecycle' do
-      get "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources']).to include(hash_including('guid' => droplet1.guid))
-      expect(parsed_response['resources']).to include(hash_including('guid' => droplet2.guid))
-      expect(parsed_response).to be_a_response_like({
-        'pagination' => {
-          'total_results' => 2,
-          'total_pages' => 1,
-          'first' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'next' => nil,
-          'previous' => nil,
-        },
-        'resources' => [
-          {
-            'guid' => droplet2.guid,
-            'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error' => 'example-error',
-            'lifecycle' => {
-              'type' => 'buildpack',
-              'data' => {}
-            },
-            'image' => nil,
-            'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-            'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack' => 'stack-2',
-            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
-              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            },
-            'metadata' => {
-              'labels' => {
-                'limes' => 'horse'
-              },
-              'annotations' => {}
-            },
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, user_headers } }
+      let(:package_droplet_json) do
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+            'next' => nil,
+            'previous' => nil,
           },
-          {
-            'guid' => droplet1.guid,
-            'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error' => 'example-error',
-            'lifecycle' => {
-              'type' => 'buildpack',
-              'data' => {}
-            },
-            'image' => nil,
-            'checksum' => nil,
-            'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack' => 'stack-1',
-            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
-              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            },
-            'metadata' => {
-              'labels' => {
-                'fruit' => 'strawberry'
+          'resources' => [
+            {
+              'guid' => droplet2.guid,
+              'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+              'error' => 'example-error',
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {}
               },
-              'annotations' => {}
+              'image' => nil,
+              'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+              'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+              'stack' => 'stack-2',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+                'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                'download' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}/download" },
+                'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+              },
+              'metadata' => {
+                'labels' => {
+                  'limes' => 'horse'
+                },
+                'annotations' => {}
+              },
             },
-          }
-        ]
-      })
+            {
+              'guid' => droplet1.guid,
+              'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
+              'error' => 'example-error',
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {}
+              },
+              'image' => nil,
+              'checksum' => nil,
+              'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+              'stack' => 'stack-1',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+                'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+                'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+              },
+              'metadata' => {
+                'labels' => {
+                  'fruit' => 'strawberry'
+                },
+                'annotations' => {}
+              },
+            }
+          ]
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: package_droplet_json)
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
