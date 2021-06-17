@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'json', '>= 2.3.0'
-gem 'middleman', '~> 4.3'
+gem 'middleman', '~> 4.4'
 gem 'middleman-syntax', '2.1'
 gem 'middleman-autoprefixer', '~> 3.0'
 gem 'middleman-sprockets', '~> 4.1'
