@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceUpdateValidator, :services do
     describe '#validate_service_instance' do

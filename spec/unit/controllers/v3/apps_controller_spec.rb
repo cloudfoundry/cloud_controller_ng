@@ -1,6 +1,8 @@
 require 'rails_helper'
 require 'permissions_spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe AppsV3Controller, type: :controller do
   describe '#index' do
     let(:app_model_1) { VCAP::CloudController::AppModel.make }

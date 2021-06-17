@@ -1,6 +1,8 @@
 require 'rails_helper'
 require 'permissions_spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe PackagesController, type: :controller do
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }

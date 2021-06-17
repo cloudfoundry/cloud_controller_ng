@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'membrane'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe TasksCompletionController do
     describe 'POST /internal/v4/tasks/:task_guid/completed' do

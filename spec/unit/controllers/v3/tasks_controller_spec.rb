@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe TasksController, type: :controller do
   let(:client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, desire_task: nil) }
   let(:tasks_enabled) { true }
