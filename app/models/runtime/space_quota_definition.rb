@@ -50,6 +50,7 @@ module VCAP::CloudController
       Sequel.or([
         [:organization, user.managed_organizations_dataset],
         [:spaces, user.spaces_dataset],
+        [:spaces, user.application_supported_spaces_dataset],
         [:spaces, user.managed_spaces_dataset],
         [:spaces, user.audited_spaces_dataset]
       ])

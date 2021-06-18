@@ -14,10 +14,20 @@ module VCAP::CloudController
 
       context 'when the space quota is applied to the space where the current user has a role' do
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(make_space_quota_json(space_quota))
+          h = Hash.new(code: 404)
+          expected_response = make_space_quota_json(space_quota)
+          h['admin'] = { code: 200, response_object: expected_response }
+          h['admin_read_only'] = { code: 200, response_object: expected_response }
+          h['global_auditor'] = { code: 200, response_object: expected_response }
+          h['space_developer'] = { code: 200, response_object: expected_response }
+          h['space_application_supporter'] = { code: 200, response_object: expected_response }
+          h['space_manager'] = { code: 200, response_object: expected_response }
+          h['space_auditor'] = { code: 200, response_object: expected_response }
+          h['org_manager'] = { code: 200, response_object: expected_response }
+          h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the space quota has no associated spaces' do
@@ -33,7 +43,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the space quota is owned by an org where the current user does not have a role' do
@@ -49,7 +59,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the space quota does not exist' do
@@ -286,10 +296,11 @@ module VCAP::CloudController
           h['space_manager'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
           h['space_auditor'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
           h['space_developer'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
+          h['space_application_supporter'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'with filters' do
