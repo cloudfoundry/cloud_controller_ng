@@ -2,6 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 
+SPACE_APPLICATION_SUPPORTER = %w[space_application_supporter].freeze
+COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + SPACE_APPLICATION_SUPPORTER).freeze
+
 RSpec.describe 'V3 service plan visibility' do
   let(:user) { VCAP::CloudController::User.make }
   let!(:org) { VCAP::CloudController::Organization.make }
@@ -31,7 +34,7 @@ RSpec.describe 'V3 service plan visibility' do
         )
       }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'for admin-only plans' do
@@ -50,7 +53,7 @@ RSpec.describe 'V3 service plan visibility' do
         end
       }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'for space-scoped plans' do
@@ -87,11 +90,12 @@ RSpec.describe 'V3 service plan visibility' do
             space_developer
             space_manager
             space_auditor
+            space_application_supporter
           )
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'for org-restricted plans' do
@@ -142,7 +146,7 @@ RSpec.describe 'V3 service plan visibility' do
         end
       }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
   end
 
@@ -169,13 +173,13 @@ RSpec.describe 'V3 service plan visibility' do
         let(:req_body) { { type: 'admin' } }
         let(:successful_response) { { code: 200, response_object: { type: 'admin' } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
 
       context 'and its being updated to "public"' do
         let(:successful_response) { { code: 200, response_object: { type: 'public' } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
 
       context 'and its being updated to "organization"' do
@@ -183,7 +187,7 @@ RSpec.describe 'V3 service plan visibility' do
         let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
     end
 
@@ -199,14 +203,14 @@ RSpec.describe 'V3 service plan visibility' do
       context 'and its being updated to "public"' do
         let(:successful_response) { { code: 200, response_object: { type: 'public' } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
 
       context 'and its being updated to "admin"' do
         let(:req_body) { { type: 'admin' } }
         let(:successful_response) { { code: 200, response_object: { type: 'admin' } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
 
       context 'and its being updated to "organization"' do
@@ -214,7 +218,7 @@ RSpec.describe 'V3 service plan visibility' do
         let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
     end
 
@@ -258,7 +262,7 @@ RSpec.describe 'V3 service plan visibility' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS do
           let(:after_request_check) do
             lambda do
               visibilities = VCAP::CloudController::ServicePlanVisibility.where(service_plan: service_plan).all
@@ -288,7 +292,7 @@ RSpec.describe 'V3 service plan visibility' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS do
           let(:after_request_check) do
             lambda do
               visibilities = VCAP::CloudController::ServicePlanVisibility.where(service_plan: service_plan).all
@@ -550,7 +554,7 @@ RSpec.describe 'V3 service plan visibility' do
         end
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
 
       it 'returns a 404 for users of other orgs' do
         new_org = VCAP::CloudController::Organization.make
@@ -629,7 +633,7 @@ RSpec.describe 'V3 service plan visibility' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
     end
 
     it 'creates an audit event' do

@@ -3,8 +3,9 @@ require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 require 'hashdiff'
 
+SPACE_APPLICATION_SUPPORTER = %w[space_application_supporter].freeze
 UNAUTHENTICATED = %w[unauthenticated].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + UNAUTHENTICATED).freeze
+COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + UNAUTHENTICATED + SPACE_APPLICATION_SUPPORTER).freeze
 
 RSpec.describe 'V3 service plans' do
   let(:user) { VCAP::CloudController::User.make }
@@ -88,6 +89,7 @@ RSpec.describe 'V3 service plans' do
               space_developer
               space_manager
               space_auditor
+              space_application_supporter
             )
           )
         end
@@ -274,6 +276,7 @@ RSpec.describe 'V3 service plans' do
           h['space_developer'] = space_plans_response
           h['space_manager'] = space_plans_response
           h['space_auditor'] = space_plans_response
+          h['space_application_supporter'] = space_plans_response
         end
       end
 
@@ -704,6 +707,7 @@ RSpec.describe 'V3 service plans' do
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 204 }
+            h['space_application_supporter'] = { code: 403 }
             h['space_manager'] = { code: 403 }
             h['space_auditor'] = { code: 403 }
             h['unauthenticated'] = { code: 401 }
@@ -854,6 +858,7 @@ RSpec.describe 'V3 service plans' do
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 200, response_object: create_plan_json(service_plan, labels: labels, annotations: annotations) }
+            h['space_application_supporter'] = { code: 403 }
             h['space_manager'] = { code: 403 }
             h['space_auditor'] = { code: 403 }
             h['unauthenticated'] = { code: 401 }

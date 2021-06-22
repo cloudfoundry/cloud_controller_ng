@@ -234,6 +234,14 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  def readable_application_supporter_space_scoped_space_guids
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS)
+    end
+  end
+
   def can_read_route?(space_guid, org_guid)
     return true if can_read_globally?
 
