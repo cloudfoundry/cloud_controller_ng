@@ -38,7 +38,7 @@ task :check_doc_links do
   require 'rainbow'
 
   puts Rainbow('Checking links in all docs...').green
-  Bundler.with_clean_env do
+  Bundler.with_unbundled_env do
     Dir.chdir('docs/v3') do
       cmd = 'bundle install && npm install && npm run checkdocs'
       py2_path = '/usr/bin/python2.7'
