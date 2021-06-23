@@ -866,6 +866,7 @@ RSpec.describe 'Processes' do
       process.reload
       expect(process.memory).to eq(1024)
     end
+
     context 'telemetry' do
       let(:process) {
         VCAP::CloudController::ProcessModel.make(
@@ -939,6 +940,25 @@ RSpec.describe 'Processes' do
         'process_type'  => 'web',
         'process_index' => 0
       })
+    end
+
+    context 'permissions' do
+      let(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+
+      let(:api_call) { lambda { |user_headers| delete "/v3/processes/#{process.guid}/instances/0", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_application_supporter'] = { code: 204 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -1450,9 +1470,10 @@ RSpec.describe 'Processes' do
     before do
       allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
     end
-    it 'terminates a single instance of a process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
 
+    let!(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+
+    it 'terminates a single instance of a process belonging to an app' do
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 
       expect(last_response.status).to eq(204)
@@ -1475,6 +1496,23 @@ RSpec.describe 'Processes' do
         'process_type'  => 'web',
         'process_index' => 0
       })
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_application_supporter'] = { code: 204 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end
