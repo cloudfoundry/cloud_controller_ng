@@ -389,46 +389,6 @@ RSpec.describe ProcessesController, type: :controller do
         expect(response.body).to include('Cannot update this process while a deployment is in flight.')
       end
     end
-
-    context 'permissions' do
-      context 'when the user cannot read the process' do
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'raises 404' do
-          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
-
-          expect(response.status).to eq(404)
-          expect(response.body).to include('ResourceNotFound')
-        end
-      end
-
-      context 'when the user can read but not write to the process due to membership' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'raises an ApiError with a 403 code' do
-          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
-
-          expect(response.status).to eq 403
-          expect(response.body).to include('NotAuthorized')
-        end
-      end
-
-      context 'when the user does not have write permissions' do
-        before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
-
-        it 'raises an ApiError with a 403 code' do
-          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
-
-          expect(response.body).to include('NotAuthorized')
-          expect(response.status).to eq(403)
-        end
-      end
-    end
   end
 
   describe '#terminate' do

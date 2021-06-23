@@ -592,9 +592,9 @@ RSpec.describe 'Processes' do
   end
 
   describe 'PATCH /v3/processes/:guid' do
-    it 'updates the process' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:                  app_model,
         revision:             revision,
@@ -607,9 +607,11 @@ RSpec.describe 'Processes' do
         health_check_type:    'port',
         health_check_timeout: 10
       )
+    end
 
-      update_request = {
-        command:      'new command',
+    let(:update_request) do
+      {
+        command: 'new command',
         health_check: {
           type: 'process',
           data: {
@@ -618,10 +620,10 @@ RSpec.describe 'Processes' do
         },
         metadata: metadata,
       }.to_json
+    end
 
-      patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
-
-      expected_response = {
+    let(:expected_response) do
+      {
         'guid' => process.guid,
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
@@ -656,6 +658,27 @@ RSpec.describe 'Processes' do
           'annotations' => { 'checksum' => 'SHA' },
         },
       }
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/processes/#{process.guid}", update_request, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['space_application_supporter'] = { code: 200, response_object: expected_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
+
+    it 'updates the process' do
+      patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
       parsed_response = MultiJson.load(last_response.body)
 

@@ -118,7 +118,7 @@ class ProcessesController < ApplicationController
   end
 
   def ensure_can_write
-    unauthorized! unless permission_queryer.can_write_to_space?(@space.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(@space.guid)
   end
 
   def process_not_found!
