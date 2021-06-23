@@ -2,52 +2,18 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Stacks Request' do
+  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
     let(:user) { make_user }
-    let(:headers) { headers_for(user) }
+    let(:user_header) { headers_for(user) }
+    let(:api_call) { lambda { |user_header| get '/v3/stacks', nil, user_header } }
 
-    it 'returns 200 OK' do
-      get '/v3/stacks', nil, headers
-      expect(last_response.status).to eq(200)
-    end
-
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::Stack }
-      let(:headers) { admin_headers }
-      let(:api_call) do
-        lambda { |headers, filters| get "/v3/stacks?#{filters}", nil, headers }
-      end
-    end
-
-    it_behaves_like 'list query endpoint' do
-      let(:request) { 'v3/stacks' }
-      let(:message) { VCAP::CloudController::StacksListMessage }
-      let(:user_header) { headers }
-
-      let(:params) do
-        {
-          names: ['foo', 'bar'],
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          label_selector:   'foo,bar',
-          guids: 'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
-        }
-      end
-    end
-
-    context 'When stacks exist' do
-      let!(:stack1) { VCAP::CloudController::Stack.make }
-      let!(:stack2) { VCAP::CloudController::Stack.make }
-      let!(:stack3) { VCAP::CloudController::Stack.make }
-
-      it 'returns a paginated list of stacks' do
-        get '/v3/stacks?page=1&per_page=2', nil, headers
-
-        expect(parsed_response).to be_a_response_like(
+    context 'lists all stacks' do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+        let(:stacks_response_object) do
           {
             'pagination' => {
               'total_results' => 3,
@@ -92,85 +58,110 @@ RSpec.describe 'Stacks Request' do
               }
             ]
           }
-        )
+        end
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 200, response_object: stacks_response_object)
+        end
+        let!(:stack1) { VCAP::CloudController::Stack.make }
+        let!(:stack2) { VCAP::CloudController::Stack.make }
+      end
+    end
+
+    context 'lists a subset of stacks' do
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::Stack }
+        let(:headers) { admin_headers }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/stacks?#{filters}", nil, headers }
+        end
       end
 
-      it 'returns a list of name filtered stacks' do
-        get "/v3/stacks?names=#{stack1.name},#{stack3.name}", nil, headers
-
-        expect(parsed_response).to be_a_response_like(
+      it_behaves_like 'list query endpoint' do
+        let(:request) { 'v3/stacks' }
+        let(:message) { VCAP::CloudController::StacksListMessage }
+        let(:params) do
           {
-            'pagination' => {
-              'total_results' => 2,
-              'total_pages' => 1,
-              'first' => {
-                'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
-              },
-              'last' => {
-                'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
-              },
-              'next' => nil,
-              'previous' => nil
-            },
-            'resources' => [
-              {
-                'name' => stack1.name,
-                'description' => stack1.description,
-                'guid' => stack1.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
-                  }
-                }
-              },
-              {
-                'name' => stack3.name,
-                'description' => stack3.description,
-                'guid' => stack3.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack3.guid}"
-                  }
-                }
-              }
-            ]
+            names: ['foo', 'bar'],
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            label_selector:   'foo,bar',
+            guids: 'foo,bar',
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
           }
-        )
+        end
       end
 
-      context 'when there are labels' do
-        let!(:stack1_label) { VCAP::CloudController::StackLabelModel.make(
-          key_name: 'release',
-          value: 'stable',
-          resource_guid: stack1.guid
-        )
-        }
-        let!(:stack2_label) { VCAP::CloudController::StackLabelModel.make(
-          key_name: 'release',
-          value: 'unstable',
-          resource_guid: stack2.guid
-        )
-        }
+      context 'When stacks exist' do
+        let!(:stack1) { VCAP::CloudController::Stack.make }
+        let!(:stack2) { VCAP::CloudController::Stack.make }
+        let!(:stack3) { VCAP::CloudController::Stack.make }
 
-        it 'returns a list of label filtered stacks' do
-          get '/v3/stacks?label_selector=release=stable', nil, headers
+        it 'returns a paginated list of stacks' do
+          get '/v3/stacks?page=1&per_page=2', nil, user_header
 
           expect(parsed_response).to be_a_response_like(
             {
               'pagination' => {
-                'total_results' => 1,
-                'total_pages' => 1,
+                'total_results' => 3,
+                'total_pages' => 2,
                 'first' => {
-                  'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                  'href' => "#{link_prefix}/v3/stacks?page=1&per_page=2"
                 },
                 'last' => {
-                  'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                  'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
+                },
+                'next' => {
+                  'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
+                },
+                'previous' => nil
+              },
+              'resources' => [
+                {
+                  'name' => stack1.name,
+                  'description' => stack1.description,
+                  'guid' => stack1.guid,
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
+                    }
+                  }
+                },
+                {
+                  'name' => stack2.name,
+                  'description' => stack2.description,
+                  'guid' => stack2.guid,
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
+                    }
+                  }
+                }
+              ]
+            }
+          )
+        end
+
+        it 'returns a list of name filtered stacks' do
+          get "/v3/stacks?names=#{stack1.name},#{stack3.name}", nil, user_header
+
+          expect(parsed_response).to be_a_response_like(
+            {
+              'pagination' => {
+                'total_results' => 2,
+                'total_pages' => 1,
+                'first' => {
+                  'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
+                },
+                'last' => {
+                  'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
                 },
                 'next' => nil,
                 'previous' => nil
@@ -180,23 +171,87 @@ RSpec.describe 'Stacks Request' do
                   'name' => stack1.name,
                   'description' => stack1.description,
                   'guid' => stack1.guid,
-                  'metadata' => {
-                    'labels' => {
-                      'release' => 'stable'
-                    },
-                    'annotations' => {}
-                  },
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
                   'links' => {
                     'self' => {
                       'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
                     }
-                  },
+                  }
                 },
+                {
+                  'name' => stack3.name,
+                  'description' => stack3.description,
+                  'guid' => stack3.guid,
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack3.guid}"
+                    }
+                  }
+                }
               ]
             }
           )
+        end
+
+        context 'when there are labels' do
+          let!(:stack1_label) { VCAP::CloudController::StackLabelModel.make(
+            key_name: 'release',
+            value: 'stable',
+            resource_guid: stack1.guid
+          )
+          }
+          let!(:stack2_label) { VCAP::CloudController::StackLabelModel.make(
+            key_name: 'release',
+            value: 'unstable',
+            resource_guid: stack2.guid
+          )
+          }
+
+          it 'returns a list of label filtered stacks' do
+            get '/v3/stacks?label_selector=release=stable', nil, user_header
+
+            expect(parsed_response).to be_a_response_like(
+              {
+                'pagination' => {
+                  'total_results' => 1,
+                  'total_pages' => 1,
+                  'first' => {
+                    'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                  },
+                  'last' => {
+                    'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                  },
+                  'next' => nil,
+                  'previous' => nil
+                },
+                'resources' => [
+                  {
+                    'name' => stack1.name,
+                    'description' => stack1.description,
+                    'guid' => stack1.guid,
+                    'metadata' => {
+                      'labels' => {
+                        'release' => 'stable'
+                      },
+                      'annotations' => {}
+                    },
+                    'created_at' => iso8601,
+                    'updated_at' => iso8601,
+                    'links' => {
+                      'self' => {
+                        'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
+                      }
+                    },
+                  },
+                ]
+              }
+            )
+          end
         end
       end
     end
@@ -204,29 +259,29 @@ RSpec.describe 'Stacks Request' do
 
   describe 'GET /v3/stacks/:guid' do
     let(:user) { make_user }
-    let(:headers) { headers_for(user) }
-
+    let(:user_header) { headers_for(user) }
+    let(:api_call) { lambda { |user_header| get "/v3/stacks/#{stack.guid}", nil, user_header } }
     let!(:stack) { VCAP::CloudController::Stack.make }
-
-    it 'returns details of the requested stack' do
-      get "/v3/stacks/#{stack.guid}", nil, headers
-      expect(last_response.status).to eq 200
-      expect(parsed_response).to be_a_response_like(
-        {
-          'name' => stack.name,
-          'description' => stack.description,
-          'guid' => stack.guid,
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
-            }
+    let(:stacks_response_object) do
+      {
+        'name' => stack.name,
+        'description' => stack.description,
+        'guid' => stack.guid,
+        'metadata' => { 'labels' => {}, 'annotations' => {} },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links' => {
+          'self' => {
+            'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
           }
         }
-      )
+      }
     end
+    let(:expected_codes_and_responses) do
+      Hash.new(code: 200, response_object: stacks_response_object)
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/stacks/:guid/apps' do
