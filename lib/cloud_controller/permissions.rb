@@ -123,18 +123,9 @@ class VCAP::CloudController::Permissions
 
   def readable_org_guids_for_domains
     if can_read_globally?
-      VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+      VCAP::CloudController::Organization.select(:guid)
     else
-      # Getting readable orgs for org-scoped roles
-      org_guids = membership.org_guids_for_roles(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS)
-
-      # Getting readable orgs for space-scoped roles
-      space_guids = membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_SUPPORTERS)
-      org_guids_from_space_guids = space_guids.filter_map do |guid|
-        VCAP::CloudController::Space.find(guid: guid)&.organization&.guid
-      end
-
-      (org_guids + org_guids_from_space_guids).uniq
+      membership.org_guids_for_roles_subquery(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + SPACE_ROLES_INCLUDING_SUPPORTERS)
     end
   end
 

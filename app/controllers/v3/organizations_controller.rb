@@ -142,7 +142,7 @@ class OrganizationsV3Controller < ApplicationController
     message = DomainsListMessage.from_params(query_params.except(:guid))
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    domains = DomainFetcher.fetch(message, domain_readable_org_guids([org.guid]))
+    domains = DomainFetcher.fetch(message, permission_queryer.readable_org_guids_for_domains.where(guid: org.guid))
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
@@ -159,16 +159,12 @@ class OrganizationsV3Controller < ApplicationController
     domain = org.default_domain
 
     domain_not_found! unless domain
-    domain_not_found! if domain.private? && !permission_queryer.readable_org_guids_for_domains.include?(org.guid)
+    domain_not_found! if domain.private? && permission_queryer.readable_org_guids_for_domains.where(guid: org.guid).empty?
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
   private
-
-  def domain_readable_org_guids(org_guids)
-    org_guids & permission_queryer.readable_org_guids_for_domains
-  end
 
   def fetch_editable_org(guid)
     org = fetch_org(guid)

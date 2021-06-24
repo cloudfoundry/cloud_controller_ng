@@ -55,8 +55,9 @@ module VCAP::CloudController
           )
         end
 
-        it 'returns readable domains for multiple orgs' do
-          domains = DomainFetcher.fetch_all_for_orgs([org2.guid, org3.guid])
+        it 'returns readable domains for multiple orgs filtered using sequel subquery' do
+          org_guids = Organization.where(guid: [org2.guid, org3.guid]).select(:guid)
+          domains = DomainFetcher.fetch_all_for_orgs(org_guids)
           expect(domains.map(&:guid)).to contain_exactly(
             'shared_domain1', 'shared_domain2',
             'private_domain1', 'private_domain3'

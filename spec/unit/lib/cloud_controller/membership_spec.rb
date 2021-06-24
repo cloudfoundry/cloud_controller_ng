@@ -404,6 +404,38 @@ module VCAP::CloudController
           end
         end
 
+        context 'for space managers' do
+          it 'returns all orgs for spaces in which the user is a space manager' do
+            SpaceManager.create(user: user, space: space)
+            guids = membership.org_guids_for_roles(Membership::SPACE_MANAGER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for space developers' do
+          it 'returns all orgs for spaces in which the user is a space developer' do
+            SpaceDeveloper.create(user: user, space: space)
+            guids = membership.org_guids_for_roles(Membership::SPACE_DEVELOPER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for space supporters' do
+          it 'returns all orgs for spaces in which the user is a space supporters' do
+            SpaceSupporter.create(user: user, space: space)
+            guids = membership.org_guids_for_roles(Membership::SPACE_SUPPORTER)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
+        context 'for space auditors' do
+          it 'returns all orgs for spaces in which the user is a space auditor' do
+            SpaceAuditor.create(user: user, space: space)
+            guids = membership.org_guids_for_roles(Membership::SPACE_AUDITOR)
+            expect(guids).to eq([organization.guid])
+          end
+        end
+
         context 'when the user has multiple roles' do
           it 'does not return duplicate org guids' do
             organization.add_auditor(user)
