@@ -21,12 +21,12 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
-  ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING ||= [
+  ROLES_FOR_SPACE_SUPPORTER_READING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
     VCAP::CloudController::Membership::ORG_MANAGER,
-    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER,
   ].freeze
 
   ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS ||= [
@@ -40,14 +40,14 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_AUDITOR,
   ].freeze
 
-  SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS ||= (SPACE_ROLES + [
-    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+  SPACE_ROLES_INCLUDING_SUPPORTERS ||= (SPACE_ROLES + [
+    VCAP::CloudController::Membership::SPACE_SUPPORTER,
   ]).freeze
 
   SPACE_ROLES_FOR_EVENTS ||= [
     VCAP::CloudController::Membership::SPACE_AUDITOR,
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
-    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
   ].freeze
 
   ROLES_FOR_SPACE_SECRETS_READING ||= [
@@ -58,8 +58,8 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
 
-  ROLES_FOR_SPACE_APPLICATION_SUPPORTER_WRITING ||= (ROLES_FOR_SPACE_WRITING + [
-    VCAP::CloudController::Membership::SPACE_APPLICATION_SUPPORTER,
+  ROLES_FOR_SPACE_SUPPORTER_WRITING ||= (ROLES_FOR_SPACE_WRITING + [
+    VCAP::CloudController::Membership::SPACE_SUPPORTER,
   ]).freeze
 
   ROLES_FOR_SPACE_UPDATING ||= [
@@ -103,7 +103,7 @@ class VCAP::CloudController::Permissions
       org_guids = membership.org_guids_for_roles(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS)
 
       # Getting readable orgs for space-scoped roles
-      space_guids = membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS)
+      space_guids = membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_SUPPORTERS)
       org_guids_from_space_guids = space_guids.filter_map do |guid|
         VCAP::CloudController::Space.find(guid: guid)&.organization&.guid
       end
@@ -139,11 +139,11 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_application_supporter_space_guids
+  def readable_supporter_space_guids
     if can_read_globally?
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_SUPPORTER_READING)
     end
   end
 
@@ -152,7 +152,7 @@ class VCAP::CloudController::Permissions
   end
 
   def untrusted_can_read_from_space?(space_guid, org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING, space_guid, org_guid)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SUPPORTER_READING, space_guid, org_guid)
   end
 
   def can_read_secrets_in_space?(space_guid, org_guid)
@@ -171,7 +171,7 @@ class VCAP::CloudController::Permissions
   def untrusted_can_write_to_space?(space_guid)
     return true if can_write_globally?
 
-    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_WRITING, space_guid)
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_SUPPORTER_WRITING, space_guid)
 
     VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
@@ -233,7 +233,7 @@ class VCAP::CloudController::Permissions
     space = VCAP::CloudController::Space.where(guid: space_guid).first
     org = space.organization
 
-    space.has_member?(@user) || space.has_application_supporter?(@user) ||
+    space.has_member?(@user) || space.has_supporter?(@user) ||
       @user.managed_organizations.include?(org) || @user.audited_organizations.include?(org)
   end
 

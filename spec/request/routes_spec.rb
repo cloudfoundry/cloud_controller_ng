@@ -183,7 +183,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'includes' do
@@ -950,7 +950,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'when the user is not logged in' do
@@ -1167,14 +1167,14 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h['space_application_supporter'] = {
+            h['space_supporter'] = {
               code: 201,
               response_object: route_json
             }
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
 
@@ -1246,7 +1246,7 @@ RSpec.describe 'Routes Request' do
                 code: 201,
                 response_object: route_json
               }
-              h['space_application_supporter'] = {
+              h['space_supporter'] = {
                 code: 201,
                 response_object: route_json
               }
@@ -1330,14 +1330,14 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h['space_application_supporter'] = {
+            h['space_supporter'] = {
               code: 201,
               response_object: route_json
             }
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
     end
@@ -1428,14 +1428,14 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h['space_application_supporter'] = {
+            h['space_supporter'] = {
               code: 201,
               response_object: route_json
             }
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
 
@@ -1500,13 +1500,13 @@ RSpec.describe 'Routes Request' do
             h['space_developer'] = {
               code: 422,
             }
-            h['space_application_supporter'] = {
+            h['space_supporter'] = {
               code: 422,
             }
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
 
@@ -1586,7 +1586,7 @@ RSpec.describe 'Routes Request' do
             code: 201,
             response_object: route_json
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 201,
             response_object: route_json
           }
@@ -1594,7 +1594,7 @@ RSpec.describe 'Routes Request' do
         end
 
         context 'and the user provides a valid port' do
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'and a route with the domain and port already exist' do
             let!(:duplicate_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
@@ -1632,7 +1632,7 @@ RSpec.describe 'Routes Request' do
             }
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'and randomly selected port is already in use' do
             let(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
@@ -1728,7 +1728,7 @@ RSpec.describe 'Routes Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
 
@@ -1842,14 +1842,14 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h['space_application_supporter'] = {
+            h['space_supporter'] = {
               code: 201,
               response_object: route_json
             }
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
     end
@@ -2072,7 +2072,7 @@ RSpec.describe 'Routes Request' do
           code: 201,
           response_object: route_json
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 201,
           response_object: route_json
         }
@@ -2083,7 +2083,7 @@ RSpec.describe 'Routes Request' do
         VCAP::CloudController::Config.config.set(:system_domain, domain.name)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'quotas' do
@@ -2385,11 +2385,11 @@ RSpec.describe 'Routes Request' do
         h['no_role'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['space_developer'] = { code: 200, response_object: route_json }
-        h['space_application_supporter'] = { code: 200, response_object: route_json }
+        h['space_supporter'] = { code: 200, response_object: route_json }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user is not a member in the routes org' do
@@ -2449,7 +2449,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when route does not exist' do
@@ -2535,11 +2535,11 @@ RSpec.describe 'Routes Request' do
 
         h['admin'] = { code: 202 }
         h['space_developer'] = { code: 202 }
-        h['space_application_supporter'] = { code: 202 }
+        h['space_supporter'] = { code: 202 }
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.route.delete-request',
@@ -2672,7 +2672,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'ports filter' do

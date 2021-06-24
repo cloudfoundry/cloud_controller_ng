@@ -385,7 +385,7 @@ module VCAP::CloudController
           end
         end
 
-        %w(developer manager auditor application_supporter).each do |perm|
+        %w(developer manager auditor supporter).each do |perm|
           include_examples 'bad app space permission', perm
         end
       end
@@ -826,8 +826,8 @@ module VCAP::CloudController
         expect(space.has_member?(user)).to be true
       end
 
-      it 'returns false if the given user is a space application supporter' do
-        space.add_application_supporter(user)
+      it 'returns false if the given user is a space supporter' do
+        space.add_supporter(user)
         expect(space.has_member?(user)).to be false
       end
 
@@ -840,7 +840,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#has_application_supporter?' do
+    describe '#has_supporter?' do
       subject(:space) { Space.make }
       let(:user) { User.make }
       let(:other_user) { User.make }
@@ -851,28 +851,28 @@ module VCAP::CloudController
         space.add_developer(other_user)
       end
 
-      it 'returns true if the given user is a space application supporter' do
-        space.add_application_supporter(user)
-        expect(space.has_application_supporter?(user)).to be true
+      it 'returns true if the given user is a space supporter' do
+        space.add_supporter(user)
+        expect(space.has_supporter?(user)).to be true
       end
 
       it 'returns false if the given user is a space developer' do
         space.add_developer(user)
-        expect(space.has_application_supporter?(user)).to be false
+        expect(space.has_supporter?(user)).to be false
       end
 
       it 'returns false if the given user is a space auditor' do
         space.add_auditor(user)
-        expect(space.has_application_supporter?(user)).to be false
+        expect(space.has_supporter?(user)).to be false
       end
 
       it 'returns false if the given user is a space manager' do
         space.add_manager(user)
-        expect(space.has_application_supporter?(user)).to be false
+        expect(space.has_supporter?(user)).to be false
       end
 
       it 'returns false if the given user is nil' do
-        expect(space.has_application_supporter?(nil)).to be false
+        expect(space.has_supporter?(nil)).to be false
       end
     end
 

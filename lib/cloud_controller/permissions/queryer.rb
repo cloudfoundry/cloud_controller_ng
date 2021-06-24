@@ -119,9 +119,9 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def readable_application_supporter_space_guids
-    science 'readable_application_supporter_space_guids' do |e|
-      e.use { db_permissions.readable_application_supporter_space_guids }
+  def readable_supporter_space_guids
+    science 'readable_supporter_space_guids' do |e|
+      e.use { db_permissions.readable_supporter_space_guids }
 
       e.compare { |a, b| compare_arrays(a, b) }
 

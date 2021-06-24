@@ -41,7 +41,7 @@ RSpec.describe 'App Features' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)
         %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
-           space_application_supporter].each do |r|
+           space_supporter].each do |r|
           h[r] = {
             code: 200,
             response_object: features_response_object
@@ -54,7 +54,7 @@ RSpec.describe 'App Features' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -62,7 +62,7 @@ RSpec.describe 'App Features' do
     let(:expected_codes_and_responses) do
       h = Hash.new(code: 404)
       %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
-         space_application_supporter].each do |r|
+         space_supporter].each do |r|
         h[r] = {
           code: 200,
           response_object: feature_response_object
@@ -85,7 +85,7 @@ RSpec.describe 'App Features' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'revisions app feature' do
@@ -98,7 +98,7 @@ RSpec.describe 'App Features' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -133,7 +133,7 @@ RSpec.describe 'App Features' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'revisions app feature' do
@@ -151,7 +151,7 @@ RSpec.describe 'App Features' do
         %w[no_role org_auditor org_billing_manager].each do |r|
           h[r] = { code: 404 }
         end
-        %w[admin space_developer space_application_supporter].each do |r|
+        %w[admin space_developer space_supporter].each do |r|
           h[r] = {
             code: 200,
             response_object: feature_response_object
@@ -160,7 +160,7 @@ RSpec.describe 'App Features' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 end

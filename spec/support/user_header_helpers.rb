@@ -88,8 +88,8 @@ module UserHeaderHelpers
     when 'space_developer'
       space.add_developer(current_user)
       set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
-    when 'space_application_supporter'
-      space.add_application_supporter(current_user)
+    when 'space_supporter'
+      space.add_supporter(current_user)
       set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'space_auditor'
       space.add_auditor(current_user)

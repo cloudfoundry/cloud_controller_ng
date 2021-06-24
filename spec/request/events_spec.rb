@@ -115,14 +115,14 @@ RSpec.describe 'Events' do
 
         h['space_auditor'] = { code: 200, response_objects: [space_scoped_event_json] }
         h['space_developer'] = { code: 200, response_objects: [space_scoped_event_json] }
-        h['space_application_supporter'] = { code: 200, response_objects: [space_scoped_event_json] }
+        h['space_supporter'] = { code: 200, response_objects: [space_scoped_event_json] }
 
         h['org_auditor'] = { code: 200, response_objects: [org_scoped_event_json, space_scoped_event_json] }
 
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'filtering by type' do
@@ -272,12 +272,12 @@ RSpec.describe 'Events' do
               org_auditor
               space_auditor
               space_developer
-              space_application_supporter
+              space_supporter
             )
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'and the space has been deleted' do
           before do
@@ -357,7 +357,7 @@ RSpec.describe 'Events' do
             code: 404,
             response_object: []
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 404,
             response_object: []
           }
@@ -380,7 +380,7 @@ RSpec.describe 'Events' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'and the org has been deleted' do
           before do
@@ -458,7 +458,7 @@ RSpec.describe 'Events' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
 

@@ -206,7 +206,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -459,13 +459,13 @@ RSpec.describe 'Spaces' do
         h['space_manager'] =               { code: 200, response_guids: [space1.guid] }
         h['space_auditor'] =               { code: 200, response_guids: [space1.guid] }
         h['space_developer'] =             { code: 200, response_guids: [space1.guid] }
-        h['space_application_supporter'] = { code: 200, response_guids: [space1.guid] }
+        h['space_supporter'] = { code: 200, response_guids: [space1.guid] }
 
         h['no_role'] = { code: 200, response_objects: [] }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -618,7 +618,7 @@ RSpec.describe 'Spaces' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -769,7 +769,7 @@ RSpec.describe 'Spaces' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -852,7 +852,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.update',
@@ -1023,7 +1023,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.delete-request',
@@ -1081,11 +1081,11 @@ RSpec.describe 'Spaces' do
 
         h['admin'] = { code: 202 }
         h['space_developer'] = { code: 202 }
-        h['space_application_supporter'] = { code: 202 }
+        h['space_supporter'] = { code: 202 }
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when user does not specify unmapped query param' do
@@ -1156,7 +1156,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 

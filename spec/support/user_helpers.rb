@@ -80,8 +80,8 @@ module UserHelpers
     when 'space_developer'
       space.add_developer(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
-    when 'spaces_application_supporters'
-      space.add_application_supporter(current_user)
+    when 'space_supporters'
+      space.add_supporter(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
     when 'space_auditor'
       space.add_auditor(current_user)
@@ -276,7 +276,7 @@ module UserHelpers
 
   def stub_readable_space_guids_for(user, spaces)
     allow(permissions_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
-    allow(permissions_double(user)).to receive(:readable_application_supporter_space_guids).and_return(spaces.map(&:guid))
+    allow(permissions_double(user)).to receive(:readable_supporter_space_guids).and_return(spaces.map(&:guid))
   end
 
   def stub_readable_org_guids_for(user, orgs)
