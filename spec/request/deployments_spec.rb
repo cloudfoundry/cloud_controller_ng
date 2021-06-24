@@ -86,11 +86,11 @@ RSpec.describe 'Deployments' do
         h = Hash.new(
           code: 422,
         )
-        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 201, response_object: expected_response }
+        h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 201, response_object: expected_response }
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when a droplet is supplied with the request' do
@@ -927,7 +927,7 @@ RSpec.describe 'Deployments' do
       h.freeze
     }
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/deployments/' do
@@ -1113,7 +1113,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1161,7 +1161,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1202,7 +1202,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1366,11 +1366,11 @@ RSpec.describe 'Deployments' do
         h = Hash.new(
           code: 404,
         )
-        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 200 }
+        h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 200 }
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the deployment is running and has a previous droplet' do

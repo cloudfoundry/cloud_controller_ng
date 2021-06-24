@@ -368,7 +368,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -454,7 +454,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -587,7 +587,7 @@ RSpec.describe 'Processes' do
       end
 
       # while this endpoint returns a list, it's easier to test as a single object since it doesn't paginate
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -667,14 +667,14 @@ RSpec.describe 'Processes' do
         h = Hash.new(code: 403)
         h['admin'] = { code: 200, response_object: expected_response }
         h['space_developer'] = { code: 200, response_object: expected_response }
-        h['space_application_supporter'] = { code: 200, response_object: expected_response }
+        h['space_supporter'] = { code: 200, response_object: expected_response }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     it 'updates the process' do
@@ -961,14 +961,14 @@ RSpec.describe 'Processes' do
         h = Hash.new(code: 403)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
-        h['space_application_supporter'] = { code: 204 }
+        h['space_supporter'] = { code: 204 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1162,7 +1162,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1248,7 +1248,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1541,14 +1541,14 @@ RSpec.describe 'Processes' do
         h = Hash.new(code: 403)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
-        h['space_application_supporter'] = { code: 204 }
+        h['space_supporter'] = { code: 204 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 end

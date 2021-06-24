@@ -110,12 +110,12 @@ module VCAP::CloudController
           }
         end
 
-        context 'creating a space application supporter' do
-          let(:type) { RoleTypes::SPACE_APPLICATION_SUPPORTER }
+        context 'creating a space supporter' do
+          let(:type) { RoleTypes::SPACE_SUPPORTER }
 
           it_behaves_like 'space role creation', {
-            model: VCAP::CloudController::SpaceApplicationSupporter,
-            event_type: 'audit.user.space_application_supporter_add'
+            model: VCAP::CloudController::SpaceSupporter,
+            event_type: 'audit.user.space_supporter_add'
           }
         end
       end

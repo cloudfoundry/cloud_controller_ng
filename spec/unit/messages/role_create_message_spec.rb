@@ -129,12 +129,12 @@ module VCAP::CloudController
         end
       end
 
-      describe 'space_application_supporter role' do
-        let(:type) { 'space_application_supporter' }
+      describe 'space_supporter role' do
+        let(:type) { 'space_supporter' }
 
         context 'when the config flag is enabled' do
           it 'is valid' do
-            TestConfig.override(temporary_enable_space_application_supporter_role: true)
+            TestConfig.override(temporary_enable_space_supporter_role: true)
             message = RoleCreateMessage.new(space_params)
             expect(message).to be_valid
           end
@@ -142,7 +142,7 @@ module VCAP::CloudController
 
         context 'when the flag is disabled' do
           it 'is invalid' do
-            TestConfig.override(temporary_enable_space_application_supporter_role: false)
+            TestConfig.override(temporary_enable_space_supporter_role: false)
             message = RoleCreateMessage.new(space_params)
             expect(message).not_to be_valid
           end
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
       context 'for space roles' do
         before do
-          TestConfig.override(temporary_enable_space_application_supporter_role: true)
+          TestConfig.override(temporary_enable_space_supporter_role: true)
         end
         VCAP::CloudController::RoleTypes::SPACE_ROLES.each do |space_type|
           context "when the type is #{space_type}" do
@@ -181,7 +181,7 @@ module VCAP::CloudController
 
       context 'for org roles' do
         before do
-          TestConfig.override(temporary_enable_space_application_supporter_role: true)
+          TestConfig.override(temporary_enable_space_supporter_role: true)
         end
 
         VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.each do |org_type|
@@ -220,7 +220,7 @@ module VCAP::CloudController
         expect(message.errors.full_messages).to eq([
           "Relationships 'relationships' is not an object",
           'Type must be one of the allowed types ["organization_auditor", "organization_manager", ' \
-          '"organization_billing_manager", "organization_user", "space_auditor", "space_manager", "space_developer", "space_application_supporter"]'
+          '"organization_billing_manager", "organization_user", "space_auditor", "space_manager", "space_developer", "space_supporter"]'
         ])
       end
     end

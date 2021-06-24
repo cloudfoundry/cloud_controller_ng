@@ -14,10 +14,10 @@ module VCAP::CloudController
         message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
       }
     validates :type,
-      unless: -> { Config.config.get(:temporary_enable_space_application_supporter_role) },
+      unless: -> { Config.config.get(:temporary_enable_space_supporter_role) },
       exclusion: {
-        in: [VCAP::CloudController::RoleTypes::SPACE_APPLICATION_SUPPORTER],
-        message: 'space application support role not enabled',
+        in: [VCAP::CloudController::RoleTypes::SPACE_SUPPORTER],
+        message: 'space supporter role not enabled',
       }
 
     delegate :space_guid, :user_guid, :organization_guid, :username, :user_origin, to: :relationships_message
