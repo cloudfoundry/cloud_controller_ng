@@ -89,6 +89,8 @@ module VCAP::CloudController
               log_level: String, # debug, info, etc.
               log_db_queries: bool,
               connection_validation_timeout: Integer,
+              optional(:connection_expiration_timeout) => Integer,
+              optional(:connection_expiration_random_delay) => Integer,
               optional(:ssl_verify_hostname) => bool,
               optional(:ca_cert_path) => String,
             },
