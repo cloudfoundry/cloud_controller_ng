@@ -867,6 +867,77 @@ RSpec.describe 'Processes' do
       expect(process.memory).to eq(1024)
     end
 
+    context 'when the user is assigned the space_supporter role' do
+      before do
+        org.add_user(user)
+        space.add_application_supporter(user)
+      end
+
+      let(:process) do
+        VCAP::CloudController::ProcessModel.make(
+          :process,
+          app:        app_model,
+          type:       'web',
+          instances:  2,
+          memory:     1024,
+          disk_quota: 1024,
+          command:    'rackup',
+        )
+      end
+
+      let(:scale_request) do {
+        instances:    5,
+        memory_in_mb: 10,
+        disk_in_mb:   20,
+      }
+      end
+
+      let(:expected_response) do
+        {
+          'guid'         => process.guid,
+          'type'         => 'web',
+
+          'relationships' => {
+            'app' => { 'data' => { 'guid' => app_model.guid } },
+            'revision' => nil,
+          },
+          'command'      => 'rackup',
+          'instances'    => 5,
+          'memory_in_mb' => 10,
+          'disk_in_mb'   => 20,
+          'health_check' => {
+            'type' => 'port',
+            'data' => {
+              'timeout' => nil,
+              'invocation_timeout' => nil
+            }
+          },
+          'metadata' => { 'annotations' => {}, 'labels' => {} },
+          'created_at'   => iso8601,
+          'updated_at'   => iso8601,
+          'links'        => {
+            'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+            'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
+            'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+            'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          },
+        }
+      end
+
+      it 'can scale a process' do
+        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        process.reload
+        expect(process.instances).to eq(5)
+        expect(process.memory).to eq(10)
+        expect(process.disk_quota).to eq(20)
+      end
+    end
+
     context 'telemetry' do
       let(:process) {
         VCAP::CloudController::ProcessModel.make(
@@ -1356,25 +1427,27 @@ RSpec.describe 'Processes' do
   end
 
   describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
-    let!(:process) { VCAP::CloudController::ProcessModel.make(
-      :process,
-      app:        app_model,
-      type:       'web',
-      instances:  2,
-      memory:     1024,
-      disk_quota: 1024,
-      command:    'rackup',
-    )
-    }
+    let!(:process) do
+      VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+      )
+    end
+
     let(:scale_request) do {
       instances:    5,
       memory_in_mb: 10,
       disk_in_mb:   20,
     }
     end
-    it 'scales the process belonging to an app' do
-      post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
-      expected_response = {
+
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
 
@@ -1404,7 +1477,10 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
 
+    it 'scales the process belonging to an app' do
+      post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(202)
@@ -1438,6 +1514,25 @@ RSpec.describe 'Processes' do
           'disk_in_mb'   => 20
         }
       })
+    end
+
+    context 'when the user is assigned the space_supporter role' do
+      before do
+        org.add_user(user)
+        space.add_application_supporter(user)
+      end
+
+      it 'can scale a process' do
+        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        process.reload
+        expect(process.instances).to eq(5)
+        expect(process.memory).to eq(10)
+        expect(process.disk_quota).to eq(20)
+      end
     end
 
     context 'telemetry' do
