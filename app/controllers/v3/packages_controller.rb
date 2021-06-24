@@ -27,7 +27,7 @@ class PackagesController < ApplicationController
       dataset = if permission_queryer.can_read_globally?
                   PackageListFetcher.fetch_all(message: message)
                 else
-                  PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_application_supporter_space_guids)
+                  PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_supporter_space_guids)
                 end
     end
 

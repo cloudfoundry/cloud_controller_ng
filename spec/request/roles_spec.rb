@@ -88,7 +88,7 @@ RSpec.describe 'Roles Request' do
         org.add_user(user_with_role)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when user is invalid' do
         let(:params) do
@@ -207,7 +207,7 @@ RSpec.describe 'Roles Request' do
         org.add_user(user_with_role)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when organization is invalid' do
         let(:params) do
@@ -315,7 +315,7 @@ RSpec.describe 'Roles Request' do
           org.add_user(user_with_role)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when there are multiple users with the same username' do
@@ -437,7 +437,7 @@ RSpec.describe 'Roles Request' do
         allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'creating a role by username and origin' do
@@ -508,7 +508,7 @@ RSpec.describe 'Roles Request' do
         org.add_user(user_with_role)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when the flag to set roles by username is disabled' do
         before do
@@ -543,7 +543,7 @@ RSpec.describe 'Roles Request' do
           h['org_billing_manager'] = { code: 422 }
           h
         end
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when there is no user with the given username and origin' do
@@ -672,7 +672,7 @@ RSpec.describe 'Roles Request' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'when the flag to set roles by username is disabled' do
           before do
@@ -688,7 +688,7 @@ RSpec.describe 'Roles Request' do
             h
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
         end
       end
     end
@@ -1024,13 +1024,13 @@ RSpec.describe 'Roles Request' do
           )
         }
 
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_objects: contain_exactly(
             space_auditor_response_object,
             org_auditor_response_object,
             make_org_role_for_current_user('organization_user'),
-            make_space_role_for_current_user('space_application_supporter')
+            make_space_role_for_current_user('space_supporter')
           )
         }
 
@@ -1038,7 +1038,7 @@ RSpec.describe 'Roles Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -1076,7 +1076,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
     context 'listing roles with overlapping timestamps' do
       let!(:user_jeff) { VCAP::CloudController::User.make(guid: 'jeff-guid') }
@@ -1363,7 +1363,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         org.add_user(user_with_role)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when getting a org role' do
@@ -1400,7 +1400,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the role does not exist' do
@@ -1561,7 +1561,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when deleting an org role' do
@@ -1575,7 +1575,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'and the user still has a role in a space within that org' do
         let(:org_user_role) { VCAP::CloudController::OrganizationUser.find(user_id: user_with_role.id) }

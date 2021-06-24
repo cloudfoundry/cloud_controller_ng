@@ -26,9 +26,9 @@ module ModelCreation
     user
   end
 
-  def make_application_supporter_for_space(space)
+  def make_supporter_for_space(space)
     user = make_user_for_org space.organization
-    space.add_application_supporter user
+    space.add_supporter user
     user
   end
 

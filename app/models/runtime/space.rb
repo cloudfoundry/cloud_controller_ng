@@ -5,7 +5,7 @@ module VCAP::CloudController
   class Space < Sequel::Model
     class InvalidDeveloperRelation < CloudController::Errors::InvalidRelation; end
     class InvalidAuditorRelation < CloudController::Errors::InvalidRelation; end
-    class InvalidApplicationSupporterRelation < CloudController::Errors::InvalidRelation; end
+    class InvalidSupporterRelation < CloudController::Errors::InvalidRelation; end
     class InvalidManagerRelation < CloudController::Errors::InvalidRelation; end
     class InvalidSpaceQuotaRelation < CloudController::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
@@ -30,7 +30,7 @@ module VCAP::CloudController
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
-    define_user_group :application_supporters, reciprocal: :application_supporter_spaces, before_add: :validate_application_supporter
+    define_user_group :application_supporters, reciprocal: :application_supporter_spaces, before_add: :validate_supporter
 
     many_to_one :organization, before_set: :validate_change_organization
 
@@ -173,9 +173,9 @@ module VCAP::CloudController
       self.reload
     end
 
-    def add_application_supporter(user)
-      validate_application_supporter(user)
-      SpaceApplicationSupporter.find_or_create(user_id: user.id, space_id: id)
+    def add_supporter(user)
+      validate_supporter(user)
+      SpaceSupporter.find_or_create(user_id: user.id, space_id: id)
       self.reload
     end
 
@@ -195,7 +195,7 @@ module VCAP::CloudController
       user.present? && developers_dataset.where(user_id: user.id).present?
     end
 
-    def has_application_supporter?(user)
+    def has_supporter?(user)
       user.present? && application_supporters_dataset.where(user_id: user.id).present?
     end
 
@@ -238,8 +238,8 @@ module VCAP::CloudController
       raise InvalidDeveloperRelation.new(user.guid) unless in_organization?(user)
     end
 
-    def validate_application_supporter(user)
-      raise InvalidApplicationSupporterRelation.new(user.guid) unless in_organization?(user)
+    def validate_supporter(user)
+      raise InvalidSupporterRelation.new(user.guid) unless in_organization?(user)
     end
 
     def validate_manager(user)

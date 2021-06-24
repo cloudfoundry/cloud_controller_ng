@@ -24,8 +24,8 @@ module VCAP::CloudController
         create_space_developer(user, space)
       when RoleTypes::SPACE_MANAGER
         create_space_manager(user, space)
-      when RoleTypes::SPACE_APPLICATION_SUPPORTER
-        create_space_application_supporter(user, space)
+      when RoleTypes::SPACE_SUPPORTER
+        create_space_supporter(user, space)
       else
         error!("Role type '#{type}' is invalid.")
       end
@@ -74,9 +74,9 @@ module VCAP::CloudController
       SpaceManager.create(user_id: user.id, space_id: space.id)
     end
 
-    def create_space_application_supporter(user, space)
-      record_space_event(space, user, 'application_supporter')
-      SpaceApplicationSupporter.create(user_id: user.id, space_id: space.id)
+    def create_space_supporter(user, space)
+      record_space_event(space, user, 'supporter')
+      SpaceSupporter.create(user_id: user.id, space_id: space.id)
     end
 
     def create_organization_user(user, organization)

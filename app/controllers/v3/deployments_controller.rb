@@ -15,7 +15,7 @@ class DeploymentsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 DeploymentListFetcher.fetch_all(message)
               else
-                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_application_supporter_space_guids)
+                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_supporter_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

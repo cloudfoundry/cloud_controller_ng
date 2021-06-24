@@ -37,7 +37,7 @@ module VCAP::CloudController
         let(:user) { User.make }
 
         [
-          SpaceApplicationSupporter,
+          SpaceSupporter,
           SpaceAuditor,
           SpaceDeveloper,
           SpaceManager,
