@@ -60,7 +60,7 @@ module VCAP::CloudController
     def self.add_connection_expiration_extension(db, opts)
       if opts[:connection_expiration_timeout]
         db.extension(:connection_expiration)
-        db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout]
+        db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout] if opts[:connection_expiration_timeout]
         db.pool.connection_expiration_random_delay = opts[:connection_expiration_random_delay] if opts[:connection_expiration_random_delay]
         # So that there are no existing connections without an expiration timestamp
         db.disconnect
