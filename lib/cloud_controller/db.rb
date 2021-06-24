@@ -38,6 +38,7 @@ module VCAP::CloudController
         db.extension(:query_length_logging)
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
+      add_connection_expiration_extension(db, opts)
       add_connection_validator_extension(db, opts)
       db
     end
@@ -54,6 +55,16 @@ module VCAP::CloudController
     def self.add_connection_validator_extension(db, opts)
       db.extension(:connection_validator)
       db.pool.connection_validation_timeout = opts[:connection_validation_timeout] if opts[:connection_validation_timeout]
+    end
+
+    def self.add_connection_expiration_extension(db, opts)
+      if opts[:connection_expiration_timeout]
+        db.extension(:connection_expiration)
+        db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout] if opts[:connection_expiration_timeout]
+        db.pool.connection_expiration_random_delay = opts[:connection_expiration_random_delay] if opts[:connection_expiration_random_delay]
+        # So that there are no existing connections without an expiration timestamp
+        db.disconnect
+      end
     end
 
     def self.load_models(db_config, logger)
