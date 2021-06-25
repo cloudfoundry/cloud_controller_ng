@@ -5,10 +5,24 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    # TODO: here is where the create action is!
     def create(service_instance, target_spaces, user_audit_info)
       validate_supported_service_type!(service_instance)
       validate_service_instance_is_shareable!(service_instance)
       validate_target_spaces!(service_instance, target_spaces)
+
+      if target_spaces.length > 1
+        shared_service_names = target_spaces[0]
+
+        # Find all the services with the same name
+        target_spaces.drop(1).each do |space|
+          shared_service_names &= space
+        end
+
+        if !shared_service_names.empty?
+          raise CloudController::Errors::ApiError.new_from_details('MultipleServicesShareTheSameName').with_response_code(422)
+        end
+      end
 
       ServiceInstance.db.transaction do
         target_spaces.each do |space|
@@ -52,6 +66,7 @@ module VCAP::CloudController
       end
     end
 
+    # TODO: this is where the work will be done
     def validate_name_uniqueness!(service_instance, space)
       if space.service_instances.map(&:name).include?(service_instance.name)
         error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}."

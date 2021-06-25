@@ -113,13 +113,14 @@ module VCAP::CloudController
 
       # TODO: here is where the work is being done
       context 'when a service instance already exists in the target space with the same name as the service being shared: NAME IN PROGRESS' do
-        let(:service_instance) { ManagedServiceInstance.make(name: 'banana') }
+        # let(:service_instance) { ManagedServiceInstance.make(name: 'banana') }
         let!(:target_space_service_instance) { ManagedServiceInstance.make(name: 'banana', space: target_space1) }
+        let!(:target_space_service_instance2) { ManagedServiceInstance.make(name: 'banana', space: target_space2) }
 
-        it 'raises an api error' do
+        it 'should fail with a 422 error' do
           expect {
-            service_instance_share.create(service_instance, [target_space1], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, /A service instance called #{service_instance.name} already exists in #{target_space1.name}/)
+            service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
+          }.to raise_error(CloudController::Errors::ApiError, /MultipleServicesShareTheSameName/)
           expect(service_instance.shared_spaces).to be_empty
         end
       end
