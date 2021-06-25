@@ -53,7 +53,7 @@ class ProcessesController < ApplicationController
   end
 
   def update
-    message = ProcessUpdateMessage.new(unmunged_body)
+    message = ProcessUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     ProcessUpdate.new(user_audit_info).update(@process, message, NonManifestStrategy)
