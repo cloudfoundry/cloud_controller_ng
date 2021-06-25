@@ -116,7 +116,7 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def update_default_isolation_segment
-    message = OrgDefaultIsoSegUpdateMessage.new(unmunged_body)
+    message = OrgDefaultIsoSegUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_editable_org(hashed_params[:guid])
