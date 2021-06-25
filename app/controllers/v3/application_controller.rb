@@ -80,10 +80,6 @@ class ApplicationController < ActionController::Base
     request.query_parameters.with_indifferent_access
   end
 
-  def unmunged_body
-    JSON.parse(request.body.string)
-  end
-
   def parsed_yaml
     return @parsed_yaml if @parsed_yaml
 
