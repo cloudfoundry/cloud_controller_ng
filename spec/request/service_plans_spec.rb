@@ -3,9 +3,8 @@ require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 require 'hashdiff'
 
-SPACE_APPLICATION_SUPPORTER = %w[space_application_supporter].freeze
 UNAUTHENTICATED = %w[unauthenticated].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + UNAUTHENTICATED + SPACE_APPLICATION_SUPPORTER).freeze
+COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + UNAUTHENTICATED).freeze
 
 RSpec.describe 'V3 service plans' do
   let(:user) { VCAP::CloudController::User.make }
@@ -22,7 +21,7 @@ RSpec.describe 'V3 service plans' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when there is a public service plan' do
@@ -42,7 +41,7 @@ RSpec.describe 'V3 service plans' do
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
 
       context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
         before do
@@ -70,7 +69,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'space scoped broker' do
@@ -94,7 +93,7 @@ RSpec.describe 'V3 service plans' do
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
     end
 
@@ -280,7 +279,7 @@ RSpec.describe 'V3 service plans' do
         end
       end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
 
       context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
         before do
@@ -644,7 +643,7 @@ RSpec.describe 'V3 service plans' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when the service plan exists and has no service instances' do
@@ -662,7 +661,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is public' do
@@ -675,7 +674,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is visible only on some orgs' do
@@ -693,7 +692,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is from a space-scoped service broker' do
@@ -714,7 +713,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
     end
 
@@ -813,7 +812,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is public' do
@@ -826,7 +825,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is visible only on some orgs' do
@@ -844,7 +843,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
 
       context 'when the plan is from a space-scoped service broker' do
@@ -865,7 +864,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS + ['space_application_supporter']
       end
     end
   end
