@@ -1,9 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 
-SPACE_APPLICATION_SUPPORTER = %w[space_application_supporter].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + SPACE_APPLICATION_SUPPORTER).freeze
-
 RSpec.describe 'Deployments' do
   let(:user) {  VCAP::CloudController::User.make }
   let(:space) { app_model.space }
@@ -949,7 +946,7 @@ RSpec.describe 'Deployments' do
       h
     end
 
-    it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/deployments/' do
@@ -1135,7 +1132,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1183,7 +1180,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1224,7 +1221,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1372,7 +1369,7 @@ RSpec.describe 'Deployments' do
       let(:headers) { admin_headers }
     end
 
-    it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS do
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
       let(:api_call) do
         lambda { |headers| get "/v3/deployments", nil, headers }
       end
