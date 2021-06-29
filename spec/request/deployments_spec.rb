@@ -1128,7 +1128,6 @@ RSpec.describe 'Deployments' do
                 ),
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
@@ -1177,7 +1176,6 @@ RSpec.describe 'Deployments' do
                 )
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
@@ -1219,7 +1217,6 @@ RSpec.describe 'Deployments' do
                   VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON),
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
