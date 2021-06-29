@@ -19,7 +19,7 @@ module VCAP::CloudController
         it 'logs the number of returned rows over threshold' do
           10.times { Space.make }
           Space.all
-          expect(logs.string).to match 'Loaded 10 records for query SELECT \* FROM "spaces"'
+          expect(logs.string).to match 'Loaded 10 records for query SELECT \* FROM [`"]spaces[`"]'
         end
 
         it 'does not log the number of returned rows under threshold' do
