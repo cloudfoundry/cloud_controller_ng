@@ -1438,9 +1438,11 @@ RSpec.describe 'Deployments' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_object: deployments_response_object)
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
+        h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
+          code: 200,
+          response_objects: []
+        }
+        h.freeze
       end
     end
   end
