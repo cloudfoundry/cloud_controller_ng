@@ -726,8 +726,8 @@ RSpec.describe 'Processes' do
   end
 
   describe 'POST /v3/processes/:guid/actions/scale' do
-    it 'scales the process' do
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         type:       'web',
@@ -736,18 +736,13 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
+    end
 
-      scale_request = {
-        instances:    5,
-        memory_in_mb: 10,
-        disk_in_mb:   20,
-      }
-
-      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-
-      expected_response = {
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
+
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => nil,
@@ -763,10 +758,10 @@ RSpec.describe 'Processes' do
             'invocation_timeout' => nil
           }
         },
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        'metadata' => { 'annotations' => {}, 'labels' => {} },
-        'links' => {
+        'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -774,6 +769,16 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+
+    it 'scales the process' do
+      scale_request = {
+        instances:    5,
+        memory_in_mb: 10,
+        disk_in_mb:   20,
+      }
+
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -810,24 +815,37 @@ RSpec.describe 'Processes' do
       })
     end
 
-    it 'returns a helpful error when the meemory is too large' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
+    context 'when the user is assigned the space_supporter role' do
+      before do
+        org.add_user(user)
+        space.add_application_supporter(user)
+      end
 
+      it 'can scale a process' do
+        scale_request = {
+          instances:    5,
+          memory_in_mb: 10,
+          disk_in_mb:   20,
+        }
+
+        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        process.reload
+        expect(process.instances).to eq(5)
+        expect(process.memory).to eq(10)
+        expect(process.disk_quota).to eq(20)
+      end
+    end
+
+    it 'returns a helpful error when the meemory is too large' do
       scale_request = {
         memory_in_mb: 100000000000,
       }
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-
-      # parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(422)
       expect(parsed_response['errors'][0]['detail']).to eq 'Memory in mb must be less than or equal to 2147483647'
@@ -837,16 +855,6 @@ RSpec.describe 'Processes' do
     end
 
     it 'ensures that the memory allocation is greater than existing sidecar memory allocation' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
-
       sidecar = VCAP::CloudController::SidecarModel.make(
         name: 'my-sidecar',
         app: app_model,
@@ -865,77 +873,6 @@ RSpec.describe 'Processes' do
 
       process.reload
       expect(process.memory).to eq(1024)
-    end
-
-    context 'when the user is assigned the space_supporter role' do
-      before do
-        org.add_user(user)
-        space.add_application_supporter(user)
-      end
-
-      let(:process) do
-        VCAP::CloudController::ProcessModel.make(
-          :process,
-          app:        app_model,
-          type:       'web',
-          instances:  2,
-          memory:     1024,
-          disk_quota: 1024,
-          command:    'rackup',
-        )
-      end
-
-      let(:scale_request) do {
-        instances:    5,
-        memory_in_mb: 10,
-        disk_in_mb:   20,
-      }
-      end
-
-      let(:expected_response) do
-        {
-          'guid'         => process.guid,
-          'type'         => 'web',
-
-          'relationships' => {
-            'app' => { 'data' => { 'guid' => app_model.guid } },
-            'revision' => nil,
-          },
-          'command'      => 'rackup',
-          'instances'    => 5,
-          'memory_in_mb' => 10,
-          'disk_in_mb'   => 20,
-          'health_check' => {
-            'type' => 'port',
-            'data' => {
-              'timeout' => nil,
-              'invocation_timeout' => nil
-            }
-          },
-          'metadata' => { 'annotations' => {}, 'labels' => {} },
-          'created_at'   => iso8601,
-          'updated_at'   => iso8601,
-          'links'        => {
-            'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-            'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
-            'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-            'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
-          },
-        }
-      end
-
-      it 'can scale a process' do
-        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-
-        expect(last_response.status).to eq(202)
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        process.reload
-        expect(process.instances).to eq(5)
-        expect(process.memory).to eq(10)
-        expect(process.disk_quota).to eq(20)
-      end
     end
 
     context 'telemetry' do
