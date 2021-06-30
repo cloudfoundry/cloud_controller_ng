@@ -163,7 +163,8 @@ module VCAP::CloudController
           process_type: destination.process_type,
           app_port: destination.app_port,
           route: route,
-          weight: destination.weight
+          weight: destination.weight,
+          http_version: destination.http_version
         }
       end
 

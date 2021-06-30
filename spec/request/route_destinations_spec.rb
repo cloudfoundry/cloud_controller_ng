@@ -235,7 +235,8 @@ RSpec.describe 'Route Destinations Request' do
               process: {
                 type: 'web'
               }
-            }
+            },
+            http_version: 2
           },
           {
             app: {

@@ -17,12 +17,14 @@ module VCAP::CloudController
         app_guid = HashUtils.dig(dst, :app, :guid)
         process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
         weight = HashUtils.dig(dst, :weight)
+        http_version = HashUtils.dig(dst, :http_version)
 
         new_route_mappings << {
           app_guid: app_guid,
           process_type: process_type,
           app_port: dst[:port],
-          weight: weight
+          weight: weight,
+          http_version: http_version
         }
       end
 
@@ -58,7 +60,7 @@ module VCAP::CloudController
           next
         end
 
-        unless (dst.keys - [:app, :weight, :port]).empty?
+        unless (dst.keys - [:app, :weight, :port, :http_version]).empty?
           add_destination_error(index, 'must have only "app" and optionally "weight" and "port".')
           next
         end

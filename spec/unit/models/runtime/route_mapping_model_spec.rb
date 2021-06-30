@@ -29,6 +29,11 @@ module VCAP::CloudController
         route_mapping = RouteMappingModel.make(app: app_model, route: route, process_type: web_process.type)
         expect(route_mapping.process.guid).to eq(newer_web_process.guid)
       end
+
+      fit 'returns the newest process for the given type to maintain backwards compatibility with v2' do
+        route_mapping = RouteMappingModel.make(app: app_model, route: route, process_type: web_process.type, http_version: nil)
+        expect(route_mapping.process.guid).to eq(newer_web_process.guid)
+      end
     end
 
     describe '#presented_port' do
