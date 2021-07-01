@@ -26,12 +26,13 @@ Content-Type: application/json
 `GET /v3/apps/:guid/processes/:type/stats`
 
 #### Permitted roles
- |
+Role | Notes |
 --- | ---
 Admin |
 Admin Read-Only |
-Global Auditor |
-Org Manager |
-Space Auditor |
+Global Auditor | Some fields are redacted
+Org Manager | Some fields are redacted
+Space Application Supporter | Some fields are redacted. Experimental |
+Space Auditor | Some fields are redacted
 Space Developer |
-Space Manager |
+Space Manager | Some fields are redacted

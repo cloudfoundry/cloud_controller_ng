@@ -31,3 +31,4 @@ This allows a user to stop a single misbehaving instance of a process.
 --- | ---
 Admin |
 Space Developer |
+Space Supporter |
