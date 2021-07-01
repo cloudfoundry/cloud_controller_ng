@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Processes' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { VCAP::CloudController::Organization.make }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
   let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
@@ -51,8 +52,6 @@ RSpec.describe 'Processes' do
       )
     }
 
-    before { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
-
     it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::ProcessesListMessage }
       let(:request) { '/v3/processes' }
@@ -94,11 +93,11 @@ RSpec.describe 'Processes' do
 
       expected_response = {
         'pagination' => {
-          'total_results' => 3,
-          'total_pages'   => 2,
+          'total_results' => 2,
+          'total_pages'   => 1,
           'first'         => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
-          'next'          => { 'href' => "#{link_prefix}/v3/processes?page=2&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/processes?page=1&per_page=2" },
+          'next'          => nil,
           'previous'      => nil,
         },
         'resources' => [
@@ -357,12 +356,26 @@ RSpec.describe 'Processes' do
         end
       end
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get '/v3/processes', nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: [web_process.guid, worker_process.guid])
+        h['org_auditor'] = { code: 200, response_guids: [] }
+        h['org_billing_manager'] = { code: 200, response_guids: [] }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'GET /v3/processes/:guid' do
-    it 'retrieves the process' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         revision:   revision,
@@ -372,10 +385,9 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-
-      get "/v3/processes/#{process.guid}", nil, developer_headers
-
-      expected_response = {
+    end
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
         'relationships' => {
@@ -404,6 +416,10 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+
+    it 'retrieves the process' do
+      get "/v3/processes/#{process.guid}", nil, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -412,8 +428,6 @@ RSpec.describe 'Processes' do
     end
 
     it 'redacts information for auditors' do
-      process = VCAP::CloudController::ProcessModel.make(:process, app: app_model, command: 'rackup')
-
       auditor = VCAP::CloudController::User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
@@ -424,6 +438,23 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/processes/#{process.guid}", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['admin_read_only'] = { code: 200, response_object: expected_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_object: nil }
+        h['no_role'] = { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -543,12 +574,27 @@ RSpec.describe 'Processes' do
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/processes/#{process.guid}/stats", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_object: [] }
+        h['no_role'] = { code: 404, response_object: [] }
+        h
+      end
+
+      # while this endpoint returns a list, it's easier to test as a single object since it doesn't paginate
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'PATCH /v3/processes/:guid' do
-    it 'updates the process' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:                  app_model,
         revision:             revision,
@@ -561,9 +607,11 @@ RSpec.describe 'Processes' do
         health_check_type:    'port',
         health_check_timeout: 10
       )
+    end
 
-      update_request = {
-        command:      'new command',
+    let(:update_request) do
+      {
+        command: 'new command',
         health_check: {
           type: 'process',
           data: {
@@ -572,10 +620,10 @@ RSpec.describe 'Processes' do
         },
         metadata: metadata,
       }.to_json
+    end
 
-      patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
-
-      expected_response = {
+    let(:expected_response) do
+      {
         'guid' => process.guid,
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
@@ -610,6 +658,27 @@ RSpec.describe 'Processes' do
           'annotations' => { 'checksum' => 'SHA' },
         },
       }
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/processes/#{process.guid}", update_request, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['space_application_supporter'] = { code: 200, response_object: expected_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
+
+    it 'updates the process' do
+      patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -657,8 +726,8 @@ RSpec.describe 'Processes' do
   end
 
   describe 'POST /v3/processes/:guid/actions/scale' do
-    it 'scales the process' do
-      process = VCAP::CloudController::ProcessModel.make(
+    let(:process) do
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         type:       'web',
@@ -667,18 +736,13 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
+    end
 
-      scale_request = {
-        instances:    5,
-        memory_in_mb: 10,
-        disk_in_mb:   20,
-      }
-
-      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-
-      expected_response = {
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
+
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => nil,
@@ -694,10 +758,10 @@ RSpec.describe 'Processes' do
             'invocation_timeout' => nil
           }
         },
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        'metadata' => { 'annotations' => {}, 'labels' => {} },
-        'links' => {
+        'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -705,6 +769,16 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+
+    it 'scales the process' do
+      scale_request = {
+        instances:    5,
+        memory_in_mb: 10,
+        disk_in_mb:   20,
+      }
+
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -741,24 +815,39 @@ RSpec.describe 'Processes' do
       })
     end
 
-    it 'returns a helpful error when the meemory is too large' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
+    context 'when the user is assigned the space_supporter role' do
+      let(:space_supporter) do
+        user = VCAP::CloudController::User.make
+        org.add_user(user)
+        space.add_application_supporter(user)
+        user
+      end
 
+      it 'can scale a process' do
+        scale_request = {
+          instances:    5,
+          memory_in_mb: 10,
+          disk_in_mb:   20,
+        }
+
+        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, headers_for(space_supporter)
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        process.reload
+        expect(process.instances).to eq(5)
+        expect(process.memory).to eq(10)
+        expect(process.disk_quota).to eq(20)
+      end
+    end
+
+    it 'returns a helpful error when the memory is too large' do
       scale_request = {
         memory_in_mb: 100000000000,
       }
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-
-      # parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(422)
       expect(parsed_response['errors'][0]['detail']).to eq 'Memory in mb must be less than or equal to 2147483647'
@@ -768,16 +857,6 @@ RSpec.describe 'Processes' do
     end
 
     it 'ensures that the memory allocation is greater than existing sidecar memory allocation' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
-
       sidecar = VCAP::CloudController::SidecarModel.make(
         name: 'my-sidecar',
         app: app_model,
@@ -797,6 +876,7 @@ RSpec.describe 'Processes' do
       process.reload
       expect(process.memory).to eq(1024)
     end
+
     context 'telemetry' do
       let(:process) {
         VCAP::CloudController::ProcessModel.make(
@@ -870,6 +950,25 @@ RSpec.describe 'Processes' do
         'process_type'  => 'web',
         'process_index' => 0
       })
+    end
+
+    context 'permissions' do
+      let(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+
+      let(:api_call) { lambda { |user_headers| delete "/v3/processes/#{process.guid}/instances/0", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_application_supporter'] = { code: 204 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -1050,12 +1149,26 @@ RSpec.describe 'Processes' do
         end
       end
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/processes", nil, user_headers } }
+      let(:expected_guids) { [process1.guid, process2.guid, process3.guid, deployment_process.guid] }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: expected_guids)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404, response_guids: nil }
+        h['no_role'] = { code: 404, response_guids: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
   end
 
   describe 'GET /v3/apps/:guid/processes/:type' do
-    it 'retrieves the process for an app with the requested type' do
-      revision = VCAP::CloudController::RevisionModel.make
-      process = VCAP::CloudController::ProcessModel.make(
+    let!(:process) {
+      VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         revision:   revision,
@@ -1065,10 +1178,10 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         command:    'rackup',
       )
-
-      get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
-
-      expected_response = {
+    }
+    let!(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:expected_response) do
+      {
         'guid' => process.guid,
         'relationships' => {
           'app' => { 'data' => { 'guid' => app_model.guid } },
@@ -1097,6 +1210,9 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
+    it 'retrieves the process for an app with the requested type' do
+      get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 
@@ -1117,6 +1233,22 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/processes/web", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h['space_developer'] = { code: 200, response_object: expected_response }
+        h['admin'] = { code: 200, response_object: expected_response }
+        h['admin_read_only'] = { code: 200, response_object: expected_response }
+        h['org_billing_manager'] = { code: 404, response_object: nil }
+        h['org_auditor'] = { code: 404, response_object: nil }
+        h['no_role'] = { code: 404, response_object: nil }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 
@@ -1234,25 +1366,27 @@ RSpec.describe 'Processes' do
   end
 
   describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
-    let!(:process) { VCAP::CloudController::ProcessModel.make(
-      :process,
-      app:        app_model,
-      type:       'web',
-      instances:  2,
-      memory:     1024,
-      disk_quota: 1024,
-      command:    'rackup',
-    )
-    }
+    let!(:process) do
+      VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+      )
+    end
+
     let(:scale_request) do {
       instances:    5,
       memory_in_mb: 10,
       disk_in_mb:   20,
     }
     end
-    it 'scales the process belonging to an app' do
-      post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
-      expected_response = {
+
+    let(:expected_response) do
+      {
         'guid'         => process.guid,
         'type'         => 'web',
 
@@ -1282,7 +1416,10 @@ RSpec.describe 'Processes' do
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
+    end
 
+    it 'scales the process belonging to an app' do
+      post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq(202)
@@ -1318,6 +1455,27 @@ RSpec.describe 'Processes' do
       })
     end
 
+    context 'when the user is assigned the space_supporter role' do
+      let(:space_supporter) do
+        user = VCAP::CloudController::User.make
+        org.add_user(user)
+        space.add_application_supporter(user)
+        user
+      end
+
+      it 'can scale a process' do
+        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, headers_for(space_supporter)
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        process.reload
+        expect(process.instances).to eq(5)
+        expect(process.memory).to eq(10)
+        expect(process.disk_quota).to eq(20)
+      end
+    end
+
     context 'telemetry' do
       it 'should log the required fields when the process gets scaled' do
         Timecop.freeze do
@@ -1348,9 +1506,10 @@ RSpec.describe 'Processes' do
     before do
       allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
     end
-    it 'terminates a single instance of a process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
 
+    let!(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+
+    it 'terminates a single instance of a process belonging to an app' do
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 
       expect(last_response.status).to eq(204)
@@ -1373,6 +1532,23 @@ RSpec.describe 'Processes' do
         'process_type'  => 'web',
         'process_index' => 0
       })
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_application_supporter'] = { code: 204 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
   end
 end
