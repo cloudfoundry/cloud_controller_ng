@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Deployments' do
-  let(:user) { make_developer_for_space(space) }
+  let(:user) { VCAP::CloudController::User.make }
   let(:space) { app_model.space }
   let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
@@ -32,15 +32,9 @@ RSpec.describe 'Deployments' do
           }
         }
       end
-
-      it 'should create a deployment object using the current droplet from the app' do
-        post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
-
-        deployment = VCAP::CloudController::DeploymentModel.last
-
-        expect(parsed_response).to be_a_response_like({
-          'guid' => deployment.guid,
+      let(:expected_response) do
+        {
+          'guid' => UUID_REGEX,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
             'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
@@ -53,15 +47,15 @@ RSpec.describe 'Deployments' do
             'guid' => droplet.guid
           },
           'revision' => {
-            'guid' => app_model.latest_revision.guid,
-            'version' => app_model.latest_revision.version,
+            'guid' => UUID_REGEX,
+            'version' => 1,
           },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
           'new_processes' => [{
-            'guid' => deployment.deploying_web_process.guid,
-            'type' => deployment.deploying_web_process.type
+            'guid' => UUID_REGEX,
+            'type' => 'web'
           }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -75,21 +69,32 @@ RSpec.describe 'Deployments' do
           },
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+              'href' => %r(#{link_prefix}/v3/deployments/#{UUID_REGEX})
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             },
             'cancel' => {
-              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+              'href' => %r(#{link_prefix}/v3/deployments/#{UUID_REGEX}/actions/cancel),
               'method' => 'POST'
             }
           }
-        })
+        }
       end
+      let(:api_call) { lambda { |user_headers| post '/v3/deployments', create_request.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 422,
+        )
+        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 201, response_object: expected_response }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
     end
 
     context 'when a droplet is supplied with the request' do
+      let(:user) { make_developer_for_space(space) }
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
       let(:create_request) do
         {
@@ -164,6 +169,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'when a revision is supplied with the request' do
+      let(:user) { make_developer_for_space(space) }
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
       let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
       let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
@@ -284,6 +290,7 @@ RSpec.describe 'Deployments' do
           },
         }
       }
+      let(:user) { make_developer_for_space(space) }
 
       let(:create_request) do
         {
@@ -362,6 +369,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'when revisions are enabled' do
+      let(:user) { make_developer_for_space(space) }
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
       let(:create_request) do
         {
@@ -438,6 +446,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'when the app is stopped' do
+      let(:user) { make_developer_for_space(space) }
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
       let(:create_request) do
         {
@@ -529,6 +538,7 @@ RSpec.describe 'Deployments' do
       let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webboo' }) }
       let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
       let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+      let(:user) { make_developer_for_space(space) }
 
       let(:create_request) do
         {
@@ -612,6 +622,7 @@ RSpec.describe 'Deployments' do
       end
 
       context 'when no strategy is provided' do
+        let(:user) { make_developer_for_space(space) }
         let(:create_request) do
           {
             relationships: {
@@ -682,6 +693,7 @@ RSpec.describe 'Deployments' do
 
       context 'when strategy "rolling" is provided' do
         let(:strategy) { 'rolling' }
+        let(:user) { make_developer_for_space(space) }
 
         it 'creates a deployment with strategy "rolling" when "strategy":"rolling" is provided' do
           post '/v3/deployments', create_request.to_json, user_header
@@ -753,6 +765,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'validation failures' do
+      let(:user) { make_developer_for_space(space) }
       let(:smol_quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1) }
       let(:create_request) do
         {
@@ -781,6 +794,7 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'PATCH /v3/deployments' do
+    let(:user) { make_developer_for_space(space) }
     let(:deployment) {
       VCAP::CloudController::DeploymentModel.make(
         app: app_model,
@@ -853,20 +867,16 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'GET /v3/deployments/:guid' do
+    let(:api_call) { lambda { |user_headers| get "/v3/deployments/#{deployment.guid}", nil, user_headers } }
     let(:old_droplet) { VCAP::CloudController::DropletModel.make }
-
-    it 'should get and display the deployment' do
-      deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app_model,
-        droplet: droplet,
-        previous_droplet: old_droplet
-      )
-
-      get "/v3/deployments/#{deployment.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like({
+    let(:deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(
+      app: app_model,
+      droplet: droplet,
+      previous_droplet: old_droplet
+    )
+    }
+    let(:expected_response) do
+      {
         'guid' => deployment.guid,
         'status' => {
           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
@@ -909,8 +919,15 @@ RSpec.describe 'Deployments' do
             'method' => 'POST'
           }
         }
-      })
+      }
     end
+    let(:expected_codes_and_responses) {
+      h = Hash.new(code: 200, response_object: expected_response)
+      h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+      h.freeze
+    }
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/deployments/' do
@@ -1089,7 +1106,6 @@ RSpec.describe 'Deployments' do
                 ),
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
@@ -1097,7 +1113,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1138,7 +1154,6 @@ RSpec.describe 'Deployments' do
                 )
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
@@ -1146,7 +1161,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1180,7 +1195,6 @@ RSpec.describe 'Deployments' do
                   VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON),
               ]
             )
-            # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
               response_objects: []
@@ -1188,7 +1202,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1338,16 +1352,31 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'POST /v3/deployments/:guid/actions/cancel' do
+    let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
+    let(:deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(
+      app: app_model,
+      droplet: droplet,
+      previous_droplet: old_droplet
+    )
+    }
+
+    context 'with a running deployment' do
+      let(:api_call) { lambda { |user_headers| post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 404,
+        )
+        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 200 }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    end
+
     context 'when the deployment is running and has a previous droplet' do
-      let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
+      let(:user) { make_developer_for_space(space) }
 
       it 'changes the deployment status_value CANCELING and rolls the droplet back' do
-        deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
-          app: app_model,
-          droplet: droplet,
-          previous_droplet: old_droplet
-        )
-
         post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
         expect(last_response.status).to eq(200), last_response.body
 
