@@ -1,9 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 
-SPACE_APPLICATION_SUPPORTER = %w[space_application_supporter].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + SPACE_APPLICATION_SUPPORTER).freeze
-
 RSpec.describe 'Revisions' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
@@ -75,14 +72,14 @@ RSpec.describe 'Revisions' do
       h
     end
 
-    it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
   end
 
   describe 'GET /v3/apps/:guid/revisions' do
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
 
     context 'gets all revisions for an app' do
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
         let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions", { per_page: '2' }, user_headers } }
         let(:revision_response_object) do
           {
@@ -555,7 +552,7 @@ RSpec.describe 'Revisions' do
     let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
     let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
 
-    it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS do
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_headers } }
       let(:revision_response_object) do
         {
