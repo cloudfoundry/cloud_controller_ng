@@ -111,17 +111,19 @@ module VCAP::CloudController
         end
       end
 
-      # TODO: here is where the work is being done
-      context 'when a service instance already exists in the target space with the same name as the service being shared: NAME IN PROGRESS' do
-        # let(:service_instance) { ManagedServiceInstance.make(name: 'banana') }
-        let!(:target_space_service_instance) { ManagedServiceInstance.make(name: 'banana', space: target_space1) }
-        let!(:target_space_service_instance2) { ManagedServiceInstance.make(name: 'banana', space: target_space2) }
+      context 'when the shared services have duplicate names' do
+        let(:service_instance) { ManagedServiceInstance.make(name: 'apple') }
+        let!(:target_space_service_instance) { ManagedServiceInstance.make(name: 'banana-1', space: target_space1) }
+        let!(:target_space_service_instance2) { ManagedServiceInstance.make(name: 'banana-2', space: target_space2) }
+        let!(:target_space_service_instance3) { ManagedServiceInstance.make(name: 'banana-3', space: target_space1) }
+        let!(:target_space_service_instance4) { ManagedServiceInstance.make(name: 'banana-1', space: target_space2) }
 
-        it 'should fail with a 422 error' do
+        it 'raise an api error' do
           expect {
             service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
-          }.to raise_error(CloudController::Errors::ApiError, /MultipleServicesShareTheSameName/)
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, /Cannot add new services to a target space with duplicate names./)
           expect(service_instance.shared_spaces).to be_empty
+          # expect(response).to have_http_status(422)
         end
       end
 

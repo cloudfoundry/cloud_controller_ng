@@ -11,19 +11,6 @@ module VCAP::CloudController
       validate_service_instance_is_shareable!(service_instance)
       validate_target_spaces!(service_instance, target_spaces)
 
-      if target_spaces.length > 1
-        shared_service_names = target_spaces[0]
-
-        # Find all the services with the same name
-        target_spaces.drop(1).each do |space|
-          shared_service_names &= space
-        end
-
-        if !shared_service_names.empty?
-          raise CloudController::Errors::ApiError.new_from_details('MultipleServicesShareTheSameName').with_response_code(422)
-        end
-      end
-
       ServiceInstance.db.transaction do
         target_spaces.each do |space|
           service_instance.add_shared_space(space)
@@ -50,6 +37,8 @@ module VCAP::CloudController
         validate_plan_visibility!(service_instance, space)
         validate_name_uniqueness!(service_instance, space)
       end
+
+      validate_uniqueness_of_service_names(service_instance, target_spaces)
     end
 
     def validate_plan_is_active!(service_instance)
@@ -66,7 +55,19 @@ module VCAP::CloudController
       end
     end
 
-    # TODO: this is where the work will be done
+    def validate_uniqueness_of_service_names(service_instance, target_spaces)
+      # Get all the names using space.service_instances.map and then check for duplicates
+      service_names = []
+      target_spaces.each do |space|
+        service_names.concat space.service_instances.map(&:name)
+      end
+
+      if service_names.uniq.length != service_names.length
+        error_msg = 'Cannot add new services to a target space with duplicate names.'
+        error!(error_msg)
+      end
+    end
+
     def validate_name_uniqueness!(service_instance, space)
       if space.service_instances.map(&:name).include?(service_instance.name)
         error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}."
