@@ -816,9 +816,11 @@ RSpec.describe 'Processes' do
     end
 
     context 'when the user is assigned the space_supporter role' do
-      before do
+      let(:space_supporter) do
+        user = VCAP::CloudController::User.make
         org.add_user(user)
         space.add_application_supporter(user)
+        user
       end
 
       it 'can scale a process' do
@@ -828,7 +830,7 @@ RSpec.describe 'Processes' do
           disk_in_mb:   20,
         }
 
-        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+        post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, headers_for(space_supporter)
 
         expect(last_response.status).to eq(202)
         expect(parsed_response).to be_a_response_like(expected_response)
@@ -840,7 +842,7 @@ RSpec.describe 'Processes' do
       end
     end
 
-    it 'returns a helpful error when the meemory is too large' do
+    it 'returns a helpful error when the memory is too large' do
       scale_request = {
         memory_in_mb: 100000000000,
       }
@@ -1454,13 +1456,15 @@ RSpec.describe 'Processes' do
     end
 
     context 'when the user is assigned the space_supporter role' do
-      before do
+      let(:space_supporter) do
+        user = VCAP::CloudController::User.make
         org.add_user(user)
         space.add_application_supporter(user)
+        user
       end
 
       it 'can scale a process' do
-        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, headers_for(space_supporter)
 
         expect(last_response.status).to eq(202)
         expect(parsed_response).to be_a_response_like(expected_response)
