@@ -29,7 +29,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   def show
     message = show_message
-    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
+    route_binding_not_found! unless @route_binding && untrusted_can_read_space?(@route_binding.route.space)
     presenter = Presenters::V3::ServiceRouteBindingPresenter.new(
       @route_binding,
       decorators: decorators(message)
@@ -63,7 +63,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def destroy
-    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
+    route_binding_not_found! unless @route_binding && untrusted_can_read_space?(@route_binding.route.space)
     unauthorized! unless can_write_space?(@route_binding.route.space)
 
     action = V3::ServiceRouteBindingDelete.new(user_audit_info)
@@ -83,7 +83,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def parameters
-    route_binding_not_found! unless @route_binding && can_read_space?(@route_binding.route.space)
+    route_binding_not_found! unless @route_binding && untrusted_can_read_space?(@route_binding.route.space)
     unauthorized! unless can_write_space?(@route_binding.route.space)
 
     fetcher = ServiceBindingRead.new
@@ -193,18 +193,18 @@ class ServiceRouteBindingsController < ApplicationController
 
   def fetch_service_instance(guid)
     service_instance = VCAP::CloudController::ServiceInstance.first(guid: guid)
-    unless service_instance && can_read_space?(service_instance.space)
+    unless service_instance && untrusted_can_read_space?(service_instance.space)
       service_instance_not_found!(guid)
     end
 
-    unauthorized! unless can_write_space?(service_instance.space)
+    unauthorized! unless untrusted_can_write_space?(service_instance.space)
 
     service_instance
   end
 
   def fetch_route(guid)
     route = VCAP::CloudController::Route.first(guid: guid)
-    unless route && can_read_space?(route.space)
+    unless route && untrusted_can_read_space?(route.space)
       route_not_found!(guid)
     end
 
@@ -220,8 +220,16 @@ class ServiceRouteBindingsController < ApplicationController
     VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
   end
 
+  def untrusted_can_read_space?(space)
+    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+  end
+
   def can_read_space?(space)
     permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+  end
+
+  def untrusted_can_write_space?(space)
+    permission_queryer.untrusted_can_write_to_space?(space.guid)
   end
 
   def can_write_space?(space)
