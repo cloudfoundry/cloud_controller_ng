@@ -218,13 +218,14 @@ module VCAP::CloudController
       end
 
       describe '.record_crash' do
+        let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
         let(:crash_payload) {
           {
-            'instance' => Sham.guid,
+            'instance' => 'abc',
             'index' => 3,
             'cell_id' => 'some-cell',
             'exit_status' => 137,
-            'exit_description' => 'description',
+            'exit_description' => exit_description,
             'reason' => 'CRASHED'
           }
         }
@@ -244,7 +245,13 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space.guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
-          expect(event.metadata).to eq(crash_payload)
+          expect(event.metadata['instance']).to eq('abc')
+          expect(event.metadata['index']).to eq(3)
+          expect(event.metadata['cell_id']).to eq('some-cell')
+          expect(event.metadata['exit_status']).to eq(137)
+          expect(event.metadata['exit_description'].length).to eq(AppEventRepository::TRUNCATE_THRESHOLD)
+          expect(event.metadata['exit_description']).to eq(exit_description.truncate(AppEventRepository::TRUNCATE_THRESHOLD, omission: ' (truncated)'))
+          expect(event.metadata['reason']).to eq('CRASHED')
         end
       end
     end

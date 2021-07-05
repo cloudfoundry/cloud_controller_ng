@@ -1,11 +1,11 @@
 require 'repositories/mixins/app_manifest_event_mixins'
+require 'repositories/mixins/truncation_mixin'
 
 module VCAP::CloudController
   module Repositories
     class AppEventRepository
       include AppManifestEventMixins
-      TRUNCATED_SUFFIX = ' (truncated)'.freeze
-      TRUNCATE_THRESHOLD = 10000
+      include TruncationMixin
 
       CENSORED_FIELDS   = [:encrypted_environment_json,
                            :command,
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
         actor    = { name: app.name, guid: app.guid, type: 'app' }
         metadata = droplet_exited_payload.slice('instance', 'index', 'cell_id', 'exit_status', 'exit_description', 'reason')
-        metadata['exit_description'] = metadata['exit_description'].truncate(TRUNCATE_THRESHOLD, omission: TRUNCATED_SUFFIX)
+        metadata['exit_description'] = truncate(metadata['exit_description'])
 
         create_app_audit_event('app.crash', app, app.space, actor, metadata)
       end
