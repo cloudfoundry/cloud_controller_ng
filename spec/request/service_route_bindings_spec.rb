@@ -1143,7 +1143,10 @@ RSpec.describe 'v3 service route bindings' do
       context 'user-provided service instance' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
 
-        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
+        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint(
+          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_application_supporter']
+        )
+        }
         let(:db_check) {
           lambda do
             expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -1182,7 +1185,10 @@ RSpec.describe 'v3 service route bindings' do
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
 
-        let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
+        let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint(
+          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_application_supporter']
+        )
+        }
         let(:db_check) { lambda {} }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
         let(:broker_base_url) { service_instance.service_broker.broker_url }

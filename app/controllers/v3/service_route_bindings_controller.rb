@@ -64,7 +64,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   def destroy
     route_binding_not_found! unless @route_binding && untrusted_can_read_space?(@route_binding.route.space)
-    unauthorized! unless can_write_space?(@route_binding.route.space)
+    unauthorized! unless untrusted_can_write_space?(@route_binding.route.space)
 
     action = V3::ServiceRouteBindingDelete.new(user_audit_info)
     binding_operation_in_progress! if action.blocking_operation_in_progress?(@route_binding)
