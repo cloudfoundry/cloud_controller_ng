@@ -120,11 +120,12 @@ RSpec.describe 'v3 service credential bindings' do
             h['space_developer'] = space_bindings
             h['space_manager'] = space_bindings
             h['space_auditor'] = space_bindings
+            h['space_application_supporter'] = space_bindings
             h['org_manager'] = space_bindings
           end
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
       end
 
       describe 'pagination' do
