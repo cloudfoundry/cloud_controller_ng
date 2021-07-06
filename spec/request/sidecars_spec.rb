@@ -298,7 +298,7 @@ RSpec.describe 'Sidecars' do
     let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
     let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
-    context 'as a space developer' do
+    context 'as a permitted user' do
       before do
         app_model.space.organization.add_user(user)
         app_model.space.add_developer(user)
@@ -337,30 +337,15 @@ RSpec.describe 'Sidecars' do
       let(:space) { app_model.space }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
-        h['admin'] = {
-          code: 200,
+        h = Hash.new(code: 200, response_guid: sidecar.guid)
+        h['no_role'] = {
+          code: 404,
         }
-        h['admin_read_only'] = {
-          code: 200,
+        h['org_auditor'] = {
+          code: 404,
         }
-        h['space_developer'] = {
-          code: 200,
-        }
-        h['space_application_supporter'] = {
-          code: 200,
-        }
-        h['global_auditor'] = {
-          code: 200,
-        }
-        h['space_manager'] = {
-          code: 200,
-        }
-        h['space_auditor'] = {
-          code: 200,
-        }
-        h['org_manager'] = {
-          code: 200,
+        h['org_billing_manager'] = {
+          code: 404,
         }
         h
       end
