@@ -22,7 +22,7 @@ class TasksController < ApplicationController
 
     if app_nested?
       app, dataset = TaskListFetcher.fetch_for_app(message: message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
       show_secrets = can_read_secrets?(app.organization, app.space)
     else
       dataset = if permission_queryer.can_read_globally?
@@ -68,9 +68,9 @@ class TasksController < ApplicationController
 
   def cancel
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    task_not_found! unless task && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
     TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
@@ -100,7 +100,7 @@ class TasksController < ApplicationController
   private
 
   def readable_space_guids
-    permission_queryer.readable_space_guids | permission_queryer.task_readable_space_guids
+    permission_queryer.readable_application_supporter_space_guids | permission_queryer.task_readable_space_guids
   end
 
   def can_read_secrets?(org, space)
