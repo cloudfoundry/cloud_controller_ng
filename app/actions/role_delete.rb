@@ -35,8 +35,8 @@ module VCAP::CloudController
         record_space_event(role, 'auditor')
       when VCAP::CloudController::RoleTypes::SPACE_DEVELOPER
         record_space_event(role, 'developer')
-      when VCAP::CloudController::RoleTypes::SPACE_APPLICATION_SUPPORTER
-        record_space_event(role, 'application_supporter')
+      when VCAP::CloudController::RoleTypes::SPACE_SUPPORTER
+        record_space_event(role, 'supporter')
       when VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         record_organization_event(role, 'user')
       when VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR

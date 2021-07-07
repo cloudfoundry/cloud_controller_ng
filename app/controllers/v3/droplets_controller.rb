@@ -39,7 +39,7 @@ class DropletsController < ApplicationController
       dataset = if permission_queryer.can_read_globally?
                   DropletListFetcher.fetch_all(message)
                 else
-                  DropletListFetcher.fetch_for_spaces(message, permission_queryer.readable_application_supporter_space_guids)
+                  DropletListFetcher.fetch_for_spaces(message, permission_queryer.readable_supporter_space_guids)
                 end
     end
 

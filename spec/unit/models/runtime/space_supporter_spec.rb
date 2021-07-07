@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe SpaceApplicationSupporter, type: :model do
+  RSpec.describe SpaceSupporter, type: :model do
     let(:space) { Space.make }
     let(:user) { User.make }
 
@@ -14,8 +14,8 @@ module VCAP::CloudController
     end
 
     it 'can be created' do
-      SpaceApplicationSupporter.create(space: space, user: user)
-      app_supporter = SpaceApplicationSupporter.find(space_id: space.id, user_id: user.id)
+      SpaceSupporter.create(space: space, user: user)
+      app_supporter = SpaceSupporter.find(space_id: space.id, user_id: user.id)
 
       expect(app_supporter.guid).to be_a_guid
     end

@@ -695,7 +695,7 @@ RSpec.describe 'buildpacks' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -869,7 +869,7 @@ RSpec.describe 'buildpacks' do
 
         let(:expected_codes_and_responses) { Hash.new(code: 404).freeze }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'the buildpack exists' do
@@ -901,7 +901,7 @@ RSpec.describe 'buildpacks' do
 
         let(:expected_codes_and_responses) { Hash.new(code: 200, response_object: buildpack_response).freeze }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
