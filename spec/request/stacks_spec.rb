@@ -12,7 +12,7 @@ RSpec.describe 'Stacks Request' do
     let(:api_call) { lambda { |user_header| get '/v3/stacks', nil, user_header } }
 
     context 'lists all stacks' do
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:stacks_response_object) do
           {
             'pagination' => {
@@ -281,7 +281,7 @@ RSpec.describe 'Stacks Request' do
       Hash.new(code: 200, response_object: stacks_response_object)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/stacks/:guid/apps' do

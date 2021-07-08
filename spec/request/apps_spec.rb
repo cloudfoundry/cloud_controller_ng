@@ -111,7 +111,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user can create an app' do
@@ -542,7 +542,7 @@ RSpec.describe 'Apps' do
             app_model1_response_object,
           ] }
 
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_objects: [
             app_model1_response_object,
@@ -552,7 +552,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'query list parameters' do
@@ -1387,7 +1387,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user has permission to view the app' do
@@ -1596,12 +1596,12 @@ RSpec.describe 'Apps' do
         h['org_billing_manager'] = { code: 404 }
         h['space_manager'] = { code: 403 }
         h['space_auditor'] = { code: 403 }
-        h['space_application_supporter'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when user has permission to view the app' do
@@ -1759,7 +1759,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'as a developer' do
@@ -2181,7 +2181,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_start_response_object
           }
@@ -2196,7 +2196,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'events' do
@@ -2336,7 +2336,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_start_response_object
           }
@@ -2351,7 +2351,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -2431,7 +2431,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: app_stop_response_object
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_object: app_stop_response_object
         }
@@ -2446,7 +2446,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'events' do
@@ -2579,7 +2579,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_restart_response_object
           }
@@ -2594,7 +2594,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'telemetry' do
@@ -2687,7 +2687,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_restart_response_object
           }
@@ -2702,7 +2702,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -2736,7 +2736,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
@@ -2799,7 +2799,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
@@ -2852,7 +2852,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: current_droplet_response_object
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_object: current_droplet_response_object
         }
@@ -2867,7 +2867,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'events' do
@@ -3111,10 +3111,10 @@ RSpec.describe 'Apps' do
       h['space_manager'] = { code: 200, response_object: read_basic_response }
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
       h['space_developer'] = { code: 200, response_object: read_all_response }
-      h['space_application_supporter'] = { code: 200, response_object: read_basic_response }
+      h['space_supporter'] = { code: 200, response_object: read_basic_response }
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 end

@@ -255,7 +255,7 @@ RSpec.describe 'Domains Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_supporter']
         end
 
         context 'when the domain is shared with an org that user is an org manager' do
@@ -294,7 +294,7 @@ RSpec.describe 'Domains Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_supporter']
         end
       end
 
@@ -322,7 +322,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'pagination' do
           let(:pagination_hsh) do
@@ -367,7 +367,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'pagination' do
           let(:pagination_hsh) do
@@ -426,7 +426,7 @@ RSpec.describe 'Domains Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES + ['space_supporter']
         end
 
         context 'pagination' do
@@ -650,7 +650,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'there are route matches' do
@@ -678,7 +678,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when querying with only host' do
@@ -705,7 +705,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when querying with only port' do
@@ -741,7 +741,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'when querying a TCP route without filtering the port' do
           it 'returns no matching routes' do
@@ -848,7 +848,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when the Routing API is unavailable' do
         let(:user_header) { admin_headers_for(user) }
@@ -984,7 +984,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       describe 'invalid private domains' do
@@ -1508,7 +1508,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
 
@@ -1553,7 +1553,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1583,7 +1583,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'deleting metadata' do
         it_behaves_like 'resource with metadata' do
@@ -1619,7 +1619,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'when deleting a shared private domain as an org manager of the shared organization' do
@@ -1798,7 +1798,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when the user is a billing manager is the shared org' do
@@ -1826,7 +1826,7 @@ RSpec.describe 'Domains Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -1883,7 +1883,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when getting a private domain' do
@@ -1937,7 +1937,7 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when the domain has been shared with another organization' do
@@ -1999,7 +1999,7 @@ RSpec.describe 'Domains Request' do
             ).freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES + ['space_application_supporter']
+          it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES + ['space_supporter']
         end
 
         context 'when the user can read globally' do
@@ -2096,7 +2096,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'updating an existing private domain' do
@@ -2154,7 +2154,7 @@ RSpec.describe 'Domains Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'updating an existing, shared private domain' do
@@ -2215,7 +2215,7 @@ RSpec.describe 'Domains Request' do
         domain.add_shared_organization(org)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 end

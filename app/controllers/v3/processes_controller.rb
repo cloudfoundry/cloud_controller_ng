@@ -33,7 +33,7 @@ class ProcessesController < ApplicationController
                 else
                   ProcessListFetcher.fetch_for_spaces(
                     message,
-                    space_guids: permission_queryer.readable_application_supporter_space_guids,
+                    space_guids: permission_queryer.readable_supporter_space_guids,
                     eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources
                   )
                 end

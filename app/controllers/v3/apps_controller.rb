@@ -41,7 +41,7 @@ class AppsV3Controller < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
-                AppListFetcher.fetch(message, permission_queryer.readable_application_supporter_space_guids,
+                AppListFetcher.fetch(message, permission_queryer.readable_supporter_space_guids,
 eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 

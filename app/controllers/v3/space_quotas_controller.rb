@@ -36,7 +36,7 @@ class SpaceQuotasController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
-      visible_space_guids: readable_application_supporter_space_guids
+      visible_space_guids: readable_supporter_space_guids
     )
   end
 
@@ -51,7 +51,7 @@ class SpaceQuotasController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/space_quotas',
       message: message,
-      extra_presenter_args: { visible_space_guids: readable_application_supporter_space_guids },
+      extra_presenter_args: { visible_space_guids: readable_supporter_space_guids },
     )
   end
 
@@ -155,7 +155,7 @@ class SpaceQuotasController < ApplicationController
     permission_queryer.readable_space_guids
   end
 
-  def readable_application_supporter_space_guids
-    permission_queryer.readable_application_supporter_space_guids
+  def readable_supporter_space_guids
+    permission_queryer.readable_supporter_space_guids
   end
 end
