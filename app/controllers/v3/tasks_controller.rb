@@ -100,7 +100,7 @@ class TasksController < ApplicationController
   private
 
   def readable_space_guids
-    permission_queryer.readable_application_supporter_space_guids | permission_queryer.task_readable_space_guids
+    permission_queryer.readable_supporter_space_guids | permission_queryer.task_readable_space_guids
   end
 
   def can_read_secrets?(org, space)

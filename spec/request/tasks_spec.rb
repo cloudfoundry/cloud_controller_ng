@@ -197,7 +197,7 @@ RSpec.describe 'Tasks' do
       end
     end
 
-    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:api_call) { lambda { |user_headers| get '/v3/tasks', nil, user_headers } }
       let(:task1) do
         VCAP::CloudController::TaskModel.make(
@@ -593,7 +593,7 @@ RSpec.describe 'Tasks' do
       allow(bbs_task_client).to receive(:cancel_task)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:api_call) { lambda { |user_headers| post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
       let(:expected_response) do
         {
@@ -641,7 +641,7 @@ RSpec.describe 'Tasks' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403)
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h['admin'] = h['space_developer'] = h['space_application_supporter'] = {
+        h['admin'] = h['space_developer'] = h['space_supporter'] = {
           code: 202,
           response_object: expected_response
         }
@@ -763,7 +763,7 @@ RSpec.describe 'Tasks' do
       end
     end
 
-    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/tasks", nil, user_headers } }
       let(:task1) do
         VCAP::CloudController::TaskModel.make(
