@@ -74,8 +74,14 @@ module VCAP::CloudController
       end
 
       def poll(instance)
+        logger = Steno.logger('cc.action.service_instance_create_managed')
         client = VCAP::Services::ServiceClientProvider.provide(instance: instance)
-        last_operation_result = client.fetch_service_instance_last_operation(instance, user_guid: @user_audit_info.user_guid)
+        begin
+          last_operation_result = client.fetch_service_instance_last_operation(instance, user_guid: @user_audit_info.user_guid)
+        rescue HttpRequestError, HttpResponseError, Sequel::Error => e
+          logger.error("Error fetching last operation from broker for service instance #{instance.guid}", error: e)
+          return ContinuePolling.call(nil)
+        end
 
         case last_operation_result[:last_operation][:state]
         when 'succeeded'

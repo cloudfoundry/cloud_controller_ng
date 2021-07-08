@@ -457,6 +457,26 @@ module VCAP::CloudController
             expect(result[:finished]).to be_truthy
           end
 
+          context 'when http error is raised' do
+            let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
+            let(:err) {
+              response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
+              HttpResponseError.new('oops', 'GET', response)
+            }
+            before do
+              allow(Steno).to receive(:logger).and_return(fake_logger)
+              allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
+            end
+
+            it 'returns continue polling with default retry delay' do
+              result = action.poll(service_instance)
+
+              expect(result[:finished]).to be_falsey
+              expect(result[:retry_after]).to be_nil
+              expect(fake_logger).to have_received(:error).with("Error fetching last operation from broker for service instance #{service_instance.guid}", error: err)
+            end
+          end
+
           context 'retrieving service instance' do
             context 'when service instance is not retrievable' do
               let(:service_offering) { Service.make(instances_retrievable: false) }
