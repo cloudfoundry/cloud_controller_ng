@@ -76,6 +76,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
 
+  ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING ||= (ROLES_FOR_SPACE_SECRETS_READING + [
+    VCAP::CloudController::Membership::SPACE_SUPPORTER,
+  ]).freeze
+
   def initialize(user)
     @user = user
   end
@@ -267,6 +271,11 @@ class VCAP::CloudController::Permissions
 
     space.has_member?(@user) || @user.managed_organizations.include?(org) ||
       @user.audited_organizations.include?(org)
+  end
+
+  def can_read_app_environment_variables?(space_guid, org_guid)
+    can_read_secrets_globally? ||
+      membership.has_any_roles?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_guid, org_guid)
   end
 
   def untrusted_can_read_route?(space_guid, org_guid)

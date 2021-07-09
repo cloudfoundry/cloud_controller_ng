@@ -80,7 +80,7 @@ module UserHelpers
     when 'space_developer'
       space.add_developer(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
-    when 'space_supporters'
+    when 'space_supporter'
       space.add_supporter(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
     when 'space_auditor'

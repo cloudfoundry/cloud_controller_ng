@@ -259,8 +259,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
@@ -272,8 +272,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def update_environment_variables
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
