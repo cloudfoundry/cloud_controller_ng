@@ -42,10 +42,6 @@
 <td></td>
 </tr>
 <tr>
-<td>Space Application Supporter</td>
-<td>Experimental</td>
-</tr>
-<tr>
 <td>Space Auditor</td>
 <td></td>
 </tr>
@@ -56,5 +52,9 @@
 <tr>
 <td>Space Manager</td>
 <td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
