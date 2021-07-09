@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'date'
 
 module VCAP::CloudController
   RSpec.describe SpaceSupporter, type: :model do
@@ -19,5 +20,7 @@ module VCAP::CloudController
 
       expect(app_supporter.guid).to be_a_guid
     end
+
+    it_should_be_removed(by: '2022/01/08', explanation: 'Timebox failure: spaces_application_supporters table is no longer being used. Consider removing it.')
   end
 end
