@@ -59,7 +59,7 @@ RSpec.describe 'v3 service route bindings' do
         Hash.new(code: 200, response_objects: [])
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'a mix of bindings' do
@@ -120,7 +120,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding_2, route_binding_2_metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'filtering' do
@@ -292,7 +292,7 @@ RSpec.describe 'v3 service route bindings' do
     let(:expected_codes_and_responses) do
       responses_for_space_restricted_single_endpoint(
         expected_body,
-        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_application_supporter']
+        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
       )
     end
 
@@ -304,7 +304,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'managed service instance' do
@@ -317,7 +317,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'does not exist' do
@@ -898,11 +898,11 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 202 }
-              h['space_application_supporter'] = { code: 202 }
+              h['space_supporter'] = { code: 202 }
               h['space_developer'] = { code: 202 }
 
               h['no_role'] = { code: 422 }
@@ -998,11 +998,11 @@ RSpec.describe 'v3 service route bindings' do
       it_behaves_like 'create route binding'
 
       context 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 201 }
-              h['space_application_supporter'] = { code: 201 }
+              h['space_supporter'] = { code: 201 }
               h['space_developer'] = { code: 201 }
 
               h['no_role'] = { code: 422 }
@@ -1144,7 +1144,7 @@ RSpec.describe 'v3 service route bindings' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
 
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint(
-          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_application_supporter']
+          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
         )
         }
         let(:db_check) {
@@ -1155,7 +1155,7 @@ RSpec.describe 'v3 service route bindings' do
           end
         }
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         it 'creates an audit log' do
           api_call.call(admin_headers)
@@ -1186,7 +1186,7 @@ RSpec.describe 'v3 service route bindings' do
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
 
         let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint(
-          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_application_supporter']
+          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
         )
         }
         let(:db_check) { lambda {} }
@@ -1204,7 +1204,7 @@ RSpec.describe 'v3 service route bindings' do
           }
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         it 'responds with a job resource' do
           api_call.call(space_dev_headers)
@@ -1572,7 +1572,7 @@ RSpec.describe 'v3 service route bindings' do
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       it 'calls the broker with the identity header' do
         api_call.call(space_dev_headers)
@@ -1642,7 +1642,7 @@ RSpec.describe 'v3 service route bindings' do
         end
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       it 'returns the appropriate error' do
         api_call.call(admin_headers)
@@ -1681,7 +1681,7 @@ RSpec.describe 'v3 service route bindings' do
 
     it_behaves_like 'metadata update for service binding', 'service_route_binding'
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:response_object) {
         expected_json(
           binding_guid: binding.guid,
@@ -1705,7 +1705,7 @@ RSpec.describe 'v3 service route bindings' do
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
-          h['space_application_supporter'] = { code: 404 }
+          h['space_supporter'] = { code: 404 }
         end
       end
     end
