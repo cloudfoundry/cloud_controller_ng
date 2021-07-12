@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe FeatureFlagsController, type: :controller do
   describe '#index' do
     let(:user) { VCAP::CloudController::User.make }

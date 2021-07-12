@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe ProcessesController, type: :controller do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app) { VCAP::CloudController::AppModel.make(space: space) }
