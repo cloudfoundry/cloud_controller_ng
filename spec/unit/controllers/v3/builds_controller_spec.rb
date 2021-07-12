@@ -1,6 +1,8 @@
 require 'rails_helper'
 require 'permissions_spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe BuildsController, type: :controller do
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }

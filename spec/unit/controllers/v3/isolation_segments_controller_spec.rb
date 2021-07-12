@@ -1,6 +1,8 @@
 require 'rails_helper'
 require 'isolation_segment_assign'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }

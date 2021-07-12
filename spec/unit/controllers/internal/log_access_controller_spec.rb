@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'fetchers/log_access_fetcher'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe LogAccessController do
     let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }

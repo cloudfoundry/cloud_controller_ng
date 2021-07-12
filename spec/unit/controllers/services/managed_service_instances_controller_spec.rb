@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstancesController, :services do
     describe 'GET', '/v2/managed_service_instances' do
