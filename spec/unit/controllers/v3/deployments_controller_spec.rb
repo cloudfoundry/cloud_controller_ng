@@ -2,6 +2,8 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 require 'messages/deployment_create_message'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
   let(:app) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }

@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe DropletsController, type: :controller do
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }

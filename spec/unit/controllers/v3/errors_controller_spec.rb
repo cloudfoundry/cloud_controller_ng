@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe ErrorsController, type: :controller do
   describe '#not_found' do
     it 'returns an error' do

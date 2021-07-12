@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'membrane'
 require 'cloud_controller/diego/failure_reason_sanitizer'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe StagingCompletionController do
     let(:buildpack_name) { 'the-pleasant-buildpack' }
