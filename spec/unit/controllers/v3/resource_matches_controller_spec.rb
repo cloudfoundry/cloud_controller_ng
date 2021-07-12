@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe ResourceMatchesController, type: :controller do
   describe '#create' do
     include_context 'resource pool'

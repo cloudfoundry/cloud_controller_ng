@@ -2,6 +2,8 @@ require 'rails_helper'
 require 'messages/buildpack_create_message'
 require 'models/runtime/buildpack'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe BuildpacksController, type: :controller do
   before do
     TestConfig.override(kubernetes: {})

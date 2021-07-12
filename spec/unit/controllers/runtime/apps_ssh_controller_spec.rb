@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'cloud_controller/diego/process_guid'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe AppsSSHController do
     let(:diego) { true }
