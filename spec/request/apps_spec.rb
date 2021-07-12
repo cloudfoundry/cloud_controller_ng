@@ -1749,10 +1749,8 @@ RSpec.describe 'Apps' do
       let(:api_call) do
         lambda { |headers| get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
-      # TODO: be a more specific on the response content
-      let(:build_response_object) { anything }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: build_response_object)
+        h = Hash.new(code: 200)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
