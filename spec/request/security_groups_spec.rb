@@ -665,7 +665,7 @@ RSpec.describe 'Security_Groups Request' do
           code: 200,
           response_objects: [expected_response_2, expected_response_3]
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_objects: [expected_response_2, expected_response_3]
         }
@@ -696,7 +696,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'filtering security groups' do
@@ -820,7 +820,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'getting a security group NOT globally enabled, associated with spaces' do
@@ -873,7 +873,7 @@ RSpec.describe 'Security_Groups Request' do
           code: 200,
           response_object: expected_response
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_object: expected_response
         }
@@ -892,7 +892,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'getting a security group globally enabled' do
@@ -927,7 +927,7 @@ RSpec.describe 'Security_Groups Request' do
         Hash.new(code: 200, response_object: expected_response)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'security group does not exist' do

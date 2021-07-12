@@ -83,7 +83,7 @@ class SecurityGroupsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
       security_group,
-      visible_space_guids: permission_queryer.readable_application_supporter_space_guids
+      visible_space_guids: permission_queryer.readable_supporter_space_guids
     )
   end
 
@@ -102,7 +102,7 @@ class SecurityGroupsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/security_groups',
       message: message,
-      extra_presenter_args: { visible_space_guids: permission_queryer.readable_application_supporter_space_guids },
+      extra_presenter_args: { visible_space_guids: permission_queryer.readable_supporter_space_guids },
     )
   end
 
