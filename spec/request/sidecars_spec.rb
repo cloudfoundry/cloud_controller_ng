@@ -350,7 +350,7 @@ RSpec.describe 'Sidecars' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -507,7 +507,7 @@ RSpec.describe 'Sidecars' do
         h['space_developer'] = {
           code: 200,
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
         }
         h['global_auditor'] = {
@@ -525,7 +525,7 @@ RSpec.describe 'Sidecars' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -630,7 +630,7 @@ RSpec.describe 'Sidecars' do
         h['space_developer'] = {
           code: 200,
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
         }
         h['global_auditor'] = {
@@ -648,7 +648,7 @@ RSpec.describe 'Sidecars' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
