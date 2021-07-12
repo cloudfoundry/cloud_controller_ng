@@ -16,7 +16,7 @@ class SidecarsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     app, dataset = SidecarListFetcher.fetch_for_app(message, hashed_params[:app_guid])
-    resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    resource_not_found!(:app) unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SidecarPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
@@ -29,7 +29,7 @@ class SidecarsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     process, dataset = SidecarListFetcher.fetch_for_process(message, hashed_params[:process_guid])
-    resource_not_found!(:process) unless process && permission_queryer.can_read_from_space?(process.space.guid, process.organization.guid)
+    resource_not_found!(:process) unless process && permission_queryer.untrusted_can_read_from_space?(process.space.guid, process.organization.guid)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SidecarPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
@@ -41,7 +41,7 @@ class SidecarsController < ApplicationController
     sidecar = SidecarModel.find(guid: hashed_params[:guid])
     resource_not_found!(:sidecar) unless sidecar
     app = sidecar.app
-    resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(app.space.guid, app.space.organization.guid)
+    resource_not_found!(:sidecar) unless permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.space.organization.guid)
 
     render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
   end
