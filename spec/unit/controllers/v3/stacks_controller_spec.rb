@@ -2,6 +2,8 @@ require 'rails_helper'
 require 'actions/stack_create'
 require 'permissions_spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe StacksController, type: :controller do
   describe '#index' do
     before { VCAP::CloudController::Stack.dataset.destroy }

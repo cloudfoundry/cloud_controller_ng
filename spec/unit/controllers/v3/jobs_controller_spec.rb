@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe V3::JobsController, type: :controller do
   describe '#show' do
     let!(:job) { VCAP::CloudController::PollableJobModel.make(resource_type: 'app') }
