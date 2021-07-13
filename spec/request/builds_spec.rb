@@ -119,6 +119,42 @@ RSpec.describe 'Builds' do
       })
     end
 
+    context 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| post '/v3/builds', create_request.to_json, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 422
+          )
+          h['admin'] = {
+            code: 201,
+          }
+          h['space_developer'] = {
+            code: 201,
+          }
+          h['space_supporter'] = {
+            code: 201,
+          }
+          h.freeze
+        end
+
+        let(:expected_event_hash) do
+          {
+            type: 'audit.app.build.create',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: app_model.name,
+            metadata: { build_guid: parsed_response['guid'], package_guid: parsed_response['package']['guid'] }.to_json,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+          }
+        end
+      end
+    end
+
     context 'kpack lifecycle' do
       let(:create_request) do
         {
@@ -366,6 +402,25 @@ RSpec.describe 'Builds' do
       let(:headers) { admin_headers }
     end
 
+    describe 'permissions' do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get '/v3/builds', nil, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_guids: [build.guid, second_build.guid]
+          )
+          h['org_auditor'] = { code: 200, response_objects: [] }
+          h['org_billing_manager'] = { code: 200, response_objects: [] }
+          h['no_role'] = { code: 200, response_objects: [] }
+          h
+        end
+      end
+    end
+
     context 'when there are other spaces the developer cannot see' do
       let(:non_accessible_space) { VCAP::CloudController::Space.make }
       let(:non_accessible_app_model) { VCAP::CloudController::AppModel.make(space_guid: non_accessible_space.guid, name: 'other-app') }
@@ -560,6 +615,22 @@ RSpec.describe 'Builds' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:api_call) { lambda { |user_headers| get "v3/builds/#{build.guid}", nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200)
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
     end
   end
 
