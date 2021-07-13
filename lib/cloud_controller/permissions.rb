@@ -104,7 +104,9 @@ class VCAP::CloudController::Permissions
 
       # Getting readable orgs for space-scoped roles
       space_guids = membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_SUPPORTERS)
-      org_guids_from_space_guids = space_guids.map { |guid| VCAP::CloudController::Space.find(guid: guid).organization.guid }
+      org_guids_from_space_guids = space_guids.filter_map do |guid|
+        VCAP::CloudController::Space.find(guid: guid)&.organization&.guid
+      end
 
       (org_guids + org_guids_from_space_guids).uniq
     end
