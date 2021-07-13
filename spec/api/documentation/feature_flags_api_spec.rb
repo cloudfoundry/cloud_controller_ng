@@ -328,7 +328,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
 
   get '/v2/config/feature_flags/space_developer_env_var_visibility' do
     example 'Get the Space Developer Environment Variable Visibility feature flag (experimental)' do
-      explanation 'When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env endpoints, and both space developers and space supporters can perform a get on the /v3/apps/:guid/environment_variables endpoint.
+      explanation 'When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint, and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints.
                    When disabled, neither space developers nor space supporters can access these endpoints.'
       client.get '/v2/config/feature_flags/space_developer_env_var_visibility', {}, headers
 

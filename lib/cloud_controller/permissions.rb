@@ -278,6 +278,11 @@ class VCAP::CloudController::Permissions
       membership.has_any_roles?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_guid, org_guid)
   end
 
+  def can_read_system_environment_variables?(space_guid, org_guid)
+    can_read_secrets_globally? ||
+      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)
+  end
+
   def untrusted_can_read_route?(space_guid, org_guid)
     return true if can_read_globally?
 
