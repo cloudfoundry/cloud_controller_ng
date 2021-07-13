@@ -22,6 +22,21 @@ module CloudFoundry
           middleware.call({})
           expect(request_metrics).to have_received(:complete_request).with(200)
         end
+
+        context 'when an unexpected error occurs' do
+          let(:middleware) { RequestMetrics.new(app, request_metrics) }
+          let(:app) { double(:app) }
+
+          before do
+            allow(app).to receive(:call).and_raise('Unexpected')
+          end
+
+          it 'catches the exception and calls complete request on request metrics' do
+            expect { middleware.call({}) }.to raise_error do
+              expect(request_metrics).to have_received(:complete_request).with(500)
+            end
+          end
+        end
       end
     end
   end
