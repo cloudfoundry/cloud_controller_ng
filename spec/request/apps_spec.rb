@@ -1750,7 +1750,7 @@ RSpec.describe 'Apps' do
         lambda { |headers| get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200)
+        h = Hash.new(code: 200, response_guids: [build.guid, second_build.guid])
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
