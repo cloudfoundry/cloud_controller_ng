@@ -413,33 +413,6 @@ RSpec.describe TasksController, type: :controller do
           expect(response.status).to eq 200
         end
       end
-
-      context 'perm permissions' do
-        before do
-          disallow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
-        end
-
-        context 'when the user has no permissions' do
-          it 'returns a 404' do
-            get :show, params: { task_guid: task.guid }
-
-            expect(response.status).to eq 404
-          end
-        end
-
-        context 'when the user has permission to read tasks in the app space or org' do
-          before do
-            allow_user_perm_permission(:can_read_task?, space_guid: space.guid, org_guid: org.guid)
-          end
-
-          it 'returns a 200' do
-            get :show, params: { task_guid: task.guid }
-
-            expect(response.status).to eq 200
-          end
-        end
-      end
     end
 
     it 'returns a 404 if the task does not exist' do
@@ -582,36 +555,6 @@ RSpec.describe TasksController, type: :controller do
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
-      end
-    end
-
-    context 'perm permissions' do
-      before do
-        allow_user_read_access_for(user, spaces: [])
-        VCAP::CloudController::TaskModel.make(app: app_model)
-        VCAP::CloudController::TaskModel.make(app: app_model)
-      end
-
-      context 'when the user has no permissions' do
-        it 'returns no tasks' do
-          get :index
-
-          expect(response.status).to eq 200
-          expect(parsed_body['resources']).to have(0).items
-        end
-      end
-
-      context 'when the user has permission to read tasks in the app space' do
-        before do
-          allow_user_perm_permission_for(:task_readable_space_guids, visible_guids: [space.guid])
-        end
-
-        it 'returns all the tasks in that space' do
-          get :index
-
-          expect(response.status).to eq 200
-          expect(parsed_body['resources']).to have(2).items
-        end
       end
     end
 

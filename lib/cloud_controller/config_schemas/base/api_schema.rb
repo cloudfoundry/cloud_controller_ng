@@ -311,8 +311,11 @@ module VCAP::CloudController
               optional(:diego_sync) => { timeout_in_seconds: Integer },
             },
 
-            perm: {
-              enabled: bool,
+            # perm settings no longer have any effect but are preserved here
+            # for the time being to avoid breaking users as the perm
+            # setting was once required.
+            optional(:perm) => {
+              optional(:enabled) => bool,
               optional(:hostname) => String,
               optional(:port) => Integer,
               optional(:timeout_in_milliseconds) => Integer,
