@@ -149,7 +149,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
     org = space.organization
     org_not_found! unless org
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
     message = SpaceUpdateIsolationSegmentMessage.new(hashed_params[:body])

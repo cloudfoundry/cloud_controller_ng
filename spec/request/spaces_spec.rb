@@ -1160,6 +1160,40 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'PATCH /v3/spaces/:guid/relationships/isolation_segment' do
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'seg') }
+    let(:org) { VCAP::CloudController::Organization.make(name: 'iso farm') }
+    let(:space) { VCAP::CloudController::Space.make name: 'space', organization: org }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+    before do
+      assigner.assign(isolation_segment, [org])
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}/relationships/isolation_segment", params.to_json, user_headers } }
+      let(:params) do
+        {
+          data: {
+            guid: isolation_segment.guid,
+          },
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['no_role'] =             { code: 404 }
+        h['org_auditor'] =         { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] =         { code: 403 }
+        h['admin'] =               { code: 200 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
+  end
+
   def build_space_links(space)
     {
       'self' => {
