@@ -689,6 +689,24 @@ RSpec.describe 'Builds' do
         expect(last_response.status).to eq(403), last_response.body
       end
 
+      describe 'permissions' do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          let(:org) { space.organization }
+          let(:user) { VCAP::CloudController::User.make }
+          let(:api_call) { lambda { |user_headers| patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(code: 403)
+            h['admin'] = { code: 200 }
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+            h['space_developer'] = { code: 200 }
+            h
+          end
+        end
+      end
+
       context 'updating state' do
         let(:build_model) { VCAP::CloudController::BuildModel.make(:kpack, package: package_model,
           state: VCAP::CloudController::BuildModel::STAGING_STATE, app: app_model)
