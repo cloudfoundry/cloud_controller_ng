@@ -54,6 +54,11 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
 
+  ROLES_FOR_SPACE_SERVICES_READING ||= [
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
+  ].freeze
+
   ROLES_FOR_SPACE_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
@@ -177,6 +182,10 @@ class VCAP::CloudController::Permissions
       membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)
   end
 
+  def untrusted_can_read_services_in_space?(space_guid, org_guid)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SERVICES_READING, space_guid, org_guid)
+  end
+
   def can_write_to_space?(space_guid)
     return true if can_write_globally?
 
@@ -223,6 +232,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
+    end
+  end
+
+  def readable_services_space_guids
+    if can_read_secrets_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_SERVICES_READING)
     end
   end
 
