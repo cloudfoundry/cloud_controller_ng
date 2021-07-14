@@ -28,8 +28,6 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :perm_client
-
     def validation_error!(error, message)
       if error.errors.on(:name)&.include?(:unique)
         error!("Organization '#{message.name}' already exists.")

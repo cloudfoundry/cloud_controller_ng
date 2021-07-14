@@ -9,7 +9,6 @@ module VCAP::CloudController
     let(:fake_req) { '' }
     let(:dependencies) do
       {
-        perm_client: double(Perm::Client),
         statsd_client: double(Statsd),
       }
     end
