@@ -615,6 +615,7 @@ RSpec.describe 'Spaces' do
         h['space_manager'] = { code: 200, response_objects: response_object }
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
+        h['space_supporter'] = { code: 200, response_objects: response_object }
         h.freeze
       end
 
@@ -766,6 +767,7 @@ RSpec.describe 'Spaces' do
         h['space_manager'] = { code: 200, response_objects: response_object }
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
+        h['space_supporter'] = { code: 200, response_objects: response_object }
         h.freeze
       end
 
