@@ -55,9 +55,16 @@ module VCAP::CloudController
         }.by(1)
 
         job = Delayed::Job.last
-        expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
-        expect(job.handler).to include("key: #{droplet.blobstore_key}")
-        expect(job.handler).to include('droplet_blobstore')
+        job_delete_handler = YAML.safe_load(job.handler, permitted_classes: [
+          VCAP::CloudController::Jobs::LoggingContextJob,
+          VCAP::CloudController::Jobs::TimeoutJob,
+          VCAP::CloudController::Jobs::Runtime::BlobstoreDelete,
+          Symbol
+        ]).handler.handler
+
+        expect(job_delete_handler.class).to eq(VCAP::CloudController::Jobs::Runtime::BlobstoreDelete)
+        expect(job_delete_handler.key).to eq(droplet.blobstore_key)
+        expect(job_delete_handler.blobstore_name).to eq(:droplet_blobstore)
         expect(job.queue).to eq(Jobs::Queues.generic)
         expect(job.guid).not_to be_nil
       end
