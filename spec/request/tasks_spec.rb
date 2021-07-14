@@ -398,7 +398,7 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'GET /v3/tasks/:guid' do
-    it_behaves_like 'permissions for single object endpoint', ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:task) do
         VCAP::CloudController::TaskModel.make(
           name:         'task',
