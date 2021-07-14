@@ -819,7 +819,7 @@ RSpec.describe 'Processes' do
       let(:space_supporter) do
         user = VCAP::CloudController::User.make
         org.add_user(user)
-        space.add_application_supporter(user)
+        space.add_supporter(user)
         user
       end
 
@@ -1459,7 +1459,7 @@ RSpec.describe 'Processes' do
       let(:space_supporter) do
         user = VCAP::CloudController::User.make
         org.add_user(user)
-        space.add_application_supporter(user)
+        space.add_supporter(user)
         user
       end
 
