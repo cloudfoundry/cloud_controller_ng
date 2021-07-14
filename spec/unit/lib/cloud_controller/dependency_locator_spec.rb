@@ -533,12 +533,6 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#perm_client' do
-    it 'returns the perm client' do
-      expect(locator.perm_client).to be_an_instance_of(VCAP::CloudController::Perm::Client)
-    end
-  end
-
   describe '#copilot_client' do
     let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client) }
 

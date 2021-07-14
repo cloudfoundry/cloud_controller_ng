@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteAccess, type: :access do
-    let(:queryer) { instance_spy(Permissions::Queryer) }
+    let(:queryer) { instance_spy(VCAP::CloudController::Permissions) }
 
     subject(:access) { RouteAccess.new(Security::AccessContext.new(queryer)) }
 

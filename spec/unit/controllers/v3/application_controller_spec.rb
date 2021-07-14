@@ -90,18 +90,6 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
-  let(:perm_client) { instance_double(VCAP::CloudController::Perm::Client) }
-
-  before do
-    Scientist::Observation::RESCUES.replace []
-
-    perm_config = TestConfig.config[:perm]
-    perm_config[:enabled] = true
-    TestConfig.override(perm: perm_config)
-
-    allow(VCAP::CloudController::Perm::Client).to receive(:new).and_return(perm_client)
-  end
-
   describe '#check_read_permissions' do
     before do
       set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: [])
