@@ -398,80 +398,58 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'GET /v3/tasks/:guid' do
-    let(:user) { make_developer_for_space(space) }
-
-    it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make(
-        name:         'task',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-        disk_in_mb:   50,
-      )
-      task_guid = task.guid
-
-      get "/v3/tasks/#{task_guid}", nil, developer_headers
-
-      expected_response = {
-        'guid'         => task_guid,
-        'sequence_id'  => task.sequence_id,
-        'name'         => 'task',
-        'command'      => 'echo task',
-        'state'        => 'RUNNING',
-        'memory_in_mb' => 5,
-        'disk_in_mb'   => 50,
-        'result'       => {
-          'failure_reason' => nil
-        },
-        'droplet_guid' => task.droplet.guid,
-        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-        'metadata' => { 'labels' => {}, 'annotations' => {} },
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links'        => {
-          'self' => {
-            'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
+    it_behaves_like 'permissions for single object endpoint', ['space_supporter'] do
+      let(:task) do
+        VCAP::CloudController::TaskModel.make(
+          name:         'task',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   50,
+        )
+      end
+      let(:api_call) { lambda { |user_headers| get "/v3/tasks/#{task.guid}", nil, user_headers } }
+      let(:expected_response) do
+        {
+          'guid'         => task.guid,
+          'sequence_id'  => task.sequence_id,
+          'name'         => 'task',
+          'state'        => 'RUNNING',
+          'memory_in_mb' => 5,
+          'disk_in_mb'   => 50,
+          'result'       => {
+            'failure_reason' => nil
           },
-          'app' => {
-            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-          },
-          'cancel' => {
-            'href' => "#{link_prefix}/v3/tasks/#{task_guid}/actions/cancel",
-            'method' => 'POST',
-          },
-          'droplet' => {
-            'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+          'droplet_guid' => task.droplet.guid,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at'   => iso8601,
+          'updated_at'   => iso8601,
+          'links'        => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/tasks/#{task.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel",
+              'method' => 'POST',
+            },
+            'droplet' => {
+              'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+            }
           }
         }
-      }
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-
-    it 'excludes information for auditors' do
-      task = VCAP::CloudController::TaskModel.make(
-        name:         'task',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-      )
-      task_guid = task.guid
-
-      auditor = VCAP::CloudController::User.make
-      space.organization.add_user(auditor)
-      space.add_auditor(auditor)
-
-      get "/v3/tasks/#{task_guid}", nil, headers_for(auditor)
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).not_to have_key('command')
+      end
+      let(:expected_response_with_command) { expected_response.merge({ 'command' => 'echo task' }) }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response_with_command }
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+        h.freeze
+      end
     end
   end
 
@@ -855,12 +833,8 @@ RSpec.describe 'Tasks' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: expected_response)
-        h['space_developer'] = { code: 200, response_objects: expected_response_with_command }
-        h['admin'] = { code: 200, response_objects: expected_response_with_command }
-        h['admin_read_only'] = { code: 200, response_objects: expected_response_with_command }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
+        h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_objects: expected_response_with_command }
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
         h.freeze
       end
     end
