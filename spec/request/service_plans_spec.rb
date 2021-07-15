@@ -4,7 +4,6 @@ require 'models/services/service_plan'
 require 'hashdiff'
 
 UNAUTHENTICATED = %w[unauthenticated].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + UNAUTHENTICATED).freeze
 
 RSpec.describe 'V3 service plans' do
   let(:user) { VCAP::CloudController::User.make }
@@ -21,7 +20,7 @@ RSpec.describe 'V3 service plans' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when there is a public service plan' do
@@ -41,7 +40,7 @@ RSpec.describe 'V3 service plans' do
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
 
       context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
         before do
@@ -69,7 +68,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'space scoped broker' do
@@ -88,11 +87,12 @@ RSpec.describe 'V3 service plans' do
               space_developer
               space_manager
               space_auditor
+              space_supporter
             )
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
 
@@ -274,10 +274,11 @@ RSpec.describe 'V3 service plans' do
           h['space_developer'] = space_plans_response
           h['space_manager'] = space_plans_response
           h['space_auditor'] = space_plans_response
+          h['space_supporter'] = space_plans_response
         end
       end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
 
       context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
         before do
@@ -641,7 +642,7 @@ RSpec.describe 'V3 service plans' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when the service plan exists and has no service instances' do
@@ -659,7 +660,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is public' do
@@ -672,7 +673,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is visible only on some orgs' do
@@ -690,7 +691,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is from a space-scoped service broker' do
@@ -704,13 +705,14 @@ RSpec.describe 'V3 service plans' do
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 204 }
+            h['space_supporter'] = { code: 403 }
             h['space_manager'] = { code: 403 }
             h['space_auditor'] = { code: 403 }
             h['unauthenticated'] = { code: 401 }
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
 
@@ -809,7 +811,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is public' do
@@ -822,7 +824,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is visible only on some orgs' do
@@ -840,7 +842,7 @@ RSpec.describe 'V3 service plans' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the plan is from a space-scoped service broker' do
@@ -854,13 +856,14 @@ RSpec.describe 'V3 service plans' do
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 200, response_object: create_plan_json(service_plan, labels: labels, annotations: annotations) }
+            h['space_supporter'] = { code: 403 }
             h['space_manager'] = { code: 403 }
             h['space_auditor'] = { code: 403 }
             h['unauthenticated'] = { code: 401 }
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
   end
