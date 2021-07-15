@@ -26,7 +26,7 @@ module VCAP::CloudController
     end
 
     def visible_space_scoped?(space)
-      current_user && space && (space.has_member?(current_user) || space.has_application_supporter?(current_user))
+      current_user && space && (space.has_member?(current_user) || space.has_supporter?(current_user))
     end
 
     def visible_to_current_user?(service: nil, plan: nil)
