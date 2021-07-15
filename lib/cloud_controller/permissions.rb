@@ -234,7 +234,7 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_application_supporter_space_scoped_space_guids
+  def readable_space_supporter_space_scoped_space_guids
     if can_read_globally?
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
