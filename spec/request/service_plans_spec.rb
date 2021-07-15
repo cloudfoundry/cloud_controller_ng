@@ -87,7 +87,7 @@ RSpec.describe 'V3 service plans' do
               space_developer
               space_manager
               space_auditor
-              space_application_supporter
+              space_supporter
             )
           )
         end
