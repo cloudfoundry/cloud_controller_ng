@@ -3,12 +3,15 @@ require 'diego/lrp_constants'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
+  let(:supporter ) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
 
   before do
     space.organization.add_user(user)
+    space.organization.add_user(supporter)
     space.add_developer(user)
+    space.add_supporter(supporter)
     TestConfig.override(kubernetes: {})
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
   end
@@ -28,6 +31,11 @@ RSpec.describe 'Apps' do
         health_check_http_endpoint: '/health',
         created_at: 7.days.ago
       )
+    end
+
+    it 'doesnt let supporters in' do
+      get '/v2/apps', nil, headers_for(supporter)
+      expect(last_response.status).to eq(401)
     end
 
     it 'lists all apps' do
