@@ -1,9 +1,11 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'App Manifests' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { space.organization }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
   let(:second_route) {
@@ -49,6 +51,28 @@ RSpec.describe 'App Manifests' do
     let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app_model.guid) }
     let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app_model.guid) }
     let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app_model.guid) }
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['no_role'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+
+        h['admin'] = { code: 200 }
+        h['admin_read_only'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+
+        h
+      end
+
+      before do
+        space.remove_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
 
     context 'for a buildpack' do
       let!(:buildpack) { VCAP::CloudController::Buildpack.make }
