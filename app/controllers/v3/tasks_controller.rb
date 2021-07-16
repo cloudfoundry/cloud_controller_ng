@@ -83,7 +83,7 @@ class TasksController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    task_not_found! unless task && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     task = TaskUpdate.new.update(task, message)
