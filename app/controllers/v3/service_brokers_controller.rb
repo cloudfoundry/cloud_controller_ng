@@ -20,7 +20,7 @@ class ServiceBrokersController < ApplicationController
                 ServiceBrokerListFetcher.fetch(
                   message: message,
                   eager_loaded_associations: Presenters::V3::ServiceBrokerPresenter.associated_resources,
-                  permitted_space_guids: permission_queryer.readable_secret_space_guids
+                  permitted_space_guids: permission_queryer.readable_services_space_guids
                 )
               end
 
@@ -36,9 +36,14 @@ class ServiceBrokersController < ApplicationController
 
   def show
     service_broker = VCAP::CloudController::ServiceBroker.find(guid: hashed_params[:guid])
-
     broker_not_found! unless service_broker
-    broker_not_found! unless permission_queryer.can_read_service_broker?(service_broker)
+
+    if service_broker.space_guid
+      space = service_broker.space
+      broker_not_found! unless space && permission_queryer.untrusted_can_read_services_in_space?(space.guid, space.organization_guid)
+    else
+      broker_not_found! unless permission_queryer.can_read_globally?
+    end
 
     presenter = Presenters::V3::ServiceBrokerPresenter.new(service_broker)
 
@@ -52,7 +57,7 @@ class ServiceBrokersController < ApplicationController
     if message.space_guid
       FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
       space = Space.where(guid: message.space_guid).first
-      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      unprocessable_space! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
     else
       unauthorized! unless permission_queryer.can_write_global_service_broker?
@@ -75,7 +80,7 @@ class ServiceBrokersController < ApplicationController
 
     if service_broker.space_guid
       space = service_broker.space
-      broker_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      broker_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
     else
       broker_not_found! unless permission_queryer.can_read_globally?
@@ -103,7 +108,7 @@ class ServiceBrokersController < ApplicationController
       broker_not_found! unless permission_queryer.can_read_globally?
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     else
-      broker_not_found! unless permission_queryer.can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
+      broker_not_found! unless permission_queryer.untrusted_can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
     end
 
