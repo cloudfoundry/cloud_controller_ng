@@ -139,7 +139,7 @@ RSpec.describe 'V3 service brokers' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'global service brokers' do
@@ -212,7 +212,7 @@ RSpec.describe 'V3 service brokers' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'spaced-scoped service brokers' do
@@ -262,11 +262,13 @@ RSpec.describe 'V3 service brokers' do
         h['space_developer'] = { code: 200,
           response_objects: [space_scoped_service_broker_json]
         }
-
+        h['space_supporter'] = { code: 200,
+          response_objects: [space_scoped_service_broker_json]
+        }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       it 'returns 200 OK and an empty list of brokers for space developer in another space' do
         expect_empty_list(space_developer_alternate_space_headers)
@@ -399,7 +401,7 @@ RSpec.describe 'V3 service brokers' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the service broker is space scoped' do
@@ -449,11 +451,14 @@ RSpec.describe 'V3 service brokers' do
           code: 200,
           response_object: space_scoped_service_broker_json
         }
-
+        h['space_supporter'] = {
+          code: 200,
+          response_object: space_scoped_service_broker_json
+        }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       it 'returns 404 Not Found for space developer in another space' do
         is_expected.to_not find_broker(broker_guid: space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
@@ -488,7 +493,7 @@ RSpec.describe 'V3 service brokers' do
       }
 
       context 'global service broker' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
           let(:expected_codes_and_responses) do
             Hash.new(code: 404).tap do |h|
@@ -519,7 +524,7 @@ RSpec.describe 'V3 service brokers' do
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
 
           let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint }
@@ -958,7 +963,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'global service broker' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', global_broker_request_body.to_json, user_headers } }
         let(:expected_codes_and_responses) do
           Hash.new(code: 403).tap do |h|
@@ -1009,7 +1014,7 @@ RSpec.describe 'V3 service brokers' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint }
@@ -1370,7 +1375,7 @@ RSpec.describe 'V3 service brokers' do
       context 'global broker' do
         let(:broker) { global_broker }
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) {
             Hash.new(code: 404).tap do |h|
               h['admin'] = { code: 202 }
@@ -1384,7 +1389,7 @@ RSpec.describe 'V3 service brokers' do
       context 'space-scoped broker' do
         let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
         end
 
