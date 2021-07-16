@@ -561,6 +561,27 @@ RSpec.describe 'Tasks' do
       }
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      before do
+        space.remove_developer(user)
+      end
+
+      let(:api_call) { lambda { |headers| patch "/v3/tasks/#{task_guid}", request_body, headers } }
+
+      let(:expected_codes_and_responses) {
+        h = Hash.new(code: 404)
+        h['space_supporter'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['org_manager'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['space_auditor'] = { code: 403 }
+        h['admin_read_only'] = { code: 403 }
+        h['space_developer'] = { code: 200 }
+        h['admin'] = { code: 200 }
+        h
+      }
+    end
   end
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
