@@ -120,9 +120,8 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         if (200...300).cover? expected_response_code
           if expected_response_code == 202
             job_location = last_response.headers['Location']
-            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+)) unless job_location.nil?
           end
-
           expected_response_object = expected_codes_and_responses[role][:response_object]
 
           expect(parsed_response).to match_json_response(expected_response_object) unless expected_response_object.nil?
