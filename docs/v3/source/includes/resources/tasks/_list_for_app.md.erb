@@ -43,12 +43,13 @@ Name | Type | Description
 **updated_ats** (*experimental*)| _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators-experimental)
 
 #### Permitted roles
- |
+ Role | Notes
 --- | ---
 Admin |
 Admin Read-Only |
-Global Auditor |
-Org Manager |
-Space Auditor |
+Global Auditor | `command` field redacted
+Org Manager | `command` field redacted
+Space Auditor | `command` field redacted
 Space Developer |
-Space Manager |
+Space Manager | `command` field redacted
+Space Supporter | Experimental, `command` field redacted

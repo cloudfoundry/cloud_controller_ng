@@ -2,8 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Tasks' do
+  let(:user) { VCAP::CloudController::User.make }
+  let(:org) { space.organization }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:user) { make_developer_for_space(space) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(
@@ -24,6 +25,7 @@ RSpec.describe 'Tasks' do
 
   describe 'GET /v3/tasks' do
     it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:user) { make_developer_for_space(space) }
       let(:resource_klass) { VCAP::CloudController::TaskModel }
       let(:headers) { admin_headers }
       let(:api_call) do
@@ -32,6 +34,7 @@ RSpec.describe 'Tasks' do
     end
 
     it_behaves_like 'list query endpoint' do
+      let(:user) { make_developer_for_space(space) }
       let(:request) { 'v3/tasks' }
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }
@@ -60,6 +63,7 @@ RSpec.describe 'Tasks' do
     end
 
     it_behaves_like 'list query endpoint' do
+      let(:user) { make_developer_for_space(space) }
       let(:request) { 'v3/tasks' }
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }
@@ -87,50 +91,143 @@ RSpec.describe 'Tasks' do
       end
     end
 
-    it 'returns a paginated list of tasks' do
-      task1 = VCAP::CloudController::TaskModel.make(
-        name:         'task one',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-        disk_in_mb:   10,
-      )
-      task2 = VCAP::CloudController::TaskModel.make(
-        name:         'task two',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 100,
-        disk_in_mb:   500,
-      )
-      VCAP::CloudController::TaskModel.make(
-        app_guid: app_model.guid,
-        droplet:  app_model.droplet,
-      )
+    context 'pagination' do
+      let(:user) { make_developer_for_space(space) }
+      it 'returns a paginated list of tasks' do
+        task1 = VCAP::CloudController::TaskModel.make(
+          name:         'task one',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   10,
+        )
+        task2 = VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 100,
+          disk_in_mb:   500,
+        )
+        VCAP::CloudController::TaskModel.make(
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
 
-      get '/v3/tasks?per_page=2', nil, developer_headers
+        get '/v3/tasks?per_page=2', nil, developer_headers
 
-      parsed_response = MultiJson.load(last_response.body)
+        parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
-        'pagination' => {
-          'total_results' => 3,
-          'total_pages'   => 2,
-          'first'         => { 'href' => "#{link_prefix}/v3/tasks?page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
-          'next'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
-          'previous'      => nil,
-        },
-        'resources' => [
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like({
+          'pagination' => {
+            'total_results' => 3,
+            'total_pages'   => 2,
+            'first'         => { 'href' => "#{link_prefix}/v3/tasks?page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
+            'next'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'         => task1.guid,
+              'sequence_id'  => task1.sequence_id,
+              'name'         => 'task one',
+              'state'        => 'RUNNING',
+              'memory_in_mb' => 5,
+              'disk_in_mb'   => 10,
+              'result'       => {
+                'failure_reason' => nil
+              },
+              'droplet_guid' => task1.droplet.guid,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at'   => iso8601,
+              'updated_at'   => iso8601,
+              'links'        => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                },
+                'cancel' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                  'method' => 'POST',
+                },
+                'droplet' => {
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                }
+              }
+            },
+            {
+              'guid'         => task2.guid,
+              'sequence_id'  => task2.sequence_id,
+              'name'         => 'task two',
+              'state'        => 'RUNNING',
+              'memory_in_mb' => 100,
+              'disk_in_mb'   => 500,
+              'result'       => {
+                'failure_reason' => nil
+              },
+              'droplet_guid' => task2.droplet.guid,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at'   => iso8601,
+              'updated_at'   => iso8601,
+              'links'        => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                },
+                'cancel' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                  'method' => 'POST',
+                },
+                'droplet' => {
+                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                }
+              }
+            }
+          ]
+        })
+      end
+    end
+
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:api_call) { lambda { |user_headers| get '/v3/tasks', nil, user_headers } }
+      let(:task1) do
+        VCAP::CloudController::TaskModel.make(
+          name:     'task one',
+          command:  'echo task',
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
+      end
+
+      let(:task2) do
+        VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   10,
+        )
+      end
+
+      let(:expected_response) do
+        [
           {
             'guid'         => task1.guid,
             'sequence_id'  => task1.sequence_id,
             'name'         => 'task one',
             'state'        => 'RUNNING',
-            'memory_in_mb' => 5,
-            'disk_in_mb'   => 10,
+            'memory_in_mb' => 256,
+            'disk_in_mb'   => nil,
             'result'       => {
               'failure_reason' => nil
             },
@@ -160,8 +257,8 @@ RSpec.describe 'Tasks' do
             'sequence_id'  => task2.sequence_id,
             'name'         => 'task two',
             'state'        => 'RUNNING',
-            'memory_in_mb' => 100,
-            'disk_in_mb'   => 500,
+            'memory_in_mb' => 5,
+            'disk_in_mb'   => 10,
             'result'       => {
               'failure_reason' => nil
             },
@@ -187,10 +284,21 @@ RSpec.describe 'Tasks' do
             }
           }
         ]
-      })
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: expected_response)
+        h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
+          code: 200,
+          response_objects: []
+        }
+        h.freeze
+      end
     end
 
     describe 'filtering' do
+      let(:user) { make_developer_for_space(space) }
+
       it 'returns a paginated list of tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
           name:         'task one',
@@ -290,82 +398,64 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'GET /v3/tasks/:guid' do
-    it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make(
-        name:         'task',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-        disk_in_mb:   50,
-      )
-      task_guid = task.guid
-
-      get "/v3/tasks/#{task_guid}", nil, developer_headers
-
-      expected_response = {
-        'guid'         => task_guid,
-        'sequence_id'  => task.sequence_id,
-        'name'         => 'task',
-        'command'      => 'echo task',
-        'state'        => 'RUNNING',
-        'memory_in_mb' => 5,
-        'disk_in_mb'   => 50,
-        'result'       => {
-          'failure_reason' => nil
-        },
-        'droplet_guid' => task.droplet.guid,
-        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-        'metadata' => { 'labels' => {}, 'annotations' => {} },
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links'        => {
-          'self' => {
-            'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:task) do
+        VCAP::CloudController::TaskModel.make(
+          name:         'task',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   50,
+        )
+      end
+      let(:api_call) { lambda { |user_headers| get "/v3/tasks/#{task.guid}", nil, user_headers } }
+      let(:expected_response) do
+        {
+          'guid'         => task.guid,
+          'sequence_id'  => task.sequence_id,
+          'name'         => 'task',
+          'state'        => 'RUNNING',
+          'memory_in_mb' => 5,
+          'disk_in_mb'   => 50,
+          'result'       => {
+            'failure_reason' => nil
           },
-          'app' => {
-            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-          },
-          'cancel' => {
-            'href' => "#{link_prefix}/v3/tasks/#{task_guid}/actions/cancel",
-            'method' => 'POST',
-          },
-          'droplet' => {
-            'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+          'droplet_guid' => task.droplet.guid,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at'   => iso8601,
+          'updated_at'   => iso8601,
+          'links'        => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/tasks/#{task.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel",
+              'method' => 'POST',
+            },
+            'droplet' => {
+              'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+            }
           }
         }
-      }
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-
-    it 'excludes information for auditors' do
-      task = VCAP::CloudController::TaskModel.make(
-        name:         'task',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-      )
-      task_guid = task.guid
-
-      auditor = VCAP::CloudController::User.make
-      space.organization.add_user(auditor)
-      space.add_auditor(auditor)
-
-      get "/v3/tasks/#{task_guid}", nil, headers_for(auditor)
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).not_to have_key('command')
+      end
+      let(:expected_response_with_command) { expected_response.merge({ 'command' => 'echo task' }) }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response_with_command }
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+        h.freeze
+      end
     end
   end
 
   describe 'PUT /v3/tasks/:guid/cancel (deprecated)' do
+    let(:user) { make_developer_for_space(space) }
+
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
       allow(bbs_task_client).to receive(:cancel_task)
@@ -402,6 +492,7 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'PATCH /v3/tasks/:guid' do
+    let(:user) { make_developer_for_space(space) }
     let(:task) { VCAP::CloudController::TaskModel.make(
       name: 'task',
       command: 'echo task',
@@ -473,147 +564,279 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
+    let(:task) { VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid }
+
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
       allow(bbs_task_client).to receive(:cancel_task)
     end
-    it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
 
-      post "/v3/tasks/#{task.guid}/actions/cancel", nil, developer_headers
-
-      expect(last_response.status).to eq(202)
-      parsed_body = JSON.parse(last_response.body)
-      expect(parsed_body['guid']).to eq(task.guid)
-      expect(parsed_body['name']).to eq('task')
-      expect(parsed_body['command']).to eq('echo task')
-      expect(parsed_body['state']).to eq('CANCELING')
-      expect(parsed_body['result']).to eq({ 'failure_reason' => nil })
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type:              'audit.app.task.cancel',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        app_model.name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
-      expect(event.metadata['task_guid']).to eq(task.guid)
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:api_call) { lambda { |user_headers| post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
+      let(:expected_response) do
+        {
+          guid: task.guid,
+          sequence_id: task.sequence_id,
+          name: 'task',
+          command: 'echo task',
+          state: 'CANCELING',
+          memory_in_mb: 256,
+          disk_in_mb: nil,
+          result: {
+            failure_reason: nil
+          },
+          droplet_guid: task.droplet.guid,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          },
+          links: {
+            self: {
+              href: %r(#{link_prefix}/v3/tasks/#{task.guid})
+            },
+            app: {
+              href: "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            cancel: {
+              href: %r(#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel),
+              method: 'POST'
+            },
+            droplet: {
+              href: %r(#{link_prefix}/v3/droplets/#{task.droplet.guid})
+            }
+          }
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+        h['admin'] = h['space_developer'] = h['space_supporter'] = {
+          code: 202,
+          response_object: expected_response
+        }
+        h.freeze
+      end
     end
   end
 
   describe 'GET /v3/apps/:guid/tasks' do
-    it 'returns a paginated list of tasks' do
-      task1 = VCAP::CloudController::TaskModel.make(
-        name:         'task one',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 5,
-        disk_in_mb:   50,
-      )
-      task2 = VCAP::CloudController::TaskModel.make(
-        name:         'task two',
-        command:      'echo task',
-        app_guid:     app_model.guid,
-        droplet:      app_model.droplet,
-        memory_in_mb: 100,
-        disk_in_mb:   500,
-      )
-      VCAP::CloudController::TaskModel.make(
-        app_guid: app_model.guid,
-        droplet:  app_model.droplet,
-      )
+    context 'pagination' do
+      let(:user) { make_developer_for_space(space) }
 
-      get "/v3/apps/#{app_model.guid}/tasks?per_page=2", nil, developer_headers
+      it 'returns a paginated list of tasks' do
+        task1 = VCAP::CloudController::TaskModel.make(
+          name:         'task one',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   50,
+        )
+        task2 = VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 100,
+          disk_in_mb:   500,
+        )
+        VCAP::CloudController::TaskModel.make(
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
 
-      expected_response =
-        {
-          'pagination' => {
-            'total_results' => 3,
-            'total_pages'   => 2,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
-            'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
-            'previous'      => nil,
-          },
-          'resources' => [
-            {
-              'guid'         => task1.guid,
-              'sequence_id'  => task1.sequence_id,
-              'name'         => 'task one',
-              'command'      => 'echo task',
-              'state'        => 'RUNNING',
-              'memory_in_mb' => 5,
-              'disk_in_mb'   => 50,
-              'result'       => {
-                'failure_reason' => nil
+        get "/v3/apps/#{app_model.guid}/tasks?per_page=2", nil, developer_headers
+
+        expected_response =
+          {
+            'pagination' => {
+              'total_results' => 3,
+              'total_pages'   => 2,
+              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
+              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+              'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+              'previous'      => nil,
+            },
+            'resources' => [
+              {
+                'guid'         => task1.guid,
+                'sequence_id'  => task1.sequence_id,
+                'name'         => 'task one',
+                'command'      => 'echo task',
+                'state'        => 'RUNNING',
+                'memory_in_mb' => 5,
+                'disk_in_mb'   => 50,
+                'result'       => {
+                  'failure_reason' => nil
+                },
+                'droplet_guid' => task1.droplet.guid,
+                'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'created_at'   => iso8601,
+                'updated_at'   => iso8601,
+                'links'        => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
+                  },
+                  'app' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                  },
+                  'cancel' => {
+                    'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                    'method' => 'POST',
+                  },
+                  'droplet' => {
+                    'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                  }
+                }
               },
-              'droplet_guid' => task1.droplet.guid,
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'created_at'   => iso8601,
-              'updated_at'   => iso8601,
-              'links'        => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
+              {
+                'guid'         => task2.guid,
+                'sequence_id'  => task2.sequence_id,
+                'name'         => 'task two',
+                'command'      => 'echo task',
+                'state'        => 'RUNNING',
+                'memory_in_mb' => 100,
+                'disk_in_mb'   => 500,
+                'result'       => {
+                  'failure_reason' => nil
                 },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-                },
-                'cancel' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
-                  'method' => 'POST',
-                },
-                'droplet' => {
-                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                'droplet_guid' => task2.droplet.guid,
+                'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'created_at'   => iso8601,
+                'updated_at'   => iso8601,
+                'links'        => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
+                  },
+                  'app' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                  },
+                  'cancel' => {
+                    'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                    'method' => 'POST',
+                  },
+                  'droplet' => {
+                    'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                  }
                 }
               }
+            ]
+          }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/tasks", nil, user_headers } }
+      let(:task1) do
+        VCAP::CloudController::TaskModel.make(
+          name:     'task one',
+          command:      'echo task',
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+        )
+      end
+
+      let(:task2) do
+        VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          disk_in_mb:   10,
+        )
+      end
+
+      let(:expected_response) do
+        [
+          {
+            'guid'         => task1.guid,
+            'sequence_id'  => task1.sequence_id,
+            'name'         => 'task one',
+            'state'        => 'RUNNING',
+            'memory_in_mb' => 256,
+            'disk_in_mb'   => nil,
+            'result'       => {
+              'failure_reason' => nil
             },
-            {
-              'guid'         => task2.guid,
-              'sequence_id'  => task2.sequence_id,
-              'name'         => 'task two',
-              'command'      => 'echo task',
-              'state'        => 'RUNNING',
-              'memory_in_mb' => 100,
-              'disk_in_mb'   => 500,
-              'result'       => {
-                'failure_reason' => nil
+            'droplet_guid' => task1.droplet.guid,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'created_at'   => iso8601,
+            'updated_at'   => iso8601,
+            'links'        => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
               },
-              'droplet_guid' => task2.droplet.guid,
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'created_at'   => iso8601,
-              'updated_at'   => iso8601,
-              'links'        => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-                },
-                'cancel' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
-                  'method' => 'POST',
-                },
-                'droplet' => {
-                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
-                }
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                'method' => 'POST',
+              },
+              'droplet' => {
+                'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
               }
             }
-          ]
-        }
+          },
+          {
+            'guid'         => task2.guid,
+            'sequence_id'  => task2.sequence_id,
+            'name'         => 'task two',
+            'state'        => 'RUNNING',
+            'memory_in_mb' => 5,
+            'disk_in_mb'   => 10,
+            'result'       => {
+              'failure_reason' => nil
+            },
+            'droplet_guid' => task2.droplet.guid,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'created_at'   => iso8601,
+            'updated_at'   => iso8601,
+            'links'        => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                'method' => 'POST',
+              },
+              'droplet' => {
+                'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+              }
+            }
+          }
+        ]
+      end
+      let(:expected_response_with_command) { expected_response.map { |task| task.merge({ 'command' => 'echo task' }) } }
 
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: expected_response)
+        h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_objects: expected_response_with_command }
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+        h.freeze
+      end
     end
 
     describe 'perms' do
@@ -634,6 +857,7 @@ RSpec.describe 'Tasks' do
     end
 
     describe 'filtering' do
+      let(:user) { make_developer_for_space(space) }
       it 'filters by name' do
         expected_task = VCAP::CloudController::TaskModel.make(name: 'task one', app: app_model)
         VCAP::CloudController::TaskModel.make(name: 'task two', app: app_model)
@@ -724,6 +948,7 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/apps/:guid/tasks' do
+    let(:user) { make_developer_for_space(space) }
     let(:body) do {
       name:         'best task ever',
       command:      'be rake && true',
