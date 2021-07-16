@@ -86,8 +86,28 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_unscoped_raw_response) do
+          { data: [{ guid: org1.guid }, { guid: org2.guid }, { guid: space.organization.guid }],
+            links: { self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
+                     related: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" } } }
+        end
+
+        let(:expected_org_scoped_raw_response) do
+          { data: [{ guid: space.organization.guid }],
+            links: { self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations" },
+                     related: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" } } }
+        end
+
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200)
+          h = Hash.new(code: 200, raw_response: expected_unscoped_raw_response)
+          h['org_auditor'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['org_billing_manager'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['org_manager'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['space_auditor'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['space_developer'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['space_manager'] = { code: 200, raw_response: expected_org_scoped_raw_response }
+          h['space_supporter'] = { code: 200, raw_response: expected_org_scoped_raw_response }
           h['no_role'] = { code: 404 }
           h
         end
@@ -126,8 +146,29 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:org) { space1.organization }
         let(:space) { space1 }
         let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_unscoped_raw_response) do
+          { data: [{ guid: space1.guid }, { guid: space2.guid }],
+            links: { self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" } } }
+        end
+
+        let(:expected_space_scoped_raw_response) do
+          { data: [{ guid: space1.guid }], links: { self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" } } }
+        end
+
+        let(:expected_fully_scoped_raw_response) do
+          { data: [], links: { self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" } } }
+        end
+
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200)
+          h = Hash.new(code: 200, raw_response: expected_unscoped_raw_response)
+          h['org_auditor'] = { code: 200, raw_response: expected_fully_scoped_raw_response }
+          h['org_billing_manager'] = { code: 200, raw_response: expected_fully_scoped_raw_response }
+          h['org_manager'] = { code: 200, raw_response: expected_space_scoped_raw_response }
+          h['space_auditor'] = { code: 200, raw_response: expected_space_scoped_raw_response }
+          h['space_developer'] = { code: 200, raw_response: expected_space_scoped_raw_response }
+          h['space_manager'] = { code: 200, raw_response: expected_space_scoped_raw_response }
+          h['space_supporter'] = { code: 200, raw_response: expected_space_scoped_raw_response }
           h['no_role'] = { code: 404 }
           h
         end
