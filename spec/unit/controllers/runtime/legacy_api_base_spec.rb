@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::LegacyApiBase do
     let(:user) { User.make(admin: true, active: true) }
@@ -7,7 +9,6 @@ module VCAP::CloudController
     let(:fake_req) { '' }
     let(:dependencies) do
       {
-        perm_client: double(Perm::Client),
         statsd_client: double(Statsd),
       }
     end

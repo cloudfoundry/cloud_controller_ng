@@ -55,7 +55,7 @@ class ServicePlansController < ApplicationController
                   message,
                   eager_loaded_associations: Presenters::V3::ServicePlanPresenter.associated_resources,
                   readable_org_guids: permission_queryer.readable_org_guids,
-                  readable_space_guids: permission_queryer.readable_space_scoped_space_guids,
+                  readable_space_guids: permission_queryer.readable_space_supporter_space_scoped_space_guids,
                 )
               end
 

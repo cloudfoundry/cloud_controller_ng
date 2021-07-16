@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe ServiceKeysController do
     describe 'Attributes' do
@@ -52,7 +54,6 @@ module VCAP::CloudController
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
           statsd_client: double(Statsd),
-          perm_client: double(Perm::Client)
         }
       end
       let(:config) { double(Config, get: nil) }

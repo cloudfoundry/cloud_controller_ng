@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'rails_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe ApplicationController, type: :controller do
   RSpec::Matchers.define_negated_matcher :not_change, :change
 
@@ -86,18 +88,6 @@ RSpec.describe ApplicationController, type: :controller do
       add_warning_headers('value of incorrect type')
       render status: 200, json: {}
     end
-  end
-
-  let(:perm_client) { instance_double(VCAP::CloudController::Perm::Client) }
-
-  before do
-    Scientist::Observation::RESCUES.replace []
-
-    perm_config = TestConfig.config[:perm]
-    perm_config[:enabled] = true
-    TestConfig.override(perm: perm_config)
-
-    allow(VCAP::CloudController::Perm::Client).to receive(:new).and_return(perm_client)
   end
 
   describe '#check_read_permissions' do

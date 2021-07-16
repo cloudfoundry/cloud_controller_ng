@@ -95,14 +95,6 @@ require 'cloud_controller/upload_buildpack'
 
 require 'cloud_controller/errors/instances_unavailable'
 
-require 'cloud_controller/permissions/queryer'
-
-require 'cloud_controller/perm/client'
-require 'cloud_controller/perm/permissions'
-require 'cloud_controller/perm/errors'
-
-require 'cloud_controller/science/experiment'
-
 require 'cloud_controller/uaa/errors'
 require 'cloud_controller/uaa/uaa_client'
 require 'cloud_controller/uaa/uaa_token_cache'

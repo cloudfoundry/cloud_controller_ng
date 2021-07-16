@@ -87,6 +87,23 @@ class VCAP::CloudController::Permissions
     roles.admin?
   end
 
+  def can_write_global_service_broker?
+    can_write_globally?
+  end
+
+  def can_write_space_scoped_service_broker?(space_guid)
+    can_write_to_space?(space_guid)
+  end
+
+  def can_read_space_scoped_service_broker?(service_broker)
+    service_broker.space_scoped? &&
+        can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
+  end
+
+  def can_read_service_broker?(service_broker)
+    can_read_globally? || can_read_space_scoped_service_broker?(service_broker)
+  end
+
   def readable_org_guids
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
@@ -104,7 +121,9 @@ class VCAP::CloudController::Permissions
 
       # Getting readable orgs for space-scoped roles
       space_guids = membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_SUPPORTERS)
-      org_guids_from_space_guids = space_guids.map { |guid| VCAP::CloudController::Space.find(guid: guid).organization.guid }
+      org_guids_from_space_guids = space_guids.filter_map do |guid|
+        VCAP::CloudController::Space.find(guid: guid)&.organization&.guid
+      end
 
       (org_guids + org_guids_from_space_guids).uniq
     end
@@ -212,6 +231,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
       membership.space_guids_for_roles(SPACE_ROLES)
+    end
+  end
+
+  def readable_space_supporter_space_scoped_space_guids
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(SPACE_ROLES_INCLUDING_SUPPORTERS)
     end
   end
 

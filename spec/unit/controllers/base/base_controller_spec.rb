@@ -10,7 +10,6 @@ module VCAP::CloudController
     let(:dependencies) do
       {
         statsd_client: double(Statsd),
-        perm_client: double(Perm::Client),
       }
     end
 

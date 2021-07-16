@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   # port of the legacy cc info spec, minus legacy token support. i.e. this is jwt
   # tokens only.

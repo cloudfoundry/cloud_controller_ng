@@ -37,8 +37,6 @@ require 'cloud_controller/opi/task_client'
 
 require 'bits_service_client'
 
-require 'perm'
-
 module CloudController
   class DependencyLocator
     include Singleton
@@ -123,10 +121,6 @@ module CloudController
 
     def index_stopper
       @dependencies[:index_stopper] || register(:index_stopper, IndexStopper.new(runners))
-    end
-
-    def perm_client
-      @dependencies[:perm_client] || register(:perm_client, build_perm_client)
     end
 
     def droplet_blobstore
@@ -554,10 +548,6 @@ module CloudController
         max_inline_relations_depth: max_inline_relations_depth,
         collection_transformer: collection_transformer
       })
-    end
-
-    def build_perm_client
-      VCAP::CloudController::Perm::Client.build_from_config(config, File)
     end
   end
 end

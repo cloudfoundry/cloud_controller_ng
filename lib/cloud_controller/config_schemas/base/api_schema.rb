@@ -89,6 +89,8 @@ module VCAP::CloudController
               log_level: String, # debug, info, etc.
               log_db_queries: bool,
               connection_validation_timeout: Integer,
+              optional(:connection_expiration_timeout) => Integer,
+              optional(:connection_expiration_random_delay) => Integer,
               optional(:ssl_verify_hostname) => bool,
               optional(:ca_cert_path) => String,
             },
@@ -311,8 +313,11 @@ module VCAP::CloudController
               optional(:diego_sync) => { timeout_in_seconds: Integer },
             },
 
-            perm: {
-              enabled: bool,
+            # perm settings no longer have any effect but are preserved here
+            # for the time being to avoid breaking users as the perm
+            # setting was once required.
+            optional(:perm) => {
+              optional(:enabled) => bool,
               optional(:hostname) => String,
               optional(:port) => Integer,
               optional(:timeout_in_milliseconds) => Integer,
