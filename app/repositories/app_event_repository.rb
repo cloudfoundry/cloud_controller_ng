@@ -14,7 +14,7 @@ module VCAP::CloudController
                            :docker_credentials].freeze
       SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system', user_name: 'system' }.freeze
 
-      def create_app_exit_event(app, droplet_exited_payload)
+      def create_app_crash_event(app, droplet_exited_payload)
         VCAP::AppLogEmitter.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
 
         actor    = { name: app.name, guid: app.guid, type: 'app' }

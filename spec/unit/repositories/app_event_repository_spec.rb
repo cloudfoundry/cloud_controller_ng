@@ -185,7 +185,7 @@ module VCAP::CloudController
         end
       end
 
-      describe '#create_app_exit_event' do
+      describe '#create_app_crash_event' do
         let(:exiting_process) { ProcessModelFactory.make }
         let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
         let(:droplet_exited_payload) {
@@ -201,7 +201,7 @@ module VCAP::CloudController
         }
 
         it 'creates a new app exit event' do
-          event = app_event_repository.create_app_exit_event(exiting_process, droplet_exited_payload)
+          event = app_event_repository.create_app_crash_event(exiting_process, droplet_exited_payload)
           expect(event.type).to eq('app.crash')
           expect(event.actor).to eq(exiting_process.guid)
           expect(event.actor_type).to eq('app')
@@ -222,7 +222,7 @@ module VCAP::CloudController
         it 'logs the event' do
           expect(VCAP::AppLogEmitter).to receive(:emit).with(exiting_process.guid, "App instance exited with guid #{exiting_process.guid} payload: #{droplet_exited_payload}")
 
-          app_event_repository.create_app_exit_event(exiting_process, droplet_exited_payload)
+          app_event_repository.create_app_crash_event(exiting_process, droplet_exited_payload)
         end
       end
 

@@ -112,6 +112,19 @@ module VCAP::CloudController
         )
       end
 
+      def self.record_rescheduling(process, rescheduling_payload)
+        VCAP::AppLogEmitter.emit(process.app.guid, 'Process is being rescheduled')
+
+        create_event(
+          process:    process,
+          type:       'audit.app.process.rescheduling',
+          actor_guid: process.guid,
+          actor_name: process.type,
+          actor_type: 'process',
+          metadata:   rescheduling_payload
+        )
+      end
+
       class << self
         private
 
