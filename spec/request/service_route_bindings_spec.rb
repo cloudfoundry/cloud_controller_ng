@@ -1705,7 +1705,7 @@ RSpec.describe 'v3 service route bindings' do
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
-          h['space_supporter'] = { code: 404 }
+          h['space_supporter'] = { code: 403 }
         end
       end
     end
