@@ -962,40 +962,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
-
-    context 'permissions' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
-      let(:space) { app_model.space }
-      let(:org) { space.organization }
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
-
-      context 'when the user cannot read the app' do
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
-        end
-      end
-
-      context 'when the user can read but cannot write to the app' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'raises ApiError NotAuthorized' do
-          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
-
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
-    end
   end
 
   describe '#destroy' do
@@ -1012,48 +978,6 @@ RSpec.describe AppsV3Controller, type: :controller do
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
       allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
-    end
-
-    context 'permissions' do
-      context 'when the user does not have the write scope' do
-        before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
-        end
-
-        it 'raises an ApiError with a 403 code' do
-          delete :destroy, params: { guid: app_model.guid }
-
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
-
-      context 'when the user cannot read the app' do
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          delete :destroy, params: { guid: app_model.guid }
-
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
-        end
-      end
-
-      context 'when the user can read but cannot write to the app' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'raises ApiError NotAuthorized' do
-          delete :destroy, params: { guid: app_model.guid }
-
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
     end
 
     context 'when the app does not exist' do
