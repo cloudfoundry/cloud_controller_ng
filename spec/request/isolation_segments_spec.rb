@@ -75,6 +75,32 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(parsed_response['data']).to include(expected_response['data'][1])
       expect(parsed_response.except('data')).to be_a_response_like(expected_response.except('data'))
     end
+
+    context 'permissions' do
+      before do
+        assigner.assign(isolation_segment_model, [space.organization])
+        space.update(isolation_segment_guid: isolation_segment_model.guid)
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_guids: [org1.guid, org2.guid, space.organization.guid])
+          h['org_auditor'] = { code: 200, response_guids: [space.organization.guid] }
+          h['org_billing_manager'] = { code: 200, response_guids: [space.organization.guid] }
+          h['org_manager'] = { code: 200, response_guids: [space.organization.guid] }
+          h['space_auditor'] = { code: 200, response_guids: [space.organization.guid] }
+          h['space_developer'] = { code: 200, response_guids: [space.organization.guid] }
+          h['space_manager'] = { code: 200, response_guids: [space.organization.guid] }
+          h['space_supporter'] = { code: 200, response_guids: [space.organization.guid] }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
+    end
   end
 
   describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
@@ -100,6 +126,28 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(parsed_response['links']).to eq({
         'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
       })
+    end
+
+    context 'permissions' do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_headers } }
+        let(:org) { space1.organization }
+        let(:space) { space1 }
+        let(:user) { VCAP::CloudController::User.make }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid])
+          h['org_auditor'] = { code: 200, response_guids: [] }
+          h['org_billing_manager'] = { code: 200, response_guids: [] }
+          h['org_manager'] = { code: 200, response_guids: [space1.guid] }
+          h['space_auditor'] = { code: 200, response_guids: [space1.guid] }
+          h['space_developer'] = { code: 200, response_guids: [space1.guid] }
+          h['space_manager'] = { code: 200, response_guids: [space1.guid] }
+          h['space_supporter'] = { code: 200, response_guids: [space1.guid] }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
     end
   end
 
@@ -214,6 +262,24 @@ RSpec.describe 'IsolationSegmentModels' do
         }
 
         expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    context 'permissions' do
+      before do
+        assigner.assign(isolation_segment_model, [space.organization])
+        space.update(isolation_segment_guid: isolation_segment_model.guid)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200)
+          h['no_role'] = { code: 404 }
+          h
+        end
       end
     end
   end
@@ -435,6 +501,26 @@ RSpec.describe 'IsolationSegmentModels' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(iso_segB.guid, iso_segC.guid)
+      end
+    end
+
+    context 'permissions' do
+      let(:iso_seg1) { VCAP::CloudController::IsolationSegmentModel.make }
+      before do
+        assigner.assign(iso_seg1, [space.organization])
+      end
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get '/v3/isolation_segments', nil, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_guids: [iso_seg1.guid])
+          h['admin'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['admin_read_only'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['global_auditor'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['no_role'] = { code: 200, response_guids: [] }
+          h
+        end
       end
     end
   end
