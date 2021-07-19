@@ -203,15 +203,8 @@ RSpec.describe 'IsolationSegmentModels' do
 
   describe 'GET /v3/isolation_segments/:guid' do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-
-    context 'as an admin' do
-      it 'returns the requested isolation segment' do
-        get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-
-        expected_response = {
+    let(:expected_response_object) do
+      {
           'name'       => isolation_segment_model.name,
           'guid'       => isolation_segment_model.guid,
           'created_at' => iso8601,
@@ -225,50 +218,11 @@ RSpec.describe 'IsolationSegmentModels' do
             'labels' => {}
           }
         }
-
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
     end
 
-    context 'when a user has read permissions for a space associated to an isolation_segment' do
-      let(:user_header) { headers_for(user) }
-
+    context 'permissions for org-scoped isolation segments' do
       before do
         assigner.assign(isolation_segment_model, [space.organization])
-        space.update(isolation_segment_guid: isolation_segment_model.guid)
-        space.organization.add_user(user)
-        space.add_developer(user)
-      end
-
-      it 'returns the requested isolation segment' do
-        get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-
-        expected_response = {
-          'name'       => isolation_segment_model.name,
-          'guid'       => isolation_segment_model.guid,
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'links'      => {
-            'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
-            'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
-          },
-          'metadata' => {
-            'annotations' => {},
-            'labels' => {}
-          }
-        }
-
-        expect(parsed_response).to be_a_response_like(expected_response)
-      end
-    end
-
-    context 'permissions' do
-      before do
-        assigner.assign(isolation_segment_model, [space.organization])
-        space.update(isolation_segment_guid: isolation_segment_model.guid)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
@@ -276,8 +230,23 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200)
+          h = Hash.new(code: 200, response_object: expected_response_object)
           h['no_role'] = { code: 404 }
+          h
+        end
+      end
+    end
+
+    context 'permissions for unscoped isolation segments' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 200, response_object: expected_response_object }
+          h['admin_read_only'] = { code: 200, response_object: expected_response_object }
+          h['global_auditor'] = { code: 200, response_object: expected_response_object }
           h
         end
       end
