@@ -85,7 +85,7 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
 
         expected_response_guids = expected_codes_and_responses[role][:response_guids]
         if expected_response_guids
-          expect(parsed_response['resources'].map { |resource| resource['guid'] }).to match_array(expected_response_guids)
+          expect((parsed_response['resources'] || parsed_response['data']).map { |resource| resource['guid'] }).to match_array(expected_response_guids)
         end
       end
     end
