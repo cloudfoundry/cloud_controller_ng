@@ -28,6 +28,8 @@ module VCAP::CloudController
               ssl_verify_hostname: bool,
               connection_validation_timeout: Integer,
               optional(:ca_cert_path) => String,
+              optional(:connection_expiration_timeout) => Integer,
+              optional(:connection_expiration_random_delay) => Integer,
             },
 
             index: Integer, # Component index (cc-0, cc-1, etc)
