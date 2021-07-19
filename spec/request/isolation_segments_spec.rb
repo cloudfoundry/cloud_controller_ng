@@ -505,12 +505,20 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'permissions' do
+      let(:iso_seg1) { VCAP::CloudController::IsolationSegmentModel.make }
+      before do
+        assigner.assign(iso_seg1, [space.organization])
+      end
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:api_call) { lambda { |user_headers| get '/v3/isolation_segments', nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200)
+          h = Hash.new(code: 200, response_guids: [iso_seg1.guid])
+          h['admin'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['admin_read_only'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['global_auditor'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
+          h['no_role'] = { code: 200, response_guids: [] }
           h
         end
       end

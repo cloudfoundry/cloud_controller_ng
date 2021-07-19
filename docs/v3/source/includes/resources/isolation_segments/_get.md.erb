@@ -21,6 +21,8 @@ Content-Type: application/json
 <%= yield_content :single_isolation_segment %>
 ```
 
+Retrieve an isolation segment to which the user has access.  For admin, this is any isolation segment in the system.  For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.
+
 #### Definition
 `GET /v3/isolation_segments/:guid`
 
