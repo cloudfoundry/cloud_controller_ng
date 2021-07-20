@@ -1652,7 +1652,6 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'PATCH v3/droplets/:guid' do
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -1663,79 +1662,118 @@ RSpec.describe 'Droplets' do
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
         sha256_checksum: 'droplet-checksum-sha256',
-        process_types: { 'web' => 'start-command' },
+        process_types: { 'web' => 'start-command' }
       )
     end
-
-    let(:metadata) do
+    let(:update_request) do
       {
-        labels: {
-          'release' => 'stable',
-          'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
-          'delete-me' => nil,
-        },
-        annotations: {
-          'potato' => 'sieglinde',
-          'key' => ''
+        metadata: {
+          labels: {
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+            'delete-me' => nil,
+          },
+          annotations: {
+            'potato' => 'sieglinde',
+            'key' => ''
+          }
         }
       }
     end
-
-    let(:update_request) do
-      {
-        metadata: metadata
-      }
-    end
+    let(:api_call) { lambda { |headers| patch "/v3/droplets/#{guid}", update_request.to_json, headers } }
 
     before do
       og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
     context 'when the droplet does not exist' do
-      it 'returns a 404' do
-        patch '/v3/droplets/POTATO', { metadata: metadata }.to_json, developer_headers
+      let(:guid) { 'fake_guid' }
+
+      it 'returns 404 and renders the errors' do
+        api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
+        expect(last_response.body).to include('CF-ResourceNotFound')
       end
     end
+
     context 'when the droplet exists' do
+      let(:guid) { og_droplet.guid }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:droplet_json) do
+          {
+            guid: og_droplet.guid,
+            state: 'STAGED',
+            error: nil,
+            lifecycle: {
+              type: 'buildpack',
+              data: {}
+            },
+            execution_metadata: 'some-data',
+            process_types: {
+              web: 'start-command'
+            },
+            checksum: {
+             type: 'sha256',
+             value: 'droplet-checksum-sha256'
+            },
+            buildpacks: [
+              {
+                name: 'http://buildpack.git.url.com',
+                detect_output: nil,
+                buildpack_name: nil,
+                version: nil
+              }
+            ],
+            stack: 'stack-name',
+            image: nil,
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: { app: { data: { guid: app_model.guid } } },
+            metadata: {
+              labels: {
+                'release' => 'stable',
+                'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+              },
+              annotations: {
+                'potato' => 'sieglinde',
+                'key' => ''
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+              app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+              assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+              package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{UUID_REGEX}) },
+              download: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}\/download) },
+            }
+          }
+        end
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 200, response_object: droplet_json }
+          h['space_developer'] = { code: 200, response_object: droplet_json }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
+
       context 'when the message is invalid' do
         let(:update_request) do
           { metadata: 567 }
         end
 
         it 'returns 422 and renders the errors' do
-          patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, admin_headers
+          api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
           expect(last_response.body).to include('UnprocessableEntity')
         end
       end
 
-      it 'cloud_controller returns 403 if not admin and not build_state_updater' do
-        patch "/v3/droplets/#{og_droplet.guid}", { metadata: metadata }.to_json, headers_for(make_auditor_for_space(space), user_name: user_name, email: 'bob@loblaw.com')
-        expect(last_response.status).to eq(403), last_response.body
-      end
-
-      it 'updates the metadata on a droplet' do
-        patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, developer_headers
-        expect(last_response.status).to eq(200), last_response.body
-
-        og_droplet.reload
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['metadata']).to eq(
-          'labels' => {
-            'release' => 'stable',
-            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-          },
-          'annotations' => {
-            'potato' => 'sieglinde',
-            'key' => ''
-          }
-        )
-      end
-
       context 'when updating the image (on a docker droplet)' do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
-        let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
         let(:rebased_image_reference) { 'rebased-image-reference' }
         let!(:og_docker_droplet) do
           VCAP::CloudController::DropletModel.make(
@@ -1747,16 +1785,19 @@ RSpec.describe 'Droplets' do
             sha256_checksum: 'droplet-checksum-sha256',
           )
         end
-        before do
-          og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
-        end
+        let(:guid) { og_docker_droplet.guid }
         let(:update_request) do
           {
             image: rebased_image_reference
           }
         end
+
+        before do
+          og_docker_droplet.update(docker_receipt_image: 'some-image-reference')
+        end
+
         it 'allows admins to update the image' do
-          patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, admin_headers
+          api_call.call(admin_headers)
           expect(last_response.status).to eq(200), last_response.body
 
           og_docker_droplet.reload
@@ -1768,7 +1809,7 @@ RSpec.describe 'Droplets' do
 
         context 'when the cloud_controller.update_build_state scope is present' do
           it 'updates the image' do
-            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, build_state_updater_headers
+            api_call.call(build_state_updater_headers)
             expect(last_response.status).to eq(200)
 
             og_docker_droplet.reload
@@ -1781,7 +1822,7 @@ RSpec.describe 'Droplets' do
 
         context 'when the cloud_controller.update_build_state scope is NOT present' do
           it '403s' do
-            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, developer_headers
+            api_call.call(developer_headers)
             expect(last_response.status).to eq(403), last_response.body
           end
         end
@@ -1791,7 +1832,7 @@ RSpec.describe 'Droplets' do
           let(:wrong_developer_headers) { headers_for(wrong_developer, user_name: user_name, email: 'bob@loblaw.com') }
 
           it '404s' do
-            patch "/v3/droplets/#{og_docker_droplet.guid}", update_request.to_json, wrong_developer_headers
+            api_call.call(wrong_developer_headers)
             expect(last_response.status).to eq(404), last_response.body
           end
         end

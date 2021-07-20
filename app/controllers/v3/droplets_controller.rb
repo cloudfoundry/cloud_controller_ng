@@ -164,7 +164,7 @@ class DropletsController < ApplicationController
   private
 
   def can_read_build?(space)
-    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    permission_queryer.can_update_build_state? || permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def send_droplet_blob(droplet)
