@@ -57,7 +57,7 @@ class AppFeaturesController < ApplicationController
   def ssh_enabled
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, Config.config.get(:allow_app_ssh_access))
   end

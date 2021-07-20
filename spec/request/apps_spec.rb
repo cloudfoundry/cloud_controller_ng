@@ -1873,6 +1873,33 @@ RSpec.describe 'Apps' do
     end
   end
 
+  describe 'GET /v3/apps/:guid/ssh_enabled' do
+    before do
+      space.organization.add_user(user)
+    end
+
+    context 'when getting an apps ssh_enabled value' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/ssh_enabled", nil, user_headers } }
+      let!(:app_model) { VCAP::CloudController::AppModel.make(
+        :buildpack,
+        name: 'my_app',
+        guid: 'app1_guid',
+        space: space,
+      )
+      }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
+  end
+
   describe 'DELETE /v3/apps/guid' do
     let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
