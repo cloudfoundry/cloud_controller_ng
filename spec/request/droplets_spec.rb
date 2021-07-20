@@ -386,7 +386,7 @@ RSpec.describe 'Droplets' do
         expect(failures).to eq(0)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       it 'downloads the bit(s) for a droplet' do
         get "/v3/droplets/#{guid}/download", nil, developer_headers

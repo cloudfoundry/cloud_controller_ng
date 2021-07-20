@@ -140,7 +140,7 @@ class DropletsController < ApplicationController
   def download
     droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space, space: :organization).first
 
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unless droplet.buildpack?
       unprocessable!("Cannot download droplets with 'docker' lifecycle.")
