@@ -10213,6 +10213,8 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 </span></code></pre>
 
+<p>Retrieve an isolation segment to which the user has access.  For admin, this is any isolation segment in the system.  For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.</p>
+
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid</code></p>
@@ -10225,25 +10227,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 </thead><tbody>
 <tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 <h3 id="list-isolation-segments">List isolation segments</h3>
@@ -10369,7 +10353,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 </span></code></pre>
 
-<p>Retrieves all isolation segments to which the user has access.  For admin, this is all the isolation segments in the system.  For an org manager, this is the isolation segments in the allowed list for any organization to which the user belongs.  For any other user, this is the isolation segments assigned to any spaces to which the user has access.</p>
+<p>Retrieves all isolation segments to which the user has access.  For admin, this is all the isolation segments in the system.  For anyone else, this is the isolation segments in the allowed list for any organization to which the user belongs.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -10536,25 +10520,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 </thead><tbody>
 <tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 <h3 id="update-an-isolation-segment">Update an isolation segment</h3>
@@ -25686,29 +25652,41 @@ In order to bind to a user-provided service instance, the service instance must 
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-route-bindings">List service route bindings</h3>
@@ -26083,14 +26061,21 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-route-binding">Update a service route binding</h3>
@@ -26234,14 +26219,21 @@ responds with a job which can be used to track the progress of the delete operat
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-parameters-for-a-route-binding">Get parameters for a route binding</h3>
