@@ -117,7 +117,7 @@ class DropletsController < ApplicationController
     combine_messages(message.errors.full_messages) unless message.valid?
 
     droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space).first
-    resource_not_found_with_message!("Droplet with guid '#{hashed_params[:guid]}' does not exist, or you do not have access to it.") unless droplet
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
 

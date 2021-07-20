@@ -1590,9 +1590,18 @@ RSpec.describe 'Droplets' do
         code: 202,
         response_object: droplet_json
       }
+      h['org_auditor'] = {
+        code: 404
+      }
+      h['org_billing_manager'] = {
+        code: 404
+      }
       h['space_developer'] = {
         code: 202,
         response_object: droplet_json
+      }
+      h['no_role'] = {
+        code: 404
       }
       h.freeze
     end
@@ -1605,7 +1614,7 @@ RSpec.describe 'Droplets' do
       allow(File).to receive(:stat).and_return(instance_double(File::Stat, size: 12))
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:expected_event_hash) do
         {
           type: 'audit.app.droplet.upload',
@@ -1634,7 +1643,7 @@ RSpec.describe 'Droplets' do
         post '/v3/droplets/bad-droplet-guid/upload', params.to_json, developer_headers
 
         expect(last_response.status).to eq(404)
-        expect(last_response).to have_error_message("Droplet with guid 'bad-droplet-guid' does not exist, or you do not have access to it.")
+        expect(last_response.body).to include('Droplet not found')
       end
     end
 
