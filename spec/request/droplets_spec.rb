@@ -1464,7 +1464,7 @@ RSpec.describe 'Droplets' do
     end
   end
 
-  describe 'POST /v3/droplets/:guid/copy' do
+  describe 'POST /v3/droplets?source_guid=:guid' do
     let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
@@ -1492,40 +1492,46 @@ RSpec.describe 'Droplets' do
       og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
-    it 'copies a droplet' do
-      post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, developer_headers
-
-      parsed_response = MultiJson.load(last_response.body)
-      copied_droplet = VCAP::CloudController::DropletModel.last
-
-      expect(last_response.status).to eq(201), "Expected 201, got status: #{last_response.status} with body: #{parsed_response}"
-      expect(parsed_response).to be_a_response_like({
-        'guid' => copied_droplet.guid,
-        'state' => VCAP::CloudController::DropletModel::COPYING_STATE,
-        'error' => nil,
-        'lifecycle' => {
-          'type' => 'buildpack',
-          'data' => {}
-        },
-        'checksum' => nil,
-        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-        'stack' => 'stack-name',
-        'execution_metadata' => 'some-data',
-        'image' => nil,
-        'process_types' => { 'web' => 'start-command' },
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'relationships' => { 'app' => { 'data' => { 'guid' => new_app.guid } } },
-        'links' => {
-          'self' => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-        },
-        'metadata' => {
-          'labels' => {},
-          'annotations' => {}
-        },
-      })
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:api_call) { lambda { |user_headers| post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, user_headers } }
+      let(:expected_copied_response) do
+        {
+          'guid' => UUID_REGEX,
+          'state' => VCAP::CloudController::DropletModel::COPYING_STATE,
+          'error' => nil,
+          'lifecycle' => {
+            'type' => 'buildpack',
+            'data' => {}
+          },
+          'checksum' => nil,
+          'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+          'stack' => 'stack-name',
+          'execution_metadata' => 'some-data',
+          'image' => nil,
+          'process_types' => { 'web' => 'start-command' },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => { 'app' => { 'data' => { 'guid' => new_app.guid } } },
+          'links' => {
+            'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
+            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+          },
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {}
+          },
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 201, response_object: expected_copied_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['space_developer'] = { code: 201, response_object: expected_copied_response }
+        h['no_role'] = { code: 404 }
+        h
+      end
     end
   end
 

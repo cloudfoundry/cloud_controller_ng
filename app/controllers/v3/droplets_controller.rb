@@ -92,10 +92,10 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).eager(:space, space: :organization).first
-    droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
+    droplet_not_found! unless source_droplet && permission_queryer.untrusted_can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
-    app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
+    app_not_found! unless destination_app && permission_queryer.untrusted_can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
     DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
