@@ -246,13 +246,13 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
-    include_system_vars = permission_queryer.can_read_system_environment_variables?(space.guid, org.guid)
+    show_secrets = permission_queryer.can_read_system_environment_variables?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
     Repositories::AppEventRepository.new.record_app_show_env(app, user_audit_info)
 
-    render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app, include_system_vars)
+    render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app, show_secrets)
   end
 
   def show_environment_variables

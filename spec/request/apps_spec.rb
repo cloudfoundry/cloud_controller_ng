@@ -1592,7 +1592,9 @@ RSpec.describe 'Apps' do
           environment_variables: app_model.environment_variables,
           staging_env_json: {},
           running_env_json: {},
-          system_env_json: {},
+          system_env_json: {
+            redacted_message: '[PRIVATE DATA HIDDEN]'
+          },
           application_env_json: anything,
         }
       end
@@ -1705,7 +1707,9 @@ RSpec.describe 'Apps' do
           'environment_variables' => {
               'unicorn' => 'horn'
           },
-          'system_env_json' => {},
+          'system_env_json' => {
+            'redacted_message' => '[PRIVATE DATA HIDDEN]'
+          },
           'application_env_json' => {
               'VCAP_APPLICATION' => {
                   'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
