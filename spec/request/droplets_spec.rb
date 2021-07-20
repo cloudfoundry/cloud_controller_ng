@@ -993,15 +993,26 @@ RSpec.describe 'Droplets' do
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
-    it 'deletes a droplet asynchronously' do
-      delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
+    it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      let(:api_call) { lambda { |user_headers| delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
+      let(:db_check) do
+        lambda do
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
 
-      expect(last_response.status).to eq(202)
-      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
-
-      execute_all_jobs(expected_successes: 2, expected_failures: 0)
-      get "/v3/droplets/#{droplet.guid}", {}, developer_headers
-      expect(last_response.status).to eq(404)
+          execute_all_jobs(expected_successes: 2, expected_failures: 0)
+          get "/v3/droplets/#{droplet.guid}", {}, developer_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['space_developer'] = { code: 202 }
+        h['no_role'] = { code: 404 }
+        h
+      end
     end
 
     context 'deleting metadata' do

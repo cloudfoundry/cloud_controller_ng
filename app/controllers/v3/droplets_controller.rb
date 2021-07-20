@@ -60,7 +60,7 @@ class DropletsController < ApplicationController
 
   def destroy
     droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
