@@ -206,7 +206,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -459,13 +459,13 @@ RSpec.describe 'Spaces' do
         h['space_manager'] =               { code: 200, response_guids: [space1.guid] }
         h['space_auditor'] =               { code: 200, response_guids: [space1.guid] }
         h['space_developer'] =             { code: 200, response_guids: [space1.guid] }
-        h['space_application_supporter'] = { code: 200, response_guids: [space1.guid] }
+        h['space_supporter'] = { code: 200, response_guids: [space1.guid] }
 
         h['no_role'] = { code: 200, response_objects: [] }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -615,10 +615,11 @@ RSpec.describe 'Spaces' do
         h['space_manager'] = { code: 200, response_objects: response_object }
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
+        h['space_supporter'] = { code: 200, response_objects: response_object }
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -766,10 +767,11 @@ RSpec.describe 'Spaces' do
         h['space_manager'] = { code: 200, response_objects: response_object }
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
+        h['space_supporter'] = { code: 200, response_objects: response_object }
         h.freeze
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -852,7 +854,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.update',
@@ -1023,7 +1025,7 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter'] do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_event_hash) do
           {
             type: 'audit.space.delete-request',
@@ -1081,11 +1083,11 @@ RSpec.describe 'Spaces' do
 
         h['admin'] = { code: 202 }
         h['space_developer'] = { code: 202 }
-        h['space_application_supporter'] = { code: 202 }
+        h['space_supporter'] = { code: 202 }
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when user does not specify unmapped query param' do
@@ -1156,7 +1158,41 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
+  end
+
+  describe 'PATCH /v3/spaces/:guid/relationships/isolation_segment' do
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'seg') }
+    let(:org) { VCAP::CloudController::Organization.make(name: 'iso farm') }
+    let(:space) { VCAP::CloudController::Space.make name: 'space', organization: org }
+    let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+    before do
+      assigner.assign(isolation_segment, [org])
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}/relationships/isolation_segment", params.to_json, user_headers } }
+      let(:params) do
+        {
+          data: {
+            guid: isolation_segment.guid,
+          },
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['no_role'] =             { code: 404 }
+        h['org_auditor'] =         { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] =         { code: 403 }
+        h['admin'] =               { code: 200 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 

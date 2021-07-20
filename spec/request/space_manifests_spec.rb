@@ -114,6 +114,28 @@ RSpec.describe 'Space Manifests' do
         'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
     end
 
+    context 'permissions' do
+      before do
+        space.remove_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
+        let(:org) { space.organization }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+
+          h['admin'] = { code: 202 }
+          h['space_developer'] = { code: 202 }
+
+          h.freeze
+        end
+      end
+    end
+
     it 'applies the manifest' do
       web_process = app1_model.web_processes.first
       expect(web_process.instances).to eq(1)
@@ -628,7 +650,7 @@ RSpec.describe 'Space Manifests' do
         default_manifest.to_yaml
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the app name has changed' do

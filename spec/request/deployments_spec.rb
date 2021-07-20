@@ -86,11 +86,11 @@ RSpec.describe 'Deployments' do
         h = Hash.new(
           code: 422,
         )
-        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 201, response_object: expected_response }
+        h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 201, response_object: expected_response }
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when a droplet is supplied with the request' do
@@ -793,7 +793,7 @@ RSpec.describe 'Deployments' do
     end
   end
 
-  describe 'PATCH /v3/deployments' do
+  describe 'PATCH /v3/deployments/:guid' do
     let(:user) { make_developer_for_space(space) }
     let(:deployment) {
       VCAP::CloudController::DeploymentModel.make(
@@ -864,6 +864,27 @@ RSpec.describe 'Deployments' do
         }
       })
     end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      before do
+        space.remove_developer(user)
+      end
+
+      let(:api_call) { lambda { |user_headers| patch "/v3/deployments/#{deployment.guid}", update_request, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['global_auditor'] = { code: 403 }
+        h['admin_read_only'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['org_manager'] = { code: 403 }
+        h['space_auditor'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+    end
   end
 
   describe 'GET /v3/deployments/:guid' do
@@ -927,7 +948,7 @@ RSpec.describe 'Deployments' do
       h.freeze
     }
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/deployments/' do
@@ -1113,7 +1134,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1161,7 +1182,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1202,7 +1223,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1366,11 +1387,11 @@ RSpec.describe 'Deployments' do
         h = Hash.new(
           code: 404,
         )
-        h['admin'] = h['space_developer'] = h['space_application_supporter'] = { code: 200 }
+        h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 200 }
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the deployment is running and has a previous droplet' do

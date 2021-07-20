@@ -111,7 +111,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user can create an app' do
@@ -542,7 +542,7 @@ RSpec.describe 'Apps' do
             app_model1_response_object,
           ] }
 
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_objects: [
             app_model1_response_object,
@@ -552,7 +552,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'query list parameters' do
@@ -1387,7 +1387,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user has permission to view the app' do
@@ -1596,12 +1596,12 @@ RSpec.describe 'Apps' do
         h['org_billing_manager'] = { code: 404 }
         h['space_manager'] = { code: 403 }
         h['space_auditor'] = { code: 403 }
-        h['space_application_supporter'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when user has permission to view the app' do
@@ -1749,17 +1749,15 @@ RSpec.describe 'Apps' do
       let(:api_call) do
         lambda { |headers| get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
-      # TODO: be a more specific on the response content
-      let(:build_response_object) { anything }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: build_response_object)
+        h = Hash.new(code: 200, response_guids: [build.guid, second_build.guid])
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'as a developer' do
@@ -1884,13 +1882,10 @@ RSpec.describe 'Apps' do
     let(:user_email) { nil }
     let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
-    before do
+    it 'deletes an App' do
       space.organization.add_user(user)
       space.add_developer(user)
       allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-    end
-
-    it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
 
       expect(last_response.status).to eq(202)
@@ -1919,7 +1914,31 @@ RSpec.describe 'Apps' do
                                       })
     end
 
+    context 'permissions for deleting an app' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/apps/#{app_model.guid}", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 202)
+        h['admin_read_only'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
+
     context 'deleting metadata' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
+      end
       it_behaves_like 'resource with metadata' do
         let(:resource) { app_model }
         let(:api_call) do
@@ -1965,10 +1984,56 @@ RSpec.describe 'Apps' do
     }
     end
 
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
+    let(:expected_response_object) do
+      {
+        'name' => 'new-name',
+        'guid' => app_model.guid,
+        'state' => 'STOPPED',
+        'lifecycle' => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpacks' => ['http://gitwheel.org/my-app'],
+            'stack' => stack.name,
+          }
+        },
+        'relationships' => {
+          'space' => {
+            'data' => {
+              'guid' => space.guid
+            }
+          }
+        },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'metadata' => {
+          'labels' => {
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+          },
+          'annotations' => {
+            'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            'anno1' => 'new-value'
+          }
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+          'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+          'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+          'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+          'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+          'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+          'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+          'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+          'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+          'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+          'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
+        }
+      }
+    end
 
+    before do
       VCAP::CloudController::AppLabelModel.make(
         resource_guid: app_model.guid,
         key_name: 'delete-me',
@@ -1987,61 +2052,17 @@ RSpec.describe 'Apps' do
         value: 'delete this',
       )
     end
+
     it 'updates an app' do
+      space.organization.add_user(user)
+      space.add_developer(user)
       patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
       app_model.reload
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-          'name' => 'new-name',
-          'guid' => app_model.guid,
-          'state' => 'STOPPED',
-          'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpacks' => ['http://gitwheel.org/my-app'],
-              'stack' => stack.name,
-            }
-          },
-          'relationships' => {
-            'space' => {
-              'data' => {
-                'guid' => space.guid
-              }
-            }
-          },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'metadata' => {
-            'labels' => {
-              'release' => 'stable',
-              'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-            },
-            'annotations' => {
-              'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-              'anno1' => 'new-value'
-            }
-          },
-          'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
-            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
-          }
-        }
-      )
+      expect(parsed_response).to be_a_response_like(expected_response_object)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -2081,7 +2102,30 @@ RSpec.describe 'Apps' do
       expect(event.metadata['request']).to eq(metadata_request)
     end
 
+    context 'permissions for updating an app' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response_object)
+        h['admin_read_only'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
+
     context 'telemetry' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
       it 'should log the required fields when the app gets updated' do
         Timecop.freeze do
           expected_json = {
@@ -2181,7 +2225,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_start_response_object
           }
@@ -2196,7 +2240,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'events' do
@@ -2336,7 +2380,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_start_response_object
           }
@@ -2351,7 +2395,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -2431,7 +2475,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: app_stop_response_object
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_object: app_stop_response_object
         }
@@ -2446,7 +2490,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'events' do
@@ -2579,7 +2623,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_restart_response_object
           }
@@ -2594,7 +2638,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'telemetry' do
@@ -2687,7 +2731,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h['space_application_supporter'] = {
+          h['space_supporter'] = {
             code: 200,
             response_object: app_restart_response_object
           }
@@ -2702,7 +2746,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -2736,7 +2780,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
@@ -2799,7 +2843,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
@@ -2852,7 +2896,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: current_droplet_response_object
         }
-        h['space_application_supporter'] = {
+        h['space_supporter'] = {
           code: 200,
           response_object: current_droplet_response_object
         }
@@ -2867,7 +2911,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'events' do
@@ -3111,10 +3155,10 @@ RSpec.describe 'Apps' do
       h['space_manager'] = { code: 200, response_object: read_basic_response }
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
       h['space_developer'] = { code: 200, response_object: read_all_response }
-      h['space_application_supporter'] = { code: 200, response_object: read_basic_response }
+      h['space_supporter'] = { code: 200, response_object: read_basic_response }
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 end

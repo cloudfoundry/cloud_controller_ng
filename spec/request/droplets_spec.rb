@@ -251,7 +251,7 @@ RSpec.describe 'Droplets' do
         h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
-        h['space_application_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -262,7 +262,7 @@ RSpec.describe 'Droplets' do
         droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ key: 'http://buildpack.git.url.com', version: '0.3', name: 'git' }], stack: 'stack-name')
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the droplet has a docker lifecycle' do
@@ -321,14 +321,14 @@ RSpec.describe 'Droplets' do
         h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
-        h['space_application_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
+        h['space_supporter'] = { code: 200, response_object: redacted_droplet_model_json }
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -712,7 +712,7 @@ RSpec.describe 'Droplets' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -1254,7 +1254,7 @@ RSpec.describe 'Droplets' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1449,7 +1449,7 @@ RSpec.describe 'Droplets' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 

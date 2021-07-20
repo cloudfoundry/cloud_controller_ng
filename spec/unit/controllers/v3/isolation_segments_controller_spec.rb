@@ -1,6 +1,8 @@
 require 'rails_helper'
 require 'isolation_segment_assign'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -456,21 +458,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           end
         end
       end
-
-      context 'and the user is not registered to any space or org associated with the isolation segment' do
-        let(:other_space) { VCAP::CloudController::Space.make }
-
-        before do
-          allow_user_read_access_for(user, spaces: [other_space])
-          disallow_user_read_access_for_isolation_segment(user)
-        end
-
-        it 'returns a 404' do
-          get :show, params: { guid: isolation_segment.guid }, as: :json
-
-          expect(response.status).to eq 404
-        end
-      end
     end
   end
 
@@ -541,69 +528,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           response_names = parsed_body['resources'].map { |r| r['name'] }
           expect(response_names.length).to eq(3)
           expect(response_names).to eq(['a-segment', 'b-segment', 'shared'])
-        end
-      end
-    end
-
-    context 'when the user is not an admin' do
-      let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make }
-      let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make }
-      let!(:isolation_segment3) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:org1) { VCAP::CloudController::Organization.make }
-      let(:org2) { VCAP::CloudController::Organization.make }
-
-      context 'and the user is registered to one or more orgs' do
-        before do
-          allow_user_read_access_for(user, orgs: [org1, org2])
-        end
-
-        context 'and the org is associated with an isolation segment' do
-          before do
-            assigner.assign(isolation_segment1, [org1])
-            assigner.assign(isolation_segment2, [org1])
-          end
-
-          it 'allows the user to see only those isolation segments associated with their orgs' do
-            get :index
-
-            expect(response.status).to eq 200
-
-            response_guids = parsed_body['resources'].map { |r| r['guid'] }
-            expect(response_guids).to include(isolation_segment1.guid)
-            expect(response_guids).to include(isolation_segment2.guid)
-            expect(response_guids).to_not include(isolation_segment3.guid)
-          end
-        end
-      end
-    end
-
-    context 'when the user has global read access' do
-      before do
-        allow_user_global_read_access(user)
-      end
-
-      context 'when isolation segments have been created' do
-        let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segment1') }
-        let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segment2') }
-
-        it 'returns a 200 and a list of the existing isolation segments' do
-          get :index
-
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response.status).to eq(200)
-          expect(response_guids.length).to eq(3)
-          expect(response_guids).to include(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID, isolation_segment1.guid, isolation_segment2.guid)
-        end
-      end
-
-      context 'when no isolation segments have been created' do
-        it 'returns a 200 and the seeded isolation segment' do
-          get :index
-
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response.status).to eq(200)
-          expect(response_guids.length).to eq(1)
-          expect(response_guids).to include(VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
         end
       end
     end

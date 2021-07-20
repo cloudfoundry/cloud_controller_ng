@@ -85,7 +85,7 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
 
         expected_response_guids = expected_codes_and_responses[role][:response_guids]
         if expected_response_guids
-          expect(parsed_response['resources'].map { |resource| resource['guid'] }).to match_array(expected_response_guids)
+          expect((parsed_response['resources'] || parsed_response['data']).map { |resource| resource['guid'] }).to match_array(expected_response_guids)
         end
       end
     end
@@ -120,9 +120,8 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         if (200...300).cover? expected_response_code
           if expected_response_code == 202
             job_location = last_response.headers['Location']
-            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+)) unless job_location.nil?
           end
-
           expected_response_object = expected_codes_and_responses[role][:response_object]
 
           expect(parsed_response).to match_json_response(expected_response_object) unless expected_response_object.nil?

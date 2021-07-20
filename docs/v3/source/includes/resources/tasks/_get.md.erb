@@ -28,12 +28,13 @@ in the response based on the user's role.
 `GET /v3/tasks/:guid`
 
 #### Permitted roles
- |
+ Role | Notes
 --- | ---
 Admin |
 Admin Read-Only |
-Global Auditor |
-Org Manager |
-Space Auditor |
+Global Auditor | `command` field redacted
+Org Manager | `command` field redacted
+Space Auditor | `command` field redacted
 Space Developer |
-Space Manager |
+Space Manager | `command` field redacted
+Space Supporter | Experimental, `command` field redacted

@@ -41,7 +41,7 @@ class AppsV3Controller < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
-                AppListFetcher.fetch(message, permission_queryer.readable_application_supporter_space_guids,
+                AppListFetcher.fetch(message, permission_queryer.readable_supporter_space_guids,
 eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 
@@ -117,7 +117,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
@@ -142,7 +142,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def destroy
     app, space, org = AppDeleteFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     delete_action = AppDelete.new(user_audit_info)

@@ -14,7 +14,7 @@ class BuildsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 BuildListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               else
-                BuildListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_application_supporter_space_guids,
+                BuildListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_supporter_space_guids,
                   eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               end
 
@@ -33,8 +33,7 @@ class BuildsController < ApplicationController
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).first
     unprocessable_package! unless package &&
-      permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid) &&
-      permission_queryer.can_write_to_space?(package.space.guid)
+      permission_queryer.untrusted_can_write_to_space?(package.space.guid)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 
@@ -93,7 +92,7 @@ class BuildsController < ApplicationController
   def show
     build = BuildModel.find(guid: hashed_params[:guid])
 
-    build_not_found! unless build && permission_queryer.can_read_from_space?(build.app.space.guid, build.app.space.organization.guid)
+    build_not_found! unless build && permission_queryer.untrusted_can_read_from_space?(build.app.space.guid, build.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end
@@ -101,7 +100,7 @@ class BuildsController < ApplicationController
   private
 
   def can_read_build?(space)
-    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    permission_queryer.can_update_build_state? || permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def create_valid_update_message

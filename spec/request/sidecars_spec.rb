@@ -6,12 +6,12 @@ RSpec.describe 'Sidecars' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
 
-  before do
-    app_model.space.organization.add_user(user)
-    app_model.space.add_developer(user)
-  end
-
   describe 'POST /v3/apps/:guid/sidecars' do
+    before do
+      app_model.space.organization.add_user(user)
+      app_model.space.add_developer(user)
+    end
+
     let(:sidecar_params) {
       {
           name: 'sidecar_one',
@@ -130,6 +130,11 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'PATCH /v3/apps/:guid/sidecars' do
+    before do
+      app_model.space.organization.add_user(user)
+      app_model.space.add_developer(user)
+    end
+
     let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'My sidecar', command: 'rackdown', app: app_model, memory: 400) }
     let!(:sidecar_process_type) do
       VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other_worker', app_guid: app_model.guid)
@@ -293,30 +298,59 @@ RSpec.describe 'Sidecars' do
     let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
     let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
-    it 'gets the sidecar' do
-      get "/v3/sidecars/#{sidecar.guid}", nil, user_header
+    context 'as a permitted user' do
+      before do
+        app_model.space.organization.add_user(user)
+        app_model.space.add_developer(user)
+      end
 
-      expected_response = {
-        'guid' => sidecar.guid,
-        'name' => 'sidecar',
-        'command' => 'smarch',
-        'process_types' => ['spider', 'web'],
-        'memory_in_mb' => 300,
-        'origin' => 'user',
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'relationships' => {
-          'app' => {
-            'data' => {
-              'guid' => app_model.guid
+      it 'gets the sidecar in the expected format' do
+        get "/v3/sidecars/#{sidecar.guid}", nil, user_header
+
+        expected_response = {
+          'guid' => sidecar.guid,
+          'name' => 'sidecar',
+          'command' => 'smarch',
+          'process_types' => ['spider', 'web'],
+          'memory_in_mb' => 300,
+          'origin' => 'user',
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
             }
           }
         }
-      }
 
-      expect(last_response.status).to eq(200), last_response.body
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(expected_response)
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/sidecars/#{sidecar.guid}", nil, user_headers } }
+      let(:org) { app_model.organization }
+      let(:space) { app_model.space }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guid: sidecar.guid)
+        h['no_role'] = {
+          code: 404,
+        }
+        h['org_auditor'] = {
+          code: 404,
+        }
+        h['org_billing_manager'] = {
+          code: 404,
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -357,98 +391,141 @@ RSpec.describe 'Sidecars' do
     )
     }
 
-    it_behaves_like 'list query endpoint' do
-      let(:request) { "/v3/processes/#{process1.guid}/sidecars" }
-      let(:message) { VCAP::CloudController::SidecarsListMessage }
-
-      let(:params) do
-        {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          guids: "#{process1.guid},bogus",
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
-        }
+    context 'as a space developer' do
+      before do
+        app_model.space.organization.add_user(user)
+        app_model.space.add_developer(user)
       end
-    end
 
-    it "retrieves the process' sidecars" do
-      get "/v3/processes/#{process1.guid}/sidecars?per_page=2", nil, user_header
+      it_behaves_like 'list query endpoint' do
+        let(:request) { "/v3/processes/#{process1.guid}/sidecars" }
+        let(:message) { VCAP::CloudController::SidecarsListMessage }
 
-      expected_response = {
-        'pagination' => {
-          'total_results' => 3,
-          'total_pages'   => 2,
-          'first'         => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
-          'next'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
-          'previous'      => nil,
-        },
-        'resources' => [
+        let(:params) do
           {
-            'guid' => sidecar1a.guid,
-            'name' => 'sidecar1a',
-            'command' => 'missile1a',
-            'process_types' => ['web', 'worker'],
-            'memory_in_mb' => nil,
-            'origin' => 'user',
-            'relationships' => {
-              'app' => {
-                'data' => {
-                  'guid' => app_model.guid,
-                },
-              },
-            },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-          },
-          {
-            'guid' => sidecar1b.guid,
-            'name' => 'sidecar1b',
-            'command' => 'missile1b',
-            'process_types' => ['web', 'worker'],
-            'memory_in_mb' => nil,
-            'origin' => 'user',
-            'relationships' => {
-              'app' => {
-                'data' => {
-                  'guid' => app_model.guid,
-                },
-              },
-            },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-          },
-        ]
-      }
-
-      expect(last_response.status).to eq(200), last_response.body
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-
-    context 'filtering on created_ats and updated_ats' do
-      let(:app_model3) { VCAP::CloudController::AppModel.make }
-      let!(:process3) { VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model3,
-        type:       'web',
-        command:    'rackup',
-      )
-      }
-
-      it_behaves_like 'list_endpoint_with_common_filters' do
-        let(:resource_klass) { VCAP::CloudController::SidecarModel }
-        let(:additional_resource_params) { { app: app_model3 } }
-        let(:headers) { admin_headers }
-        let(:api_call) do
-          app_model3.sidecars_dataset.each do |sidecar|
-            VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web')
-          end
-          lambda { |headers, filters| get "/v3/processes/#{process3.guid}/sidecars?#{filters}", nil, headers }
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            guids: "#{process1.guid},bogus",
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
+          }
         end
       end
+
+      it "retrieves the process' sidecars" do
+        get "/v3/processes/#{process1.guid}/sidecars?per_page=2", nil, user_header
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 3,
+            'total_pages'   => 2,
+            'first'         => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
+            'next'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid' => sidecar1a.guid,
+              'name' => 'sidecar1a',
+              'command' => 'missile1a',
+              'process_types' => ['web', 'worker'],
+              'memory_in_mb' => nil,
+              'origin' => 'user',
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid,
+                  },
+                },
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+            },
+            {
+              'guid' => sidecar1b.guid,
+              'name' => 'sidecar1b',
+              'command' => 'missile1b',
+              'process_types' => ['web', 'worker'],
+              'memory_in_mb' => nil,
+              'origin' => 'user',
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid,
+                  },
+                },
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+            },
+          ]
+        }
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+
+      context 'filtering on created_ats and updated_ats' do
+        let(:app_model3) { VCAP::CloudController::AppModel.make }
+        let!(:process3) { VCAP::CloudController::ProcessModel.make(
+          :process,
+          app:        app_model3,
+          type:       'web',
+          command:    'rackup',
+        )
+        }
+
+        it_behaves_like 'list_endpoint_with_common_filters' do
+          let(:resource_klass) { VCAP::CloudController::SidecarModel }
+          let(:additional_resource_params) { { app: app_model3 } }
+          let(:headers) { admin_headers }
+          let(:api_call) do
+            app_model3.sidecars_dataset.each do |sidecar|
+              VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web')
+            end
+            lambda { |headers, filters| get "/v3/processes/#{process3.guid}/sidecars?#{filters}", nil, headers }
+          end
+        end
+      end
+    end
+    describe 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/processes/#{process1.guid}/sidecars", nil, user_headers } }
+      let(:org) { app_model.organization }
+      let(:space) { app_model.space }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = {
+          code: 200,
+        }
+        h['admin_read_only'] = {
+          code: 200,
+        }
+        h['space_developer'] = {
+          code: 200,
+        }
+        h['space_supporter'] = {
+          code: 200,
+        }
+        h['global_auditor'] = {
+          code: 200,
+        }
+        h['space_manager'] = {
+          code: 200,
+        }
+        h['space_auditor'] = {
+          code: 200,
+        }
+        h['org_manager'] = {
+          code: 200,
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -460,74 +537,118 @@ RSpec.describe 'Sidecars' do
     let!(:sidecar3) { VCAP::CloudController::SidecarModel.make(name: 'sidecar3', app: app_model) }
     let!(:sidecar3_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'three') }
 
-    it 'lists the sidecars for an app' do
-      get "/v3/apps/#{app_model.guid}/sidecars?per_page=2", nil, user_header
-      expect(last_response.status).to eq(200), last_response.body
+    context 'with a user in the space' do
+      before do
+        app_model.space.organization.add_user(user)
+        app_model.space.add_developer(user)
+      end
 
-      expect(parsed_response).to be_a_response_like(
-        {
-          'pagination' => {
-            'total_results' => 3,
-            'total_pages' => 2,
-            'first' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=1&per_page=2"
+      it 'lists the sidecars for an app' do
+        get "/v3/apps/#{app_model.guid}/sidecars?per_page=2", nil, user_header
+        expect(last_response.status).to eq(200), last_response.body
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 3,
+              'total_pages' => 2,
+              'first' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=1&per_page=2"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
+              },
+              'next' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
+              },
+              'previous' => nil
             },
-            'last' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
-            },
-            'next' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
-            },
-            'previous' => nil
-          },
-          'resources' => [
-            {
-              'guid' => sidecar1.guid,
-              'name' => 'sidecar1',
-              'command' => 'bundle exec rackup',
-              'process_types' => ['one'],
-              'memory_in_mb' => nil,
-              'origin' => 'user',
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app_model.guid
+            'resources' => [
+              {
+                'guid' => sidecar1.guid,
+                'name' => 'sidecar1',
+                'command' => 'bundle exec rackup',
+                'process_types' => ['one'],
+                'memory_in_mb' => nil,
+                'origin' => 'user',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'relationships' => {
+                  'app' => {
+                    'data' => {
+                      'guid' => app_model.guid
+                    }
                   }
                 }
-              }
-            },
-            {
-              'guid' => sidecar2.guid,
-              'name' => 'sidecar2',
-              'command' => 'bundle exec rackup',
-              'process_types' => ['two'],
-              'memory_in_mb' => nil,
-              'origin' => 'user',
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app_model.guid
+              },
+              {
+                'guid' => sidecar2.guid,
+                'name' => 'sidecar2',
+                'command' => 'bundle exec rackup',
+                'process_types' => ['two'],
+                'memory_in_mb' => nil,
+                'origin' => 'user',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'relationships' => {
+                  'app' => {
+                    'data' => {
+                      'guid' => app_model.guid
+                    }
                   }
                 }
-              }
-            },
-          ]
-        }
-    )
+              },
+            ]
+          }
+      )
+      end
+
+      it_behaves_like 'list_endpoint_with_common_filters' do
+        let(:resource_klass) { VCAP::CloudController::SidecarModel }
+        let(:app_model2) { VCAP::CloudController::AppModel.make }
+        let(:additional_resource_params) { { app: app_model2 } }
+        let(:headers) { admin_headers }
+        let(:api_call) do
+          lambda { |headers, filters| get "/v3/apps/#{app_model2.guid}/sidecars?#{filters}", nil, headers }
+        end
+      end
     end
 
-    it_behaves_like 'list_endpoint_with_common_filters' do
-      let(:resource_klass) { VCAP::CloudController::SidecarModel }
-      let(:app_model2) { VCAP::CloudController::AppModel.make }
-      let(:additional_resource_params) { { app: app_model2 } }
-      let(:headers) { admin_headers }
-      let(:api_call) do
-        lambda { |headers, filters| get "/v3/apps/#{app_model2.guid}/sidecars?#{filters}", nil, headers }
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/sidecars", nil, user_headers } }
+      let(:org) { app_model.organization }
+      let(:space) { app_model.space }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = {
+          code: 200,
+        }
+        h['admin_read_only'] = {
+          code: 200,
+        }
+        h['space_developer'] = {
+          code: 200,
+        }
+        h['space_supporter'] = {
+          code: 200,
+        }
+        h['global_auditor'] = {
+          code: 200,
+        }
+        h['space_manager'] = {
+          code: 200,
+        }
+        h['space_auditor'] = {
+          code: 200,
+        }
+        h['org_manager'] = {
+          code: 200,
+        }
+        h
       end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -535,6 +656,11 @@ RSpec.describe 'Sidecars' do
     let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
     let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
     let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+
+    before do
+      app_model.space.organization.add_user(user)
+      app_model.space.add_developer(user)
+    end
 
     it 'deletes the sidecar' do
       delete "/v3/sidecars/#{sidecar.guid}", nil, user_header

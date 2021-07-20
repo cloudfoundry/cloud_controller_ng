@@ -34,7 +34,6 @@ services:
 env:
   global:
     - CC_TEST_REPORTER_ID=301facccb751b8f202e8a382e9f74bda51055f738691cf2ee9a9b853ac807304
-    - CF_RUN_PERM_SPECS=false
 
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all

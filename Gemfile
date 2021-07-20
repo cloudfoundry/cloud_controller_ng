@@ -33,7 +33,7 @@ gem 'rake'
 gem 'retryable'
 gem 'rfc822'
 gem 'rubyzip', '>= 1.3.0'
-gem 'sequel', '~> 5.45'
+gem 'sequel', '~> 5.46'
 gem 'sinatra', '~> 2.0'
 gem 'sinatra-contrib'
 gem 'statsd-ruby', '~> 1.4.0'
@@ -63,9 +63,6 @@ gem 'fog-openstack'
 gem 'cf-uaa-lib', '~> 3.14.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
-gem 'cf-perm', '~> 0.0.10'
-gem 'scientist', '~> 1.1.0'
-
 group :db do
   gem 'mysql2', '~> 0.5.3'
   gem 'pg'
@@ -77,7 +74,6 @@ group :operations do
 end
 
 group :test do
-  gem 'cf-perm-test-helpers', '~> 0.0.6'
   gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
@@ -89,7 +85,7 @@ group :test do
   gem 'rspec-rails', '~> 5.0.1'
   gem 'rspec-wait'
   gem 'rspec_api_documentation', '>= 6.1.0'
-  gem 'rubocop', '~> 1.18.1'
+  gem 'rubocop', '~> 1.18.3'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end

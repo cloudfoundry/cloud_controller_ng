@@ -56,7 +56,7 @@ class SpacesV3Controller < ApplicationController
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
-    space = SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
+    space = SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e
@@ -96,7 +96,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
     unfiltered_group_guids = fetch_running_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
@@ -115,7 +115,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
 
     unfiltered_group_guids = fetch_staging_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
@@ -149,7 +149,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
     org = space.organization
     org_not_found! unless org
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
     message = SpaceUpdateIsolationSegmentMessage.new(hashed_params[:body])
@@ -226,7 +226,7 @@ class SpacesV3Controller < ApplicationController
         SpaceListFetcher.fetch_all(message: message, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
       end
     else
-      readable_space_guids = permission_queryer.readable_application_supporter_space_guids
+      readable_space_guids = permission_queryer.readable_supporter_space_guids
       filtered_readable_guids = message.requested?(:guids) ? readable_space_guids & message.guids : readable_space_guids
       SpaceListFetcher.fetch(message: message, guids: filtered_readable_guids, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
     end

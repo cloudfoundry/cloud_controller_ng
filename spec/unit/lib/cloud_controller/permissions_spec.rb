@@ -176,7 +176,7 @@ module VCAP::CloudController
 
         it 'combines readable orgs for both org-scoped and space-scoped roles' do
           allow(membership).to receive(:space_guids_for_roles).
-            with(Permissions::SPACE_ROLES_INCLUDING_APPLICATION_SUPPORTERS).
+            with(Permissions::SPACE_ROLES_INCLUDING_SUPPORTERS).
             and_return([space_guid])
 
           expect(permissions.readable_org_guids_for_domains).
@@ -386,7 +386,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#readable_application_supporter_space_guids' do
+    describe '#readable_supporter_space_guids' do
       it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
@@ -396,7 +396,7 @@ module VCAP::CloudController
         org2 = Organization.make
         space2 = Space.make(organization: org2)
 
-        space_guids = subject.readable_application_supporter_space_guids
+        space_guids = subject.readable_supporter_space_guids
 
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
@@ -411,7 +411,7 @@ module VCAP::CloudController
         org2 = Organization.make
         space2 = Space.make(organization: org2)
 
-        space_guids = subject.readable_application_supporter_space_guids
+        space_guids = subject.readable_supporter_space_guids
 
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
@@ -426,7 +426,7 @@ module VCAP::CloudController
         org2 = Organization.make
         space2 = Space.make(organization: org2)
 
-        space_guids = subject.readable_application_supporter_space_guids
+        space_guids = subject.readable_supporter_space_guids
 
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
@@ -436,8 +436,8 @@ module VCAP::CloudController
         space_guids = double
         membership = instance_double(Membership, space_guids_for_roles: space_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_application_supporter_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
+        expect(permissions.readable_supporter_space_guids).to eq(space_guids)
+        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_SUPPORTER_READING)
       end
     end
 
@@ -757,9 +757,9 @@ module VCAP::CloudController
           expect(permissions.untrusted_can_write_to_space?(space_guid)).to be true
         end
 
-        it 'returns true for space application supporter' do
+        it 'returns true for space supporter' do
           org.add_user(user)
-          space.add_application_supporter(user)
+          space.add_supporter(user)
           expect(permissions.untrusted_can_write_to_space?(space_guid)).to be true
         end
 
@@ -771,9 +771,9 @@ module VCAP::CloudController
             expect(permissions.untrusted_can_write_to_space?(space_guid)).to be_falsey
           end
 
-          it 'returns false for the space application supporter' do
+          it 'returns false for the space supporter' do
             org.add_user(user)
-            space.add_application_supporter(user)
+            space.add_supporter(user)
             org.update(status: Organization::SUSPENDED)
             expect(permissions.untrusted_can_write_to_space?(space_guid)).to be_falsey
           end
@@ -1206,9 +1206,9 @@ module VCAP::CloudController
         expect(permissions.can_read_route?(space_guid, org_guid)).to be true
       end
 
-      it 'returns false for space application supporter' do
+      it 'returns false for space supporter' do
         org.add_user(user)
-        space.add_application_supporter(user)
+        space.add_supporter(user)
 
         expect(permissions.can_read_route?(space_guid, org_guid)).to be false
       end
@@ -1268,9 +1268,9 @@ module VCAP::CloudController
         expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
       end
 
-      it 'returns true for space application supporter' do
+      it 'returns true for space supporter' do
         org.add_user(user)
-        space.add_application_supporter(user)
+        space.add_supporter(user)
 
         expect(permissions.untrusted_can_read_route?(space_guid, org_guid)).to be true
       end

@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
+
 module VCAP::CloudController
   RSpec.describe BuildpacksCacheController do
     describe 'DELETE /v2/blobstores/buildpack_cache' do

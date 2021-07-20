@@ -15,7 +15,7 @@ class DeploymentsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 DeploymentListFetcher.fetch_all(message)
               else
-                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_application_supporter_space_guids)
+                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_supporter_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -58,7 +58,7 @@ class DeploymentsController < ApplicationController
   def update
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
     resource_not_found!(:deployment) unless deployment &&
-      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
+      permission_queryer.untrusted_can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(deployment.app.space.guid)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])

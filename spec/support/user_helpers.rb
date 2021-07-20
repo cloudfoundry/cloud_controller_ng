@@ -80,8 +80,8 @@ module UserHelpers
     when 'space_developer'
       space.add_developer(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
-    when 'spaces_application_supporters'
-      space.add_application_supporter(current_user)
+    when 'space_supporters'
+      space.add_supporter(current_user)
       set_current_user_as_reader_and_writer(user: current_user)
     when 'space_auditor'
       space.add_auditor(current_user)
@@ -276,36 +276,17 @@ module UserHelpers
 
   def stub_readable_space_guids_for(user, spaces)
     allow(permissions_double(user)).to receive(:readable_space_guids).and_return(spaces.map(&:guid))
-    allow(permissions_double(user)).to receive(:readable_application_supporter_space_guids).and_return(spaces.map(&:guid))
+    allow(permissions_double(user)).to receive(:readable_supporter_space_guids).and_return(spaces.map(&:guid))
   end
 
   def stub_readable_org_guids_for(user, orgs)
     allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
   end
 
-  def allow_user_perm_permission(permission, space_guid:, org_guid:)
-    allow(perm_permissions_double(user)).to receive(permission).and_return(false)
-    allow(perm_permissions_double(user)).to receive(permission).with(space_guid: space_guid, org_guid: org_guid).and_return(true)
-  end
-
-  def allow_user_perm_permission_for(method, visible_guids: [])
-    allow(perm_permissions_double(user)).to receive(method).and_return(visible_guids)
-  end
-
   def permissions_double(user)
     @permissions ||= {}
     @permissions[user.guid] ||= instance_double(VCAP::CloudController::Permissions).tap do |permissions|
       allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
-      allow(permissions).to receive(:can_read_globally?).and_return(false)
-    end
-  end
-
-  def perm_permissions_double(user)
-    @perm_permissions ||= {}
-    @perm_permissions[user.guid] ||= instance_double(VCAP::CloudController::Perm::Permissions).tap do |permissions|
-      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).
-        with(user_id: user.guid, perm_client: anything, issuer: anything, roles: anything).
-        and_return(permissions)
       allow(permissions).to receive(:can_read_globally?).and_return(false)
     end
   end
