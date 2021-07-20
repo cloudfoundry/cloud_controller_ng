@@ -34,7 +34,7 @@ RSpec.describe 'Droplets' do
     end
 
     describe 'when creating a droplet' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
 
         let(:droplet_json) do

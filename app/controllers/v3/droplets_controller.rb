@@ -106,7 +106,7 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.relationships_message.app_guid).eager(:space, :organization).first
-    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
     DropletCreate.new.create(app, message, user_audit_info)
