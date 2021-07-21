@@ -289,7 +289,6 @@ RSpec.describe 'Stacks Request' do
     let(:headers) { headers_for(user) }
     let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let!(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'bp-name') }
-    let!(:space) { make_space_for_user(user) }
     let!(:space2) { VCAP::CloudController::Space.make }
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
@@ -304,62 +303,69 @@ RSpec.describe 'Stacks Request' do
       app_model2.buildpack_lifecycle_data.update(stack: stack.name, buildpacks: [buildpack.name])
     end
 
-    it 'returns the list of space-visible apps using the given stack' do
-      get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
+    context 'as a space developer' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
 
-      expect(last_response.status).to eq(200), last_response.body
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-          'pagination' => {
-            'total_results' => 1,
-            'total_pages' => 1,
-            'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
-            'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
-            'previous' => nil,
-            'next' => nil,
-          },
-          'resources' => [
-            {
-              'guid' => app_model1.guid,
-              'name' => 'name1',
-              'state' => 'STOPPED',
-              'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                  'buildpacks' => ['bp-name'],
-                  'stack' => 'stack-name',
-                }
-              },
-              'relationships' => {
-                'space' => {
-                  'data' => {
-                    'guid' => space.guid
-                  }
-                }
-              },
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
-                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
-              }
+      it 'returns the list of space-visible apps using the given stack' do
+        get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+              'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+              'previous' => nil,
+              'next' => nil,
             },
-          ]
-        }
-      )
+            'resources' => [
+              {
+                'guid' => app_model1.guid,
+                'name' => 'name1',
+                'state' => 'STOPPED',
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                    'buildpacks' => ['bp-name'],
+                    'stack' => 'stack-name',
+                  }
+                },
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => space.guid
+                    }
+                  }
+                },
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
+                }
+              },
+            ]
+          }
+        )
+      end
     end
 
     context 'as an admin user' do
@@ -459,6 +465,62 @@ RSpec.describe 'Stacks Request' do
           }
         )
       end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| get "/v3/stacks/#{stack.guid}/apps", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_guids: [app_model1.guid, app_model2.guid])
+
+        h['org_auditor'] = {
+          code: 200,
+          response_guids: []
+        }
+
+        h['org_billing_manager'] = {
+          code: 200,
+          response_guids: []
+        }
+
+        h['org_manager'] = {
+          code: 200,
+          response_guids: [
+            app_model1.guid,
+          ]
+        }
+
+        h['space_manager'] = {
+          code: 200,
+          response_guids: [
+            app_model1.guid,
+          ]
+        }
+
+        h['space_auditor'] = {
+          code: 200,
+          response_guids: [
+            app_model1.guid,
+          ]
+        }
+
+        h['space_developer'] = {
+          code: 200,
+          response_guids: [
+            app_model1.guid,
+          ] }
+
+        h['space_supporter'] = {
+          code: 200,
+          response_guids: [
+            app_model1.guid,
+          ] }
+
+        h['no_role'] = { code: 200, response_guids: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'user is not logged in' do

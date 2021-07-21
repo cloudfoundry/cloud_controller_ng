@@ -67,7 +67,7 @@ class StacksController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.fetch_all(message)
               else
-                AppListFetcher.fetch(message, permission_queryer.readable_space_guids)
+                AppListFetcher.fetch(message, permission_queryer.readable_supporter_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
