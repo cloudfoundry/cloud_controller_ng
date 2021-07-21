@@ -272,13 +272,13 @@ class ServiceCredentialBindingsController < ApplicationController
       readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
       readable_spaces.any? do |space|
-        permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+        permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
       end
     end
   end
 
   def can_write_to_space?(space)
-    permission_queryer.can_write_to_space?(space.guid)
+    permission_queryer.untrusted_can_write_to_space?(space.guid)
   end
 
   AVAILABLE_DECORATORS = [
@@ -326,7 +326,7 @@ class ServiceCredentialBindingsController < ApplicationController
     if permission_queryer.can_read_globally?
       :all
     else
-      permission_queryer.readable_space_guids
+      permission_queryer.readable_supporter_space_guids
     end
   end
 
@@ -347,7 +347,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_from_space?(space)
-    permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def binding_space

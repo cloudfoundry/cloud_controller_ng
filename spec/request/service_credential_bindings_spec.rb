@@ -120,12 +120,12 @@ RSpec.describe 'v3 service credential bindings' do
             h['space_developer'] = space_bindings
             h['space_manager'] = space_bindings
             h['space_auditor'] = space_bindings
-            h['space_application_supporter'] = space_bindings
+            h['space_supporter'] = space_bindings
             h['org_manager'] = space_bindings
           end
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_application_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       describe 'pagination' do
@@ -494,7 +494,7 @@ RSpec.describe 'v3 service credential bindings' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     describe 'key credential binding' do
@@ -513,10 +513,13 @@ RSpec.describe 'v3 service credential bindings' do
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(expected_object)
+          responses_for_space_restricted_single_endpoint(
+            expected_object,
+            permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
+          )
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       describe 'query params' do
@@ -557,10 +560,12 @@ RSpec.describe 'v3 service credential bindings' do
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(expected_object)
+          responses_for_space_restricted_single_endpoint(
+            expected_object,
+            permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter'])
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       describe 'include' do
@@ -610,12 +615,12 @@ RSpec.describe 'v3 service credential bindings' do
     }
 
     context 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) do
           Hash.new(code: 404).tap do |h|
-            h['space_developer'] = { code: 200, response_object: binding_credentials }
             h['admin'] = { code: 200, response_object: binding_credentials }
             h['admin_read_only'] = { code: 200, response_object: binding_credentials }
+            h['space_developer'] = { code: 200, response_object: binding_credentials }
           end
         end
       end
@@ -1106,14 +1111,11 @@ RSpec.describe 'v3 service credential bindings' do
       context 'user-provided service' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
-              h['space_developer'] = { code: 201 }
-              h['admin'] = { code: 201 }
-              h['org_billing_manager'] = { code: 422 }
-              h['org_auditor'] = { code: 422 }
-              h['no_role'] = { code: 422 }
+              h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 201 }
+              h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 422 }
             end
           end
         end
@@ -1253,14 +1255,11 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'permissions' do
           context 'users in the originating service instance space' do
-            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
               let(:expected_codes_and_responses) do
                 Hash.new(code: 403).tap do |h|
-                  h['space_developer'] = { code: 202 }
-                  h['admin'] = { code: 202 }
-                  h['org_billing_manager'] = { code: 422 }
-                  h['org_auditor'] = { code: 422 }
-                  h['no_role'] = { code: 422 }
+                  h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
+                  h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 422 }
                 end
               end
             end
@@ -1281,14 +1280,11 @@ RSpec.describe 'v3 service credential bindings' do
               service_instance.add_shared_space(space)
             end
 
-            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
               let(:expected_codes_and_responses) do
                 Hash.new(code: 403).tap do |h|
-                  h['space_developer'] = { code: 202 }
-                  h['admin'] = { code: 202 }
-                  h['org_billing_manager'] = { code: 422 }
-                  h['org_auditor'] = { code: 422 }
-                  h['no_role'] = { code: 422 }
+                  h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
+                  h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 422 }
                 end
               end
             end
@@ -1389,14 +1385,11 @@ RSpec.describe 'v3 service credential bindings' do
 
       context 'permissions' do
         context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['space_developer'] = { code: 202 }
-                h['admin'] = { code: 202 }
-                h['org_billing_manager'] = { code: 422 }
-                h['org_auditor'] = { code: 422 }
-                h['no_role'] = { code: 422 }
+                h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
+                h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 422 }
               end
             end
           end
@@ -1419,13 +1412,11 @@ RSpec.describe 'v3 service credential bindings' do
             service_instance.add_shared_space(space)
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
                 h['admin'] = { code: 202 }
-                h['org_billing_manager'] = { code: 422 }
-                h['org_auditor'] = { code: 422 }
-                h['no_role'] = { code: 422 }
+                h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 422 }
               end
             end
           end
@@ -2059,12 +2050,12 @@ RSpec.describe 'v3 service credential bindings' do
 
         let(:expected_codes_and_responses) do
           Hash.new(code: 403).tap do |h|
-            h['admin'] = h['space_developer'] = { code: 204 }
+            h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 204 }
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
           end
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'when the organization is suspended' do
           it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
@@ -2120,10 +2111,10 @@ RSpec.describe 'v3 service credential bindings' do
         }
 
         context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['admin'] = h['space_developer'] = { code: 202 }
+                h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
                 h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
               end
             end
@@ -2145,10 +2136,10 @@ RSpec.describe 'v3 service credential bindings' do
             service_instance.add_shared_space(space)
           end
 
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['admin'] = h['space_developer'] = { code: 202 }
+                h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
                 h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
               end
             end
