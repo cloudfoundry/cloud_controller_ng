@@ -45,9 +45,6 @@ class RoutesController < ApplicationController
     message = RouteShowMessage.from_params(query_params.merge(guid: hashed_params[:guid]))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-
     decorators = []
     decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
@@ -87,9 +84,6 @@ class RoutesController < ApplicationController
   end
 
   def update
-    route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route
-
     message = RouteUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -105,8 +99,6 @@ class RoutesController < ApplicationController
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
     unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
 
     delete_action = RouteDeleteAction.new(user_audit_info)
@@ -120,9 +112,6 @@ class RoutesController < ApplicationController
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-
     destinations_message = RouteDestinationsListMessage.from_params(query_params)
     unprocessable!(destinations_message.errors.full_messages) unless destinations_message.valid?
     route_mappings = RouteDestinationsListFetcher.new(message: destinations_message).fetch_for_route(route: route)
@@ -132,20 +121,11 @@ class RoutesController < ApplicationController
 
   def insert_destinations
     message = RouteUpdateDestinationsMessage.new(hashed_params[:body])
+
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-
     unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
 
-    desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
-
-    apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
-    validate_app_guids!(apps_hash, desired_app_guids)
-    validate_app_spaces!(apps_hash, route)
-
-    route = UpdateRouteDestinations.add(message.destinations_array, route, apps_hash, user_audit_info)
+    UpdateRouteDestinations.add(message.destinations_array, route, apps_hash(message), user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
   rescue UpdateRouteDestinations::Error => e
@@ -154,24 +134,34 @@ class RoutesController < ApplicationController
 
   def replace_destinations
     message = RouteUpdateDestinationsMessage.new(hashed_params[:body], replace: true)
+
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-
     unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
 
-    desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
-
-    apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
-    validate_app_guids!(apps_hash, desired_app_guids)
-    validate_app_spaces!(apps_hash, route)
-
-    route = UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash, user_audit_info)
+    UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash(message), user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
   rescue UpdateRouteDestinations::DuplicateDestinationError => e
     unprocessable!(e.message)
+  end
+
+  def route
+    @route || begin
+      @route = Route.find(guid: hashed_params[:guid])
+      route_not_found! unless @route && permission_queryer.untrusted_can_read_route?(@route.space.guid, @route.organization.guid)
+      @route
+    end
+  end
+
+  def apps_hash(update_message)
+    @apps_hash || begin
+      desired_app_guids = update_message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
+
+      @apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
+      validate_app_guids!(@apps_hash, desired_app_guids)
+      validate_app_spaces!(@apps_hash, route)
+      @apps_hash
+    end
   end
 
   def destroy_destination
