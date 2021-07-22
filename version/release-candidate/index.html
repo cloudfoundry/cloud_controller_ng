@@ -12463,7 +12463,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in an organization</td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
@@ -12635,7 +12635,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in an organization</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -13230,7 +13230,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in an organization</td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
@@ -23577,29 +23577,41 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-credentials-for-a-user-provided-service-instance">Get credentials for a user-provided service instance</h3>
@@ -24159,29 +24171,41 @@ will continue in the background. The operation can be retried until it is succes
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="share-a-service-instance-to-other-spaces">Share a service instance to other spaces</h3>
@@ -25900,6 +25924,9 @@ In order to bind to a user-provided service instance, the service instance must 
 </tr>
 <tr>
 <td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Supporter</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-service-route-binding">Create a service route binding</h3>
@@ -27793,7 +27820,7 @@ applications in the space may be accessed via SSH.</p>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in a space</td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
@@ -27979,7 +28006,7 @@ applications in the space may be accessed via SSH.</p>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in a space</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -28460,7 +28487,7 @@ applications in the space may be accessed via SSH.</p>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Maximum number of running tasks in a single application</td>
+<td>Maximum number of running tasks in a space</td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
