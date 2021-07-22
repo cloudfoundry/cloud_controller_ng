@@ -3,8 +3,7 @@ require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 require 'hashdiff'
 
-ADDITIONAL_ROLES = %w[unauthenticated].freeze
-COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + ADDITIONAL_ROLES).freeze
+UNAUTHENTICATED = %w[unauthenticated].freeze
 
 RSpec.describe 'V3 service offerings' do
   let(:user) { VCAP::CloudController::User.make }
@@ -28,7 +27,7 @@ RSpec.describe 'V3 service offerings' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when service plan is not available in any orgs' do
@@ -43,7 +42,7 @@ RSpec.describe 'V3 service offerings' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when service offering is publicly available' do
@@ -54,7 +53,7 @@ RSpec.describe 'V3 service offerings' do
         Hash.new(successful_response)
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
 
       context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
         before do
@@ -67,7 +66,7 @@ RSpec.describe 'V3 service offerings' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
 
@@ -89,7 +88,7 @@ RSpec.describe 'V3 service offerings' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when service offering comes from space scoped broker' do
@@ -113,13 +112,14 @@ RSpec.describe 'V3 service offerings' do
               admin_read_only
               global_auditor
               space_developer
+              space_supporter
               space_manager
               space_auditor
             )
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'the user is in a different space to the service broker' do
@@ -135,7 +135,7 @@ RSpec.describe 'V3 service offerings' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'the user is a SpaceDeveloper in the space of the broker, but is targeting a different space' do
@@ -154,7 +154,7 @@ RSpec.describe 'V3 service offerings' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
 
@@ -295,13 +295,14 @@ RSpec.describe 'V3 service offerings' do
           h['org_manager'] = org_offerings_response
           h['org_billing_manager'] = org_offerings_response
           h['org_auditor'] = org_offerings_response
+          h['space_supporter'] = space_offerings_response
           h['space_developer'] = space_offerings_response
           h['space_manager'] = space_offerings_response
           h['space_auditor'] = space_offerings_response
         end
       end
 
-      it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     describe 'pagination' do
@@ -654,7 +655,7 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when the service offering exists and has no plans' do
@@ -679,7 +680,7 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when the service offering exists and has public plans' do
@@ -693,7 +694,7 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when the service offering exists and has org-scoped plans' do
@@ -713,7 +714,7 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     context 'when the service offering is from a space-scoped service broker' do
@@ -738,12 +739,13 @@ RSpec.describe 'V3 service offerings' do
           h['global_auditor'] = { code: 403 }
           h['space_manager'] = { code: 403 }
           h['space_auditor'] = { code: 403 }
+          h['space_supporter'] = { code: 403 }
           h['space_developer'] = { code: 204 }
           h['unauthenticated'] = { code: 401 }
         end
       end
 
-      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
     end
 
     describe 'audit events' do
@@ -863,7 +865,7 @@ RSpec.describe 'V3 service offerings' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the service offering exists and has public plans' do
@@ -879,7 +881,7 @@ RSpec.describe 'V3 service offerings' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the service offering exists and has org-scoped plans' do
@@ -901,7 +903,7 @@ RSpec.describe 'V3 service offerings' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
 
       context 'when the service offering is from a space-scoped service broker' do
@@ -926,6 +928,7 @@ RSpec.describe 'V3 service offerings' do
             h['global_auditor'] = { code: 403 }
             h['space_manager'] = { code: 403 }
             h['space_auditor'] = { code: 403 }
+            h['space_supporter'] = { code: 403 }
             h['space_developer'] = {
               code: 200,
               response_object: create_offering_json(service_offering, labels: labels, annotations: annotations)
@@ -934,7 +937,7 @@ RSpec.describe 'V3 service offerings' do
           end
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED + ['space_supporter']
       end
     end
   end
