@@ -3056,74 +3056,70 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PATCH /v3/apps/:guid/environment_variables' do
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    it 'patches the environment variables for the app' do
-      app_model = VCAP::CloudController::AppModel.make(
-        name: 'name1',
-        space: space,
-        desired_state: 'STOPPED',
-        environment_variables: {
-            override: 'original',
-            preserve: 'keep'
+    let(:app_model) {
+      VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { override: 'original', preserve: 'keep' })
+    }
+    let(:update_request) {
+      {
+        var: {
+          override: 'new-value',
+          new_key: 'brand-new-value'
         }
-      )
-
-      update_request = {
-          var: {
-              override: 'new-value',
-              new_key: 'brand-new-value'
-          }
       }
-
-      patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-            'var' => {
-                'override' => 'new-value',
-                'new_key' => 'brand-new-value',
-                'preserve' => 'keep'
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-            }
+    }
+    let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_headers } }
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: {
+        'var' => {
+          'override' => 'new-value',
+          'new_key' => 'brand-new-value',
+          'preserve' => 'keep'
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
-                                 )
+      })
+      h['admin_read_only'] = { code: 403 }
+      h['global_auditor'] = { code: 403 }
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_manager'] = { code: 403 }
+      h['no_role'] = { code: 404 }
+      h['space_auditor'] = { code: 403 }
+      h['space_manager'] = { code: 403 }
+      h['space_supporter'] = { code: 403 }
+      h
     end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/apps/:guid/environment_variables' do
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    it 'gets the environment variables for the app' do
-      app_model = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' })
-
-      get "/v3/apps/#{app_model.guid}/environment_variables", nil, user_header
-      expect(last_response.status).to eq(200)
-
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-            'var' => {
-                'meep' => 'moop'
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-            }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' }) }
+    let(:api_call) {  lambda { |user_headers| get "/v3/apps/#{app_model.guid}/environment_variables", nil, user_headers } }
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 200, response_object: {
+        'var' => {
+          'meep' => 'moop'
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
-                                 )
+      })
+      h['global_auditor'] = { code: 403 }
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['org_manager'] = { code: 403 }
+      h['no_role'] = { code: 404 }
+      h['space_auditor'] = { code: 403 }
+      h['space_manager'] = { code: 403 }
+      h['space_supporter'] = { code: 403 }
+      h
     end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
   end
 
   describe 'GET /v3/apps/:guid/permissions' do
