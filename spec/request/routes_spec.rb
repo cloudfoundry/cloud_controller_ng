@@ -64,7 +64,8 @@ RSpec.describe 'Routes Request' do
               }
             },
             weight: route_in_org_dest_web.weight,
-            port: route_in_org_dest_web.presented_port
+            port: route_in_org_dest_web.presented_port,
+            protocol: 'http1'
           },
           {
             guid: route_in_org_dest_worker.guid,
@@ -75,7 +76,8 @@ RSpec.describe 'Routes Request' do
               }
             },
             weight: route_in_org_dest_worker.weight,
-            port: route_in_org_dest_worker.presented_port
+            port: route_in_org_dest_worker.presented_port,
+            protocol: 'http1'
           }
         ]),
         relationships: {
@@ -2618,7 +2620,8 @@ RSpec.describe 'Routes Request' do
               }
             },
             weight: route_mapping1.weight,
-            port: route_mapping1.presented_port
+            port: route_mapping1.presented_port,
+            protocol: 'http1'
           },
         ]),
         relationships: {
@@ -2662,7 +2665,8 @@ RSpec.describe 'Routes Request' do
               }
             },
             weight: route_mapping2.weight,
-            port: route_mapping2.presented_port
+            port: route_mapping2.presented_port,
+            protocol: 'http1'
           },
         ]),
         relationships: {

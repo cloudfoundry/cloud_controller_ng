@@ -17,6 +17,24 @@ module VCAP::CloudController
     one_to_many :processes, class: 'VCAP::CloudController::ProcessModel',
       primary_key: [:app_guid, :process_type], key: [:app_guid, :type]
 
+    def default_protocol_mapping
+      @default_protocol_mapping ||= { 'tcp' => 'tcp', 'http' => 'http1', nil: nil }
+    end
+
+    def protocol_with_defaults=(new_protocol)
+      self.protocol_without_defaults = (new_protocol == 'http2' ? new_protocol : nil)
+    end
+
+    alias_method :protocol_without_defaults=, :protocol=
+    alias_method :protocol=, :protocol_with_defaults=
+
+    def protocol_with_defaults
+      self.protocol_without_defaults == 'http2' ? 'http2' : default_protocol_mapping[self.route&.protocol]
+    end
+
+    alias_method :protocol_without_defaults, :protocol
+    alias_method :protocol, :protocol_with_defaults
+
     def validate
       validates_presence [:app_port]
       validates_unique [:app_guid, :route_guid, :process_type, :app_port]

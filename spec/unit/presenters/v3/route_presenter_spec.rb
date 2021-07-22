@@ -30,7 +30,8 @@ module VCAP::CloudController::Presenters::V3
           app_port: 1234,
           route: route,
           process_type: 'web',
-          weight: 55
+          weight: 55,
+          protocol: 'http1'
         )
       end
 
@@ -40,7 +41,8 @@ module VCAP::CloudController::Presenters::V3
           app_port: 5678,
           route: route,
           process_type: 'other-process',
-          weight: 45
+          weight: 45,
+          protocol: 'http1'
         )
       end
 
@@ -80,7 +82,8 @@ module VCAP::CloudController::Presenters::V3
               }
             },
             weight: destination.weight,
-            port: destination.presented_port
+            port: destination.presented_port,
+            protocol: destination.protocol
           },
           {
             guid: destination2.guid,
@@ -91,7 +94,8 @@ module VCAP::CloudController::Presenters::V3
               }
             },
             weight: destination2.weight,
-            port: destination2.presented_port
+            port: destination2.presented_port,
+            protocol: destination2.protocol
           }
         ]
         expect(subject[:destinations]).to match_array(expected_destinations)

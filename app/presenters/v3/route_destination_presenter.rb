@@ -12,7 +12,8 @@ module VCAP::CloudController::Presenters::V3
           }
         },
         weight: destination.weight,
-        port: destination.presented_port
+        port: destination.presented_port,
+        protocol: destination.protocol
       }
     end
 
