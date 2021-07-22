@@ -30,7 +30,8 @@ module VCAP::CloudController::Presenters::V3
             }
           },
           weight: route_mapping.weight,
-          port: route_mapping.presented_port
+          port: route_mapping.presented_port,
+          protocol: route_mapping.protocol
         )
       end
     end

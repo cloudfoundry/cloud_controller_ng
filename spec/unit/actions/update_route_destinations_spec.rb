@@ -50,6 +50,7 @@ module VCAP::CloudController
               process_type: 'web',
               app_port: 7000,
               weight: nil,
+              protocol: 'http2',
             },
             {
               app_guid: app_model2.guid,
@@ -71,12 +72,12 @@ module VCAP::CloudController
           }.to change { RouteMappingModel.count }.by(2)
           route.reload
           mappings = route.route_mappings.collect do |rm|
-            { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port }
+            { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port, protocol: rm.protocol }
           end
           expect(mappings).to contain_exactly(
-            { app_guid: app_model.guid, process_type: 'web', app_port: 7000 },
-            { app_guid: app_model.guid, process_type: 'existing', app_port: 3001 },
-            { app_guid: app_model2.guid, process_type: 'worker', app_port: ProcessModel::NO_APP_PORT_SPECIFIED },
+            { app_guid: app_model.guid, process_type: 'web', app_port: 7000, protocol: 'http2' },
+            { app_guid: app_model.guid, process_type: 'existing', app_port: 3001, protocol: 'http1' },
+            { app_guid: app_model2.guid, process_type: 'worker', app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http1' },
           )
         end
 
@@ -174,7 +175,6 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: 'web',
                 app_port: nil,
-                weight: nil,
               },
             ]
           end
@@ -214,7 +214,6 @@ module VCAP::CloudController
                 app_guid: docker_app.guid,
                 process_type: 'web',
                 app_port: nil,
-                weight: nil,
               },
             ]
           end
@@ -246,7 +245,6 @@ module VCAP::CloudController
               app_guid: docker_app.guid,
               process_type: docker_process.type,
               app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-              weight: nil,
             },
           ]
         end
@@ -280,7 +278,6 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: -2000000,
-              weight: nil,
             },
           ]
         end
@@ -299,12 +296,10 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 8080,
-              weight: nil,
             },
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              weight: nil,
             },
           ]
         end
@@ -323,13 +318,11 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 7000,
-              weight: nil,
             },
             {
               app_guid: app_model2.guid,
               process_type: 'worker',
               app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-              weight: nil,
             },
           ]
         end
@@ -363,7 +356,6 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 7000,
-              weight: nil,
             }
           ]
         end
@@ -386,6 +378,166 @@ module VCAP::CloudController
           expect(route_resource_manager).to have_received(:update_destinations).with(route)
         end
       end
+
+      context 'protocols' do
+        context 'http routes' do
+          it 'saves http2 in the db' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'http2',
+              }
+            ]
+            expect {
+              subject.add(params, route, apps_hash, user_audit_info)
+            }.to change { RouteMappingModel.count }.by(1)
+            route.reload
+            query = RouteMappingModel.where(route: route,
+                                            process_type: process_type,
+                                            app_guid: app_model.guid,
+                                            app_port: 7000)
+
+            expect(query.first.protocol).to eq('http2')
+          end
+
+          it 'saves http1' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'http1',
+              }
+            ]
+            expect {
+              subject.add(params, route, apps_hash, user_audit_info)
+            }.to change { RouteMappingModel.count }.by(1)
+            route.reload
+            query = RouteMappingModel.where(route: route,
+                                            process_type: process_type,
+                                            app_guid: app_model.guid,
+                                            app_port: 7000)
+
+            expect(query.first.protocol).to eq('http1')
+          end
+
+          it 'errors for tcp' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'tcp',
+              }
+            ]
+            expect {
+              subject.add(params, route, apps_hash, user_audit_info)
+            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              "Cannot use 'tcp' protocol for http routes; valid options are: [http1, http2]."
+            )
+          end
+        end
+
+        context 'tcp routes' do
+          let(:tcp_route) { Route.make(:tcp) }
+          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+            allow_any_instance_of(RouteValidator).to receive(:validate)
+          end
+
+          it 'saves tcp' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'tcp',
+              }
+            ]
+            expect {
+              subject.add(params, tcp_route, apps_hash, user_audit_info)
+            }.to change { RouteMappingModel.count }.by(1)
+            route.reload
+            query = RouteMappingModel.where(route: tcp_route,
+                                            process_type: process_type,
+                                            app_guid: app_model.guid,
+                                            app_port: 7000)
+            expect(query.first.protocol).to eq('tcp')
+          end
+
+          it 'errors for http1' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'http1',
+              }
+            ]
+            expect {
+              subject.add(params, tcp_route, apps_hash, user_audit_info)
+            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              "Cannot use 'http1' protocol for tcp routes; valid options are: [tcp]."
+            )
+          end
+
+          it 'errors for http2' do
+            process_type = 'web'
+            params = [
+              {
+                app_guid: app_model.guid,
+                process_type: process_type,
+                app_port: 7000,
+                protocol: 'http2',
+              }
+            ]
+            expect {
+              subject.add(params, tcp_route, apps_hash, user_audit_info)
+            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              "Cannot use 'http2' protocol for tcp routes; valid options are: [tcp]."
+            )
+          end
+        end
+      end
+
+      context 'when a destination exists with a different http protocol' do
+        let!(:same_destination) do
+          RouteMappingModel.make(
+            app: app_model,
+            route: route,
+            app_port: 8080,
+            process_type: 'web',
+            protocol: 'http1'
+          )
+        end
+
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 8080,
+              protocol: 'http2'
+            },
+          ]
+        end
+
+        it 'raise an error' do
+          expect {
+            subject.add(params, route, apps_hash, user_audit_info)
+          }.to raise_error('Destination exists with conflicting protocol')
+        end
+      end
     end
 
     describe '#replace' do
@@ -396,13 +548,11 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 7000,
-              weight: nil,
             },
             {
               app_guid: app_model2.guid,
               process_type: 'worker',
               app_port: 8081,
-              weight: nil,
             },
           ]
         end
@@ -533,6 +683,7 @@ module VCAP::CloudController
               process_type: 'web',
               app_port: ProcessModel::DEFAULT_HTTP_PORT,
               weight: nil,
+              protocol: nil,
             },
           ]
         end
@@ -565,12 +716,10 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 8080,
-              weight: nil,
             },
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              weight: nil,
             },
           ]
         end
@@ -598,7 +747,6 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 7000 + i,
-              weight: nil,
             }
           end
 
@@ -620,7 +768,6 @@ module VCAP::CloudController
               app_guid: app_model.guid,
               process_type: 'web',
               app_port: 7000,
-              weight: nil,
             }
           ]
         end

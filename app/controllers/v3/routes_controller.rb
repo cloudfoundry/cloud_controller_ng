@@ -87,10 +87,9 @@ class RoutesController < ApplicationController
     message = RouteUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
     unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
 
-    route = VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
+    VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
 
     render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
   end

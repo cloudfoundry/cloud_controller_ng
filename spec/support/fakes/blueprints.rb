@@ -11,6 +11,7 @@ Sham.define do
   auth_username       { |index| "auth_username-#{index}" }
   auth_password       { |index| "auth_password-#{index}" }
   provider            { |index| "provider-#{index}" }
+  port                { |index| index + 1000 }
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
   description         { |index| "desc-#{index}" }
@@ -245,6 +246,10 @@ module VCAP::CloudController
     name { Sham.domain }
   end
 
+  SharedDomain.blueprint(:tcp) do
+    router_group_guid { Sham.guid }
+  end
+
   Route.blueprint do
     space { Space.make }
 
@@ -255,6 +260,15 @@ module VCAP::CloudController
     end
 
     host { Sham.host }
+  end
+
+  Route.blueprint(:tcp) do
+    port { Sham.port }
+    domain do
+      SharedDomain.make(
+        :tcp,
+      )
+    end
   end
 
   Space.blueprint do

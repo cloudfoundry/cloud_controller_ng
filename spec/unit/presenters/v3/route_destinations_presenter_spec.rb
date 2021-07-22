@@ -46,6 +46,7 @@ module VCAP::CloudController::Presenters::V3
           process: { type: process.type }
         })
         expect(result[:destinations][0][:port]).to eq(route_mapping.app_port)
+        expect(result[:destinations][0][:protocol]).to eq(route_mapping.protocol)
         expect(result[:destinations][0][:weight]).to eq(route_mapping.weight)
 
         expect(result[:destinations][1][:guid]).to eq(route_mapping2.guid)
@@ -55,6 +56,7 @@ module VCAP::CloudController::Presenters::V3
         })
         expect(result[:destinations][1][:port]).to eq(route_mapping2.app_port)
         expect(result[:destinations][1][:weight]).to eq(route_mapping2.weight)
+        expect(result[:destinations][1][:protocol]).to eq(route_mapping2.protocol)
       end
 
       context 'links' do

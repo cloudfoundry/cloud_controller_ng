@@ -4,6 +4,31 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::Route, type: :model do
     it { is_expected.to have_timestamp_columns }
 
+    describe '#protocol' do
+      let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+      let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+
+      before do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+      end
+
+      context 'when the route belongs to a domain with the "http" protocol' do
+        let!(:domain) { SharedDomain.make }
+        it 'returns "http"' do
+          route = Route.new(domain: domain)
+          expect(route.protocol).to eq('http')
+        end
+      end
+
+      context 'when the route belongs to a domain with the "tcp" protocol' do
+        let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
+        it 'returns "tcp"' do
+          route = Route.new(domain: tcp_domain, port: 6000)
+          expect(route.protocol).to eq('tcp')
+        end
+      end
+    end
+
     describe '#tcp?' do
       let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
       let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
