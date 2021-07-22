@@ -789,26 +789,25 @@ RSpec.describe 'Users Request' do
   end
 
   describe 'PATCH /v3/users/:guid' do
+    let(:api_call) do
+      lambda {
+        |user_headers| patch "/v3/users/#{actee.guid}",
+        {
+          metadata: {
+            labels: {
+              potato: 'yam',
+              style: 'casserole',
+            },
+            annotations: {
+              potato: 'russet',
+              style: 'french',
+            }
+          }
+        }.to_json,
+        user_headers
+      }
+    end
     describe 'metadata' do
-      let(:api_call) do
-        lambda {
-          |user_headers| patch "/v3/users/#{actee.guid}",
-            {
-              metadata: {
-                labels: {
-                  potato: 'yam',
-                  style: 'casserole',
-                },
-                annotations: {
-                  potato: 'russet',
-                  style: 'french',
-                }
-              }
-            }.to_json,
-            user_headers
-        }
-      end
-
       let(:client_json) do
         {
           guid: actee.guid,
@@ -853,7 +852,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when the actee has an org or space role' do
@@ -875,7 +874,7 @@ RSpec.describe 'Users Request' do
           org.add_user(actee)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       context 'when metadata is invalid' do
@@ -927,7 +926,7 @@ RSpec.describe 'Users Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the actee has an org or space role' do
@@ -942,7 +941,7 @@ RSpec.describe 'Users Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the user is not logged in' do
@@ -985,6 +984,18 @@ RSpec.describe 'Users Request' do
           delete '/v3/users/unknown-user', nil, user_header
           expect(last_response).to have_status_code(404)
           expect(last_response).to have_error_message('User not found')
+        end
+      end
+    end
+
+    context 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 202 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h
         end
       end
     end
