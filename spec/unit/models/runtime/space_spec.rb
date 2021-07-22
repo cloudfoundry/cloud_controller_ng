@@ -536,7 +536,7 @@ module VCAP::CloudController
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh }
       it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
-        :auditor_guids, :application_supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
+        :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
       }
     end
 

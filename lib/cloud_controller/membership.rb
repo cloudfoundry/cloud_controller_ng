@@ -50,7 +50,7 @@ module VCAP::CloudController
         when SPACE_AUDITOR
           @user.audited_spaces.map(&:guid)
         when SPACE_SUPPORTER
-          @user.application_supported_spaces.map(&:guid)
+          @user.supported_spaces.map(&:guid)
         when ORG_USER
           @user.organizations_dataset.join(
             :spaces, spaces__organization_id: :organizations__id
@@ -92,7 +92,7 @@ module VCAP::CloudController
             association_join(:organization).map(&:guid)
         when SPACE_SUPPORTER
           @space_supporter ||=
-            @user.application_supported_spaces_dataset.
+            @user.supported_spaces_dataset.
             association_join(:organization).map(&:guid)
         when ORG_USER
           @org_user ||=
