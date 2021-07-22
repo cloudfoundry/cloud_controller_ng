@@ -30,7 +30,7 @@ module VCAP::CloudController
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
-    define_user_group :application_supporters, reciprocal: :application_supporter_spaces, before_add: :validate_supporter
+    define_user_group :supporters, reciprocal: :supporter_spaces, before_add: :validate_supporter
 
     many_to_one :organization, before_set: :validate_change_organization
 
@@ -156,7 +156,7 @@ module VCAP::CloudController
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
     import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
-      :manager_guids, :auditor_guids, :application_supporter_guids, :security_group_guids, :space_quota_definition_guid
+      :manager_guids, :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name
 
@@ -196,7 +196,7 @@ module VCAP::CloudController
     end
 
     def has_supporter?(user)
-      user.present? && application_supporters_dataset.where(user_id: user.id).present?
+      user.present? && supporters_dataset.where(user_id: user.id).present?
     end
 
     def has_member?(user)
@@ -266,7 +266,7 @@ module VCAP::CloudController
         spaces__id: dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).
           union(dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)).
           union(dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)).
-          union(dataset.join_table(:inner, :spaces_application_supporters, space_id: :id, user_id: user.id).select(:spaces__id)).
+          union(dataset.join_table(:inner, :spaces_supporters, space_id: :id, user_id: user.id).select(:spaces__id)).
           union(dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)).
           select(:id)
       }

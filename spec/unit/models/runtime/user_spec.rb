@@ -31,7 +31,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :spaces }
       it { is_expected.to have_associated :managed_spaces, class: Space }
       it { is_expected.to have_associated :audited_spaces, class: Space }
-      it { is_expected.to have_associated :application_supported_spaces, class: Space }
+      it { is_expected.to have_associated :supported_spaces, class: Space }
 
       describe 'destroy dependent associations' do
         let(:user) { User.make }
