@@ -109,6 +109,7 @@ RSpec.describe 'v3 service route bindings' do
           h['admin_read_only'] = bindings_response_body
           h['global_auditor'] = bindings_response_body
           h['space_developer'] = bindings_response_body
+          h['space_supporter'] = bindings_response_body
           h['space_manager'] = bindings_response_body
           h['space_auditor'] = bindings_response_body
           h['org_manager'] = bindings_response_body

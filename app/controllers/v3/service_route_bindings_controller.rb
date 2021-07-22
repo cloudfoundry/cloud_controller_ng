@@ -182,7 +182,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def space_guids
-    permission_queryer.readable_space_guids
+    permission_queryer.readable_supporter_space_guids
   end
 
   def parse_create_request
