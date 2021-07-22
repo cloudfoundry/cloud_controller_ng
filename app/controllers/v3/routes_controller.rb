@@ -133,6 +133,12 @@ class RoutesController < ApplicationController
 
   def replace_destinations
     message = RouteUpdateDestinationsMessage.new(hashed_params[:body], replace: true)
+<<<<<<< HEAD
+
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+
+    UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash(message), user_audit_info)
 
     unprocessable!(message.errors.full_messages) unless message.valid?
     unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
