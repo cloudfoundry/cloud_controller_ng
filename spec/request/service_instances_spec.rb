@@ -19,7 +19,7 @@ RSpec.describe 'V3 service instances' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'managed service instance' do
@@ -28,11 +28,12 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         responses_for_space_restricted_single_endpoint(
-          create_managed_json(instance)
+          create_managed_json(instance),
+          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'user-provided service instance' do
@@ -41,11 +42,12 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         responses_for_space_restricted_single_endpoint(
-          create_user_provided_json(instance)
+          create_user_provided_json(instance),
+          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'shared service instance' do
@@ -59,11 +61,12 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         responses_for_space_restricted_single_endpoint(
-          create_managed_json(instance)
+          create_managed_json(instance),
+          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
         )
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'fields' do
@@ -239,6 +242,7 @@ RSpec.describe 'V3 service instances' do
           h['admin'] = all_instances
           h['admin_read_only'] = all_instances
           h['global_auditor'] = all_instances
+          h['space_supporter'] = space_instances
           h['space_developer'] = space_instances
           h['space_manager'] = space_instances
           h['space_auditor'] = space_instances
@@ -247,7 +251,7 @@ RSpec.describe 'V3 service instances' do
           h
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
 
       describe 'filters' do
@@ -496,7 +500,7 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances/:guid/credentials' do
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
       let(:credentials) { { 'fake-key' => 'fake-value' } }
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: credentials) }
@@ -508,14 +512,9 @@ RSpec.describe 'V3 service instances' do
           response_object: credentials,
         )
 
-        h['global_auditor'] = { code: 403 }
-        h['space_manager'] = { code: 403 }
-        h['space_auditor'] = { code: 403 }
-        h['org_manager'] = { code: 403 }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h
+        h['global_auditor'] = h['space_supporter'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+        h.freeze
       end
     end
 
@@ -551,7 +550,7 @@ RSpec.describe 'V3 service instances' do
         to_return(status: response_code, body: body)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
       let(:parameters) { { 'some-key' => 'some-value' } }
       let(:body) { { 'parameters' => parameters }.to_json }
@@ -563,6 +562,7 @@ RSpec.describe 'V3 service instances' do
           response_object: parameters,
         )
 
+        h['space_supporter'] = { code: 403 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -656,7 +656,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'when the instance is shared' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, service_plan: service_plan) }
         let(:parameters) { { 'some-key' => 'some-value' } }
@@ -673,14 +673,9 @@ RSpec.describe 'V3 service instances' do
             response_object: parameters,
           )
 
-          h['space_developer'] = { code: 403 }
-          h['space_manager'] = { code: 403 }
-          h['space_auditor'] = { code: 403 }
-          h['org_manager'] = { code: 403 }
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-          h
+          h['space_supporter'] = h['space_developer'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
+          h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+          h.freeze
         end
       end
     end
@@ -735,7 +730,7 @@ RSpec.describe 'V3 service instances' do
       headers_for(user)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 201) }
     end
 
@@ -1511,7 +1506,7 @@ RSpec.describe 'V3 service instances' do
       {}
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
       let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
       let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
     end
@@ -2623,7 +2618,7 @@ RSpec.describe 'V3 service instances' do
         }
       }
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
@@ -3330,7 +3325,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
       end
 
@@ -3343,7 +3338,7 @@ RSpec.describe 'V3 service instances' do
           space
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
           let(:expected_codes_and_responses) do
             responses_for_org_suspended_space_restricted_update_endpoint(success_code: 200).merge({ 'space_developer' => { code: 422 } })
           end
@@ -3555,11 +3550,11 @@ RSpec.describe 'V3 service instances' do
         }
       }
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
-      it_behaves_like 'permissions for delete endpoint when organization is suspended', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes) { responses_for_org_suspended_space_restricted_delete_endpoint(success_code: 204) }
       end
     end
@@ -3687,7 +3682,7 @@ RSpec.describe 'V3 service instances' do
     describe 'permissions in originating space' do
       let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_headers } }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_response) do
           {
             data: [{ guid: other_space.guid }],
@@ -3698,7 +3693,10 @@ RSpec.describe 'V3 service instances' do
         end
 
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(expected_response)
+          responses_for_space_restricted_single_endpoint(
+            expected_response,
+            permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
+          )
         end
       end
     end
@@ -3821,7 +3819,7 @@ RSpec.describe 'V3 service instances' do
         responses_for_space_restricted_single_endpoint(response_object)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
 
     context 'when the instance does not exist' do
