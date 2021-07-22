@@ -225,7 +225,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def can_read_space?(space)
-    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
   end
 
   def untrusted_can_write_space?(space)
