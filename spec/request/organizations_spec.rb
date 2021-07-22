@@ -312,6 +312,28 @@ module VCAP::CloudController
           expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(orgB.guid, orgC.guid)
         end
       end
+
+      context 'permissions' do
+        before do
+          organization1.remove_user(user)
+          organization2.remove_user(user)
+          organization3.remove_user(user)
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          let(:api_call) { lambda { |user_headers| get 'v3/organizations', nil, user_headers } }
+          let(:space) { VCAP::CloudController::Space.make }
+          let(:org) { space.organization }
+          let(:expected_codes_and_responses) do
+            h = Hash.new(code: 200, response_guids: [org.guid])
+            h['admin'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
+            h['admin_read_only'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
+            h['global_auditor'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
+            h['no_role'] = { code: 200, response_guids: [] }
+            h
+          end
+        end
+      end
     end
 
     describe 'GET /v3/isolation_segments/:guid/organizations' do
@@ -1056,6 +1078,47 @@ module VCAP::CloudController
 
         organization1.reload
         expect(organization1.default_isolation_segment_guid).to eq(isolation_segment.guid)
+      end
+    end
+
+    describe 'GET /v3/organizations/:guid' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}", nil, user_headers } }
+      let(:expected_response_object) do {
+            'guid' => org.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'name' => org.name.to_s,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}" },
+              'domains' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains" },
+              'default_domain' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default" },
+              'quota' => { 'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}" }
+            },
+            'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {}
+            },
+            'suspended' => false
+          }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response_object)
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+
+      context 'when the org is suspended' do
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          expected_response_object['suspended'] = true
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
 

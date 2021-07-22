@@ -109,6 +109,7 @@ RSpec.describe 'v3 service route bindings' do
           h['admin_read_only'] = bindings_response_body
           h['global_auditor'] = bindings_response_body
           h['space_developer'] = bindings_response_body
+          h['space_supporter'] = bindings_response_body
           h['space_manager'] = bindings_response_body
           h['space_auditor'] = bindings_response_body
           h['org_manager'] = bindings_response_body
@@ -1705,7 +1706,7 @@ RSpec.describe 'v3 service route bindings' do
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
-          h['space_supporter'] = { code: 404 }
+          h['space_supporter'] = { code: 403 }
         end
       end
     end

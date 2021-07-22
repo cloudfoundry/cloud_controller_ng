@@ -91,6 +91,32 @@ RSpec.describe 'Packages' do
           organization_guid: space.organization.guid
         })
       end
+
+      context 'permissions' do
+        before do
+          space.remove_developer(user)
+          space.organization.remove_user(user)
+        end
+        let(:api_call) { lambda { |user_headers| post '/v3/packages', { type: type, data: data, relationships: relationships, metadata: metadata }.to_json, user_headers } }
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 201)
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['org_auditor'] = { code: 422 }
+          h['org_billing_manager'] = { code: 422 }
+          h['org_manager'] = { code: 403 }
+          h['no_role'] = { code: 422 }
+          h['space_auditor'] = { code: 403 }
+          h['space_manager'] = { code: 403 }
+          h['space_supporter'] = { code: 403 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      end
     end
 
     describe 'copying' do
@@ -156,6 +182,39 @@ RSpec.describe 'Packages' do
           space_guid:        space.guid,
           organization_guid: space.organization.guid
         })
+      end
+
+      context 'permissions' do
+        before do
+          space.remove_developer(user)
+          space.organization.remove_user(user)
+        end
+        let(:api_call) { lambda { |user_headers| post "/v3/packages?source_guid=#{source_package_guid}",
+                                                      {
+                                                        relationships: {
+                                                          app: { data: { guid: guid } },
+                                                        }
+                                                      }.to_json, user_headers
+                         }
+        }
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 201)
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['org_auditor'] = { code: 422 }
+          h['org_billing_manager'] = { code: 422 }
+          h['org_manager'] = { code: 403 }
+          h['no_role'] = { code: 422 }
+          h['space_auditor'] = { code: 403 }
+          h['space_manager'] = { code: 403 }
+          h['space_supporter'] = { code: 403 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
       end
     end
   end
@@ -862,6 +921,53 @@ RSpec.describe 'Packages' do
         end
       end
     end
+
+    context 'permissions' do
+      before do
+        space.remove_developer(user)
+        space.organization.remove_user(user)
+      end
+      let(:api_call) { lambda { |user_headers| post "/v3/packages/#{guid}/upload", packages_params.to_json, user_headers } }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+      let(:user) { VCAP::CloudController::User.make }
+      let(:package_model_response_object) do
+        {
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'data'       => {
+            'checksum' => { 'type' => 'sha256', 'value' => anything },
+            'error' => nil
+          },
+          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: package_model_response_object)
+        h['admin_read_only'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
   end
 
   describe 'GET /v3/packages/:guid/download' do
@@ -920,6 +1026,31 @@ RSpec.describe 'Packages' do
         })
       end
     end
+
+    context 'permissions' do
+      before do
+        space.remove_developer(user)
+        space.organization.remove_user(user)
+      end
+      let(:api_call) { lambda { |user_headers| get "/v3/packages/#{guid}/download", nil, user_headers } }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+      let(:user) { VCAP::CloudController::User.make }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 302)
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    end
   end
 
   describe 'PATCH /v3/packages/:guid' do
@@ -960,6 +1091,32 @@ RSpec.describe 'Packages' do
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
       expect(parsed_response['metadata']).to eq(expected_metadata)
+    end
+
+    context 'permissions' do
+      before do
+        space.remove_developer(user)
+        space.organization.remove_user(user)
+      end
+      let(:api_call) { lambda { |user_headers| patch "/v3/packages/#{guid}", { metadata: metadata }.to_json, user_headers } }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+      let(:user) { VCAP::CloudController::User.make }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200)
+        h['admin_read_only'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
@@ -1014,6 +1171,32 @@ RSpec.describe 'Packages' do
           -> { delete "/v3/packages/#{resource.guid}", nil, user_header }
         end
       end
+    end
+
+    context 'permissions' do
+      before do
+        space.remove_developer(user)
+        space.organization.remove_user(user)
+      end
+      let(:api_call) { lambda { |user_headers| delete "/v3/packages/#{guid}", nil, user_headers } }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+      let(:user) { VCAP::CloudController::User.make }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 202)
+        h['admin_read_only'] = { code: 403 }
+        h['global_auditor'] = { code: 403 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['org_manager'] = { code: 403 }
+        h['no_role'] = { code: 404 }
+        h['space_auditor'] = { code: 403 }
+        h['space_manager'] = { code: 403 }
+        h['space_supporter'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
     end
   end
 
