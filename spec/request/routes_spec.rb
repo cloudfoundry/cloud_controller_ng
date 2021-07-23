@@ -151,6 +151,7 @@ RSpec.describe 'Routes Request' do
             per_page: '10',
             order_by: 'updated_at',
             space_guids: ['foo', 'bar'],
+            service_instance_guids: ['baz', 'qux'],
             organization_guids: ['foo', 'bar'],
             domain_guids: ['foo', 'bar'],
             app_guids: ['foo', 'bar'],
@@ -608,6 +609,34 @@ RSpec.describe 'Routes Request' do
             expect(parsed_response['resources'].size).to eq(2)
             expect(parsed_response['resources'].map { |resource| resource['port'] }).to contain_exactly(route_with_ports_0.port, route_with_ports_1.port)
           end
+        end
+      end
+
+      context 'service instance guids filter' do
+        let!(:app_model_with_service_instances) { VCAP::CloudController::AppModel.make(space: space) }
+        let(:service_instance_one) do
+          VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-name-1')
+        end
+        let(:service_instance_two) do
+          VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-name-2')
+        end
+        let!(:service_binding_one) { VCAP::CloudController::ServiceBinding.make(app: app_model_with_service_instances, service_instance: service_instance_one) }
+        let!(:service_binding_two) { VCAP::CloudController::ServiceBinding.make(app: app_model_with_service_instances, service_instance: service_instance_two) }
+        let!(:route_mapping_one) { VCAP::CloudController::RouteMappingModel.make(app: app_model_with_service_instances, route: route_with_service_instance_one) }
+        let!(:route_mapping_two) { VCAP::CloudController::RouteMappingModel.make(app: app_model_with_service_instances, route: route_with_service_instance_two) }
+
+        let!(:route_with_service_instance_one) do
+          VCAP::CloudController::Route.make(space: space, host: 'host-with-service-instance-one', domain: domain, path: '/path1', guid: 'route-with-service-instance-one')
+        end
+        let!(:route_with_service_instance_two) do
+          VCAP::CloudController::Route.make(space: space, host: 'host-with-service-instance-two', domain: domain, path: '/path2', guid: 'route-with-service-instance-two')
+        end
+
+        it 'returns routes filtered by service instance guid' do
+          get "/v3/routes?service_instance_guids=#{service_instance_one.guid},#{service_instance_two.guid}", nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].size).to eq(2)
+          expect(parsed_response['resources'].map { |resource| resource['guid'] }).to contain_exactly('route-with-service-instance-one', 'route-with-service-instance-two')
         end
       end
     end
