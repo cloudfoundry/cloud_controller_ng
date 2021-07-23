@@ -21,7 +21,8 @@ module VCAP::CloudController::Presenters::V3
         app: app
       )
     end
-    subject(:presenter) { AppEnvPresenter.new(app) }
+    let(:show_secrets) { true }
+    subject(:presenter) { AppEnvPresenter.new(app, show_secrets) }
 
     describe '#to_hash' do
       let(:service) { VCAP::CloudController::Service.make(label: 'rabbit', tags: ['swell']) }
@@ -40,6 +41,14 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:system_env_json]).to have_key(:VCAP_SERVICES)
         expect(result[:staging_env_json]).to eq({})
         expect(result[:running_env_json]).to eq({})
+      end
+
+      describe 'with show secrets false' do
+        let(:show_secrets) { false }
+
+        it 'redacts system env json' do
+          expect(result[:system_env_json]['redacted_message']).to eq('[PRIVATE DATA HIDDEN]')
+        end
       end
     end
   end

@@ -245,13 +245,14 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
 
     app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
+    show_secrets = permission_queryer.can_read_system_environment_variables?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
     Repositories::AppEventRepository.new.record_app_show_env(app, user_audit_info)
 
-    render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
+    render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app, show_secrets)
   end
 
   def show_environment_variables
@@ -259,8 +260,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
@@ -272,8 +273,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def update_environment_variables
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
