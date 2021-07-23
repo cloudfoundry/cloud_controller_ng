@@ -208,6 +208,8 @@ module UserHelpers
 
   def allow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.guid, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.guid, space.organization_guid).and_return(true)
   end
 
   def allow_user_write_access(user, space:)
@@ -267,6 +269,8 @@ module UserHelpers
 
   def disallow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.guid, space.organization_guid).and_return(false)
   end
 
   def disallow_user_write_access(user, space:)
