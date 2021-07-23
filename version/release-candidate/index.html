@@ -3034,17 +3034,25 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental, system_env_json redacted</td>
 </tr>
 </tbody></table>
 <h3 id="get-environment-variables-for-an-app">Get environment variables for an app</h3>
@@ -3085,17 +3093,25 @@ For the entire list of environment variables that will be available to the app a
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-permissions">Get permissions</h3>
@@ -3660,14 +3676,21 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Supporter</td>
+<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="app-features">App Features</h2>
@@ -9676,7 +9699,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td><strong>Name:</strong> <code class="prettyprint">set_roles_by_username</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the <code class="prettyprint">/ids/users/</code> endpoint for UAA <br>2) Create a UAA <code class="prettyprint">cloud_controller_username_lookup</code> client with the <code class="prettyprint">scim.userids</code> authority</td>
 </tr>
 <tr>
-<td><strong>Name:</strong> <code class="prettyprint">space_developer_env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env end points. When disabled, space developers can no longer do a get against these end points.</td>
+<td><strong>Name:</strong> <code class="prettyprint">space_developer_env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint, and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints. When disabled, neither space developers nor space supporters can access these endpoints.</td>
 </tr>
 <tr>
 <td><strong>Name:</strong> <code class="prettyprint">space_scoped_private_broker_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers.</td>
