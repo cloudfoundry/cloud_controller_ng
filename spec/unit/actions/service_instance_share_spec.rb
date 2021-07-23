@@ -111,31 +111,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a service instance with the same name has already been shared with the target space' do
-        let(:service_instance1) { ManagedServiceInstance.make(name: 'banana') }
-        let(:service_instance2) { ManagedServiceInstance.make(name: 'banana') }
-
-        before do
-          service_instance_share.create(service_instance1, [Space.first(guid: target_space1.guid)], user_audit_info)
-        end
-
-        it 'raises an api error' do
-          # For some reason, in our unit tests, the `service_instance.add_shared_space` method adds services instances
-          # to the spaces `service_instances` association (only in memory, the assoiation resets when the model is reloaded).
-          #
-          # This is not how real environments behave and it's unclear why
-          # our tests behave differently.
-          #
-          # To get around this, we query for the space to clear the association
-          expect {
-            service_instance_share.create(service_instance2, [Space.first(guid: target_space1.guid)], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error,
-/A service instance called #{service_instance1.name} has already been shared with #{target_space1.name}/)
-          expect(service_instance1.shared_spaces).to eq [target_space1]
-          expect(service_instance2.shared_spaces).to be_empty
-        end
-      end
-
       context 'when the service is user-provided' do
         it 'raises an api error' do
           expect {
