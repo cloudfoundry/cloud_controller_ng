@@ -303,7 +303,7 @@ RSpec.describe 'Stacks Request' do
       app_model2.buildpack_lifecycle_data.update(stack: stack.name, buildpacks: [buildpack.name])
     end
 
-    context 'as a space developer' do
+    context 'as a permitted user' do
       before do
         space.organization.add_user(user)
         space.add_developer(user)
