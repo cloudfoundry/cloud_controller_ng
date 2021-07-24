@@ -21,10 +21,10 @@ Content-Type: application/json
 <%= yield_content :paginated_list_of_apps, '/v3/stacks/[guid]/apps' %>
 ```
 
-Retrieve all stacks.
+Retrieve all apps using a given stack.
 
 #### Definition
-`GET /v3/stacks`
+`GET /v3/stacks/:guid/apps`
 
 #### Query parameters
 
