@@ -348,6 +348,7 @@ includes:
   - resources/stacks/create
   - resources/stacks/get
   - resources/stacks/list
+  - resources/stacks/apps
   - resources/stacks/update
   - resources/stacks/delete
   - resources/tasks/header
