@@ -613,17 +613,12 @@ RSpec.describe 'Routes Request' do
       end
 
       context 'service instance guids filter' do
-        let!(:app_model_with_service_instances) { VCAP::CloudController::AppModel.make(space: space) }
         let(:service_instance_one) do
-          VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-name-1')
+          VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, name: 'si-name-1')
         end
         let(:service_instance_two) do
-          VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-name-2')
+          VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, name: 'si-name-2')
         end
-        let!(:service_binding_one) { VCAP::CloudController::ServiceBinding.make(app: app_model_with_service_instances, service_instance: service_instance_one) }
-        let!(:service_binding_two) { VCAP::CloudController::ServiceBinding.make(app: app_model_with_service_instances, service_instance: service_instance_two) }
-        let!(:route_mapping_one) { VCAP::CloudController::RouteMappingModel.make(app: app_model_with_service_instances, route: route_with_service_instance_one) }
-        let!(:route_mapping_two) { VCAP::CloudController::RouteMappingModel.make(app: app_model_with_service_instances, route: route_with_service_instance_two) }
 
         let!(:route_with_service_instance_one) do
           VCAP::CloudController::Route.make(space: space, host: 'host-with-service-instance-one', domain: domain, path: '/path1', guid: 'route-with-service-instance-one')
@@ -631,6 +626,9 @@ RSpec.describe 'Routes Request' do
         let!(:route_with_service_instance_two) do
           VCAP::CloudController::Route.make(space: space, host: 'host-with-service-instance-two', domain: domain, path: '/path2', guid: 'route-with-service-instance-two')
         end
+
+        let!(:route_mapping_one) { VCAP::CloudController::RouteBinding.make(route: route_with_service_instance_one, service_instance: service_instance_one) }
+        let!(:route_mapping_two) { VCAP::CloudController::RouteBinding.make(route: route_with_service_instance_two, service_instance: service_instance_two) }
 
         it 'returns routes filtered by service instance guid' do
           get "/v3/routes?service_instance_guids=#{service_instance_one.guid},#{service_instance_two.guid}", nil, admin_header

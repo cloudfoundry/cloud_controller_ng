@@ -238,10 +238,9 @@ module VCAP::CloudController
       end
 
       context 'when fetching routes by service_instance_guid' do
-        let!(:service_instance) { ManagedServiceInstance.make(space: space2, name: 'service-instance') }
-        let!(:app_model) { AppModel.make(space: space2) }
-        let!(:service_binding) { ServiceBinding.make(app: app_model, service_instance: service_instance) }
-        let!(:route_mapping) { RouteMappingModel.make(app: app_model, route: route3) }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space2, name: 'service-instance') }
+        let!(:service_binding) { RouteBinding.make(service_instance: service_instance, route: route3) }
+
         context 'when there is a matching route' do
           let(:routes_filter) { { service_instance_guids: service_instance.guid } }
 
@@ -258,6 +257,23 @@ module VCAP::CloudController
           it 'returns no routes' do
             results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
             expect(results.length).to eq(0)
+          end
+        end
+      end
+
+      context 'when fetching routes by service_instance_guid and app_guid' do
+        let!(:service_instance) { ManagedServiceInstance.make(space: space2, name: 'service-instance') }
+        let!(:app_model) { AppModel.make(space: space2) }
+        let!(:service_binding) { ServiceBinding.make(app: app_model, service_instance: service_instance) }
+        let!(:route_mapping) { RouteMappingModel.make(app: app_model, route: route3) }
+
+        context 'when there is a matching route' do
+          let(:routes_filter) { { service_instance_guids: service_instance.guid, app_guids: app_model.guid } }
+
+          it 'returns the matching route' do
+            results = RouteFetcher.fetch(message, Route.where(guid: [route2.guid, route3.guid])).all
+            expect(results.length).to eq(1)
+            expect(results[0].guid).to eq(route3.guid)
           end
         end
       end
