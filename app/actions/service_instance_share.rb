@@ -57,6 +57,11 @@ module VCAP::CloudController
         error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}."
         error!(error_msg)
       end
+
+      if space.service_instances_shared_from_other_spaces.map(&:name).include?(service_instance.name)
+        error_msg = "A service instance called #{service_instance.name} has already been shared with #{space.name}."
+        error!(error_msg)
+      end
     end
 
     def validate_not_sharing_to_self!(service_instance, spaces)
