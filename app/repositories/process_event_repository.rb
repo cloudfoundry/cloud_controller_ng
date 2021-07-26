@@ -1,9 +1,11 @@
 require 'repositories/mixins/app_manifest_event_mixins'
+require 'repositories/mixins/truncation_mixin'
 
 module VCAP::CloudController
   module Repositories
     class ProcessEventRepository
       extend AppManifestEventMixins
+      extend TruncationMixin
 
       def self.record_create(process, user_audit_info, manifest_triggered: false)
         VCAP::AppLogEmitter.emit(process.app.guid, "Added process: \"#{process.type}\"")
@@ -98,6 +100,7 @@ module VCAP::CloudController
 
       def self.record_crash(process, crash_payload)
         VCAP::AppLogEmitter.emit(process.app.guid, "Process has crashed with type: \"#{process.type}\"")
+        crash_payload['exit_description'] = truncate(crash_payload['exit_description'])
 
         create_event(
           process:    process,
