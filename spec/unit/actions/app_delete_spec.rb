@@ -329,10 +329,14 @@ module VCAP::CloudController
               end
             end
 
-            it 'raises the first error in the list' do
+            it 'raises the errors wrapped into a SubResourceError' do
               expect {
                 app_delete.delete(app_dataset)
-              }.to raise_error(StandardError, 'error 1')
+              }.to raise_error(AppDelete::SubResourceError) do |err|
+                expect(err.underlying_errors).to have(2).items
+                expect(err.underlying_errors).to all(be_a(StandardError))
+                expect(err.underlying_errors.map(&:message)).to eq(['error 1', 'error 2'])
+              end
             end
           end
         end
