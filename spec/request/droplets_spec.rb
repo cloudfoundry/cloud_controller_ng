@@ -365,6 +365,9 @@ RSpec.describe 'Droplets' do
         h = Hash.new(
           code: 302
         )
+        h['space_supporter'] = {
+          code: 403
+        }
         h['org_auditor'] = {
           code: 404
         }
