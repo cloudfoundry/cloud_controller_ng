@@ -39,6 +39,21 @@ module VCAP::CloudController
           end
 
           context 'http routes' do
+            context 'with protocol' do
+              before do
+                RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http2')
+                RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+              end
+              it 'returns the mapped http routes associated with the app with protocol' do
+                expected_http = [
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http2' },
+                  { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' }
+                ]
+
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
+                expect(ri['http_routes']).to match_array expected_http
+              end
+            end
             context 'with no app ports specified in route mapping' do
               before do
                 RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
@@ -48,8 +63,8 @@ module VCAP::CloudController
               context 'and app has no ports' do
                 it 'returns the mapped http routes associated with the app with a default of port 8080' do
                   expected_http = [
-                    { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-                    { 'hostname' => route_without_service.uri, 'port' => 8080 }
+                    { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http1' },
+                    { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' }
                   ]
 
                   expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -62,8 +77,8 @@ module VCAP::CloudController
 
                 it 'uses the first port available on the app' do
                   expected_http = [
-                    { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 7890 },
-                    { 'hostname' => route_without_service.uri, 'port' => 7890 }
+                    { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 7890, 'protocol' => 'http1' },
+                    { 'hostname' => route_without_service.uri, 'port' => 7890, 'protocol' => 'http1' }
                   ]
 
                   expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -94,8 +109,8 @@ module VCAP::CloudController
 
                   it 'uses 8080 as a default' do
                     expected_http = [
-                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-                      { 'hostname' => route_without_service.uri, 'port' => 8080 }
+                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http1' },
+                      { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' }
                     ]
 
                     expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -108,8 +123,8 @@ module VCAP::CloudController
 
                   it 'uses the first docker port available on the app' do
                     expected_http = [
-                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 1024 },
-                      { 'hostname' => route_without_service.uri, 'port' => 1024 }
+                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 1024, 'protocol' => 'http1' },
+                      { 'hostname' => route_without_service.uri, 'port' => 1024, 'protocol' => 'http1' }
                     ]
 
                     expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -125,7 +140,7 @@ module VCAP::CloudController
 
               it 'returns the app port in routing info' do
                 expected_http = [
-                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090, 'protocol' => 'http1' },
                 ]
 
                 expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -140,8 +155,8 @@ module VCAP::CloudController
 
               it 'returns the app port in routing info' do
                 expected_http = [
-                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080 },
-                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http1' },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090, 'protocol' => 'http1' },
                 ]
 
                 expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -156,8 +171,8 @@ module VCAP::CloudController
 
               it 'returns the app port in routing info' do
                 expected_http = [
-                  { 'hostname' => route_without_service.uri, 'port' => 9090 },
-                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+                  { 'hostname' => route_without_service.uri, 'port' => 9090, 'protocol' => 'http1' },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090, 'protocol' => 'http1' },
                 ]
 
                 expect(ri.keys).to match_array ['http_routes', 'internal_routes']
@@ -172,8 +187,8 @@ module VCAP::CloudController
 
               it 'returns the app port in routing info' do
                 expected_http = [
-                  { 'hostname' => route_without_service.uri, 'port' => 8080 },
-                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+                  { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090, 'protocol' => 'http1' },
                 ]
                 expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                 expect(ri['http_routes']).to match_array expected_http
@@ -189,7 +204,7 @@ module VCAP::CloudController
               it 'returns the router group guid in the http routing info' do
                 expect(ri.keys).to contain_exactly('http_routes', 'internal_routes')
                 hr = ri['http_routes'][0]
-                expect(hr.keys).to contain_exactly('router_group_guid', 'port', 'hostname')
+                expect(hr.keys).to contain_exactly('router_group_guid', 'port', 'hostname', 'protocol')
                 expect(hr['router_group_guid']).to eql(domain.router_group_guid)
                 expect(hr['port']).to eql(http_route.port)
                 expect(hr['hostname']).to match(/host-[0-9]+\.#{domain.name}/)
