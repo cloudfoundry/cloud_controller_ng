@@ -159,19 +159,15 @@ module VCAP::CloudController
       context 'when user has valid membership' do
         let(:membership) { instance_double(Membership) }
         let(:space_guid) { double(:space_guid) }
+        let(:subquery) { instance_double(Sequel::Dataset) }
         let(:first_org_guid) { double(:first_org_guid) }
         let(:second_org_guid) { double(:second_org_guid) }
 
         before do
-          organization = double(:organization, guid: second_org_guid)
-          space = double(:space, organization: organization)
-
-          allow(membership).to receive(:org_guids_for_roles).
-            with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
-            and_return([first_org_guid])
+          allow(membership).to receive(:org_guids_for_roles_subquery).
+            with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + Permissions::SPACE_ROLES_INCLUDING_SUPPORTERS).
+            and_return(subquery)
           allow(Membership).to receive(:new).with(user).and_return(membership)
-          allow(Space).to receive(:find).with(guid: space_guid).
-            and_return(space)
         end
 
         it 'combines readable orgs for both org-scoped and space-scoped roles' do
@@ -180,7 +176,7 @@ module VCAP::CloudController
             and_return([space_guid])
 
           expect(permissions.readable_org_guids_for_domains).
-            to contain_exactly(first_org_guid, second_org_guid)
+            to be(subquery)
         end
       end
     end
