@@ -41,6 +41,15 @@ module VCAP::CloudController
           dataset = dataset.where(guid: destinations_route_guids)
         end
 
+        if message.requested?(:service_instance_guids)
+          service_instance_route_guids = RouteBinding.
+                                         join(:routes, id: :route_id).
+                                         join(:service_instances, id: :route_bindings__service_instance_id).
+                                         where { { service_instances[:guid] => message.service_instance_guids } }.
+                                         select(:routes__guid)
+          dataset = dataset.where(guid: service_instance_route_guids)
+        end
+
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: RouteLabelModel,
