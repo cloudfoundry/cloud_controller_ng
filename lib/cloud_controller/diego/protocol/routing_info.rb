@@ -9,9 +9,12 @@ module VCAP::CloudController
         end
 
         def routing_info
-          route_info = {}
-          route_info['http_routes'] = http_info unless http_info.blank?
-          route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
+          http_info_obj = http_info
+          tcp_info_obj  = tcp_info
+
+          route_info                    = {}
+          route_info['http_routes']     = http_info_obj unless http_info_obj.blank?
+          route_info['tcp_routes']      = tcp_info_obj unless tcp_info_obj.blank?
           route_info['internal_routes'] = internal_routes
           route_info
         rescue RoutingApi::RoutingApiDisabled
@@ -25,51 +28,39 @@ module VCAP::CloudController
         private
 
         def http_info
-          return @http_info unless @http_info.nil?
-
-          @http_info = []
-
           relevant_http_routes = process.routes.reject do |route|
             route.internal? ||
               (route.tcp? &&
                 route.domain.router_group.present?)
           end
 
-          relevant_http_routes.each do |r|
+          relevant_http_routes.each_with_object([]) do |r, http_info|
             r.route_mappings.each do |route_mapping|
               info = { 'hostname' => r.uri }
               info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
               info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
               info['port'] = get_port_to_use(route_mapping)
               info['protocol'] = route_mapping.protocol
-              @http_info.push(info)
+              http_info.push(info)
             end
           end
-
-          @http_info
         end
 
         def tcp_info
-          return @tcp_info unless @tcp_info.nil?
-
-          @tcp_info = []
-
           relevant_tcp_routes = process.routes.select do |r|
             r.tcp? &&
               !r.internal? &&
               r.domain.router_group.present?
           end
 
-          relevant_tcp_routes.each do |r|
+          relevant_tcp_routes.each_with_object([]) do |r, tcp_info|
             r.route_mappings.each do |route_mapping|
               info = { 'router_group_guid' => r.domain.router_group_guid }
               info['external_port'] = r.port
               info['container_port'] = get_port_to_use(route_mapping)
-              @tcp_info.push(info)
+              tcp_info.push(info)
             end
           end
-
-          @tcp_info
         end
 
         def internal_routes
