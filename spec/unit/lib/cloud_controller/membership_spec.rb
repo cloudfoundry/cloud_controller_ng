@@ -527,12 +527,12 @@ module VCAP::CloudController
       end
 
       context 'mix of org and space roles' do
-        let(:org_managed) { Organization.make }
-        let(:org_audited) { Organization.make }
-        let!(:space1_in_managed_org) { Space.make(organization: org_managed) }
-        let!(:space2_in_managed_org) { Space.make(organization: org_managed) }
-        let!(:space_in_audited_org) { Space.make(organization: org_audited) }
-        let!(:some_other_space) { Space.make }
+        let(:org_managed) { Organization.make(guid: 'org_managed') } # two orgs
+        let(:org_audited) { Organization.make(guid: 'org_audited') }
+        let!(:space1_in_managed_org) { Space.make(guid: 'space1_in_managed', organization: org_managed) }
+        let!(:space2_in_managed_org) { Space.make(guid: 'space2_in_managed', organization: org_managed) }
+        let!(:space_in_audited_org) { Space.make(guid: 'space_in_audited', organization: org_audited) }
+        let!(:some_other_space) { Space.make(guid: 'other') }
 
         before do
           org_managed.add_manager(user)
