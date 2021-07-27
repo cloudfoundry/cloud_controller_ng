@@ -152,6 +152,7 @@ module VCAP::CloudController
             port:              i['port'],
             route_service_url: i['route_service_url'],
             isolation_segment: IsolationSegmentSelector.for_space(process.space),
+            protocol:          i['protocol'],
           }
         end
 
