@@ -60,7 +60,7 @@ class DropletsController < ApplicationController
 
   def destroy
     droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
@@ -92,10 +92,10 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).eager(:space, space: :organization).first
-    droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
+    droplet_not_found! unless source_droplet && permission_queryer.untrusted_can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
-    app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
+    app_not_found! unless destination_app && permission_queryer.untrusted_can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
     DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
@@ -106,7 +106,7 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.relationships_message.app_guid).eager(:space, :organization).first
-    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.untrusted_can_read_from_space?(app.space.guid, app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
     DropletCreate.new.create(app, message, user_audit_info)
@@ -117,7 +117,7 @@ class DropletsController < ApplicationController
     combine_messages(message.errors.full_messages) unless message.valid?
 
     droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space).first
-    resource_not_found_with_message!("Droplet with guid '#{hashed_params[:guid]}' does not exist, or you do not have access to it.") unless droplet
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
 
@@ -139,8 +139,9 @@ class DropletsController < ApplicationController
 
   def download
     droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space, space: :organization).first
+    droplet_not_found! unless droplet && permission_queryer.untrusted_can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
+    unauthorized! unless permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unless droplet.buildpack?
       unprocessable!("Cannot download droplets with 'docker' lifecycle.")
@@ -164,7 +165,7 @@ class DropletsController < ApplicationController
   private
 
   def can_read_build?(space)
-    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    permission_queryer.can_update_build_state? || permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def send_droplet_blob(droplet)

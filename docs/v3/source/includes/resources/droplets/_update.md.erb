@@ -32,9 +32,11 @@ Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** | [_label object_](#labels) | Labels applied to the droplet
 **metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the droplet
+**image** | _string_ | Image reference where the built complete image was stored (field can only be passed by Build State Updaters)
 
 #### Permitted roles
- |
+Role | Notes
 --- | ---
 Admin |
 Space Developer |
+Build State Updater | This is a special component role; [read more about component roles](#component-roles)
