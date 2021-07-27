@@ -575,11 +575,13 @@ module VCAP::CloudController
                   {
                     'hostname' => 'potato.example.com',
                     'port'     => 8080,
+                    'protocol' => 'http2'
                   },
                   {
                     'hostname'          => 'tomato.example.com',
                     'port'              => 8080,
-                    'route_service_url' => 'https://potatosarebetter.example.com'
+                    'route_service_url' => 'https://potatosarebetter.example.com',
+                    'protocol' => 'http1'
                   }
                 ],
                 'tcp_routes' => [
@@ -615,12 +617,14 @@ module VCAP::CloudController
                       'port'              => 8080,
                       'route_service_url' => nil,
                       'isolation_segment' => 'placement-tag',
+                      'protocol'          => 'http2',
                     },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com',
                       'isolation_segment' => 'placement-tag',
+                      'protocol'          => 'http1'
                     }
                   ].to_json,
                   'tcp-router' => [
@@ -711,12 +715,14 @@ module VCAP::CloudController
                   'http_routes' => [
                     {
                       'hostname' => 'potato.example.com',
-                      'port'     => 8080
+                      'port'     => 8080,
+                      'protocol' => 'http1'
                     },
                     {
                       'hostname'          => 'tomato.example.com',
                       'port'              => 8080,
-                      'route_service_url' => 'https://potatosarebetter.example.com'
+                      'route_service_url' => 'https://potatosarebetter.example.com',
+                      'protocol'          => 'http2'
                     }
 
                   ],
@@ -741,12 +747,14 @@ module VCAP::CloudController
                         'port'              => 8080,
                         'route_service_url' => nil,
                         'isolation_segment' => 'placement-tag',
+                        'protocol'          => 'http1',
                       },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
                         'route_service_url' => 'https://potatosarebetter.example.com',
                         'isolation_segment' => 'placement-tag',
+                        'protocol'          => 'http2'
                       }
                     ].to_json,
                     'tcp-router' => [].to_json,
@@ -1176,13 +1184,15 @@ module VCAP::CloudController
                 {
                   'hostname'          => 'potato.example.com',
                   'port'              => 8080,
-                  'router_group_guid' => 'potato-guid'
+                  'router_group_guid' => 'potato-guid',
+                  'protocol'          => 'http1'
                 },
                 {
                   'hostname'          => 'tomato.example.com',
                   'port'              => 8080,
                   'router_group_guid' => 'tomato-guid',
-                  'route_service_url' => 'https://potatosarebetter.example.com'
+                  'route_service_url' => 'https://potatosarebetter.example.com',
+                  'protocol'          => 'http2'
                 }
               ],
               'tcp_routes' => [
@@ -1218,12 +1228,14 @@ module VCAP::CloudController
                     'port'              => 8080,
                     'route_service_url' => nil,
                     'isolation_segment' => 'placement-tag',
+                    'protocol'          => 'http1',
                   },
                   {
                     'hostnames'         => ['tomato.example.com'],
                     'port'              => 8080,
                     'route_service_url' => 'https://potatosarebetter.example.com',
                     'isolation_segment' => 'placement-tag',
+                    'protocol'          => 'http2',
                   }
                 ].to_json,
                 'tcp-router' => [
@@ -1314,12 +1326,14 @@ module VCAP::CloudController
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
-                    'port'     => 8080
+                    'port'     => 8080,
+                    'protocol' => 'http2'
                   },
                   {
                     'hostname'          => 'tomato.example.com',
                     'port'              => 8080,
-                    'route_service_url' => 'https://potatosarebetter.example.com'
+                    'route_service_url' => 'https://potatosarebetter.example.com',
+                    'protocol'          => 'http1'
                   }
                 ],
                 'internal_routes' => [
@@ -1339,16 +1353,18 @@ module VCAP::CloudController
                 routes: {
                   'cf-router' => [
                     {
-                    'hostnames'         => ['potato.example.com'],
-                    'port'              => 8080,
-                    'route_service_url' => nil,
-                    'isolation_segment' => 'placement-tag',
-                  },
+                      'hostnames'         => ['potato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => nil,
+                      'isolation_segment' => 'placement-tag',
+                      'protocol'          => 'http2',
+                    },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com',
                       'isolation_segment' => 'placement-tag',
+                      'protocol'          => 'http1',
                     }
                   ].to_json,
                   'tcp-router' => [].to_json,
