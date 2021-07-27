@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class SpaceSupporter < Sequel::Model(:spaces_application_supporters)
+  class SpaceSupporter < Sequel::Model(:spaces_supporters)
     include SpaceRoleMixin
 
     def type

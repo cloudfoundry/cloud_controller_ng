@@ -37,12 +37,12 @@ module VCAP::CloudController
 
       Sequel.or([
         [:spaces, user.spaces_dataset],
-        [:spaces, user.application_supported_spaces_dataset],
+        [:spaces, user.supported_spaces_dataset],
         [:spaces, user.managed_spaces_dataset],
         [:spaces, user.audited_spaces_dataset],
         [:spaces, managed_organizations_spaces_dataset],
         [:staging_spaces, user.spaces_dataset],
-        [:staging_spaces, user.application_supported_spaces_dataset],
+        [:staging_spaces, user.supported_spaces_dataset],
         [:staging_spaces, user.managed_spaces_dataset],
         [:staging_spaces, user.audited_spaces_dataset],
         [:staging_spaces, managed_organizations_spaces_dataset],
