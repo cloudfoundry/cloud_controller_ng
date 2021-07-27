@@ -36,8 +36,18 @@ module VCAP::CloudController
           dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id))
         end
 
-        if message.requested?(:app_guids) || message.requested?(:service_instance_guids)
-          dataset = dataset.where(guid: combine_app_and_serivce_guids(message))
+        if message.requested?(:app_guids)
+          destinations_route_guids = RouteMappingModel.where(app_guid: message.app_guids).select(:route_guid)
+          dataset = dataset.where(guid: destinations_route_guids)
+        end
+
+        if message.requested?(:service_instance_guids)
+          service_instance_route_guids = RouteBinding.
+            join(:routes, id: :route_id).
+            join(:service_instances, id: :route_bindings__service_instance_id).
+            where { { service_instances[:guid] => message.service_instance_guids } }.
+            select(:routes__guid)
+          dataset = dataset.where(guid: service_instance_route_guids)
         end
 
         if message.requested?(:label_selector)
@@ -50,25 +60,6 @@ module VCAP::CloudController
         end
 
         super(message, dataset, Route)
-      end
-
-      def combine_app_and_serivce_guids(message)
-        if message.requested?(:app_guids) && message.requested?(:service_instance_guids)
-          app_guids = ServiceBinding.where(service_instance_guid: message.service_instance_guids).select(:app_guid)
-          return RouteMappingModel.where(app_guid: message.app_guids).where(app_guid: app_guids).select(:route_guid)
-        end
-
-        if message.requested?(:app_guids)
-          return RouteMappingModel.where(app_guid: message.app_guids).select(:route_guid)
-        end
-
-        if message.requested?(:service_instance_guids)
-          return RouteBinding.
-                 join(:routes, id: :route_id).
-                 join(:service_instances, id: :route_bindings__service_instance_id).
-                 where { { service_instances[:guid] => message.service_instance_guids } }.
-                 select(:routes__guid)
-        end
       end
     end
   end

@@ -262,9 +262,10 @@ module VCAP::CloudController
       end
 
       context 'when fetching routes by service_instance_guid and app_guid' do
-        let!(:service_instance) { ManagedServiceInstance.make(space: space2, name: 'service-instance') }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space2, name: 'service-instance') }
+        let!(:service_binding) { RouteBinding.make(service_instance: service_instance, route: route3) }
+
         let!(:app_model) { AppModel.make(space: space2) }
-        let!(:service_binding) { ServiceBinding.make(app: app_model, service_instance: service_instance) }
         let!(:route_mapping) { RouteMappingModel.make(app: app_model, route: route3) }
 
         context 'when there is a matching route' do
