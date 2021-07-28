@@ -9147,20 +9147,32 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the droplet</td>
 </tr>
+<tr>
+<td><strong>image</strong></td>
+<td><em>string</em></td>
+<td>Image reference where the built complete image was stored (field can only be passed by Build State Updaters)</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Build State Updater</td>
+<td>This is a special component role; <a href="#component-roles">read more about component roles</a></td>
 </tr>
 </tbody></table>
 <h3 id="delete-a-droplet">Delete a droplet</h3>
