@@ -784,9 +784,12 @@ RSpec.describe 'v3 service credential bindings' do
         stub_param_broker_request_for_binding(binding, binding_params)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(binding_params)
+          responses_for_space_restricted_single_endpoint(
+            binding_params,
+            permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
+          )
         end
       end
 
