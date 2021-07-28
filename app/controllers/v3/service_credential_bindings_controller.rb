@@ -74,7 +74,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def update
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_write_to_space?(binding_space)
+    unauthorized! unless can_update_service_credentials_binding?(binding_space)
 
     unprocessable!('The service binding is being deleted') if delete_in_progress?(service_credential_binding)
 
@@ -279,6 +279,10 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def can_write_to_space?(space)
     permission_queryer.untrusted_can_write_to_space?(space.guid)
+  end
+
+  def can_update_service_credentials_binding?(space)
+    permission_queryer.can_write_to_space?(space.guid)
   end
 
   AVAILABLE_DECORATORS = [

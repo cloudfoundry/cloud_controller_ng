@@ -617,11 +617,9 @@ RSpec.describe 'v3 service credential bindings' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
         let(:expected_codes_and_responses) do
-          Hash.new(code: 404).tap do |h|
-            h['admin'] = { code: 200, response_object: binding_credentials }
-            h['admin_read_only'] = { code: 200, response_object: binding_credentials }
-            h['space_developer'] = { code: 200, response_object: binding_credentials }
-          end
+          h = Hash.new(code: 404, response_object: binding_credentials)
+          h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200 }
+          h
         end
       end
 
@@ -1646,7 +1644,7 @@ RSpec.describe 'v3 service credential bindings' do
 
       it_behaves_like 'metadata update for service binding', 'service_key'
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when the organization is suspended' do
         it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
@@ -1664,7 +1662,7 @@ RSpec.describe 'v3 service credential bindings' do
 
       it_behaves_like 'metadata update for service binding', 'service_binding'
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
       context 'when the organization is suspended' do
         it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
@@ -1680,7 +1678,7 @@ RSpec.describe 'v3 service credential bindings' do
           instance.add_shared_space(space)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
 
         context 'when the organization is suspended' do
           it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
