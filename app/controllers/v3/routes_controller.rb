@@ -46,7 +46,7 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
     decorators = []
     decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
@@ -70,7 +70,7 @@ class RoutesController < ApplicationController
 
     unprocessable_space! unless space
     unprocessable_domain! unless domain
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
     unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
@@ -93,8 +93,8 @@ class RoutesController < ApplicationController
     message = RouteUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
     route = VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
 
@@ -106,8 +106,8 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
     delete_action = RouteDeleteAction.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Route, route.guid, delete_action)
@@ -121,7 +121,7 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
     destinations_message = RouteDestinationsListMessage.from_params(query_params)
     unprocessable!(destinations_message.errors.full_messages) unless destinations_message.valid?
@@ -135,9 +135,9 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
     desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
 
@@ -157,9 +157,9 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
     desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
 
@@ -176,8 +176,8 @@ class RoutesController < ApplicationController
 
   def destroy_destination
     route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.untrusted_can_read_route?(route.space.guid, route.organization.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
     unprocessable_destination! unless destination
@@ -194,7 +194,7 @@ class RoutesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(hashed_params['guid'])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     dataset = RouteFetcher.fetch(
       message,

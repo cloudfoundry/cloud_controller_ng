@@ -615,7 +615,7 @@ RSpec.describe 'v3 service credential bindings' do
     }
 
     context 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 404, response_object: binding_credentials)
           h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200 }
@@ -784,7 +784,7 @@ RSpec.describe 'v3 service credential bindings' do
         stub_param_broker_request_for_binding(binding, binding_params)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           responses_for_space_restricted_single_endpoint(
             binding_params,
@@ -1112,7 +1112,7 @@ RSpec.describe 'v3 service credential bindings' do
       context 'user-provided service' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
               h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 201 }
@@ -1256,7 +1256,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'permissions' do
           context 'users in the originating service instance space' do
-            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
               let(:expected_codes_and_responses) do
                 Hash.new(code: 403).tap do |h|
                   h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
@@ -1281,7 +1281,7 @@ RSpec.describe 'v3 service credential bindings' do
               service_instance.add_shared_space(space)
             end
 
-            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
               let(:expected_codes_and_responses) do
                 Hash.new(code: 403).tap do |h|
                   h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
@@ -1386,7 +1386,7 @@ RSpec.describe 'v3 service credential bindings' do
 
       context 'permissions' do
         context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
                 h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
@@ -1413,7 +1413,7 @@ RSpec.describe 'v3 service credential bindings' do
             service_instance.add_shared_space(space)
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
                 h['admin'] = { code: 202 }
@@ -2112,7 +2112,7 @@ RSpec.describe 'v3 service credential bindings' do
         }
 
         context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
                 h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
@@ -2137,7 +2137,7 @@ RSpec.describe 'v3 service credential bindings' do
             service_instance.add_shared_space(space)
           end
 
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
                 h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }

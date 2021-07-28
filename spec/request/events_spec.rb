@@ -122,7 +122,7 @@ RSpec.describe 'Events' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     context 'filtering by type' do
@@ -277,7 +277,7 @@ RSpec.describe 'Events' do
           )
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
         context 'and the space has been deleted' do
           before do
@@ -380,7 +380,7 @@ RSpec.describe 'Events' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
         context 'and the org has been deleted' do
           before do
@@ -458,7 +458,7 @@ RSpec.describe 'Events' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 

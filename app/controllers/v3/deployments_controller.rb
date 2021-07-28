@@ -15,7 +15,7 @@ class DeploymentsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 DeploymentListFetcher.fetch_all(message)
               else
-                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_supporter_space_guids)
+                DeploymentListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -33,7 +33,7 @@ class DeploymentsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.find(guid: message.app_guid)
-    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.untrusted_can_write_to_space?(app.space.guid)
+    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_manage_apps_in_space?(app.space.guid)
     unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
     begin
@@ -58,7 +58,7 @@ class DeploymentsController < ApplicationController
   def update
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
     resource_not_found!(:deployment) unless deployment &&
-      permission_queryer.untrusted_can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
+      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(deployment.app.space.guid)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])
@@ -73,7 +73,7 @@ class DeploymentsController < ApplicationController
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
     resource_not_found!(:deployment) unless deployment &&
-      permission_queryer.untrusted_can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
+      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end
@@ -81,7 +81,7 @@ class DeploymentsController < ApplicationController
   def cancel
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
-    resource_not_found!(:deployment) unless deployment && permission_queryer.untrusted_can_write_to_space?(deployment.app.space_guid)
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_manage_apps_in_space?(deployment.app.space_guid)
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)

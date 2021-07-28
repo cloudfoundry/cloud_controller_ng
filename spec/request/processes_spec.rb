@@ -368,7 +368,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -454,7 +454,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -587,7 +587,7 @@ RSpec.describe 'Processes' do
       end
 
       # while this endpoint returns a list, it's easier to test as a single object since it doesn't paginate
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -674,7 +674,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     it 'updates the process' do
@@ -968,7 +968,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1162,7 +1162,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1248,7 +1248,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1548,7 +1548,7 @@ RSpec.describe 'Processes' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 end

@@ -93,7 +93,7 @@ class RolesController < ApplicationController
     org = space.organization
 
     unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
-      !permission_queryer.untrusted_can_read_from_space?(message.space_guid, org.guid)
+      !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
 
     unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
 

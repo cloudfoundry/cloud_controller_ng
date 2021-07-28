@@ -166,7 +166,7 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the route does not exist' do
@@ -297,7 +297,7 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_event_hash) do
           new_destination = parsed_response['destinations'].detect { |dst| dst['guid'] != existing_destination.guid }
 
@@ -703,7 +703,7 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -1108,7 +1108,7 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
         let(:expected_event_hash) do
           {
             type: 'audit.app.unmap-route',

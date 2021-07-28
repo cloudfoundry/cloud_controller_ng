@@ -59,7 +59,7 @@ RSpec.describe 'v3 service route bindings' do
         Hash.new(code: 200, response_objects: [])
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'a mix of bindings' do
@@ -121,7 +121,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding_2, route_binding_2_metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'filtering' do
@@ -305,7 +305,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'managed service instance' do
@@ -318,7 +318,7 @@ RSpec.describe 'v3 service route bindings' do
         VCAP::CloudController::AnnotationsUpdate.update(route_binding, metadata[:annotations], VCAP::CloudController::RouteBindingAnnotationModel)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'does not exist' do
@@ -899,7 +899,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 202 }
@@ -999,7 +999,7 @@ RSpec.describe 'v3 service route bindings' do
       it_behaves_like 'create route binding'
 
       context 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
             Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 201 }
@@ -1156,7 +1156,7 @@ RSpec.describe 'v3 service route bindings' do
           end
         }
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
 
         it 'creates an audit log' do
           api_call.call(admin_headers)
@@ -1205,7 +1205,7 @@ RSpec.describe 'v3 service route bindings' do
           }
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
 
         it 'responds with a job resource' do
           api_call.call(space_dev_headers)
@@ -1573,7 +1573,7 @@ RSpec.describe 'v3 service route bindings' do
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'calls the broker with the identity header' do
         api_call.call(space_dev_headers)
@@ -1643,7 +1643,7 @@ RSpec.describe 'v3 service route bindings' do
         end
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'returns the appropriate error' do
         api_call.call(admin_headers)
@@ -1682,7 +1682,7 @@ RSpec.describe 'v3 service route bindings' do
 
     it_behaves_like 'metadata update for service binding', 'service_route_binding'
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:response_object) {
         expected_json(
           binding_guid: binding.guid,

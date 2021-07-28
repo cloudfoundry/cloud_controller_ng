@@ -47,7 +47,7 @@ class ServiceInstancesV3Controller < ApplicationController
                 ServiceInstanceListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  readable_space_guids: permission_queryer.readable_supporter_space_guids,
+                  readable_space_guids: permission_queryer.readable_space_guids,
                 )
               end
 
@@ -359,12 +359,12 @@ class ServiceInstancesV3Controller < ApplicationController
     readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
     readable_spaces.any? do |space|
-      permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+      permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
     end
   end
 
   def untrusted_can_read_space?(space)
-    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
 
   def can_read_space?(space)
