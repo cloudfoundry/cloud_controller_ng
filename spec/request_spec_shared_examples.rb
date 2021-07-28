@@ -8,6 +8,7 @@ LOCAL_ROLES = %w[
   space_developer
   space_manager
   space_auditor
+  space_supporter
   org_manager
   org_auditor
   org_billing_manager

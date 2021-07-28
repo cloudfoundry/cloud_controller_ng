@@ -80,7 +80,7 @@ module VCAP::CloudController
           }.by 1
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'using provided params' do
@@ -210,7 +210,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
         it_behaves_like 'list_endpoint_with_common_filters' do
           let(:resource_klass) { VCAP::CloudController::QuotaDefinition }
@@ -277,7 +277,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the organization_quota had no associated organizations' do
@@ -382,7 +382,7 @@ module VCAP::CloudController
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when the organization_quota does not exist' do
         it 'returns a 404 with a helpful message' do
@@ -487,7 +487,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when an org guid does not exist' do
@@ -541,7 +541,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
       end
 
       context 'when the user is not logged in' do

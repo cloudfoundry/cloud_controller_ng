@@ -27,7 +27,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the space quota has no associated spaces' do
@@ -43,7 +43,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the space quota is owned by an org where the current user does not have a role' do
@@ -59,7 +59,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the space quota does not exist' do
@@ -300,7 +300,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
       context 'with filters' do

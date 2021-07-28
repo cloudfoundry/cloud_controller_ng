@@ -7,6 +7,7 @@ module SpaceRestrictedResponseGenerators
       space_developer
       space_manager
       space_auditor
+      space_supporter
       org_manager
     )
   end

@@ -120,7 +120,7 @@ RSpec.describe 'Builds' do
     end
 
     context 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| post '/v3/builds', create_request.to_json, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -403,7 +403,7 @@ RSpec.describe 'Builds' do
     end
 
     describe 'permissions' do
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get '/v3/builds', nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -618,7 +618,7 @@ RSpec.describe 'Builds' do
     end
 
     describe 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:api_call) { lambda { |user_headers| get "v3/builds/#{build.guid}", nil, user_headers } }
@@ -690,7 +690,7 @@ RSpec.describe 'Builds' do
       end
 
       describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:org) { space.organization }
           let(:user) { VCAP::CloudController::User.make }
           let(:api_call) { lambda { |user_headers| patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, user_headers } }

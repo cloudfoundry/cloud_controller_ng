@@ -115,7 +115,7 @@ RSpec.describe 'Packages' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -214,7 +214,7 @@ RSpec.describe 'Packages' do
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
@@ -271,7 +271,7 @@ RSpec.describe 'Packages' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     context 'when listing paginated results of all packages for an app' do
@@ -528,7 +528,7 @@ RSpec.describe 'Packages' do
         Hash.new(code: 200, response_object: packages_response_object)
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     context 'when listing a subset of packages' do
@@ -790,7 +790,7 @@ RSpec.describe 'Packages' do
       h
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
   describe 'POST /v3/packages/:guid/upload' do
@@ -966,7 +966,7 @@ RSpec.describe 'Packages' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1049,7 +1049,7 @@ RSpec.describe 'Packages' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1116,7 +1116,7 @@ RSpec.describe 'Packages' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1196,7 +1196,7 @@ RSpec.describe 'Packages' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 

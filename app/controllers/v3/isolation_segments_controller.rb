@@ -104,7 +104,7 @@ class IsolationSegmentsController < ApplicationController
     spaces = if permission_queryer.can_read_globally?
                fetcher.fetch_all
              else
-               fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_supporter_space_guids_query)
+               fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids_query)
              end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(

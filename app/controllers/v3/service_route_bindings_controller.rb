@@ -182,7 +182,7 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def space_guids
-    permission_queryer.readable_supporter_space_guids
+    permission_queryer.readable_space_guids
   end
 
   def parse_create_request
@@ -221,15 +221,15 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def untrusted_can_read_space?(space)
-    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
 
   def can_read_space?(space)
-    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
 
   def untrusted_can_write_space?(space)
-    permission_queryer.untrusted_can_write_to_space?(space.guid)
+    permission_queryer.can_manage_apps_in_space?(space.guid)
   end
 
   def can_write_space?(space)

@@ -41,7 +41,7 @@ class AppsV3Controller < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
-                AppListFetcher.fetch(message, permission_queryer.readable_supporter_space_guids,
+                AppListFetcher.fetch(message, permission_queryer.readable_space_guids,
 eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 
@@ -69,7 +69,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     decorators = []
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
@@ -87,7 +87,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
-    unprocessable_space! unless space && permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
+    unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     # TODO: only fail if also not `kpack` app lifecycle
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
@@ -117,7 +117,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
@@ -142,7 +142,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def destroy
     app, space, org = AppDeleteFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     delete_action = AppDelete.new(user_audit_info)
@@ -157,9 +157,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def start
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -180,8 +180,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def stop
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
 
     AppStop.stop(app: app, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -199,9 +199,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def restart
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -228,7 +228,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     dataset = AppBuildsListFetcher.fetch_all(app.guid, message)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -244,7 +244,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
     show_secrets = permission_queryer.can_read_system_environment_variables?(space.guid, org.guid)
 
@@ -260,7 +260,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_app_environment_variables?(space.guid, org.guid)
 
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
@@ -273,8 +273,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def update_environment_variables
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -290,8 +290,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     cannot_remove_droplet! if hashed_params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
     deployment_in_progress! if app.deploying?
 
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)
@@ -309,7 +309,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def current_droplet_relationship
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
 
     droplet_not_found! unless droplet
@@ -324,7 +324,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def current_droplet
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
 
     droplet_not_found! unless droplet
@@ -334,7 +334,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def show_permissions
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: {
       read_basic_data: true,
