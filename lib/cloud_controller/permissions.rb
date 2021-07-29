@@ -205,9 +205,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    can_read_globally? ||
-      contains_any(isolation_segment.spaces.map(&:guid), readable_space_guids) ||
-      contains_any(isolation_segment.organizations.map(&:guid), readable_org_guids)
+    can_read_globally? || contains_any(isolation_segment.organizations.map(&:guid), readable_org_guids)
   end
 
   def readable_route_guids
