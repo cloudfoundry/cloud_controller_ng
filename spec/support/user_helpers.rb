@@ -222,7 +222,6 @@ module UserHelpers
     orgs.each do |org|
       allow(permissions_double(user)).to receive(:can_read_from_org?).with(org.guid).and_return(true)
     end
-    stub_readable_org_guids_for(user, orgs)
 
     allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
     allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).and_return(false)
@@ -231,6 +230,7 @@ module UserHelpers
       allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
     end
 
+    stub_readable_org_guids_for(user, orgs, spaces)
     stub_readable_space_guids_for(user, spaces)
   end
 
@@ -240,14 +240,6 @@ module UserHelpers
 
   def allow_user_global_write_access(user)
     allow(permissions_double(user)).to receive(:can_write_globally?).and_return(true)
-  end
-
-  def allow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(true)
-  end
-
-  def disallow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(false)
   end
 
   def disallow_user_global_read_access(user)
@@ -283,8 +275,8 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:readable_supporter_space_guids).and_return(spaces.map(&:guid))
   end
 
-  def stub_readable_org_guids_for(user, orgs)
-    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
+  def stub_readable_org_guids_for(user, orgs, spaces=[])
+    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid) + spaces.map(&:organization_guid))
   end
 
   def permissions_double(user)

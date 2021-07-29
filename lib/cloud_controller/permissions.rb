@@ -323,7 +323,7 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::SecurityContext.roles
   end
 
-  def contains_any(a, b)
+  def contains_any(a, b) # rubocop:disable Naming/MethodParameterName
     !(a & b).empty?
   end
 end

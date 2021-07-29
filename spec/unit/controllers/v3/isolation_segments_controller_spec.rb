@@ -13,9 +13,14 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
+  before do
+    disallow_user_global_read_access(user)
+    allow_user_read_access_for(user) # ... nothing
+  end
+
   describe '#relationships_orgs' do
     context 'when the segment has not been assigned to any orgs' do
-      context ' when the user has global read access' do
+      context 'when the user has global read access' do
         before do
           allow_user_global_read_access(user)
         end
@@ -31,10 +36,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'when user does not have global read access' do
-        before do
-          disallow_user_global_read_access(user)
-        end
-
         it 'returns a 404' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 404
@@ -94,27 +95,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     let(:space3) { VCAP::CloudController::Space.make(organization: org1) }
 
     context 'when the segment has not been associated with spaces' do
-      context 'when the user has read access for isolation segment' do
-        before do
-          allow_user_read_access_for_isolation_segment(user)
-          allow_user_read_access_for(user, spaces: [space1, space2, space3])
-        end
-
-        it 'returns an empty list' do
-          get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 200
-
-          guids = parsed_body['data'].map { |r| r['guid'] }
-
-          expect(guids).to be_empty
-        end
-      end
-
       context 'when the user does not have read access for isolation segment' do
-        before do
-          disallow_user_read_access_for_isolation_segment(user)
-        end
-
         it 'returns a 404' do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 404
@@ -128,7 +109,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         isolation_segment_model.add_space(space1)
         isolation_segment_model.add_space(space2)
         isolation_segment_model.add_space(space3)
-        allow_user_read_access_for_isolation_segment(user)
       end
 
       context 'when the user has read access for isolation segment' do
@@ -396,7 +376,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     context 'when the user has global read access' do
       before do
         allow_user_global_read_access(user)
-        allow_user_read_access_for_isolation_segment(user)
       end
 
       context 'when the isolation segment has been created' do
@@ -425,7 +404,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         before do
           allow_user_read_access_for(user, orgs: [org1])
           assigner.assign(isolation_segment, [org1])
-          allow_user_read_access_for_isolation_segment(user)
         end
 
         it 'allows the user to see the isolation segment' do
