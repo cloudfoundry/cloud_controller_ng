@@ -49,21 +49,22 @@ module VCAP::CloudController
         guid = token && (token['user_id'] || token['client_id'])
         return unless guid
 
-        validate_unique_user(token, guid)
+        user = User.find(guid: guid.to_s)
+        validate_unique_user(user, token, guid)
 
-        User.find(guid: guid.to_s) || User.create(guid: guid, active: true, is_oauth_client: is_oauth_client?(token))
+        user || User.create(guid: guid, active: true, is_oauth_client: is_oauth_client?(token))
       rescue Sequel::ValidationFailed,
              Sequel::UniqueConstraintViolation
         User.find(guid: guid.to_s)
       end
 
-      def validate_unique_user(token, guid)
+      def validate_unique_user(user, token, guid)
         if is_oauth_client?(token)
-          if User.find(guid: guid.to_s, is_oauth_client: false) || client_is_shadowing_user?(token['client_id'])
+          if is_oauth_client_field_for(user) == false || client_is_shadowing_user?(token['client_id'])
             logger.error("Invalid token client_id: #{token['client_id']}")
             raise VCAP::CloudController::UaaTokenDecoder::BadToken
           end
-        elsif User.find(guid: guid.to_s, is_oauth_client: true)
+        elsif is_oauth_client_field_for(user) == true
           logger.error("Invalid token user_id: #{token['user_id']}")
           raise VCAP::CloudController::UaaTokenDecoder::BadToken
         end
@@ -71,6 +72,10 @@ module VCAP::CloudController
 
       def is_oauth_client?(token)
         !token.key?('user_id') && token.key?('client_id')
+      end
+
+      def is_oauth_client_field_for(user)
+        user.nil? ? nil : user.is_oauth_client
       end
 
       def logger
