@@ -13,11 +13,6 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
-  before do
-    disallow_user_global_read_access(user)
-    allow_user_read_access_for(user) # ... nothing
-  end
-
   describe '#relationships_orgs' do
     context 'when the segment has not been assigned to any orgs' do
       context 'when the user has global read access' do
@@ -35,7 +30,11 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         end
       end
 
-      context 'when user does not have global read access' do
+      context 'when the user does not have global read access' do
+        before do
+          set_current_user_as_role(user: user, role: 'org_user', org: org1)
+        end
+
         it 'returns a 404' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 404
@@ -64,7 +63,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       context 'when the user does not have global read access' do
         before do
-          allow_user_read_access_for(user, orgs: [org3])
+          set_current_user_as_role(user: user, role: 'org_user', org: org3)
         end
 
         it 'returns a 404' do
@@ -74,7 +73,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context "when the user is an org user for an org in the isolation segment's allowed list" do
           before do
-            allow_user_read_access_for(user, orgs: [org1])
+            set_current_user_as_role(user: user, role: 'org_user', org: org1)
           end
 
           it 'returns the org guids for only those allowed organizations to which the user has access' do
@@ -96,6 +95,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the segment has not been associated with spaces' do
       context 'when the user does not have read access for isolation segment' do
+        before do
+          set_current_user_as_role(user: user, role: 'org_user', org: org1)
+        end
+
         it 'returns a 404' do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 404
@@ -113,7 +116,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       context 'when the user has read access for isolation segment' do
         before do
-          allow_user_read_access_for(user, orgs: [org1], spaces: [space1, space2, space3])
+          set_current_user_as_role(user: user, role: 'space_auditor', space: space1, org: space1.organization)
+          set_current_user_as_role(user: user, role: 'space_auditor', space: space2, org: space2.organization)
+          set_current_user_as_role(user: user, role: 'space_auditor', space: space3, org: space3.organization)
         end
 
         it 'returns the guids of all associated spaces' do
@@ -127,7 +132,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       context "and the user has read access for a subset of the org's spaces" do
         before do
-          allow_user_read_access_for(user, orgs: [org1], spaces: [space1, space3])
+          set_current_user_as_role(user: user, role: 'space_auditor', space: space1, org: space1.organization)
+          set_current_user_as_role(user: user, role: 'space_auditor', space: space3, org: space3.organization)
         end
 
         it 'returns the guids of only the allowed spaces' do
@@ -402,7 +408,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     context 'when the user does not have global read access' do
       context "and the user is an org user for an org in the isolation segment's allowed list" do
         before do
-          allow_user_read_access_for(user, orgs: [org1])
+          set_current_user_as_role(user: user, role: 'org_user', org: org1)
           assigner.assign(isolation_segment, [org1])
         end
 
@@ -416,7 +422,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context 'and the user is registered to a space' do
           before do
-            allow_user_read_access_for(user, spaces: [space])
+            set_current_user_as_role(user: user, role: 'space_auditor', space: space, org: space.organization)
           end
 
           context 'and the space is associated to an isolation segment' do
@@ -443,7 +449,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     let(:space) { VCAP::CloudController::Space.make }
 
     before do
-      allow_user_read_access_for(user, spaces: [space])
+      set_current_user_as_role(user: user, role: 'space_auditor', space: space, org: space.organization)
     end
 
     context 'when using query params' do

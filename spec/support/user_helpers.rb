@@ -222,6 +222,7 @@ module UserHelpers
     orgs.each do |org|
       allow(permissions_double(user)).to receive(:can_read_from_org?).with(org.guid).and_return(true)
     end
+    stub_readable_org_guids_for(user, orgs)
 
     allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
     allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).and_return(false)
@@ -230,7 +231,6 @@ module UserHelpers
       allow(permissions_double(user)).to receive(:untrusted_can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
     end
 
-    stub_readable_org_guids_for(user, orgs, spaces)
     stub_readable_space_guids_for(user, spaces)
   end
 
@@ -275,13 +275,13 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:readable_supporter_space_guids).and_return(spaces.map(&:guid))
   end
 
-  def stub_readable_org_guids_for(user, orgs, spaces=[])
-    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid) + spaces.map(&:organization_guid))
+  def stub_readable_org_guids_for(user, orgs)
+    allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
   end
 
   def permissions_double(user)
     @permissions ||= {}
-    @permissions[user.guid] ||= instance_double(VCAP::CloudController::Permissions).tap do |permissions|
+    @permissions[user.guid] ||= VCAP::CloudController::Permissions.new(user).tap do |permissions|
       allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
       allow(permissions).to receive(:can_read_globally?).and_return(false)
     end

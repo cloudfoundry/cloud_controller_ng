@@ -44,7 +44,7 @@ class IsolationSegmentsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 IsolationSegmentListFetcher.fetch_all(message)
               else
-                IsolationSegmentListFetcher.fetch_for_organizations(message, org_guids: permission_queryer.readable_org_guids)
+                IsolationSegmentListFetcher.fetch_for_organizations(message, org_guids: permission_queryer.readable_org_guids_query)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -90,7 +90,7 @@ class IsolationSegmentsController < ApplicationController
     organizations = if permission_queryer.can_read_globally?
                       fetcher.fetch_all
                     else
-                      fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids)
+                      fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids_query)
                     end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
@@ -104,7 +104,7 @@ class IsolationSegmentsController < ApplicationController
     spaces = if permission_queryer.can_read_globally?
                fetcher.fetch_all
              else
-               fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_supporter_space_guids)
+               fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_supporter_space_guids_query)
              end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
@@ -173,7 +173,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment = if permission_queryer.can_read_globally?
                           IsolationSegmentModel.first(guid: guid)
                         else
-                          IsolationSegmentModel.dataset.where(organizations: Organization.where(guid: permission_queryer.readable_org_guids)).first(guid: guid)
+                          IsolationSegmentModel.dataset.where(organizations: Organization.where(guid: permission_queryer.readable_org_guids_query)).first(guid: guid)
                         end
     resource_not_found!(:isolation_segment) unless isolation_segment
     isolation_segment
