@@ -121,7 +121,7 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_org_guids_for_domains
+  def readable_org_guids_for_domains_query
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid)
     else

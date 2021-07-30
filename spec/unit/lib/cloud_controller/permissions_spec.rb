@@ -155,7 +155,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#readable_org_guids_for_domains' do
+    describe '#readable_org_guids_for_domains_query' do
       context 'when user has valid membership' do
         let(:membership) { instance_double(Membership) }
         let(:space_guid) { double(:space_guid) }
@@ -175,7 +175,7 @@ module VCAP::CloudController
             with(Permissions::SPACE_ROLES_INCLUDING_SUPPORTERS).
             and_return([space_guid])
 
-          expect(permissions.readable_org_guids_for_domains).
+          expect(permissions.readable_org_guids_for_domains_query).
             to be(subquery)
         end
       end
