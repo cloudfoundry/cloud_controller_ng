@@ -7,12 +7,13 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    def initialize(uaa_config, grace_period_in_seconds=0)
+    def initialize(uaa_config, grace_period_in_seconds=0, alternate_reference_time=nil)
       @config = uaa_config
       @logger = Steno.logger('cc.uaa_token_decoder')
 
       raise ArgumentError.new('grace period should be an integer') unless grace_period_in_seconds.is_a? Integer
 
+      @alternate_reference_time = alternate_reference_time
       @grace_period_in_seconds = grace_period_in_seconds
       if grace_period_in_seconds < 0
         @grace_period_in_seconds = 0
@@ -73,10 +74,16 @@ module VCAP::CloudController
     end
 
     def decode_token_with_key(auth_token, options)
+      time = Time.now.utc.to_i
+      if @alternate_reference_time
+        time = @alternate_reference_time
+        @logger.info("using alternate reference time of #{Time.at(@alternate_reference_time)} to calculate token expiry instead of current time")
+      end
+
       options         = { audience_ids: config[:resource_id] }.merge(options)
-      token           = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.utc.to_i - @grace_period_in_seconds)
+      token           = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, time - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
-      if expiration_time && expiration_time < Time.now.utc.to_i
+      if expiration_time && expiration_time < time
         @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
       end
 
