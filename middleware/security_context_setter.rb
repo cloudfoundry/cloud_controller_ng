@@ -1,6 +1,8 @@
 module CloudFoundry
   module Middleware
     class SecurityContextSetter
+      PACKAGES_UPLOAD_REGEX = %r{/v3/packages/[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}/upload}i.freeze
+
       def initialize(app, security_context_configurer)
         @app                         = app
         @security_context_configurer = security_context_configurer
@@ -8,8 +10,19 @@ module CloudFoundry
 
       def call(env)
         header_token = env['HTTP_AUTHORIZATION']
+        request_path = env['REQUEST_PATH']
 
         @security_context_configurer.configure(header_token)
+
+        if request_path && request_path.match(PACKAGES_UPLOAD_REGEX)
+          upload_start_time = Rack::Request.new(env).params['upload_start_time'].to_i
+          if upload_start_time
+            auth                  = env['HTTP_AUTHORIZATION']
+            grace_period          = VCAP::CloudController::Config.config.get(:app_bits_upload_grace_period_in_seconds)
+            relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa), grace_period, upload_start_time)
+            VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
+          end
+        end
 
         if VCAP::CloudController::SecurityContext.valid_token?
           env['cf.user_guid'] = id_from_token
