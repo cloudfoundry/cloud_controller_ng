@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    def initialize(uaa_config, grace_period_in_seconds=0, alternate_reference_time=nil)
+    def initialize(uaa_config, grace_period_in_seconds: 0, alternate_reference_time: nil)
       @config = uaa_config
       @logger = Steno.logger('cc.uaa_token_decoder')
 

@@ -30,7 +30,7 @@ module VCAP::CloudController
     describe '.new' do
       context 'when the decoder is created with a grace period' do
         context 'and that grace period is negative' do
-          subject { UaaTokenDecoder.new(uaa_config, -10) }
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: -10) }
 
           it 'logs a warning that the grace period was changed to 0' do
             expect(logger).to receive(:warn).with(/negative grace period interval.*-10.*is invalid, changed to 0/i)
@@ -39,7 +39,7 @@ module VCAP::CloudController
         end
 
         context 'and that grace period is not an integer' do
-          subject { UaaTokenDecoder.new(uaa_config, 'blabla') }
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 'blabla') }
 
           it 'raises an ArgumentError' do
             expect {
@@ -446,7 +446,7 @@ module VCAP::CloudController
         end
 
         context 'when the decoder has an alternate reference time specified' do
-          subject { UaaTokenDecoder.new(uaa_config, 0, Time.now.utc.to_i - 100) }
+          subject { UaaTokenDecoder.new(uaa_config, alternate_reference_time: Time.now.utc.to_i - 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
               'payload' => 123,
@@ -478,7 +478,7 @@ module VCAP::CloudController
           end
         end
         context 'when the decoder has an grace period specified' do
-          subject { UaaTokenDecoder.new(uaa_config, 100) }
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
               'payload' => 123,
@@ -509,7 +509,7 @@ module VCAP::CloudController
           end
 
           context 'and that grace period interval is negative' do
-            subject { UaaTokenDecoder.new(uaa_config, -10) }
+            subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: -10) }
 
             it 'sets the grace period to be 0 instead' do
               token_content['exp'] = Time.now.utc.to_i
