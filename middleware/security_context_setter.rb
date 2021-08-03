@@ -24,7 +24,7 @@ module CloudFoundry
         if request_path && request_path.match(UPLOADS_PATH_REGEX)
           upload_start_time = Rack::Request.new(env).params['upload_start_time'].to_i
           if upload_start_time
-            relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa), upload_start_time: upload_start_time)
+            relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa), alternate_reference_time: upload_start_time)
             security_context_configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder)
           end
         end
