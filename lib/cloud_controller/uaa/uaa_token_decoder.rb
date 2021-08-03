@@ -12,6 +12,7 @@ module VCAP::CloudController
       @logger = Steno.logger('cc.uaa_token_decoder')
 
       raise ArgumentError.new('grace period should be an integer') unless grace_period_in_seconds.is_a? Integer
+      raise ArgumentError.new('grace period and alternate reference time cannot be used together') if (grace_period_in_seconds != 0) && !alternate_reference_time.nil?
 
       @alternate_reference_time = alternate_reference_time
       @grace_period_in_seconds = grace_period_in_seconds

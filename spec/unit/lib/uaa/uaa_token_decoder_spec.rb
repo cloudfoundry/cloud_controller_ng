@@ -477,7 +477,17 @@ module VCAP::CloudController
             end
           end
         end
-        context 'when the decoder has an grace period specified' do
+
+        context 'when the decoder has both a grace period and an alternate reference time specified' do
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 100, alternate_reference_time: '123') }
+          it 'raises an ArgumentError' do
+            expect {
+              subject
+            }.to raise_error(ArgumentError, /grace period and alternate reference time cannot be used together/i)
+          end
+        end
+
+        context 'when the decoder has a grace period specified' do
           subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
