@@ -1,7 +1,14 @@
 module CloudFoundry
   module Middleware
     class SecurityContextSetter
-      PACKAGES_UPLOAD_REGEX = %r{/v3/packages/[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}/upload}i.freeze
+      UUID_REGEX = '[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}'.freeze
+      UPLOADS_PATH_REGEX = Regexp.union(
+        [
+          %r{/v3/packages/#{UUID_REGEX}/upload}i.freeze,
+          %r{/v3/buildpacks/#{UUID_REGEX}/upload}i.freeze,
+          %r{/v3/droplets/#{UUID_REGEX}/upload}i.freeze
+        ]
+      )
 
       def initialize(app, security_context_configurer)
         @app                         = app
@@ -14,7 +21,7 @@ module CloudFoundry
 
         security_context_configurer = @security_context_configurer
 
-        if request_path && request_path.match(PACKAGES_UPLOAD_REGEX)
+        if request_path && request_path.match(UPLOADS_PATH_REGEX)
           upload_start_time = Rack::Request.new(env).params['upload_start_time'].to_i
           if upload_start_time
             relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa), upload_start_time: upload_start_time)
