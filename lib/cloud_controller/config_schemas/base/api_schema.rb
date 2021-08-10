@@ -88,6 +88,7 @@ module VCAP::CloudController
               pool_timeout: Integer, # timeout before raising an error when connection can't be established to the db
               log_level: String, # debug, info, etc.
               log_db_queries: bool,
+              optional(:query_size_log_threshold) => Integer,
               connection_validation_timeout: Integer,
               optional(:connection_expiration_timeout) => Integer,
               optional(:connection_expiration_random_delay) => Integer,
