@@ -102,7 +102,7 @@ module VCAP::CloudController
     def validate_protocol(destination_index, protocol)
       return unless protocol
 
-      unless protocol.is_a?(String) && ['http1', 'http2', 'tcp'].include?(protocol)
+      unless protocol.is_a?(String) && RouteMappingModel::VALID_PROTOCOLS.include?(protocol)
         add_destination_error(destination_index, "protocol must be 'http1', 'http2' or 'tcp'.")
       end
     end

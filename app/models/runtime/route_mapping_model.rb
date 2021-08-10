@@ -3,6 +3,7 @@ require 'cloud_controller/copilot/adapter'
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
     DEFAULT_PROTOCOL_MAPPING = { 'tcp' => 'tcp', 'http' => 'http1' }.freeze
+    VALID_PROTOCOLS = ['http1', 'http2', 'tcp'].freeze
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid,
                       primary_key: :guid, without_guid_generation: true

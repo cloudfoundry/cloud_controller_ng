@@ -162,7 +162,7 @@ module VCAP::CloudController
           { 'routes' =>
             [
               { 'route' => 'existing.example.com' },
-              { 'route' => 'new.example.com' },
+              { 'route' => 'new.example.com', 'protocol' => 'http2' },
             ]
           }
         end
@@ -189,6 +189,26 @@ module VCAP::CloudController
 
           expect(msg.valid?).to eq(false)
           expect(msg.errors.full_messages).to include("The route 'potato://bad.example.com' is not a properly formed URL")
+        end
+      end
+
+      context 'when a route has an invalid protocol' do
+        let(:body) do
+          { 'routes' =>
+            [
+              { 'route' => 'existing.example.com', 'protocol' => 'bologna' },
+              { 'route' => 'http2.example.com', 'protocol' => 'http2' },
+              { 'route' => 'http1.example.com', 'protocol' => 'http1' },
+              { 'route' => 'tcp.example.com', 'protocol' => 'tcp' },
+            ]
+          }
+        end
+
+        it 'returns false' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to eq(false)
+          expect(msg.errors.full_messages).to include("Route protocol must be 'http1', 'http2' or 'tcp'.")
         end
       end
     end
