@@ -132,10 +132,7 @@ module VCAP::CloudController
       def compare_destination_hashes(new_route_mappings, existing_route_mappings)
         new_route_mappings.reject do |new|
           matching_route_mapping = existing_route_mappings.find do |existing|
-            new[:app_guid] == existing[:app_guid] &&
-              new[:process_type] == existing[:process_type] &&
-              new[:route_guid] == existing[:route_guid] &&
-              new[:app_port] == existing[:app_port]
+            new.slice(:app_guid, :process_type, :route_guid, :app_port) == existing.slice(:app_guid, :process_type, :route_guid, :app_port)
           end
 
           if matching_route_mapping && matching_route_mapping[:protocol] != new[:protocol]
