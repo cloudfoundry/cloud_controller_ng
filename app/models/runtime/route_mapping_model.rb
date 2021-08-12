@@ -18,7 +18,7 @@ module VCAP::CloudController
       primary_key: [:app_guid, :process_type], key: [:app_guid, :type]
 
     def default_protocol_mapping
-      @default_protocol_mapping ||= { 'tcp' => 'tcp', 'http' => 'http1', nil: nil }
+      @default_protocol_mapping ||= { 'tcp' => 'tcp', 'http' => 'http1' }
     end
 
     def protocol_with_defaults=(new_protocol)
