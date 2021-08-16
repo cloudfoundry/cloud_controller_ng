@@ -93,6 +93,10 @@ module VCAP::Services::ServiceBrokers
     def catalog
       client = VCAP::Services::ServiceClientProvider.provide(broker: broker)
       @catalog ||= VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, client.catalog)
+    rescue V2::Errors::ServiceBrokerResponseMalformed
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerRequestMalformed')
+    rescue V2::Errors::ServiceBrokerRequestRejected => e
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerRequestRejected', "#{e.response.code} #{e.response.message}")
     end
 
     def formatter

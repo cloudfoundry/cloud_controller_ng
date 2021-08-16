@@ -619,6 +619,50 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
+      context 'when fetching broker catalog fails' do
+        before do
+          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+            to_return(status: 418, body: {}.to_json)
+          patch("/v3/service_brokers/#{broker.guid}", { url: 'http://example.org/broker-url' }.to_json, admin_headers)
+
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
+        end
+
+        it 'has failed the job with an appropriate error' do
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+          expect(job.cf_api_error).not_to be_nil
+          error = YAML.safe_load(job.cf_api_error)
+          expect(error['errors'].first['code']).to eq(270020)
+          expect(error['errors'].first['detail']).
+            to eq("The service broker rejected the request. Status Code: 418 I'm a Teapot. Please check that the URL points to a valid service broker.")
+        end
+      end
+
+      context 'when catalog is not valid JSON' do
+        before do
+          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+            to_return(status: 200, body: '<!doctype html><html><body>I am not JSON</body></hmtl>')
+          patch("/v3/service_brokers/#{broker.guid}", { url: 'http://example.org/broker-url' }.to_json, admin_headers)
+
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
+        end
+
+        it 'has failed the job with an appropriate error' do
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+          cf_api_error = job.cf_api_error
+          expect(cf_api_error).not_to be_nil
+          error = YAML.safe_load(cf_api_error)
+          expect(error['errors'].first['code']).to eq(270021)
+          expect(error['errors'].first['detail']).
+            to eq('The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker.')
+        end
+      end
+
       context 'when a broker with the same name exists' do
         before do
           VCAP::CloudController::ServiceBroker.make(name: 'another broker')
@@ -1110,9 +1154,37 @@ RSpec.describe 'V3 service brokers' do
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
         expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
-        expect(error['errors'].first['code']).to eq(10001)
+        expect(error['errors'].first['code']).to eq(270020)
         expect(error['errors'].first['detail']).
-          to eq("The service broker rejected the request. Status Code: 418 I'm a Teapot, Body: {}")
+          to eq("The service broker rejected the request. Status Code: 418 I'm a Teapot. Please check that the URL points to a valid service broker.")
+      end
+    end
+
+    context 'when catalog is not valid JSON' do
+      before do
+        stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+          to_return(status: 200, body: '<!doctype html><html><body>I am not JSON</body></hmtl>')
+        create_broker_successfully(global_broker_request_body, with: admin_headers)
+
+        execute_all_jobs(expected_successes: 0, expected_failures: 1)
+      end
+
+      it 'leaves broker in a non-available failed state' do
+        broker = VCAP::CloudController::ServiceBroker.last
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+      end
+
+      it 'has failed the job with an appropriate error' do
+        job = VCAP::CloudController::PollableJobModel.last
+
+        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+        cf_api_error = job.cf_api_error
+        expect(cf_api_error).not_to be_nil
+        error = YAML.safe_load(cf_api_error)
+        expect(error['errors'].first['code']).to eq(270021)
+        expect(error['errors'].first['detail']).
+          to eq('The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker.')
       end
     end
 

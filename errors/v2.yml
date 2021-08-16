@@ -928,6 +928,16 @@
   http_code: 502
   message: "Service broker catalog is incompatible: %s"
 
+270020:
+  name: ServiceBrokerRequestRejected
+  http_code: 502
+  message: "The service broker rejected the request. Status Code: %s. Please check that the URL points to a valid service broker."
+
+270021:
+  name: ServiceBrokerRequestMalformed
+  http_code: 502
+  message: "The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker."
+
 290000:
   name: BuildpackNameStackTaken
   http_code: 422

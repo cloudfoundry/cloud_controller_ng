@@ -1,10 +1,11 @@
 require 'cloud_controller/structured_error'
 
 class HttpResponseError < StructuredError
-  attr_reader :uri, :method, :status
+  attr_reader :uri, :method, :status, :response
 
   def initialize(message, method, response)
     @method = method.to_s.upcase
+    @response = response
     @status = response.code.to_i
 
     begin
