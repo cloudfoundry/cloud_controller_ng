@@ -413,7 +413,7 @@ GEM
       rubocop-ast (>= 1.7.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
-    rubocop-ast (1.7.0)
+    rubocop-ast (1.10.0)
       parser (>= 3.0.1.1)
     ruby-debug-ide (0.7.2)
       rake (>= 0.8.1)
@@ -447,7 +447,7 @@ GEM
       rack-protection (= 2.0.8.1)
       sinatra (= 2.0.8.1)
       tilt (~> 2.0)
-    solargraph (0.42.4)
+    solargraph (0.43.0)
       backport (~> 1.2)
       benchmark
       bundler (>= 1.17.2)
