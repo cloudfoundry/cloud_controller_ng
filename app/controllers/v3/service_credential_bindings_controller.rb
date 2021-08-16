@@ -74,7 +74,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def update
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_write_to_space?(binding_space)
+    unauthorized! unless can_update_service_credentials_binding?(binding_space)
 
     unprocessable!('The service binding is being deleted') if delete_in_progress?(service_credential_binding)
 
@@ -272,12 +272,16 @@ class ServiceCredentialBindingsController < ApplicationController
       readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
       readable_spaces.any? do |space|
-        permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+        permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization_guid)
       end
     end
   end
 
   def can_write_to_space?(space)
+    permission_queryer.untrusted_can_write_to_space?(space.guid)
+  end
+
+  def can_update_service_credentials_binding?(space)
     permission_queryer.can_write_to_space?(space.guid)
   end
 
@@ -326,7 +330,7 @@ class ServiceCredentialBindingsController < ApplicationController
     if permission_queryer.can_read_globally?
       :all
     else
-      permission_queryer.readable_space_guids
+      permission_queryer.readable_supporter_space_guids
     end
   end
 
@@ -347,7 +351,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_from_space?(space)
-    permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    permission_queryer.untrusted_can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def binding_space
