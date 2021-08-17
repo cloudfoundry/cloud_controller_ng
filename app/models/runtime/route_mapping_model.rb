@@ -2,6 +2,8 @@ require 'cloud_controller/copilot/adapter'
 
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
+    DEFAULT_PROTOCOL_MAPPING = { 'tcp' => 'tcp', 'http' => 'http1' }.freeze
+
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid,
                       primary_key: :guid, without_guid_generation: true
     many_to_one :route, key: :route_guid, primary_key: :guid, without_guid_generation: true
@@ -17,10 +19,6 @@ module VCAP::CloudController
     one_to_many :processes, class: 'VCAP::CloudController::ProcessModel',
       primary_key: [:app_guid, :process_type], key: [:app_guid, :type]
 
-    def default_protocol_mapping
-      @default_protocol_mapping ||= { 'tcp' => 'tcp', 'http' => 'http1' }
-    end
-
     def protocol_with_defaults=(new_protocol)
       self.protocol_without_defaults = (new_protocol == 'http2' ? new_protocol : nil)
     end
@@ -29,7 +27,7 @@ module VCAP::CloudController
     alias_method :protocol=, :protocol_with_defaults=
 
     def protocol_with_defaults
-      self.protocol_without_defaults == 'http2' ? 'http2' : default_protocol_mapping[self.route&.protocol]
+      self.protocol_without_defaults == 'http2' ? 'http2' : DEFAULT_PROTOCOL_MAPPING[self.route&.protocol]
     end
 
     alias_method :protocol_without_defaults, :protocol

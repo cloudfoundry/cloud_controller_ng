@@ -511,31 +511,65 @@ module VCAP::CloudController
       end
 
       context 'when a destination exists with a different http protocol' do
-        let!(:same_destination) do
-          RouteMappingModel.make(
-            app: app_model,
-            route: route,
-            app_port: 8080,
-            process_type: 'web',
-            protocol: 'http1'
-          )
-        end
-
-        let(:params) do
-          [
-            {
-              app_guid: app_model.guid,
-              process_type: 'web',
+        context 'when existing protocol is http1 and new protocol is http2' do
+          let!(:same_destination) do
+            RouteMappingModel.make(
+              app: app_model,
+              route: route,
               app_port: 8080,
-              protocol: 'http2'
-            },
-          ]
+              process_type: 'web',
+              protocol: 'http1'
+            )
+          end
+
+          let(:params) do
+            [
+              {
+                app_guid: app_model.guid,
+                process_type: 'web',
+                app_port: 8080,
+                protocol: 'http2'
+              },
+            ]
+          end
+
+          it 'raise an error' do
+            expect {
+              subject.add(params, route, apps_hash, user_audit_info)
+            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              /Destination host-\d+.domain-\d+.example.com for app some-guid with process web exists with conflicting protocol http1, can't create destination with protocol http2/
+            )
+          end
         end
 
-        it 'raise an error' do
-          expect {
-            subject.add(params, route, apps_hash, user_audit_info)
-          }.to raise_error('Destination exists with conflicting protocol')
+        context 'when existing protocol is http2 and new protocol is not set' do
+          let!(:same_destination) do
+            RouteMappingModel.make(
+              app: app_model,
+              route: route,
+              app_port: 8080,
+              process_type: 'web',
+              protocol: 'http2'
+            )
+          end
+
+          let(:params) do
+            [
+              {
+                app_guid: app_model.guid,
+                process_type: 'web',
+                app_port: 8080
+              },
+            ]
+          end
+
+          it 'raise an error' do
+            expect {
+              subject.add(params, route, apps_hash, user_audit_info)
+            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              /Destination host-\d+.domain-\d+.example.com for app some-guid with process web exists with conflicting protocol http2, can't create destination with protocol http1/
+            )
+          end
         end
       end
     end

@@ -136,7 +136,11 @@ module VCAP::CloudController
           end
 
           if matching_route_mapping && matching_route_mapping[:protocol] != new[:protocol]
-            raise Error.new('Destination exists with conflicting protocol')
+            existing_protocol = matching_route_mapping[:protocol] == 'http2' ? 'http2' : RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[matching_route_mapping[:route].protocol]
+            new_protocol = new[:protocol] || RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[new[:route].protocol]
+            raise Error.new("Destination #{matching_route_mapping[:route].uri} for app #{matching_route_mapping[:app_guid]} " \
+                            "with process #{matching_route_mapping[:process_type]} exists with conflicting protocol #{existing_protocol}, " \
+                            "can't create destination with protocol #{new_protocol}")
           end
 
           matching_route_mapping
