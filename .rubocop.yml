@@ -196,6 +196,9 @@ Style/BlockDelimiters:
 Style/ClassAndModuleChildren:
   Enabled: false
 
+Style/ConditionalAssignment:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false
 
