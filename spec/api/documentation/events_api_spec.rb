@@ -300,8 +300,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       }
     end
 
-    example 'List App Exited Events' do
-      app_event_repository.create_app_exit_event(test_app, droplet_exited_payload)
+    example 'List App Crashed Events' do
+      app_event_repository.create_app_crash_event(test_app, droplet_exited_payload)
 
       client.get '/v2/events?q=type:app.crash', {}, headers
       expect(status).to eq(200)

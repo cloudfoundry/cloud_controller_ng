@@ -3,38 +3,37 @@ require 'controllers/base/base_controller'
 require 'cloud_controller/internal_api'
 
 module VCAP::CloudController
-  class AppCrashedController < RestController::BaseController
+  class AppReschedulingController < RestController::BaseController
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access
 
-    post '/internal/v4/apps/:process_guid/crashed', :crashed
-    def crashed(process_guid)
-      crash_payload = crashed_request
+    post '/internal/v4/apps/:process_guid/rescheduling', :rescheduling
+    def rescheduling(process_guid)
+      rescheduling_payload = rescheduling_request
 
       app_guid = Diego::ProcessGuid.cc_process_guid(process_guid)
 
       process = ProcessModel.find(guid: app_guid)
       raise CloudController::Errors::NotFound.new_from_details('ProcessNotFound', app_guid) unless process
 
-      crash_payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
+      rescheduling_payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
 
-      Repositories::ProcessEventRepository.record_crash(process, crash_payload)
-      Repositories::AppEventRepository.new.create_app_crash_event(process, crash_payload)
+      Repositories::ProcessEventRepository.record_rescheduling(process, rescheduling_payload)
     end
 
     private
 
-    def crashed_request
-      crashed = {}
+    def rescheduling_request
+      rescheduling = {}
       begin
         payload = body.read
-        crashed = MultiJson.load(payload)
+        rescheduling = MultiJson.load(payload)
       rescue MultiJson::ParseError => pe
-        logger.error('diego.app_crashed.parse-error', payload: payload, error: pe.to_s)
+        logger.error('diego.app_rescheduling.parse-error', payload: payload, error: pe.to_s)
         raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
       end
 
-      crashed
+      rescheduling
     end
   end
 end

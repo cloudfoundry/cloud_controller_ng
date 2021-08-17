@@ -254,6 +254,35 @@ module VCAP::CloudController
           expect(event.metadata['reason']).to eq('CRASHED')
         end
       end
+
+      describe '.record_rescheduling' do
+        let(:rescheduling_payload) {
+          {
+            'instance' => Sham.guid,
+            'index' => 3,
+            'cell_id' => 'some-cell',
+            'reason' => 'Helpful reason for rescheduling'
+          }
+        }
+
+        it 'creates a new audit.app.process.rescheduling event' do
+          event = ProcessEventRepository.record_rescheduling(process, rescheduling_payload)
+          event.reload
+
+          expect(event.type).to eq('audit.app.process.rescheduling')
+          expect(event.actor).to eq(process.guid)
+          expect(event.actor_type).to eq('process')
+          expect(event.actor_name).to eq('potato')
+          expect(event.actor_username).to eq('')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq('zach-loves-kittens')
+          expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+
+          expect(event.metadata).to eq(rescheduling_payload)
+        end
+      end
     end
   end
 end
