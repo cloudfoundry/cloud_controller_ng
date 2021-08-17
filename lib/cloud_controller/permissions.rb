@@ -118,7 +118,15 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_org_guids_for_domains
+  def readable_org_guids_query
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:guid)
+    else
+      membership.org_guids_for_roles_subquery(ROLES_FOR_ORG_READING)
+    end
+  end
+
+  def readable_org_guids_for_domains_query
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid)
     else
@@ -194,9 +202,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    can_read_globally? ||
-      isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||
-      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+    can_read_globally? || contains_any(isolation_segment.organizations.map(&:guid), readable_org_guids)
   end
 
   def readable_route_guids
@@ -305,5 +311,9 @@ class VCAP::CloudController::Permissions
 
   def roles
     VCAP::CloudController::SecurityContext.roles
+  end
+
+  def contains_any(a, b) # rubocop:disable Naming/MethodParameterName
+    !(a & b).empty?
   end
 end

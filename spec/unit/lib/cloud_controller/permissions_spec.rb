@@ -151,11 +151,21 @@ module VCAP::CloudController
         membership = instance_double(Membership, org_guids_for_roles: org_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(permissions.readable_org_guids).to eq(org_guids)
-        expect(membership).to have_received(:org_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_ORG_READING)
+        expect(membership).to have_received(:org_guids_for_roles).with(Permissions::ROLES_FOR_ORG_READING)
       end
     end
 
-    describe '#readable_org_guids_for_domains' do
+    describe '#readable_org_guids_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:org_guids_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(permissions.readable_org_guids_query).to be(subquery)
+      end
+    end
+
+    describe '#readable_org_guids_for_domains_query' do
       context 'when user has valid membership' do
         let(:membership) { instance_double(Membership) }
         let(:space_guid) { double(:space_guid) }
@@ -175,7 +185,7 @@ module VCAP::CloudController
             with(Permissions::SPACE_ROLES).
             and_return([space_guid])
 
-          expect(permissions.readable_org_guids_for_domains).
+          expect(permissions.readable_org_guids_for_domains_query).
             to be(subquery)
         end
       end
@@ -378,7 +388,7 @@ module VCAP::CloudController
         membership = instance_double(Membership, space_guids_for_roles: space_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(permissions.readable_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_READING)
+        expect(membership).to have_received(:space_guids_for_roles).with(Permissions::ROLES_FOR_SPACE_READING)
       end
     end
 
@@ -601,7 +611,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_SECRETS_READING).
+          with(Permissions::ROLES_FOR_SPACE_SECRETS_READING).
           and_return(space_guids)
 
         actual_space_guids = permissions.readable_secret_space_guids
@@ -640,7 +650,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::SPACE_ROLES).
+          with(Permissions::SPACE_ROLES).
           and_return(space_guids)
 
         actual_space_guids = permissions.readable_space_scoped_space_guids
@@ -861,9 +871,9 @@ module VCAP::CloudController
     end
 
     describe '#readable_event_dataset' do
-      let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
-      let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org_guid, organization_guid: org_guid) }
-      let!(:space_scoped_event) { VCAP::CloudController::Event.make(space_guid: space_guid, actee: space_guid, type: 'audit.app.restart') }
+      let!(:unscoped_event) { Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+      let!(:org_scoped_event) { Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org_guid, organization_guid: org_guid) }
+      let!(:space_scoped_event) { Event.make(space_guid: space_guid, actee: space_guid, type: 'audit.app.restart') }
 
       it 'returns all events for admins' do
         user = set_current_user_as_admin
@@ -890,11 +900,9 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::SPACE_ROLES_FOR_EVENTS).
+          with(Permissions::SPACE_ROLES_FOR_EVENTS).
           and_return([space_guid])
-        expect(membership).to receive(:org_guids_for_roles).
-          with(VCAP::CloudController::Membership::ORG_AUDITOR).
-          and_return([])
+        expect(membership).to receive(:org_guids_for_roles).with(Membership::ORG_AUDITOR).and_return([])
         event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
 
         expect(event_guids).to contain_exactly(space_scoped_event.guid)
@@ -904,11 +912,9 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:space_guids_for_roles).
-          with(VCAP::CloudController::Permissions::SPACE_ROLES_FOR_EVENTS).
+          with(Permissions::SPACE_ROLES_FOR_EVENTS).
           and_return([])
-        expect(membership).to receive(:org_guids_for_roles).
-          with(VCAP::CloudController::Membership::ORG_AUDITOR).
-          and_return(org_guid)
+        expect(membership).to receive(:org_guids_for_roles).with(Membership::ORG_AUDITOR).and_return(org_guid)
         event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
 
         expect(event_guids).to contain_exactly(org_scoped_event.guid)

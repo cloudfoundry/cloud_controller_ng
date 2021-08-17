@@ -242,14 +242,6 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_write_globally?).and_return(true)
   end
 
-  def allow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(true)
-  end
-
-  def disallow_user_read_access_for_isolation_segment(user)
-    allow(permissions_double(user)).to receive(:can_read_from_isolation_segment?).and_return(false)
-  end
-
   def disallow_user_global_read_access(user)
     allow(permissions_double(user)).to receive(:can_read_globally?).and_return(false)
   end
@@ -289,7 +281,7 @@ module UserHelpers
 
   def permissions_double(user)
     @permissions ||= {}
-    @permissions[user.guid] ||= instance_double(VCAP::CloudController::Permissions).tap do |permissions|
+    @permissions[user.guid] ||= VCAP::CloudController::Permissions.new(user).tap do |permissions|
       allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
       allow(permissions).to receive(:can_read_globally?).and_return(false)
     end

@@ -32,8 +32,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def show
-    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
-    resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
+    isolation_segment_model = find_readable_isolation_segment(hashed_params[:guid])
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -45,7 +44,7 @@ class IsolationSegmentsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 IsolationSegmentListFetcher.fetch_all(message)
               else
-                IsolationSegmentListFetcher.fetch_for_organizations(message, org_guids: permission_queryer.readable_org_guids)
+                IsolationSegmentListFetcher.fetch_for_organizations(message, org_guids: permission_queryer.readable_org_guids_query)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -85,14 +84,13 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_orgs
-    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
-    resource_not_found!(:isolation_segment) unless can_list_organizations?(isolation_segment_model)
+    isolation_segment_model = find_readable_isolation_segment(hashed_params[:guid])
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
     organizations = if permission_queryer.can_read_globally?
                       fetcher.fetch_all
                     else
-                      fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids)
+                      fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids_query)
                     end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
@@ -100,8 +98,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_spaces
-    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
-    resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
+    isolation_segment_model = find_readable_isolation_segment(hashed_params[:guid])
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
     spaces = if permission_queryer.can_read_globally?
@@ -166,12 +163,18 @@ class IsolationSegmentsController < ApplicationController
     [isolation_segment_model, organizations]
   end
 
-  def can_list_organizations?(isolation_segment)
-    permission_queryer.can_read_globally? || isolation_segment.organizations.any? { |org| permission_queryer.can_read_from_org?(org.guid) }
-  end
-
   def find_isolation_segment(guid)
     isolation_segment = IsolationSegmentModel.first(guid: guid)
+    resource_not_found!(:isolation_segment) unless isolation_segment
+    isolation_segment
+  end
+
+  def find_readable_isolation_segment(guid)
+    isolation_segment = if permission_queryer.can_read_globally?
+                          IsolationSegmentModel.first(guid: guid)
+                        else
+                          IsolationSegmentModel.dataset.where(organizations: Organization.where(guid: permission_queryer.readable_org_guids_query)).first(guid: guid)
+                        end
     resource_not_found!(:isolation_segment) unless isolation_segment
     isolation_segment
   end
