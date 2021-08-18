@@ -38,11 +38,7 @@ module VCAP::CloudController
       apps.each do |app|
         logger.info("Deleting app: #{app.guid}")
 
-        errs = delete_non_transactional_subresources(app)
-
-        if errs&.any?
-          raise SubResourceError.new(errs)
-        end
+        delete_non_transactional_subresources(app)
 
         app.db.transaction do
           app.lock!
@@ -104,10 +100,7 @@ module VCAP::CloudController
 
     def delete_non_transactional_subresources(app)
       errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info)
-      non_async_errors = errors.reject { |e| e.is_a?(AsyncBindingDeletionsTriggered) }
-      raise non_async_errors.first unless non_async_errors.empty?
-
-      errors
+      raise SubResourceError.new(errors) if errors.any?
     end
 
     def stagers
