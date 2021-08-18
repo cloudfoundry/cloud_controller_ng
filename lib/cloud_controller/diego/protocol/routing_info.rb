@@ -29,9 +29,7 @@ module VCAP::CloudController
 
         def http_info
           relevant_http_routes = process.routes.reject do |route|
-            route.internal? ||
-              (route.tcp? &&
-                route.domain.router_group.present?)
+            route.internal? || route.tcp?
           end
 
           relevant_http_routes.each_with_object([]) do |r, http_info|
@@ -48,9 +46,7 @@ module VCAP::CloudController
 
         def tcp_info
           relevant_tcp_routes = process.routes.select do |r|
-            r.tcp? &&
-              !r.internal? &&
-              r.domain.router_group.present?
+            r.tcp? && !r.internal?
           end
 
           relevant_tcp_routes.each_with_object([]) do |r, tcp_info|
