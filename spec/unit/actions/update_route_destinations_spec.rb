@@ -537,7 +537,8 @@ module VCAP::CloudController
             expect {
               subject.add(params, route, apps_hash, user_audit_info)
             }.to raise_error { UpdateRouteDestinations::Error }.with_message(
-              /Destination host-\d+.domain-\d+.example.com for app some-guid with process web exists with conflicting protocol http1, can't create destination with protocol http2/
+              'Cannot add destination with protocol: http2. Destination already exists for' \
+              " route: #{route.uri}, app: some-guid, process: web, and protocol: http1."
             )
           end
         end
@@ -567,7 +568,8 @@ module VCAP::CloudController
             expect {
               subject.add(params, route, apps_hash, user_audit_info)
             }.to raise_error { UpdateRouteDestinations::Error }.with_message(
-              /Destination host-\d+.domain-\d+.example.com for app some-guid with process web exists with conflicting protocol http2, can't create destination with protocol http1/
+              'Cannot add destination with protocol: http1. Destination already exists for' \
+              " route: #{route.uri}, app: some-guid, process: web, and protocol: http2."
             )
           end
         end

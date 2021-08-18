@@ -12,6 +12,7 @@ module VCAP::CloudController
       def add(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
+        new_route_mappings = update_protocol(new_route_mappings, route)
         new_route_mappings = add_route(new_route_mappings, route)
 
         validate_max_destinations!(existing_route_mappings, new_route_mappings)
@@ -29,6 +30,7 @@ module VCAP::CloudController
       def replace(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
+        new_route_mappings = update_protocol(new_route_mappings, route)
         new_route_mappings = add_route(new_route_mappings, route)
 
         validate_max_destinations!([], new_route_mappings)
@@ -136,11 +138,8 @@ module VCAP::CloudController
           end
 
           if matching_route_mapping && matching_route_mapping[:protocol] != new[:protocol]
-            existing_protocol = matching_route_mapping[:protocol] == 'http2' ? 'http2' : RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[matching_route_mapping[:route].protocol]
-            new_protocol = new[:protocol] || RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[new[:route].protocol]
-            raise Error.new("Destination #{matching_route_mapping[:route].uri} for app #{matching_route_mapping[:app_guid]} " \
-                            "with process #{matching_route_mapping[:process_type]} exists with conflicting protocol #{existing_protocol}, " \
-                            "can't create destination with protocol #{new_protocol}")
+            raise Error.new("Cannot add destination with protocol: #{new[:protocol]}. Destination already exists for route: #{new[:route].uri}, app: #{new[:app_guid]}, " \
+                            "process: #{new[:process_type]}, and protocol: #{matching_route_mapping[:protocol]}.")
           end
 
           matching_route_mapping
@@ -159,6 +158,14 @@ module VCAP::CloudController
             app = apps_hash[dst[:app_guid]]
 
             dst[:app_port] = default_port(app)
+          end
+        end
+      end
+
+      def update_protocol(destinations, route)
+        destinations.each do |dst|
+          if dst[:protocol].nil?
+            dst[:protocol] = RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[route.protocol]
           end
         end
       end
@@ -185,7 +192,7 @@ module VCAP::CloudController
           app_port: destination.app_port,
           route: route,
           weight: destination.weight,
-          protocol: destination.protocol_without_defaults
+          protocol: destination.protocol
         }
       end
 
