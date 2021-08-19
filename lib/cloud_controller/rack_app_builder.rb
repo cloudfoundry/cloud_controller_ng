@@ -8,6 +8,7 @@ require 'security_context_setter'
 require 'rate_limiter'
 require 'new_relic_custom_attributes'
 require 'zipkin'
+require 'block_v3_only_roles'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -41,6 +42,7 @@ module VCAP::CloudController
         use Rack::CommonLogger, logger if logger
 
         map '/' do
+          use CloudFoundry::Middleware::BlockV3OnlyRoles, { logger: Steno.logger('cc.unsupported_roles') }
           run FrontController.new(config)
         end
 
