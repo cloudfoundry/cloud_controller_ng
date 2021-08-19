@@ -16799,7 +16799,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -16810,7 +16811,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16937,7 +16939,8 @@ spaces, and assign &amp; unassign roles to users.</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
@@ -16983,6 +16986,11 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td><strong>weight</strong> (<em>experimental</em>)</td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
 <td>Percentage of traffic which will be routed to this destination; <em>this feature is only available via the BETA Service Mesh routing plane</em></td>
+</tr>
+<tr>
+<td><strong>protocol</strong> (<em>experimental</em>)</td>
+<td><em>string</em> or <code class="prettyprint">null</code></td>
+<td>Protocol to use for this destination. Valid protocols are <code class="prettyprint">http1</code> or <code class="prettyprint">http2</code> if route protocol is <code class="prettyprint">http</code>, <code class="prettyprint">tcp</code> if route protocol is <code class="prettyprint">tcp</code>. A <code class="prettyprint">null</code> value will set it either <code class="prettyprint">http1</code> or <code class="prettyprint">tcp</code> based on the route protocol; <em>this feature is only available if you turn it on in routing release</em></td>
 </tr>
 </tbody></table>
 <h3 id="create-a-route">Create a route</h3>
@@ -17034,7 +17042,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17045,7 +17054,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17195,7 +17205,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17206,7 +17217,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17354,7 +17366,8 @@ spaces, and assign &amp; unassign roles to users.</p>
             </span><span class="p">}</span><span class="w">
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17365,7 +17378,8 @@ spaces, and assign &amp; unassign roles to users.</p>
             </span><span class="p">}</span><span class="w">
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">],</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17553,7 +17567,8 @@ spaces, and assign &amp; unassign roles to users.</p>
             </span><span class="p">}</span><span class="w">
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17564,7 +17579,8 @@ spaces, and assign &amp; unassign roles to users.</p>
             </span><span class="p">}</span><span class="w">
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+          </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">],</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17749,7 +17765,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17760,7 +17777,8 @@ spaces, and assign &amp; unassign roles to users.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18007,7 +18025,8 @@ belongs to a space the user does not belong to.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -18018,7 +18037,8 @@ belongs to a space the user does not belong to.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18126,7 +18146,8 @@ belongs to a space the user does not belong to.</p>
             "type": "api"
           }
         },
-        "port": 9000
+        "port": 9000,
+        "protocol": "http1"
       }
     ]
   }'</span>
@@ -18147,7 +18168,8 @@ belongs to a space the user does not belong to.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -18158,7 +18180,8 @@ belongs to a space the user does not belong to.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18241,7 +18264,8 @@ replace all destinations for a route at once using the <a href="#replace-all-des
           }
         },
         "weight": 39,
-        "port": 9000
+        "port": 9000,
+        "protocol": "http1"
       }
     ]
   }'</span>
@@ -18262,7 +18286,8 @@ replace all destinations for a route at once using the <a href="#replace-all-des
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -18273,7 +18298,8 @@ replace all destinations for a route at once using the <a href="#replace-all-des
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
