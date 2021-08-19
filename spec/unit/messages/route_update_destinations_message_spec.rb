@@ -111,7 +111,7 @@ module VCAP::CloudController
         it 'is not valid' do
           expect(subject).to be_invalid
           expect(subject.errors.full_messages).to contain_exactly(
-            'Destinations[0]: must have only "app" and optionally "weight" and "port".'
+            'Destinations[0]: must have only "app" and optionally "weight", "port" or "protocol".'
           )
         end
       end
@@ -272,6 +272,44 @@ module VCAP::CloudController
             expect(subject).to be_invalid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
+            )
+          end
+        end
+      end
+
+      context 'when protocol is invalid' do
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: {
+                  guid: 'some-guid',
+                  process: {
+                    type: 'web'
+                  }
+                },
+                protocol: protocol
+              }
+            ]
+          }
+        end
+
+        context 'when protocol is not a string' do
+          let(:protocol) { 5 }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              "Destinations[0]: protocol must be 'http1', 'http2' or 'tcp'."
+            )
+          end
+        end
+
+        context 'when protocol is an invalid string' do
+          let(:protocol) { 'not-a-protocol' }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              "Destinations[0]: protocol must be 'http1', 'http2' or 'tcp'."
             )
           end
         end
@@ -594,6 +632,50 @@ module VCAP::CloudController
       end
     end
 
+    describe 'when protocols are specified' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: { guid: 'app-guid' },
+              protocol: protocol
+            },
+          ]
+        }
+      end
+      context 'inserting destinations with http1' do
+        let(:protocol) { 'http1' }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'inserting destinations with http1 as nil' do
+        let(:protocol) { nil }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'inserting destinations with http2' do
+        let(:protocol) { 'http2' }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'inserting destinations with tcp' do
+        let(:protocol) { 'tcp' }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+    end
+
     describe 'destinations' do
       let(:params) do
         {
@@ -626,12 +708,14 @@ module VCAP::CloudController
             process_type: 'web',
             app_port: nil,
             weight: nil,
+            protocol: nil,
           },
           {
             app_guid: 'some-other-guid',
             process_type: 'web',
             app_port: 9000,
             weight: nil,
+            protocol: nil,
           }
         ])
       end

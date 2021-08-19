@@ -17,12 +17,14 @@ module VCAP::CloudController
         app_guid = HashUtils.dig(dst, :app, :guid)
         process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
         weight = HashUtils.dig(dst, :weight)
+        protocol = HashUtils.dig(dst, :protocol)
 
         new_route_mappings << {
           app_guid: app_guid,
           process_type: process_type,
           app_port: dst[:port],
-          weight: weight
+          weight: weight,
+          protocol: protocol,
         }
       end
 
@@ -58,14 +60,15 @@ module VCAP::CloudController
           next
         end
 
-        unless (dst.keys - [:app, :weight, :port]).empty?
-          add_destination_error(index, 'must have only "app" and optionally "weight" and "port".')
+        unless (dst.keys - [:app, :weight, :port, :protocol]).empty?
+          add_destination_error(index, 'must have only "app" and optionally "weight", "port" or "protocol".')
           next
         end
 
         validate_app(index, dst[:app])
         validate_weight(index, dst[:weight])
         validate_port(index, dst[:port])
+        validate_protocol(index, dst[:protocol])
 
         app_to_ports_hash[dst[:app]] ||= []
         app_to_ports_hash[dst[:app]] << dst[:port]
@@ -93,6 +96,14 @@ module VCAP::CloudController
 
       unless weight.is_a?(Integer) && weight > 0 && weight <= 100
         add_destination_error(destination_index, 'weight must be a positive integer between 1 and 100.')
+      end
+    end
+
+    def validate_protocol(destination_index, protocol)
+      return unless protocol
+
+      unless protocol.is_a?(String) && ['http1', 'http2', 'tcp'].include?(protocol)
+        add_destination_error(destination_index, "protocol must be 'http1', 'http2' or 'tcp'.")
       end
     end
 

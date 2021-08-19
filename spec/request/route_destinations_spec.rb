@@ -144,7 +144,8 @@ RSpec.describe 'Route Destinations Request' do
               }
             },
             weight: nil,
-            port: 8080
+            port: 8080,
+            protocol: 'http1'
           }
         ],
         links: {
@@ -235,7 +236,8 @@ RSpec.describe 'Route Destinations Request' do
               process: {
                 type: 'web'
               }
-            }
+            },
+            protocol: 'http2',
           },
           {
             app: {
@@ -264,7 +266,8 @@ RSpec.describe 'Route Destinations Request' do
                 }
               },
               weight: nil,
-              port: 8080
+              port: 8080,
+              protocol: 'http1',
             },
             {
               guid: UUID_REGEX,
@@ -275,7 +278,8 @@ RSpec.describe 'Route Destinations Request' do
                 }
               },
               weight: nil,
-              port: 8080
+              port: 8080,
+              protocol: 'http2',
             }
           ],
           links: {
@@ -284,6 +288,7 @@ RSpec.describe 'Route Destinations Request' do
           }
         }
       end
+
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 403,
@@ -566,7 +571,8 @@ RSpec.describe 'Route Destinations Request' do
               process: {
                 type: 'worker'
               }
-            }
+            },
+            protocol: 'http2'
           }
         ]
       }
@@ -590,6 +596,72 @@ RSpec.describe 'Route Destinations Request' do
       end
     end
 
+    describe 'Protocols' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'assistant'
+                }
+              },
+              protocol: new_protocol
+            }
+          ]
+        }
+      end
+      let!(:existing_destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          process_type: 'assistant',
+          protocol: existing_protocol
+        )
+      end
+      context 'http1/http2' do
+        [
+          ['http2', 'http1', 'http1'],
+          ['http2', 'http2', 'http2'],
+          ['http2', nil,     'http1'],
+          ['http1', 'http1', 'http1'],
+          ['http1', 'http2', 'http2'],
+          ['http1', nil,     'http1'],
+        ].each do |set_from, set_to, result|
+          context "when existing destination is #{set_from}" do
+            let(:existing_protocol) { set_from }
+            let(:new_protocol) { set_to }
+
+            it "can be changed to #{set_to} even though we are not storing it that way in the DB" do
+              patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+              expect(last_response.status).to eq(200)
+              expect(parsed_response['destinations'][0]['protocol']).to eq(result)
+            end
+          end
+        end
+      end
+
+      context 'tcp' do
+        let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+        let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+        let(:route) do
+          UAARequests.stub_all
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+          allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
+
+          VCAP::CloudController::Route.make(:tcp, space: space)
+        end
+        let(:existing_protocol) { 'tcp' }
+        let(:new_protocol) { nil }
+
+        it 'stays tcp' do
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['destinations'][0]['protocol']).to eq(existing_protocol)
+        end
+      end
+    end
     context 'when removing a destination app' do
       let(:app_model_1) { VCAP::CloudController::AppModel.make(space: space) }
       let(:app_model_2) { VCAP::CloudController::AppModel.make(space: space) }
@@ -670,7 +742,8 @@ RSpec.describe 'Route Destinations Request' do
                 }
               },
               weight: nil,
-              port: 8080
+              port: 8080,
+              protocol: 'http1'
             },
             {
               guid: UUID_REGEX,
@@ -681,7 +754,8 @@ RSpec.describe 'Route Destinations Request' do
                 }
               },
               weight: nil,
-              port: 8080
+              port: 8080,
+              protocol: 'http2'
             }
           ],
           links: {
@@ -725,6 +799,15 @@ RSpec.describe 'Route Destinations Request' do
     describe 'when the user has permissions to the route' do
       before do
         set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
+      end
+
+      describe 'protocols' do
+        it 'replaces all destinations on the route' do
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['destinations'][0]['protocol']).to eq('http1')
+          expect(parsed_response['destinations'][1]['protocol']).to eq('http2')
+        end
       end
 
       context 'when the route does not exist' do

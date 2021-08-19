@@ -24,7 +24,8 @@ curl "https://api.example.org/v3/routes/[guid]/destinations" \
           }
         },
         "weight": 39,
-        "port": 9000
+        "port": 9000,
+        "protocol": "http1"
       }
     ]
   }'
@@ -49,7 +50,8 @@ Content-Type: application/json
         }
       },
       "weight": 61,
-      "port": 8080
+      "port": 8080,
+      "protocol": "http2"
     },
     {
       "guid": "fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5",
@@ -60,7 +62,8 @@ Content-Type: application/json
         }
       },
       "weight": 39,
-      "port": 9000
+      "port": 9000,
+      "protocol": "http1"
     }
   ],
   "links": {

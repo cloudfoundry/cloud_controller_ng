@@ -31,6 +31,132 @@ module VCAP::CloudController
       end
     end
 
+    describe 'protocol' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let!(:web_process) do
+        VCAP::CloudController::ProcessModel.make(
+          app: app_model,
+          type: VCAP::CloudController::ProcessTypes::WEB,
+        )
+      end
+      context 'setting' do
+        it 'saves http2 as itself' do
+          protocol = 'http2'
+          route_mapping = RouteMappingModel.create(
+            app: app_model,
+            app_port: 1234,
+            route: route,
+            process_type: web_process.type,
+            protocol: protocol
+          )
+          expect(route_mapping.protocol_without_defaults).to eq('http2')
+        end
+
+        it 'saves everything else as nil' do
+          protocol = 'http1'
+          route_mapping = RouteMappingModel.create(
+            app: app_model,
+            app_port: 1111,
+            route: route,
+            process_type: web_process.type,
+            protocol: protocol
+          )
+          expect(route_mapping.protocol_without_defaults).to be_nil
+
+          protocol = 'tcp'
+          route_mapping = RouteMappingModel.create(
+            app: app_model,
+            app_port: 2222,
+            route: route,
+            process_type: web_process.type,
+            protocol: protocol
+          )
+          expect(route_mapping.protocol_without_defaults).to be_nil
+
+          protocol = 'potato'
+          route_mapping = RouteMappingModel.create(
+            app: app_model,
+            app_port: 3333,
+            route: route,
+            process_type: web_process.type,
+            protocol: protocol
+          )
+          expect(route_mapping.protocol_without_defaults).to be_nil
+        end
+      end
+
+      context 'getting' do
+        it 'returns http2 unmodified' do
+          protocol = 'http2'
+          route_mapping = RouteMappingModel.create(
+            app: app_model,
+            app_port: 3333,
+            route: route,
+            process_type: web_process.type,
+            protocol: protocol
+          )
+          expect(route_mapping.protocol).to eq(protocol)
+        end
+
+        context 'http route' do
+          it 'returns nil as http1' do
+            protocol = nil
+            route_mapping = RouteMappingModel.create(
+              app: app_model,
+              app_port: 3333,
+              route: route,
+              process_type: web_process.type,
+              protocol: protocol
+            )
+            expect(route_mapping.protocol).to eq('http1')
+          end
+        end
+
+        context 'when the model does NOT have a route (yet)' do
+          it 'returns nil' do
+            protocol = nil
+            route_mapping = RouteMappingModel.new(
+              app: app_model,
+              app_port: 3333,
+              process_type: web_process.type,
+              protocol: protocol
+            )
+            expect(route_mapping.protocol).to eq(nil)
+          end
+        end
+
+        context 'tcp route' do
+          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+            allow_any_instance_of(RouteValidator).to receive(:validate)
+          end
+
+          let(:tcp_route) { VCAP::CloudController::Route.make(
+            :tcp,
+            space: space,
+          )
+          }
+
+          it 'returns nil as tcp' do
+            protocol = nil
+            route_mapping = RouteMappingModel.create(
+              app: app_model,
+              app_port: 3333,
+              route: tcp_route,
+              process_type: web_process.type,
+              protocol: protocol
+            )
+            expect(route_mapping.protocol).to eq('tcp')
+          end
+        end
+      end
+    end
+
     describe '#presented_port' do
       let!(:app) { VCAP::CloudController::AppModel.make }
       let!(:app_docker) { VCAP::CloudController::AppModel.make(:docker, droplet: droplet_docker) }
