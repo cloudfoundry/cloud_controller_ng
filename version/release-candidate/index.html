@@ -16045,7 +16045,12 @@ spaces, and assign &amp; unassign roles to users.</p>
 <li><code class="prettyprint">space_auditor</code></li>
 <li><code class="prettyprint">space_developer</code></li>
 <li><code class="prettyprint">space_manager</code></li>
-<li><code class="prettyprint">space_supporter</code> - This role is under active development and is not supported</li>
+<li><code class="prettyprint">space_supporter</code>
+
+<ul>
+<li>This role is under active development and is not supported</li>
+<li>Users with only the space supporter role are not authorized to use the <strong>V2</strong> API</li>
+</ul></li>
 </ul>
 <h3 id="create-a-role">Create a role</h3>
 <pre class="highlight plaintext"><code>Example Request (by user guid)
