@@ -310,7 +310,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def current_droplet_relationship
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
+    droplet = DropletModel.where(guid: app.droplet_guid).first
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
@@ -325,7 +325,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def current_droplet
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).first
+    droplet = DropletModel.where(guid: app.droplet_guid).first
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
