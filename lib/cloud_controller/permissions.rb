@@ -262,16 +262,6 @@ class VCAP::CloudController::Permissions
       membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)
   end
 
-  # def can_read_route?(space_guid, org_guid)
-  #   return true if can_read_globally?
-
-  #   space = VCAP::CloudController::Space.where(guid: space_guid).first
-  #   org = space.organization
-
-  #   space.has_member?(@user) || space.has_supporter?(@user) ||
-  #     @user.managed_organizations.include?(org) || @user.audited_organizations.include?(org)
-  # end
-
   def readable_app_guids
     VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).map(&:guid)
   end

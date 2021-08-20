@@ -147,7 +147,7 @@ class RoutesController < ApplicationController
   def route
     @route || begin
       @route = Route.find(guid: hashed_params[:guid])
-      route_not_found! unless @route && permission_queryer.untrusted_can_read_route?(@route.space.guid, @route.organization.guid)
+      route_not_found! unless @route && permission_queryer.can_read_route?(@route.space.guid, @route.organization.guid)
       @route
     end
   end

@@ -81,7 +81,7 @@ class ServiceInstancesV3Controller < ApplicationController
     message = build_create_message(hashed_params[:body])
 
     space = Space.first(guid: message.space_guid)
-    unprocessable_space! unless space && untrusted_can_read_space?(space)
+    unprocessable_space! unless space && can_read_space?(space)
     unauthorized! unless can_write_space?(space)
 
     case message.type
@@ -170,7 +170,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def relationships_shared_spaces
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_instance) unless service_instance && untrusted_can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
 
     message = SharedSpacesShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -361,10 +361,6 @@ class ServiceInstancesV3Controller < ApplicationController
     readable_spaces.any? do |space|
       permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
     end
-  end
-
-  def untrusted_can_read_space?(space)
-    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
 
   def can_read_space?(space)
