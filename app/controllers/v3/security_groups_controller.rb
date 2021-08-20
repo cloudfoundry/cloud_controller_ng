@@ -78,8 +78,8 @@ class SecurityGroupsController < ApplicationController
   end
 
   def show
-    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
-    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+    security_group = SecurityGroupFetcher.fetch(hashed_params[:guid], permission_queryer.readable_security_group_guids_query)
+    resource_not_found!(:security_group) unless security_group
 
     render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
       security_group,
@@ -94,7 +94,7 @@ class SecurityGroupsController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 SecurityGroupListFetcher.fetch_all(message)
               else
-                SecurityGroupListFetcher.fetch(message, permission_queryer.readable_security_group_guids)
+                SecurityGroupListFetcher.fetch(message, permission_queryer.readable_security_group_guids_query)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

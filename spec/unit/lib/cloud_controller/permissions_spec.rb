@@ -146,12 +146,15 @@ module VCAP::CloudController
         expect(org_guids).to include(org2_guid)
       end
 
-      it 'returns org guids from membership' do
-        org_guids = double
-        membership = instance_double(Membership, org_guids_for_roles: org_guids)
+      it 'returns org guids from membership via subquery' do
+        guid1, guid2 = double
+        org_guid_records = [double(guid: guid1), double(guid: guid2)]
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_org_guids).to eq(org_guids)
-        expect(membership).to have_received(:org_guids_for_roles).with(Permissions::ROLES_FOR_ORG_READING)
+        expect(membership).to receive(:org_guids_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(subquery).to receive(:all).and_return(org_guid_records)
+        expect(permissions.readable_org_guids).to eq([guid1, guid2])
       end
     end
 
@@ -383,12 +386,15 @@ module VCAP::CloudController
         expect(space_guids).to include(space2.guid)
       end
 
-      it 'returns space guids from membership' do
-        space_guids = double
-        membership = instance_double(Membership, space_guids_for_roles: space_guids)
+      it 'returns space guids from membership via subquery' do
+        guid1, guid2 = double
+        space_guid_records = [double(guid: guid1), double(guid: guid2)]
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(Permissions::ROLES_FOR_SPACE_READING)
+        expect(membership).to receive(:space_guids_for_roles_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
+        expect(subquery).to receive(:all).and_return(space_guid_records)
+        expect(permissions.readable_space_guids).to eq([guid1, guid2])
       end
     end
 

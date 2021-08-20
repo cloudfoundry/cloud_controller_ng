@@ -2,17 +2,20 @@ require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
 require 'fetchers/label_selector_query_generator'
 require 'fetchers/base_list_fetcher'
+require 'fetchers/security_group_fetcher'
 
 module VCAP::CloudController
   class SecurityGroupListFetcher < BaseListFetcher
     class << self
       def fetch_all(message)
         dataset = SecurityGroup.dataset
+        dataset = SecurityGroupFetcher.eager_load_running_and_staging_space_guids(dataset)
         filter(message, dataset)
       end
 
       def fetch(message, visible_security_group_guids)
         dataset = SecurityGroup.where(guid: visible_security_group_guids)
+        dataset = SecurityGroupFetcher.eager_load_running_and_staging_space_guids(dataset)
         filter(message, dataset)
       end
 

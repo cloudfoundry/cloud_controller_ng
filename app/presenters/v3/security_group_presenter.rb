@@ -25,10 +25,10 @@ module VCAP::CloudController::Presenters::V3
         },
         relationships: {
           running_spaces: {
-            data: space_guid_hash_for(security_group.spaces_dataset)
+            data: space_guid_hash_for(security_group.spaces)
           },
           staging_spaces: {
-            data: space_guid_hash_for(security_group.staging_spaces_dataset)
+            data: space_guid_hash_for(security_group.staging_spaces)
           }
         },
         links: build_links,
@@ -41,8 +41,8 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    def space_guid_hash_for(dataset)
-      dataset.select(:guid).all.select { |space| @visible_space_guids.include? space.guid }.map { |space| { guid: space.guid } }
+    def space_guid_hash_for(spaces)
+      spaces.select { |space| @visible_space_guids.include? space.guid }.map { |space| { guid: space.guid } }
     end
 
     def build_links

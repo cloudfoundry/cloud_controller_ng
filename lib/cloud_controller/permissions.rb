@@ -111,11 +111,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_org_guids
-    if can_read_globally?
-      VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
-    else
-      membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
-    end
+    readable_org_guids_query.all.map(&:guid)
   end
 
   def readable_org_guids_query
@@ -154,11 +150,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_space_guids
-    if can_read_globally?
-      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
-    else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_READING)
-    end
+    readable_space_guids_query.all.map(&:guid)
   end
 
   def readable_space_guids_query
@@ -283,7 +275,11 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_security_group_guids
-    VCAP::CloudController::SecurityGroup.user_visible(@user, can_read_globally?).map(&:guid)
+    readable_security_group_guids_query.all.map(&:guid)
+  end
+
+  def readable_security_group_guids_query
+    VCAP::CloudController::SecurityGroup.user_visible(@user, can_read_globally?).select(:guid)
   end
 
   def can_update_build_state?
