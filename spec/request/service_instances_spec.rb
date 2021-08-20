@@ -562,7 +562,6 @@ RSpec.describe 'V3 service instances' do
           response_object: parameters,
         )
 
-        # h['space_supporter'] = { code: 403 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
