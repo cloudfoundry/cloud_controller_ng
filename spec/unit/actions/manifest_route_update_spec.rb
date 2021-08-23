@@ -48,6 +48,26 @@ module VCAP::CloudController
               }.not_to change { route_mapping.reload.updated_at }
             end
           end
+
+          context 'when the new route has a protocol' do
+            let(:message) do
+              ManifestRoutesUpdateMessage.new(
+                routes: [
+                  { route: 'http://potato.tomato.avocado-toast.com/some-path', protocol: 'http2' }
+                ]
+              )
+            end
+
+            it 'will update (or recreate) the route mapping with the new protocol' do
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+              route_mappings = route.reload.route_mappings
+
+              expect(route_mappings.count).to eq(1)
+              mapped_route = route_mappings.first
+              expect(mapped_route.protocol).to eq('http2')
+            end
+          end
         end
 
         context 'when the route is not mapped to the app' do

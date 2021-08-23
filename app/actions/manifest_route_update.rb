@@ -33,16 +33,26 @@ module VCAP::CloudController
 
         # map route to app, but do this only if the full message contains valid routes
         routes_to_map.
-          select { |route| RouteMappingModel.find(app: app, route: route[:model]).nil? }.
           each do |route|
-          UpdateRouteDestinations.add(
-            [{ app_guid: app_guid, process_type: 'web', protocol: route[:protocol] }],
-            route[:model],
-            apps_hash,
-            user_audit_info,
-            manifest_triggered: true
-          )
-        end
+            route_mapping = RouteMappingModel.find(app: app, route: route[:model])
+            if route_mapping.nil?
+              UpdateRouteDestinations.add(
+                [{ app_guid: app_guid, process_type: 'web', protocol: route[:protocol] }],
+                route[:model],
+                apps_hash,
+                user_audit_info,
+                manifest_triggered: true
+              )
+            elsif !route[:protocol].nil? && route[:protocol] != route_mapping.protocol
+              UpdateRouteDestinations.replace(
+                [{ app_guid: app_guid, process_type: 'web', protocol: route[:protocol] }],
+                route[:model],
+                apps_hash,
+                user_audit_info,
+                manifest_triggered: true
+              )
+            end
+          end
       rescue Sequel::ValidationFailed, RouteCreate::Error => e
         raise InvalidRoute.new(e.message)
       end
