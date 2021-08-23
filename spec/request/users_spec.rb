@@ -161,7 +161,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
       context 'when the actee has an org or space role' do
@@ -213,7 +213,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -232,7 +232,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
       context 'when filtering by usernames and origins' do
@@ -280,7 +280,7 @@ RSpec.describe 'Users Request' do
           )
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
       context 'when filtering by usernames' do
@@ -305,7 +305,7 @@ RSpec.describe 'Users Request' do
           )
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
         context 'when UAA is disabled' do
           before do
@@ -452,7 +452,7 @@ RSpec.describe 'Users Request' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the actee has an org or space role' do
@@ -472,7 +472,7 @@ RSpec.describe 'Users Request' do
         org.add_user(actee)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the user is not logged in' do
@@ -852,7 +852,7 @@ RSpec.describe 'Users Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the actee has an org or space role' do
@@ -874,7 +874,7 @@ RSpec.describe 'Users Request' do
           org.add_user(actee)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when metadata is invalid' do
@@ -926,7 +926,7 @@ RSpec.describe 'Users Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
     context 'when the actee has an org or space role' do
@@ -941,7 +941,7 @@ RSpec.describe 'Users Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
     context 'when the user is not logged in' do
@@ -989,7 +989,7 @@ RSpec.describe 'Users Request' do
     end
 
     context 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 404)
           h['admin'] = { code: 202 }

@@ -17,7 +17,7 @@ class AppFeaturesController < ApplicationController
 
   def index
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     resources = presented_app_features(app)
 
     render status: :ok, json: {
@@ -28,7 +28,7 @@ class AppFeaturesController < ApplicationController
 
   def show
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     resource_not_found!(:feature) unless APP_FEATURES.include?(hashed_params[:name])
 
     render status: :ok, json: feature_presenter_for(hashed_params[:name], app)
@@ -37,12 +37,12 @@ class AppFeaturesController < ApplicationController
   def update
     app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     name = hashed_params[:name]
     resource_not_found!(:feature) unless APP_FEATURES.include?(name)
     if UNTRUSTED_APP_FEATURES.include?(name)
-      unauthorized! unless permission_queryer.untrusted_can_write_to_space?(space.guid)
+      unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
     else
       unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     end
@@ -57,7 +57,7 @@ class AppFeaturesController < ApplicationController
   def ssh_enabled
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.untrusted_can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, Config.config.get(:allow_app_ssh_access))
   end

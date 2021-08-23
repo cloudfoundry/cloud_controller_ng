@@ -111,7 +111,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the user can create an app' do
@@ -552,7 +552,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'query list parameters' do
@@ -1387,7 +1387,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the user has permission to view the app' do
@@ -1607,7 +1607,7 @@ RSpec.describe 'Apps' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when VCAP_SERVICES contains potentially sensitive information' do
@@ -1739,14 +1739,14 @@ RSpec.describe 'Apps' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
           VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
             h = Hash.new(code: 403)
             h['admin'] = h['admin_read_only'] = { code: 200, response_object: expected_response }
@@ -1819,7 +1819,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'as a developer' do
@@ -1958,7 +1958,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -2019,7 +2019,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'deleting metadata' do
@@ -2207,7 +2207,7 @@ RSpec.describe 'Apps' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'telemetry' do
@@ -2329,7 +2329,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'events' do
@@ -2484,7 +2484,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
@@ -2579,7 +2579,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'events' do
@@ -2727,7 +2727,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'telemetry' do
@@ -2835,7 +2835,7 @@ RSpec.describe 'Apps' do
           space.organization.add_user(user)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
@@ -2869,7 +2869,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
@@ -2932,7 +2932,7 @@ RSpec.describe 'Apps' do
       app_model.save
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
@@ -3000,7 +3000,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'events' do
@@ -3149,7 +3149,7 @@ RSpec.describe 'Apps' do
       space.organization.add_user(user)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:update_request) do
         {
           var: {
@@ -3214,7 +3214,7 @@ RSpec.describe 'Apps' do
       space.organization.add_user(user)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)
         h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = { code: 403 }
@@ -3231,7 +3231,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 404)
           h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = h['space_developer'] = h['space_supporter'] = { code: 403 }
@@ -3278,6 +3278,6 @@ RSpec.describe 'Apps' do
       h.freeze
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 end

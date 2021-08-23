@@ -90,7 +90,7 @@ RSpec.describe 'Deployments' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when a droplet is supplied with the request' do
@@ -865,7 +865,7 @@ RSpec.describe 'Deployments' do
       })
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       before do
         space.remove_developer(user)
       end
@@ -948,7 +948,7 @@ RSpec.describe 'Deployments' do
       h.freeze
     }
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
   describe 'GET /v3/deployments/' do
@@ -1134,7 +1134,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1182,7 +1182,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1223,7 +1223,7 @@ RSpec.describe 'Deployments' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
           context 'pagination' do
             let(:pagination_hsh) do
@@ -1391,7 +1391,7 @@ RSpec.describe 'Deployments' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the deployment is running and has a previous droplet' do

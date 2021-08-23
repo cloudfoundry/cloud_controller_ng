@@ -320,7 +320,7 @@ module VCAP::CloudController
           organization3.remove_user(user)
         end
 
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
           let(:api_call) { lambda { |user_headers| get 'v3/organizations', nil, user_headers } }
           let(:space) { VCAP::CloudController::Space.make }
           let(:org) { space.organization }
@@ -578,7 +578,7 @@ module VCAP::CloudController
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
         end
 
         describe 'when filtering by name' do
@@ -597,7 +597,7 @@ module VCAP::CloudController
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
         end
 
         describe 'when filtering by guid' do
@@ -616,7 +616,7 @@ module VCAP::CloudController
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
         end
 
         describe 'when filtering by organization_guid' do
@@ -639,7 +639,7 @@ module VCAP::CloudController
             h.freeze
           end
 
-          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
         end
       end
 
@@ -906,7 +906,7 @@ module VCAP::CloudController
             }
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
 
         context 'when at least one non-internal shared domain exists' do
@@ -940,7 +940,7 @@ module VCAP::CloudController
             }
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
 
@@ -954,7 +954,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when only tcp domains exist' do
@@ -967,7 +967,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when no domains exist' do
@@ -978,7 +978,7 @@ module VCAP::CloudController
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1018,7 +1018,7 @@ module VCAP::CloudController
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when the org does not exist' do
         it 'returns a 404' do
@@ -1110,7 +1110,7 @@ module VCAP::CloudController
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when the org is suspended' do
         before do
@@ -1118,7 +1118,7 @@ module VCAP::CloudController
           expected_response_object['suspended'] = true
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1340,7 +1340,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
       end
 
       describe 'when the user is not logged in' do

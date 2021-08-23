@@ -34,7 +34,7 @@ RSpec.describe 'Droplets' do
     end
 
     describe 'when creating a droplet' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
 
         let(:droplet_json) do
@@ -262,7 +262,7 @@ RSpec.describe 'Droplets' do
         droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ key: 'http://buildpack.git.url.com', version: '0.3', name: 'git' }], stack: 'stack-name')
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the droplet has a docker lifecycle' do
@@ -328,7 +328,7 @@ RSpec.describe 'Droplets' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -389,7 +389,7 @@ RSpec.describe 'Droplets' do
         expect(failures).to eq(0)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'downloads the bit(s) for a droplet' do
         get "/v3/droplets/#{guid}/download", nil, developer_headers
@@ -715,7 +715,7 @@ RSpec.describe 'Droplets' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -996,7 +996,7 @@ RSpec.describe 'Droplets' do
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
-    it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
       let(:api_call) { lambda { |user_headers| delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
@@ -1268,7 +1268,7 @@ RSpec.describe 'Droplets' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1463,7 +1463,7 @@ RSpec.describe 'Droplets' do
         h.freeze
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1495,7 +1495,7 @@ RSpec.describe 'Droplets' do
       og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:api_call) { lambda { |user_headers| post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, user_headers } }
       let(:expected_copied_response) do
         {
@@ -1617,7 +1617,7 @@ RSpec.describe 'Droplets' do
       allow(File).to receive(:stat).and_return(instance_double(File::Stat, size: 12))
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:expected_event_hash) do
         {
           type: 'audit.app.droplet.upload',
@@ -1728,7 +1728,7 @@ RSpec.describe 'Droplets' do
     context 'when the droplet exists' do
       let(:guid) { og_droplet.guid }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:droplet_json) do
           {
             guid: og_droplet.guid,

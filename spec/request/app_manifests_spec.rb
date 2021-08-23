@@ -71,7 +71,7 @@ RSpec.describe 'App Manifests' do
         space.remove_developer(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'for a buildpack' do

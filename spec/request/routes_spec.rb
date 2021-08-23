@@ -186,7 +186,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     describe 'includes' do
@@ -979,7 +979,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     describe 'when the user is not logged in' do
@@ -1203,7 +1203,7 @@ RSpec.describe 'Routes Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
 
@@ -1366,7 +1366,7 @@ RSpec.describe 'Routes Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
     end
@@ -1464,7 +1464,7 @@ RSpec.describe 'Routes Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
 
@@ -1535,7 +1535,7 @@ RSpec.describe 'Routes Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
 
@@ -1623,7 +1623,7 @@ RSpec.describe 'Routes Request' do
         end
 
         context 'and the user provides a valid port' do
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
           context 'and a route with the domain and port already exist' do
             let!(:duplicate_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
@@ -1661,7 +1661,7 @@ RSpec.describe 'Routes Request' do
             }
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
           context 'and randomly selected port is already in use' do
             let(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
@@ -1757,7 +1757,7 @@ RSpec.describe 'Routes Request' do
           h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1878,7 +1878,7 @@ RSpec.describe 'Routes Request' do
             h.freeze
           end
 
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
     end
@@ -2112,7 +2112,7 @@ RSpec.describe 'Routes Request' do
         VCAP::CloudController::Config.config.set(:system_domain, domain.name)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     describe 'quotas' do
@@ -2418,7 +2418,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the user is not a member in the routes org' do
@@ -2478,7 +2478,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when route does not exist' do
@@ -2568,7 +2568,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
         let(:expected_event_hash) do
           {
             type: 'audit.route.delete-request',
@@ -2703,7 +2703,7 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     context 'ports filter' do

@@ -119,7 +119,7 @@ RSpec.describe 'Space Manifests' do
         space.remove_developer(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
         let(:org) { space.organization }
         let(:expected_codes_and_responses) do
@@ -650,7 +650,7 @@ RSpec.describe 'Space Manifests' do
         default_manifest.to_yaml
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the app name has changed' do

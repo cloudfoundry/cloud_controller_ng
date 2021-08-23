@@ -82,7 +82,7 @@ RSpec.describe 'IsolationSegmentModels' do
         space.update(isolation_segment_guid: isolation_segment_model.guid)
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -129,7 +129,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'permissions' do
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_headers } }
         let(:org) { space1.organization }
         let(:space) { space1 }
@@ -225,7 +225,7 @@ RSpec.describe 'IsolationSegmentModels' do
         assigner.assign(isolation_segment_model, [space.organization])
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -238,7 +238,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'permissions for unscoped isolation segments' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -478,7 +478,7 @@ RSpec.describe 'IsolationSegmentModels' do
       before do
         assigner.assign(iso_seg1, [space.organization])
       end
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter'] do
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get '/v3/isolation_segments', nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }

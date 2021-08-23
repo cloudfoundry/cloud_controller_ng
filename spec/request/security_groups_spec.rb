@@ -696,7 +696,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     context 'filtering security groups' do
@@ -820,7 +820,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'getting a security group NOT globally enabled, associated with spaces' do
@@ -892,7 +892,7 @@ RSpec.describe 'Security_Groups Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'getting a security group globally enabled' do
@@ -927,7 +927,7 @@ RSpec.describe 'Security_Groups Request' do
         Hash.new(code: 200, response_object: expected_response)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'security group does not exist' do

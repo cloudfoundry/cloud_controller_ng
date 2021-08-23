@@ -46,6 +46,7 @@ RSpec.describe AppManifestsController, type: :controller do
             'space_developer' => 200,
             'space_manager' => 403,
             'space_auditor' => 403,
+            'space_supporter' => 403,
             'org_manager' => 403,
             'org_auditor' => 404,
             'org_billing_manager' => 404,

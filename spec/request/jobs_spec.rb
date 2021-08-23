@@ -175,7 +175,7 @@ RSpec.describe 'Jobs' do
         space.organization.add_user(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ['space_supporter']
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 end
