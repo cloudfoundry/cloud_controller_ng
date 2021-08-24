@@ -346,6 +346,54 @@ module VCAP::CloudController
           ])
         end
       end
+
+      context 'when the user passes in protocols manifest' do
+        context 'when it is same protocol' do
+          let(:default_manifest) {
+            {
+              'applications' => [
+                {
+                  'name' => app1_model.name,
+                  'routes' => [
+                    {
+                      'route' => "a_host.#{shared_domain.name}",
+                      'protocol' => 'http1'
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+
+          it 'returns an empty diff if the field is equivalent' do
+            expect(subject).to match_array([])
+          end
+        end
+
+        context 'when it is different protocol' do
+          let(:default_manifest) {
+            {
+              'applications' => [
+                {
+                  'name' => app1_model.name,
+                  'routes' => [
+                    {
+                      'route' => "a_host.#{shared_domain.name}",
+                      'protocol' => 'http2'
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+
+          it 'returns an empty diff if the field is equivalent' do
+            expect(subject).to match_array([
+              { 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' },
+            ])
+          end
+        end
+      end
     end
   end
 end
