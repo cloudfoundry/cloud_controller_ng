@@ -58,6 +58,11 @@ module VCAP::CloudController
         manifest_app_hash = manifest_app_hash.except('metadata') if manifest_app_hash['metadata'] == {}
       end
 
+      # TODO(wfung): Remove this when we do diffing 4realz
+      if manifest_app_hash.key? 'routes'
+        manifest_app_hash['routes'] = manifest_app_hash['routes'].map { |route| route.merge({ 'protocol' => 'http1' }) }
+      end
+
       manifest_app_hash
     end
     # rubocop:enable Metrics/CyclomaticComplexity
@@ -77,7 +82,7 @@ module VCAP::CloudController
           manifest_presenter = Presenters::V3::AppManifestPresenter.new(
             existing_app,
             existing_app.service_bindings,
-            existing_app.routes,
+            existing_app.route_mappings,
           )
           existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
           web_process_hash = existing_app_hash['processes'].find { |p| p['type'] == 'web' }

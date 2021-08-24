@@ -26,6 +26,7 @@ applications:
   - my-service
   routes:
   - route: my-app.example.com
+    protocol: http1
   processes:
   - type: web
     instances: 2
