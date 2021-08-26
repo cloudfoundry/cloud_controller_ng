@@ -10,6 +10,9 @@ class HttpResponseError < StructuredError
 
     begin
       source = MultiJson.load(response.body)
+    rescue ArgumentError
+      # Either Oj should raise Oj::ParseError instead of ArgumentError, or MultiJson should also wrap
+      # ArgumentError into MultiJson::Adapters::Oj::ParseError
     rescue MultiJson::ParseError
       source = response.body
     end
