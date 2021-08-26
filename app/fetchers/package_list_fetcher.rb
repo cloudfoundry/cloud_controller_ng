@@ -13,8 +13,7 @@ module VCAP::CloudController
       end
 
       def fetch_for_app(message:)
-        app_dataset = AppModel.where(guid: message.app_guid).eager(:space, :organization)
-        app = app_dataset.first
+        app = AppModel.where(guid: message.app_guid).first
         return [nil, nil] unless app
 
         dataset = PackageModel.dataset.select_all(PackageModel.table_name).

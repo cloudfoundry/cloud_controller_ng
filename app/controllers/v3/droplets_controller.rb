@@ -52,7 +52,7 @@ class DropletsController < ApplicationController
   end
 
   def show
-    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
+    droplet = DropletModel.where(guid: hashed_params[:guid]).first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
     show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid)
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
@@ -91,10 +91,10 @@ class DropletsController < ApplicationController
     message = DropletCopyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).eager(:space, space: :organization).first
+    source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).first
     droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
-    destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
+    destination_app = AppModel.where(guid: message.app_guid).first
     app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
@@ -105,7 +105,7 @@ class DropletsController < ApplicationController
     message = DropletCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app = AppModel.where(guid: message.relationships_message.app_guid).eager(:space, :organization).first
+    app = AppModel.where(guid: message.relationships_message.app_guid).first
     unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
@@ -116,7 +116,7 @@ class DropletsController < ApplicationController
     message = DropletUploadMessage.create_from_params(hashed_params[:body])
     combine_messages(message.errors.full_messages) unless message.valid?
 
-    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space).first
+    droplet = DropletModel.where(guid: hashed_params[:guid]).first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
@@ -138,7 +138,7 @@ class DropletsController < ApplicationController
   end
 
   def download
-    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space, space: :organization).first
+    droplet = DropletModel.where(guid: hashed_params[:guid]).first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
     unauthorized! unless permission_queryer.can_download_droplet?(droplet.space.guid, droplet.space.organization.guid)

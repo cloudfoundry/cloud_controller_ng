@@ -14,14 +14,14 @@ module VCAP::CloudController
       end
 
       def fetch_for_app(message)
-        app = AppModel.where(guid: message.app_guid).eager(:space, space: :organization).first
+        app = AppModel.where(guid: message.app_guid).first
         return nil unless app
 
         [app, filter(message, app, nil, app.droplets_dataset)]
       end
 
       def fetch_for_package(message)
-        package = PackageModel.where(guid: message.package_guid).eager(:space, space: :organization).first
+        package = PackageModel.where(guid: message.package_guid).first
         return nil unless package
 
         [package, filter(message, nil, nil, package.droplets_dataset)]

@@ -1,10 +1,7 @@
 module VCAP::CloudController
   class TaskFetcher
     def fetch_for_app(task_guid:, app_guid:)
-      app = AppModel.where(guid: app_guid).eager(
-        :space,
-        space: :organization
-      ).first
+      app = AppModel.where(guid: app_guid).first
 
       return nil unless app
 
@@ -14,10 +11,7 @@ module VCAP::CloudController
     end
 
     def fetch(task_guid:)
-      task = TaskModel.where(guid: task_guid).eager(
-        :space,
-        space: :organization
-      ).first
+      task = TaskModel.where(guid: task_guid).first
 
       return nil unless task
 
