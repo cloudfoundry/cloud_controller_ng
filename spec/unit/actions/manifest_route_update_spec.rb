@@ -58,13 +58,18 @@ module VCAP::CloudController
               )
             end
 
+            before do
+              route2 = Route.make(host: 'potatotwo', domain: domain, path: '/some-path', space: app.space)
+              RouteMappingModel.make(app: app, route: route2)
+            end
+
             it 'will update (or recreate) the route mapping with the new protocol' do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
 
-              route_mappings = route.reload.route_mappings
+              route_mappings = app.reload.route_mappings
 
-              expect(route_mappings.count).to eq(1)
-              mapped_route = route_mappings.first
+              expect(route_mappings.count).to eq(2)
+              mapped_route = route_mappings.find { |rm| rm.route == route }
               expect(mapped_route.protocol).to eq('http2')
             end
           end
