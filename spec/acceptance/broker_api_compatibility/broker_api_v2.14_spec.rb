@@ -48,7 +48,6 @@ RSpec.describe 'Service Broker API integration' do
 
           it 'sends the broker the X-Broker-Api-Originating-Identity header' do
             user = VCAP::CloudController::User.make
-            base64_encoded_user_id = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
 
             get("/v2/service_bindings/#{@binding_guid}/parameters",
               {}.to_json,
@@ -56,7 +55,9 @@ RSpec.describe 'Service Broker API integration' do
 
             expect(
               a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
-                req.headers['X-Broker-Api-Originating-Identity'] == "cloudfoundry #{base64_encoded_user_id}"
+                m = req.headers['X-Broker-Api-Originating-Identity'].match /(?<platform>\S+) (?<value>\S+)/
+                value = MultiJson.load(Base64.strict_decode64(m[:value]))
+                m[:platform] == 'cloudfoundry' && value['user_id'] == user.guid
               end
             ).to have_been_made
           end
@@ -177,7 +178,7 @@ RSpec.describe 'Service Broker API integration' do
               async_bind_service(status: 202)
 
               service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
-              stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: '{"credentials": {"foo": true}')
+              stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: '{"credentials": {"foo": true}}')
 
               Delayed::Worker.new.work_off
 
