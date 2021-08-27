@@ -28,8 +28,8 @@ RSpec.describe 'App Manifests' do
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-1') }
     let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-2') }
 
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
-    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: second_route) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, protocol: nil) }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: second_route, protocol: nil) }
 
     let!(:worker_process) do
       VCAP::CloudController::ProcessModelFactory.make(
@@ -91,8 +91,14 @@ RSpec.describe 'App Manifests' do
               'stack' => buildpack.stack,
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
-                { 'route' => "#{route.host}.#{route.domain.name}" },
-                { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
+                {
+                  'route' => "#{route.host}.#{route.domain.name}",
+                  'protocol' => 'http1'
+                },
+                {
+                  'route' => "#{second_route.host}.#{second_route.domain.name}/path",
+                  'protocol' => 'http1'
+                }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
               'processes' => [
@@ -181,8 +187,14 @@ RSpec.describe 'App Manifests' do
               },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
-                { 'route' => "#{route.host}.#{route.domain.name}" },
-                { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
+                {
+                  'route' => "#{route.host}.#{route.domain.name}",
+                  'protocol' => 'http1'
+                },
+                {
+                  'route' => "#{second_route.host}.#{second_route.domain.name}/path",
+                  'protocol' => 'http1'
+                }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
               'processes' => [
@@ -223,6 +235,44 @@ RSpec.describe 'App Manifests' do
 
       it 'retrieves an app manifest for the app' do
         get "/v3/apps/#{app_model.guid}/manifest", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq(expected_yml_manifest)
+      end
+    end
+
+    context 'for a protocol' do
+      let(:simple_app) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: simple_app, route: route, protocol: 'http2') }
+      let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: simple_app, route: second_route, protocol: nil) }
+
+      let(:expected_yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => simple_app.name,
+              'stack' => 'itaewon_class_best_kdrama',
+              'routes' => [
+                {
+                  'route' => "#{route.host}.#{route.domain.name}",
+                  'protocol' => 'http2'
+                },
+                {
+                  'route' => "#{second_route.host}.#{second_route.domain.name}/path",
+                  'protocol' => 'http1'
+                }
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      before do
+        simple_app.lifecycle_data.update(stack: 'itaewon_class_best_kdrama')
+      end
+
+      it 'shows the protocol' do
+        get "/v3/apps/#{simple_app.guid}/manifest", nil, user_header
 
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq(expected_yml_manifest)

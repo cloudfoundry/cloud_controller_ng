@@ -22,6 +22,7 @@ applications:
   routes:
   - route: route.example.com
   - route: another-route.example.com
+    protocol: http2
   services:
   - my-service1
   - my-service2
@@ -92,7 +93,7 @@ Name | Type | Description
 **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types
 **random-route** | _boolean_ | Creates a random route for the app if `true`; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
 **default-route** | _boolean_ | If true, a route for the app will be created using the app name as the hostname and the containing organization's default domain as the domain; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
-**routes** | _array of route objects_ | List declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist; example route object: `- route: www.examplecom/path`
+**routes** | _array of route objects_ | List declaring HTTP and TCP routes to be mapped to the app. The route object contains a route, and an optional protocol. The allowed protocols are: http2, http1, tcp. Each route is created if it does not already exist. The protocol will be updated for any existing route mapping. Example route object: `- {route: www.examplecom/path, protocol: http2}`
 **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
 **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
 **stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`

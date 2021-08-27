@@ -39,8 +39,14 @@ RSpec.describe 'Space Manifests' do
               'k3' => 'watermelon'
             },
             'routes' => [
-              { 'route' => "https://#{route.host}.#{route.domain.name}" },
-              { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
+              {
+                'route' => "https://#{route.host}.#{route.domain.name}",
+                'protocol' => 'http1',
+              },
+              {
+                'route' => "https://#{second_route.host}.#{second_route.domain.name}/path",
+                'protocol' => 'http2',
+              }
             ],
             'services' => [
               service_instance_1.name,
@@ -167,6 +173,8 @@ RSpec.describe 'Space Manifests' do
         'k3' => 'watermelon'
       )
       expect(app1_model.routes).to match_array([route, second_route])
+      expect(route.route_mappings_dataset.first(app: app1_model).protocol).to eq('http1')
+      expect(second_route.route_mappings_dataset.first(app: app1_model).protocol).to eq('http2')
 
       expect(app1_model.service_bindings.map(&:service_instance)).to contain_exactly(service_instance_1, service_instance_2)
       expect(service_instance_1.service_bindings.first.name).to be_nil

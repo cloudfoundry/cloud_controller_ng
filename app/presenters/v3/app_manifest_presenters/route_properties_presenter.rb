@@ -3,13 +3,21 @@ module VCAP::CloudController
     module V3
       module AppManifestPresenters
         class RoutePropertiesPresenter
-          def to_hash(routes:, **_)
-            route_hashes = alphabetize(routes.map(&:uri)).map { |uri| { route: uri } }
-            { routes: route_hashes.presence, }
+          def to_hash(route_mappings:, app:, **_)
+            route_hashes = route_mappings.map do |route_mapping|
+              {
+                route: route_mapping.route.uri,
+                protocol: route_mapping.protocol
+              }
+            end
+
+            { routes: alphabetize(route_hashes).presence, }
           end
 
+          private
+
           def alphabetize(array)
-            array.sort_by(&:downcase)
+            array.sort_by { |obj| obj[:route].downcase }
           end
         end
       end

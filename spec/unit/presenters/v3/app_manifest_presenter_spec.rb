@@ -13,12 +13,12 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       context 'when the app has no associated resources' do
         let(:service_bindings) { [] }
-        let(:routes) { [] }
+        let(:route_mappings) { [] }
         let(:environment_variables) { nil }
 
         context 'for buildpack apps' do
           it 'only returns the application name and stack' do
-            result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+            result = AppManifestPresenter.new(app, service_bindings, route_mappings).to_hash
             application = result[:applications].first
             expect(application).to eq({ name: app.name, stack: app.lifecycle_data.stack })
           end
@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
           }
 
           it 'only returns application name' do
-            result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+            result = AppManifestPresenter.new(app, service_bindings, route_mappings).to_hash
             application = result[:applications].first
             expect(application).to eq({ name: app.name })
           end
@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3
           let(:environment_variables) { {} }
 
           it 'does not include the environment variables key' do
-            result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+            result = AppManifestPresenter.new(app, service_bindings, route_mappings).to_hash
             application = result[:applications].first
             expect(application[:env]).to be_nil
           end
@@ -69,8 +69,8 @@ module VCAP::CloudController::Presenters::V3
 
         let(:route) { VCAP::CloudController::Route.make host: 'aaa' }
         let(:route2) { VCAP::CloudController::Route.make host: 'zzz' }
-
-        let(:routes) { [route2, route] }
+        let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
+        let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route2) }
 
         let!(:process1) do
           VCAP::CloudController::ProcessModelFactory.make(
@@ -100,7 +100,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app.guid) }
 
         it 'presents the app manifest' do
-          result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+          result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
 
           application = result[:applications].first
           expect(application[:name]).to eq(app.name)
@@ -109,8 +109,8 @@ module VCAP::CloudController::Presenters::V3
             service_instance2.name
           ])
           expect(application[:routes]).to eq([
-            { route: route.uri },
-            { route: route2.uri }
+            { route: route.uri, protocol: 'http1' },
+            { route: route2.uri, protocol: 'http1' }
           ])
           expect(application[:env]).to match({ 'one' => 'potato', 'two' => 'tomato' })
           expect(application[:metadata]).to match({ labels: { 'potato' => 'idaho' }, annotations: { 'style' => 'mashed' } })
@@ -159,7 +159,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'does not include the missing attributes in the hash' do
-            result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+            result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
             application = result[:applications].first
 
             expect(application[:processes]).to eq([
@@ -191,7 +191,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'presents the buildpacks in the order originally specified (not alphabetical)' do
-            result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+            result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
             application = result[:applications].first
             expect(application[:stack]).to eq(app.lifecycle_data.stack)
             expect(application[:buildpacks]).to eq(['limabean', 'git://user:pass@github.com/repo'])
@@ -218,7 +218,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'presents the docker image and username' do
-              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
               application = result[:applications].first
 
               expect(application[:buildpacks]).to be_nil
@@ -233,7 +233,7 @@ module VCAP::CloudController::Presenters::V3
               let(:docker_username) { nil }
 
               it 'does not return a username' do
-                result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+                result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
                 application = result[:applications].first
 
                 expect(application[:buildpacks]).to be_nil
@@ -261,7 +261,7 @@ module VCAP::CloudController::Presenters::V3
 
             it 'omits all docker information, even if the app has packages' do
               expect(app.packages).to have(1).items
-              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
               application = result[:applications].first
 
               expect(application[:docker]).to be_nil
@@ -277,7 +277,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'does not present the metadata hash' do
-              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
 
               application = result[:applications].first
               expect(application[:metadata]).to be_nil
@@ -290,7 +290,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'presents labels and does not present the annotations hash' do
-              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
 
               application = result[:applications].first
               expect(application[:metadata]).to match({ labels: { 'potato' => 'idaho' } })
@@ -303,7 +303,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             it 'presents annotations and does not present the labels hash' do
-              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
 
               application = result[:applications].first
               expect(application[:metadata]).to match({ annotations: { 'style' => 'mashed' } })

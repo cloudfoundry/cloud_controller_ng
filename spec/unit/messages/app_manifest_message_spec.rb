@@ -333,7 +333,7 @@ module VCAP::CloudController
             {
               name: 'eugene',
               routes: [
-                { route: 'existing.example.com' },
+                { route: 'existing.example.com', protocol: 'http2' },
                 { route: 'new.example.com' },
               ]
             }

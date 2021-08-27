@@ -24,13 +24,19 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validates_with ManifestRoutesYAMLValidator, if: proc { |record| record.requested?(:routes) }
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
+    validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
     validate :random_route_and_default_route_conflict
 
-    def manifest_routes
-      @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
+    def manifest_route_mappings
+      @manifest_route_mappings ||= routes.map do |route|
+        {
+          route: ManifestRoute.parse(route[:route]),
+          protocol: route[:protocol]
+        }
+      end
     end
 
     private
@@ -38,10 +44,20 @@ module VCAP::CloudController
     def routes_are_uris
       return if errors[:routes].present?
 
-      manifest_routes.each do |manifest_route|
-        next if manifest_route.valid?
+      manifest_route_mappings.each do |manifest_route_mapping|
+        next if manifest_route_mapping[:route].valid?
 
-        errors.add(:base, "The route '#{manifest_route}' is not a properly formed URL")
+        errors.add(:base, "The route '#{manifest_route_mapping[:route]}' is not a properly formed URL")
+      end
+    end
+
+    def route_protocols_are_valid
+      return if errors[:routes].present?
+
+      manifest_route_mappings.each do |manifest_route_mapping|
+        next if manifest_route_mapping[:protocol].nil? || RouteMappingModel::VALID_PROTOCOLS.include?(manifest_route_mapping[:protocol])
+
+        errors.add(:base, "Route protocol must be 'http1', 'http2' or 'tcp'.")
       end
     end
 
