@@ -10950,6 +10950,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   <span class="s">routes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">route</span><span class="pi">:</span> <span class="s">route.example.com</span>
   <span class="pi">-</span> <span class="s">route</span><span class="pi">:</span> <span class="s">another-route.example.com</span>
+    <span class="s">protocol</span><span class="pi">:</span> <span class="s">http2</span>
   <span class="s">services</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
@@ -11075,7 +11076,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>routes</strong></td>
 <td><em>array of route objects</em></td>
-<td>List declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist; example route object: <code class="prettyprint">- route: www.examplecom/path</code></td>
+<td>List declaring HTTP and TCP routes to be mapped to the app. The route object contains a route, and an optional protocol. The allowed protocols are: http2, http1, tcp. Each route is created if it does not already exist. The protocol will be updated for any existing route mapping. Example route object: <code class="prettyprint">- {route: www.examplecom/path, protocol: http2}</code></td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
@@ -11292,6 +11293,7 @@ applications:
   - my-service
   routes:
   - route: my-app.example.com
+    protocol: http1
   processes:
   - type: web
     instances: 2
