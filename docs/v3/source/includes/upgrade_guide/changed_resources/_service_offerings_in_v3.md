@@ -4,9 +4,9 @@ Services resource is now replaced by [service offerings resource](#service-offer
 
 Some services related endpoints nested in other resources have been translated to filters on `service_offerings`, with the advantage that filters accept multiple values and can be combined.
 
-`GET /v2/organizations/:guid/services` is now `GET /v3/service_offerings?organization_ids=guid`.
+`GET /v2/organizations/:guid/services` is now `GET /v3/service_offerings?organization_guids=guid`.
 
-`GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_ids=guid`
+`GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_guids=guid`
 
 `GET /v2/services/:guid/service_plans` is now a filter on the service plan resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
 
