@@ -93,7 +93,7 @@ Name | Type | Description
 **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types
 **random-route** | _boolean_ | Creates a random route for the app if `true`; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
 **default-route** | _boolean_ | If true, a route for the app will be created using the app name as the hostname and the containing organization's default domain as the domain; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
-**routes** | _array of route objects_ | List declaring HTTP and TCP routes to be mapped to the app. The route object contains a route, and an optional protocol. The allowed protocols are: http2, http1, tcp. Each route is created if it does not already exist. The protocol will be updated for any existing route mapping. Example route object: `- {route: www.examplecom/path, protocol: http2}`
+**routes** | _array of [route configurations](#space-manifest-route-level-configuration)_  | List declaring HTTP and TCP routes to be mapped to the app.
 **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
 **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
 **stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
@@ -118,6 +118,15 @@ Name | Type | Description
 **instances** | _integer_ | The number of instances to run
 **memory** | _string_ | The memory limit for all instances of the web process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
 **timeout** | _integer_ | Time in seconds at which the health-check will report failure
+
+####  <a name="space-manifest-route-level-configuration"></a> Route-level configuration
+This configuration is for _creating_ mappings between the app and a route. Each route is created if it does not already exist. The protocol 
+will be updated for any existing route mapping.
+
+Name | Type | Description
+---- | ---- | -----------
+**route** | _string_ | **(Required)** The route URI. Example: `host.domain.com`
+**protocol** (*experimental*) | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`.
 
 ####  <a name="space-manifest-service-level-configuration"></a> Service-level configuration
 This configuration is _creating_ new service bindings between the app and a service instance. The `services` field can
