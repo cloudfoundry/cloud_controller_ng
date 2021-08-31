@@ -11075,8 +11075,8 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 <tr>
 <td><strong>routes</strong></td>
-<td><em>array of route objects</em></td>
-<td>List declaring HTTP and TCP routes to be mapped to the app. The route object contains a route, and an optional protocol. The allowed protocols are: http2, http1, tcp. Each route is created if it does not already exist. The protocol will be updated for any existing route mapping. Example route object: <code class="prettyprint">- {route: www.examplecom/path, protocol: http2}</code></td>
+<td><em>array of <a href="#space-manifest-route-level-configuration">route configurations</a></em></td>
+<td>List declaring HTTP and TCP routes to be mapped to the app.</td>
 </tr>
 <tr>
 <td><strong>services</strong></td>
@@ -11167,6 +11167,30 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>timeout</strong></td>
 <td><em>integer</em></td>
 <td>Time in seconds at which the health-check will report failure</td>
+</tr>
+</tbody></table>
+
+<h4 id="route-level-configuration"><a name="space-manifest-route-level-configuration"></a> Route-level configuration</h4>
+
+<p>This configuration is for <em>creating</em> mappings between the app and a route. Each route is created if it does not already exist. The protocol 
+will be updated for any existing route mapping.</p>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>route</strong></td>
+<td><em>string</em></td>
+<td><strong>(Required)</strong> The route URI. Example: <code class="prettyprint">host.domain.com</code></td>
+</tr>
+<tr>
+<td><strong>protocol</strong> (<em>experimental</em>)</td>
+<td><em>string</em></td>
+<td>Protocol to use for this route. Valid protocols are <code class="prettyprint">http1</code>, <code class="prettyprint">http2</code>, and <code class="prettyprint">tcp</code>.</td>
 </tr>
 </tbody></table>
 
