@@ -33441,9 +33441,9 @@ an async create or delete <code class="prettyprint">key</code> service credentia
 
 <p>Some services related endpoints nested in other resources have been translated to filters on <code class="prettyprint">service_offerings</code>, with the advantage that filters accept multiple values and can be combined.</p>
 
-<p><code class="prettyprint">GET /v2/organizations/:guid/services</code> is now <code class="prettyprint">GET /v3/service_offerings?organization_ids=guid</code>.</p>
+<p><code class="prettyprint">GET /v2/organizations/:guid/services</code> is now <code class="prettyprint">GET /v3/service_offerings?organization_guids=guid</code>.</p>
 
-<p><code class="prettyprint">GET /v2/spaces/:guid/services</code> is now <code class="prettyprint">GET /v3/service_offerings?space_ids=guid</code></p>
+<p><code class="prettyprint">GET /v2/spaces/:guid/services</code> is now <code class="prettyprint">GET /v3/service_offerings?space_guids=guid</code></p>
 
 <p><code class="prettyprint">GET /v2/services/:guid/service_plans</code> is now a filter on the service plan resource: <code class="prettyprint">GET /v3/service_plans?service_offering_guids=guid</code>. This link can also be found in the object&rsquo;s <code class="prettyprint">links</code> section.</p>
 
