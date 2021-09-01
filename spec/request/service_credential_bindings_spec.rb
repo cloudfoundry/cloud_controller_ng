@@ -1389,7 +1389,7 @@ RSpec.describe 'v3 service credential bindings' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
               Hash.new(code: 403).tap do |h|
-                h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 202 }
+                h['admin'] = h['space_developer'] = { code: 202 }
                 h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 422 }
               end
             end
