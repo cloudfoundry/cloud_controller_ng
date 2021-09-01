@@ -59,11 +59,11 @@ class ServiceCredentialBindingsController < ApplicationController
     case message.type
     when 'app'
       app = get_app!(message.app_guid)
-      unauthorized! unless can_write_to_space?(app.space)
+      unauthorized! unless can_create_and_destroy_service_bindings?(app.space)
 
       create_app_binding(message, service_instance, app)
     when 'key'
-      unauthorized! unless can_write_to_space?(service_instance.space)
+      unauthorized! unless can_update_service_credentials_binding?(service_instance.space)
 
       create_key_binding(message, service_instance)
     end
@@ -100,7 +100,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def destroy
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_write_to_space?(binding_space)
+    unauthorized! unless can_create_and_destroy_service_bindings?(binding_space)
 
     type = service_credential_binding.is_a?(ServiceKey) ? :key : :credential
 
@@ -277,7 +277,7 @@ class ServiceCredentialBindingsController < ApplicationController
     end
   end
 
-  def can_write_to_space?(space)
+  def can_create_and_destroy_service_bindings?(space)
     permission_queryer.can_manage_apps_in_space?(space.guid)
   end
 
