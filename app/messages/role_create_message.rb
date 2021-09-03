@@ -13,12 +13,6 @@ module VCAP::CloudController
         in: VCAP::CloudController::RoleTypes::ALL_ROLES,
         message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
       }
-    validates :type,
-      unless: -> { Config.config.get(:temporary_enable_space_supporter_role) },
-      exclusion: {
-        in: [VCAP::CloudController::RoleTypes::SPACE_SUPPORTER],
-        message: 'space supporter role not enabled',
-      }
 
     delegate :space_guid, :user_guid, :organization_guid, :username, :user_origin, to: :relationships_message
 
