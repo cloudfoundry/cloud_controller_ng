@@ -269,6 +269,7 @@ Rails.application.routes.draw do
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
   patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
+  get '/spaces/:guid/users', to: 'spaces_v3#list_users'
 
   # tasks
   get '/tasks', to: 'tasks#index'

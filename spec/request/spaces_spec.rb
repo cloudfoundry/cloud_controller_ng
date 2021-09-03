@@ -1196,6 +1196,300 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'GET /v3/spaces/:guid/users' do
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+    let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
+    context 'filters' do
+      before do
+        org.add_user(user)
+        space1.add_developer(user)
+        org.add_user(client)
+        space1.add_developer(client)
+        allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+        allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(user.guid, client.guid)).and_return({
+          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+        })
+        allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
+        allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return({
+          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+        })
+        allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
+      end
+
+      it_behaves_like 'list query endpoint' do
+        before do
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+        end
+
+        let(:request) { "/v3/spaces/#{space1.guid}/users" }
+        let(:message) { VCAP::CloudController::UsersListMessage }
+        let(:user_header) { admin_header }
+
+        let(:params) do
+          {
+            guids: ['foo', 'bar'],
+            usernames: ['foo', 'bar'],
+            origins: ['foo', 'bar'],
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            label_selector:   'foo,bar',
+            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 },
+          }
+        end
+      end
+
+      context 'by guid' do
+        it 'returns 200 and the filtered users' do
+          get "/v3/spaces/#{space1.guid}/users?guids=#{user.guid}", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?guids=#{user.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?guids=#{user.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
+
+      context 'by usernames and origins' do
+        let(:user_in_different_origin) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
+        let(:user_with_different_username) { VCAP::CloudController::User.make(guid: 'user_with_different_username') }
+
+        before do
+          org.add_user(user_in_different_origin)
+          org.add_user(user_with_different_username)
+          space1.add_developer(user_in_different_origin)
+          space1.add_developer(user_with_different_username)
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['bob-mcjames'], ['Okta']).and_return([user.guid])
+          allow(uaa_client).to receive(:users_for_ids).with(contain_exactly('user', 'user_in_different_origin')).and_return(
+            {
+              user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+              user_in_different_origin.guid => { 'username' => 'bob-mcjames', 'origin' => 'uaa' },
+            }
+          )
+        end
+        it 'returns 200 and the filtered users' do
+          get "/v3/spaces/#{space1.guid}/users?usernames=bob-mcjames&origins=Okta", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?origins=Okta&page=1&per_page=50&usernames=bob-mcjames" },
+            'last' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?origins=Okta&page=1&per_page=50&usernames=bob-mcjames" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
+
+      context 'by labels' do
+        let!(:user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: user.guid, key_name: 'animal', value: 'dog') }
+
+        it 'returns a 200 and the filtered users for "in" label selector' do
+          get "/v3/spaces/#{space1.guid}/users?label_selector=animal in (dog)", nil, admin_header
+          expect(last_response).to have_status_code(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}/users?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
+
+      # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
+      context 'by timestamps on creation' do
+        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+
+        before do
+          org.add_user(resource_1)
+          space1.add_supporter(resource_1)
+          org.add_user(resource_4)
+          space1.add_supporter(resource_4)
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
+        end
+
+        it 'returns 200 and filters' do
+          get "/v3/spaces/#{space1.guid}/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+        end
+      end
+
+      # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
+      context 'by timestamps on update' do
+        # before must occur before the let! otherwise the resources will be created with
+        # update_on_create: true
+        before do
+          VCAP::CloudController::User.plugin :timestamps, update_on_create: false
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
+        end
+
+        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+
+        after do
+          VCAP::CloudController::User.plugin :timestamps, update_on_create: true
+        end
+
+        it 'returns 200 and filters' do
+          org.add_user(resource_1)
+          space1.add_manager(resource_1)
+          get "/v3/spaces/#{space1.guid}/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_2.guid, resource_3.guid, resource_4.guid)
+        end
+      end
+    end
+
+    context 'no filters' do
+      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space1.guid}/users", nil, user_headers } }
+      let(:space) { space1 }
+      let(:current_user_json) do
+        {
+          guid: user.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: 'bob-mcjames',
+          presentation_name: 'bob-mcjames',
+          origin: 'Okta',
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+          }
+        }
+      end
+      let(:client_json) do
+        {
+          guid: client.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: nil,
+          presentation_name: client.guid,
+          origin: nil,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [
+            client_json,
+            current_user_json,
+          ]
+        )
+        h['no_role'] = {
+          code: 404
+        }
+        h['org_billing_manager'] = {
+          code: 404
+        }
+        h['org_auditor'] = {
+          code: 404
+        }
+        h['admin'] = {
+          code: 200,
+          response_objects: [
+            client_json
+          ]
+        }
+        h['admin_read_only'] = {
+          code: 200,
+          response_objects: [
+            client_json
+          ]
+        }
+        h['org_manager'] = {
+          code: 200,
+          response_objects: [
+            client_json
+          ]
+        }
+        h['global_auditor'] = {
+          code: 200,
+          response_objects: [
+            client_json
+          ]
+        }
+        h.freeze
+      end
+
+      before do
+        VCAP::CloudController::User.dataset.destroy # this will clean up the seeded test users
+        org.add_user(client)
+        space1.add_developer(client)
+        allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+        allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(user.guid, client.guid)).and_return(
+          {
+            user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+          }
+      )
+        allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
+        allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
+      end
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when UAA is disabled' do
+      before do
+        allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+        allow(uaa_client).to receive(:users_for_ids).and_raise(VCAP::CloudController::UaaEndpointDisabled)
+      end
+
+      it 'returns an error indicating UAA is unavailable' do
+        get "/v3/spaces/#{space1.guid}/users", nil, admin_header
+        expect(last_response).to have_status_code(503)
+        expect(parsed_response['errors'].first['detail']).to eq('The UAA service is currently unavailable')
+      end
+    end
+
+    context 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get "/v3/spaces/#{space1.guid}/users", nil, base_json_headers
+        expect(last_response).to have_status_code(401)
+      end
+    end
+  end
+
   def build_space_links(space)
     {
       'self' => {

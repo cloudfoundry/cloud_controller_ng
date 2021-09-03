@@ -329,6 +329,7 @@ includes:
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
   - resources/spaces/manage_isolation_segment
+  - resources/spaces/list_users
   - resources/space_features/header
   - resources/space_features/object
   - resources/space_features/get

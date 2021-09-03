@@ -7,6 +7,7 @@ require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
 require 'messages/space_security_groups_list_message'
 require 'messages/space_show_message'
+require 'messages/users_list_message'
 require 'actions/space_update_isolation_segment'
 require 'actions/space_create'
 require 'actions/space_update'
@@ -14,6 +15,7 @@ require 'actions/space_delete_unmapped_routes'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
 require 'fetchers/security_group_list_fetcher'
+require 'fetchers/space_users_list_fetcher'
 require 'jobs/v3/space_delete_unmapped_routes_job'
 
 class SpacesV3Controller < ApplicationController
@@ -182,6 +184,30 @@ class SpacesV3Controller < ApplicationController
       relationship_name: 'isolation_segment',
       related_resource_name: 'isolation_segments'
     )
+  end
+
+  def list_users
+    message = UsersListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+
+    admin_roles = permission_queryer.can_read_globally?
+    users = SpaceUsersListFetcher.fetch_all(message, space, current_user.readable_users(admin_roles))
+
+    paginated_result = SequelPaginator.new.get_page(users, message.try(:pagination_options))
+    user_guids = paginated_result.records.map(&:guid)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::UserPresenter,
+      paginated_result: paginated_result,
+      path: "/v3/spaces/#{space.guid}/users",
+      message: message,
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+    )
+  rescue VCAP::CloudController::UaaEndpointDisabled
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   private
