@@ -9,7 +9,7 @@ module CloudFoundry
       end
 
       def call(env)
-        if !allowed_path?(env['PATH_INFO']) && v3_only_role_enabled? && v3_only_role?
+        if !allowed_path?(env['PATH_INFO']) && v3_only_role?
           [
             403,
             { 'Content-Type' => 'text/html' },
@@ -33,10 +33,6 @@ module CloudFoundry
 
       def globally_authenticated?
         roles.admin? || roles.admin_read_only? || roles.global_auditor?
-      end
-
-      def v3_only_role_enabled?
-        VCAP::CloudController::Config.config.get(:temporary_enable_space_supporter_role)
       end
 
       def space_supporter_and_only_space_supporter?(current_user)

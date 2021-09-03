@@ -44,10 +44,6 @@ RSpec.describe 'Auth' do
   end
 
   context 'space supporter' do
-    before do
-      TestConfig.override(temporary_enable_space_supporter_role: true)
-    end
-
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
     let(:space3) { VCAP::CloudController::Space.make }
@@ -71,13 +67,6 @@ RSpec.describe 'Auth' do
           get '/v2/spaces', nil, user_header
           expect(last_response.status).to eq(403)
           expect(last_response.body).to match %r(You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html)
-        end
-
-        it 'does not error when the space supporter role is disabled' do
-          TestConfig.override(temporary_enable_space_supporter_role: false)
-
-          get '/v2/apps', nil, user_header
-          expect(last_response.status).to eq(200)
         end
 
         it 'does not error when hitting info' do
