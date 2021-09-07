@@ -15,7 +15,7 @@ require 'actions/space_delete_unmapped_routes'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
 require 'fetchers/security_group_list_fetcher'
-require 'fetchers/space_users_list_fetcher'
+require 'fetchers/user_list_fetcher'
 require 'jobs/v3/space_delete_unmapped_routes_job'
 
 class SpacesV3Controller < ApplicationController
@@ -193,8 +193,7 @@ class SpacesV3Controller < ApplicationController
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
 
-    admin_roles = permission_queryer.can_read_globally?
-    users = SpaceUsersListFetcher.fetch_all(message, space, current_user.readable_users(admin_roles))
+    users = UserListFetcher.fetch_all(message, space.users_dataset)
 
     paginated_result = SequelPaginator.new.get_page(users, message.try(:pagination_options))
     user_guids = paginated_result.records.map(&:guid)

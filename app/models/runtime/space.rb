@@ -302,6 +302,10 @@ module VCAP::CloudController
       organization.suspended?
     end
 
+    def users_dataset
+      User.dataset.where(id: SpaceRole.where(space_id: id).select(:user_id))
+    end
+
     private
 
     def has_manager?(user)

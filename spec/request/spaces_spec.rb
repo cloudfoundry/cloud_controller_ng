@@ -1366,7 +1366,7 @@ RSpec.describe 'Spaces' do
 
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
     end
