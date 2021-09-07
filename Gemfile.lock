@@ -140,7 +140,7 @@ GEM
     em-socksify (0.3.2)
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.10.0)
-    eventmachine (1.0.9.1)
+    eventmachine (1.2.7)
     excon (0.85.0)
     faraday (0.15.4)
       multipart-post (>= 1.2, < 3)
@@ -149,7 +149,7 @@ GEM
       http-cookie (~> 1.0.0)
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
-    ffi (1.15.3)
+    ffi (1.15.4)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
@@ -222,7 +222,7 @@ GEM
       google-protobuf (~> 3.13)
       googleapis-common-protos-types (~> 1.0)
     hashdiff (0.3.8)
-    honeycomb-beeline (2.6.0)
+    honeycomb-beeline (2.7.0)
       libhoney (~> 1.14, >= 1.14.2)
     http (4.4.1)
       addressable (~> 2.3)
@@ -258,7 +258,7 @@ GEM
       jsonpath (~> 1.0)
       recursive-open-struct (~> 1.1, >= 1.1.1)
       rest-client (~> 2.0)
-    libhoney (1.19.0)
+    libhoney (1.20.0)
       addressable (~> 2.0)
       excon
       http (>= 2.0, < 5.0)
@@ -524,7 +524,7 @@ DEPENDENCIES
   codeclimate-test-reporter (>= 1.0.8)
   debase (>= 0.2.2.beta14)
   em-http-request (~> 1.1)
-  eventmachine (~> 1.0.9)
+  eventmachine (~> 1.2.7)
   fluent-logger
   fog-aliyun
   fog-aws
