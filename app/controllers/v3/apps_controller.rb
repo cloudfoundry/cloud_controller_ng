@@ -151,7 +151,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable do |pollable_job|
       DeleteAppErrorTranslatorJob.new(pollable_job)
     end
-
+    VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app with guid #{app.guid}")
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
