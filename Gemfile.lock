@@ -221,7 +221,7 @@ GEM
     grpc (1.38.0-x86_64-linux)
       google-protobuf (~> 3.15)
       googleapis-common-protos-types (~> 1.0)
-    hashdiff (0.3.8)
+    hashdiff (1.0.1)
     honeycomb-beeline (2.7.0)
       libhoney (~> 1.14, >= 1.14.2)
     http (4.4.1)
