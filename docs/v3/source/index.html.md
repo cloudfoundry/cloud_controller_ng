@@ -185,6 +185,7 @@ includes:
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain
   - resources/organizations/get_usage_summary
+  - resources/organizations/list_users
   - resources/organization_quotas/header
   - resources/organization_quotas/object
   - resources/organization_quotas/create

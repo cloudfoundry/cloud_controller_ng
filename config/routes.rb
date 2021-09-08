@@ -140,6 +140,7 @@ Rails.application.routes.draw do
   get '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#show_default_isolation_segment'
   patch '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#update_default_isolation_segment'
   delete '/organizations/:guid', to: 'organizations_v3#destroy'
+  get '/organizations/:guid/users', to: 'organizations_v3#list_members'
 
   # organization_quotas
   post '/organization_quotas', to: 'organization_quotas#create'
@@ -269,7 +270,7 @@ Rails.application.routes.draw do
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
   patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
-  get '/spaces/:guid/users', to: 'spaces_v3#list_users'
+  get '/spaces/:guid/users', to: 'spaces_v3#list_members'
 
   # tasks
   get '/tasks', to: 'tasks#index'

@@ -269,6 +269,10 @@ module VCAP::CloudController
       SharedDomain.where(internal: false, router_group_guid: nil).order(Sequel.asc(:id)).first || private_domains.first
     end
 
+    def members
+      User.where(id: OrganizationRole.where(organization_id: id).select(:user_id))
+    end
+
     private
 
     def validate_default_isolation_segment
