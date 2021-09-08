@@ -319,7 +319,8 @@ RSpec.describe 'Route Destinations Request' do
               route_mapping_guid: new_destination['guid'],
               destination_guid: new_destination['guid'],
               process_type: 'web',
-              weight: nil
+              weight: nil,
+              protocol: 'http2',
             }.to_json,
           }
         end
@@ -1206,7 +1207,8 @@ RSpec.describe 'Route Destinations Request' do
               route_mapping_guid: destination_to_delete.guid,
               destination_guid: destination_to_delete.guid,
               process_type: destination_to_delete.process_type,
-              weight: nil
+              weight: nil,
+              protocol: 'http1',
             }.to_json,
           }
         end

@@ -296,6 +296,30 @@ module VCAP::CloudController
               expect(event.metadata[:weight]).to eq(100)
             end
           end
+          context 'when the route mapping has no protocol' do
+            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+
+            it 'creates a new app.map_route audit event with appropriate metadata' do
+              event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+              expect(event.metadata[:route_guid]).to eq(route.guid)
+              expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:destination_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:process_type]).to eq('potato')
+              expect(event.metadata[:protocol]).to eq('http1')
+            end
+          end
+          context 'when the route mapping has a protocol' do
+            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', protocol: 'http2') }
+
+            it 'creates a new app.map_route audit event with appropriate metadata' do
+              event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+              expect(event.metadata[:route_guid]).to eq(route.guid)
+              expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:destination_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:process_type]).to eq('potato')
+              expect(event.metadata[:protocol]).to eq('http2')
+            end
+          end
         end
       end
 

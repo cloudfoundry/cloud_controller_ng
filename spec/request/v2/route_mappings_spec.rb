@@ -179,7 +179,8 @@ RSpec.describe 'RouteMappings' do
         'destination_guid' => route_mapping.guid,
         'route_mapping_guid' => route_mapping.guid,
         'process_type' => 'web',
-        'weight' => nil
+        'weight' => nil,
+        'protocol' => 'http1'
       })
     end
   end
@@ -205,7 +206,8 @@ RSpec.describe 'RouteMappings' do
         'destination_guid' => route_mapping.guid,
         'route_mapping_guid' => route_mapping.guid,
         'process_type' => 'web',
-        'weight' => nil
+        'weight' => nil,
+        'protocol' => 'http1'
       })
     end
   end
