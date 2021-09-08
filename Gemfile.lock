@@ -317,7 +317,7 @@ GEM
       ast (~> 2.4.1)
     pg (1.2.3)
     posix-spawn (0.3.15)
-    protobuf (3.6.12)
+    protobuf (3.10.4)
       activesupport (>= 3.2)
       middleware
       thor
@@ -556,7 +556,7 @@ DEPENDENCIES
   parallel_tests
   pg
   posix-spawn (~> 0.3.15)
-  protobuf (= 3.6.12)
+  protobuf (= 3.10.4)
   pry-byebug
   public_suffix
   rack-test
