@@ -5,10 +5,12 @@ require 'actions/role_create'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'
+require 'fetchers/user_list_fetcher'
 require 'messages/organization_update_message'
 require 'messages/organization_create_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
+require 'messages/users_list_message'
 require 'models/helpers/role_types'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/organization_presenter'
@@ -162,6 +164,29 @@ class OrganizationsV3Controller < ApplicationController
     domain_not_found! if domain.private? && permission_queryer.readable_org_guids_for_domains_query.where(guid: org.guid).empty?
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+  end
+
+  def list_members
+    message = UsersListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+
+    users = UserListFetcher.fetch_all(message, org.members)
+
+    paginated_result = SequelPaginator.new.get_page(users, message.try(:pagination_options))
+    user_guids = paginated_result.records.map(&:guid)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::UserPresenter,
+      paginated_result: paginated_result,
+      path: "/v3/organizations/#{org.guid}/users",
+      message: message,
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+    )
+  rescue VCAP::CloudController::UaaEndpointDisabled
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   private

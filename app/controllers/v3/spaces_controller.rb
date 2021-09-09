@@ -186,14 +186,14 @@ class SpacesV3Controller < ApplicationController
     )
   end
 
-  def list_users
+  def list_members
     message = UsersListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
 
-    users = UserListFetcher.fetch_all(message, space.users_dataset)
+    users = UserListFetcher.fetch_all(message, space.members)
 
     paginated_result = SequelPaginator.new.get_page(users, message.try(:pagination_options))
     user_guids = paginated_result.records.map(&:guid)
