@@ -108,7 +108,8 @@ module VCAP::CloudController
           route_mapping_guid: route_mapping.guid,
           destination_guid: route_mapping.guid,
           process_type: route_mapping.process_type,
-          weight: route_mapping.weight
+          weight: route_mapping.weight,
+          protocol: route_mapping.protocol,
         })
         create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
       end
@@ -123,7 +124,8 @@ module VCAP::CloudController
           route_mapping_guid: route_mapping.guid,
           destination_guid: route_mapping.guid,
           process_type: route_mapping.process_type,
-          weight: route_mapping.weight
+          weight: route_mapping.weight,
+          protocol: route_mapping.protocol,
         })
         create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
       end
