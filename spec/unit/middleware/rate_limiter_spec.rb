@@ -7,18 +7,22 @@ module CloudFoundry
         RateLimiter.new(
           app,
           logger:                logger,
+          general_limit_enabled: general_limit_enabled,
           general_limit:         general_limit,
           unauthenticated_limit: unauthenticated_limit,
           interval:              interval,
+          service_rate_limit_enabled: service_rate_limit_enabled,
           service_limit:         service_limit,
           service_interval:      service_interval
         )
       end
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
+      let(:general_limit_enabled) { true }
       let(:general_limit) { 100 }
       let(:unauthenticated_limit) { 10 }
       let(:interval) { 60 }
+      let(:service_rate_limit_enabled) { true }
       let(:service_limit) { 5 }
       let(:service_interval) { 5 }
       let(:logger) { double('logger', info: nil) }
@@ -405,9 +409,11 @@ module CloudFoundry
           RateLimiter.new(
             app,
             logger:                logger,
+            general_limit_enabled: general_limit_enabled,
             general_limit:         general_limit,
             unauthenticated_limit: unauthenticated_limit,
             interval:              interval,
+            service_rate_limit_enabled: service_rate_limit_enabled,
             service_limit:         service_limit,
             service_interval:      service_interval
           )
@@ -418,6 +424,44 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Remaining']).to eq('99')
           _, response_headers, _ = other_middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+        end
+      end
+      context 'with different rate limters enabled' do
+        context 'with rate limits general on, service_instance off' do
+          let(:middleware_general_on_services_off) do
+            RateLimiter.new(
+              app,
+              logger:                logger,
+              general_limit_enabled: general_limit_enabled,
+              general_limit:         general_limit,
+              unauthenticated_limit: unauthenticated_limit,
+              interval:              interval,
+              service_rate_limit_enabled: service_rate_limit_enabled,
+              service_limit:         service_limit,
+              service_interval:      service_interval
+            )
+          end
+          let(:app) { double(:app, call: [200, {}, 'a body']) }
+          let(:general_limit_enabled) { true }
+          let(:service_rate_limit_enabled) { false }
+          let(:path_info) { '/v2/service_instances' }
+          let(:service_instance_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info, 'REQUEST_METHOD' => 'POST' } }
+
+          it 'rate limits generally and not the service_instances' do
+            _, response_headers, _ = middleware_general_on_services_off.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+
+            _, response_headers, _ = middleware_general_on_services_off.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+
+            _, response_headers, _ = middleware_general_on_services_off.call(service_instance_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('97')
+
+            _, response_headers, _ = middleware_general_on_services_off.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('96')
+
+
+          end
         end
       end
     end

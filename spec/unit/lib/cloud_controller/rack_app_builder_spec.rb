@@ -55,21 +55,82 @@ module VCAP::CloudController
               reset_interval_in_minutes: 60,
               general_limit: 123,
               unauthenticated_limit: 1,
+            }, service_instance_rate_limiter: {
+              enabled: true,
               service_instance_reset_interval_in_minutes: 456,
               service_instance_limit: 2,
-            }), request_metrics, request_logs).to_app
+              }), request_metrics, request_logs).to_app
           end
 
           it 'enables the RateLimiter middleware' do
             expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
               anything,
               logger: instance_of(Steno::Logger),
+              general_limit_enabled: true,
               general_limit: 123,
               unauthenticated_limit: 1,
               interval: 60,
+              service_rate_limit_enabled: true,
               service_interval: 456,
               service_limit: 2
             )
+          end
+        end
+
+        context 'when configuring one rate limter to on and the other off' do
+          describe 'when general_limit_enabled is off but service limiter is on' do
+          before do
+            builder.build(TestConfig.override(rate_limiter: {
+              enabled: false,
+              reset_interval_in_minutes: 60,
+              general_limit: 123,
+              unauthenticated_limit: 1,
+            }, service_instance_rate_limiter: {
+              enabled: true,
+              service_instance_reset_interval_in_minutes: 456,
+              service_instance_limit: 2,
+              }), request_metrics, request_logs).to_app
+          end
+            it 'enables the RateLimiter middleware' do
+              expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
+                anything,
+                logger: instance_of(Steno::Logger),
+                general_limit_enabled: false,
+                general_limit: 123,
+                unauthenticated_limit: 1,
+                interval: 60,
+                service_rate_limit_enabled: true,
+                service_interval: 456,
+                service_limit: 2
+              )
+            end
+          end
+          describe 'when general_limit_enabled is on but service limiter is off' do
+            before do
+              builder.build(TestConfig.override(rate_limiter: {
+                enabled: true,
+                reset_interval_in_minutes: 60,
+                general_limit: 123,
+                unauthenticated_limit: 1,
+              }, service_instance_rate_limiter: {
+                enabled: false,
+                service_instance_reset_interval_in_minutes: 456,
+                service_instance_limit: 2,
+                }), request_metrics, request_logs).to_app
+            end
+            it 'enables the RateLimiter middleware' do
+              expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
+                anything,
+                logger: instance_of(Steno::Logger),
+                general_limit_enabled: true,
+                general_limit: 123,
+                unauthenticated_limit: 1,
+                interval: 60,
+                service_rate_limit_enabled: false,
+                service_interval: 456,
+                service_limit: 2
+              )
+            end
           end
         end
 
@@ -80,6 +141,10 @@ module VCAP::CloudController
               reset_interval_in_minutes: 60,
               general_limit: 123,
               unauthenticated_limit: 1
+            }, service_instance_rate_limiter: {
+              enabled: false,
+              service_instance_reset_interval_in_minutes: 456,
+              service_instance_limit: 2,
             }), request_metrics, request_logs).to_app
           end
 

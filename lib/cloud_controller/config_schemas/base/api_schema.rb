@@ -286,6 +286,9 @@ module VCAP::CloudController
               general_limit: Integer,
               unauthenticated_limit: Integer,
               reset_interval_in_minutes: Integer,
+            },
+            service_instance_rate_limiter: {
+              enabled: bool,
               service_instance_limit: Integer,
               service_instance_reset_interval_in_minutes: Integer,
             },

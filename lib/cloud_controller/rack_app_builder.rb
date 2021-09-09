@@ -27,14 +27,16 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::RequestLogs, request_logs
         use CloudFoundry::Middleware::Zipkin
-        if config.get(:rate_limiter, :enabled)
+        if config.get(:rate_limiter, :enabled) || config.get(:service_instance_rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
             logger: Steno.logger('cc.rate_limiter'),
+            general_limit_enabled: config.get(:rate_limiter, :enabled),
             general_limit: config.get(:rate_limiter, :general_limit),
             unauthenticated_limit: config.get(:rate_limiter, :unauthenticated_limit),
             interval: config.get(:rate_limiter, :reset_interval_in_minutes),
-            service_limit: config.get(:rate_limiter, :service_instance_limit),
-            service_interval: config.get(:rate_limiter, :service_instance_reset_interval_in_minutes)
+            service_rate_limit_enabled: config.get(:service_instance_rate_limiter, :enabled),
+            service_limit: config.get(:service_instance_rate_limiter, :service_instance_limit),
+            service_interval: config.get(:service_instance_rate_limiter, :service_instance_reset_interval_in_minutes)
           }
         end
 

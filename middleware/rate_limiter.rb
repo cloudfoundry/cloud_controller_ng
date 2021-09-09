@@ -16,6 +16,7 @@ module CloudFoundry
         @service_limit         = service_limit
         @service_interval      = service_interval
       end
+      # rubocop:disable Metrics/CyclomaticComplexity
 
       # rubocop:disable Metrics/CyclomaticComplexity
       def call(env)

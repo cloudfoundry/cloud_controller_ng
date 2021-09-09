@@ -258,6 +258,8 @@ rate_limiter:
   general_limit: 2000
   unauthenticated_limit: 100
   reset_interval_in_minutes: 60
+service_instance_rate_limiter:
+  enabled: true
   service_instance_limit: 5
   service_instance_reset_interval_in_minutes: 5
 

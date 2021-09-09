@@ -8,6 +8,9 @@ RSpec.describe 'Rate Limiting' do
         general_limit: 10,
         unauthenticated_limit: 2,
         reset_interval_in_minutes: 60,
+      },
+      service_instance_rate_limiter: {
+        enabled: true,
         service_instance_limit: 5,
         service_instance_reset_interval_in_minutes: 30
       }
@@ -85,7 +88,6 @@ RSpec.describe 'Rate Limiting' do
       end
 
       context 'that require existing service_instances' do
-        # let(:user) { VCAP::CloudController::User.make }
         let(:org) { VCAP::CloudController::Organization.make }
         let(:space) { VCAP::CloudController::Space.make(organization: org) }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
