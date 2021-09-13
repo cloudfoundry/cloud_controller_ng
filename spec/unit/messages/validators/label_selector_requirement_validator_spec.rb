@@ -22,6 +22,14 @@ module VCAP::CloudController::Validators
       end
     end
 
+    context 'when there are too many requirements' do
+      let(:requirements) { Array.new(LabelSelectorRequirementValidator::MAX_REQUIREMENTS + 1) }
+      it 'fails' do
+        expect(message).not_to be_valid
+        expect(message.errors_on(:base)).to include(/^Too many label_selector requirements/)
+      end
+    end
+
     context 'when there are no valid requirements' do
       let(:requirements) { [nil, nil, nil] }
       it 'fails' do

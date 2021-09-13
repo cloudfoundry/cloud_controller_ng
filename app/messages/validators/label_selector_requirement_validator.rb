@@ -4,12 +4,19 @@ require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   class LabelSelectorRequirementValidator < ActiveModel::Validator
+    MAX_REQUIREMENTS = 50
     MISSING_LABEL_SELECTOR_ERROR = 'Missing label_selector value'.freeze
+    TOO_MANY_REQUIREMENTS_ERROR = "Too many label_selector requirements (maximum is #{MAX_REQUIREMENTS})".freeze
     INVALID_LABEL_SELECTOR_ERROR = 'Invalid label_selector value'.freeze
 
     def validate(record)
       if record.requirements.empty?
         record.errors[:base] << MISSING_LABEL_SELECTOR_ERROR
+        return
+      end
+
+      if record.requirements.length > MAX_REQUIREMENTS
+        record.errors[:base] << TOO_MANY_REQUIREMENTS_ERROR
         return
       end
 

@@ -146,7 +146,7 @@ cf curl /v3/apps?label_selector=env=dev,%21chargeback-code,tier%20in%20%28backen
 ```
 
 Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
-more `requirements` in a comma-delimited list.
+more `requirements` in a comma-delimited list. The maximum number of `requirements` in a single selector is 50.
 
 _eg:_ `env=dev,!chargeback-code,tier in (backend,worker)`
 
