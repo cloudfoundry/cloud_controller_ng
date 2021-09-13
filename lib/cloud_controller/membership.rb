@@ -1,51 +1,42 @@
 module VCAP::CloudController
   class Membership
-    SPACE_DEVELOPER             = 0
-    SPACE_MANAGER               = 1
-    SPACE_AUDITOR               = 2
-    ORG_USER                    = 3
-    ORG_MANAGER                 = 4
-    ORG_AUDITOR                 = 5
-    ORG_BILLING_MANAGER         = 6
-    SPACE_SUPPORTER             = 7
+    SPACE_DEVELOPER = 'space_developer'.freeze
+    SPACE_MANAGER = 'space_manager'.freeze
+    SPACE_AUDITOR = 'space_auditor'.freeze
+    SPACE_SUPPORTER = 'space_supporter'.freeze
+    ORG_USER = 'organization_user'.freeze
+    ORG_MANAGER = 'organization_manager'.freeze
+    ORG_AUDITOR = 'organization_auditor'.freeze
+    ORG_BILLING_MANAGER = 'organization_billing_manager'.freeze
+
+    SPACE_ROLES = %w(space_developer space_manager space_auditor space_supporter).freeze
+    ORG_ROLES = %w(organization_manager organization_billing_manager organization_auditor organization_user).freeze
 
     def initialize(user)
       @user = user
     end
 
     def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      roles = Array(roles)
+      space_ids = Space.where(guid: space_guid).select(:id)
+      return true if SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_ids).any?
 
-      member_guids = member_guids(roles: roles)
-      member_guids.include?(space_guid) || member_guids.include?(org_guid)
+      org_ids = Organization.where(guid: org_guid).select(:id)
+      OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_ids).any?
     end
 
     def org_guids_for_roles(roles)
       org_guids_for_roles_subquery(roles).all.map(&:guid)
     end
 
-    # rubocop:todo Metrics/CyclomaticComplexity
     def org_guids_for_roles_subquery(roles)
-      Array(roles).map do |role|
-        case role
-        when ORG_USER
-          @user.organizations_dataset.select(:guid)
-        when ORG_AUDITOR
-          @user.audited_organizations_dataset.select(:guid)
-        when ORG_BILLING_MANAGER
-          @user.billing_managed_organizations_dataset.select(:guid)
-        when ORG_MANAGER
-          @user.managed_organizations_dataset.select(:guid)
-        when SPACE_DEVELOPER
-          @user.spaces_dataset.association_join(:organization).select(:organization__guid)
-        when SPACE_MANAGER
-          @user.managed_spaces_dataset.association_join(:organization).select(:organization__guid)
-        when SPACE_AUDITOR
-          @user.audited_spaces_dataset.association_join(:organization).select(:organization__guid)
-        when SPACE_SUPPORTER
-          @user.supported_spaces_dataset.association_join(:organization).select(:organization__guid)
-        end
-      end.reduce(:union)
+      org_role_dataset = OrganizationRole.where(type: org_roles(roles), user_id: @user.id)
+      org_guid_dataset = Organization.where(id: org_role_dataset.select(:organization_id)).select(:guid)
+
+      space_role_dataset = SpaceRole.where(type: space_roles(roles), user_id: @user.id)
+      spaces_dataset = Space.where(id: space_role_dataset.select(:space_id))
+      org_guids_for_space_roles_dataset = Organization.where(id: spaces_dataset.select(:organization_id)).select(:guid)
+
+      org_guids_for_space_roles_dataset.union(org_guid_dataset)
     end
 
     def space_guids_for_roles(roles)
@@ -53,72 +44,23 @@ module VCAP::CloudController
     end
 
     def space_guids_for_roles_subquery(roles)
-      Array(roles).map do |role|
-        case role
-        when SPACE_DEVELOPER
-          @user.spaces_dataset.select(:guid)
-        when SPACE_MANAGER
-          @user.managed_spaces_dataset.select(:guid)
-        when SPACE_AUDITOR
-          @user.audited_spaces_dataset.select(:guid)
-        when SPACE_SUPPORTER
-          @user.supported_spaces_dataset.select(:guid)
-        when ORG_USER
-          @user.organizations_dataset.join(
-            :spaces, spaces__organization_id: :organizations__id
-          ).select(:spaces__guid)
-        when ORG_MANAGER
-          @user.managed_organizations_dataset.join(
-            :spaces, spaces__organization_id: :organizations__id
-          ).select(:spaces__guid)
-        when ORG_BILLING_MANAGER
-          @user.billing_managed_organizations_dataset.join(
-            :spaces, spaces__organization_id: :organizations__id
-          ).select(:spaces__guid)
-        when ORG_AUDITOR
-          @user.audited_organizations_dataset.join(
-            :spaces, spaces__organization_id: :organizations__id
-          ).select(:spaces__guid)
-        end
-      end.reduce(:union)
+      space_role_dataset = SpaceRole.where(type: space_roles(roles), user_id: @user.id)
+      space_guid_dataset = Space.where(id: space_role_dataset.select(:space_id)).select(:guid)
+
+      org_role_dataset = OrganizationRole.where(type: org_roles(roles), user_id: @user.id)
+      space_guids_for_org_roles_dataset = Space.where(organization_id: org_role_dataset.select(:organization_id)).select(:guid)
+
+      space_guids_for_org_roles_dataset.union(space_guid_dataset)
     end
 
     private
 
-    def member_guids(roles: [])
-      roles.map do |role|
-        case role
-        when SPACE_DEVELOPER
-          @space_developer ||=
-            @user.spaces_dataset.
-            association_join(:organization).map(&:guid)
-        when SPACE_MANAGER
-          @space_manager ||=
-            @user.managed_spaces_dataset.
-            association_join(:organization).map(&:guid)
-        when SPACE_AUDITOR
-          @space_auditor ||=
-            @user.audited_spaces_dataset.
-            association_join(:organization).map(&:guid)
-        when SPACE_SUPPORTER
-          @space_supporter ||=
-            @user.supported_spaces_dataset.
-            association_join(:organization).map(&:guid)
-        when ORG_USER
-          @org_user ||=
-            @user.organizations_dataset.map(&:guid)
-        when ORG_MANAGER
-          @org_manager ||=
-            @user.managed_organizations_dataset.map(&:guid)
-        when ORG_AUDITOR
-          @org_auditor ||=
-            @user.audited_organizations_dataset.map(&:guid)
-        when ORG_BILLING_MANAGER
-          @org_billing_manager ||=
-            @user.billing_managed_organizations_dataset.map(&:guid)
-        end
-      end.flatten.compact
+    def space_roles(roles)
+      Array(roles) & SPACE_ROLES
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
+
+    def org_roles(roles)
+      Array(roles) & ORG_ROLES
+    end
   end
 end
