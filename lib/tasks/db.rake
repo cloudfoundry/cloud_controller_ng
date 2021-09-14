@@ -76,11 +76,7 @@ namespace :db do
       extensions = 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
       sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c '#{extensions}'"
     when 'mysql'
-      if ENV['TRAVIS'] == 'true'
-        sh "mysql -e 'create database #{db_config.name};' -u root"
-      else
-        sh "mysql #{host} #{port} #{user} #{pass} -e 'create database #{db_config.name};'"
-      end
+      sh "mysql #{host} #{port} #{user} #{pass} -e 'create database #{db_config.name};'"
     else
       puts 'rake db:create requires DB to be set to create a database'
     end
@@ -98,11 +94,7 @@ namespace :db do
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
     when 'mysql'
-      if ENV['TRAVIS'] == 'true'
-        sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
-      else
-        sh "mysql #{host} #{port} #{user} #{pass} -e 'drop database if exists #{db_config.name};'"
-      end
+      sh "mysql #{host} #{port} #{user} #{pass} -e 'drop database if exists #{db_config.name};'"
     else
       puts 'rake db:drop requires DB to be set to create a database'
     end
