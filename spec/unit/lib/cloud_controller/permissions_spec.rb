@@ -392,61 +392,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#readable_space_guids' do
-      it 'returns all the space guids for admins' do
-        user = set_current_user_as_admin
-        subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
-      end
-
-      it 'returns all the space guids for read-only admins' do
-        user = set_current_user_as_admin_read_only
-        subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
-      end
-
-      it 'returns all the space guids for global auditors' do
-        user = set_current_user_as_global_auditor
-        subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
-      end
-
-      it 'returns space guids from membership' do
-        space_guids = double
-        membership = instance_double(Membership, space_guids_for_roles: space_guids)
-        expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(permissions.readable_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(Permissions::ROLES_FOR_SPACE_READING)
-      end
-    end
-
     describe '#readables_space_guids_query' do
       it 'returns subquery from membership' do
         membership = instance_double(Membership)

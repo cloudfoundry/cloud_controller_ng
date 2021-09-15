@@ -271,7 +271,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_app_guids
-    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).map(&:guid)
+    VCAP::CloudController::AppModel.where(space_guid: readable_space_guids).select(:guid).map(&:guid)
   end
 
   def readable_route_mapping_guids
