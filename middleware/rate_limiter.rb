@@ -33,9 +33,7 @@ module CloudFoundry
           rate_limit_headers['X-RateLimit-Reset']     = request_count.valid_until.utc.to_i.to_s
           rate_limit_headers['X-RateLimit-Remaining'] = [0, request_limit(env) - count].max.to_s
 
-          if not_admin && exceeded_rate_limit(count, env)
-            return too_many_requests!(env, rate_limit_headers)
-          end
+          return too_many_requests!(env, rate_limit_headers) if exceeded_rate_limit(count, env)
 
           increment_request_count!(request_count)
         end
@@ -48,7 +46,7 @@ module CloudFoundry
 
       def skip_rate_limiting?(env, request)
         auth = Rack::Auth::Basic::Request.new(env)
-        basic_auth?(auth) || internal_api?(request) || root_api?(request)
+        basic_auth?(auth) || internal_api?(request) || root_api?(request) || admin?
       end
 
       def root_api?(request)
@@ -68,7 +66,7 @@ module CloudFoundry
       end
 
       def increment_request_count!(request_count)
-        VCAP::CloudController::RequestCount.where(id: request_count.id).update(count: Sequel.expr(1) + :count)
+        request_count.update(count: Sequel.expr(1) + :count)
       end
 
       def request_limit(env)
@@ -107,8 +105,8 @@ module CloudFoundry
         request_count.update(valid_until: Time.now + @interval.minutes, count: 0)
       end
 
-      def not_admin
-        !(VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?)
+      def admin?
+        VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
     end
   end
