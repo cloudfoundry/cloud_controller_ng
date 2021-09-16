@@ -1234,7 +1234,7 @@ Prefixes are dns names intended to enable namespacing of label keys.</p>
 </code></pre>
 
 <p>Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
-more <code class="prettyprint">requirements</code> in a comma-delimited list.</p>
+more <code class="prettyprint">requirements</code> in a comma-delimited list. The maximum number of <code class="prettyprint">requirements</code> in a single selector is 50.</p>
 
 <p><em>eg:</em> <code class="prettyprint">env=dev,!chargeback-code,tier in (backend,worker)</code></p>
 
