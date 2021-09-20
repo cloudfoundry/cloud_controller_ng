@@ -158,5 +158,16 @@ RSpec.describe 'Rate Limiting' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response['errors'].first['detail']).to include('Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit')
     end
+    it 'uses the unauthenticated limit on service_instances endpoints' do
+      2.times do |n|
+        get '/v3/service_instances', nil, {}
+        expect(last_response.status).to eq(401), "rate limited after #{n} requests"
+      end
+
+      get '/v3/service_instances', nil, {}
+      expect(last_response.status).to eq(429)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['errors'].first['detail']).to include('Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit')
+    end
   end
 end

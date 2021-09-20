@@ -27,50 +27,19 @@ module CloudFoundry
       let(:v2_path_info) { '/v2/service_instances' }
       let(:v3_path_info) { '/v3/service_instances' }
 
-      let(:unauthenticated_env) { { some: 'env', 'PATH_INFO' => v2_path_info } }
+      let(:unauthenticated_env) { { some: 'env', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
       let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass'),
                                'PATH_INFO' => v2_path_info,
                                'REQUEST_METHOD' => 'POST'
                             }
       }
       let(:user_1_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
+      let(:user_1_v3_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => v3_path_info, 'REQUEST_METHOD' => 'POST' } }
       let(:user_2_env) { { 'cf.user_guid' => 'user-id-2', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
       let(:post_env) { { 'cf.user_guid' => 'post-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
       let(:patch_env) { { 'cf.user_guid' => 'patch-user', 'PATH_INFO' => v3_path_info, 'REQUEST_METHOD' => 'PATCH' } }
       let(:put_env) { { 'cf.user_guid' => 'put-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'PUT' } }
       let(:get_env) { { 'cf.user_guid' => 'get-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'GET' } }
-
-      describe 'servce_instance requests' do
-        describe 'rate limits only specific methods' do
-          it 'rate limits POST methods' do
-            status, response_headers, _ = middleware.call(post_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
-            expect(status).to eq(200)
-            expect(app).to have_received(:call).at_least(:once)
-          end
-
-          it 'rate limits PATCH methods' do
-            status, response_headers, _ = middleware.call(patch_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
-            expect(status).to eq(200)
-            expect(app).to have_received(:call).at_least(:once)
-          end
-
-          it 'rate limits PUT methods' do
-            status, response_headers, _ = middleware.call(patch_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
-            expect(status).to eq(200)
-            expect(app).to have_received(:call).at_least(:once)
-          end
-
-          it 'does not rate limit GET or other methods' do
-            status, response_headers, _ = middleware.call(get_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99') # runs into the general limit
-            expect(status).to eq(200)
-            expect(app).to have_received(:call).at_least(:once)
-          end
-        end
-      end
 
       describe 'servce_instance headers' do
         describe 'X-RateLimit-Limit' do
@@ -92,6 +61,35 @@ module CloudFoundry
             expect(response_headers['X-RateLimit-Remaining']).to eq('3')
           end
 
+          describe 'rate limits only specific methods' do
+            it 'rate limits POST methods' do
+              status, response_headers, _ = middleware.call(post_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+              expect(status).to eq(200)
+              expect(app).to have_received(:call).at_least(:once)
+            end
+
+            it 'rate limits PATCH methods' do
+              status, response_headers, _ = middleware.call(patch_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+              expect(status).to eq(200)
+              expect(app).to have_received(:call).at_least(:once)
+            end
+
+            it 'rate limits PUT methods' do
+              status, response_headers, _ = middleware.call(patch_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+              expect(status).to eq(200)
+              expect(app).to have_received(:call).at_least(:once)
+            end
+
+            it 'does not rate limit GET or other methods' do
+              status, response_headers, _ = middleware.call(get_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq('99') # runs into the general limit
+              expect(status).to eq(200)
+              expect(app).to have_received(:call).at_least(:once)
+            end
+          end
           it 'tracks user\'s remaining requests independently' do
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('4')
@@ -100,6 +98,16 @@ module CloudFoundry
 
             _, response_headers, _ = middleware.call(user_2_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+          end
+
+          it 'tracks requests across different API versions' do
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+            _, response_headers, _ = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('3')
+
+            _, response_headers, _ = middleware.call(user_1_v3_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('2')
           end
 
           it 'resets remaining requests after the interval is over' do
@@ -159,7 +167,7 @@ module CloudFoundry
       end
 
       it 'allows the service_instance request to continue' do
-        _, _, _ = middleware.call(user_1_env)
+        middleware.call(user_1_env)
         expect(app).to have_received(:call)
       end
 
@@ -171,10 +179,10 @@ module CloudFoundry
 
       it 'logs the service instance request count when the interval expires' do
         Timecop.freeze do
-          _, _, _ = middleware.call(user_1_env)
+          middleware.call(user_1_env)
 
           Timecop.travel(Time.now + interval.minutes + 1.minute)
-          _, _, _ = middleware.call(user_1_env)
+          middleware.call(user_1_env)
           expect(logger).to have_received(:info).with "Resetting service instance request count of 1 for user 'user-id-1'"
         end
       end
@@ -200,7 +208,7 @@ module CloudFoundry
             allow(fake_request_2).to receive(:fetch_header).with('HTTP_X_FORWARDED_FOR').and_return('forwarded_ip_2')
           end
 
-          it 'uses unauthenticated_limit instead of general_limit' do
+          it 'uses unauthenticated_limit instead of service_instance limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Limit']).to eq('10')
@@ -276,8 +284,8 @@ module CloudFoundry
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
         end
         it 'does not rate limit' do
-          _, _, _ = middleware.call(user_1_env)
-          _, _, _ = middleware.call(user_1_env)
+          middleware.call(user_1_env)
+          middleware.call(user_1_env)
           status, response_headers, _ = middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
           expect(status).to eq(200)
@@ -318,7 +326,7 @@ module CloudFoundry
         end
 
         it 'ends the request' do
-          _, _, _ = middleware.call(middleware_env)
+          middleware.call(middleware_env)
           expect(app).not_to have_received(:call)
         end
 
