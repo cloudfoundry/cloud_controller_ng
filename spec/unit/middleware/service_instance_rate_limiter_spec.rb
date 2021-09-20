@@ -291,7 +291,7 @@ module CloudFoundry
           middleware.call(user_1_env)
           middleware.call(user_1_env)
           status, response_headers, _ = middleware.call(user_1_env)
-          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
+          expect(response_headers).not_to include('X-RateLimit-Remaining')
           expect(status).to eq(200)
           expect(app).to have_received(:call).at_least(:once)
         end

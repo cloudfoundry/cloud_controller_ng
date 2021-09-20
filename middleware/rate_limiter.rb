@@ -35,7 +35,7 @@ module CloudFoundry
             rate_limit_headers['X-RateLimit-Reset']     = request_count.service_instance_valid_until.utc.to_i.to_s
             rate_limit_headers['X-RateLimit-Remaining'] = [0, @service_limit - service_instance_count].max.to_s
 
-            return too_many_requests!(env, rate_limit_headers, true) if not_admin exceeded_service_instance_rate_limit(service_instance_count)
+            return too_many_requests!(env, rate_limit_headers, true) if exceeded_service_instance_rate_limit(service_instance_count)
 
             increment_service_instance_request_count!(request_count)
           elsif @general_limit_enabled
