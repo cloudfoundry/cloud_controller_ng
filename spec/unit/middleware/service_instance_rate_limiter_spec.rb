@@ -20,53 +20,97 @@ module CloudFoundry
       let(:unauthenticated_limit) { 10 }
       let(:interval) { 60 }
       let(:service_limit) { 5 }
-      let(:service_interval) { 5 }
+      let(:service_interval) { 6 }
       let(:logger) { double('logger', info: nil) }
 
-      let(:unauthenticated_env) { { some: 'env' } }
-      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
-      let(:user_1_env) { { 'cf.user_guid' => 'user-id-1' } }
-      let(:user_2_env) { { 'cf.user_guid' => 'user-id-2' } }
+      let(:path_info) { '/v2/service_instances' }
+      let(:v2_path_info) { '/v2/service_instances' }
+      let(:v3_path_info) { '/v3/service_instances' }
 
-      describe 'headers' do
+      let(:unauthenticated_env) { { some: 'env', 'PATH_INFO' => v2_path_info } }
+      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass'),
+                               'PATH_INFO' => v2_path_info,
+                               'REQUEST_METHOD' => 'POST'
+                            }
+      }
+      let(:user_1_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
+      let(:user_2_env) { { 'cf.user_guid' => 'user-id-2', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
+      let(:post_env) { { 'cf.user_guid' => 'post-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'POST' } }
+      let(:patch_env) { { 'cf.user_guid' => 'patch-user', 'PATH_INFO' => v3_path_info, 'REQUEST_METHOD' => 'PATCH' } }
+      let(:put_env) { { 'cf.user_guid' => 'put-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'PUT' } }
+      let(:get_env) { { 'cf.user_guid' => 'get-user', 'PATH_INFO' => v2_path_info, 'REQUEST_METHOD' => 'GET' } }
+
+      describe 'servce_instance requests' do
+        describe 'rate limits only specific methods' do
+          it 'rate limits POST methods' do
+            status, response_headers, _ = middleware.call(post_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+            expect(status).to eq(200)
+            expect(app).to have_received(:call).at_least(:once)
+          end
+
+          it 'rate limits PATCH methods' do
+            status, response_headers, _ = middleware.call(patch_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+            expect(status).to eq(200)
+            expect(app).to have_received(:call).at_least(:once)
+          end
+
+          it 'rate limits PUT methods' do
+            status, response_headers, _ = middleware.call(patch_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
+            expect(status).to eq(200)
+            expect(app).to have_received(:call).at_least(:once)
+          end
+
+          it 'does not rate limit GET or other methods' do
+            status, response_headers, _ = middleware.call(get_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('99') # runs into the general limit
+            expect(status).to eq(200)
+            expect(app).to have_received(:call).at_least(:once)
+          end
+        end
+      end
+
+      describe 'servce_instance headers' do
         describe 'X-RateLimit-Limit' do
           it 'shows the user the total request limit' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Limit']).to eq('5')
 
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Limit']).to eq('5')
           end
         end
 
         describe 'X-RateLimit-Remaining' do
           it 'shows the user the number of remaining requests' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
 
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('3')
           end
 
           it 'tracks user\'s remaining requests independently' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('3')
 
             _, response_headers, _ = middleware.call(user_2_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('4')
           end
 
           it 'resets remaining requests after the interval is over' do
             Timecop.freeze do
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('4')
 
-              Timecop.travel(Time.now + 61.minutes)
+              Timecop.travel(Time.now + 6.minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('4')
             end
           end
         end
@@ -74,11 +118,11 @@ module CloudFoundry
         describe 'X-RateLimit-Reset' do
           it 'shows the user when the interval will expire' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + service_interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
-              Timecop.travel(Time.now + 30.minutes)
+              Timecop.travel(Time.now + 3.minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
@@ -87,12 +131,12 @@ module CloudFoundry
 
           it 'tracks users independently' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + service_interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 1.minutes)
-              valid_until_2 = Time.now + interval.minutes
+              valid_until_2 = Time.now + service_interval.minutes
 
               _, response_headers, _ = middleware.call(user_2_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until_2.utc.to_i)
@@ -101,12 +145,12 @@ module CloudFoundry
 
           it 'resets after the interval' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + service_interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 91.minutes)
-              valid_until = Time.now + 60.minutes
+              valid_until = Time.now + service_interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
             end
@@ -114,28 +158,28 @@ module CloudFoundry
         end
       end
 
-      it 'allows the request to continue' do
+      it 'allows the service_instance request to continue' do
         _, _, _ = middleware.call(user_1_env)
         expect(app).to have_received(:call)
       end
 
-      it 'does not drop headers created in next middleware' do
+      it 'does not drop headers created in next middleware to service_instances requests' do
         allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
-        _, headers, _ = middleware.call({})
+        _, headers, _ = middleware.call({'PATH_INFO' => path_info, 'REQUEST_METHOD' => 'POST'})
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
-      it 'logs the request count when the interval expires' do
+      it 'logs the service instance request count when the interval expires' do
         Timecop.freeze do
           _, _, _ = middleware.call(user_1_env)
 
           Timecop.travel(Time.now + interval.minutes + 1.minute)
           _, _, _ = middleware.call(user_1_env)
-          expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id-1'"
+          expect(logger).to have_received(:info).with "Resetting service instance request count of 1 for user 'user-id-1'"
         end
       end
 
-      describe 'when the user is not logged in' do
+      describe 'when the user is not logged in and accesses services_instances' do
         describe 'when the user has basic auth credentials' do
           it 'exempts them from rate limiting' do
             _, response_headers, _ = middleware.call(basic_auth_env)
@@ -145,88 +189,11 @@ module CloudFoundry
           end
         end
 
-        describe 'exempting internal endpoints' do
-          context 'when the user is hitting a path starting with "/internal"' do
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/internal/pants/1234') }
-
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
-            end
-          end
-
-          context 'when the user is hitting containing, but NOT starting with "/internal"' do
-            let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/pants/internal/1234', headers: headers) }
-
-            it 'rate limits them' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to_not be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to_not be_nil
-              expect(response_headers['X-RateLimit-Reset']).to_not be_nil
-            end
-          end
-        end
-
-        describe 'exempting root endpoints' do
-          context 'when the user is hitting a root path /' do
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/') }
-
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
-            end
-          end
-
-          context 'when the user is hitting a root path /v2/info' do
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
-
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
-            end
-          end
-
-          context 'when the user is hitting a root path /v3' do
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3') }
-
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
-            end
-          end
-
-          context 'when the user is hitting a root path /healthz' do
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/healthz') }
-
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
-            end
-          end
-        end
-
         describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
           let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
           let(:headers_2) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }
-          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip', fullpath: '/some/path') }
-          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip', fullpath: '/some/path') }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip', fullpath: '/v2/service_instances/') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip', fullpath: '/v2/service_instances/coolstuff') }
 
           before do
             allow(fake_request).to receive(:fetch_header).with('HTTP_X_FORWARDED_FOR').and_return('forwarded_ip')
@@ -266,8 +233,8 @@ module CloudFoundry
 
         describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
           let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'X_HEADER' => 'nope' }) }
-          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip', fullpath: '/some/path') }
-          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2', fullpath: '/some/path') }
+          let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip', fullpath: '/v2/service_instances/notcoolstuff') }
+          let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2', fullpath: '/v2/service_instances/') }
 
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
@@ -303,6 +270,7 @@ module CloudFoundry
 
       context 'when user has admin or admin_read_only scopes' do
         let(:general_limit) { 1 }
+        let(:service_limit) { 1 }
 
         before do
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
@@ -311,7 +279,7 @@ module CloudFoundry
           _, _, _ = middleware.call(user_1_env)
           _, _, _ = middleware.call(user_1_env)
           status, response_headers, _ = middleware.call(user_1_env)
-          expect(response_headers).not_to include('X-RateLimit-Remaining')
+          expect(response_headers['X-RateLimit-Remaining']).to eq('0')
           expect(status).to eq(200)
           expect(app).to have_received(:call).at_least(:once)
         end
@@ -319,9 +287,9 @@ module CloudFoundry
 
       context 'when limit has exceeded' do
         let(:general_limit) { 0 }
-        let(:path_info) { '/v2/foo' }
+        let(:service_limit) { 0 }
         let(:middleware_env) do
-          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info, 'REQUEST_METHOD' => 'POST' }
         end
 
         it 'returns 429 response' do
@@ -341,7 +309,7 @@ module CloudFoundry
             error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
-            valid_until = Time.now + interval.minutes
+            valid_until = Time.now + service_interval.minutes
             _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
@@ -354,34 +322,34 @@ module CloudFoundry
           expect(app).not_to have_received(:call)
         end
 
-        context 'when the path is /v2/*' do
+        context 'when the path is /v2/service_instances' do
           it 'formats the response error in v2 format' do
             _, _, body = middleware.call(middleware_env)
             json_body = JSON.parse(body.first)
             expect(json_body).to include(
-              'code' => 10013,
-              'description' => 'Rate Limit Exceeded',
-              'error_code' => 'CF-RateLimitExceeded',
+              'code' => 10016,
+              'description' => 'Service Instance Rate Limit Exceeded',
+              'error_code' => 'CF-ServiceInstanceRateLimitExceeded',
             )
           end
         end
 
         context 'when the path is /v3/*' do
-          let(:path_info) { '/v3/foo' }
+          let(:path_info) { '/v3/service_instances' }
 
           it 'formats the response error in v3 format' do
             _, _, body = middleware.call(middleware_env)
             json_body = JSON.parse(body.first)
             expect(json_body['errors'].first).to include(
-              'code' => 10013,
-              'detail' => 'Rate Limit Exceeded',
-              'title' => 'CF-RateLimitExceeded',
+              'code' => 10016,
+              'detail' => 'Service Instance Rate Limit Exceeded',
+              'title' => 'CF-ServiceInstanceRateLimitExceeded',
             )
           end
         end
 
         context 'when the user is unauthenticated' do
-          let(:path_info) { '/v3/foo' }
+          let(:path_info) { '/v3/service_instances' }
           let(:unauthenticated_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           it 'suggests they log in' do
@@ -415,9 +383,9 @@ module CloudFoundry
 
         it 'shares request count between servers' do
           _, response_headers, _ = middleware.call(user_1_env)
-          expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+          expect(response_headers['X-RateLimit-Remaining']).to eq('4')
           _, response_headers, _ = other_middleware.call(user_1_env)
-          expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+          expect(response_headers['X-RateLimit-Remaining']).to eq('3')
         end
       end
     end

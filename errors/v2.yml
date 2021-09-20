@@ -103,6 +103,11 @@
   http_code: 503
   message: "%s"
 
+10016:
+  name: ServiceInstanceRateLimitExceeded
+  http_code: 429
+  message: "Service Instance Rate Limit Exceeded"
+
 20001:
   name: UserInvalid
   http_code: 400
