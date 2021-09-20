@@ -4,11 +4,25 @@ require 'cloud_controller/errors/api_error'
 require 'cloud_controller/errors/not_authenticated'
 require 'cloud_controller/errors/compound_error'
 
+module VCAP::CloudController::MyModule
+  class MyError < StandardError; end
+end
+
+module MyModule
+  class MyError < StandardError; end
+end
+
 RSpec.describe V3ErrorHasher do
   subject(:error_hasher) { V3ErrorHasher.new(error) }
 
   let(:unknown_error) do
-    error = RuntimeError.new('fake message')
+    error = MyModule::MyError.new('fake message')
+    error.set_backtrace('fake backtrace')
+    error
+  end
+
+  let(:cc_standard_error) do
+    error = VCAP::CloudController::MyModule::MyError.new('fake message')
     error.set_backtrace('fake backtrace')
     error
   end
@@ -129,7 +143,24 @@ RSpec.describe V3ErrorHasher do
           'title'          => 'UnknownError',
           'test_mode_info' => {
             'detail'    => 'fake message',
-            'title'     => 'CF-RuntimeError',
+            'title'     => 'CF-MyError',
+            'backtrace' => ['fake backtrace'],
+          }
+        }])
+      end
+    end
+
+    context 'with a cc standard error' do
+      let(:error) { cc_standard_error }
+
+      it 'uses a standard convention by default' do
+        expect(unsanitized_hash).to eq('errors' => [{
+          'code'           => 10001,
+          'detail'         => 'fake message',
+          'title'          => 'CF-MyError',
+          'test_mode_info' => {
+            'detail'    => 'fake message',
+            'title'     => 'CF-MyError',
             'backtrace' => ['fake backtrace'],
           }
         }])
@@ -253,6 +284,18 @@ RSpec.describe V3ErrorHasher do
           'code'   => 10001,
           'detail' => 'An unknown error occurred.',
           'title'  => 'UnknownError'
+        }])
+      end
+    end
+
+    context 'with a cc standard error' do
+      let(:error) { cc_standard_error }
+
+      it 'uses a standard convention by default' do
+        expect(sanitized_hash).to eq('errors' => [{
+          'code'   => 10001,
+          'detail' => 'fake message',
+          'title'  => 'CF-MyError'
         }])
       end
     end

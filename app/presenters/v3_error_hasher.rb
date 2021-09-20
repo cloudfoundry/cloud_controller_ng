@@ -14,8 +14,10 @@ class V3ErrorHasher < BaseErrorHasher
                        compound_error_payload
                      elsif api_error?
                        api_error_payload
-                     elsif services_error?
-                       services_error_payload
+                     elsif structured_error?
+                       structured_error_payload
+                     elsif cc_standard_error?
+                       standard_error_payload
                      else
                        unknown_error_payload
                      end
@@ -24,14 +26,27 @@ class V3ErrorHasher < BaseErrorHasher
   end
 
   def sanitized_hash
-    return_hash = unsanitized_hash
-    return_hash['errors'] = unsanitized_hash['errors'].map do |error|
-      error.keep_if { |k, _| allowed_keys.include? k }
+    hash = unsanitized_hash
+    hash['errors'] = unsanitized_hash['errors'].map do |error|
+      error.keep_if { |k, _| allowed_keys.include?(k) }
     end
-    return_hash
+    hash
   end
 
   private
+
+  def compound_error?
+    error.respond_to?(:underlying_errors)
+  end
+
+  def cc_standard_error?
+    modules = get_module_hierarchy(error.class.name)
+    error.is_a?(StandardError) && (modules[0] == 'CloudController' || modules[0] == 'VCAP' && modules[1] == 'CloudController')
+  end
+
+  def get_module_hierarchy(name)
+    name.deconstantize.empty? ? [name.demodulize] : get_module_hierarchy(name.deconstantize) + [name.demodulize]
+  end
 
   def compound_error_payload
     hash_api_errors(error.underlying_errors)
@@ -41,9 +56,15 @@ class V3ErrorHasher < BaseErrorHasher
     hash_api_errors([error])
   end
 
-  def services_error_payload
+  def structured_error_payload
     [
-      with_test_mode_info(hash: services_error_hash, an_error: error, backtrace: error.backtrace)
+      with_test_mode_info(hash: structured_error_hash, an_error: error, backtrace: error.backtrace)
+    ]
+  end
+
+  def standard_error_payload
+    [
+      with_test_mode_info(hash: standard_error_hash, an_error: error, backtrace: error.backtrace)
     ]
   end
 
@@ -61,18 +82,23 @@ class V3ErrorHasher < BaseErrorHasher
 
   def api_error_hash(an_error)
     {
+      'title'  => generate_error_code(an_error),
       'detail' => an_error.message,
-      'title'  => "CF-#{an_error.name}",
       'code'   => an_error.code,
     }
   end
 
-  def services_error_hash
-    error_hash = error.to_h
+  def structured_error_hash
+    hash = standard_error_hash
+    hash.merge!(error.to_h.keep_if { |k, v| allowed_keys.include?(k) && !v.nil? }) if error.respond_to?(:to_h)
+    hash
+  end
+
+  def standard_error_hash
     {
-      'detail' => error_hash['detail'] || error.message,
-      'title' => error_hash['title'] || "CF-#{error.class.name.demodulize}",
-      'code' => error_hash['code'] || UNKNOWN_ERROR_HASH['code'],
+      'title' => generate_error_code(error),
+      'detail' => error.message,
+      'code' => UNKNOWN_ERROR_HASH['code'],
     }
   end
 
@@ -83,24 +109,15 @@ class V3ErrorHasher < BaseErrorHasher
 
   def test_mode_hash(an_error:, backtrace:)
     info = {
+      'title'     => generate_error_code(an_error),
       'detail'    => an_error.message,
-      'title'     => generate_debug_title(an_error),
       'backtrace' => backtrace,
     }
     info.merge!(an_error.to_h) if an_error.respond_to?(:to_h)
-
     info
   end
 
-  def generate_debug_title(error)
-    if error.respond_to?(:name)
-      "CF-#{error.name}"
-    else
-      "CF-#{error.class.name.demodulize}"
-    end
-  end
-
   def allowed_keys
-    ['title', 'detail', 'code']
+    %w[title detail code]
   end
 end

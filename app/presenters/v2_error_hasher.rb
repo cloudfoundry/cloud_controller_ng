@@ -8,65 +8,55 @@ class V2ErrorHasher < BaseErrorHasher
   }.freeze
 
   def unsanitized_hash
-    return unknown_error_hash.dup if error.nil?
+    return UNKNOWN_ERROR_HASH.dup if error.nil?
 
     payload = if api_error?
                 api_error_hash
-              elsif services_error?
-                services_error_hash
+              elsif structured_error?
+                structured_error_hash
               else
-                unknown_error_hash.dup
+                UNKNOWN_ERROR_HASH.dup
               end
     payload['test_mode_info'] = test_mode_hash
 
     payload
   end
 
+  def sanitized_hash
+    unsanitized_hash.keep_if { |k, _| allowed_keys.include?(k) }
+  end
+
   private
 
   def api_error_hash
     {
+      'error_code'  => generate_error_code(error),
       'description' => error.message,
-      'error_code'  => "CF-#{error.name}",
       'code'        => error.code,
     }
   end
 
-  def services_error_hash
+  def structured_error_hash
     hash = {
+      'error_code'  => generate_error_code(error),
       'description' => error.message,
-      'error_code'  => "CF-#{error.class.name.demodulize}",
       'code'        => UNKNOWN_ERROR_HASH['code'],
     }
-    allowed_keys.each do |key|
-      hash[key] = error.to_h[key] unless error.to_h[key].nil?
-    end
-
+    hash.merge!(error.to_h.keep_if { |k, v| allowed_keys.include?(k) && !v.nil? }) if error.respond_to?(:to_h)
     hash
   end
 
   def test_mode_hash
-    debug_error_code = if error.respond_to?(:name)
-                         "CF-#{error.name}"
-                       else
-                         "CF-#{error.class.name.demodulize}"
-                       end
-
     info = {
+      'error_code'  => generate_error_code(error),
       'description' => error.message,
-      'error_code'  => debug_error_code,
       'backtrace'   => error.backtrace,
     }
     info.merge!(error.to_h) if error.respond_to?(:to_h)
-
     info
   end
 
-  def unknown_error_hash
-    UNKNOWN_ERROR_HASH
-  end
-
   def allowed_keys
-    ['error_code', 'description', 'code', 'http']
+    %w[error_code description code http]
   end
 end

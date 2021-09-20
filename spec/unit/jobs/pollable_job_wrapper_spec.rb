@@ -2,10 +2,9 @@ require 'spec_helper'
 require 'jobs/pollable_job_wrapper'
 require 'yaml'
 
-module VCAP::CloudController::Jobs
-  class BigException < StandardError
-  end
+class BigException < StandardError; end
 
+module VCAP::CloudController::Jobs
   RSpec.describe PollableJobWrapper, job_context: :worker do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil) }
     let(:pollable_job) { PollableJobWrapper.new(job) }
@@ -180,7 +179,7 @@ module VCAP::CloudController::Jobs
           errors = block['errors']
           expect(errors.size).to eq(1)
           error = errors[0]['test_mode_info']
-          expect(error['detail']).to eq('VCAP::CloudController::Jobs::BigException')
+          expect(error['detail']).to eq('BigException')
           expect(error['backtrace'].size).to be == 8
         end
       end
