@@ -16,9 +16,7 @@ module CloudFoundry
         @service_limit         = service_limit
         @service_interval      = service_interval
       end
-      # rubocop:disable Metrics/CyclomaticComplexity
 
-      # rubocop:disable Metrics/CyclomaticComplexity
       def call(env)
         rate_limit_headers = {}
 
@@ -58,7 +56,6 @@ module CloudFoundry
         status, headers, body = @app.call(env)
         [status, headers.merge(rate_limit_headers), body]
       end
-      # rubocop:enable Metrics/CyclomaticComplexity
 
       private
 
@@ -85,7 +82,7 @@ module CloudFoundry
           'POST',
           'PUT'
         ]
-        if rate_limit_methods.include?env['REQUEST_METHOD']
+        if rate_limit_methods.include? env['REQUEST_METHOD']
           return true
         end
 

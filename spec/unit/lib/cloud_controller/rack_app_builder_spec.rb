@@ -79,18 +79,18 @@ module VCAP::CloudController
 
         context 'when configuring one rate limter to on and the other off' do
           describe 'when general_limit_enabled is off but service limiter is on' do
-          before do
-            builder.build(TestConfig.override(rate_limiter: {
-              enabled: false,
-              reset_interval_in_minutes: 60,
-              general_limit: 123,
-              unauthenticated_limit: 1,
-            }, service_instance_rate_limiter: {
-              enabled: true,
-              service_instance_reset_interval_in_minutes: 456,
-              service_instance_limit: 2,
-              }), request_metrics, request_logs).to_app
-          end
+            before do
+              builder.build(TestConfig.override(rate_limiter: {
+                enabled: false,
+                reset_interval_in_minutes: 60,
+                general_limit: 123,
+                unauthenticated_limit: 1,
+              }, service_instance_rate_limiter: {
+                enabled: true,
+                service_instance_reset_interval_in_minutes: 456,
+                service_instance_limit: 2,
+                }), request_metrics, request_logs).to_app
+            end
             it 'enables the RateLimiter middleware' do
               expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
                 anything,

@@ -177,7 +177,7 @@ module CloudFoundry
 
       it 'does not drop headers created in next middleware to service_instances requests' do
         allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
-        _, headers, _ = middleware.call({'PATH_INFO' => path_info, 'REQUEST_METHOD' => 'POST'})
+        _, headers, _ = middleware.call({ 'PATH_INFO' => path_info, 'REQUEST_METHOD' => 'POST' })
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
@@ -439,12 +439,9 @@ module CloudFoundry
 
             _, response_headers, _ = middleware_general_on_services_off.call(service_instance_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('2')
-
           end
-
         end
       end
-
     end
   end
 end

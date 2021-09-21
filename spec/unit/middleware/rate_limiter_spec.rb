@@ -459,8 +459,6 @@ module CloudFoundry
 
             _, response_headers, _ = middleware_general_on_services_off.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('96')
-
-
           end
         end
       end
