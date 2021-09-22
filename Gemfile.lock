@@ -415,7 +415,7 @@ GEM
       unicode-display_width (>= 1.4.0, < 3.0)
     rubocop-ast (1.11.0)
       parser (>= 3.0.1.1)
-    ruby-debug-ide (0.7.2)
+    ruby-debug-ide (0.7.3)
       rake (>= 0.8.1)
     ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.2)
