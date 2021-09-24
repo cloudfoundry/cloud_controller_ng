@@ -6,17 +6,18 @@ module CloudFoundry
       let(:middleware) do
         RateLimiter.new(
           app,
-          logger:                logger,
-          general_limit:         general_limit,
-          unauthenticated_limit: unauthenticated_limit,
-          interval:              interval,
+          logger:                     logger,
+          general_limit:              general_limit,
+          unauthenticated_limit:      unauthenticated_limit,
+          reset_interval_in_minutes:  reset_interval_in_minutes,
+          update_db_every_n_requests: 1,
         )
       end
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:general_limit) { 100 }
       let(:unauthenticated_limit) { 10 }
-      let(:interval) { 60 }
+      let(:reset_interval_in_minutes) { 60 }
       let(:logger) { double('logger', info: nil) }
 
       let(:unauthenticated_env) { { some: 'env' } }
@@ -70,7 +71,7 @@ module CloudFoundry
         describe 'X-RateLimit-Reset' do
           it 'shows the user when the interval will expire' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + reset_interval_in_minutes.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
@@ -83,12 +84,12 @@ module CloudFoundry
 
           it 'tracks users independently' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + reset_interval_in_minutes.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 1.minutes)
-              valid_until_2 = Time.now + interval.minutes
+              valid_until_2 = Time.now + reset_interval_in_minutes.minutes
 
               _, response_headers, _ = middleware.call(user_2_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until_2.utc.to_i)
@@ -97,7 +98,7 @@ module CloudFoundry
 
           it 'resets after the interval' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + reset_interval_in_minutes.minutes
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
@@ -125,7 +126,7 @@ module CloudFoundry
         Timecop.freeze do
           _, _, _ = middleware.call(user_1_env)
 
-          Timecop.travel(Time.now + interval.minutes + 1.minute)
+          Timecop.travel(Time.now + reset_interval_in_minutes.minutes + 1.minute)
           _, _, _ = middleware.call(user_1_env)
           expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id-1'"
         end
@@ -238,7 +239,7 @@ module CloudFoundry
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + reset_interval_in_minutes.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
@@ -274,7 +275,7 @@ module CloudFoundry
 
           it 'identifies them by the request ip' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now + reset_interval_in_minutes.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
@@ -337,7 +338,7 @@ module CloudFoundry
             error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
-            valid_until = Time.now + interval.minutes
+            valid_until = Time.now + reset_interval_in_minutes.minutes
             _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
@@ -400,10 +401,11 @@ module CloudFoundry
         let(:other_middleware) do
           RateLimiter.new(
             app,
-            logger:                logger,
-            general_limit:         general_limit,
-            unauthenticated_limit: unauthenticated_limit,
-            interval:              interval
+            logger:                     logger,
+            general_limit:              general_limit,
+            unauthenticated_limit:      unauthenticated_limit,
+            reset_interval_in_minutes:  reset_interval_in_minutes,
+            update_db_every_n_requests: 1,
           )
         end
 

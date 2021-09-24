@@ -286,6 +286,7 @@ module VCAP::CloudController
               general_limit: Integer,
               unauthenticated_limit: Integer,
               reset_interval_in_minutes: Integer,
+              update_db_every_n_requests: Integer,
             },
             shared_isolation_segment_name: String,
 

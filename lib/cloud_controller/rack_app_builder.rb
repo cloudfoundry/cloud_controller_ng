@@ -32,7 +32,8 @@ module VCAP::CloudController
             logger: Steno.logger('cc.rate_limiter'),
             general_limit: config.get(:rate_limiter, :general_limit),
             unauthenticated_limit: config.get(:rate_limiter, :unauthenticated_limit),
-            interval: config.get(:rate_limiter, :reset_interval_in_minutes),
+            reset_interval_in_minutes: config.get(:rate_limiter, :reset_interval_in_minutes),
+            update_db_every_n_requests: config.get(:rate_limiter, :update_db_every_n_requests),
           }
         end
 

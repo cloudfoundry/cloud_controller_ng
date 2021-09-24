@@ -7,7 +7,8 @@ RSpec.describe 'Rate Limiting' do
         enabled: true,
         general_limit: 10,
         unauthenticated_limit: 2,
-        reset_interval_in_minutes: 60
+        reset_interval_in_minutes: 60,
+        update_db_every_n_requests: 1,
       }
     )
   end

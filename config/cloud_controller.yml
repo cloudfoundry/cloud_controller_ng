@@ -258,6 +258,7 @@ rate_limiter:
   general_limit: 2000
   unauthenticated_limit: 100
   reset_interval_in_minutes: 60
+  update_db_every_n_requests: 1
 
 diego:
   file_server_url: http://file-server.service.cf.internal:8080

@@ -2,15 +2,89 @@ require 'mixins/client_ip'
 
 module CloudFoundry
   module Middleware
+    InMemoryRequestCount = Struct.new(:valid_until, :requests)
+
+    class RequestCounter
+      include Singleton
+
+      def initialize
+        @mutex = Mutex.new
+        @data = {}
+      end
+
+      def get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+        db_count, valid_until = db_find_or_create(user_guid, reset_interval_in_minutes, logger)
+        mem_count = mem_find_or_create(user_guid, valid_until, update_db_every_n_requests)
+
+        [db_count + mem_count, valid_until]
+      end
+
+      def increment(user_guid, update_db_every_n_requests)
+        db_update_count = mem_increment(user_guid, update_db_every_n_requests)
+        db_update(user_guid, { count: Sequel.expr(db_update_count) + :count }) if db_update_count > 0
+      end
+
+      private
+
+      def mem_find_or_create(user_guid, valid_until, update_db_every_n_requests)
+        return 0 if update_db_every_n_requests == 1
+
+        @mutex.synchronize do
+          request_count = @data[user_guid]
+          return request_count.requests if request_count&.valid_until == valid_until
+
+          @data[user_guid] = InMemoryRequestCount.new(valid_until, 0)
+          return 0
+        end
+      end
+
+      def mem_increment(user_guid, update_db_every_n_requests)
+        return 1 if update_db_every_n_requests == 1
+
+        @mutex.synchronize do
+          request_count = @data[user_guid]
+          request_count.requests += 1
+          return 0 if request_count.requests < update_db_every_n_requests
+
+          db_update_count = request_count.requests
+          @data.delete(user_guid)
+          return db_update_count
+        end
+      end
+
+      def db_find_or_create(user_guid, reset_interval_in_minutes, logger)
+        request_count = VCAP::CloudController::RequestCount.find_or_create(user_guid: user_guid) do |created_request_count|
+          created_request_count.valid_until = Time.now + reset_interval_in_minutes.minutes
+        end
+        count = request_count.count
+        valid_until = request_count.valid_until
+
+        if valid_until < Time.now # expired
+          logger.info("Resetting request count of #{count} for user '#{user_guid}'")
+          count = 0
+          valid_until = Time.now + reset_interval_in_minutes.minutes
+          db_update(user_guid, { count: count, valid_until: valid_until })
+        end
+
+        [count, valid_until]
+      end
+
+      def db_update(user_guid, fields)
+        VCAP::CloudController::RequestCount.where(user_guid: user_guid).update(**fields)
+      end
+    end
+
     class RateLimiter
       include CloudFoundry::Middleware::ClientIp
 
-      def initialize(app, logger:, general_limit:, unauthenticated_limit:, interval:)
-        @app                   = app
-        @logger                = logger
-        @general_limit         = general_limit
-        @unauthenticated_limit = unauthenticated_limit
-        @interval              = interval
+      def initialize(app, logger:, general_limit:, unauthenticated_limit:, reset_interval_in_minutes:, update_db_every_n_requests:)
+        @app                        = app
+        @logger                     = logger
+        @general_limit              = general_limit
+        @unauthenticated_limit      = unauthenticated_limit
+        @reset_interval_in_minutes  = reset_interval_in_minutes
+        @update_db_every_n_requests = update_db_every_n_requests
+        @request_counter            = RequestCounter.instance
       end
 
       def call(env)
@@ -21,21 +95,17 @@ module CloudFoundry
         unless skip_rate_limiting?(env, request)
           user_guid = user_token?(env) ? env['cf.user_guid'] : client_ip(request)
 
-          request_count = VCAP::CloudController::RequestCount.find_or_create(user_guid: user_guid) do |created_request_count|
-            created_request_count.valid_until = Time.now + @interval.minutes
-          end
+          count, valid_until = @request_counter.get(user_guid, @reset_interval_in_minutes, @update_db_every_n_requests, @logger)
 
-          reset_request_count(request_count) if reset_interval_expired(request_count)
-
-          count = request_count.count + 1
+          count += 1
 
           rate_limit_headers['X-RateLimit-Limit']     = request_limit(env).to_s
-          rate_limit_headers['X-RateLimit-Reset']     = request_count.valid_until.utc.to_i.to_s
+          rate_limit_headers['X-RateLimit-Reset']     = valid_until.utc.to_i.to_s
           rate_limit_headers['X-RateLimit-Remaining'] = [0, request_limit(env) - count].max.to_s
 
           return too_many_requests!(env, rate_limit_headers) if exceeded_rate_limit(count, env)
 
-          increment_request_count!(request_count)
+          @request_counter.increment(user_guid, @update_db_every_n_requests)
         end
 
         status, headers, body = @app.call(env)
@@ -65,10 +135,6 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
-      def increment_request_count!(request_count)
-        request_count.update(count: Sequel.expr(1) + :count)
-      end
-
       def request_limit(env)
         @request_limit ||= user_token?(env) ? @general_limit : @unauthenticated_limit
       end
@@ -94,15 +160,6 @@ module CloudFoundry
 
       def exceeded_rate_limit(count, env)
         count > request_limit(env)
-      end
-
-      def reset_interval_expired(request_count)
-        request_count.valid_until < Time.now
-      end
-
-      def reset_request_count(request_count)
-        @logger.info("Resetting request count of #{request_count.count} for user '#{request_count.user_guid}'")
-        request_count.update(valid_until: Time.now + @interval.minutes, count: 0)
       end
 
       def admin?
