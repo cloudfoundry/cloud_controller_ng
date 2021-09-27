@@ -10,7 +10,7 @@ module CloudFoundry
           general_limit:              general_limit,
           unauthenticated_limit:      unauthenticated_limit,
           reset_interval_in_minutes:  reset_interval_in_minutes,
-          update_db_every_n_requests: 1,
+          update_db_every_n_requests: update_db_every_n_requests,
         )
       end
 
@@ -18,6 +18,7 @@ module CloudFoundry
       let(:general_limit) { 100 }
       let(:unauthenticated_limit) { 10 }
       let(:reset_interval_in_minutes) { 60 }
+      let(:update_db_every_n_requests) { 1 }
       let(:logger) { double('logger', info: nil) }
 
       let(:unauthenticated_env) { { some: 'env' } }
@@ -414,6 +415,163 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Remaining']).to eq('99')
           _, response_headers, _ = other_middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+        end
+      end
+    end
+
+    RSpec.describe RequestCounter do
+      let(:request_counter) { RequestCounter.instance }
+      let(:reset_interval_in_minutes) { 60 }
+      let(:logger) { double('logger', info: nil) }
+      let(:user_guid) { 'user-id' }
+      let(:db_request_count) do
+        -> { VCAP::CloudController::RequestCount.first(user_guid: user_guid) }
+      end
+      let(:create_request_count) do
+        ->(count) { VCAP::CloudController::RequestCount.create(user_guid: user_guid) do |rc|
+                      rc.valid_until = Time.now.utc + reset_interval_in_minutes.minutes
+                      rc.count = count
+                    end
+        }
+      end
+
+      # Reset the request counter instance between tests
+      before(:each) do
+        Singleton.__init__(RequestCounter)
+      end
+
+      describe 'with update_db_every_n_requests = 1' do
+        let(:update_db_every_n_requests) { 1 }
+        describe 'get' do
+          it 'should return the db count and valid_until' do
+            Timecop.freeze do
+              request_count = create_request_count.call(10)
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+              expect(count).to eq(request_count.count)
+              expect(valid_until).to eq(request_count.valid_until)
+            end
+          end
+
+          it 'should create a new record and return 0 and new valid_until when user has not been seen before' do
+            Timecop.freeze do
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+              expect(count).to eq(0)
+              expect(valid_until).to be_within(1.seconds).of(Time.now.utc + reset_interval_in_minutes.minutes)
+              expect(db_request_count.call.count).to eq(0)
+            end
+          end
+
+          it 'should reset the validity when requests have expired' do
+            Timecop.freeze do
+              create_request_count.call(10)
+              Timecop.travel(Time.now.utc + (1 + reset_interval_in_minutes).minutes)
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+
+              expected_time = Time.now.utc + reset_interval_in_minutes.minutes
+              expect(count).to eq(0)
+              expect(db_request_count.call.count).to eq(0)
+              expect(valid_until).to be_within(1.seconds).of(expected_time)
+              expect(db_request_count.call.valid_until).to be_within(1.seconds).of(expected_time)
+              expect(logger).to have_received(:info).with "Resetting request count of 10 for user '#{user_guid}'"
+            end
+          end
+
+          it 'should not create an in-memory record' do
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(request_counter.instance_variable_get(:@data)).to eq({})
+          end
+        end
+
+        describe 'increment' do
+          it 'should add 1 to the db count' do
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(db_request_count.call.count).to eq(0)
+            request_counter.increment(user_guid, update_db_every_n_requests)
+            expect(db_request_count.call.count).to eq(1)
+          end
+        end
+      end
+
+      describe 'with update_db_every_n_requests > 1' do
+        let(:update_db_every_n_requests) { 3 }
+
+        describe 'get' do
+          it 'should return 0 and new valid_until when user has not been seen before' do
+            Timecop.freeze do
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+              expect(count).to eq(0)
+              expect(valid_until).to be_within(1).of(Time.now.utc + reset_interval_in_minutes.minutes)
+            end
+          end
+
+          it 'should return the db count when user has not been seen before by this instance' do
+            create_request_count.call(10)
+            count, _ = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(count).to eq(10)
+          end
+
+          it 'should return the combined count when the user has made some requests below the limit' do
+            create_request_count.call(10)
+            # Initialize this user in the in-memory map
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            2.times do request_counter.increment(user_guid, update_db_every_n_requests) end
+            count, _ = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(count).to eq(12)
+          end
+
+          it 'reset in-memory count to 0 when requests are expired by another instance (validity is different)' do
+            Timecop.freeze do
+              # Create in-memory record with 2 requests
+              request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+              2.times do request_counter.increment(user_guid, update_db_every_n_requests) end
+
+              db_valid_until = Time.now.utc + 100.minutes
+              db_request_count.call.update(valid_until: db_valid_until, count: 10)
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+              # Ignores 2 in-memory requests due to validity difference
+              expect(count).to eq(10)
+              expect(valid_until).to be_within(1.second).of(db_valid_until)
+            end
+          end
+
+          it 'should create a record in the db on first get' do
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(db_request_count.call.count).to eq(0)
+          end
+
+          it 'should reset the validity in db when requests have expired' do
+            Timecop.freeze do
+              create_request_count.call(10)
+              Timecop.travel(Time.now.utc + (1 + reset_interval_in_minutes).minutes)
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+
+              expected_time = Time.now.utc + reset_interval_in_minutes.minutes
+              expect(count).to eq(0)
+              expect(db_request_count.call.count).to eq(0)
+              expect(valid_until).to be_within(1.seconds).of(expected_time)
+              expect(db_request_count.call.valid_until).to be_within(1.seconds).of(expected_time)
+              expect(logger).to have_received(:info).with "Resetting request count of 10 for user '#{user_guid}'"
+            end
+          end
+        end
+
+        describe 'increment' do
+          it 'should not update the db when below update limit' do
+            create_request_count.call(10)
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            2.times do request_counter.increment(user_guid, update_db_every_n_requests) end
+            expect(db_request_count.call.count).to eq(10)
+          end
+
+          it 'should update the db and reset in-memory counter when update limit is reached' do
+            create_request_count.call(10)
+            request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            3.times do request_counter.increment(user_guid, update_db_every_n_requests) end
+            expect(db_request_count.call.count).to eq(13)
+
+            count, _ = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
+            expect(count).to eq(13)
+          end
         end
       end
     end
