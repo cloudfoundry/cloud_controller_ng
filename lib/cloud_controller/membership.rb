@@ -17,11 +17,17 @@ module VCAP::CloudController
     end
 
     def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      space_ids = Space.where(guid: space_guid).select(:id)
-      return true if SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_ids).any?
+      if space_guid && space_role?(roles)
+        space_id = Space.where(guid: space_guid).select(:id)
+        return true unless SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_id).empty?
+      end
 
-      org_ids = Organization.where(guid: org_guid).select(:id)
-      OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_ids).any?
+      if org_guid && org_role?(roles)
+        org_id = Organization.where(guid: org_guid).select(:id)
+        return true unless OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_id).empty?
+      end
+
+      false
     end
 
     def org_guids_for_roles(roles)
@@ -61,6 +67,14 @@ module VCAP::CloudController
 
     def org_roles(roles)
       Array(roles) & ORG_ROLES
+    end
+
+    def space_role?(roles)
+      space_roles(roles).any?
+    end
+
+    def org_role?(roles)
+      org_roles(roles).any?
     end
   end
 end
