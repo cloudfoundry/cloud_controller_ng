@@ -13,7 +13,10 @@ module VCAP::CloudController
     describe '#create' do
       it 'creates share' do
         shared_instance = service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
-
+        # The target_space variable will not refresh its service_instances anymore after we added a call to grab the shared services with the space to the
+        # Validation of shared services. If we just reload the target_space1 object we can get the new version of target_space1 & 2's shared services.
+        target_space1.reload
+        target_space2.reload
         expect(shared_instance.shared_spaces.length).to eq 2
 
         expect(target_space1.service_instances_shared_from_other_spaces.length).to eq 1
@@ -29,17 +32,6 @@ module VCAP::CloudController
         service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
         expect(Repositories::ServiceInstanceShareEventRepository).to have_received(:record_share_event).with(
           service_instance, [target_space1.guid, target_space2.guid], user_audit_info)
-      end
-
-      context 'when a share already exists' do
-        before do
-          service_instance.add_shared_space(target_space1)
-        end
-
-        it 'is idempotent' do
-          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
-          expect(shared_instance.shared_spaces.length).to eq 1
-        end
       end
 
       context 'when sharing one space from the list of spaces fails' do
@@ -108,6 +100,27 @@ module VCAP::CloudController
             service_instance_share.create(service_instance, [target_space1], user_audit_info)
           }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, /A service instance called #{service_instance.name} already exists in #{target_space1.name}/)
           expect(service_instance.shared_spaces).to be_empty
+        end
+      end
+
+      context 'when a service instance with the same name has already been shared with the target space' do
+        let(:service_instance1) { ManagedServiceInstance.make(name: 'banana') }
+        let(:service_instance2) { ManagedServiceInstance.make(name: 'banana') }
+
+        before do
+          service_instance_share.create(service_instance1, [Space.first(guid: target_space1.guid)], user_audit_info)
+        end
+
+        it 'raises an api error' do
+          # The target_space variable will not refresh its service_instances anymore after we added a call to grab the shared services with the space to the
+          # Validation of shared services. If we just reload the target_space1 object we can get the new version of target_space1's shared services.
+          target_space1.reload
+          expect {
+            service_instance_share.create(service_instance2, [target_space1], user_audit_info)
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error,
+/A service instance called #{service_instance1.name} has already been shared with #{target_space1.name}/)
+          expect(service_instance1.shared_spaces).to eq [target_space1]
+          expect(service_instance2.shared_spaces).to be_empty
         end
       end
 
