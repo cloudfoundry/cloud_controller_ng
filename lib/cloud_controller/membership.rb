@@ -17,11 +17,17 @@ module VCAP::CloudController
     end
 
     def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      space_ids = Space.where(guid: space_guid).select(:id)
-      return true if SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_ids).any?
+      if space_guid && space_role?(roles)
+        space_id = Space.where(guid: space_guid).select(:id)
+        return true unless SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_id).empty?
+      end
 
-      org_ids = Organization.where(guid: org_guid).select(:id)
-      OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_ids).any?
+      if org_guid && org_role?(roles)
+        org_id = Organization.where(guid: org_guid).select(:id)
+        return true unless OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_id).empty?
+      end
+
+      false
     end
 
     def org_guids_for_roles(roles)
@@ -33,14 +39,12 @@ module VCAP::CloudController
     end
 
     def orgs_for_roles_subquery(roles)
-      org_role_dataset = OrganizationRole.where(type: org_roles(roles), user_id: @user.id)
-      org_guid_dataset = Organization.where(id: org_role_dataset.select(:organization_id)).select(:id, :guid)
-
-      space_role_dataset = SpaceRole.where(type: space_roles(roles), user_id: @user.id)
-      spaces_dataset = Space.where(id: space_role_dataset.select(:space_id))
-      org_guids_for_space_roles_dataset = Organization.where(id: spaces_dataset.select(:organization_id)).select(:id, :guid)
-
-      org_guids_for_space_roles_dataset.union(org_guid_dataset)
+      org_ids = org_ids_for_org_roles(roles)
+      space_ids = space_ids_for_space_roles(roles)
+      org_ids_from_space_roles = if space_ids
+                                   Space.where(id: space_ids).select(:organization_id)
+                                 end
+      Organization.where(id: org_ids).or(id: org_ids_from_space_roles).select(:id, :guid)
     end
 
     def space_guids_for_roles(roles)
@@ -52,13 +56,9 @@ module VCAP::CloudController
     end
 
     def spaces_for_roles_subquery(roles)
-      space_role_dataset = SpaceRole.where(type: space_roles(roles), user_id: @user.id)
-      space_guid_dataset = Space.where(id: space_role_dataset.select(:space_id)).select(:id, :guid)
-
-      org_role_dataset = OrganizationRole.where(type: org_roles(roles), user_id: @user.id)
-      space_guids_for_org_roles_dataset = Space.where(organization_id: org_role_dataset.select(:organization_id)).select(:id, :guid)
-
-      space_guids_for_org_roles_dataset.union(space_guid_dataset)
+      space_ids = space_ids_for_space_roles(roles)
+      org_ids = org_ids_for_org_roles(roles)
+      Space.where(id: space_ids).or(organization_id: org_ids).select(:id, :guid)
     end
 
     private
@@ -69,6 +69,26 @@ module VCAP::CloudController
 
     def org_roles(roles)
       Array(roles) & ORG_ROLES
+    end
+
+    def space_role?(roles)
+      space_roles(roles).any?
+    end
+
+    def org_role?(roles)
+      org_roles(roles).any?
+    end
+
+    def space_ids_for_space_roles(roles)
+      if space_role?(roles)
+        SpaceRole.where(type: space_roles(roles), user_id: @user.id).select(:space_id)
+      end
+    end
+
+    def org_ids_for_org_roles(roles)
+      if org_role?(roles)
+        OrganizationRole.where(type: org_roles(roles), user_id: @user.id).select(:organization_id)
+      end
     end
   end
 end
