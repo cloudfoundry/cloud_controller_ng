@@ -23,11 +23,13 @@ Sequel.migration do
           ids << c[0]
         end
 
+        # rubocop:disable Layout/DotPosition
         @db[<<-SQL, *@batched_commands.flatten, *ids].update
           UPDATE droplets
           SET process_types = (CASE #{cases.join(' ')} ELSE process_types END)
           WHERE id IN (#{id_place_holders.join(',')})
         SQL
+        # rubocop:enable Layout/DotPosition
       end
 
       @batched_commands = []

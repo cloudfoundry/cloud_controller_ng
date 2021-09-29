@@ -84,6 +84,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
       EOS
 
+      # rubocop:disable Layout/DotPosition
       request_body_example = <<-EOS.gsub(/^ */, '')
         --AaB03x
         Content-Disposition: form-data; name="async"
@@ -102,6 +103,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         &lt;&lt;binary artifact bytes&gt;&gt;
         --AaB03x
       EOS
+      # rubocop:enable Layout/DotPosition
 
       client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
