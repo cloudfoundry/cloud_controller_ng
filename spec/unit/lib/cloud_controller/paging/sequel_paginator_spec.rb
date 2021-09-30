@@ -83,6 +83,24 @@ module VCAP::CloudController
         }.not_to raise_error
         expect(paginated_result.total).to be 1
       end
+
+      it 'selects only primary key when getting pagination_record_count for distinct dataset' do
+        options = { page: 1, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+        new_dataset = dataset.distinct
+
+        def normalize_quotes(string)
+          return string unless dataset.db.database_type == :postgres
+
+          string.tr('`', '"')
+        end
+
+        expect(new_dataset.db).to receive(:execute).once.with(/#{normalize_quotes 'SELECT DISTINCT `apps`.`id`'}/, {}).and_call_original
+        expect(new_dataset.db).to receive(:execute).and_call_original
+
+        paginated_result = paginator.get_page(new_dataset, pagination_options)
+        expect(paginated_result.total).to be > 1
+      end
     end
   end
 end
