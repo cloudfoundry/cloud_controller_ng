@@ -15,23 +15,10 @@ module VCAP::CloudController
         filter(message, dataset).select_all(:services).distinct
       end
 
-      def join_tables(dataset, message, omniscient)
-        need_all_parent_tables = !omniscient || visibility_filter?(message)
+      private
 
-        filter_properties = [
-          :service_broker_guids,
-          :service_broker_names,
-        ]
-
-        need_broker_tables = filter_properties.any? { |filter| message.requested?(filter) }
-
-        if need_all_parent_tables
-          dataset = join_all_parent_tables(dataset.left_join(:service_plans, service_id: Sequel[:services][:id]))
-        elsif need_broker_tables
-          dataset = dataset.join(:service_brokers, id: Sequel[:services][:service_broker_id])
-        end
-
-        dataset
+      def join_service_plans(dataset)
+        join(dataset, :left, :service_plans, service_id: Sequel[:services][:id])
       end
 
       def filter(message, dataset)
