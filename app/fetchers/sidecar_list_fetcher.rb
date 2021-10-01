@@ -5,12 +5,12 @@ module VCAP::CloudController
     class << self
       def fetch_for_app(message, app_guid)
         app, _, _ = AppFetcher.new.fetch(app_guid)
-        [app, filter(message, app.sidecars_dataset)]
+        [app, filter(message, app&.sidecars_dataset)]
       end
 
       def fetch_for_process(message, process_guid)
         process, _, _ = ProcessFetcher.fetch(process_guid: process_guid)
-        [process, filter(message, process.sidecars_dataset)]
+        [process, filter(message, process&.sidecars_dataset)]
       end
 
       private
