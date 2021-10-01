@@ -166,6 +166,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'shared_spaces' do
+          let(:space1) { Space.make }
+          let(:space2) { Space.make }
+          let!(:route) { Route.make(space: ProcessModelFactory.make.space, domain: SharedDomain.make) } 
+
+          it 'associates with shared organizations' do
+            route.space(space1)
+            route.add_shared_space(space2)
+            expect(route.shared_spaces).to include(space2)
+          end
+        end
+
         context 'with domain' do
           it 'succeeds if its a shared domain' do
             route = Route.make(domain: SharedDomain.make)

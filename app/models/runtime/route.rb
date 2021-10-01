@@ -12,6 +12,13 @@ module VCAP::CloudController
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
+    
+    many_to_many :shared_spaces,
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_routes',
+      left_key: :route_id,
+      right_key: :space_id
+
     one_through_one :organization, join_table: Space.table_name, left_key: :id, left_primary_key: :space_id, right_primary_key: :id, right_key: :organization_id
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
@@ -32,7 +39,7 @@ module VCAP::CloudController
 
     add_association_dependencies route_mappings: :destroy
 
-    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
+    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port, :shared_spaces
     import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
 
     add_association_dependencies labels: :destroy
