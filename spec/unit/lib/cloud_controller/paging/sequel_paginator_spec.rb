@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     describe '#get_page' do
       let(:dataset) { AppModel.dataset }
-      let!(:app_model1) { AppModel.make }
+      let!(:app_model1) { AppModel.make(space: Space.make) }
       let!(:app_model2) { AppModel.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
@@ -18,6 +18,14 @@ module VCAP::CloudController
         pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.records.length).to eq(1)
+      end
+
+      it 'returns no rows when result set is empty' do
+        options = { page: page, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(ServiceKey.dataset, pagination_options)
+        expect(paginated_result.records.length).to eq(0)
+        expect(paginated_result.total).to eq(0)
       end
 
       it 'pages properly' do
@@ -61,6 +69,14 @@ module VCAP::CloudController
         expect(paginated_result.total).to be > 0
       end
 
+      it 'works with eager_graph' do
+        options = { page: page, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+        eager_graph_dataset = AppModel.dataset.eager_graph(:space)
+        paginated_result = paginator.get_page(eager_graph_dataset, pagination_options)
+        expect(paginated_result.total).to eq(2)
+      end
+
       it 'orders by GUID as a secondary field when available' do
         options = { page: 1, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
         app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')
@@ -82,6 +98,17 @@ module VCAP::CloudController
           paginated_result = paginator.get_page(request_count_dataset, pagination_options)
         }.not_to raise_error
         expect(paginated_result.total).to be 1
+      end
+
+      it 'only calls DB once if DB supports window functions' do
+        skip 'DB does not support window functions' unless dataset.supports_window_functions?
+        options = { page: 1, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+
+        expect(dataset.db).to receive(:execute).once.and_call_original
+
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.total).to be > 1
       end
     end
   end
