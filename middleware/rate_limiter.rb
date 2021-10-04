@@ -14,9 +14,9 @@ module CloudFoundry
 
       def get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
         db_count, valid_until = db_find_or_create(user_guid, reset_interval_in_minutes, logger)
-        mem_count = mem_find_or_create(user_guid, valid_until, update_db_every_n_requests)
+        mem_keep_or_reset(user_guid, valid_until, update_db_every_n_requests)
 
-        [db_count + mem_count, valid_until]
+        [db_count, valid_until]
       end
 
       def increment(user_guid, update_db_every_n_requests)
@@ -26,15 +26,12 @@ module CloudFoundry
 
       private
 
-      def mem_find_or_create(user_guid, valid_until, update_db_every_n_requests)
-        return 0 if update_db_every_n_requests == 1
+      def mem_keep_or_reset(user_guid, valid_until, update_db_every_n_requests)
+        return if update_db_every_n_requests == 1
 
         @mutex.synchronize do
           request_count = @data[user_guid]
-          return request_count.requests if request_count&.valid_until == valid_until
-
-          @data[user_guid] = InMemoryRequestCount.new(valid_until, 0)
-          return 0
+          @data[user_guid] = InMemoryRequestCount.new(valid_until, 0) unless request_count&.valid_until == valid_until
         end
       end
 
@@ -97,7 +94,7 @@ module CloudFoundry
 
           count, valid_until = @request_counter.get(user_guid, @reset_interval_in_minutes, @update_db_every_n_requests, @logger)
 
-          count += 1
+          count += @update_db_every_n_requests
 
           rate_limit_headers['X-RateLimit-Limit']     = request_limit(env).to_s
           rate_limit_headers['X-RateLimit-Reset']     = valid_until.utc.to_i.to_s

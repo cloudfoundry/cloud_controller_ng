@@ -406,7 +406,7 @@ module CloudFoundry
             general_limit:              general_limit,
             unauthenticated_limit:      unauthenticated_limit,
             reset_interval_in_minutes:  reset_interval_in_minutes,
-            update_db_every_n_requests: 1,
+            update_db_every_n_requests: update_db_every_n_requests,
           )
         end
 
@@ -415,6 +415,25 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Remaining']).to eq('99')
           _, response_headers, _ = other_middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+        end
+
+        context 'with update_db_every_n_requests > 1' do
+          let(:update_db_every_n_requests) { 3 }
+
+          it 'shared request count decreases in steps equal to update_db_every_n_requests' do
+            calls = [
+              { server: middleware, remaining_count: '97' },
+              { server: middleware, remaining_count: '97' },
+              { server: other_middleware, remaining_count: '97' },
+              { server: middleware, remaining_count: '94' },
+              { server: other_middleware, remaining_count: '94' },
+            ]
+
+            calls.each do |c|
+              _, response_headers, _ = c[:server].call(user_1_env)
+              expect(response_headers['X-RateLimit-Remaining']).to eq(c[:remaining_count])
+            end
+          end
         end
       end
     end
@@ -510,13 +529,13 @@ module CloudFoundry
             expect(count).to eq(10)
           end
 
-          it 'should return the combined count when the user has made some requests below the limit' do
+          it 'should return the db count when the user has made some requests below the limit' do
             create_request_count.call(10)
             # Initialize this user in the in-memory map
             request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
             2.times do request_counter.increment(user_guid, update_db_every_n_requests) end
             count, _ = request_counter.get(user_guid, reset_interval_in_minutes, update_db_every_n_requests, logger)
-            expect(count).to eq(12)
+            expect(count).to eq(10)
           end
 
           it 'reset in-memory count to 0 when requests are expired by another instance (validity is different)' do
