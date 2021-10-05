@@ -159,10 +159,7 @@ class RolesController < ApplicationController
   end
 
   def readable_roles
-    roles_in_visible_spaces = Role.filter(space_id: visible_space_ids)
-    roles_in_visible_orgs = Role.filter(organization_id: visible_org_ids)
-
-    roles_in_visible_spaces.union(roles_in_visible_orgs)
+    Role.where(space_id: visible_space_ids).or(organization_id: visible_org_ids)
   end
 
   def visible_space_ids
