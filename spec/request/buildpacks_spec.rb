@@ -92,11 +92,11 @@ RSpec.describe 'buildpacks' do
       let!(:stack2) { VCAP::CloudController::Stack.make }
       let!(:stack3) { VCAP::CloudController::Stack.make }
 
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
-      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name) }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 3) }
+      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name, position: 2) }
 
-      it 'returns a paginated list of buildpacks' do
+      it 'returns a paginated list of buildpacks, sorted by position' do
         get '/v3/buildpacks?page=1&per_page=2', nil, headers
 
         expect(parsed_response).to be_a_response_like(
@@ -139,23 +139,23 @@ RSpec.describe 'buildpacks' do
                 }
               },
               {
-                'guid' => buildpack2.guid,
+                'guid' => buildpack3.guid,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
-                'name' => buildpack2.name,
-                'state' => buildpack2.state,
-                'filename' => buildpack2.filename,
-                'stack' => buildpack2.stack,
+                'name' => buildpack3.name,
+                'state' => buildpack3.state,
+                'filename' => buildpack3.filename,
+                'stack' => buildpack3.stack,
                 'position' => 2,
                 'enabled' => true,
                 'locked' => false,
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload",
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
                     'method' => 'POST'
                   }
                 }
@@ -236,7 +236,7 @@ RSpec.describe 'buildpacks' do
                 'state' => buildpack3.state,
                 'filename' => buildpack3.filename,
                 'stack' => buildpack3.stack,
-                'position' => 3,
+                'position' => 2,
                 'enabled' => true,
                 'locked' => false,
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -671,16 +671,16 @@ RSpec.describe 'buildpacks' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['pagination']['total_results']).to(eq(10))
         expect(parsed_response['resources'].map { |r| r['name'] }).to(eq(%w[
-          paketo-buildpacks/dotnet-core
-          paketo-buildpacks/go
-          paketo-buildpacks/httpd
-          paketo-buildpacks/java
-          paketo-buildpacks/nginx
-          paketo-buildpacks/nodejs
-          paketo-buildpacks/php
-          paketo-buildpacks/procfile
-          paketo-community/python
           paketo-community/ruby
+          paketo-community/python
+          paketo-buildpacks/java
+          paketo-buildpacks/nodejs
+          paketo-buildpacks/go
+          paketo-buildpacks/dotnet-core
+          paketo-buildpacks/php
+          paketo-buildpacks/httpd
+          paketo-buildpacks/nginx
+          paketo-buildpacks/procfile
         ]))
       end
     end
