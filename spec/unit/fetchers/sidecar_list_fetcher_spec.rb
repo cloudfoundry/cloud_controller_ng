@@ -21,6 +21,15 @@ module VCAP::CloudController
         expect(app).to eq(app_model)
         expect(results).to contain_exactly(sidecar1, sidecar2)
       end
+
+      context 'when the app does not exist' do
+        it 'returns nil for the app' do
+          app, results = fetcher.fetch_for_app(message, 'non-existant-app-guid')
+
+          expect(app).to be_nil
+          expect(results).to be_nil
+        end
+      end
     end
 
     describe '#fetch_for_process' do
@@ -61,6 +70,15 @@ module VCAP::CloudController
 
         expect(process).to eq(worker_process)
         expect(results).to contain_exactly(sidecar2)
+      end
+
+      context 'when the process does not exist' do
+        it 'returns nil for the app' do
+          process, results = fetcher.fetch_for_process(message, 'non-existant-process-guid')
+
+          expect(process).to be_nil
+          expect(results).to be_nil
+        end
       end
     end
   end

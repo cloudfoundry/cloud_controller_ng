@@ -468,6 +468,13 @@ RSpec.describe 'Sidecars' do
         expect(parsed_response).to be_a_response_like(expected_response)
       end
 
+      context 'when the process does not exist' do
+        it 'returns a 404 error' do
+          get '/v3/processes/fake-process-guid/sidecars?per_page=2', nil, user_header
+          expect(last_response.status).to eq(404), last_response.body
+        end
+      end
+
       context 'filtering on created_ats and updated_ats' do
         let(:app_model3) { VCAP::CloudController::AppModel.make }
         let!(:process3) { VCAP::CloudController::ProcessModel.make(
@@ -601,6 +608,13 @@ RSpec.describe 'Sidecars' do
             ]
           }
       )
+      end
+
+      context 'when the app does not exist' do
+        it 'returns a 404 error' do
+          get '/v3/apps/fake-app-guid/sidecars?per_page=2', nil, user_header
+          expect(last_response.status).to eq(404), last_response.body
+        end
       end
 
       it_behaves_like 'list_endpoint_with_common_filters' do
