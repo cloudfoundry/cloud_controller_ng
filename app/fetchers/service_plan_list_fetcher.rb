@@ -17,31 +17,8 @@ module VCAP::CloudController
 
       private
 
-      def join_tables(dataset, message, omniscient)
-        need_all_parent_tables = !omniscient || visibility_filter?(message)
-        filter_properties = [
-          :service_broker_guids,
-          :service_broker_names,
-          :service_offering_guids,
-          :service_offering_names,
-          :broker_catalog_ids
-        ]
-
-        need_broker_and_offering_tables = filter_properties.any? { |filter| message.requested?(filter) }
-
-        if need_all_parent_tables
-          dataset = join_all_parent_tables(dataset.join(:services, id: Sequel[:service_plans][:service_id]))
-        elsif need_broker_and_offering_tables
-          dataset = dataset.
-                    join(:services, id: Sequel[:service_plans][:service_id]).
-                    join(:service_brokers, id: Sequel[:services][:service_broker_id])
-        end
-
-        if message.requested?(:service_instance_guids)
-          dataset = dataset.join(Sequel[:service_instances], service_plan_id: Sequel[:service_plans][:id])
-        end
-
-        dataset
+      def join_services(dataset)
+        join(dataset, :inner, :services, id: Sequel[:service_plans][:service_id])
       end
 
       def filter(message, dataset)
@@ -54,14 +31,17 @@ module VCAP::CloudController
         end
 
         if message.requested?(:service_offering_guids)
+          dataset = join_services(dataset)
           dataset = dataset.where { Sequel[:services][:guid] =~ message.service_offering_guids }
         end
 
         if message.requested?(:service_offering_names)
+          dataset = join_services(dataset)
           dataset = dataset.where { Sequel[:services][:label] =~ message.service_offering_names }
         end
 
         if message.requested?(:service_instance_guids)
+          dataset = join_service_instances(dataset)
           dataset = dataset.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
         end
 
