@@ -14,6 +14,11 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
 
+    def initialize(params={})
+      super
+      pagination_options.default_order_by = :position
+    end
+
     def self.from_params(params)
       super(params, %w(names stacks))
     end
