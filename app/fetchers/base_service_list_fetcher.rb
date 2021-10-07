@@ -7,16 +7,16 @@ module VCAP::CloudController
     class << self
       private
 
-      def select_readable(dataset, message, omniscient: false, readable_space_guids: [], readable_org_guids: [])
-        if readable_org_guids.any?
+      def select_readable(dataset, message, omniscient: false, readable_spaces: [], readable_orgs: [])
+        if readable_orgs.any?
           dataset = join_service_plans(dataset)
-          dataset = join_plan_orgs(dataset)
-          dataset = join_broker_spaces(dataset)
+          dataset = join_plan_org_visibilities(dataset)
+          dataset = join_service_brokers(dataset)
 
           dataset = dataset.where do
             (Sequel[:service_plans][:public] =~ true) |
-              (Sequel[:plan_orgs][:guid] =~ readable_org_guids) |
-              (Sequel[:broker_spaces][:guid] =~ readable_space_guids)
+              (Sequel[:service_plan_visibilities][:organization_id] =~ readable_orgs.map(&:id)) |
+              (Sequel[:service_brokers][:space_id] =~ readable_spaces.map(&:id))
           end
         elsif !omniscient
           dataset = join_service_plans(dataset)
@@ -27,7 +27,7 @@ module VCAP::CloudController
           dataset = filter_spaces(
             dataset,
             filtered_space_guids: message.space_guids,
-            readable_space_guids: readable_space_guids,
+            readable_space_guids: readable_spaces.map(&:guid),
             omniscient: omniscient,
           )
         end
@@ -119,9 +119,13 @@ module VCAP::CloudController
         join(dataset, :left, Sequel[:organizations].as(:broker_orgs), id: Sequel[:broker_spaces][:organization_id])
       end
 
-      def join_plan_orgs(dataset)
+      def join_plan_org_visibilities(dataset)
         dataset = join_service_plans(dataset)
-        dataset = join(dataset, :left, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
+        join(dataset, :left, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
+      end
+
+      def join_plan_orgs(dataset)
+        dataset = join_plan_org_visibilities(dataset)
         join(dataset, :left, Sequel[:organizations].as(:plan_orgs), id: Sequel[:service_plan_visibilities][:organization_id])
       end
 

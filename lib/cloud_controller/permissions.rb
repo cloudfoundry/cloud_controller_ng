@@ -122,6 +122,14 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  def readable_orgs
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:id, :guid).all
+    else
+      membership.orgs_for_roles_subquery(ROLES_FOR_ORG_READING).all
+    end
+  end
+
   def readable_org_guids_for_domains_query
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid)
@@ -238,6 +246,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
       membership.space_guids_for_roles(SPACE_ROLES)
+    end
+  end
+
+  def readable_space_scoped_spaces
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:id, :guid).all
+    else
+      membership.spaces_for_roles_subquery(SPACE_ROLES).all
     end
   end
 
