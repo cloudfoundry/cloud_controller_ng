@@ -256,7 +256,9 @@ allowed_cors_domains:
 rate_limiter:
   enabled: false
   general_limit: 2000
+  total_general_limit: 20000
   unauthenticated_limit: 100
+  total_unauthenticated_limit: 1000
   reset_interval_in_minutes: 60
 
 diego:

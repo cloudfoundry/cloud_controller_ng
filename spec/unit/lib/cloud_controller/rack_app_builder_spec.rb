@@ -54,7 +54,9 @@ module VCAP::CloudController
               enabled: true,
               reset_interval_in_minutes: 60,
               general_limit: 123,
+              total_general_limit: 1230,
               unauthenticated_limit: 1,
+              total_unauthenticated_limit: 10
             }), request_metrics, request_logs).to_app
           end
 
@@ -63,7 +65,9 @@ module VCAP::CloudController
               anything,
               logger: instance_of(Steno::Logger),
               general_limit: 123,
+              total_general_limit: 1230,
               unauthenticated_limit: 1,
+              total_unauthenticated_limit: 10,
               interval: 60
             )
           end
@@ -75,7 +79,9 @@ module VCAP::CloudController
               enabled: false,
               reset_interval_in_minutes: 60,
               general_limit: 123,
-              unauthenticated_limit: 1
+              total_general_limit: 1230,
+              unauthenticated_limit: 1,
+              total_unauthenticated_limit: 10
             }), request_metrics, request_logs).to_app
           end
 

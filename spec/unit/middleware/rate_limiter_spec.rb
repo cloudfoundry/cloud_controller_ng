@@ -6,17 +6,21 @@ module CloudFoundry
       let(:middleware) do
         RateLimiter.new(
           app,
-          logger:                logger,
-          general_limit:         general_limit,
-          unauthenticated_limit: unauthenticated_limit,
-          interval:              interval,
+          logger:                      logger,
+          general_limit:               general_limit,
+          total_general_limit:         total_general_limit,
+          unauthenticated_limit:       unauthenticated_limit,
+          total_unauthenticated_limit: total_unauthenticated_limit,
+          interval:                    interval,
         )
       end
       before(:each) { Singleton.__init__(RequestCounter) }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:general_limit) { 100 }
+      let(:total_general_limit) { 1000 }
       let(:unauthenticated_limit) { 10 }
+      let(:total_unauthenticated_limit) { 100 }
       let(:interval) { 60 }
       let(:logger) { double('logger', info: nil) }
 
@@ -29,41 +33,46 @@ module CloudFoundry
         describe 'X-RateLimit-Limit' do
           it 'shows the user the total request limit' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Limit']).to eq('1000')
 
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Limit']).to eq('1000')
           end
         end
 
         describe 'X-RateLimit-Remaining' do
-          it 'shows the user the number of remaining requests' do
+          it 'shows the user the number of remaining requests rounded down to nearest 10%' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('900')
 
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('900')
+
+            10.times do _, response_headers, _ = middleware.call(user_1_env) end
+            expect(response_headers['X-RateLimit-Remaining']).to eq('800')
           end
 
           it 'tracks user\'s remaining requests independently' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('900')
+            10.times do middleware.call(user_1_env) end
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('800')
 
             _, response_headers, _ = middleware.call(user_2_env)
-            expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('900')
           end
 
           it 'resets remaining requests after the interval is over' do
             Timecop.freeze do
+              10.times do middleware.call(user_1_env) end
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('800')
 
               Timecop.travel(Time.now + 61.minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('900')
             end
           end
         end
@@ -233,8 +242,8 @@ module CloudFoundry
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('10')
-            expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('90')
           end
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
@@ -243,19 +252,19 @@ module CloudFoundry
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('90')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('8')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('80')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('90')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
             end
           end
@@ -269,8 +278,8 @@ module CloudFoundry
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq('10')
-            expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+            expect(response_headers['X-RateLimit-Limit']).to eq('100')
+            expect(response_headers['X-RateLimit-Remaining']).to eq('90')
           end
 
           it 'identifies them by the request ip' do
@@ -279,19 +288,19 @@ module CloudFoundry
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('90')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('8')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('80')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
               _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to eq('10')
-              expect(response_headers['X-RateLimit-Remaining']).to eq('9')
+              expect(response_headers['X-RateLimit-Limit']).to eq('100')
+              expect(response_headers['X-RateLimit-Remaining']).to eq('90')
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
             end
           end
@@ -401,18 +410,21 @@ module CloudFoundry
         let(:other_middleware) do
           RateLimiter.new(
             app,
-            logger:                logger,
-            general_limit:         general_limit,
-            unauthenticated_limit: unauthenticated_limit,
-            interval:              interval
+            logger:                      logger,
+            general_limit:               general_limit,
+            total_general_limit:         total_general_limit,
+            unauthenticated_limit:       unauthenticated_limit,
+            total_unauthenticated_limit: total_unauthenticated_limit,
+            interval:                    interval,
           )
         end
 
         it 'shares request count between servers' do
           _, response_headers, _ = middleware.call(user_1_env)
-          expect(response_headers['X-RateLimit-Remaining']).to eq('99')
+          expect(response_headers['X-RateLimit-Remaining']).to eq('900')
+          10.times do middleware.call(user_1_env) end
           _, response_headers, _ = other_middleware.call(user_1_env)
-          expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+          expect(response_headers['X-RateLimit-Remaining']).to eq('800')
         end
       end
     end

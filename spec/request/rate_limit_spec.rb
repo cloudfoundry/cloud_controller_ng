@@ -6,7 +6,9 @@ RSpec.describe 'Rate Limiting' do
       rate_limiter: {
         enabled: true,
         general_limit: 10,
+        total_general_limit: 100,
         unauthenticated_limit: 2,
+        total_unauthenticated_limit: 20,
         reset_interval_in_minutes: 60
       }
     )
