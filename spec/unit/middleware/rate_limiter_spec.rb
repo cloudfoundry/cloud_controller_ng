@@ -12,6 +12,7 @@ module CloudFoundry
           interval:              interval,
         )
       end
+      before(:each) { Singleton.__init__(RequestCounter) }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:general_limit) { 100 }
@@ -412,6 +413,51 @@ module CloudFoundry
           expect(response_headers['X-RateLimit-Remaining']).to eq('99')
           _, response_headers, _ = other_middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('98')
+        end
+      end
+    end
+
+    RSpec.describe RequestCounter do
+      let(:request_counter) { RequestCounter.instance }
+      let(:reset_interval_in_minutes) { 60 }
+      let(:logger) { double('logger', info: nil) }
+      let(:user_guid) { 'user-id' }
+
+      describe 'get' do
+        before(:each) do
+          Timecop.freeze
+          Singleton.__init__(RequestCounter)
+        end
+        after(:each) do Timecop.return end
+
+        it 'should return new valid until and 0 requests for a new user' do
+          count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+          expect(count).to eq(0)
+          expect(valid_until).to eq(Time.now + reset_interval_in_minutes.minutes)
+        end
+
+        it 'should return valid until and requests for an existing user' do
+          _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+          request_counter.increment(user_guid)
+
+          Timecop.travel(original_valid_until - 1.minutes) do
+            count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+            expect(count).to eq(1)
+            expect(valid_until).to eq(original_valid_until)
+          end
+        end
+
+        it 'should return new valid until and 0 requests for an existing user with expired rate limit' do
+          _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+          request_counter.increment(user_guid)
+
+          Timecop.travel(original_valid_until + 1.minutes) do
+            Timecop.freeze do
+              count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+              expect(count).to eq(0)
+              expect(valid_until).to eq(Time.now + reset_interval_in_minutes.minutes)
+            end
+          end
         end
       end
     end
