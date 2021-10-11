@@ -520,6 +520,24 @@ RSpec.describe 'Space Manifests' do
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end
+
+    context 'special classes' do
+      let(:yml_manifest) do
+        <<~YML
+          ---
+          applications:
+          - name: blah
+            env:
+              OMG: :symbol
+        YML
+      end
+
+      it 'allows symbols' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+      end
+    end
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
