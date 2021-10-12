@@ -69,7 +69,7 @@ module CloudFoundry
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Remaining']).to eq('800')
 
-              Timecop.travel(Time.now + 61.minutes)
+              Timecop.travel(Time.now.utc.beginning_of_hour + (interval + 1).minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Remaining']).to eq('900')
@@ -80,41 +80,27 @@ module CloudFoundry
         describe 'X-RateLimit-Reset' do
           it 'shows the user when the interval will expire' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now.utc.beginning_of_hour + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to eq(valid_until.utc.to_i)
 
-              Timecop.travel(Time.now + 30.minutes)
+              Timecop.travel(Time.now.utc.beginning_of_hour + 30.minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
-            end
-          end
-
-          it 'tracks users independently' do
-            Timecop.freeze do
-              valid_until = Time.now + interval.minutes
-              _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
-
-              Timecop.travel(Time.now + 1.minutes)
-              valid_until_2 = Time.now + interval.minutes
-
-              _, response_headers, _ = middleware.call(user_2_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until_2.utc.to_i)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to eq(valid_until.utc.to_i)
             end
           end
 
           it 'resets after the interval' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now.utc.beginning_of_hour + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to eq(valid_until.utc.to_i)
 
-              Timecop.travel(Time.now + 91.minutes)
-              valid_until = Time.now + 60.minutes
+              Timecop.travel(Time.now.utc.beginning_of_hour + (interval + 1).minutes)
+              valid_until = Time.now.utc.beginning_of_hour + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to eq(valid_until.utc.to_i)
             end
           end
         end
@@ -135,7 +121,7 @@ module CloudFoundry
         Timecop.freeze do
           _, _, _ = middleware.call(user_1_env)
 
-          Timecop.travel(Time.now + interval.minutes + 1.minute)
+          Timecop.travel(Time.now.utc.beginning_of_hour + (interval + 1).minutes)
           _, _, _ = middleware.call(user_1_env)
           expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id-1'"
         end
@@ -248,7 +234,7 @@ module CloudFoundry
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now.utc.beginning_of_hour + interval.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
@@ -284,7 +270,7 @@ module CloudFoundry
 
           it 'identifies them by the request ip' do
             Timecop.freeze do
-              valid_until = Time.now + interval.minutes
+              valid_until = Time.now.utc.beginning_of_hour + interval.minutes
 
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(unauthenticated_env)
@@ -347,7 +333,7 @@ module CloudFoundry
             error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
-            valid_until = Time.now + interval.minutes
+            valid_until = Time.now.utc.beginning_of_hour + interval.minutes
             _, response_headers, _ = middleware.call(middleware_env)
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
@@ -442,10 +428,18 @@ module CloudFoundry
         end
         after(:each) do Timecop.return end
 
-        it 'should return new valid until and 0 requests for a new user' do
+        it 'should return next valid until interval and 0 requests for a new user' do
           count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           expect(count).to eq(0)
-          expect(valid_until).to eq(Time.now + reset_interval_in_minutes.minutes)
+          expect(valid_until).to eq(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+        end
+
+        it 'should return valid until based on interval not first request' do
+          Timecop.travel(Time.now.utc.beginning_of_hour + (reset_interval_in_minutes - 1).minutes) do
+            count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
+            expect(count).to eq(0)
+            expect(valid_until).to eq(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+          end
         end
 
         it 'should return valid until and requests for an existing user' do
@@ -467,7 +461,7 @@ module CloudFoundry
             Timecop.freeze do
               count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
               expect(count).to eq(0)
-              expect(valid_until).to eq(Time.now + reset_interval_in_minutes.minutes)
+              expect(valid_until).to eq(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
             end
           end
         end

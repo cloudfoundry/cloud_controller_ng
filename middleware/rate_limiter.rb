@@ -17,7 +17,7 @@ module CloudFoundry
           return create_new_request_count(user_guid, reset_interval_in_minutes) unless @data.key? user_guid
 
           request_count = @data[user_guid]
-          if request_count.valid_until < Time.now
+          if request_count.valid_until < Time.now.utc
             logger.info("Resetting request count of #{request_count.requests} for user '#{user_guid}'")
             return create_new_request_count(user_guid, reset_interval_in_minutes)
           end
@@ -38,9 +38,14 @@ module CloudFoundry
 
       def create_new_request_count(user_guid, reset_interval_in_minutes)
         requests = 0
-        valid_until = Time.now + reset_interval_in_minutes.minutes
+        valid_until = next_reset_interval(reset_interval_in_minutes)
         @data[user_guid] = RequestCount.new(requests, valid_until)
         [requests, valid_until]
+      end
+
+      def next_reset_interval(reset_interval_in_minutes)
+        no_of_intervals = (Time.now.utc.to_f / reset_interval_in_minutes.minutes.to_i).floor + 1
+        Time.at(no_of_intervals * reset_interval_in_minutes.minutes.to_i)
       end
     end
 
