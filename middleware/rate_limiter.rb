@@ -1,4 +1,5 @@
 require 'mixins/client_ip'
+require 'mixins/user_reset_interval'
 
 module CloudFoundry
   module Middleware
@@ -6,6 +7,7 @@ module CloudFoundry
 
     class RequestCounter
       include Singleton
+      include CloudFoundry::Middleware::UserResetInterval
 
       def initialize
         @mutex = Mutex.new
@@ -38,14 +40,9 @@ module CloudFoundry
 
       def create_new_request_count(user_guid, reset_interval_in_minutes)
         requests = 0
-        valid_until = next_reset_interval(reset_interval_in_minutes)
+        valid_until = next_reset_interval(user_guid, reset_interval_in_minutes)
         @data[user_guid] = RequestCount.new(requests, valid_until)
         [requests, valid_until]
-      end
-
-      def next_reset_interval(reset_interval_in_minutes)
-        no_of_intervals = (Time.now.utc.to_f / reset_interval_in_minutes.minutes.to_i).floor + 1
-        Time.at(no_of_intervals * reset_interval_in_minutes.minutes.to_i)
       end
     end
 
@@ -75,7 +72,7 @@ module CloudFoundry
           new_count = count + 1
 
           rate_limit_headers['X-RateLimit-Limit']     = total_request_limit(env).to_s
-          rate_limit_headers['X-RateLimit-Reset']     = valid_until.utc.to_i.to_s
+          rate_limit_headers['X-RateLimit-Reset']     = valid_until.to_i.to_s
           rate_limit_headers['X-RateLimit-Remaining'] = estimate_remaining(env, new_count)
 
           return too_many_requests!(env, rate_limit_headers) if exceeded_rate_limit(new_count, env)
