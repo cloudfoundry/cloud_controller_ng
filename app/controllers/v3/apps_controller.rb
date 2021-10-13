@@ -148,9 +148,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable do |pollable_job|
-      DeleteAppErrorTranslatorJob.new(pollable_job)
-    end
+    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app with guid #{app.guid}")
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
@@ -340,18 +338,6 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
       read_basic_data: true,
       read_sensitive_data: permission_queryer.can_read_secrets_in_space?(space.guid, org.guid),
     }
-  end
-
-  class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob
-    include V3ErrorsHelper
-
-    def translate_error(e)
-      if e.instance_of?(VCAP::CloudController::AppDelete::SubResourceError)
-        underlying_errors = e.underlying_errors.map { |err| unprocessable(err.message) }
-        e = CloudController::Errors::CompoundError.new(underlying_errors)
-      end
-      e
-    end
   end
 
   private

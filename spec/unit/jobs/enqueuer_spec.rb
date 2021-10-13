@@ -2,7 +2,12 @@ require 'db_spec_helper'
 require 'jobs/enqueuer'
 require 'jobs/delete_action_job'
 require 'jobs/runtime/model_deletion'
-require 'jobs/error_translator_job'
+require 'cloud_controller/errors/invalid_auth_token'
+require 'cloud_controller/errors/not_authenticated'
+require 'cloud_controller/errors/not_found'
+require 'cloud_controller/params_hashifier'
+require 'controllers/v3/application_controller'
+require 'controllers/v3/apps_controller'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer, job_context: :api do
@@ -107,14 +112,11 @@ module VCAP::CloudController::Jobs
         it 'should wrap the pollable job with the result from the block' do
           original_enqueue = Delayed::Job.method(:enqueue)
           expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
-            expect(enqueued_job.handler.handler).to be_a ErrorTranslatorJob
-            expect(enqueued_job.handler.handler.handler).to be_a PollableJobWrapper
+            expect(enqueued_job.handler.handler).to be_a PollableJobWrapper
             original_enqueue.call(enqueued_job, opts)
           end
 
-          Enqueuer.new(wrapped_job, opts).enqueue_pollable do |pollable_job|
-            ErrorTranslatorJob.new(pollable_job)
-          end
+          Enqueuer.new(wrapped_job, opts).enqueue_pollable
         end
       end
     end
@@ -149,6 +151,61 @@ module VCAP::CloudController::Jobs
             Enqueuer.new(wrapped_job, opts).run_inline
           }.to raise_error(/Boom!/)
           expect(Delayed::Worker.delay_jobs).to be(true)
+        end
+      end
+    end
+
+    describe 'error handling' do
+      context 'job is enqueued from a /v3 endpoint' do
+        before do
+          allow(VCAP::Request).to receive(:api_version).and_return(VCAP::Request::API_VERSION_V3)
+          allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+        end
+
+        context 'AppDelete raises SubResourceError' do
+          class AppDeleteRaisingSubResourceError < VCAP::CloudController::AppDelete
+            def delete(apps, record_event: true)
+              raise VCAP::CloudController::AppDelete::SubResourceError.new([StandardError.new('some error')])
+            end
+          end
+
+          let(:wrapped_job) do
+            DeleteActionJob.new(VCAP::CloudController::AppModel, 'guid', AppDeleteRaisingSubResourceError.new(nil))
+          end
+          let(:opts) { { queue: 'my-queue' } }
+
+          it 'translates the error and saves it to the database' do
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+
+            delayed_job = Delayed::Job.last
+            expect { delayed_job.invoke_job }.to raise_error(VCAP::CloudController::AppDelete::SubResourceError)
+            cf_api_error = /detail:\s+some error.*title:\s+CF-UnprocessableEntity/m
+            expect(delayed_job.cf_api_error).to match(cf_api_error)
+            expect(VCAP::CloudController::PollableJobModel.last.cf_api_error).to match(cf_api_error)
+          end
+        end
+
+        context 'AppDelete raises BlobstoreError' do
+          class AppDeleteRaisingBlobstoreError < VCAP::CloudController::AppDelete
+            def delete(apps, record_event: true)
+              raise CloudController::Blobstore::BlobstoreError.new(nil)
+            end
+          end
+
+          let(:wrapped_job) do
+            DeleteActionJob.new(VCAP::CloudController::AppModel, 'guid', AppDeleteRaisingBlobstoreError.new(nil))
+          end
+          let(:opts) { { queue: 'my-queue' } }
+
+          it 'translates the error and saves it to the database' do
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+
+            delayed_job = Delayed::Job.last
+            expect { delayed_job.invoke_job }.to raise_error(CloudController::Blobstore::BlobstoreError)
+            cf_api_error = /title:\s+CF-BlobstoreError/
+            expect(delayed_job.cf_api_error).to match(cf_api_error)
+            expect(VCAP::CloudController::PollableJobModel.last.cf_api_error).to match(cf_api_error)
+          end
         end
       end
     end

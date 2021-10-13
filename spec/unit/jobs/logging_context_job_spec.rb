@@ -55,16 +55,6 @@ module VCAP::CloudController
 
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
-
-        context 'when a BlobstoreError occurs' do
-          it 'wraps the error in an ApiError' do
-            allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
-
-            expect {
-              logging_context_job.perform
-            }.to raise_error(CloudController::Errors::ApiError, /three retries/)
-          end
-        end
       end
 
       context '#max_attempts' do
@@ -76,10 +66,27 @@ module VCAP::CloudController
       context '#error(job, exception)' do
         let(:job) { double('Job', guid: 'gregid').as_null_object }
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
+        let(:transformed_exception) { 'exception' }
 
         before do
-          allow(ErrorPresenter).to receive(:new).with('exception', boolean, instance_of(V3ErrorHasher)).and_return(error_presenter)
+          allow(ErrorPresenter).to receive(:new).with(transformed_exception, boolean, instance_of(V3ErrorHasher)).and_return(error_presenter)
           allow(error_presenter).to receive(:log_message).and_return('log message')
+        end
+
+        context 'when a BlobstoreError occurs' do
+          let(:transformed_exception) { instance_of(CloudController::Errors::ApiError) }
+
+          it 'transforms the error into an ApiError' do
+            logging_context_job.error(job, CloudController::Blobstore::BlobstoreError.new(nil))
+          end
+        end
+
+        context 'when a SubResourceError occurs' do
+          let(:transformed_exception) { instance_of(CloudController::Errors::CompoundError) }
+
+          it 'transforms the error into a CompoundError' do
+            logging_context_job.error(job, VCAP::CloudController::AppDelete::SubResourceError.new([]))
+          end
         end
 
         it 'saves the exception on the job as cf_api_error' do
@@ -159,25 +166,6 @@ module VCAP::CloudController
             expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
             expect(background_logger).to receive(:error).with('log message', job_guid: 'gregid')
             logging_context_job.error(job, 'exception')
-          end
-        end
-
-        context 'when the error is a compound error' do
-          let(:error) do
-            CloudController::Errors::CompoundError.new([
-              CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'message')
-            ])
-          end
-
-          before do
-            allow(ErrorPresenter).to receive(:new).and_call_original
-          end
-
-          it 'renders the exception in V3 error format' do
-            expect(YAML).to receive(:dump).with(hash_including({
-              'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
-            }))
-            logging_context_job.error(job, error)
           end
         end
 

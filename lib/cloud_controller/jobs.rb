@@ -6,7 +6,6 @@ require 'jobs/queues'
 require 'jobs/logging_context_job'
 require 'jobs/pollable_job_wrapper'
 require 'jobs/timeout_job'
-require 'jobs/error_translator_job'
 
 require 'jobs/diego/sync'
 

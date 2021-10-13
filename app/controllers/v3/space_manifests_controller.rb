@@ -64,20 +64,15 @@ class SpaceManifestsController < ApplicationController
     return [] if message.valid?
 
     if message.name.present?
-      message.errors.full_messages.map { |error| "For application '#{message.name}': #{error}" }
+      message.errors.full_messages.map { |error| unprocessable("For application '#{message.name}': #{error}") }
     else
-      message.errors.full_messages.map { |error| "For application at index #{index}: #{error}" }
+      message.errors.full_messages.map { |error| unprocessable("For application at index #{index}: #{error}") }
     end
   end
 
   def record_apply_manifest_audit_event(app, message, space)
     audited_request_yaml = { 'applications' => [message.audit_hash] }.to_yaml
     Repositories::AppEventRepository.new.record_app_apply_manifest(app, space, user_audit_info, audited_request_yaml)
-  end
-
-  def compound_error!(error_messages)
-    underlying_errors = error_messages.map { |message| unprocessable(message) }
-    raise CloudController::Errors::CompoundError.new(underlying_errors)
   end
 
   def validate_content_type!
@@ -109,11 +104,11 @@ class SpaceManifestsController < ApplicationController
   end
 
   def unsupported_for_docker_apps!(manifest)
-    raise unprocessable("For application '#{manifest.name}': #{manifest.buildpacks ? 'Buildpacks' : 'Buildpack'} cannot be configured for a docker lifecycle app.")
+    unprocessable!("For application '#{manifest.name}': #{manifest.buildpacks ? 'Buildpacks' : 'Buildpack'} cannot be configured for a docker lifecycle app.")
   end
 
   def unsupported_for_buildpack_apps!(manifest)
-    raise unprocessable("For application '#{manifest.name}': Docker cannot be configured for a buildpack lifecycle app.")
+    unprocessable!("For application '#{manifest.name}': Docker cannot be configured for a buildpack lifecycle app.")
   end
 
   def incompatible_with_buildpacks(lifecycle_type, manifest)

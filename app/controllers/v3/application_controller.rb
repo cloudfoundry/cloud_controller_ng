@@ -1,55 +1,8 @@
-require 'cloud_controller/blobstore/errors'
-require 'cloud_controller/errors/compound_error'
-
-module V3ErrorsHelper
-  def invalid_request!(message)
-    raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', message)
-  end
-
-  def invalid_param!(message)
-    raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', message)
-  end
-
-  def unprocessable(message)
-    CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
-  end
-
-  def unprocessable!(message)
-    raise unprocessable(message)
-  end
-
-  def unauthorized!
-    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
-  end
-
-  def resource_not_found_with_message!(message)
-    raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
-  end
-
-  def bad_request!(message)
-    raise CloudController::Errors::ApiError.new_from_details('BadRequest', message)
-  end
-
-  def message_parse_error!(message)
-    raise CloudController::Errors::ApiError.new_from_details('MessageParseError', message)
-  end
-
-  def service_unavailable!(message)
-    raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', message)
-  end
-
-  def resource_not_found!(resource)
-    raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "#{resource.to_s.humanize} not found")
-  end
-
-  def not_found!
-    raise CloudController::Errors::NotFound.new_from_details('NotFound')
-  end
-end
+require 'controllers/v3/mixins/errors_helper'
 
 class ApplicationController < ActionController::Base
   include VCAP::CloudController
-  include V3ErrorsHelper
+  include ErrorsHelper
   include VCAP::CloudController::ParamsHashifier
 
   ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request', 'v3_info'].map(&:freeze).freeze
@@ -182,7 +135,7 @@ class ApplicationController < ActionController::Base
   end
 
   def handle_blobstore_error(error)
-    error = CloudController::Errors::ApiError.new_from_details('BlobstoreError', error.message)
+    error = blobstore_error(error.message)
     handle_api_error(error)
   end
 
@@ -192,10 +145,10 @@ class ApplicationController < ActionController::Base
     render status: presenter.response_code, json: presenter
   end
   alias_method :handle_not_authenticated, :handle_exception
-  alias_method :handle_api_error, :handle_exception
-  alias_method :handle_compound_error, :handle_exception
   alias_method :handle_not_found, :handle_exception
   alias_method :handle_invalid_auth_token, :handle_exception
+  alias_method :handle_api_error, :handle_exception
+  alias_method :handle_compound_error, :handle_exception
 
   def null_coalesce_body
     hashed_params[:body] ||= {}

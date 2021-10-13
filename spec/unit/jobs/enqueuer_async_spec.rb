@@ -2,7 +2,6 @@ require 'db_spec_helper'
 require 'jobs/enqueuer'
 require 'jobs/delete_action_job'
 require 'jobs/runtime/model_deletion'
-require 'jobs/error_translator_job'
 
 # DelayedJob Plugin additions for collecting data within callbacks
 class TestDelayedPlugin < Delayed::Plugin

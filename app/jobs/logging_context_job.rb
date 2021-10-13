@@ -1,9 +1,12 @@
 require 'jobs/wrapping_job'
 require 'presenters/error_presenter'
+require 'controllers/v3/mixins/errors_helper'
 
 module VCAP::CloudController
   module Jobs
     class LoggingContextJob < WrappingJob
+      include ErrorsHelper
+
       attr_reader :request_id
 
       def initialize(handler, request_id, api_version)
@@ -17,11 +20,10 @@ module VCAP::CloudController
           logger.info("about to run job #{wrapped_handler.class.name}")
           super
         end
-      rescue CloudController::Blobstore::BlobstoreError => e
-        raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
       end
 
       def error(job, exception)
+        exception = translate_error(exception)
         error_presenter = if @api_version == VCAP::Request::API_VERSION_V3
                             ErrorPresenter.new(exception, false, V3ErrorHasher.new(exception))
                           else
@@ -33,6 +35,17 @@ module VCAP::CloudController
       end
 
       private
+
+      def translate_error(exception)
+        case exception
+        when CloudController::Blobstore::BlobstoreError
+          blobstore_error(exception.message)
+        when VCAP::CloudController::AppDelete::SubResourceError
+          compound_error(exception.underlying_errors.map { |err| unprocessable(err.message) })
+        else
+          exception
+        end
+      end
 
       def save_error(error_presenter, job)
         job.cf_api_error = YAML.dump(error_presenter.to_hash)

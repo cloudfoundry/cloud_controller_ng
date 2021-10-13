@@ -51,23 +51,23 @@ RSpec.describe ApplicationController, type: :controller do
       render status: 200, json: can_write_to_space?(params[:space_guid])
     end
 
-    def api_explode
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
+    def raise_invalid_request
+      invalid_request!('omg no!')
     end
 
-    def compound_error
-      raise CloudController::Errors::CompoundError.new [
+    def raise_compound_error
+      compound_error!([
         CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error1'),
         CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2'),
-      ]
+      ])
     end
 
-    def blobstore_error
-      raise CloudController::Blobstore::BlobstoreError.new('it broke!')
+    def raise_blobstore_error
+      blobstore_error!('it broke!')
     end
 
-    def not_found
-      raise CloudController::Errors::NotFound.new_from_details('NotFound')
+    def raise_not_found
+      not_found!
     end
 
     def yaml_rejection
@@ -260,8 +260,8 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'rescues from ApiError and renders an error presenter' do
       allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
-      routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
-      get :blobstore_error
+      routes.draw { get 'raise_blobstore_error' => 'anonymous#raise_blobstore_error' }
+      get :raise_blobstore_error
       expect(response.status).to eq(500)
       expect(response).to have_error_message(/three retries/)
     end
@@ -271,8 +271,8 @@ RSpec.describe ApplicationController, type: :controller do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     it 'rescues from ApiError and renders an error presenter' do
-      routes.draw { get 'api_explode' => 'anonymous#api_explode' }
-      get :api_explode
+      routes.draw { get 'raise_invalid_request' => 'anonymous#raise_invalid_request' }
+      get :raise_invalid_request
       expect(response.status).to eq(400)
       expect(response).to have_error_message('The request is invalid')
     end
@@ -282,8 +282,8 @@ RSpec.describe ApplicationController, type: :controller do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     it 'rescues from CompoundErrors and renders an error presenter' do
-      routes.draw { get 'compound_error' => 'anonymous#compound_error' }
-      get :compound_error
+      routes.draw { get 'raise_compound_error' => 'anonymous#raise_compound_error' }
+      get :raise_compound_error
       expect(response.status).to eq(400)
       expect(parsed_body['errors'].length).to eq 2
     end
@@ -293,8 +293,8 @@ RSpec.describe ApplicationController, type: :controller do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     it 'rescues from NotFound error and renders an error presenter' do
-      routes.draw { get 'not_found' => 'anonymous#not_found' }
-      get :not_found
+      routes.draw { get 'raise_not_found' => 'anonymous#raise_not_found' }
+      get :raise_not_found
       expect(response.status).to eq(404)
       expect(response).to have_error_message('Unknown request')
     end
