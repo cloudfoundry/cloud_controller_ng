@@ -6,9 +6,10 @@ module VCAP::CloudController
     class LoggingContextJob < WrappingJob
       attr_reader :request_id
 
-      def initialize(handler, request_id)
+      def initialize(handler, request_id, api_version)
         super(handler)
         @request_id = request_id
+        @api_version = api_version
       end
 
       def perform
@@ -20,15 +21,15 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
       end
 
-      def error(job, e)
-        error_presenter = if e.instance_of?(CloudController::Errors::CompoundError)
-                            ErrorPresenter.new(e, false, V3ErrorHasher.new(e))
+      def error(job, exception)
+        error_presenter = if @api_version == VCAP::Request::API_VERSION_V3
+                            ErrorPresenter.new(exception, false, V3ErrorHasher.new(exception))
                           else
-                            ErrorPresenter.new(e)
+                            ErrorPresenter.new(exception)
                           end
         log_error(error_presenter, job)
         save_error(error_presenter, job)
-        super(job, e)
+        super(job, exception)
       end
 
       private

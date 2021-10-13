@@ -84,12 +84,12 @@ module CloudFoundry
       def rate_limit_error(env)
         error_name = user_token?(env) ? 'RateLimitExceeded' : 'IPBasedRateLimitExceeded'
         api_error = CloudController::Errors::ApiError.new_from_details(error_name)
-        version   = env['PATH_INFO'][0..2]
-        if version == '/v2'
-          ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_hash
-        elsif version == '/v3'
-          ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error)).to_hash
-        end
+        error_presenter = if VCAP::Request.api_version == VCAP::Request::API_VERSION_V3
+                            ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error))
+                          else
+                            ErrorPresenter.new(api_error, Rails.env.test?)
+                          end
+        error_presenter.to_hash
       end
 
       def exceeded_rate_limit(count, env)

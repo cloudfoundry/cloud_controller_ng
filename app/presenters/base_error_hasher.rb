@@ -10,7 +10,7 @@ class BaseErrorHasher < Struct.new(:error)
   end
 
   def compound_error?
-    error.respond_to?(:underlying_errors)
+    error.is_a?(CloudController::Errors::CompoundError)
   end
 
   def api_error?

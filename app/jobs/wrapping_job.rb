@@ -45,8 +45,8 @@ module VCAP::CloudController
         handler.reschedule_at(time, attempts) if handler.respond_to?(:reschedule_at)
       end
 
-      def error(job, e)
-        handler.error(job, e) if handler.respond_to?(:error)
+      def error(job, exception)
+        handler.error(job, exception) if handler.respond_to?(:error)
       end
 
       def display_name

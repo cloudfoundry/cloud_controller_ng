@@ -4,9 +4,10 @@ module VCAP::CloudController
   module Jobs
     RSpec.describe LoggingContextJob, job_context: :worker do
       subject(:logging_context_job) do
-        LoggingContextJob.new(handler, request_id)
+        LoggingContextJob.new(handler, request_id, api_version)
       end
       let(:request_id) { 'abc123' }
+      let(:api_version) { VCAP::Request::API_VERSION_V3 }
       let(:background_logger) { instance_double(Steno::Logger).as_null_object }
 
       let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
@@ -77,7 +78,7 @@ module VCAP::CloudController
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
 
         before do
-          allow(ErrorPresenter).to receive(:new).with('exception').and_return(error_presenter)
+          allow(ErrorPresenter).to receive(:new).with('exception', boolean, instance_of(V3ErrorHasher)).and_return(error_presenter)
           allow(error_presenter).to receive(:log_message).and_return('log message')
         end
 
@@ -125,6 +126,16 @@ module VCAP::CloudController
           expect { logging_context_job.error(job, 'exception') }.to raise_error 'runtime test exception'
 
           expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+
+        context 'when the request starting the job was against the V2 api' do
+          let(:api_version) { VCAP::Request::API_VERSION_V2 }
+
+          it 'creates an error presenter with default (i.e. V2) error hasher' do
+            expect(ErrorPresenter).to receive(:new).with('exception').and_return(error_presenter)
+
+            logging_context_job.error(job, 'exception')
+          end
         end
 
         context 'when the error is a client error' do

@@ -316,8 +316,13 @@ module CloudFoundry
       context 'when limit has exceeded' do
         let(:general_limit) { 0 }
         let(:path_info) { '/v2/foo' }
+        let(:api_version) { VCAP::Request::API_VERSION_V2 }
         let(:middleware_env) do
           { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+        end
+
+        before do
+          allow(VCAP::Request).to receive(:api_version).and_return(api_version)
         end
 
         it 'returns 429 response' do
@@ -364,6 +369,7 @@ module CloudFoundry
 
         context 'when the path is /v3/*' do
           let(:path_info) { '/v3/foo' }
+          let(:api_version) { VCAP::Request::API_VERSION_V3 }
 
           it 'formats the response error in v3 format' do
             _, _, body = middleware.call(middleware_env)
@@ -378,6 +384,7 @@ module CloudFoundry
 
         context 'when the user is unauthenticated' do
           let(:path_info) { '/v3/foo' }
+          let(:api_version) { VCAP::Request::API_VERSION_V3 }
           let(:unauthenticated_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           it 'suggests they log in' do

@@ -41,8 +41,9 @@ module VCAP::CloudController
       def enqueue_job(job)
         @opts['guid'] = SecureRandom.uuid
         request_id = ::VCAP::Request.current_id
+        api_version = ::VCAP::Request.api_version
         timeout_job = TimeoutJob.new(job, job_timeout)
-        logging_context_job = LoggingContextJob.new(timeout_job, request_id)
+        logging_context_job = LoggingContextJob.new(timeout_job, request_id, api_version)
         Delayed::Job.enqueue(logging_context_job, @opts)
       end
 

@@ -39,13 +39,12 @@ module CloudFoundry
 
       def error_message(env, error_name)
         api_error = CloudController::Errors::ApiError.new_from_details(error_name)
-        version = env['PATH_INFO'][0..2]
-
-        if version == '/v2'
-          ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_json
-        elsif version == '/v3'
-          ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error)).to_json
-        end
+        error_presenter = if VCAP::Request.api_version == VCAP::Request::API_VERSION_V3
+                            ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error))
+                          else
+                            ErrorPresenter.new(api_error, Rails.env.test?)
+                          end
+        error_presenter.to_json
       end
 
       def invalid_token!(env, headers)

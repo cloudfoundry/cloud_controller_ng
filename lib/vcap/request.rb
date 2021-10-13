@@ -7,6 +7,8 @@ module VCAP
     HEADER_BROKER_API_REQUEST_IDENTITY = 'X-Broker-API-Request-Identity'.freeze
     HEADER_ZIPKIN_B3_TRACEID = 'X-B3-TraceId'.freeze
     HEADER_ZIPKIN_B3_SPANID = 'X-B3-SpanId'.freeze
+    API_VERSION_V2 = 'v2'.freeze
+    API_VERSION_V3 = 'v3'.freeze
 
     class << self
       def current_id=(request_id)
@@ -20,6 +22,19 @@ module VCAP
 
       def current_id
         Thread.current[:vcap_request_id]
+      end
+
+      def api_version=(api_version)
+        Thread.current[:api_version] = api_version
+        if api_version.nil?
+          Steno.config.context.data.delete('api_version')
+        else
+          Steno.config.context.data['api_version'] = api_version
+        end
+      end
+
+      def api_version
+        Thread.current[:api_version]
       end
 
       def b3_trace_id=(trace_id)

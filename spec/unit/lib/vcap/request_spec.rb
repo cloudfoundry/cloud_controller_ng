@@ -67,6 +67,39 @@ module VCAP
       end
     end
 
+    describe '.api_version' do
+      after do
+        Request.api_version = nil
+      end
+
+      let(:api_version) { Request::API_VERSION_V3 }
+      let(:data) { {} }
+
+      before do
+        allow(Steno.config.context).to receive(:data).and_return(data)
+      end
+
+      it 'sets the new api_version value' do
+        Request.api_version = api_version
+
+        expect(Request.api_version).to eq api_version
+        expect(Steno.config.context.data.fetch('api_version')).to eq api_version
+      end
+
+      it 'deletes from steno context when set to nil' do
+        Request.api_version = nil
+
+        expect(Request.api_version).to be_nil
+        expect(Steno.config.context.data.key?('api_version')).to be false
+      end
+
+      it 'uses the :api_version thread local' do
+        Request.api_version = api_version
+
+        expect(Thread.current[:api_version]).to eq(api_version)
+      end
+    end
+
     describe '.b3_trace_id' do
       after do
         Request.b3_trace_id = nil

@@ -45,7 +45,8 @@ module VCAP::CloudController
 
       def error(job, exception)
         begin
-          api_error = convert_to_v3_api_error(exception)
+          error_presenter = ErrorPresenter.new(exception, Rails.env.test?, V3ErrorHasher.new(exception))
+          api_error = YAML.dump(error_presenter.to_hash)
           save_error(api_error, job)
         rescue Sequel::DatabaseError
           if (exception.backtrace.size rescue 0) > 0
@@ -65,12 +66,6 @@ module VCAP::CloudController
       end
 
       private
-
-      def convert_to_v3_api_error(exception)
-        v3_hasher = V3ErrorHasher.new(exception)
-        error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
-        YAML.dump(error_presenter.to_hash)
-      end
 
       def find_pollable_job(job)
         PollableJobModel.where(delayed_job_guid: job.guid)

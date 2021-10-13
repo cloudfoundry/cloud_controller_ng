@@ -10,10 +10,11 @@ module CloudFoundry
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }
 
       class VcapRequestId::FakeApp
-        attr_accessor :last_request_id, :last_env_input
+        attr_accessor :last_request_id, :last_api_version, :last_env_input
 
         def call(env)
           @last_request_id = ::VCAP::Request.current_id
+          @last_api_version = ::VCAP::Request.api_version
           @last_env_input = env
           [200, {}, 'a body']
         end
@@ -29,6 +30,38 @@ module CloudFoundry
           it 'nils it out after the request has been processed' do
             middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
             expect(::VCAP::Request.current_id).to eq(nil)
+          end
+        end
+
+        context 'setting the api_version in the current thread' do
+          let(:path_info) { '/v3/something' }
+
+          before do
+            middleware.call('PATH_INFO' => path_info)
+          end
+
+          it 'has assigned it before passing the request' do
+            expect(app.last_api_version).to eq(VCAP::Request::API_VERSION_V3)
+          end
+
+          it 'nils it out after the request has been processed' do
+            expect(::VCAP::Request.api_version).to eq(nil)
+          end
+
+          context 'with a /v2 path' do
+            let(:path_info) { '/v2/something' }
+
+            it 'assigns the correct api version' do
+              expect(app.last_api_version).to eq(VCAP::Request::API_VERSION_V2)
+            end
+          end
+
+          context 'with a different path' do
+            let(:path_info) { '/something' }
+
+            it 'does not assign an api version' do
+              expect(app.last_api_version).to eq(nil)
+            end
           end
         end
 

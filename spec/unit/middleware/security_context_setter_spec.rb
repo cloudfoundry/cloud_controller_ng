@@ -7,6 +7,7 @@ module CloudFoundry
       let(:middleware) { SecurityContextSetter.new(app, security_context_configurer) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:path_info) { '/v2/foo' }
+      let(:api_version) { VCAP::Request::API_VERSION_V2 }
       let(:env) do
         {
           'HTTP_AUTHORIZATION' => 'auth-token',
@@ -15,6 +16,10 @@ module CloudFoundry
       end
       let(:token_decoder) { instance_double(VCAP::CloudController::UaaTokenDecoder) }
       let(:security_context_configurer) { VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder) }
+
+      before do
+        allow(VCAP::Request).to receive(:api_version).and_return(api_version)
+      end
 
       describe '#call' do
         let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato' } }
@@ -141,6 +146,7 @@ module CloudFoundry
 
           context 'when the path is /v3/*' do
             let(:path_info) { '/v3/foo' }
+            let(:api_version) { VCAP::Request::API_VERSION_V3 }
             it 'throws an error' do
               _, _, body = middleware.call(env)
               json_body = JSON.parse(body.first)
