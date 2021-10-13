@@ -4,7 +4,7 @@ module VCAP::CloudController
   class PackageUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
 
-    register_allowed_keys [:bits_path, :bits_name, :resources]
+    register_allowed_keys [:bits_path, :bits_name, :upload_start_time, :resources]
 
     validates_with NoAdditionalKeysValidator
 
