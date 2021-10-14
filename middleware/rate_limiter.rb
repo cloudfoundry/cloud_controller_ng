@@ -49,15 +49,15 @@ module CloudFoundry
     class RateLimiter
       include CloudFoundry::Middleware::ClientIp
 
-      def initialize(app, logger:, general_limit:, total_general_limit:, unauthenticated_limit:, total_unauthenticated_limit:, interval:)
-        @app                         = app
-        @logger                      = logger
-        @general_limit               = general_limit
-        @total_general_limit         = total_general_limit
-        @unauthenticated_limit       = unauthenticated_limit
-        @total_unauthenticated_limit = total_unauthenticated_limit
-        @interval                    = interval
-        @request_counter             = RequestCounter.instance
+      def initialize(app, logger:, per_process_general_limit:, global_general_limit:, per_process_unauthenticated_limit:, global_unauthenticated_limit:, interval:)
+        @app                               = app
+        @logger                            = logger
+        @per_process_general_limit         = per_process_general_limit
+        @global_general_limit              = global_general_limit
+        @per_process_unauthenticated_limit = per_process_unauthenticated_limit
+        @global_unauthenticated_limit      = global_unauthenticated_limit
+        @interval                          = interval
+        @request_counter                   = RequestCounter.instance
       end
 
       def call(env)
@@ -71,7 +71,7 @@ module CloudFoundry
           count, valid_until = @request_counter.get(user_guid, @interval, @logger)
           new_count = count + 1
 
-          rate_limit_headers['X-RateLimit-Limit']     = total_request_limit(env).to_s
+          rate_limit_headers['X-RateLimit-Limit']     = global_request_limit(env).to_s
           rate_limit_headers['X-RateLimit-Reset']     = valid_until.to_i.to_s
           rate_limit_headers['X-RateLimit-Remaining'] = estimate_remaining(env, new_count)
 
@@ -107,20 +107,20 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
-      def total_request_limit(env)
-        user_token?(env) ? @total_general_limit : @total_unauthenticated_limit
+      def global_request_limit(env)
+        user_token?(env) ? @global_general_limit : @global_unauthenticated_limit
       end
 
-      def request_limit(env)
-        user_token?(env) ? @general_limit : @unauthenticated_limit
+      def per_process_request_limit(env)
+        user_token?(env) ? @per_process_general_limit : @per_process_unauthenticated_limit
       end
 
       def estimate_remaining(env, new_count)
-        total_limit = total_request_limit(env)
-        limit = request_limit(env)
+        global_limit = global_request_limit(env)
+        limit = per_process_request_limit(env)
         return '0' unless limit > 0
 
-        estimate = ((limit - new_count).to_f / limit).floor(1) * total_limit
+        estimate = ((limit - new_count).to_f / limit).floor(1) * global_limit
         [0, estimate].max.to_i.to_s
       end
 
@@ -144,7 +144,7 @@ module CloudFoundry
       end
 
       def exceeded_rate_limit(count, env)
-        count > request_limit(env)
+        count > per_process_request_limit(env)
       end
 
       def admin?

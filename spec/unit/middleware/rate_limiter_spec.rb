@@ -6,12 +6,12 @@ module CloudFoundry
       let(:middleware) do
         RateLimiter.new(
           app,
-          logger:                      logger,
-          general_limit:               general_limit,
-          total_general_limit:         total_general_limit,
-          unauthenticated_limit:       unauthenticated_limit,
-          total_unauthenticated_limit: total_unauthenticated_limit,
-          interval:                    interval,
+          logger:                            logger,
+          per_process_general_limit:         per_process_general_limit,
+          global_general_limit:              global_general_limit,
+          per_process_unauthenticated_limit: per_process_unauthenticated_limit,
+          global_unauthenticated_limit:      global_unauthenticated_limit,
+          interval:                          interval,
         )
       end
       let(:request_counter) { double }
@@ -22,10 +22,10 @@ module CloudFoundry
       }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
-      let(:general_limit) { 100 }
-      let(:total_general_limit) { 1000 }
-      let(:unauthenticated_limit) { 10 }
-      let(:total_unauthenticated_limit) { 100 }
+      let(:per_process_general_limit) { 100 }
+      let(:global_general_limit) { 1000 }
+      let(:per_process_unauthenticated_limit) { 10 }
+      let(:global_unauthenticated_limit) { 100 }
       let(:interval) { 60 }
       let(:logger) { double('logger', info: nil) }
 
@@ -40,10 +40,10 @@ module CloudFoundry
         describe 'X-RateLimit-Limit' do
           it 'shows the user the total request limit' do
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq(total_general_limit.to_s)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
 
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq(total_general_limit.to_s)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
           end
         end
 
@@ -209,7 +209,7 @@ module CloudFoundry
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq(total_unauthenticated_limit.to_s)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_unauthenticated_limit.to_s)
           end
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
@@ -242,7 +242,7 @@ module CloudFoundry
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq(total_unauthenticated_limit.to_s)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_unauthenticated_limit.to_s)
           end
 
           it 'identifies them by the request ip' do
@@ -267,7 +267,7 @@ module CloudFoundry
       end
 
       context 'when user has admin or admin_read_only scopes' do
-        let(:general_limit) { 1 }
+        let(:per_process_general_limit) { 1 }
 
         before do
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
@@ -289,7 +289,7 @@ module CloudFoundry
         let(:middleware_env) do
           { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
         end
-        before(:each) { allow(request_counter).to receive(:get).and_return([general_limit + 1, Time.now.utc]) }
+        before(:each) { allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
 
         it 'returns 429 response' do
           status, _, _ = middleware.call(middleware_env)
@@ -302,14 +302,14 @@ module CloudFoundry
         end
 
         it 'prevents "X-RateLimit-Remaining" from going lower than zero' do
-          allow(request_counter).to receive(:get).and_return([general_limit + 100, Time.now.utc])
+          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 100, Time.now.utc])
           _, response_headers, _ = middleware.call(middleware_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
 
         it 'contains the correct headers' do
           valid_until = Time.now.utc
-          allow(request_counter).to receive(:get).and_return([general_limit + 1, valid_until])
+          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, valid_until])
           error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
           allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
@@ -355,7 +355,7 @@ module CloudFoundry
           let(:unauthenticated_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           it 'suggests they log in' do
-            allow(request_counter).to receive(:get).and_return([unauthenticated_limit + 1, Time.now.utc])
+            allow(request_counter).to receive(:get).and_return([per_process_unauthenticated_limit + 1, Time.now.utc])
             _, response_headers, body = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('0')
             json_body = JSON.parse(body.first)

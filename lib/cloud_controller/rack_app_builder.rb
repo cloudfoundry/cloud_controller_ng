@@ -30,10 +30,10 @@ module VCAP::CloudController
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
             logger: Steno.logger('cc.rate_limiter'),
-            general_limit: config.get(:rate_limiter, :general_limit),
-            total_general_limit: config.get(:rate_limiter, :total_general_limit),
-            unauthenticated_limit: config.get(:rate_limiter, :unauthenticated_limit),
-            total_unauthenticated_limit: config.get(:rate_limiter, :total_unauthenticated_limit),
+            per_process_general_limit: config.get(:rate_limiter, :per_process_general_limit),
+            global_general_limit: config.get(:rate_limiter, :global_general_limit),
+            per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
+            global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
             interval: config.get(:rate_limiter, :reset_interval_in_minutes),
           }
         end
