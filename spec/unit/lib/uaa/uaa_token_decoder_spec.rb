@@ -30,7 +30,7 @@ module VCAP::CloudController
     describe '.new' do
       context 'when the decoder is created with a grace period' do
         context 'and that grace period is negative' do
-          subject { UaaTokenDecoder.new(uaa_config, -10) }
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: -10) }
 
           it 'logs a warning that the grace period was changed to 0' do
             expect(logger).to receive(:warn).with(/negative grace period interval.*-10.*is invalid, changed to 0/i)
@@ -39,7 +39,7 @@ module VCAP::CloudController
         end
 
         context 'and that grace period is not an integer' do
-          subject { UaaTokenDecoder.new(uaa_config, 'blabla') }
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 'blabla') }
 
           it 'raises an ArgumentError' do
             expect {
@@ -445,8 +445,50 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the decoder has an grace period specified' do
-          subject { UaaTokenDecoder.new(uaa_config, 100) }
+        context 'when the decoder has an alternate reference time specified' do
+          subject { UaaTokenDecoder.new(uaa_config, alternate_reference_time: Time.now.utc.to_i - 100) }
+          let(:token_content) do
+            { 'aud'     => 'resource-id',
+              'payload' => 123,
+              'exp'     => Time.now.utc.to_i,
+              'iss'     => uaa_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549',
+            }
+          end
+
+          let(:token) { generate_token(rsa_key, token_content) }
+
+          context 'and the token is currently expired but had not expired at the alternate reference time' do
+            it 'decodes the token' do
+              token_content['exp'] = Time.now.utc.to_i - 50
+              expect(logger).to receive(:info).with(/using alternate reference time/i)
+              expect(subject.decode_token("bearer #{token}")).to eq token_content
+            end
+          end
+
+          context 'and the token was expired at the alternate reference time' do
+            it 'raises and logs a warning about the expired token' do
+              token_content['exp'] = Time.now.utc.to_i - 150
+              expect(logger).to receive(:info).with(/using alternate reference time/i)
+              expect(logger).to receive(:warn).with(/token expired/i)
+              expect {
+                subject.decode_token("bearer #{token}")
+              }.to raise_error(VCAP::CloudController::UaaTokenDecoder::BadToken)
+            end
+          end
+        end
+
+        context 'when the decoder has both a grace period and an alternate reference time specified' do
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 100, alternate_reference_time: '123') }
+          it 'raises an ArgumentError' do
+            expect {
+              subject
+            }.to raise_error(ArgumentError, /grace period and alternate reference time cannot be used together/i)
+          end
+        end
+
+        context 'when the decoder has a grace period specified' do
+          subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
               'payload' => 123,
@@ -477,7 +519,7 @@ module VCAP::CloudController
           end
 
           context 'and that grace period interval is negative' do
-            subject { UaaTokenDecoder.new(uaa_config, -10) }
+            subject { UaaTokenDecoder.new(uaa_config, grace_period_in_seconds: -10) }
 
             it 'sets the grace period to be 0 instead' do
               token_content['exp'] = Time.now.utc.to_i

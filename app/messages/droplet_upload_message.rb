@@ -4,7 +4,7 @@ module VCAP::CloudController
   class DropletUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
 
-    register_allowed_keys [:bits_path, :bits_name]
+    register_allowed_keys [:bits_path, :bits_name, :upload_start_time]
 
     validates_with NoAdditionalKeysValidator
 
