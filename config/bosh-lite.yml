@@ -243,8 +243,10 @@ system_hostnames: ["api", "uaa", "login", "doppler", "loggregator"]
 
 rate_limiter:
   enabled: false
-  general_limit: 2000
-  unauthenticated_limit: 100
+  per_process_general_limit: 2000
+  global_general_limit: 2000
+  per_process_unauthenticated_limit: 100
+  global_unauthenticated_limit: 100
   reset_interval_in_minutes: 60
 
 diego:

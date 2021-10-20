@@ -53,8 +53,10 @@ module VCAP::CloudController
             builder.build(TestConfig.override(rate_limiter: {
               enabled: true,
               reset_interval_in_minutes: 60,
-              general_limit: 123,
-              unauthenticated_limit: 1,
+              per_process_general_limit: 123,
+              global_general_limit: 1230,
+              per_process_unauthenticated_limit: 1,
+              global_unauthenticated_limit: 10
             }), request_metrics, request_logs).to_app
           end
 
@@ -62,8 +64,10 @@ module VCAP::CloudController
             expect(CloudFoundry::Middleware::RateLimiter).to have_received(:new).with(
               anything,
               logger: instance_of(Steno::Logger),
-              general_limit: 123,
-              unauthenticated_limit: 1,
+              per_process_general_limit: 123,
+              global_general_limit: 1230,
+              per_process_unauthenticated_limit: 1,
+              global_unauthenticated_limit: 10,
               interval: 60
             )
           end
@@ -74,8 +78,10 @@ module VCAP::CloudController
             builder.build(TestConfig.override(rate_limiter: {
               enabled: false,
               reset_interval_in_minutes: 60,
-              general_limit: 123,
-              unauthenticated_limit: 1
+              per_process_general_limit: 123,
+              global_general_limit: 1230,
+              per_process_unauthenticated_limit: 1,
+              global_unauthenticated_limit: 10
             }), request_metrics, request_logs).to_app
           end
 
