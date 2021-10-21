@@ -12,7 +12,7 @@ RSpec::Matchers.define :match_json_response do |expected|
     actual = actual.deep_symbolize_keys
 
     begin
-      diffs = HashDiff.best_diff(expected.deep_symbolize_keys, actual)
+      diffs = Hashdiff.best_diff(expected.deep_symbolize_keys, actual)
       if diffs
         diffs.each do |comparator, key, expected_value, actual_value|
           case comparator

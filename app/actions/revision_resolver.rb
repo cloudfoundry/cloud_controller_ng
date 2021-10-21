@@ -72,7 +72,7 @@ module VCAP::CloudController
           revision_to_create.commands_by_process_type
         ))
 
-        sidecars_differences = HashDiff.diff(
+        sidecars_differences = Hashdiff.diff(
           latest_revision.sidecars.sort_by(&:name).map(&:to_hash),
           revision_to_create.sidecars.sort_by(&:name).map(&:to_hash)
         )
@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
 
       def list_process_command_changes(commands_by_process_type_a, commands_by_process_type_b)
-        commands_differences = HashDiff.diff(commands_by_process_type_a, commands_by_process_type_b)
+        commands_differences = Hashdiff.diff(commands_by_process_type_a, commands_by_process_type_b)
 
         commands_differences.map do |change_type, process_type, *command_change|
           if change_type == '+'
