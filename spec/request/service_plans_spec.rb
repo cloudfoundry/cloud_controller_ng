@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 require 'models/services/service_plan'
-require 'hashdiff'
 
 UNAUTHENTICATED = %w[unauthenticated].freeze
 

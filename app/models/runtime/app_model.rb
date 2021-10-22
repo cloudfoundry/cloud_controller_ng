@@ -1,7 +1,6 @@
 require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/serializer'
 require 'models/helpers/process_types'
-require 'hashdiff'
 
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
