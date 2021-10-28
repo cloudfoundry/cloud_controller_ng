@@ -68,6 +68,8 @@ module VCAP::CloudController
               },
             },
 
+            log_audit_events: bool,
+
             telemetry_log_path: String, # path to log telemetry to, /dev/null to disable
 
             pid_filename: String, # Pid filename to use

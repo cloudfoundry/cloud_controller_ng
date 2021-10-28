@@ -92,6 +92,32 @@ module VCAP::CloudController
       expect(event.organization_guid).to eq(space.organization.guid)
     end
 
+    context 'logging is enabled' do
+      let(:fake_logger) { instance_double(Steno::Logger) }
+
+      before do
+        TestConfig.config[:log_audit_events] = true
+        allow(Steno).to receive(:logger).and_return(fake_logger)
+      end
+
+      it 'logs the audit event when the event is created' do
+        required_attrs = {
+          type: 'audit.test',
+          timestamp: Time.new(1999, 9, 9).utc,
+          actor: 'shatner',
+          actor_type: 'pork',
+          actor_username: 'chop',
+          actee: 'nimoy',
+          actee_type: 'vulcan',
+          actee_name: 'Mr. Spock',
+          space_guid: space.guid
+        }
+        e = Event.new(required_attrs)
+        expect(fake_logger).to receive(:info).with('Audit event: audit.test enacted by pork chop on vulcan Mr. Spock')
+        e.save
+      end
+    end
+
     describe 'supports deleted spaces (for auditing purposes)' do
       context 'when the space is deleted' do
         let(:space_guid) { 'space-guid-1234' }
