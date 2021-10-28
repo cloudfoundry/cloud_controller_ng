@@ -33,6 +33,8 @@ module VCAP::CloudController
               syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
             },
 
+            log_audit_events: bool,
+
             stacks_file: String,
             newrelic_enabled: bool,
 

@@ -93,6 +93,8 @@ logging:
   format:
     timestamp: 'rfc3339'
 
+log_audit_events: false
+
 telemetry_log_path: spec/artifacts/cloud_controller_telemetry.log
 
 loggregator:

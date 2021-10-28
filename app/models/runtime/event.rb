@@ -47,6 +47,14 @@ module VCAP::CloudController
       super
     end
 
+    def after_save
+      super
+      if Config.config.get(:log_audit_events)
+        logger = Steno.logger('cc.model.event')
+        logger.info "Audit event: #{type} enacted by #{actor_type} #{actor_username || actor_name} on #{actee_type} #{actee_name}"
+      end
+    end
+
     def denormalize_space_and_org_guids
       # If we have both guids, return.
       # If we have a space, get the guids off of it.
