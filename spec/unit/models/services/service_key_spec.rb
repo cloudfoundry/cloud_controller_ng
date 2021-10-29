@@ -1,5 +1,9 @@
 require 'spec_helper'
 
+RSpec::Matchers.define :existing_service_key_count do |c|
+  match { |arg| arg.is_a?(Sequel::Dataset) && arg.count == c }
+end
+
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceKey, type: :model do
     let(:client) { double('broker client', unbind: nil, deprovision: nil) }
@@ -23,15 +27,17 @@ module VCAP::CloudController
 
       context 'MaxServiceKeysPolicy' do
         let(:service_key) { ServiceKey.make }
+        let(:existing_service_key_dataset) { double(Sequel::Dataset, count: 1) }
         let(:policy) { double(MaxServiceKeysPolicy) }
         let(:space_policy) { double(MaxServiceKeysPolicy) }
 
         it 'validates org quotas using MaxServiceKeysPolicy' do
           expect(MaxServiceKeysPolicy).to receive(:new).
-            with(service_key, 1, service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
+            with(service_key, existing_service_key_count(1), service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
             and_return(policy)
           expect(policy).to receive(:validate)
-          expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, 1, nil, :service_keys_space_quota_exceeded).and_return(space_policy)
+          expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, existing_service_key_count(1), nil, :service_keys_space_quota_exceeded).
+            and_return(space_policy)
           expect(space_policy).to receive(:validate)
 
           service_key.valid?
@@ -47,10 +53,11 @@ module VCAP::CloudController
 
           it 'validates space quotas using MaxServiceKeysPolicy' do
             expect(MaxServiceKeysPolicy).to receive(:new).
-              with(service_key, 1, service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
+              with(service_key, existing_service_key_count(1), service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
               and_return(policy)
             expect(policy).to receive(:validate)
-            expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, 1, space_quota, :service_keys_space_quota_exceeded).and_return(space_policy)
+            expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, existing_service_key_count(1), space_quota, :service_keys_space_quota_exceeded).
+              and_return(space_policy)
             expect(space_policy).to receive(:validate)
 
             service_key.valid?
