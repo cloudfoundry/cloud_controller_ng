@@ -404,7 +404,7 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.22.1)
+    rubocop (1.22.3)
       parallel (~> 1.10)
       parser (>= 3.0.0.0)
       rainbow (>= 2.2.2, < 4.0)
@@ -571,7 +571,7 @@ DEPENDENCIES
   rspec-rails (~> 5.0.2)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.22.1)
+  rubocop (~> 1.22.3)
   ruby-debug-ide (>= 0.7.0.beta4)
   rubyzip (>= 1.3.0)
   sequel (~> 5.49)
