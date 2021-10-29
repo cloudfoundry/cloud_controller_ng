@@ -11,9 +11,10 @@ RSpec.describe MaxServiceKeysPolicy do
   let(:total_service_keys) { 2 }
   let(:quota) { VCAP::CloudController::QuotaDefinition.make total_service_keys: total_service_keys }
   let(:existing_service_key_count) { 0 }
+  let(:existing_service_key_dataset) { double(Sequel::Dataset, count: existing_service_key_count) }
   let(:error_name) { :random_error_name }
 
-  let(:policy) { MaxServiceKeysPolicy.new(service_key, existing_service_key_count, quota, error_name) }
+  let(:policy) { MaxServiceKeysPolicy.new(service_key, existing_service_key_dataset, quota, error_name) }
 
   def make_service_key
     VCAP::CloudController::ServiceKey.make service_instance: service_instance
