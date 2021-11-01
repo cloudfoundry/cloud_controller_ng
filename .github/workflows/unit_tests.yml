@@ -64,6 +64,25 @@ jobs:
         notify_when: 'failure' # default is 'success,failure,warnings'
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+  test_mysql8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+    - name: Setup MySQL
+      run: |
+        sudo systemctl start mysql.service
+    - name: Run tests
+      run: MYSQL_CONNECTION_PREFIX=mysql2://root:root@localhost:3306 bundle exec rake spec:all
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
   test_docs:
     runs-on: ubuntu-latest
     container:
