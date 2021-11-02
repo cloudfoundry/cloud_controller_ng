@@ -75,7 +75,7 @@ jobs:
       run: |
         sudo systemctl start mysql.service
     - name: Run tests
-      run: MYSQL_CONNECTION_PREFIX=mysql2://root:root@localhost:3306 bundle exec rake spec:all
+      run: DB=mysql MYSQL_CONNECTION_PREFIX=mysql2://root:root@localhost:3306 bundle exec rake spec:all
     - uses: ravsamhq/notify-slack-action@v1.1
       if: always()
       with:
