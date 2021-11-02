@@ -34,8 +34,8 @@ class ServiceOfferingsController < ApplicationController
               else
                 ServiceOfferingListFetcher.fetch(
                   message,
-                  readable_org_guids: permission_queryer.readable_org_guids,
-                  readable_space_guids: permission_queryer.readable_space_scoped_space_guids,
+                  readable_orgs: permission_queryer.readable_orgs,
+                  readable_spaces: permission_queryer.readable_space_scoped_spaces,
                   eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
                 )
               end

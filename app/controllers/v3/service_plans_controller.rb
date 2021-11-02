@@ -54,8 +54,8 @@ class ServicePlansController < ApplicationController
                 ServicePlanListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServicePlanPresenter.associated_resources,
-                  readable_org_guids: permission_queryer.readable_org_guids,
-                  readable_space_guids: permission_queryer.readable_space_scoped_space_guids,
+                  readable_orgs: permission_queryer.readable_orgs,
+                  readable_spaces: permission_queryer.readable_space_scoped_spaces,
                 )
               end
 

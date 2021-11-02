@@ -65,12 +65,12 @@ module VCAP::CloudController
           end
         end
 
-        context 'when `readable_org_guids` are specified' do
+        context 'when `readable_orgs` are specified' do
           it 'includes public plans and ones for those orgs' do
             service_offerings = fetcher.fetch(
               message,
-              readable_org_guids: [org_1.guid, org_3.guid],
-              readable_space_guids: [],
+              readable_orgs: [org_1, org_3],
+              readable_spaces: [],
             ).all
 
             expect(service_offerings).to contain_exactly(
@@ -83,12 +83,12 @@ module VCAP::CloudController
           end
         end
 
-        context 'when both `readable_space_guids` and `readable_org_guids` are specified' do
+        context 'when both `readable_spaces` and `readable_orgs` are specified' do
           it 'includes public plans, ones for those spaces and ones for those orgs' do
             service_offerings = fetcher.fetch(
               message,
-              readable_space_guids: [space_3.guid],
-              readable_org_guids: [org_3.guid],
+              readable_spaces: [space_3],
+              readable_orgs: [org_3],
             ).all
 
             expect(service_offerings).to contain_exactly(
@@ -152,8 +152,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [org_1.guid],
-                readable_space_guids: [],
+                readable_orgs: [org_1],
+                readable_spaces: [],
               ).all
 
               expect(service_offerings).to contain_exactly(org_restricted_offering_1, public_offering)
@@ -168,8 +168,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [],
-                readable_space_guids: [],
+                readable_orgs: [],
+                readable_spaces: [],
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering)
@@ -187,8 +187,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [org_1.guid],
-                readable_space_guids: [space_1.guid],
+                readable_orgs: [org_1],
+                readable_spaces: [space_1],
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering, org_restricted_offering_1, space_scoped_offering_1)
@@ -222,8 +222,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [org_1.guid],
-                readable_space_guids: [space_1.guid],
+                readable_orgs: [org_1],
+                readable_spaces: [space_1],
               ).all
               expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
             end
@@ -236,8 +236,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [org_1.guid, org_2.guid],
-                readable_space_guids: [space_1.guid],
+                readable_orgs: [org_1, org_2],
+                readable_spaces: [space_1],
               ).all
               expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
             end
@@ -251,8 +251,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [],
-                readable_space_guids: [],
+                readable_orgs: [],
+                readable_spaces: [],
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering)
@@ -289,8 +289,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_org_guids: [org_1.guid, org_2.guid],
-                readable_space_guids: [space_1.guid],
+                readable_orgs: [org_1, org_2],
+                readable_spaces: [space_1],
               ).all
               expect(service_offerings).to contain_exactly(public_offering)
             end
