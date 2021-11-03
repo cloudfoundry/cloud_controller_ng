@@ -171,6 +171,10 @@ module VCAP::CloudController
     end
 
     describe '.raise_unless_enabled!' do
+      before do
+        allow(FeatureFlag).to receive(:find).once.and_call_original
+      end
+
       context 'when the flag is enabled' do
         before do
           feature_flag.enabled = true

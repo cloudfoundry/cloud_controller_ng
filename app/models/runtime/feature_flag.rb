@@ -47,34 +47,33 @@ module VCAP::CloudController
       validates_format FF_ERROR_MESSAGE_REGEX, :error_message if error_message
     end
 
-    def self.enabled?(feature_flag_name)
+    def self.enabled?(feature_flag_name, raise_unless_enabled: false)
       return true if ADMIN_SKIPPABLE.include?(feature_flag_name) && admin?
       return true if ADMIN_READ_ONLY_SKIPPABLE.include?(feature_flag_name) && admin_read_only?
 
       feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
-      return feature_flag.enabled if feature_flag
+      enabled = if feature_flag
+                  feature_flag.enabled
+                else
+                  DEFAULT_FLAGS.fetch(feature_flag_name)
+                end
 
-      DEFAULT_FLAGS.fetch(feature_flag_name)
+      if raise_unless_enabled && !enabled
+        err_message = feature_flag&.error_message ? feature_flag.error_message : feature_flag_name
+        raise CloudController::Errors::ApiError.new_from_details('FeatureDisabled', err_message)
+      end
+
+      enabled
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end
 
     def self.disabled?(feature_flag_name)
-      !FeatureFlag.enabled?(feature_flag_name)
+      !enabled?(feature_flag_name)
     end
 
     def self.raise_unless_enabled!(feature_flag_name)
-      feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
-
-      err_message = feature_flag_name
-
-      if feature_flag && feature_flag.error_message
-        err_message = feature_flag.error_message
-      end
-
-      raise CloudController::Errors::ApiError.new_from_details('FeatureDisabled', err_message) if !enabled?(feature_flag_name)
-    rescue KeyError
-      raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
+      enabled?(feature_flag_name, raise_unless_enabled: true)
     end
 
     def self.admin?
