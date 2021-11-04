@@ -6,6 +6,7 @@ require 'request_logs'
 require 'cef_logs'
 require 'security_context_setter'
 require 'rate_limiter'
+require 'service_broker_rate_limiter'
 require 'new_relic_custom_attributes'
 require 'zipkin'
 require 'block_v3_only_roles'
@@ -35,6 +36,12 @@ module VCAP::CloudController
             per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
             global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
             interval: config.get(:rate_limiter, :reset_interval_in_minutes),
+          }
+        end
+        if config.get(:max_concurrent_service_broker_requests) > 0
+          use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
+            logger: Steno.logger('cc.service_broker_rate_limiter'),
+            concurrent_limit: config.get(:max_concurrent_service_broker_requests),
           }
         end
 
