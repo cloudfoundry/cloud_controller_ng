@@ -43,15 +43,16 @@ module VCAP::CloudController
       validates_unique [:name, :service_instance_id]
 
       if service_instance
+        space_ids_for_org_dataset = Space.where(organization_id: space.organization.id).select(:id)
         MaxServiceKeysPolicy.new(
           self,
-          ServiceKey.filter(service_instance: space.organization.service_instances),
+          ServiceKey.filter(service_instance: ServiceInstance.where(space_id: space_ids_for_org_dataset)),
           space.organization.quota_definition,
           :service_keys_quota_exceeded
         ).validate
         MaxServiceKeysPolicy.new(
           self,
-          ServiceKey.filter(service_instance: space.service_instances),
+          ServiceKey.filter(service_instance: ServiceInstance.where(space_id: space.id)),
           space.space_quota_definition,
           :service_keys_space_quota_exceeded
         ).validate
