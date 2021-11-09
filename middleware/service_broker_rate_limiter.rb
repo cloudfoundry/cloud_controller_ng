@@ -40,9 +40,13 @@ module CloudFoundry
         unless skip_rate_limiting?(env, request)
           return too_many_requests!(env) unless @request_counter.can_make_request?(user_guid, @concurrent_limit)
 
-          status, headers, body = @app.call(env)
-          @request_counter.decrement(user_guid)
-          return [status, headers, body]
+          begin
+            return @app.call(env)
+          rescue => e
+            raise e
+          ensure
+            @request_counter.decrement(user_guid)
+          end
         end
 
         @app.call(env)

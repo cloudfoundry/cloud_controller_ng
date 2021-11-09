@@ -39,6 +39,14 @@ module CloudFoundry
           expect(app).to have_received(:call).once
         end
 
+        it 'still decrements the count when an error occurs in another middleware' do
+          allow(app).to receive(:call).and_raise 'an error'
+          expect { middleware.call(user_env) }.to raise_error('an error')
+          allow(app).to receive(:call).and_return [200, {}, 'a body']
+          status, _, _ = middleware.call(user_env)
+          expect(status).to eq(200)
+        end
+
         describe 'errors' do
           let(:middleware) { ServiceBrokerRateLimiter.new(app, logger: logger, concurrent_limit: 0) }
 
