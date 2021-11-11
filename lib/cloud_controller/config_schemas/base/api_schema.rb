@@ -291,6 +291,7 @@ module VCAP::CloudController
               global_unauthenticated_limit: Integer,
               reset_interval_in_minutes: Integer,
             },
+            max_concurrent_service_broker_requests: Integer,
             shared_isolation_segment_name: String,
 
             opi: {

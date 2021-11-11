@@ -91,6 +91,36 @@ module VCAP::CloudController
         end
       end
 
+      describe 'ServiceBrokerRateLimiter' do
+        before do
+          allow(CloudFoundry::Middleware::ServiceBrokerRateLimiter).to receive(:new)
+        end
+
+        context 'when configuring a limit' do
+          before do
+            builder.build(TestConfig.override(max_concurrent_service_broker_requests: 5), request_metrics, request_logs).to_app
+          end
+
+          it 'enables the ServiceBrokerRateLimiter middleware' do
+            expect(CloudFoundry::Middleware::ServiceBrokerRateLimiter).to have_received(:new).with(
+              anything,
+              logger: instance_of(Steno::Logger),
+              concurrent_limit: 5,
+            )
+          end
+        end
+
+        context 'when not configuring a limit' do
+          before do
+            builder.build(TestConfig.override(max_concurrent_service_broker_requests: 0), request_metrics, request_logs).to_app
+          end
+
+          it 'does not enable the ServiceBrokerRateLimiter middleware' do
+            expect(CloudFoundry::Middleware::ServiceBrokerRateLimiter).not_to have_received(:new)
+          end
+        end
+      end
+
       describe 'New Relic custom attributes' do
         before do
           allow(CloudFoundry::Middleware::NewRelicCustomAttributes).to receive(:new)
