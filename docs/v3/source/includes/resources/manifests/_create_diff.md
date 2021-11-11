@@ -9,7 +9,7 @@ curl "https://api.example.org/v3/spaces/[guid]/manifest_diff" \
   -X POST \
   -H "Content-Type: application/x-yaml" \
   -H "Authorization: bearer [token]" \
-  -d @/path/to/manifest.yml
+  --data-binary @/path/to/manifest.yml
 ```
 
 ```
