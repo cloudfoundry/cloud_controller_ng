@@ -308,6 +308,7 @@ GEM
       racc (~> 1.4)
     nokogiri (1.12.5-x86_64-linux)
       racc (~> 1.4)
+    oj (3.13.2)
     os (1.0.1)
     palm_civet (1.1.0)
     parallel (1.21.0)
@@ -551,6 +552,7 @@ DEPENDENCIES
   netaddr (>= 2.0.4)
   newrelic_rpm
   nokogiri (>= 1.10.5)
+  oj
   palm_civet
   parallel_tests
   pg
