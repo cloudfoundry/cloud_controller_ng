@@ -1,35 +1,31 @@
+require 'concurrent-ruby'
+
 module CloudFoundry
   module Middleware
     class ServiceBrokerRequestCounter
       include Singleton
 
       def initialize
-        @mutex = Mutex.new
         @data = {}
       end
 
-      def can_make_request?(user_guid, limit)
-        @mutex.synchronize do
-          request_count = @data.fetch(user_guid, 0)
-          return false if request_count + 1 > limit
-
-          @data[user_guid] = request_count + 1
-          true
-        end
+      def limit=(limit)
+        @data.default = Concurrent::Semaphore.new(limit)
       end
 
-      def decrement(user_guid)
-        @mutex.synchronize do
-          @data[user_guid] = @data[user_guid] - 1
-        end
+      def try_acquire?(user_guid)
+        return @data[user_guid].try_acquire
+      end
+
+      def release(user_guid)
+        @data[user_guid].release
       end
     end
 
     class ServiceBrokerRateLimiter
-      def initialize(app, logger:, concurrent_limit:)
+      def initialize(app, logger:)
         @app                               = app
         @logger                            = logger
-        @concurrent_limit = concurrent_limit
         @request_counter = ServiceBrokerRequestCounter.instance
       end
 
@@ -38,14 +34,14 @@ module CloudFoundry
         user_guid = env['cf.user_guid']
 
         unless skip_rate_limiting?(env, request)
-          return too_many_requests!(env) unless @request_counter.can_make_request?(user_guid, @concurrent_limit)
+          return too_many_requests!(env, user_guid) unless @request_counter.try_acquire?(user_guid)
 
           begin
             return @app.call(env)
           rescue => e
             raise e
           ensure
-            @request_counter.decrement(user_guid)
+            @request_counter.release(user_guid)
           end
         end
 
@@ -74,14 +70,15 @@ module CloudFoundry
       end
 
       def rate_limit_method?(request)
-        %w(PATCH PUT POST).include? request.method
+        %w(PATCH PUT POST DELETE).include? request.method
       end
 
       def user_token?(env)
         !!env['cf.user_guid']
       end
 
-      def too_many_requests!(env)
+      def too_many_requests!(env, user_guid)
+        @logger.info("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
         message = rate_limit_error(env).to_json
         [429, {}, [message]]
       end

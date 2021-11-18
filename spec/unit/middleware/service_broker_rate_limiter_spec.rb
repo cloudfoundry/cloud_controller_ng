@@ -4,14 +4,19 @@ module CloudFoundry
   module Middleware
     RSpec.describe ServiceBrokerRateLimiter do
       let(:app) { double(:app) }
-      let(:logger) { double('logger', info: nil) }
+      let(:logger) { double }
       let(:path_info) { '/v3/service_instances' }
       let(:user_env) { { 'cf.user_guid' => 'user_guid', 'PATH_INFO' => path_info } }
       let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
-      let(:middleware) { ServiceBrokerRateLimiter.new(app, logger: logger, concurrent_limit: 1) }
+      let(:concurrent_limit) { 1 }
+      let(:middleware) {
+        ServiceBrokerRequestCounter.instance.limit = concurrent_limit
+        ServiceBrokerRateLimiter.new(app, logger: logger)
+      }
 
       before(:each) do
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+        allow(logger).to receive(:info)
         allow(app).to receive(:call) do
           sleep(1)
           [200, {}, 'a body']
@@ -34,12 +39,14 @@ module CloudFoundry
         it 'does not allow more than the max number of concurrent requests' do
           threads = 2.times.map { Thread.new { Thread.current[:status], _, _ = middleware.call(user_env) } }
           statuses = threads.map { |t| t.join[:status] }
+
           expect(statuses).to include(200)
           expect(statuses).to include(429)
           expect(app).to have_received(:call).once
+          expect(logger).to have_received(:info).with "Service broker concurrent rate limit exceeded for user 'user_guid'"
         end
 
-        it 'still decrements the count when an error occurs in another middleware' do
+        it 'still releases when an error occurs in another middleware' do
           allow(app).to receive(:call).and_raise 'an error'
           expect { middleware.call(user_env) }.to raise_error('an error')
           allow(app).to receive(:call).and_return [200, {}, 'a body']
@@ -48,7 +55,7 @@ module CloudFoundry
         end
 
         describe 'errors' do
-          let(:middleware) { ServiceBrokerRateLimiter.new(app, logger: logger, concurrent_limit: 0) }
+          let(:concurrent_limit) { 0 }
 
           context 'when the path is /v2/*' do
             let(:path_info) { '/v2/service_instances' }
@@ -90,7 +97,7 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:can_make_request?)
+            expect(request_counter).not_to receive(:try_acquire?)
             expect(app).to have_received(:call)
           end
         end
@@ -100,7 +107,7 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:can_make_request?)
+            expect(request_counter).not_to receive(:try_acquire?)
             expect(app).to have_received(:call)
           end
         end
@@ -110,7 +117,7 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:can_make_request?)
+            expect(request_counter).not_to receive(:try_acquire?)
             expect(app).to have_received(:call)
           end
         end

@@ -105,7 +105,6 @@ module VCAP::CloudController
             expect(CloudFoundry::Middleware::ServiceBrokerRateLimiter).to have_received(:new).with(
               anything,
               logger: instance_of(Steno::Logger),
-              concurrent_limit: 5,
             )
           end
         end
