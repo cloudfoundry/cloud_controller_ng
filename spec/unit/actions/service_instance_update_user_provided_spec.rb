@@ -55,6 +55,8 @@ module VCAP::CloudController
         si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
         si
       end
+      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, credentials: { foo: 'bar', baz: 'qux' }) }
+      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route_service_url: 'https://bar.com') }
       let(:message) { ServiceInstanceUpdateUserProvidedMessage.new(body) }
 
       it 'updates the values in the service instance in the database' do
@@ -80,6 +82,21 @@ module VCAP::CloudController
           { prefix: nil, key: 'alpha', value: 'beta' },
           { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
         )
+      end
+
+      it 'updates the values of the service bindings in the database' do
+        action.update(service_instance, message)
+        service_binding.reload
+
+        expect(service_binding.credentials).to eq({ used_in: 'bindings', foo: 'bar' }.with_indifferent_access)
+        expect(service_binding.syslog_drain_url).to eq('https://foo2.com')
+      end
+
+      it 'updates the values of the route bindings in the database' do
+        action.update(service_instance, message)
+        route_binding.reload
+
+        expect(route_binding.route_service_url).to eq('https://bar2.com')
       end
 
       context 'last operation was not set' do

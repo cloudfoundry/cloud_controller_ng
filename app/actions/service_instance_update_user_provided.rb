@@ -30,6 +30,8 @@ module VCAP::CloudController
       service_instance.db.transaction do
         original_service_instance = service_instance.dup
         service_instance.save_with_new_operation(updates, last_operation)
+        update_service_bindings(service_instance, updates) if updates.key?(:credentials) || updates.key?(:syslog_drain_url)
+        update_route_bindings(service_instance, updates) if updates.key?(:route_service_url)
         MetadataUpdate.update(service_instance, message)
         service_event_repository.record_user_provided_service_instance_event(:update, original_service_instance, message.audit_hash)
       end
@@ -46,6 +48,20 @@ module VCAP::CloudController
     private
 
     attr_reader :service_event_repository
+
+    def update_service_bindings(service_instance, updates)
+      service_instance.service_bindings_dataset.each do |sb|
+        sb.credentials = updates[:credentials] if updates.key?(:credentials)
+        sb.syslog_drain_url = updates[:syslog_drain_url] if updates.key?(:syslog_drain_url)
+        sb.save
+      end
+    end
+
+    def update_route_bindings(service_instance, updates)
+      service_instance.routes.each do |route|
+        route.route_binding.update(route_service_url: updates[:route_service_url]) if updates[:route_service_url]
+      end
+    end
 
     class ValidationErrorHandler
       def error!(message)
