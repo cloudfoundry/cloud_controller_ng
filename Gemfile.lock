@@ -93,7 +93,7 @@ GEM
     backport (1.2.0)
     backports (3.18.1)
     beefcake (1.0.0)
-    benchmark (0.1.1)
+    benchmark (0.2.0)
     bit-struct (0.16)
     bits_service_client (3.4.0)
       activesupport
@@ -330,7 +330,7 @@ GEM
       byebug (~> 11.0)
       pry (~> 0.13.0)
     public_suffix (4.0.6)
-    racc (1.5.2)
+    racc (1.6.0)
     rack (2.2.3)
     rack-protection (2.0.8.1)
       rack
@@ -365,7 +365,7 @@ GEM
       netrc (~> 0.8)
     retriable (3.1.2)
     retryable (3.0.5)
-    reverse_markdown (2.0.0)
+    reverse_markdown (2.1.1)
       nokogiri
     rexml (3.2.5)
     rfc822 (0.1.5)
@@ -447,7 +447,7 @@ GEM
       rack-protection (= 2.0.8.1)
       sinatra (= 2.0.8.1)
       tilt (~> 2.0)
-    solargraph (0.44.0)
+    solargraph (0.44.1)
       backport (~> 1.2)
       benchmark
       bundler (>= 1.17.2)
