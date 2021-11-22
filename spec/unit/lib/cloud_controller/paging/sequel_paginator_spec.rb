@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       it 'sorts by the order_by option in the corresponding order_direction' do
-        options = { page: 1, per_page: 2, order_by: 'name', order_direction: 'asc' }
+        options = { page: page, per_page: 2, order_by: 'name', order_direction: 'asc' }
         app_model2.update(name: 'a')
         app_model1.update(name: 'b')
         pagination_options = PaginationOptions.new(options)
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       it 'works with a multi table result set' do
         PackageModel.make(app: app_model1)
-        options = { page: 1, per_page: per_page }
+        options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
         new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid".to_sym => "#{AppModel.table_name}__guid".to_sym)
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
       end
 
       it 'orders by GUID as a secondary field when available' do
-        options = { page: 1, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
+        options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
         app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')
         app_model2.update(guid: '2', created_at: '2019-12-25T13:00:00Z')
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       it 'does not order by GUID when the table has no GUID' do
-        options = { page: 1, per_page: per_page }
+        options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
         request_count_dataset = RequestCount.dataset
         RequestCount.make.save
@@ -102,13 +102,23 @@ module VCAP::CloudController
 
       it 'only calls DB once if DB supports window functions' do
         skip 'DB does not support window functions' unless dataset.supports_window_functions?
-        options = { page: 1, per_page: per_page }
+        options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
 
         expect(dataset.db).to receive(:execute).once.and_call_original
 
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.total).to be > 1
+      end
+
+      it 'returns correct total results for distinct result' do
+        options = { page: page, per_page: per_page, order_by: :key_name }
+        pagination_options = PaginationOptions.new(options)
+        2.times { SpaceLabelModel.create(key_name: 'testLabel') }
+        dataset = SpaceLabelModel.dataset.distinct(:key_name)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+
+        expect(paginated_result.total).to eq(1)
       end
     end
   end
