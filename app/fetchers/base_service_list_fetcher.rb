@@ -7,16 +7,17 @@ module VCAP::CloudController
     class << self
       private
 
-      def select_readable(dataset, message, omniscient: false, readable_spaces: [], readable_orgs: [])
-        if readable_orgs.any?
+      def select_readable(dataset, message, omniscient: false, readable_spaces_query: nil, readable_orgs_query: nil)
+        if readable_orgs_query
           dataset = join_service_plans(dataset)
           dataset = join_plan_org_visibilities(dataset)
           dataset = join_service_brokers(dataset)
 
+          readable_space_ids_query = readable_spaces_query ? readable_spaces_query.select(:id) : nil
           dataset = dataset.where do
             (Sequel[:service_plans][:public] =~ true) |
-              (Sequel[:service_plan_visibilities][:organization_id] =~ readable_orgs.map(&:id)) |
-              (Sequel[:service_brokers][:space_id] =~ readable_spaces.map(&:id))
+              (Sequel[:service_plan_visibilities][:organization_id] =~ readable_orgs_query.select(:id)) |
+              (Sequel[:service_brokers][:space_id] =~ readable_space_ids_query)
           end
         elsif !omniscient
           dataset = join_service_plans(dataset)
@@ -24,10 +25,11 @@ module VCAP::CloudController
         end
 
         if message.requested?(:space_guids)
+          readable_space_guids = readable_spaces_query ? readable_spaces_query.select(:guid).all.map(&:guid) : []
           dataset = filter_spaces(
             dataset,
             filtered_space_guids: message.space_guids,
-            readable_space_guids: readable_spaces.map(&:guid),
+            readable_space_guids: readable_space_guids,
             omniscient: omniscient,
           )
         end
