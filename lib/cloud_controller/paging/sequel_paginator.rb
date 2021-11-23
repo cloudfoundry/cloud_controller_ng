@@ -15,7 +15,7 @@ module VCAP::CloudController
       sequel_dataset = sequel_dataset.order(sequel_order)
       sequel_dataset = sequel_dataset.order_append(Sequel.asc(Sequel.qualify(table_name, :guid))) if sequel_dataset.model.columns.include?(:guid)
 
-      records, count = if sequel_dataset.supports_window_functions?
+      records, count = if sequel_dataset.supports_window_functions? && !sequel_dataset.opts[:distinct]
                          paginate_with_window_function(sequel_dataset, per_page, page, table_name)
                        else
                          paginate_with_extension(sequel_dataset, per_page, page)
