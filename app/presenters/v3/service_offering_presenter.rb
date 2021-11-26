@@ -2,17 +2,25 @@ require 'presenters/v3/base_presenter'
 require 'models/helpers/metadata_helpers'
 require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/api_url_builder'
+require 'presenters/mixins/association_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class ServiceOfferingPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+        include VCAP::CloudController::Presenters::Mixins::AssociationPresentationHelpers
 
         class << self
           # :labels and :annotations come from MetadataPresentationHelpers
-          def associated_resources
-            super + [:service_broker]
+          def associated_resources(fields=nil)
+            super + associations(merge_fields(associated_fields, fields))
+          end
+
+          def associated_fields
+            {
+              service_broker: [:id, :guid]
+            }
           end
         end
 

@@ -20,28 +20,30 @@ class ServiceOfferingsController < ApplicationController
     message = ServiceOfferingsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
+    decorators = []
+    decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
+
+    eager_loaded_associations = Presenters::V3::ServiceOfferingPresenter.associated_resources(decorators.map(&:associated_fields))
+
     dataset = if !current_user
                 ServiceOfferingListFetcher.fetch(
                   message,
-                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources
+                  eager_loaded_associations: eager_loaded_associations
                 )
               elsif permission_queryer.can_read_globally?
                 ServiceOfferingListFetcher.fetch(
                   message,
                   omniscient: true,
-                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                  eager_loaded_associations: eager_loaded_associations
                 )
               else
                 ServiceOfferingListFetcher.fetch(
                   message,
                   readable_orgs: permission_queryer.readable_orgs,
                   readable_spaces: permission_queryer.readable_space_scoped_spaces,
-                  eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                  eager_loaded_associations: eager_loaded_associations
                 )
               end
-
-    decorators = []
-    decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
 
     page_results = SequelPaginator.new.get_page(dataset, message.try(:pagination_options))
     handle_order_by_presented_value(page_results)
@@ -60,15 +62,15 @@ class ServiceOfferingsController < ApplicationController
   def show
     not_authenticated! if user_cannot_see_marketplace?
 
-    service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
-    service_offering_not_found! if service_offering.nil?
-    service_offering_not_found! unless visible_to_current_user?(service: service_offering)
-
     message = ServiceOfferingsShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
     decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
+
+    service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
+    service_offering_not_found! if service_offering.nil?
+    service_offering_not_found! unless visible_to_current_user?(service: service_offering)
 
     presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering, decorators: decorators)
     render status: :ok, json: presenter.to_json

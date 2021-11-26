@@ -2,17 +2,29 @@ require 'json'
 require 'json-schema'
 require 'presenters/v3/base_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
+require 'presenters/mixins/association_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class ServicePlanPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+        include VCAP::CloudController::Presenters::Mixins::AssociationPresentationHelpers
 
         class << self
           # :labels and :annotations come from MetadataPresentationHelpers
-          def associated_resources
-            super + [{ service: :service_broker }, { service: { service_broker: :space } }]
+          def associated_resources(fields=nil)
+            super + associations(merge_fields(associated_fields, fields))
+          end
+
+          def associated_fields
+            {
+              service: [:id, :guid, :bindable, :service_broker_id, {
+                service_broker: [:id, :space_id, {
+                  space: [:id, :guid]
+                }]
+              }]
+            }
           end
         end
 

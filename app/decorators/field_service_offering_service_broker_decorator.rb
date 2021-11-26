@@ -12,6 +12,12 @@ module VCAP::CloudController
       @fields = fields[:service_broker].to_set.intersection(self.class.allowed)
     end
 
+    def associated_fields
+      {
+        service_broker: [:created_at, :name]
+      }
+    end
+
     def decorate(hash, service_offerings)
       hash[:included] ||= {}
       service_brokers = service_offerings.map(&:service_broker).uniq
@@ -21,7 +27,6 @@ module VCAP::CloudController
         broker_view[:guid] = broker.guid if @fields.include?('guid')
         broker_view
       end
-
       hash
     end
   end

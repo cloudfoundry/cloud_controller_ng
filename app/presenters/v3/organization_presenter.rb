@@ -10,6 +10,12 @@ module VCAP::CloudController::Presenters::V3
       def associated_resources
         super << :quota_definition
       end
+
+      def associated_fields
+        {
+          quota_definition: :* # TODO: select required fields only
+        }
+      end
     end
 
     def to_hash

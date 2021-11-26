@@ -5,11 +5,28 @@ module VCAP::CloudController::Presenters::Mixins
     extend ActiveSupport::Concern
 
     class_methods do
-      def associated_resources
+      def associated_resources(fields=nil)
         [
           :labels,
           :annotations
         ]
+      end
+
+      def all_fields
+        [
+          :*,
+          associated_fields,
+          {
+            labels: :*
+          },
+          {
+            annotations: :*
+          }
+        ]
+      end
+
+      def associated_fields
+        {}
       end
     end
 

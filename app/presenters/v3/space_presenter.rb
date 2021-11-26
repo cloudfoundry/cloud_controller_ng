@@ -10,6 +10,12 @@ module VCAP::CloudController::Presenters::V3
       def associated_resources
         super << :organization
       end
+
+      def associated_fields
+        {
+          organization: :* # TODO: select required fields only
+        }
+      end
     end
 
     def to_hash

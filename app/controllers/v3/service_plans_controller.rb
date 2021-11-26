@@ -20,14 +20,14 @@ class ServicePlansController < ApplicationController
     message = ServicePlansShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
-    service_plan_not_found! if service_plan.nil?
-    service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
-
     decorators = []
     decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
     decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
     decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
+
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
+    service_plan_not_found! if service_plan.nil?
+    service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
 
     presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators: decorators)
     render status: :ok, json: presenter.to_json
@@ -39,30 +39,32 @@ class ServicePlansController < ApplicationController
     message = ServicePlansListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
+    decorators = []
+    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
+    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
+    decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
+
+    eager_loaded_associations = Presenters::V3::ServicePlanPresenter.associated_resources(decorators.map(&:associated_fields))
+
     dataset = if !current_user
                 ServicePlanListFetcher.fetch(
                   message,
-                  eager_loaded_associations: Presenters::V3::ServicePlanPresenter.associated_resources
+                  eager_loaded_associations: eager_loaded_associations
                 )
               elsif permission_queryer.can_read_globally?
                 ServicePlanListFetcher.fetch(
                   message,
-                  eager_loaded_associations: Presenters::V3::ServicePlanPresenter.associated_resources,
+                  eager_loaded_associations: eager_loaded_associations,
                   omniscient: true
                 )
               else
                 ServicePlanListFetcher.fetch(
                   message,
-                  eager_loaded_associations: Presenters::V3::ServicePlanPresenter.associated_resources,
+                  eager_loaded_associations: eager_loaded_associations,
                   readable_orgs: permission_queryer.readable_orgs,
                   readable_spaces: permission_queryer.readable_space_scoped_spaces,
                 )
               end
-
-    decorators = []
-    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
-    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
-    decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServicePlanPresenter,
