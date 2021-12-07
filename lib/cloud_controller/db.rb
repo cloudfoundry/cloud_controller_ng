@@ -41,6 +41,15 @@ module VCAP::CloudController
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_expiration_extension(db, opts)
       add_connection_validator_extension(db, opts)
+
+      if db.database_type == :postgres && Sequel.application_timezone == :utc && Sequel.database_timezone == :utc && Sequel.typecast_timezone == :utc
+        # object identifier '1114' is 'timestamp without time zone' (used for e.g. created_at, updated_at)
+        db.add_conversion_proc(1114) do |value|
+          dt = DateTime._strptime(value, value.include?('.') ? '%Y-%m-%d %H:%M:%S.%N' : '%Y-%m-%d %H:%M:%S')
+          Time.utc(dt[:year], dt[:mon], dt[:mday], dt[:hour], dt[:min], dt[:sec] + (dt[:sec_fraction] || 0))
+        end
+      end
+
       db
     end
 
