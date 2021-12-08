@@ -13,20 +13,13 @@ module VCAP::CloudController
 
       describe 'droplets' do
         context 'expired' do
-          let!(:expired_droplet) { DropletModel.make(state: DropletModel::EXPIRED_STATE) }
+          let!(:expired_droplet) { DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: 'not-nil', docker_receipt_image: nil) }
+          DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, docker_receipt_image: 'repo/test-app')
           let!(:non_expired_droplet) { DropletModel.make }
 
           it 'enqueues a deletion job when droplet_hash is not nil' do
-            expired_droplet.update(droplet_hash: 'not-nil')
-
             expect { job.perform }.to change { Delayed::Job.count }.by(1)
             expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
-          end
-
-          it 'does nothing when droplet_hash is nil' do
-            expired_droplet.update(droplet_hash: nil)
-
-            expect { job.perform }.not_to change { Delayed::Job.count }.from(0)
           end
         end
 
