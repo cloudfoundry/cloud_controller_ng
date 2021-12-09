@@ -12,8 +12,7 @@ module VCAP::CloudController
     def expire_droplets!(app)
       expirable_candidates = DropletModel.
                              where(state: DropletModel::STAGED_STATE, app_guid: app.guid).
-                             exclude(guid: app.droplet_guid).
-                             exclude(droplet_hash: nil)
+                             exclude(guid: app.droplet_guid)
 
       return if expirable_candidates.count < droplets_storage_count
 
@@ -21,7 +20,9 @@ module VCAP::CloudController
 
       droplets_to_expire.each do |droplet|
         droplet.update(state: DropletModel::EXPIRED_STATE)
-        enqueue_droplet_delete_job(droplet.guid)
+        if droplet.droplet_hash
+          enqueue_droplet_delete_job(droplet.guid)
+        end
       end
     end
 
