@@ -12,15 +12,15 @@ module VCAP::CloudController
           logger = Steno.logger('cc.background')
           logger.info('Cleaning up excess app revisions')
 
-          AppModel.each do |app|
-            revision_dataset = RevisionModel.where(app_guid: app.guid)
+          AppModel.select_map(:guid).each do |app_guid|
+            revision_dataset = RevisionModel.where(app_guid: app_guid)
             next if revision_dataset.count <= max_retained_revisions_per_app
 
             revisions_to_keep = revision_dataset.order(Sequel.desc(:created_at)).
                                 limit(max_retained_revisions_per_app).
                                 select(:id)
             delete_count = RevisionDelete.delete(revision_dataset.exclude(id: revisions_to_keep))
-            logger.info("Cleaned up #{delete_count} revision rows for app #{app.guid}")
+            logger.info("Cleaned up #{delete_count} revision rows for app #{app_guid}")
           end
         end
 
