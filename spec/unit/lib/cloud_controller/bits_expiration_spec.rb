@@ -62,8 +62,8 @@ module VCAP::CloudController
         end
       end
 
-      it 'it does not enqueue a job to delete the blob' do
-        expect { BitsExpiration.new.expire_droplets!(app) }.not_to change { Delayed::Job.count }.from(0)
+      it 'does not enqueue a job to delete the blob' do
+        expect { BitsExpiration.new.expire_droplets!(app) }.not_to change { Delayed::Job.count }
       end
     end
 
