@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       droplets_to_expire.each do |droplet|
         droplet.update(state: DropletModel::EXPIRED_STATE)
-        enqueue_droplet_delete_job(droplet.guid)
+        enqueue_droplet_delete_job(droplet.guid) if droplet.droplet_hash
       end
     end
 

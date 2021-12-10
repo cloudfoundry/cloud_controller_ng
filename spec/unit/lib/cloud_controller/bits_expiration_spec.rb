@@ -41,12 +41,14 @@ module VCAP::CloudController
       end
     end
 
-    context 'with droplets' do
+    context 'with docker cf apps' do
       before do
         t        = Time.now
         @current = DropletModel.make(
           app_guid:     app.guid,
-          created_at:   t
+          created_at:   t,
+          droplet_hash: nil,
+          docker_receipt_image: 'repo/test-app',
         )
         app.update(droplet: @current)
 
@@ -54,6 +56,32 @@ module VCAP::CloudController
           DropletModel.make(
             app_guid:     app.guid,
             created_at:   t + i,
+            droplet_hash: nil,
+            docker_receipt_image: 'repo/test-app',
+          )
+        end
+      end
+
+      it 'does not enqueue a job to delete the blob' do
+        expect { BitsExpiration.new.expire_droplets!(app) }.not_to change { Delayed::Job.count }
+      end
+    end
+
+    context 'with droplets' do
+      before do
+        t        = Time.now
+        @current = DropletModel.make(
+          app_guid:     app.guid,
+          created_at:   t,
+          droplet_hash: 'current_droplet_hash',
+        )
+        app.update(droplet: @current)
+
+        10.times do |i|
+          DropletModel.make(
+            app_guid:     app.guid,
+            created_at:   t + i,
+            droplet_hash: 'current_droplet_hash',
           )
         end
       end

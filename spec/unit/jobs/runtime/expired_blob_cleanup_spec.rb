@@ -12,39 +12,31 @@ module VCAP::CloudController
       end
 
       describe 'droplets' do
+        let!(:buildpack_droplet) { DropletModel.make(droplet_hash: 'not-nil', docker_receipt_image: nil) }
+        let!(:docker_droplet) { DropletModel.make(droplet_hash: nil, docker_receipt_image: 'repo/test-app') }
+        let!(:staged_droplet) { DropletModel.make(state: DropletModel::STAGED_STATE) }
+
         context 'expired' do
-          let!(:expired_droplet) { DropletModel.make(state: DropletModel::EXPIRED_STATE) }
-          let!(:non_expired_droplet) { DropletModel.make }
-
-          it 'enqueues a deletion job when droplet_hash is not nil' do
-            expired_droplet.update(droplet_hash: 'not-nil')
-
-            expect { job.perform }.to change { Delayed::Job.count }.by(1)
-            expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
+          before do
+            buildpack_droplet.update(state: DropletModel::EXPIRED_STATE)
+            docker_droplet.update(state: DropletModel::EXPIRED_STATE)
           end
 
-          it 'does nothing when droplet_hash is nil' do
-            expired_droplet.update(droplet_hash: nil)
-
-            expect { job.perform }.not_to change { Delayed::Job.count }.from(0)
+          it 'enqueues a deletion job only for buildpack droplets' do
+            expect { job.perform }.to change { Delayed::Job.count }.by(1)
+            expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
           end
         end
 
         context 'failed' do
-          let!(:expired_droplet) { DropletModel.make(state: DropletModel::FAILED_STATE) }
-          let!(:non_expired_droplet) { DropletModel.make }
-
-          it 'enqueues a deletion job when droplet_hash is not nil' do
-            expired_droplet.update(droplet_hash: 'not-nil')
-
-            expect { job.perform }.to change { Delayed::Job.count }.by(1)
-            expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
+          before do
+            buildpack_droplet.update(state: DropletModel::FAILED_STATE)
+            docker_droplet.update(state: DropletModel::FAILED_STATE)
           end
 
-          it 'does nothing when droplet_hash is nil' do
-            expired_droplet.update(droplet_hash: nil)
-
-            expect { job.perform }.not_to change { Delayed::Job.count }.from(0)
+          it 'enqueues a deletion job only for buildpack droplets' do
+            expect { job.perform }.to change { Delayed::Job.count }.by(1)
+            expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
           end
         end
       end
