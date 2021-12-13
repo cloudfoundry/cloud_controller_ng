@@ -246,7 +246,7 @@
 60009:
   name: ServiceInstanceNameTooLong
   http_code: 400
-  message: "You have requested an invalid service instance name. Names are limited to 50 characters."
+  message: "You have requested an invalid service instance name. Names are limited to 255 characters."
 
 60010:
   name: ServiceInstanceOrganizationNotAuthorized
