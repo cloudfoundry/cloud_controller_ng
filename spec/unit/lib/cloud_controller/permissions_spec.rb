@@ -168,6 +168,26 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_orgs' do
+      it 'calls all on subquery' do
+        org_records = double
+        subquery = instance_double(Sequel::Dataset)
+        expect(subquery).to receive(:all).and_return(org_records)
+        expect(permissions).to receive(:readable_orgs_query).and_return(subquery)
+        expect(permissions.readable_orgs).to be(org_records)
+      end
+    end
+
+    describe '#readable_orgs_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:orgs_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(permissions.readable_orgs_query).to be(subquery)
+      end
+    end
+
     describe '#readable_org_guids_for_domains_query' do
       context 'when user has valid membership' do
         let(:membership) { instance_double(Membership) }
@@ -617,6 +637,26 @@ module VCAP::CloudController
         actual_space_guids = permissions.readable_space_scoped_space_guids
 
         expect(actual_space_guids).to eq(space_guids)
+      end
+    end
+
+    describe '#readable_space_scoped_spaces' do
+      it 'calls all on subquery' do
+        space_records = double
+        subquery = instance_double(Sequel::Dataset)
+        expect(subquery).to receive(:all).and_return(space_records)
+        expect(permissions).to receive(:readable_space_scoped_spaces_query).and_return(subquery)
+        expect(permissions.readable_space_scoped_spaces).to be(space_records)
+      end
+    end
+
+    describe '#readable_space_scoped_spaces_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:spaces_for_roles_subquery).with(Permissions::SPACE_ROLES).and_return(subquery)
+        expect(permissions.readable_space_scoped_spaces_query).to be(subquery)
       end
     end
 

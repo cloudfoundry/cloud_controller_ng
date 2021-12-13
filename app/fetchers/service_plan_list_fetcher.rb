@@ -3,13 +3,13 @@ require 'fetchers/base_service_list_fetcher'
 module VCAP::CloudController
   class ServicePlanListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_spaces: [], readable_orgs: [], eager_loaded_associations: [])
+      def fetch(message, omniscient: false, readable_spaces_query: nil, readable_orgs_query: nil, eager_loaded_associations: [])
         dataset = select_readable(
           ServicePlan.dataset.eager(eager_loaded_associations),
           message,
           omniscient: omniscient,
-          readable_orgs: readable_orgs,
-          readable_spaces: readable_spaces,
+          readable_orgs_query: readable_orgs_query,
+          readable_spaces_query: readable_spaces_query,
         )
 
         filter(message, dataset).select_all(:service_plans).distinct

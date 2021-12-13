@@ -8,6 +8,9 @@ module VCAP::CloudController
     let(:fetcher) { described_class }
 
     describe '#fetch' do
+      let(:readable_orgs_query) { VCAP::CloudController::Organization.where(id: readable_orgs&.map(&:id)) }
+      let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: readable_spaces&.map(&:id)) }
+
       context 'when there are no plans' do
         it 'is empty' do
           service_plans = fetcher.fetch(message, omniscient: true).all
@@ -79,11 +82,14 @@ module VCAP::CloudController
         end
 
         context 'when `readable_org` are specified' do
+          let(:readable_orgs) { [org_1, org_3] }
+          let(:readable_spaces) { [] }
+
           it 'includes public plans and ones for those orgs' do
             service_plans = fetcher.fetch(
               message,
-              readable_orgs: [org_1, org_3],
-              readable_spaces: [],
+              readable_orgs_query: readable_orgs_query,
+              readable_spaces_query: readable_spaces_query,
             ).all
 
             expect(service_plans).to contain_exactly(
@@ -97,11 +103,14 @@ module VCAP::CloudController
         end
 
         context 'when both `readable_spaces` and `readable_orgs` are specified' do
+          let(:readable_orgs) { [org_3] }
+          let(:readable_spaces) { [space_3] }
+
           it 'includes public plans, ones for those spaces and ones for those orgs' do
             service_plans = fetcher.fetch(
               message,
-              readable_spaces: [space_3],
-              readable_orgs: [org_3],
+              readable_orgs_query: readable_orgs_query,
+              readable_spaces_query: readable_spaces_query,
             ).all
 
             expect(service_plans).to contain_exactly(
@@ -158,6 +167,9 @@ module VCAP::CloudController
           end
 
           context 'only some orgs are readable (ORG_AUDITOR etc)' do
+            let(:readable_orgs) { [org_1] }
+            let(:readable_spaces) { [] }
+
             it 'shows only readable plans' do
               message = ServicePlansListMessage.from_params({
                 organization_guids: [org_1.guid, org_2.guid].join(',')
@@ -165,8 +177,8 @@ module VCAP::CloudController
 
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [org_1],
-                readable_spaces: [],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
 
               expect(service_plans).to contain_exactly(org_restricted_plan_1, public_plan)
@@ -174,6 +186,9 @@ module VCAP::CloudController
           end
 
           context 'no orgs are readable' do
+            let(:readable_orgs) { [] }
+            let(:readable_spaces) { [] }
+
             it 'shows only public plans' do
               message = ServicePlansListMessage.from_params({
                 organization_guids: [org_1.guid, org_2.guid].join(',')
@@ -181,8 +196,8 @@ module VCAP::CloudController
 
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [],
-                readable_spaces: [],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
 
               expect(service_plans).to contain_exactly(public_plan)
@@ -192,6 +207,8 @@ module VCAP::CloudController
           context 'when the user only has access to some spaces in an org' do
             let(:space_1a) { Space.make(organization: org_1) }
             let!(:space_scoped_plan_1a) { make_space_scoped_plan(space_1a) }
+            let(:readable_orgs) { [org_1] }
+            let(:readable_spaces) { [space_1] }
 
             it 'only shows space-scoped plans for the readable spaces' do
               message = ServicePlansListMessage.from_params({
@@ -200,8 +217,8 @@ module VCAP::CloudController
 
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [org_1],
-                readable_spaces: [space_1],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
 
               expect(service_plans).to contain_exactly(public_plan, org_restricted_plan_1, space_scoped_plan_1)
@@ -229,34 +246,43 @@ module VCAP::CloudController
           end
 
           context 'only some spaces are readable (SPACE_DEVELOPER, SPACE_AUDITOR etc)' do
+            let(:readable_orgs) { [org_1] }
+            let(:readable_spaces) { [space_1] }
+
             it 'shows only plans for readable spaces and orgs' do
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [org_1],
-                readable_spaces: [space_1],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
               expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, public_plan)
             end
           end
 
           context 'when a filter contains a space guid that the user cannot access' do
+            let(:readable_orgs) { [org_1, org_2] }
+            let(:readable_spaces) { [space_1] }
+
             it 'ignores the unauthorized space guid' do
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [org_1, org_2],
-                readable_spaces: [space_1],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
               expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, public_plan)
             end
           end
 
           context 'no spaces are readable' do
+            let(:readable_orgs) { [] }
+            let(:readable_spaces) { [] }
+
             it 'shows only public plans' do
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(',')
@@ -264,8 +290,8 @@ module VCAP::CloudController
 
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [],
-                readable_spaces: [],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
 
               expect(service_plans).to contain_exactly(public_plan)
@@ -295,6 +321,9 @@ module VCAP::CloudController
           end
 
           context 'when only some spaces and orgs are visible' do
+            let(:readable_orgs) { [org_1, org_2] }
+            let(:readable_spaces) { [space_1] }
+
             it 'excludes plans that do not meet all the filter conditions' do
               message = ServicePlansListMessage.from_params({
                 space_guids: [space_1.guid, space_2.guid].join(','),
@@ -302,8 +331,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
                 message,
-                readable_orgs: [org_1, org_2],
-                readable_spaces: [space_1],
+                readable_orgs_query: readable_orgs_query,
+                readable_spaces_query: readable_spaces_query,
               ).all
               expect(service_plans).to contain_exactly(public_plan)
             end
@@ -464,7 +493,16 @@ module VCAP::CloudController
         context 'when org user' do
           let(:org_1) { Organization.make }
           let(:space_1) { Space.make(organization: org_1) }
-          let(:service_plans) { fetcher.fetch(message, omniscient: false, readable_spaces: [space_1], readable_orgs: [org_1]).all }
+          let(:readable_orgs) { [org_1] }
+          let(:readable_spaces) { [space_1] }
+          let(:service_plans) do
+            fetcher.fetch(
+              message,
+              omniscient: false,
+              readable_orgs_query: readable_orgs_query,
+              readable_spaces_query: readable_spaces_query
+            ).all
+          end
 
           it_behaves_like 'filtered service plans fetcher'
         end
