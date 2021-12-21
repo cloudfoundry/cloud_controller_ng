@@ -13,24 +13,30 @@ module VCAP::CloudController
       CREATE_IN_PROGRESS_OPERATION = { type: 'create', state: 'in progress' }.freeze
 
       def bind(binding, parameters: {}, accepts_incomplete: false)
-        client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-        details = client.bind(
-          binding,
-          arbitrary_parameters: parameters,
-          accepts_incomplete: accepts_incomplete,
-          user_guid: @user_audit_info.user_guid
-        )
-
-        if details[:async]
-          not_retrievable! unless bindings_retrievable?(binding)
-          save_incomplete_binding(binding, details[:operation])
-        else
-          complete_binding_and_save(binding, details[:binding], { state: 'succeeded' })
+        begin
+          client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+          details = client.bind(
+            binding,
+            arbitrary_parameters: parameters,
+            accepts_incomplete: accepts_incomplete,
+            user_guid: @user_audit_info.user_guid
+          )
+        rescue => e
+          binding.destroy if binding
+          raise e
         end
-      rescue => e
-        save_failed_state(binding, e)
 
-        raise e
+        begin
+          if details[:async]
+            not_retrievable! unless bindings_retrievable?(binding)
+            save_incomplete_binding(binding, details[:operation])
+          else
+            complete_binding_and_save(binding, details[:binding], { state: 'succeeded' })
+          end
+        rescue => e
+          save_failed_state(binding, e)
+          raise e
+        end
       end
 
       def poll(binding)

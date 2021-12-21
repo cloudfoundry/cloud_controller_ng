@@ -38,15 +38,12 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         end
 
-        it 'marks the binding as failed' do
+        it 'deletes the binding' do
           expect {
             action.bind(precursor)
           }.to raise_error(BadError)
 
-          binding = precursor.reload
-          expect(binding.last_operation.type).to eq('create')
-          expect(binding.last_operation.state).to eq('failed')
-          expect(binding.last_operation.description).to eq('BadError')
+          expect { precursor.reload }.to raise_error(Sequel::NoExistingObject)
         end
       end
 
