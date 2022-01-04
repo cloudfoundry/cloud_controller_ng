@@ -1,8 +1,6 @@
 require 'models/helpers/role_types'
 
 module VCAP::CloudController
-  SPACE_OR_ORGANIZATION_NOT_SPECIFIED = -1
-
   # creating a new model backed by a smaller union will allow us to manipulate space roles with out handling too much excess data
   class SpaceRole < Role
     set_dataset(
