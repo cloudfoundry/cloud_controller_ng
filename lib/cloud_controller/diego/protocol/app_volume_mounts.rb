@@ -7,7 +7,7 @@ module VCAP::CloudController
         end
 
         def as_json(_options={})
-          @app.service_bindings.map(&:volume_mounts).reject(&:nil?).flatten
+          @app.service_bindings.map(&:volume_mounts).compact.flatten
         end
       end
     end
