@@ -1029,9 +1029,10 @@ RSpec.describe 'Space Manifests' do
 
         it 'returns an appropriate error' do
           headers = yml_headers(user_header)
-          headers['CONTENT_TYPE'] = 'bogus'
+          headers['CONTENT_TYPE'] = 'application/bogus'
 
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, headers
+
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response).to have_status_code(400)

@@ -71,6 +71,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::InvalidAuthToken, with: :handle_invalid_auth_token
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
   rescue_from CloudController::Errors::CompoundError, with: :handle_compound_error
+  rescue_from ActionDispatch::Http::Parameters::ParseError, with: :handle_invalid_request_body
 
   def configuration
     Config.config
@@ -183,6 +184,11 @@ class ApplicationController < ActionController::Base
 
   def handle_blobstore_error(error)
     error = CloudController::Errors::ApiError.new_from_details('BlobstoreError', error.message)
+    handle_api_error(error)
+  end
+
+  def handle_invalid_request_body(_error)
+    error = CloudController::Errors::ApiError.new_from_details('MessageParseError', 'invalid request body')
     handle_api_error(error)
   end
 
