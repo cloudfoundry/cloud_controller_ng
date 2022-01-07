@@ -94,7 +94,7 @@ module VCAP::CloudController
     class NoAdditionalKeysValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?
-          record.errors[:base] << "Unknown field(s): '#{record.extra_keys.join("', '")}'"
+          record.errors.add(:base, message: "Unknown field(s): '#{record.extra_keys.join("', '")}'")
         end
       end
     end
@@ -102,7 +102,7 @@ module VCAP::CloudController
     class NoAdditionalParamsValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?
-          record.errors[:base] << "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'. Valid parameters are: '#{record.class.allowed_keys.join("', '")}'"
+          record.errors.add(:base, message: "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'. Valid parameters are: '#{record.class.allowed_keys.join("', '")}'")
         end
       end
     end
@@ -110,7 +110,7 @@ module VCAP::CloudController
     class DisallowUpdatedAtsParamValidator < ActiveModel::Validator
       def validate(record)
         if record.requested?(:updated_ats)
-          record.errors[:base] << "Filtering by 'updated_ats' is not allowed on this resource."
+          record.errors.add(:base, message: "Filtering by 'updated_ats' is not allowed on this resource.")
         end
       end
     end
@@ -118,7 +118,7 @@ module VCAP::CloudController
     class DisallowCreatedAtsParamValidator < ActiveModel::Validator
       def validate(record)
         if record.requested?(:created_ats)
-          record.errors[:base] << "Filtering by 'created_ats' is not allowed on this resource."
+          record.errors.add(:base, message: "Filtering by 'created_ats' is not allowed on this resource.")
         end
       end
     end
@@ -131,10 +131,10 @@ module VCAP::CloudController
             if options[:valid_values].member?(include_candidate)
               key_counts[include_candidate] += 1
               if key_counts[include_candidate] == 2
-                record.errors[:base] << "Duplicate included resource: '#{include_candidate}'"
+                record.errors.add(:base, message: "Duplicate included resource: '#{include_candidate}'")
               end
             else
-              record.errors[:base] << "Invalid included resource: '#{include_candidate}'. Valid included resources are: '#{options[:valid_values].join("', '")}'"
+              record.errors.add(:base, message: "Invalid included resource: '#{include_candidate}'. Valid included resources are: '#{options[:valid_values].join("', '")}'")
             end
           end
         end
@@ -146,7 +146,7 @@ module VCAP::CloudController
         if record.requested?(:lifecycle_type)
           valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE]
           unless valid_lifecycle_types.include?(record.lifecycle_type)
-            record.errors[:base] << "Invalid lifecycle_type: '#{record.lifecycle_type}'"
+            record.errors.add(:base, message: "Invalid lifecycle_type: '#{record.lifecycle_type}'")
           end
         end
       end

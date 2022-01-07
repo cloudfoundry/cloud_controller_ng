@@ -61,9 +61,9 @@ module VCAP::CloudController
           it 'is invalid' do
             message = UsersListMessage.from_params(params)
             expect(message).to be_invalid
-            expect(message.errors.details[:guids].first[:error]).to eq('must be an array')
-            expect(message.errors.details[:usernames].first[:error]).to eq('must be an array')
-            expect(message.errors.details[:origins].first[:error]).to eq('must be an array')
+            expect(message.errors_on(:guids)).to include('must be an array')
+            expect(message.errors_on(:usernames)).to include('must be an array')
+            expect(message.errors_on(:origins)).to include('must be an array')
           end
         end
       end

@@ -67,10 +67,10 @@ module VCAP::CloudController
         it 'is invalid' do
           message = SpaceQuotasListMessage.from_params(params)
           expect(message).to be_invalid
-          expect(message.errors.details[:guids].first[:error]).to eq('must be an array')
-          expect(message.errors.details[:names].first[:error]).to eq('must be an array')
-          expect(message.errors.details[:organization_guids].first[:error]).to eq('must be an array')
-          expect(message.errors.details[:space_guids].first[:error]).to eq('must be an array')
+          expect(message.errors_on(:guids)).to include('must be an array')
+          expect(message.errors_on(:names)).to include('must be an array')
+          expect(message.errors_on(:organization_guids)).to include('must be an array')
+          expect(message.errors_on(:space_guids)).to include('must be an array')
         end
       end
 

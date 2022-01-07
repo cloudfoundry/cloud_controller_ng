@@ -24,6 +24,7 @@ module VCAP::CloudController
   class SampleActiveModel
     include ActiveModel::Model
     validates_with CompleteValidator
+    attr_accessor :data
   end
 
   RSpec.describe NestedMessageValidator do

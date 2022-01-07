@@ -11,18 +11,18 @@ module VCAP::CloudController::Validators
 
     def validate(record)
       if record.requirements.empty?
-        record.errors[:base] << MISSING_LABEL_SELECTOR_ERROR
+        record.errors.add(:base, message: MISSING_LABEL_SELECTOR_ERROR)
         return
       end
 
       if record.requirements.length > MAX_REQUIREMENTS
-        record.errors[:base] << TOO_MANY_REQUIREMENTS_ERROR
+        record.errors.add(:base, message: TOO_MANY_REQUIREMENTS_ERROR)
         return
       end
 
       record.requirements.each do |r|
         res = valid_requirement?(r)
-        record.errors[:base] << res.message unless res.is_valid?
+        record.errors.add(:base, message: res.message) unless res.is_valid?
       end
     end
 

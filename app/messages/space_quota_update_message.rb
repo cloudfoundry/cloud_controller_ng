@@ -29,14 +29,18 @@ module VCAP::CloudController
     def validates_hash(key, sym)
       return true if key.is_a?(Hash)
 
-      errors[sym].concat(['must be an object'])
+      errors.add(sym, message: 'must be an object')
       false
     end
 
     def apps_validator
       return unless validates_hash(apps, :apps)
 
-      errors[:apps].concat(apps_limits_message.errors.full_messages) unless apps_limits_message.valid?
+      return if apps_limits_message.valid?
+
+      apps_limits_message.errors.full_messages.each do |message|
+        errors.add(:apps, message: message)
+      end
     end
 
     def apps_limits_message
@@ -46,7 +50,11 @@ module VCAP::CloudController
     def services_validator
       return unless validates_hash(services, :services)
 
-      errors[:services].concat(services_limits_message.errors.full_messages) unless services_limits_message.valid?
+      return if services_limits_message.valid?
+
+      services_limits_message.errors.full_messages.each do |message|
+        errors.add(:services, message: message)
+      end
     end
 
     def services_limits_message
@@ -56,7 +64,11 @@ module VCAP::CloudController
     def routes_validator
       return unless validates_hash(routes, :routes)
 
-      errors[:routes].concat(routes_limits_message.errors.full_messages) unless routes_limits_message.valid?
+      return if routes_limits_message.valid?
+
+      routes_limits_message.errors.full_messages.each do |message|
+        errors.add(:routes, message: message)
+      end
     end
 
     def routes_limits_message

@@ -69,7 +69,7 @@ module VCAP::CloudController
             space_guids: 'not-an-array'
           })
         expect(message).not_to be_valid
-        expect(message.errors.first).to(eq([:space_guids, 'must be an array']))
+        expect(message.errors_on(:space_guids)).to include('must be an array')
       end
 
       it 'does not accept non-array values for names' do
@@ -77,7 +77,7 @@ module VCAP::CloudController
             names: 'not-an-array'
           })
         expect(message).not_to be_valid
-        expect(message.errors.first).to(eq([:names, 'must be an array']))
+        expect(message.errors_on(:names)).to include('must be an array')
       end
     end
   end

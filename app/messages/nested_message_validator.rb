@@ -16,10 +16,12 @@ module VCAP::CloudController
 
     def validate(record)
       @record = record
-      return unless should_validate?
+      return unless should_validate? && error_key # call error_key expicitly to check it is implemented
       return if self.valid?
 
-      record.errors[error_key].concat self.errors.full_messages
+      self.errors.full_messages.each do |message|
+        record.errors.add(error_key, message: message)
+      end
     end
 
     private
