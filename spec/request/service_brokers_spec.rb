@@ -675,6 +675,32 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
+      context 'when there is a sql validation error while syncing' do
+        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker, unique_id: global_broker_id + '-1') }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: 'plan_name-1', unique_id: Sham.guid) }
+
+        before do
+          stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
+            to_return(status: 200, body: catalog(global_broker_id).to_json, headers: {})
+          patch("/v3/service_brokers/#{broker.guid}", { url: 'http://example.org/broker-url' }.to_json, admin_headers)
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
+        end
+
+        it 'should return 422 and meaningful error and does not create a broker' do
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+          cf_api_error = job.cf_api_error
+          expect(cf_api_error).not_to be_nil
+          error = YAML.safe_load(cf_api_error)
+          expect(error['errors'].first['code']).to eq(270022)
+          expect(error['errors'].first['detail']).
+            to eq('Encountered an error while attempting to sync cloud controller with the service broker\'s catalog: '\
+            'Plan names must be unique within a service. Service service_name-1 already has a plan named plan_name-1')
+        end
+      end
+
       context 'when job succeeds with warnings' do
         context 'when warning is a UAA problem' do
           let(:broker) do

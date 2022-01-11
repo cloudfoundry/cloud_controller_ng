@@ -1,5 +1,7 @@
 module VCAP::Services::ServiceBrokers
   class ServiceManager
+    class ServiceBrokerSyncError < StandardError
+    end
     attr_reader :warnings
 
     def initialize(service_event_repository)
@@ -15,6 +17,8 @@ module VCAP::Services::ServiceBrokers
       deactivate_plans(catalog)
       delete_plans(catalog)
       delete_services(catalog)
+    rescue Sequel::ValidationFailed => e
+      raise ServiceBrokerSyncError.new(e.message)
     end
 
     def has_warnings?

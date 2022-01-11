@@ -943,6 +943,11 @@
   http_code: 502
   message: "The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker."
 
+270022:
+  name: ServiceBrokerSyncFailed
+  http_code: 502
+  message: "Encountered an error while attempting to sync cloud controller with the service broker's catalog: %s"
+
 290000:
   name: BuildpackNameStackTaken
   http_code: 422

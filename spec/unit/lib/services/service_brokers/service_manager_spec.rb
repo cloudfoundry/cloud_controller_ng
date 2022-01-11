@@ -976,6 +976,21 @@ module VCAP::Services::ServiceBrokers
           end
         end
       end
+      context 'when a sql validtion error is thrown' do
+        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker, unique_id: service_id) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: plan_name, unique_id: Sham.guid) }
+
+        it 'should throw a sync error' do
+          expect {
+            service_manager.sync_services_and_plans(catalog)
+          }.to raise_error(ServiceManager::ServiceBrokerSyncError)
+        end
+
+        after do
+          service_plan.destroy
+          service_offering.destroy
+        end
+      end
     end
 
     describe '#has_warnings?' do
