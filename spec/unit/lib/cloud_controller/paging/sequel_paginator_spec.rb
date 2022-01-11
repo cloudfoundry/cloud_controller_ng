@@ -8,7 +8,8 @@ module VCAP::CloudController
 
     describe '#get_page' do
       let(:dataset) { AppModel.dataset }
-      let!(:app_model1) { AppModel.make(space: Space.make) }
+      let!(:space) { Space.make }
+      let!(:app_model1) { AppModel.make(space: space) }
       let!(:app_model2) { AppModel.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
@@ -69,12 +70,28 @@ module VCAP::CloudController
         expect(paginated_result.total).to be > 0
       end
 
+      it 'works with eager' do
+        options = { page: page, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
+        eager_dataset = AppModel.dataset.eager(:space)
+        paginated_result = nil
+        expect {
+          paginated_result = paginator.get_page(eager_dataset, pagination_options)
+        }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 2 : 3)
+        expect(paginated_result.total).to eq(2)
+        expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
+      end
+
       it 'works with eager_graph' do
         options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
         eager_graph_dataset = AppModel.dataset.eager_graph(:space)
-        paginated_result = paginator.get_page(eager_graph_dataset, pagination_options)
+        paginated_result = nil
+        expect {
+          paginated_result = paginator.get_page(eager_graph_dataset, pagination_options)
+        }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
         expect(paginated_result.total).to eq(2)
+        expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
       end
 
       it 'orders by GUID as a secondary field when available' do
@@ -100,14 +117,15 @@ module VCAP::CloudController
         expect(paginated_result.total).to be 1
       end
 
-      it 'only calls DB once if DB supports window functions' do
-        skip 'DB does not support window functions' unless dataset.supports_window_functions?
+      it 'only calls DB once if DB supports pagination with window function' do
+        skip 'DB does not support pagination with window function' unless paginator.can_paginate_with_window_function?(dataset)
         options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
 
-        expect(dataset.db).to receive(:execute).once.and_call_original
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
+        paginated_result = nil
+        expect {
+          paginated_result = paginator.get_page(dataset, pagination_options)
+        }.to have_queried_db_times(/select/i, 1)
         expect(paginated_result.total).to be > 1
       end
 
