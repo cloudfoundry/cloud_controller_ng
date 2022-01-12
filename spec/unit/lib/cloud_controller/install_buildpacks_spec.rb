@@ -22,7 +22,7 @@ module VCAP::CloudController
       let(:enqueued_job2) { double(:enqueued_job2, perform: nil) }
 
       before do
-        TestConfig.override(install_buildpack_config)
+        TestConfig.override(**install_buildpack_config)
 
         allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file)
         allow(installer.logger).to receive(:error)

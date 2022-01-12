@@ -103,7 +103,7 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
       it 'returns the correct response status and resources' do
         email = Sham.email
         user_name = Sham.name
-        headers = set_user_with_header_as_role({
+        headers = set_user_with_header_as_role(
           role: role,
           org: org,
           space: space,
@@ -111,7 +111,7 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
           scopes: expected_codes_and_responses[role][:scopes],
           user_name: user_name,
           email: email,
-        })
+        )
 
         api_call.call(headers)
 

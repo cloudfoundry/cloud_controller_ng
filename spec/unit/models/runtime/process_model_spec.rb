@@ -10,11 +10,11 @@ module VCAP::CloudController
     let(:route) { Route.make(domain: domain, space: space) }
 
     def enable_custom_buildpacks
-      TestConfig.override({ disable_custom_buildpacks: nil })
+      TestConfig.override(disable_custom_buildpacks: nil)
     end
 
     def disable_custom_buildpacks
-      TestConfig.override({ disable_custom_buildpacks: true })
+      TestConfig.override(disable_custom_buildpacks: true)
     end
 
     def expect_validator(validator_class)
@@ -910,7 +910,7 @@ module VCAP::CloudController
 
     describe 'health_check_timeout' do
       before do
-        TestConfig.override({ maximum_health_check_timeout: 512 })
+        TestConfig.override(maximum_health_check_timeout: 512)
       end
 
       context 'when the health_check_timeout was not specified' do
@@ -1303,7 +1303,7 @@ module VCAP::CloudController
 
       describe 'default_app_memory' do
         before do
-          TestConfig.override({ default_app_memory: 200 })
+          TestConfig.override(default_app_memory: 200)
         end
 
         it 'uses the provided memory' do
@@ -1319,7 +1319,7 @@ module VCAP::CloudController
 
       describe 'default disk_quota' do
         before do
-          TestConfig.override({ default_app_disk_in_mb: 512 })
+          TestConfig.override(default_app_disk_in_mb: 512)
         end
 
         it 'should use the provided quota' do
@@ -1335,7 +1335,7 @@ module VCAP::CloudController
 
       describe 'instance_file_descriptor_limit' do
         before do
-          TestConfig.override({ instance_file_descriptor_limit: 200 })
+          TestConfig.override(instance_file_descriptor_limit: 200)
         end
 
         it 'uses the instance_file_descriptor_limit config variable' do

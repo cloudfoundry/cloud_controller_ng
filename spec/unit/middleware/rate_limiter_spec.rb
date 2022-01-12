@@ -6,12 +6,14 @@ module CloudFoundry
       let(:middleware) do
         RateLimiter.new(
           app,
-          logger:                            logger,
-          per_process_general_limit:         per_process_general_limit,
-          global_general_limit:              global_general_limit,
-          per_process_unauthenticated_limit: per_process_unauthenticated_limit,
-          global_unauthenticated_limit:      global_unauthenticated_limit,
-          interval:                          interval,
+          {
+            logger:                            logger,
+            per_process_general_limit:         per_process_general_limit,
+            global_general_limit:              global_general_limit,
+            per_process_unauthenticated_limit: per_process_unauthenticated_limit,
+            global_unauthenticated_limit:      global_unauthenticated_limit,
+            interval:                          interval,
+          }
         )
       end
       let(:request_counter) { double }

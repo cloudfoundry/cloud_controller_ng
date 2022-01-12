@@ -3,9 +3,9 @@ require 'mixins/client_ip'
 module CloudFoundry
   module Middleware
     class BlockV3OnlyRoles
-      def initialize(app, logger:)
+      def initialize(app, opts)
         @app                   = app
-        @logger                = logger
+        @logger                = opts[:logger]
       end
 
       def call(env)

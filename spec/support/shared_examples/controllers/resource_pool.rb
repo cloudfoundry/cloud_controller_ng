@@ -59,7 +59,7 @@ shared_context 'resource pool' do
 
   before do
     @resource_pool = VCAP::CloudController::ResourcePool.new(
-      VCAP::CloudController::Config.new(resource_pool: resource_pool_config)
+      VCAP::CloudController::Config.new({ resource_pool: resource_pool_config })
     )
     allow(VCAP::CloudController::ResourcePool).to receive(:instance).and_return(@resource_pool)
   end

@@ -37,7 +37,7 @@ module VCAP::CloudController
           at:       time,
           priority: priority
         }
-        clock.schedule_daily_job(clock_opts) { some_job_class.new }
+        clock.schedule_daily_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name, priority: 0 }
         expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
@@ -66,7 +66,7 @@ module VCAP::CloudController
             at:       time,
             priority: priority
           }
-          clock.schedule_daily_job(clock_opts) { some_job_class.new }
+          clock.schedule_daily_job(**clock_opts) { some_job_class.new }
 
           expected_job_opts = { queue: job_name, priority: priority }
           expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
@@ -93,7 +93,7 @@ module VCAP::CloudController
           name:     job_name,
           interval: interval,
         }
-        clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
+        clock.schedule_frequent_worker_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name }
         expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
@@ -123,7 +123,7 @@ module VCAP::CloudController
           interval: interval,
           timeout:  timeout,
         }
-        clock.schedule_frequent_inline_job(clock_opts) { some_job_class.new }
+        clock.schedule_frequent_inline_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name }
         expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)

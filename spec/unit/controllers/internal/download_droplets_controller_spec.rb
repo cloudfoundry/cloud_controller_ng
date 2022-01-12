@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       before do
         Fog.unmock!
-        TestConfig.override(staging_config)
+        TestConfig.override(**staging_config)
       end
       after { FileUtils.rm_rf(workspace) }
 
@@ -152,7 +152,7 @@ module VCAP::CloudController
 
       before do
         Fog.unmock!
-        TestConfig.override(staging_config)
+        TestConfig.override(**staging_config)
       end
       after { FileUtils.rm_rf(workspace) }
 
