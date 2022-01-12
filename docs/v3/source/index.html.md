@@ -220,6 +220,13 @@ includes:
   - resources/resource_matches/header
   - resources/resource_matches/object
   - resources/resource_matches/create
+  - resources/revisions/header
+  - resources/revisions/object
+  - resources/revisions/get
+  - resources/revisions/environment_variables
+  - resources/revisions/list
+  - resources/revisions/deployed_list
+  - resources/revisions/update
   - resources/roles/header
   - resources/roles/object
   - resources/roles/valid_roles
@@ -321,6 +328,14 @@ includes:
   - resources/service_usage_events/get
   - resources/service_usage_events/list
   - resources/service_usage_events/delete
+  - resources/sidecars/header
+  - resources/sidecars/object
+  - resources/sidecars/create_from_app
+  - resources/sidecars/get
+  - resources/sidecars/update
+  - resources/sidecars/list_for_app
+  - resources/sidecars/list_for_process
+  - resources/sidecars/delete
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -369,21 +384,6 @@ includes:
   - resources/users/update
   - resources/users/delete
   - experimental_resources/header
-  - experimental_resources/revisions/header
-  - experimental_resources/revisions/object
-  - experimental_resources/revisions/get
-  - experimental_resources/revisions/environment_variables
-  - experimental_resources/revisions/list
-  - experimental_resources/revisions/deployed_list
-  - experimental_resources/revisions/update
-  - experimental_resources/sidecars/header
-  - experimental_resources/sidecars/object
-  - experimental_resources/sidecars/create_from_app
-  - experimental_resources/sidecars/get
-  - experimental_resources/sidecars/update
-  - experimental_resources/sidecars/list_for_app
-  - experimental_resources/sidecars/list_for_process
-  - experimental_resources/sidecars/delete
   - upgrade_guide/header
   - upgrade_guide/conceptual_changes/header
   - upgrade_guide/conceptual_changes/app_sub_resources
