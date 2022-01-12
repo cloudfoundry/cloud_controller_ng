@@ -1710,7 +1710,7 @@ module VCAP::Services::ServiceBrokers::V2
 
               it 'propagates the error and does not issue an unbind' do
                 expect {
-                  client.bind(binding, arbitrary_parameters)
+                  client.bind(binding, **arbitrary_parameters)
                 }.to raise_error(Errors::ConcurrencyError)
 
                 expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)

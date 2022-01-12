@@ -10,7 +10,7 @@ RSpec.describe HealthCheckPolicy do
 
   describe 'health_check_timeout' do
     before do
-      TestConfig.override({ maximum_health_check_timeout: max_health_check_timeout })
+      TestConfig.override(maximum_health_check_timeout: max_health_check_timeout)
     end
 
     context 'when a health_check_timeout exceeds the maximum' do

@@ -149,9 +149,9 @@ module VCAP::CloudController
 
           context 'computes the maximum duration' do
             before do
-              TestConfig.override({
+              TestConfig.override(
                 broker_client_max_async_poll_duration_minutes: 90009
-              })
+              )
               job.perform
             end
 
@@ -268,7 +268,7 @@ module VCAP::CloudController
           context 'the maximum duration' do
             it 'recomputes the value' do
               job.maximum_duration_seconds = 90009
-              TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+              TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
 
               job.perform
 

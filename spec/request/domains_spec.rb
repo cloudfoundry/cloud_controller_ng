@@ -1073,7 +1073,7 @@ RSpec.describe 'Domains Request' do
 
         context 'when the domain is in the list of reserved private domains' do
           before do
-            TestConfig.override({ reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat') })
+            TestConfig.override(reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'))
           end
 
           it 'returns a 422 with a error message about reserved domains' do
