@@ -6,6 +6,10 @@ module VCAP::CloudController
     let(:fake_class) do
       Class.new(MetadataListMessage) do
         register_allowed_keys []
+
+        def self.model_name
+          ActiveModel::Name.new(self, nil, 'fake class')
+        end
       end
     end
 

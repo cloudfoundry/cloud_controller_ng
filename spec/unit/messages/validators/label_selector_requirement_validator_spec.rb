@@ -10,6 +10,10 @@ module VCAP::CloudController::Validators
 
         attr_accessor :requirements
         validates_with LabelSelectorRequirementValidator
+
+        def self.model_name
+          ActiveModel::Name.new(self, nil, 'label selector class')
+        end
       end
     end
     let(:message) { label_selector_class.new({ requirements: requirements }) }

@@ -7,6 +7,10 @@ module VCAP::CloudController
       let(:fake_class) do
         Class.new(BaseMessage) do
           register_allowed_keys []
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
       end
 
@@ -27,6 +31,10 @@ module VCAP::CloudController
       it 'returns true if the key was requested, false otherwise' do
         FakeClass = Class.new(BaseMessage) do
           register_allowed_keys []
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
 
         message = FakeClass.new({ requested: 'thing' })
@@ -178,6 +186,10 @@ module VCAP::CloudController
         Class.new(BaseMessage) do
           register_allowed_keys [:allowed]
           validates_with VCAP::CloudController::BaseMessage::NoAdditionalKeysValidator
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
       end
 
@@ -200,6 +212,10 @@ module VCAP::CloudController
         Class.new(BaseMessage) do
           register_allowed_keys [:allowed, :other_allowed]
           validates_with VCAP::CloudController::BaseMessage::NoAdditionalParamsValidator
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
       end
 
@@ -222,6 +238,10 @@ module VCAP::CloudController
         Class.new(BaseMessage) do
           register_allowed_keys [:include]
           validates_with VCAP::CloudController::BaseMessage::IncludeParamValidator, valid_values: ['foo', 'bar']
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
       end
 
@@ -244,6 +264,10 @@ module VCAP::CloudController
         Class.new(BaseMessage) do
           register_allowed_keys [:lifecycle_type]
           validates_with VCAP::CloudController::BaseMessage::LifecycleTypeParamValidator
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
         end
       end
 

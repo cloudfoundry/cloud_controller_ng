@@ -17,6 +17,10 @@ module VCAP::CloudController::Validators
         include VCAP::CloudController::Validators
 
         attr_accessor :field
+
+        def self.model_name
+          ActiveModel::Name.new(self, nil, 'fake class')
+        end
       end
     end
 

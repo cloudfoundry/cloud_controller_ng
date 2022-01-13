@@ -349,9 +349,9 @@ module VCAP::CloudController
       app_update_environment_variables_message.valid?
       app_update_environment_variables_message.errors[:var].each do |error_message|
         if error_message == 'must be an object'
-          errors[:base] << 'Env must be an object of keys and values'
+          errors.add(:base, message: 'Env must be an object of keys and values')
         else
-          errors[:env] << error_message
+          errors.add(:env, message: error_message)
         end
       end
     end

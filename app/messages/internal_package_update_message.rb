@@ -43,7 +43,10 @@ module VCAP::CloudController
 
       if errors[:checksums].empty?
         checksum_messages = checksums.map { |checksum| Checksum.new(checksum.deep_symbolize_keys) }
-        errors[:checksums].concat(checksum_messages.select(&:invalid?).map { |checksum| checksum.errors.full_messages }.flatten)
+        invalid_errors = checksum_messages.select(&:invalid?).map { |checksum| checksum.errors.full_messages }.flatten
+        invalid_errors.each do |message|
+          errors.add(:checksums, message: message)
+        end
       end
 
       unless checksums.length == 2 && sha1 && sha256

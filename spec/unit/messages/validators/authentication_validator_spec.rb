@@ -9,6 +9,10 @@ module VCAP::CloudController::Validators
         validates_with AuthenticationValidator
 
         attr_accessor :authentication
+
+        def self.model_name
+          ActiveModel::Name.new(self, nil, 'auth class')
+        end
       end
     end
 
@@ -25,7 +29,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_type)).to include('authentication.type must be one of ["basic"]')
+        expect(message.errors_on(:authentication)).to include('authentication.type must be one of ["basic"]')
       end
     end
 
@@ -40,7 +44,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include(/Field\(s\) \["username", "password"\] must be valid/)
+        expect(message.errors_on(:authentication)).to include(/Field\(s\) \["username", "password"\] must be valid/)
       end
     end
 
@@ -53,7 +57,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include('must be an object')
+        expect(message.errors_on(:authentication)).to include('must be an object')
       end
     end
 
@@ -67,7 +71,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include('must be an object')
+        expect(message.errors_on(:authentication)).to include('must be an object')
       end
     end
 
@@ -96,7 +100,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include(/Field\(s\) \["username"\] must be valid/)
+        expect(message.errors_on(:authentication)).to include(/Field\(s\) \["username"\] must be valid/)
       end
     end
 
@@ -111,7 +115,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include(/Field\(s\) \["password"\] must be valid/)
+        expect(message.errors_on(:authentication)).to include(/Field\(s\) \["password"\] must be valid/)
       end
     end
   end
