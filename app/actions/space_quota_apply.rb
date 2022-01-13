@@ -20,7 +20,11 @@ module VCAP::CloudController
       existing_space_guids = existing_spaces.map(&:guid)
 
       nonexistent_space_guids = requested_space_guids - existing_space_guids
-      unreadable_space_guids = existing_space_guids - readable_space_guids
+      unreadable_space_guids = if readable_space_guids == :all
+                                 []
+                               else
+                                 existing_space_guids - readable_space_guids
+                               end
 
       invalid_space_guids =  nonexistent_space_guids + unreadable_space_guids
       error!("Spaces with guids #{invalid_space_guids} do not exist, or you do not have access to them.") if invalid_space_guids.any?

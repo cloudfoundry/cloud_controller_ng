@@ -84,6 +84,17 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:routes][:total_reserved_ports]).to be_nil
         end
       end
+
+      context 'when user is admin' do
+        let(:visible_space_guids) { :all }
+
+        it 'displays all spaces' do
+          expect(result[:relationships][:spaces][:data]).to match_array([
+            { guid: space_1.guid },
+            { guid: space_2.guid }
+          ])
+        end
+      end
     end
   end
 end

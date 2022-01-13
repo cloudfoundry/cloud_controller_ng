@@ -25,8 +25,9 @@ module VCAP::CloudController
         end
 
         service_manager.sync_services_and_plans(catalog)
-
         collect_warnings
+      rescue VCAP::Services::ServiceBrokers::ServiceManager::ServiceBrokerSyncError => e
+        raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerSyncFailed', e.message)
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed
         raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerRequestMalformed')
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected => e
