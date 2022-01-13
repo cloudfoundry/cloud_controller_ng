@@ -87,6 +87,19 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when user is admin' do
+        let(:readable_space_guids) { :all }
+
+        it 'associates given space with the quota' do
+          expect {
+            subject.apply(space_quota, message, readable_space_guids)
+          }.to change { space_quota.spaces.count }.by 1
+
+          expect(space_quota.spaces.count).to eq(1)
+          expect(space_quota.spaces[0].guid).to eq(space.guid)
+        end
+      end
     end
   end
 end

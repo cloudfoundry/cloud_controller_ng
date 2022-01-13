@@ -42,7 +42,12 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def space_guid_hash_for(spaces)
-      spaces.select { |space| @visible_space_guids.include? space.guid }.map { |space| { guid: space.guid } }
+      visible_spaces = if @visible_space_guids == :all
+                         spaces
+                       else
+                         spaces.select { |space| @visible_space_guids.include? space.guid }
+                       end
+      visible_spaces.map { |space| { guid: space.guid } }
     end
 
     def build_links

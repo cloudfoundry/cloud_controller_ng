@@ -17,8 +17,8 @@ module VCAP::CloudController
       end
       let(:readable_space_guids) { [space.guid] }
 
-      context 'when applying quota to a space' do
-        it 'associates given space with the quota' do
+      context 'when applying security group to a space' do
+        it 'associates given space with the security group' do
           expect {
             subject.apply_running(security_group, message, readable_space_guids)
           }.to change { security_group.spaces.count }.by 1
@@ -59,12 +59,25 @@ module VCAP::CloudController
       context 'when the space is not readable by the user' do
         let(:readable_space_guids) { [] }
 
-        it 'associates given space with the quota' do
+        it 'associates given space with the security group' do
           expect {
             subject.apply_running(security_group, message, readable_space_guids)
           }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
 
           expect(security_group.spaces.count).to eq(0)
+        end
+      end
+
+      context 'when user is admin' do
+        let(:readable_space_guids) { :all }
+
+        it 'associates given space with the security group' do
+          expect {
+            subject.apply_running(security_group, message, readable_space_guids)
+          }.to change { security_group.spaces.count }.by 1
+
+          expect(security_group.spaces.count).to eq(1)
+          expect(security_group.spaces[0].guid).to eq(space.guid)
         end
       end
     end
@@ -82,8 +95,8 @@ module VCAP::CloudController
       end
       let(:readable_space_guids) { [space.guid] }
 
-      context 'when applying quota to a space' do
-        it 'associates given space with the quota' do
+      context 'when applying security group to a space' do
+        it 'associates given space with the security group' do
           expect {
             subject.apply_staging(security_group, message, readable_space_guids)
           }.to change { security_group.staging_spaces.count }.by 1
@@ -124,12 +137,25 @@ module VCAP::CloudController
       context 'when the space is not readable by the user' do
         let(:readable_space_guids) { [] }
 
-        it 'associates given space with the quota' do
+        it 'associates given space with the security group' do
           expect {
             subject.apply_staging(security_group, message, readable_space_guids)
           }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
 
           expect(security_group.staging_spaces.count).to eq(0)
+        end
+      end
+
+      context 'when user is admin' do
+        let(:readable_space_guids) { :all }
+
+        it 'associates given space with the security group' do
+          expect {
+            subject.apply_staging(security_group, message, readable_space_guids)
+          }.to change { security_group.staging_spaces.count }.by 1
+
+          expect(security_group.staging_spaces.count).to eq(1)
+          expect(security_group.staging_spaces[0].guid).to eq(space.guid)
         end
       end
     end
