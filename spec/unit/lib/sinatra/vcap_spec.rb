@@ -58,7 +58,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
   shared_examples 'http header content type' do
     it 'should return json content type in the header' do
-      expect(last_response.headers['Content-Type']).to eql('application/json;charset=utf-8')
+      expect(last_response.headers['Content-Type']).to eq('application/json;charset=utf-8')
     end
   end
 
