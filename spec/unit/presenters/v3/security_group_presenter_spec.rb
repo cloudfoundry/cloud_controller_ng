@@ -59,6 +59,17 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:relationships][:staging_spaces][:data]).to be_empty
         end
       end
+
+      describe 'when user is admin' do
+        let(:visible_space_guids) { :all }
+
+        it 'displays all spaces' do
+          expect(result[:relationships][:running_spaces][:data].length).to eq(1)
+          expect(result[:relationships][:staging_spaces][:data].length).to eq(1)
+          expect(result[:relationships][:running_spaces][:data][0][:guid]).to eq(space1.guid)
+          expect(result[:relationships][:staging_spaces][:data][0][:guid]).to eq(space2.guid)
+        end
+      end
     end
   end
 end
