@@ -479,13 +479,11 @@ RSpec.describe BuildsController, type: :controller do
 
       before do
         TestConfig.override(
-          {
-            staging: {
-              minimum_staging_memory_mb: 5,
-              minimum_staging_disk_mb: 5,
-            },
-            maximum_app_disk_in_mb: 10,
-          }
+          staging: {
+            minimum_staging_memory_mb: 5,
+            minimum_staging_disk_mb: 5,
+          },
+          maximum_app_disk_in_mb: 10,
         )
       end
 
