@@ -97,7 +97,7 @@ GEM
     mini_racer (0.4.0)
       libv8-node (~> 15.14.0.0)
     minitest (5.14.4)
-    nokogiri (1.13.0)
+    nokogiri (1.13.1)
       mini_portile2 (~> 2.7.0)
       racc (~> 1.4)
     padrino-helpers (0.15.1)
@@ -154,7 +154,7 @@ DEPENDENCIES
   middleman-sprockets (~> 4.1)
   middleman-syntax (= 2.1)
   mini_racer
-  nokogiri (~> 1.13.0)
+  nokogiri (~> 1.13.1)
   rake (>= 12.3.3)
   redcarpet (~> 3.5.1)
   sass
