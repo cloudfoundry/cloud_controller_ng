@@ -27,8 +27,8 @@ Location: https://api.example.org/v3/jobs/[guid]
 
 #### Permitted roles
 
-Role  | Notes
---- | ---
+ |
+--- |
 Admin |
 Org Manager |
 

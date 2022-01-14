@@ -63,7 +63,7 @@ Name           | Type | Description
 
 `POST /v3/spaces/:guid/manifest_diff`
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

@@ -40,7 +40,7 @@ Generate a manifest for an app and its underlying processes.
 #### Definition
 `GET /v3/apps/:guid/manifest`
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |
