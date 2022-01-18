@@ -26,7 +26,7 @@ This allows a user to stop a single misbehaving instance of a process.
 `DELETE /v3/processes/:guid/instances/:index` <br>
 `DELETE /v3/apps/:guid/processes/:type/instances/:index`
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

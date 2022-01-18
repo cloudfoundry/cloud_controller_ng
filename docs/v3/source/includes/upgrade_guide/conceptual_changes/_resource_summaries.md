@@ -23,11 +23,11 @@ filter by the parent resource. See below for examples of summaries in V3.
   Passing `include=space` will include the space resource in the response body.
 - To fetch all service offerings in a space use `GET
   /v3/service_offerings?space_guids=<space-guid>`. Use the
-  experimental `fields` parameter to include related information in the response
+  `fields` parameter to include related information in the response
   body.
 - To fetch all service instances in a space use `GET
   /v3/service_instances?space_guids=<space-guid>`. Use the
-  experimental `fields` parameter to include related information in the response
+  `fields` parameter to include related information in the response
   body.
   
 ##### Replacing the space summary response for service instances

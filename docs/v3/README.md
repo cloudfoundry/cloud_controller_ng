@@ -34,7 +34,7 @@ Style Rules
   - alphabetical everything else
 - Object names should be lowercased and separated by a space
 - Every object description should have examples
-- Every request should have a "Permitted Roles"
+- Every request should have a "Permitted roles"
   - Use "All Roles" to define any set of permissions that do not apply to org/space managers, developers, etc.
 - Optional params should be omitted from request examples.
 

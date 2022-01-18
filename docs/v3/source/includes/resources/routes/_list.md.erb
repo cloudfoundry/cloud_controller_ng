@@ -43,8 +43,8 @@ Name | Type | Description
 **order_by** | _string_ | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`
 **label_selector** | _string_ | A query string containing a list of [label selector](#labels-and-selectors) requirements
 **include** | _string_ | Optionally include a list of unique related resources in the response <br>Valid values are `domain`, `space.organization`, `space`
-**created_ats** (*experimental*)| _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators-experimental)
-**updated_ats** (*experimental*)| _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators-experimental)
+**created_ats** | _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
+**updated_ats** | _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
 
 #### Permitted roles
  |
