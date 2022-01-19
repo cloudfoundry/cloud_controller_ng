@@ -201,7 +201,8 @@ module VCAP::CloudController
     end
 
     def binding_exists?(service_instance, app)
-      ServiceBinding.where(service_instance: service_instance, app: app).present?
+      binding = ServiceBinding.first(service_instance: service_instance, app: app)
+      binding && !binding.create_failed?
     end
 
     def binding_being_deleted!(service_instance, app)

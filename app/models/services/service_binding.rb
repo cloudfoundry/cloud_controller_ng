@@ -131,6 +131,12 @@ module VCAP::CloudController
       true
     end
 
+    def create_failed?
+      return true if service_binding_operation&.type == 'create' && service_binding_operation.state == 'failed'
+
+      false
+    end
+
     def terminal_state?
       !service_binding_operation || (%w(succeeded failed).include? service_binding_operation.state)
     end
