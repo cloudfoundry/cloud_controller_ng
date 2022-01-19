@@ -729,7 +729,7 @@ New Year&rsquo;s just before midnight and July 4th at noon will be returned:</p>
 
 <p>This will return all routes with hostname <code class="prettyprint">&quot;hostname1&quot;</code>, <code class="prettyprint">&quot;&quot;</code> OR <code class="prettyprint">&quot;hostname2&quot;</code>.</p>
 
-<h4 id="relational-operators-experimental">Relational Operators (Experimental)</h4>
+<h4 id="relational-operators">Relational Operators</h4>
 
 <p>Some fields (e.g. <code class="prettyprint">created_at</code> and <code class="prettyprint">updated_at</code>) can be filtered using relational operators when listing resources.</p>
 
@@ -768,7 +768,7 @@ will return all audit events occurring on New Year&rsquo;s Day.</p>
 </tr>
 </tbody></table>
 
-<h4 id="exclusion-operator-experimental">Exclusion Operator (Experimental)</h4>
+<h4 id="exclusion-operator">Exclusion Operator</h4>
 
 <p>Some fields support filtering on all values except a given set of values.</p>
 
@@ -1845,7 +1845,7 @@ unnecessary blobs.</p>
 
 <p><code class="prettyprint">POST /v3/admin/actions/clear_buildpack_cache</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2294,41 +2294,32 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-apps">List apps</h3>
@@ -2571,14 +2562,14 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Optionally include a list of unique related resources in the response; valid values are <code class="prettyprint">space</code> and <code class="prettyprint">spaceorganization</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -2848,41 +2839,32 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-current-droplet-association-for-an-app">Get current droplet association for an app</h3>
@@ -2924,41 +2906,32 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-environment-for-an-app">Get environment for an app</h3>
@@ -3052,7 +3025,7 @@ It will include environment variables for Environment Variable Groups and Servic
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental, system_env_json redacted</td>
+<td><code class="prettyprint">system_env_json</code> redacted</td>
 </tr>
 </tbody></table>
 <h3 id="get-environment-variables-for-an-app">Get environment variables for an app</h3>
@@ -3093,25 +3066,20 @@ For the entire list of environment variables that will be available to the app a
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-permissions">Get permissions</h3>
@@ -3144,41 +3112,32 @@ developers can read sensitive data.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="set-current-droplet">Set current droplet</h3>
@@ -3221,21 +3180,17 @@ developers can read sensitive data.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-ssh-enabled-for-an-app">Get SSH enabled for an app</h3>
@@ -3270,41 +3225,32 @@ whether it is disabled globally, at the space level, or at the app level.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="start-an-app">Start an app</h3>
@@ -3398,21 +3344,17 @@ whether it is disabled globally, at the space level, or at the app level.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="stop-an-app">Stop an app</h3>
@@ -3506,21 +3448,17 @@ whether it is disabled globally, at the space level, or at the app level.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="restart-an-app">Restart an app</h3>
@@ -3621,21 +3559,17 @@ in the runtime.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-environment-variables-for-an-app">Update environment variables for an app</h3>
@@ -3688,21 +3622,17 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="app-features">App Features</h2>
@@ -3789,41 +3719,32 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-app-features">List app features</h3>
@@ -3873,41 +3794,32 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-an-app-feature">Update an app feature</h3>
@@ -3970,7 +3882,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Can only update <strong>revisions</strong> feature</td>
+<td>Can only update <strong>revisions</strong> feature</td>
 </tr>
 </tbody></table>
 <h2 id="app-usage-events">App Usage Events</h2>
@@ -4210,7 +4122,7 @@ to three instances), and stopping an application.</p>
 
 <p><code class="prettyprint">GET /v3/app_usage_events/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4346,13 +4258,13 @@ to three instances), and stopping an application.</p>
 <td>Comma-delimited list of usage event guids to filter by</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4383,7 +4295,7 @@ to three instances), and stopping an application.</p>
 
 <p><code class="prettyprint">POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4600,7 +4512,7 @@ to three instances), and stopping an application.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Cannot see events which occurred in spaces that the user does not belong to</td>
+<td>Cannot see events which occurred in spaces that the user does not belong to</td>
 </tr>
 </tbody></table>
 <h3 id="list-audit-events">List audit events</h3>
@@ -4689,7 +4601,7 @@ to three instances), and stopping an application.</p>
 <tr>
 <td><strong>target_guids</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of target guids to filter by. Also supports <a href="#exclusion-operator-experimental">filtering by exclusion</a>.</td>
+<td>Comma-delimited list of target guids to filter by. Also supports <a href="#exclusion-operator">filtering by exclusion</a>.</td>
 </tr>
 <tr>
 <td><strong>space_guids</strong></td>
@@ -4717,14 +4629,14 @@ to three instances), and stopping an application.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -4732,45 +4644,35 @@ to three instances), and stopping an application.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="builds">Builds</h2>
@@ -5299,14 +5201,14 @@ resource can be created to initiate the staging process. A successful build resu
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -5437,14 +5339,14 @@ resource can be created to initiate the staging process. A successful build resu
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -5452,41 +5354,32 @@ resource can be created to initiate the staging process. A successful build resu
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-build">Update a build</h3>
@@ -5580,12 +5473,12 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Annotations applied to the build</td>
 </tr>
 <tr>
-<td><strong>state</strong> <em>(experimental)</em></td>
+<td><strong>state</strong></td>
 <td><em>string</em></td>
 <td>Build status; valid values are <code class="prettyprint">FAILED</code> or <code class="prettyprint">STAGED</code> (field can only be passed by Build State Updaters)</td>
 </tr>
 <tr>
-<td><strong>lifecycle.data.image</strong> <em>(experimental)</em></td>
+<td><strong>lifecycle.data.image</strong></td>
 <td><em>string</em></td>
 <td>Image reference tag where the built complete image was stored (field can only be passed by Build State Updaters)</td>
 </tr>
@@ -6012,14 +5905,14 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -6160,7 +6053,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">DELETE /v3/buildpacks/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6573,21 +6466,17 @@ applications without incurring downtime. This is different from the traditional 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-deployment">Get a deployment</h3>
@@ -6666,41 +6555,32 @@ applications without incurring downtime. This is different from the traditional 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-deployments">List deployments</h3>
@@ -6835,14 +6715,14 @@ applications without incurring downtime. This is different from the traditional 
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -6850,13 +6730,11 @@ applications without incurring downtime. This is different from the traditional 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>All Roles</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="update-a-deployment">Update a deployment</h3>
@@ -6959,17 +6837,14 @@ applications without incurring downtime. This is different from the traditional 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="cancel-a-deployment">Cancel a deployment</h3>
@@ -6993,21 +6868,17 @@ applications without incurring downtime. This is different from the traditional 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="domains">Domains</h2>
@@ -7373,7 +7244,7 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
+<td></td>
 </tr>
 </tbody></table>
 <h3 id="list-domains">List domains</h3>
@@ -7492,14 +7363,14 @@ applications without incurring downtime. This is different from the traditional 
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -7841,17 +7712,14 @@ organization), and domains that have been shared with the organization.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="unshare-a-domain">Unshare a domain</h3>
@@ -8375,7 +8243,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Some fields are redacted</td>
+<td>Some fields are redacted</td>
 </tr>
 </tbody></table>
 <h3 id="list-droplets">List droplets</h3>
@@ -8573,14 +8441,14 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -8780,41 +8648,32 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-droplets-for-an-app">List droplets for an app</h3>
@@ -9007,41 +8866,32 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-droplet">Update a droplet</h3>
@@ -9192,7 +9042,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">DELETE /v3/droplets/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9865,9 +9715,9 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td>Value to sort by. Defaults to <code class="prettyprint">name</code> ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid value is <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -10451,14 +10301,14 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -11332,7 +11182,7 @@ applications:
 
 <p><code class="prettyprint">GET /v3/apps/:guid/manifest</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11428,7 +11278,7 @@ specification</a>.</p>
 
 <p><code class="prettyprint">POST /v3/spaces/:guid/manifest_diff</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11850,14 +11700,14 @@ specification</a>.</p>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -12390,7 +12240,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
+<td></td>
 </tr>
 </tbody></table>
 <h3 id="get-usage-summary">Get usage summary</h3>
@@ -12558,14 +12408,14 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -12918,13 +12768,11 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="get-an-organization-quota">Get an organization quota</h3>
@@ -13028,7 +12876,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental / Response will only include guids of parent organizations</td>
+<td>Response will only include guids of parent organizations</td>
 </tr>
 </tbody></table>
 <h3 id="list-organization-quotas">List organization quotas</h3>
@@ -13172,14 +13020,14 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -13229,7 +13077,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental / Response will only include guids of parent organizations</td>
+<td>Response will only include guids of parent organizations</td>
 </tr>
 </tbody></table>
 <h3 id="apply-an-organization-quota-to-an-organization">Apply an organization quota to an organization</h3>
@@ -13289,13 +13137,11 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="delete-an-organization-quota">Delete an organization quota</h3>
@@ -13321,13 +13167,11 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="update-an-organization-quota">Update an organization quota</h3>
@@ -13497,13 +13341,11 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h2 id="packages">Packages</h2>
@@ -13956,41 +13798,32 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-packages">List packages</h3>
@@ -14162,14 +13995,14 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -14301,14 +14134,14 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Value to sort by; defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -14316,41 +14149,32 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-package">Update a package</h3>
@@ -14468,7 +14292,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">DELETE /v3/packages/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14860,7 +14684,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The app the process belongs to</td>
 </tr>
 <tr>
-<td><strong>relationships.revision</strong> (<em>experimental</em>)</td>
+<td><strong>relationships.revision</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app revision the process is currently running</td>
 </tr>
@@ -15148,7 +14972,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Some fields are redacted</td>
+<td>Some fields are redacted</td>
 </tr>
 </tbody></table>
 <h3 id="get-stats-for-a-process">Get stats for a process</h3>
@@ -15239,7 +15063,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Some fields are redacted</td>
+<td>Some fields are redacted</td>
 </tr>
 </tbody></table>
 <h3 id="list-processes">List processes</h3>
@@ -15432,14 +15256,14 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -15629,14 +15453,14 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -15644,41 +15468,32 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <table><thead>
 <tr>
-<th>Roles</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="update-a-process">Update a process</h3>
@@ -15950,7 +15765,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <p><code class="prettyprint">DELETE /v3/processes/:guid/instances/:index</code> <br>
 <code class="prettyprint">DELETE /v3/apps/:guid/processes/:type/instances/:index</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16222,7 +16037,7 @@ resource matching will always return an empty array.</p>
 <td>A short description of the reason for revision</td>
 </tr>
 <tr>
-<td><strong>deployable</strong> <em>(experimental)</em></td>
+<td><strong>deployable</strong></td>
 <td><em>boolean</em></td>
 <td>Indicates if the revision&rsquo;s droplet is staged and the revision can be used to <a href="#create-a-deployment">create a deployment</a></td>
 </tr>
@@ -16372,41 +16187,32 @@ Each object contains the command that the given process type was running at this
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-environment-variables-for-a-revision">Get environment variables for a revision</h3>
@@ -16580,14 +16386,14 @@ Each object contains the command that the given process type was running at this
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -16595,41 +16401,32 @@ Each object contains the command that the given process type was running at this
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-deployed-revisions-for-an-app">List deployed revisions for an app</h3>
@@ -16746,41 +16543,32 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-revision">Update a revision</h3>
@@ -17467,14 +17255,14 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>Optionally include a list of unique related resources in the response; <br>valid values are <code class="prettyprint">user</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -18109,21 +17897,17 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-route">Get a route</h3>
@@ -18231,45 +18015,35 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-routes">List routes</h3>
@@ -18451,14 +18225,14 @@ spaces, and assign &amp; unassign roles to users.</p>
 <td>Optionally include a list of unique related resources in the response <br>Valid values are <code class="prettyprint">domain</code>, <code class="prettyprint">space.organization</code>, <code class="prettyprint">space</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -18642,41 +18416,32 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-route">Update a route</h3>
@@ -18799,21 +18564,17 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="delete-a-route">Delete a route</h3>
@@ -18837,21 +18598,17 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
@@ -18951,7 +18708,7 @@ belongs to a space the user does not belong to.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
+<td></td>
 </tr>
 </tbody></table>
 <h3 id="list-destinations-for-a-route">List destinations for a route</h3>
@@ -19036,45 +18793,35 @@ belongs to a space the user does not belong to.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="insert-destinations-for-a-route">Insert destinations for a route</h3>
@@ -19177,21 +18924,17 @@ replace all destinations for a route at once using the <a href="#replace-all-des
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="replace-all-destinations-for-a-route">Replace all destinations for a route</h3>
@@ -19295,21 +19038,17 @@ and unweighted destinations for a route is not allowed.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="remove-destination-for-a-route">Remove destination for a route</h3>
@@ -19334,21 +19073,17 @@ and unweighted destinations for a route is not allowed.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
@@ -19374,21 +19109,17 @@ and unweighted destinations for a route is not allowed.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 
@@ -19821,7 +19552,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental. Can see globally enabled security groups or groups associated with a space they can see</td>
+<td>Can see globally enabled security groups or groups associated with a space they can see</td>
 </tr>
 </tbody></table>
 <h3 id="list-security-groups">List security groups</h3>
@@ -19978,14 +19709,14 @@ and unweighted destinations for a route is not allowed.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -20035,7 +19766,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental. Can see globally–enabled security groups or groups associated with a space they can see</td>
+<td>Can see globally–enabled security groups or groups associated with a space they can see</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-security-group">Update a security group</h3>
@@ -20619,7 +20350,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental. Can see globally-enabled security groups and groups associated with spaces where they have this role</td>
+<td>Can see globally-enabled security groups and groups associated with spaces where they have this role</td>
 </tr>
 </tbody></table>
 <h3 id="list-staging-security-groups-for-a-space">List staging security groups for a space</h3>
@@ -20797,7 +20528,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental. Can see globally-enabled security groups and groups associated with spaces where they have this role</td>
+<td>Can see globally-enabled security groups and groups associated with spaces where they have this role</td>
 </tr>
 </tbody></table>
 <h2 id="service-brokers">Service Brokers</h2>
@@ -21135,7 +20866,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Only space-scoped brokers</td>
+<td>Only space-scoped brokers</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-brokers">List service brokers</h3>
@@ -21266,14 +20997,14 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -21303,7 +21034,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Only space-scoped brokers</td>
+<td>Only space-scoped brokers</td>
 </tr>
 <tr>
 <td>Other</td>
@@ -22140,7 +21871,7 @@ They are only visible to members of that space.</p>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>fields</strong> (<em>experimental</em>)</td>
+<td><strong>fields</strong></td>
 <td><a href="#fields-parameter"><em>fields parameter</em></a></td>
 <td><a href="#service-offerings-list-fields"><em>Allowed values</em></a></td>
 </tr>
@@ -22160,14 +21891,14 @@ They are only visible to members of that space.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending<br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code> and <code class="prettyprint">name</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -23086,19 +22817,19 @@ Service offerings and service plans are created and updated when a service broke
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>fields</strong> (<em>experimental</em>)</td>
+<td><strong>fields</strong></td>
 <td><a href="#fields-parameter"><em>fields parameter</em></a></td>
 <td><a href="#service-plans-list-fields"><em>Allowed values</em></a></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -24373,14 +24104,14 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <td><a href="#service-instances-list-fields"><em>Allowed values</em></a></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -24607,41 +24338,32 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-credentials-for-a-user-provided-service-instance">Get credentials for a user-provided service instance</h3>
@@ -24778,7 +24500,7 @@ Check the <a href="#the-service-offering-object">Service Offering object</a> for
     }
   }'</span>
 </code></pre>
-<pre class="highlight plaintext"><code>(Experimental) Example Request for Managed Service Instance Upgrade (maintenance_info update)
+<pre class="highlight plaintext"><code>Example Request for Managed Service Instance Upgrade (maintenance_info update)
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
@@ -24862,7 +24584,7 @@ Check the <a href="#the-service-offering-object">Service Offering object</a> for
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
 </code></pre>
-<pre class="highlight plaintext"><code>(Experimental) Example Request for User-Provided Service Instance
+<pre class="highlight plaintext"><code>Example Request for User-Provided Service Instance
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
@@ -24887,7 +24609,7 @@ Check the <a href="#the-service-offering-object">Service Offering object</a> for
     }
   }'</span>
 </code></pre>
-<pre class="highlight plaintext"><code>(Experimental) Example Response for User-Provided Service Instance
+<pre class="highlight plaintext"><code>Example Response for User-Provided Service Instance
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
@@ -25113,7 +24835,7 @@ will continue in the background. The operation can be retried until it is succes
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -25201,41 +24923,32 @@ will continue in the background. The operation can be retried until it is succes
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="share-a-service-instance-to-other-spaces">Share a service instance to other spaces</h3>
@@ -25558,7 +25271,7 @@ Field <code class="prettyprint">broker_catalog.features.bindable</code> from <a 
 <td>Either <code class="prettyprint">app</code> or <code class="prettyprint">key</code></td>
 </tr>
 <tr>
-<td><strong>last_operation</strong> (<em>experimental</em>)</td>
+<td><strong>last_operation</strong></td>
 <td><em><a href="#the-last-operation-object-for-service-credential-binding">last operation object</a></em></td>
 <td>The last operation of this binding</td>
 </tr>
@@ -25849,7 +25562,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental. Only allowed to create bindings of type <code class="prettyprint">app</code>.</td>
+<td>Only allowed to create bindings of type <code class="prettyprint">app</code>.</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-credential-binding">Get a service credential binding</h3>
@@ -25992,41 +25705,32 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-credential-bindings">List service credential bindings</h3>
@@ -26217,14 +25921,14 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <td>Comma-delimited list of service route binding guids to filter by</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
 <td><strong>include</strong></td>
@@ -26257,41 +25961,32 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-credential-binding">Update a service credential binding</h3>
@@ -26433,25 +26128,21 @@ respond synchronously to the delete request.</p>
 
 <p><code class="prettyprint">DELETE /v3/service_credential_bindings/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-credential-binding-details">Get a service credential binding details</h3>
@@ -26530,25 +26221,20 @@ This endpoint is not available for User-Provided Service Instances.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="service-route-binding">Service Route Binding</h2>
@@ -26752,41 +26438,32 @@ In order to bind to a user-provided service instance, the service instance must 
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-route-bindings">List service route bindings</h3>
@@ -26942,14 +26619,14 @@ In order to bind to a user-provided service instance, the service instance must 
 <td>Comma-delimited list of service route binding guids to filter by</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
 <td><strong>include</strong></td>
@@ -27164,21 +26841,17 @@ and the service offering must have <code class="prettyprint">route_forwarding</c
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-route-binding">Update a service route binding</h3>
@@ -27318,25 +26991,21 @@ responds with a job which can be used to track the progress of the delete operat
 
 <p><code class="prettyprint">DELETE /v3/service_route_bindings/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="get-parameters-for-a-route-binding">Get parameters for a route binding</h3>
@@ -27581,7 +27250,7 @@ question and the associated space, service broker, and service offering.</p>
 
 <p><code class="prettyprint">GET /v3/service_usage_events/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -27717,18 +27386,18 @@ question and the associated space, service broker, and service offering.</p>
 <td>Comma-delimited list of service offering guids to filter by</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -27759,7 +27428,7 @@ question and the associated space, service broker, and service offering.</p>
 
 <p><code class="prettyprint">POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -28245,14 +27914,14 @@ question and the associated space, service broker, and service offering.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -28386,14 +28055,14 @@ question and the associated space, service broker, and service offering.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -28754,41 +28423,32 @@ question and the associated space, service broker, and service offering.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-spaces">List spaces</h3>
@@ -28953,14 +28613,14 @@ question and the associated space, service broker, and service offering.</p>
 <td>Optionally include a list of unique related resources in the response; <br>valid value is <code class="prettyprint">organization</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -29099,17 +28759,14 @@ deleted.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="get-assigned-isolation-segment">Get assigned isolation segment</h3>
@@ -29148,41 +28805,32 @@ deleted.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="manage-isolation-segment">Manage isolation segment</h3>
@@ -29377,14 +29025,14 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -29392,41 +29040,32 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="space-features">Space Features</h2>
@@ -29500,41 +29139,32 @@ applications in the space may be accessed via SSH.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="list-space-features">List space features</h3>
@@ -29571,41 +29201,32 @@ applications in the space may be accessed via SSH.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h3 id="update-space-features">Update space features</h3>
@@ -30279,14 +29900,14 @@ applications in the space may be accessed via SSH.</p>
 <td>Value to sort by. Defaults to ascending; prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code></td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -30955,14 +30576,14 @@ An application will automatically use buildpacks associated with the application
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -31182,14 +30803,14 @@ An application will automatically use buildpacks associated with the application
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -31197,9 +30818,11 @@ An application will automatically use buildpacks associated with the application
 
 <table><thead>
 <tr>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-stack">Update a stack</h3>
@@ -31699,7 +31322,7 @@ in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental, <code class="prettyprint">command</code> field redacted</td>
+<td><code class="prettyprint">command</code> field redacted</td>
 </tr>
 </tbody></table>
 <h3 id="list-tasks">List tasks</h3>
@@ -31881,14 +31504,14 @@ in the response based on the user&rsquo;s role.</p>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -32073,14 +31696,14 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -32122,7 +31745,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental, <code class="prettyprint">command</code> field redacted</td>
+<td><code class="prettyprint">command</code> field redacted</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-task">Update a task</h3>
@@ -32296,21 +31919,17 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
 <h2 id="users">Users</h2>
@@ -32473,13 +32092,11 @@ UAA database, though this is not required.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h3 id="get-a-user">Get a user</h3>
@@ -32564,7 +32181,7 @@ UAA database, though this is not required.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Can only view users affiliated with their org</td>
+<td>Can only view users affiliated with their org</td>
 </tr>
 </tbody></table>
 
@@ -32688,14 +32305,14 @@ UAA database, though this is not required.</p>
 <td>A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements</td>
 </tr>
 <tr>
-<td><strong>created_ats</strong> (<em>experimental</em>)</td>
+<td><strong>created_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 <tr>
-<td><strong>updated_ats</strong> (<em>experimental</em>)</td>
+<td><strong>updated_ats</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators-experimental">relational operators</a></td>
+<td>Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with <a href="#relational-operators">relational operators</a></td>
 </tr>
 </tbody></table>
 
@@ -32745,7 +32362,7 @@ UAA database, though this is not required.</p>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental; Can only view users affiliated with their org</td>
+<td>Can only view users affiliated with their org</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-user">Update a user</h3>
@@ -32847,13 +32464,11 @@ UAA database, though this is not required.</p>
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 </tbody></table>
 <h1 id="experimental-resources">Experimental Resources</h1>
@@ -33083,11 +32698,11 @@ filter by the parent resource. See below for examples of summaries in V3.</p>
 Passing <code class="prettyprint">include=space</code> will include the space resource in the response body.</li>
 <li>To fetch all service offerings in a space use <code class="prettyprint">GET
 /v3/service_offerings?space_guids=&lt;space-guid&gt;</code>. Use the
-experimental <code class="prettyprint">fields</code> parameter to include related information in the response
+<code class="prettyprint">fields</code> parameter to include related information in the response
 body.</li>
 <li>To fetch all service instances in a space use <code class="prettyprint">GET
 /v3/service_instances?space_guids=&lt;space-guid&gt;</code>. Use the
-experimental <code class="prettyprint">fields</code> parameter to include related information in the response
+<code class="prettyprint">fields</code> parameter to include related information in the response
 body.</li>
 </ul>
 

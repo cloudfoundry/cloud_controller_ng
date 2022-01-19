@@ -21,40 +21,31 @@
 
 <table><thead>
 <tr>
-<th>Role</th>
-<th>Notes</th>
+<th></th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
-<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Supporter</td>
-<td>Experimental</td>
 </tr>
 </tbody></table>
