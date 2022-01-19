@@ -22,7 +22,7 @@ Location: https://api.example.org/v3/jobs/[guid]
 #### Definition
 `DELETE /v3/buildpacks/:guid`
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |
