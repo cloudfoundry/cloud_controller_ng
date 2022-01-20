@@ -822,6 +822,20 @@ module VCAP::CloudController
 
                 expect(service_cred_binding_create).to_not have_received(:bind)
               end
+
+              context "last binding operation is 'create failed'" do
+                before do
+                  binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+                end
+
+                it 'recreates the binding' do
+                  allow(service_cred_binding_create).to receive(:precursor).and_return(binding)
+
+                  app_apply_manifest.apply(app.guid, message)
+
+                  expect(service_cred_binding_create).to have_received(:bind).with(binding, parameters: nil)
+                end
+              end
             end
 
             context 'volume_services_enabled' do
