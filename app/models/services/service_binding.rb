@@ -132,7 +132,13 @@ module VCAP::CloudController
     end
 
     def create_failed?
-      return true if service_binding_operation&.type == 'create' && service_binding_operation.state == 'failed'
+      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
+
+      false
+    end
+
+    def create_in_progress?
+      return true if last_operation&.type == 'create' && last_operation.state == 'in progress'
 
       false
     end

@@ -91,6 +91,18 @@ module VCAP::CloudController
       service_key_operation
     end
 
+    def create_failed?
+      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
+
+      false
+    end
+
+    def create_in_progress?
+      return true if last_operation&.type == 'create' && last_operation.state == 'in progress'
+
+      false
+    end
+
     def terminal_state?
       !service_key_operation || (%w(succeeded failed).include? service_key_operation.state)
     end

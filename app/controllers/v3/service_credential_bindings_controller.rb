@@ -121,6 +121,9 @@ class ServiceCredentialBindingsController < ApplicationController
   def details
     ensure_service_credential_binding_is_accessible!
     not_found! unless can_read_secrets_in_the_binding_space?
+    if service_credential_binding.create_in_progress? || service_credential_binding.create_failed?
+      not_found_with_message!(service_credential_binding)
+    end
 
     credentials = if service_credential_binding[:type] == 'key' && service_credential_binding.credhub_reference?
                     fetch_credentials_value(service_credential_binding.credhub_reference)
@@ -384,6 +387,12 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def binding_operation_in_progress!
     unprocessable!('There is an operation in progress for the service binding.')
+  end
+
+  def not_found_with_message!(service_credential_binding)
+    type = service_credential_binding.is_a?(ServiceKey) ? 'key' : 'binding'
+    state = service_credential_binding.last_operation.state
+    resource_not_found_with_message!("Creation of service #{type} #{state}")
   end
 
   def not_found!
