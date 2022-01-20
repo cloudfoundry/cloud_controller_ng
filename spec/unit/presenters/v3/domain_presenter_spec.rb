@@ -4,10 +4,11 @@ require 'presenters/v3/domain_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DomainPresenter do
     let(:visible_org_guids) { [] }
+    let(:all_orgs_visible) { false }
 
     describe '#to_hash' do
       subject do
-        DomainPresenter.new(domain, visible_org_guids: visible_org_guids).to_hash
+        DomainPresenter.new(domain, visible_org_guids: visible_org_guids, all_orgs_visible: all_orgs_visible).to_hash
       end
 
       context 'when the domain is public (shared)' do
@@ -120,24 +121,45 @@ module VCAP::CloudController::Presenters::V3
           let(:shared_org_2) { VCAP::CloudController::Organization.make(guid: 'org3') }
           let(:shared_org_3) { VCAP::CloudController::Organization.make(guid: 'org4') }
 
-          let(:visible_org_guids) { ['org2', 'org3'] }
-
           before do
             shared_org_1.add_private_domain(domain)
             shared_org_2.add_private_domain(domain)
             shared_org_3.add_private_domain(domain)
           end
 
-          it 'presents the shared orgs that are visible to a user' do
-            expect(subject[:relationships]).to match({
-              organization: { data: { guid: 'org' } },
-              shared_organizations: {
-                data: contain_exactly(
-                  { guid: 'org2' },
-                  { guid: 'org3' }
-                ),
-              }
-            })
+          context 'when user is a regular user' do
+            let(:visible_org_guids) { ['org2', 'org3'] }
+
+            it 'presents the shared orgs that are visible to a user' do
+              expect(subject[:relationships]).to match({
+                organization: { data: { guid: 'org' } },
+                shared_organizations: {
+                  data: contain_exactly(
+                    { guid: 'org2' },
+                    { guid: 'org3' }
+                  ),
+                }
+              })
+            end
+          end
+
+          context 'when user is admin' do
+            let(:all_orgs_visible) { true }
+
+            it 'displays all orgs' do
+              expect(subject[:relationships][:organization].length).to eq(1)
+              expect(subject[:relationships][:shared_organizations][:data].length).to eq(3)
+              expect(subject[:relationships]).to match({
+                organization: { data: { guid: 'org' } },
+                shared_organizations: {
+                  data: contain_exactly(
+                    { guid: 'org2' },
+                    { guid: 'org3' },
+                    { guid: 'org4' }
+                  ),
+                }
+              })
+            end
           end
         end
       end
