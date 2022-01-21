@@ -218,7 +218,6 @@ RSpec.describe 'Space Manifests' do
         get job_location, nil, user_header
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(VCAP::CloudController::ServiceBinding.count).to eq(0)
         expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance_1.name}': Failed")
       end
     end
