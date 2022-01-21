@@ -13,12 +13,15 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
   class TestApp < Sinatra::Base
     register Sinatra::VCAP
-
     vcap_configure logger_name: 'vcap_spec'
 
-    def in_test_mode?
-      false
+    module TestModeHelpers
+      def in_test_mode?
+        false
+      end
     end
+
+    helpers TestModeHelpers
 
     get '/' do
       'ok'
