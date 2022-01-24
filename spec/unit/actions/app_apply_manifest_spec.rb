@@ -13,7 +13,6 @@ module VCAP::CloudController
       let(:process_update) { instance_double(ProcessUpdate) }
       let(:process_create) { instance_double(ProcessCreate) }
       let(:service_cred_binding_create) { instance_double(V3::ServiceCredentialBindingAppCreate) }
-      let(:service_cred_binding_delete) { instance_double(V3::ServiceCredentialBindingDelete) }
       let(:random_route_generator) { instance_double(RandomRouteGenerator, route: 'spiffy/donut') }
 
       describe '#apply' do
@@ -49,10 +48,6 @@ module VCAP::CloudController
             to receive(:new).and_return(service_cred_binding_create)
           allow(service_cred_binding_create).to receive(:precursor)
           allow(service_cred_binding_create).to receive(:bind)
-
-          allow(V3::ServiceCredentialBindingDelete).
-            to receive(:new).and_return(service_cred_binding_delete)
-          allow(service_cred_binding_delete).to receive(:delete)
 
           allow(AppPatchEnvironmentVariables).
             to receive(:new).and_return(app_patch_env)
@@ -822,6 +817,20 @@ module VCAP::CloudController
 
                 expect(service_cred_binding_create).to_not have_received(:bind)
               end
+
+              context "last binding operation is 'create failed'" do
+                before do
+                  binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+                end
+
+                it 'recreates the binding' do
+                  allow(service_cred_binding_create).to receive(:precursor).and_return(binding)
+
+                  app_apply_manifest.apply(app.guid, message)
+
+                  expect(service_cred_binding_create).to have_received(:bind).with(binding, parameters: nil)
+                end
+              end
             end
 
             context 'volume_services_enabled' do
@@ -844,48 +853,26 @@ module VCAP::CloudController
                 context 'action starts async binding' do
                   before do
                     allow(service_cred_binding_create).to receive(:bind).and_return({ async: true })
-                    allow(service_cred_binding_delete).to receive(:delete).and_return({ finished: true })
                   end
 
-                  it 'raises an error and requests unbind' do
+                  it 'raises an error' do
                     expect {
                       app_apply_manifest.apply(app.guid, message)
                     }.to raise_error(AppApplyManifest::ServiceBindingError,
 /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
-
-                    expect(service_cred_binding_delete).to have_received(:delete)
                   end
-
-                  context 'delete happens async' do
-                    before do
-                      allow(service_cred_binding_delete).to receive(:delete).and_return({ finished: false })
-                    end
-
-                    it 'creates a job to follow up' do
-                      expect {
-                        app_apply_manifest.apply(app.guid, message)
-                      }.to raise_error(AppApplyManifest::ServiceBindingError,
-/For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
-
-                      expect(service_cred_binding_delete).to have_received(:delete)
-                      expect(Delayed::Job.all).to have(1).job
-                    end
-                  end
-
-                  context
                 end
 
                 context 'bind fails with BindingNotRetrievable' do
                   before do
                     allow(service_cred_binding_create).to receive(:bind).and_raise(V3::ServiceBindingCreate::BindingNotRetrievable)
                   end
-                  it 'fails with async error and attempt delete' do
+
+                  it 'fails with async error' do
                     expect {
                       app_apply_manifest.apply(app.guid, message)
                     }.to raise_error(AppApplyManifest::ServiceBindingError,
 /For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
-
-                    expect(service_cred_binding_delete).to have_received(:delete)
                   end
                 end
               end
@@ -895,12 +882,10 @@ module VCAP::CloudController
                   allow(service_cred_binding_create).to receive(:bind).and_raise('fake binding error')
                 end
 
-                it 'decorates the error with the name of the service instancev and delete the binding' do
+                it 'decorates the error with the name of the service instance' do
                   expect {
                     app_apply_manifest.apply(app.guid, message)
                   }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
-
-                  expect(service_cred_binding_delete).to have_received(:delete)
                 end
               end
             end
@@ -916,8 +901,6 @@ module VCAP::CloudController
                 expect {
                   app_apply_manifest.apply(app.guid, message)
                 }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': An existing binding is being deleted. Try recreating the binding later./)
-
-                expect(service_cred_binding_delete).to_not have_received(:delete)
               end
             end
           end

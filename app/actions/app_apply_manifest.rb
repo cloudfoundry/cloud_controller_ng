@@ -1,4 +1,3 @@
-require 'actions/mixins/bindings_delete'
 require 'actions/process_create'
 require 'actions/process_scale'
 require 'actions/process_update'
@@ -11,8 +10,6 @@ require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
-    include V3::BindingsDeleteMixin
-
     class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
     class ServiceBindingError < StandardError; end
@@ -166,10 +163,6 @@ module VCAP::CloudController
             raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously, but async bindings are not supported.')
           end
         rescue => e
-          if binding
-            delete_bindings([binding], user_audit_info: @user_audit_info)
-          end
-
           raise_binding_error!(service_instance, e.message)
         end
       end
@@ -201,7 +194,8 @@ module VCAP::CloudController
     end
 
     def binding_exists?(service_instance, app)
-      ServiceBinding.where(service_instance: service_instance, app: app).present?
+      binding = ServiceBinding.first(service_instance: service_instance, app: app)
+      binding && !binding.create_failed?
     end
 
     def binding_being_deleted!(service_instance, app)

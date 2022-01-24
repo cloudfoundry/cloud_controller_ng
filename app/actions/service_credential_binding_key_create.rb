@@ -26,7 +26,10 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        ServiceKey.new.tap do |b|
+        key = ServiceKey.first(service_instance: service_instance, name: message.name)
+        key_already_exists!(message.name) if key && !key.create_failed?
+
+        (key || ServiceKey.new).tap do |b|
           ServiceKey.db.transaction do
             b.save_with_attributes_and_new_operation(
               binding_details,

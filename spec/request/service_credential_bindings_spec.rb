@@ -614,6 +614,38 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
 
+    context "last binding operation is in 'create in progress' state" do
+      before do
+        app_binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+      end
+
+      it 'returns an error' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'Creation of service binding in progress',
+          'title' => 'CF-ResourceNotFound',
+          'code' => 10010,
+        }))
+      end
+    end
+
+    context "last binding operation is in 'create failed' state" do
+      before do
+        app_binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+      end
+
+      it 'returns an error' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'Creation of service binding failed',
+          'title' => 'CF-ResourceNotFound',
+          'code' => 10010,
+        }))
+      end
+    end
+
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
@@ -717,7 +749,7 @@ RSpec.describe 'v3 service credential bindings' do
         let(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
         let(:guid) { key_binding.guid }
 
-        it 'returns the credentials as found in the datbase' do
+        it 'returns the credentials as found in the database' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(200)
           expect(credhub_server_stub).not_to have_been_requested

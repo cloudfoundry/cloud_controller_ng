@@ -54,12 +54,28 @@ module VCAP::CloudController
             expect(binding).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
           end
 
-          it 'raises an error when a key with same name already exists' do
-            binding = ServiceKey.make(service_instance: service_instance, name: message.name)
-            expect { action.precursor(service_instance, message: message) }.to raise_error(
-              ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-              "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
-            )
+          context 'when a key with the same name already exists' do
+            let!(:binding) { ServiceKey.make(service_instance: service_instance, name: message.name) }
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, message: message) }.to raise_error(
+                ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
+              )
+            end
+
+            context "when the last key operation is in 'create failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+              end
+
+              it 'updates and returns the existing key' do
+                b = action.precursor(service_instance, message: message)
+
+                expect(b.id).to eq(binding.id)
+                expect(b.create_in_progress?).to be_truthy
+              end
+            end
           end
         end
 

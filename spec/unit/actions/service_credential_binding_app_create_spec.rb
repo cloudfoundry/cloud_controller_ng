@@ -65,15 +65,31 @@ module VCAP::CloudController
             )
           end
 
-          it 'raises an error when a binding already exists' do
-            ServiceBinding.make(service_instance: service_instance, app: app)
-            expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
-              ServiceCredentialBindingAppCreate::UnprocessableCreate,
-              'The app is already bound to the service instance'
-            )
+          context 'when a binding already exists' do
+            let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+
+            it 'raises an error' do
+              expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                'The app is already bound to the service instance'
+              )
+            end
+
+            context "when the last binding operation is in 'create failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+              end
+
+              it 'updates and returns the existing binding' do
+                b = action.precursor(service_instance, app: app, message: message)
+
+                expect(b.id).to eq(binding.id)
+                expect(b.create_in_progress?).to be_truthy
+              end
+            end
           end
 
-          it 'raises an error when a the app and the instance are in different spaces' do
+          it 'raises an error when the app and the instance are in different spaces' do
             another_space = Space.make
             another_app = AppModel.make(space: another_space)
             expect { action.precursor(service_instance, app: another_app, message: message) }.to raise_error(
