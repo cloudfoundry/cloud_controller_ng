@@ -292,7 +292,7 @@ GEM
       faraday-cookie_jar (~> 0.0.6)
       ms_rest (~> 0.6.3)
     msgpack (1.4.2)
-    multi_json (1.12.2)
+    multi_json (1.15.0)
     multipart-parser (0.1.1)
     multipart-post (2.1.1)
     mustache (1.1.1)
