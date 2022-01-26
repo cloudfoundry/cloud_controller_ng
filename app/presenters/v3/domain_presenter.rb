@@ -9,9 +9,11 @@ module VCAP::CloudController::Presenters::V3
       resource,
         show_secrets: false,
         censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        visible_org_guids: []
+        visible_org_guids: [],
+        all_orgs_visible: false
     )
       @visible_org_guids = visible_org_guids
+      @all_orgs_visible = all_orgs_visible
 
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
     end
@@ -43,11 +45,11 @@ module VCAP::CloudController::Presenters::V3
 
     private
 
-    attr_reader :visible_org_guids
+    attr_reader :visible_org_guids, :all_orgs_visible
 
     def shared_org_guids
       org_guids = domain.shared_organizations.map(&:guid)
-      org_guids &= visible_org_guids
+      org_guids &= visible_org_guids unless all_orgs_visible
       org_guids.map { |org_guid| { guid: org_guid } }
     end
 

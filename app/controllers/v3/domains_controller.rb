@@ -25,7 +25,7 @@ class DomainsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/domains',
       message: message,
-      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids }
+      extra_presenter_args: presenter_args
     )
   end
 
@@ -46,7 +46,7 @@ class DomainsController < ApplicationController
     end
     domain = DomainCreate.new.create(message: message, shared_organizations: shared_org_objects)
 
-    render status: :created, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :created, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   rescue DomainCreate::Error => e
     unprocessable!(e)
   end
@@ -78,7 +78,7 @@ class DomainsController < ApplicationController
     domain = find_domain(message)
     domain_not_found! unless domain
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
 
   def update
@@ -92,7 +92,7 @@ class DomainsController < ApplicationController
 
     domain = DomainUpdate.new.update(domain: domain, message: message)
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
 
   def destroy
@@ -127,7 +127,7 @@ class DomainsController < ApplicationController
     unprocessable!('Domains cannot be shared with other organizations unless they are scoped to an organization.') unless domain.private?
 
     DomainUpdateSharedOrgs.update(domain: domain, shared_organizations: shared_orgs)
-    render status: :ok, json: Presenters::V3::DomainSharedOrgsPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainSharedOrgsPresenter.new(domain, **presenter_args)
   end
 
   def delete_shared_org
@@ -219,5 +219,13 @@ class DomainsController < ApplicationController
     service_unavailable!('The Routing API is currently unavailable. Please try again later.')
   rescue UaaUnavailable, RoutingApi::UaaUnavailable
     service_unavailable!('Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.')
+  end
+
+  def presenter_args
+    if permission_queryer.can_read_globally?
+      { all_orgs_visible: true }
+    else
+      { visible_org_guids: permission_queryer.readable_org_guids }
+    end
   end
 end
