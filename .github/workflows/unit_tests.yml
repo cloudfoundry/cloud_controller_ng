@@ -18,7 +18,7 @@ jobs:
     - name: Run Rubocop
       run: bundle exec rake rubocop
     - uses: ravsamhq/notify-slack-action@v1.1
-      if: always()
+      if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
         notify_when: 'failure' # default is 'success,failure,warnings'
@@ -37,7 +37,7 @@ jobs:
     - name: Run tests
       run: DB=postgres bundle exec rake spec:all
     - uses: ravsamhq/notify-slack-action@v1.1
-      if: always()
+      if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
         notify_when: 'failure' # default is 'success,failure,warnings'
@@ -58,7 +58,7 @@ jobs:
     - name: Run tests
       run: DB=mysql bundle exec rake spec:all
     - uses: ravsamhq/notify-slack-action@v1.1
-      if: always()
+      if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
         notify_when: 'failure' # default is 'success,failure,warnings'
@@ -77,7 +77,7 @@ jobs:
     - name: Run tests
       run: DB=mysql MYSQL_CONNECTION_PREFIX=mysql2://root:root@localhost:3306 bundle exec rake spec:all
     - uses: ravsamhq/notify-slack-action@v1.1
-      if: always()
+      if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
         notify_when: 'failure' # default is 'success,failure,warnings'
@@ -98,7 +98,7 @@ jobs:
       - name: Run docs tests
         run: bundle exec rake check_doc_links
       - uses: ravsamhq/notify-slack-action@v1.1
-        if: always()
+        if: github.event_name == 'push'
         with:
           status: ${{ job.status }}
           notify_when: 'failure' # default is 'success,failure,warnings'
