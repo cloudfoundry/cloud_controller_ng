@@ -1,8 +1,10 @@
 require 'models/helpers/process_types'
+require 'models/runtime/helpers/service_credential_binding_mixin'
 
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     include Serializer
+    include ServiceCredentialBindingMixin
 
     plugin :after_initialize
 
@@ -118,37 +120,17 @@ module VCAP::CloudController
     end
 
     def is_created?
-      return true unless service_binding_operation
+      return true unless last_operation
 
-      if service_binding_operation.type == 'create' && service_binding_operation.state != 'succeeded'
+      if last_operation.type == 'create' && last_operation.state != 'succeeded'
         return false
       end
 
-      if service_binding_operation.type == 'delete' && service_binding_operation.state == 'succeeded'
+      if last_operation.type == 'delete' && last_operation.state == 'succeeded'
         return false
       end
 
       true
-    end
-
-    def create_failed?
-      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
-
-      false
-    end
-
-    def create_in_progress?
-      return true if last_operation&.type == 'create' && last_operation.state == 'in progress'
-
-      false
-    end
-
-    def terminal_state?
-      !service_binding_operation || (%w(succeeded failed).include? service_binding_operation.state)
-    end
-
-    def operation_in_progress?
-      !!service_binding_operation && service_binding_operation.state == 'in progress'
     end
 
     def save_with_attributes_and_new_operation(attributes, operation)

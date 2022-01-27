@@ -1,4 +1,5 @@
 require 'spec_helper'
+require_relative 'service_credential_binding_shared'
 
 RSpec::Matchers.define :existing_service_key_count do |c|
   match { |arg| arg.is_a?(Sequel::Dataset) && arg.count == c }
@@ -253,90 +254,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#terminal_state?' do
-      let(:service_binding) { ServiceKey.make }
-      let(:operation) { ServiceKeyOperation.make(state: state) }
-
-      before do
-        service_binding.service_key_operation = operation
-      end
-
-      context 'when state is succeeded' do
-        let(:state) { 'succeeded' }
-
-        it 'returns true' do
-          expect(service_binding.terminal_state?).to be true
-        end
-      end
-
-      context 'when state is failed' do
-        let(:state) { 'failed' }
-
-        it 'returns true when state is `failed`' do
-          expect(service_binding.terminal_state?).to be true
-        end
-      end
-
-      context 'when state is something else' do
-        let(:state) { 'in progress' }
-
-        it 'returns false' do
-          expect(service_binding.terminal_state?).to be false
-        end
-      end
-
-      context 'when binding operation is missing' do
-        let(:operation) { nil }
-
-        it 'returns true' do
-          expect(service_binding.terminal_state?).to be true
-        end
-      end
-    end
-
-    describe 'operation_in_progress?' do
-      let(:service_instance) { ManagedServiceInstance.make }
-      let(:service_key) { ServiceKey.make(service_instance: service_instance) }
-
-      context 'when the service key has been created synchronously' do
-        it 'returns false' do
-          expect(service_key.operation_in_progress?).to be false
-        end
-      end
-
-      context 'when the service key is being created asynchronously' do
-        let(:state) {}
-        let(:operation) { ServiceKeyOperation.make(state: state) }
-
-        before do
-          service_key.service_key_operation = operation
-        end
-
-        context 'and the operation is in progress' do
-          let(:state) { 'in progress' }
-
-          it 'returns true' do
-            expect(service_key.operation_in_progress?).to be true
-          end
-        end
-
-        context 'and the operation has failed' do
-          let(:state) { 'failed' }
-
-          it 'returns false' do
-            expect(service_key.operation_in_progress?).to be false
-          end
-        end
-
-        context 'and the operation has succeeded' do
-          let(:state) { 'succeeded' }
-
-          it 'returns false' do
-            expect(service_key.operation_in_progress?).to be false
-          end
-        end
-      end
-    end
+    it_behaves_like 'a model including the ServiceCredentialBindingMixin', ServiceKey, ServiceKeyOperation, :service_key_operation
 
     describe '#destroy' do
       it 'cascades deletion of related dependencies' do

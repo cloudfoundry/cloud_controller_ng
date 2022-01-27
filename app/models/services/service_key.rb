@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class ServiceKey < Sequel::Model
+    include ServiceCredentialBindingMixin
+
     class InvalidAppAndServiceRelation < StandardError; end
 
     many_to_one :service_instance
@@ -89,26 +91,6 @@ module VCAP::CloudController
 
     def last_operation
       service_key_operation
-    end
-
-    def create_failed?
-      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
-
-      false
-    end
-
-    def create_in_progress?
-      return true if last_operation&.type == 'create' && last_operation.state == 'in progress'
-
-      false
-    end
-
-    def terminal_state?
-      !service_key_operation || (%w(succeeded failed).include? service_key_operation.state)
-    end
-
-    def operation_in_progress?
-      !!service_key_operation && service_key_operation.state == 'in progress'
     end
 
     def save_with_attributes_and_new_operation(attributes, operation)
