@@ -282,7 +282,7 @@ module VCAP::CloudController
 
           it 'creates an internal shared domain' do
             Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-            expect(Domain.shared_domains.map(&:name)).to eq(['app.some-other-domain.com', 'internal.domain.name'])
+            expect(Domain.shared_domains.map(&:name)).to match_array(['app.some-other-domain.com', 'internal.domain.name'])
             expect(SharedDomain.first(name: 'internal.domain.name')).to be_internal
           end
         end
