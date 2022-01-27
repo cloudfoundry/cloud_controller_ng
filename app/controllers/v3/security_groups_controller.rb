@@ -21,7 +21,7 @@ class SecurityGroupsController < ApplicationController
 
     render status: :created, json: Presenters::V3::SecurityGroupPresenter.new(
       security_group,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   rescue SecurityGroupCreate::Error => e
     unprocessable!(e)
@@ -40,7 +40,7 @@ class SecurityGroupsController < ApplicationController
     end
     unauthorized! if unwritable_space_guids.any?
 
-    SecurityGroupApply.apply_running(security_group, message, visible_space_guids)
+    SecurityGroupApply.apply_running(security_group, message, **presenter_args)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "security_groups/#{security_group.guid}",
@@ -65,7 +65,7 @@ class SecurityGroupsController < ApplicationController
     end
     unauthorized! if unwritable_space_guids.any?
 
-    SecurityGroupApply.apply_staging(security_group, message, visible_space_guids)
+    SecurityGroupApply.apply_staging(security_group, message, **presenter_args)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "security_groups/#{security_group.guid}",
@@ -83,7 +83,7 @@ class SecurityGroupsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
       security_group,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   end
 
@@ -102,7 +102,7 @@ class SecurityGroupsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/security_groups',
       message: message,
-      extra_presenter_args: { visible_space_guids: visible_space_guids },
+      extra_presenter_args: presenter_args,
     )
   end
 
@@ -119,7 +119,7 @@ class SecurityGroupsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
       updated_security_group,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   rescue SecurityGroupUpdate::Error => e
     unprocessable!(e)
@@ -176,11 +176,11 @@ class SecurityGroupsController < ApplicationController
 
   private
 
-  def visible_space_guids
+  def presenter_args
     if permission_queryer.can_read_globally?
-      :all
+      { all_spaces_visible: true }
     else
-      permission_queryer.readable_space_guids
+      { visible_space_guids: permission_queryer.readable_space_guids }
     end
   end
 end

@@ -24,7 +24,7 @@ class SpaceQuotasController < ApplicationController
 
     render status: :created, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   rescue SpaceQuotasCreate::Error => e
     unprocessable!(e.message)
@@ -36,7 +36,7 @@ class SpaceQuotasController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   end
 
@@ -51,7 +51,7 @@ class SpaceQuotasController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/space_quotas',
       message: message,
-      extra_presenter_args: { visible_space_guids: visible_space_guids },
+      extra_presenter_args: presenter_args,
     )
   end
 
@@ -71,7 +71,7 @@ class SpaceQuotasController < ApplicationController
 
     render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
-      visible_space_guids: visible_space_guids
+      **presenter_args
     )
   rescue SpaceQuotaUpdate::Error => e
     unprocessable!(e.message)
@@ -89,7 +89,7 @@ class SpaceQuotasController < ApplicationController
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    SpaceQuotaApply.new.apply(space_quota, message, visible_space_guids)
+    SpaceQuotaApply.new.apply(space_quota, message, **presenter_args)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "space_quotas/#{space_quota.guid}",
@@ -151,11 +151,11 @@ class SpaceQuotasController < ApplicationController
     permission_queryer.readable_space_quota_guids
   end
 
-  def visible_space_guids
+  def presenter_args
     if permission_queryer.can_read_globally?
-      :all
+      { all_spaces_visible: true }
     else
-      permission_queryer.readable_space_guids
+      { visible_space_guids: permission_queryer.readable_space_guids }
     end
   end
 end

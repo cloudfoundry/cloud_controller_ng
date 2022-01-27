@@ -7,6 +7,7 @@ module VCAP::CloudController::Presenters::V3
     let(:space_1) { VCAP::CloudController::Space.make(organization: org) }
     let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
     let(:visible_space_guids) { [space_1.guid, space_2.guid] }
+    let(:all_spaces_visible) { false }
 
     let(:space_quota) do
       VCAP::CloudController::SpaceQuotaDefinition.make(
@@ -30,7 +31,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids: visible_space_guids).to_hash }
+      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(space_quota.guid)
@@ -86,7 +87,8 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when user is admin' do
-        let(:visible_space_guids) { :all }
+        let(:all_spaces_visible) { true }
+        let(:visible_space_guids) { [] }
 
         it 'displays all spaces' do
           expect(result[:relationships][:spaces][:data]).to match_array([

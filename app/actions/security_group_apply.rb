@@ -4,18 +4,18 @@ module VCAP::CloudController
     end
 
     class << self
-      def apply_running(security_group, message, readable_space_guids)
-        apply(security_group, message, readable_space_guids, :running)
+      def apply_running(security_group, message, visible_space_guids: [], all_spaces_visible: false)
+        apply(security_group, message, :running, visible_space_guids, all_spaces_visible)
       end
 
-      def apply_staging(security_group, message, readable_space_guids)
-        apply(security_group, message, readable_space_guids, :staging)
+      def apply_staging(security_group, message, visible_space_guids: [], all_spaces_visible: false)
+        apply(security_group, message, :staging, visible_space_guids, all_spaces_visible)
       end
 
       private
 
-      def apply(security_group, message, readable_space_guids, staging_or_running)
-        spaces = valid_spaces(message.space_guids, readable_space_guids)
+      def apply(security_group, message, staging_or_running, visible_space_guids, all_spaces_visible)
+        spaces = valid_spaces(message.space_guids, visible_space_guids, all_spaces_visible)
 
         if staging_or_running == :running
           SecurityGroup.db.transaction do
@@ -30,15 +30,15 @@ module VCAP::CloudController
         error!(e.message)
       end
 
-      def valid_spaces(requested_space_guids, readable_space_guids)
+      def valid_spaces(requested_space_guids, visible_space_guids, all_spaces_visible)
         existing_spaces = Space.where(guid: requested_space_guids).all
         existing_space_guids = existing_spaces.map(&:guid)
 
         nonexistent_space_guids = requested_space_guids - existing_space_guids
-        unreadable_space_guids = if readable_space_guids == :all
+        unreadable_space_guids = if all_spaces_visible
                                    []
                                  else
-                                   existing_space_guids - readable_space_guids
+                                   existing_space_guids - visible_space_guids
                                  end
 
         invalid_space_guids = nonexistent_space_guids + unreadable_space_guids

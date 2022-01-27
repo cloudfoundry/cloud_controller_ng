@@ -3,8 +3,8 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    def apply(space_quota, message, readable_space_guids)
-      spaces = valid_spaces(message.space_guids, readable_space_guids, space_quota.organization_id)
+    def apply(space_quota, message, visible_space_guids: [], all_spaces_visible: false)
+      spaces = valid_spaces(message.space_guids, visible_space_guids, all_spaces_visible, space_quota.organization_id)
 
       SpaceQuotaDefinition.db.transaction do
         spaces.each { |space| space_quota.add_space(space) }
@@ -15,15 +15,15 @@ module VCAP::CloudController
 
     private
 
-    def valid_spaces(requested_space_guids, readable_space_guids, space_quota_org_id)
+    def valid_spaces(requested_space_guids, visible_space_guids, all_spaces_visible, space_quota_org_id)
       existing_spaces = Space.where(guid: requested_space_guids).all
       existing_space_guids = existing_spaces.map(&:guid)
 
       nonexistent_space_guids = requested_space_guids - existing_space_guids
-      unreadable_space_guids = if readable_space_guids == :all
+      unreadable_space_guids = if all_spaces_visible
                                  []
                                else
-                                 existing_space_guids - readable_space_guids
+                                 existing_space_guids - visible_space_guids
                                end
 
       invalid_space_guids =  nonexistent_space_guids + unreadable_space_guids

@@ -24,11 +24,12 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids: visible_space_guids).to_hash }
+      let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible).to_hash }
 
       let(:space1) { VCAP::CloudController::Space.make(guid: 'guid1') }
       let(:space2) { VCAP::CloudController::Space.make(guid: 'guid2') }
       let(:visible_space_guids) { [space1.guid, space2.guid] }
+      let(:all_spaces_visible) { false }
 
       it 'presents the security group as json' do
         expect(result[:guid]).to eq(security_group.guid)
@@ -61,7 +62,8 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'when user is admin' do
-        let(:visible_space_guids) { :all }
+        let(:all_spaces_visible) { true }
+        let(:visible_space_guids) { [] }
 
         it 'displays all spaces' do
           expect(result[:relationships][:running_spaces][:data].length).to eq(1)
