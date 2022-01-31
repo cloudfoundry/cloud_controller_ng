@@ -4,42 +4,62 @@ require 'rfc822'
 module VCAP
   module RestAPI
     class Message < JsonMessage
+      class UrlDecorator < SimpleDelegator
+        def inspect
+          'String /URL_REGEX/'
+        end
+
+        alias_method :to_s, :inspect
+        def default_error_message
+          'must be a valid URL'
+        end
+      end
+
+      class HttpsUrlDecorator < SimpleDelegator
+        def inspect
+          'String /HTTPS_URL_REGEX/'
+        end
+
+        alias_method :to_s, :inspect
+        def default_error_message
+          'must be a valid HTTPS URL'
+        end
+      end
+
+      class EmailDecorator < SimpleDelegator
+        def inspect
+          'String /EMAIL_REGEX/'
+        end
+
+        alias_method :to_s, :inspect
+        def default_error_message
+          'must be a valid email'
+        end
+      end
+
+      class GitUrlDecorator < SimpleDelegator
+        def inspect
+          'String /GIT_URL_REGEX/'
+        end
+
+        alias_method :to_s, :inspect
+
+        def default_error_message
+          'must be a valid git URL'
+        end
+      end
       # The schema validator used by class `JsonMessage` calls the `inspect`
       # method on the regexp object to get a description of the regex. We tweak
       # the regexp object so that the `inspect` method generates a readable
       # description for us through `VCAP::RestAPI::Message#schema_doc` method.
-      def self.readable_regexp(regexp, description, default_error_message)
-        regexp.define_singleton_method(:inspect) do
-          description
-        end
-
-        regexp.define_singleton_method(:to_s) do
-          inspect
-        end
-
-        regexp.define_singleton_method(:default_error_message) do
-          default_error_message
-        end
-
-        regexp
-      end
-
       def self.schema_doc(schema)
         schema.deparse
       end
 
-      URL = readable_regexp(URI::DEFAULT_PARSER.make_regexp(%w(http https)),
-                                  'String /URL_REGEX/',
-                                  'must be a valid URL')
-      HTTPS_URL = readable_regexp(URI::DEFAULT_PARSER.make_regexp('https'),
-                                  'String /HTTPS_URL_REGEX/',
-                                  'must be a valid HTTPS URL')
-      EMAIL = readable_regexp(RFC822::EMAIL_REGEXP_WHOLE,
-                                  'String /EMAIL_REGEX/',
-                                  'must be a valid email')
-      GIT_URL = readable_regexp(URI::DEFAULT_PARSER.make_regexp(%w(http https git)),
-                                  'String /GIT_URL_REGEX/',
-                                  'must be a valid git URL')
+      URL = UrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w(http https)))
+      HTTPS_URL = HttpsUrlDecorator.new(URI::DEFAULT_PARSER.make_regexp('https'))
+      EMAIL = EmailDecorator.new(RFC822::EMAIL_REGEXP_WHOLE)
+      GIT_URL = GitUrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w(http https git)))
 
       # The block will be evaluated in the context of the schema validator used
       # by class `JsonMessage` viz. `Membrane`.
