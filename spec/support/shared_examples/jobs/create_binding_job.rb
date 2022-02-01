@@ -58,9 +58,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
       context 'asynchronous response' do
         context 'computes the maximum duration' do
           before do
-            TestConfig.override({
+            TestConfig.override(
               broker_client_max_async_poll_duration_minutes: 90009
-            })
+            )
             subject.perform
           end
 
@@ -141,7 +141,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
       context 'the maximum duration' do
         it 'recomputes the value' do
           subject.maximum_duration_seconds = 90009
-          TestConfig.override({ broker_client_max_async_poll_duration_minutes: 8088 })
+          TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
           subject.perform
           expect(subject.maximum_duration_seconds).to eq(8088.minutes)
         end

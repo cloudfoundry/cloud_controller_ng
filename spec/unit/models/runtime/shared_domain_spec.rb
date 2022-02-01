@@ -223,7 +223,7 @@ module VCAP::CloudController
         context 'and the domain is internal' do
           it 'raises an error' do
             attrs = { name: 'some-domain.com', router_group_guid: 'some-guid', internal: true }
-            expect { SharedDomain.find_or_create(attrs) }.to raise_error do |e|
+            expect { SharedDomain.find_or_create(**attrs) }.to raise_error do |e|
               expect(e).to be_a(StandardError)
               expect(e.message).to eq('Error for shared domain name some-domain.com: router_group_guid cannot be specified for internal domains')
             end
@@ -250,7 +250,7 @@ module VCAP::CloudController
             before_updated_at = existing_domain.updated_at
 
             expect {
-              SharedDomain.find_or_create(attrs.merge(internal: false))
+              SharedDomain.find_or_create(**attrs.merge(internal: false))
             }.not_to change { existing_domain.reload }
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
@@ -268,7 +268,7 @@ module VCAP::CloudController
             before_updated_at = existing_domain.updated_at
 
             expect {
-              SharedDomain.find_or_create(attrs.merge(internal: true))
+              SharedDomain.find_or_create(**attrs.merge(internal: true))
             }.not_to change { existing_domain.reload }
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
@@ -284,7 +284,7 @@ module VCAP::CloudController
           before_updated_at = existing_domain.updated_at
 
           expect {
-            SharedDomain.find_or_create(attrs.merge(router_group_guid: 'new rgg'))
+            SharedDomain.find_or_create(**attrs.merge(router_group_guid: 'new rgg'))
           }.not_to change { existing_domain.reload }
           expect(fake_logger).to have_received(:warn).
             with("Domain '#{domain_name}' already exists. Skipping updates of router_group_guid")
@@ -299,7 +299,7 @@ module VCAP::CloudController
           before_updated_at = existing_domain.updated_at
 
           expect {
-            SharedDomain.find_or_create(attrs)
+            SharedDomain.find_or_create(**attrs)
           }.not_to change { existing_domain.reload }
           expect(existing_domain.updated_at).to eq(before_updated_at)
           expect(fake_logger).to have_received(:info).with("reusing default serving domain: #{domain_name}")

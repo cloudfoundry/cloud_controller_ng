@@ -28,7 +28,7 @@ module VCAP::CloudController
 
       context 'when using a package registry' do
         before do
-          TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
+          TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
         end
 
         it 'returns the image reference for the package' do

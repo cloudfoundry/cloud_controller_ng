@@ -67,7 +67,7 @@ class ServicePlanVisibilityController < ApplicationController
     message = ServicePlanVisibilityUpdateMessage.new(hashed_params[:body])
     bad_request!(message.errors.full_messages) unless message.valid?
 
-    updated_service_plan = V3::ServicePlanVisibilityUpdate.new.update(service_plan, message, opts)
+    updated_service_plan = V3::ServicePlanVisibilityUpdate.new.update(service_plan, message, **opts)
     event_repository.record_service_plan_update_visibility_event(service_plan, message.audit_hash)
     updated_service_plan
   rescue V3::ServicePlanVisibilityUpdate::UnprocessableRequest => e

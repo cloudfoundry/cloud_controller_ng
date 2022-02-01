@@ -104,7 +104,7 @@ module VCAP::CloudController
       let(:resources) { [{ sha1: '12345' }, { sha1: '56789' }] }
 
       before do
-        TestConfig.override(bits_service_config)
+        TestConfig.override(**bits_service_config)
         set_current_user_as_admin
       end
 
