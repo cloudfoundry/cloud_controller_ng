@@ -57,11 +57,13 @@ module VCAP::CloudController
           context 'when a key with the same name already exists' do
             let!(:binding) { ServiceKey.make(service_instance: service_instance, name: message.name) }
 
-            it 'raises an error' do
-              expect { action.precursor(service_instance, message: message) }.to raise_error(
-                ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-                "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
-              )
+            context 'when no last key operation exists' do
+              it 'raises an error' do
+                expect { action.precursor(service_instance, message: message) }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
+                )
+              end
             end
 
             context "when the last key operation is in 'create failed' state" do
@@ -74,6 +76,60 @@ module VCAP::CloudController
 
                 expect(b.id).to eq(binding.id)
                 expect(b.create_in_progress?).to be_truthy
+              end
+            end
+
+            context "when the last key operation is in 'create in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, message: message) }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
+                )
+              end
+            end
+
+            context "when the last key operation is in 'create succeeded' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, message: message) }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{binding.name}'."
+                )
+              end
+            end
+
+            context "when the last key operation is in 'delete failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, message: message) }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  'The binding name is invalid. Key binding names must be unique. '\
+                  "The service instance already has a key binding with the name '#{binding.name}' that is getting deleted or its deletion failed."
+                )
+              end
+            end
+
+            context "when the last key operation is in 'delete in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, message: message) }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  'The binding name is invalid. Key binding names must be unique. '\
+                  "The service instance already has a key binding with the name '#{binding.name}' that is getting deleted or its deletion failed."
+                 )
               end
             end
           end

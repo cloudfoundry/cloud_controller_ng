@@ -68,11 +68,13 @@ module VCAP::CloudController
           context 'when a binding already exists' do
             let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
 
-            it 'raises an error' do
-              expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'The app is already bound to the service instance'
-              )
+            context 'when no last binding operation exists' do
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'The app is already bound to the service instance'
+                )
+              end
             end
 
             context "when the last binding operation is in 'create failed' state" do
@@ -85,6 +87,58 @@ module VCAP::CloudController
 
                 expect(b.id).to eq(binding.id)
                 expect(b.create_in_progress?).to be_truthy
+              end
+            end
+
+            context "when the last binding operation is in 'create in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'The app is already bound to the service instance'
+                )
+              end
+            end
+
+            context "when the last binding operation is in 'create succeeded' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                 'The app is already bound to the service instance'
+                )
+              end
+            end
+
+            context "when the last binding operation is in 'delete failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'The binding is getting deleted or its deletion failed'
+                )
+              end
+            end
+
+            context "when the last binding operation is in 'delete in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                  'The binding is getting deleted or its deletion failed'
+                )
               end
             end
           end

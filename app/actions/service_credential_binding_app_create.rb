@@ -21,7 +21,9 @@ module VCAP::CloudController
       PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
 
       def precursor(service_instance, app: nil, volume_mount_services_enabled: false, message:)
-        validate!(service_instance, app, volume_mount_services_enabled)
+        validate_service_instance!(app, service_instance, volume_mount_services_enabled)
+        binding = ServiceBinding.first(service_instance: service_instance, app: app)
+        validate_binding!(binding)
 
         binding_details = {
           service_instance: service_instance,
@@ -30,9 +32,6 @@ module VCAP::CloudController
           type: 'app',
           credentials: {}
         }
-
-        binding = ServiceBinding.first(service_instance: service_instance, app: app)
-        already_bound! if binding && !binding.create_failed?
 
         (binding || ServiceBinding.new).tap do |b|
           ServiceBinding.db.transaction do
@@ -50,15 +49,21 @@ module VCAP::CloudController
 
       private
 
-      def validate!(service_instance, app, volume_mount_services_enabled)
+      def validate_service_instance!(app, service_instance, volume_mount_services_enabled)
         app_is_required! unless app.present?
         space_mismatch! unless all_space_guids(service_instance).include? app.space.guid
-
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
           volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
           operation_in_progress! if service_instance.operation_in_progress?
+        end
+      end
+
+      def validate_binding!(binding)
+        if binding
+          already_bound! if binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?
+          incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end
 
@@ -89,6 +94,10 @@ module VCAP::CloudController
 
       def already_bound!
         raise UnprocessableCreate.new('The app is already bound to the service instance')
+      end
+
+      def incomplete_deletion!
+        raise UnprocessableCreate.new('The binding is getting deleted or its deletion failed')
       end
 
       def space_mismatch!
