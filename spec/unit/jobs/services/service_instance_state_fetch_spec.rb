@@ -69,7 +69,7 @@ module VCAP::CloudController
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
               broker_client_max_async_poll_duration_minutes: max_duration,
             }
-            TestConfig.override(**config_override)
+            TestConfig.override(config_override)
           end
 
           context 'when the caller does not provide the maximum number of attempts' do

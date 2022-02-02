@@ -20,7 +20,7 @@ RSpec.describe 'BuildpackBitsController download endpoint exists:' do
       end
 
       before do
-        TestConfig.override(**staging_config)
+        TestConfig.override(staging_config)
         allow(VCAP::CloudController::BlobDispatcher).to receive(:new).and_return(blob_dispatcher)
       end
 

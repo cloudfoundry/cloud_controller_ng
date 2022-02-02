@@ -19,7 +19,7 @@ module TestConfig
     end
 
     def reset
-      override
+      override({})
     end
 
     def config

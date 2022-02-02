@@ -12,17 +12,17 @@ module VCAP::CloudController
     end
 
     let(:config) do
-      Config.new({
+      Config.new(
         packages: { max_valid_packages_stored: 5 },
         droplets: { max_staged_droplets_stored: 5 }
-      })
+      )
     end
 
     let(:changed_config) do
-      Config.new({
+      Config.new(
         packages: { max_valid_packages_stored: 10 },
         droplets: { max_staged_droplets_stored: 10 }
-      })
+      )
     end
 
     it 'is configurable' do

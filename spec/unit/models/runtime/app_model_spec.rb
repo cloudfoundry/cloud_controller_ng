@@ -396,7 +396,7 @@ module VCAP::CloudController
 
       context 'when default_app_ssh_access is true' do
         before do
-          TestConfig.override(default_app_ssh_access: true)
+          TestConfig.override({ default_app_ssh_access: true })
         end
 
         it 'sets enable_ssh to true' do
@@ -407,7 +407,7 @@ module VCAP::CloudController
 
       context 'when default_app_ssh_access is false' do
         before do
-          TestConfig.override(default_app_ssh_access: false)
+          TestConfig.override({ default_app_ssh_access: false })
         end
 
         it 'sets enable_ssh to false' do
@@ -507,7 +507,7 @@ module VCAP::CloudController
     describe 'encryption' do
       context 'when not saving any encrypted fields, with db keys' do
         it 'still updates the encryption-key value' do
-          TestConfig.override(database_encryption: { current_key_label: nil, keys: {} })
+          TestConfig.override({ database_encryption: { current_key_label: nil, keys: {} } })
           app = AppModel.create(name: 'jimmy')
           expect(app.encryption_key_label).to be_nil
 
@@ -516,7 +516,7 @@ module VCAP::CloudController
           app.reload
           expect(app.encryption_key_label).to be_nil
 
-          TestConfig.override(database_encryption: { current_key_label: 'k2', keys: { k1: 'moose' } })
+          TestConfig.override({ database_encryption: { current_key_label: 'k2', keys: { k1: 'moose' } } })
           app.environment_variables = app.environment_variables.merge({ 'building' => 'outhouse' })
           app.save
           app.reload

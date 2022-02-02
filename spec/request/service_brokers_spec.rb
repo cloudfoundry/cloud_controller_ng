@@ -704,7 +704,7 @@ RSpec.describe 'V3 service brokers' do
       context 'when job succeeds with warnings' do
         context 'when warning is a UAA problem' do
           let(:broker) do
-            TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
+            TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
             create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
           end
 
@@ -729,7 +729,7 @@ RSpec.describe 'V3 service brokers' do
 
         context 'when warning is a catalog problem (deactivated plan, but there is a service instance)' do
           let!(:broker) do
-            TestConfig.override
+            TestConfig.override({})
             create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
           end
 
@@ -1138,7 +1138,7 @@ RSpec.describe 'V3 service brokers' do
     context 'when job succeeds with warnings' do
       context 'when warning is a UAA problem' do
         before do
-          TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
+          TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
           create_broker_successfully(global_broker_request_body, with: admin_headers)
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end

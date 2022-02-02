@@ -23,9 +23,9 @@ module CloudFoundry
     end
 
     class ServiceBrokerRateLimiter
-      def initialize(app, opts)
+      def initialize(app, logger:)
         @app                               = app
-        @logger                            = opts[:logger]
+        @logger                            = logger
         @request_counter = ServiceBrokerRequestCounter.instance
       end
 

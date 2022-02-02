@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       before do
-        TestConfig.override(**blobstore_config)
+        TestConfig.override(blobstore_config)
       end
 
       let(:blobstore) do

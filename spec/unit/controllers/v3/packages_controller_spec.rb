@@ -313,7 +313,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package is stored in an image registry' do
       before do
-        TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
+        TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
       end
 
       it 'returns 422' do
@@ -1306,7 +1306,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the package is stored in an image registry' do
         before do
-          TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
+          TestConfig.override({ packages: { image_registry: { base_path: 'hub.example.com/user' } } })
         end
 
         it 'returns 422' do

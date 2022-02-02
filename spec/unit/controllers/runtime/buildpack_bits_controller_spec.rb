@@ -301,7 +301,7 @@ module VCAP::CloudController
         end
 
         before do
-          TestConfig.override(**staging_config)
+          TestConfig.override(staging_config)
           VCAP::CloudController::Buildpack.create_from_hash({ name: 'get_binary_buildpack', stack: nil, key: 'xyz', position: 0 })
         end
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
       before do
         allow(Clock).to receive(:new).with(no_args).and_return(clock)
         allow(Clockwork).to receive(:run)
-        TestConfig.override(
+        TestConfig.override({
           jobs: {
             global: { timeout_in_seconds: global_timeout },
           },
@@ -27,7 +27,7 @@ module VCAP::CloudController
           max_retained_deployments_per_app: 15,
           max_retained_builds_per_app: 15,
           max_retained_revisions_per_app: 15,
-        )
+        })
       end
 
       it 'configures Clockwork with a logger' do
@@ -176,9 +176,9 @@ module VCAP::CloudController
 
       context 'when the diego sync frequency is zero' do
         before do
-          TestConfig.override(
+          TestConfig.override({
             diego_sync: { frequency_in_seconds: 0 },
-          )
+          })
         end
 
         it 'does not run diego sync' do

@@ -18,12 +18,12 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#droplet_blobstore' do
     let(:config) do
-      VCAP::CloudController::Config.new({
+      VCAP::CloudController::Config.new(
         droplets: {
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
         },
-      })
+      )
     end
 
     it 'creates blob store' do
@@ -33,13 +33,13 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     context('when bits service is enabled') do
-      let(:config) do VCAP::CloudController::Config.new({
+      let(:config) do VCAP::CloudController::Config.new(
         droplets: {
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
         },
         bits_service: bits_service_config
-      })
+        )
       end
 
       it 'creates the client with the right arguments' do
@@ -52,12 +52,12 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#buildpack_cache_blobstore' do
     let(:config) do
-      VCAP::CloudController::Config.new({
+      VCAP::CloudController::Config.new(
         droplets: {
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
         }
-      })
+      )
     end
 
     it 'creates blob store' do
@@ -71,13 +71,13 @@ RSpec.describe CloudController::DependencyLocator do
 
     context('when bits service is enabled') do
       let(:config) do
-        VCAP::CloudController::Config.new({
+        VCAP::CloudController::Config.new(
           droplets: {
             fog_connection: 'fog_connection',
             droplet_directory_key: 'key',
           },
           bits_service: bits_service_config
-})
+        )
       end
 
       it 'creates the client with the right arguments' do
@@ -90,12 +90,12 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#package_blobstore' do
     let(:config) do
-      VCAP::CloudController::Config.new({
+      VCAP::CloudController::Config.new(
         packages: {
           fog_connection: 'fog_connection',
           app_package_directory_key: 'key',
         }
-      })
+      )
     end
 
     it 'creates blob store' do
@@ -106,12 +106,12 @@ RSpec.describe CloudController::DependencyLocator do
 
     context('when bits service is enabled') do
       let(:config) do
-        VCAP::CloudController::Config.new({
+        VCAP::CloudController::Config.new(
           packages: {
             app_package_directory_key: 'key'
           },
           bits_service: bits_service_config
-        })
+        )
       end
 
       it 'creates the client with the right arguments' do
@@ -124,12 +124,12 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#legacy_global_app_bits_cache' do
     let(:config) do
-      VCAP::CloudController::Config.new({
+      VCAP::CloudController::Config.new(
         resource_pool: {
           fog_connection: 'fog_connection',
           resource_directory_key: 'key',
         }
-      })
+      )
     end
 
     it 'creates blob store' do
@@ -143,12 +143,12 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#global_app_bits_cache' do
     let(:config) do
-      VCAP::CloudController::Config.new({
+      VCAP::CloudController::Config.new(
         resource_pool: {
           fog_connection: 'fog_connection',
           resource_directory_key: 'key',
         }
-      })
+      )
     end
 
     it 'creates blob store with a app_bits_cache as root_dir' do
@@ -178,7 +178,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     before do
-      TestConfig.override(**my_config)
+      TestConfig.override(my_config)
     end
 
     it 'creates blobstore_url_generator with the internal_service_hostname, port, and blobstores' do
@@ -210,7 +210,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     before do
-      TestConfig.override(**my_config)
+      TestConfig.override(my_config)
     end
 
     it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
@@ -491,7 +491,9 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'returns the tc-decorated client without TLS' do
       TestConfig.override(
-        logcache_tls: nil
+        {
+          logcache_tls: nil
+        }
       )
       expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
       expect(Logcache::Client).to have_received(:new).with(
@@ -506,15 +508,17 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'returns the tc-decorated client with TLS certificates' do
       TestConfig.override(
-        logcache: {
-          host: 'some-logcache-host',
-          port: 1234,
-        },
-        logcache_tls: {
-          ca_file: 'logcache-ca',
-          cert_file: 'logcache-client-ca',
-          key_file: 'logcache-client-key',
-          subject_name: 'some-tls-cert-san'
+        {
+          logcache: {
+            host: 'some-logcache-host',
+            port: 1234,
+          },
+          logcache_tls: {
+            ca_file: 'logcache-ca',
+            cert_file: 'logcache-client-ca',
+            key_file: 'logcache-client-key',
+            subject_name: 'some-tls-cert-san'
+          }
         }
       )
       expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
@@ -534,13 +538,15 @@ RSpec.describe CloudController::DependencyLocator do
 
     before do
       TestConfig.override(
-        copilot: {
-          enabled: true,
-          host: 'some-host',
-          port: 1234,
-          client_ca_file: 'some-client-ca-file',
-          client_key_file: 'some-client-key-file',
-          client_chain_file: 'some-client-chain-file'
+        {
+          copilot: {
+            enabled: true,
+            host: 'some-host',
+            port: 1234,
+            client_ca_file: 'some-client-ca-file',
+            client_key_file: 'some-client-key-file',
+            client_chain_file: 'some-client-chain-file'
+          }
         }
       )
     end
@@ -562,10 +568,10 @@ RSpec.describe CloudController::DependencyLocator do
       host = 'test-host'
       port = 1234
 
-      TestConfig.override(
+      TestConfig.override({
         statsd_host: host,
         statsd_port: port,
-      )
+      })
 
       expected_client = double(Statsd)
 
@@ -593,13 +599,13 @@ RSpec.describe CloudController::DependencyLocator do
 
     context 'opi staging is enabled' do
       before do
-        TestConfig.override(
+        TestConfig.override({
           opi: {
             enabled: true,
             url: 'http://custom-opi-url.service.cf.internal',
             opi_staging: true
           }
-        )
+        })
       end
 
       it 'uses opi' do
@@ -627,7 +633,7 @@ RSpec.describe CloudController::DependencyLocator do
 
     context 'opi is enabled' do
       before do
-        TestConfig.override(**{
+        TestConfig.override({
           opi: {
             enabled: true,
             url: 'http://custom-opi-url.service.cf.internal'
@@ -645,7 +651,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       context 'experimental crds are enabled' do
         before do
-          TestConfig.override(**{
+          TestConfig.override({
             opi: {
               enabled: true,
               experimental_enable_crds: true,
@@ -679,12 +685,12 @@ RSpec.describe CloudController::DependencyLocator do
 
     context 'opi is enabled' do
       before do
-        TestConfig.override(
+        TestConfig.override({
           opi: {
             enabled: true,
             url: 'http://custom-opi-url.service.cf.internal'
           }
-        )
+        })
         allow(::Diego::Client).to receive(:new)
       end
 
@@ -718,12 +724,12 @@ RSpec.describe CloudController::DependencyLocator do
 
     context 'opi is enabled' do
       before do
-        TestConfig.override(
+        TestConfig.override({
           opi: {
             enabled: true,
             url: 'http://custom-opi-url.service.cf.internal'
           }
-        )
+        })
         allow(::Diego::Client).to receive(:new)
       end
 
@@ -752,7 +758,7 @@ RSpec.describe CloudController::DependencyLocator do
       token_file.write('token')
       token_file.close
 
-      TestConfig.override(**generate_test_kubeconfig)
+      TestConfig.override(generate_test_kubeconfig)
     end
 
     it 'creates a k8s client from config' do

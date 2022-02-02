@@ -18,7 +18,7 @@ module VCAP::CloudController::Jobs
     let(:global_timeout) { 5.hours }
 
     before do
-      TestConfig.override(**config_override)
+      TestConfig.override(config_override)
     end
 
     shared_examples_for 'a job enqueueing method' do

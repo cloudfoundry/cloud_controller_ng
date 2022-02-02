@@ -42,7 +42,7 @@ module VCAP::CloudController
         context 'and the name changes' do
           it 'sets the name of the shared segment to the new value' do
             expect {
-              Seeds.create_seed_shared_isolation_segment(Config.new({ shared_isolation_segment_name: 'original-name' }))
+              Seeds.create_seed_shared_isolation_segment(Config.new(shared_isolation_segment_name: 'original-name'))
             }.to_not change { IsolationSegmentModel.count }
 
             shared_isolation_segment_model = IsolationSegmentModel.first
@@ -57,7 +57,7 @@ module VCAP::CloudController
             # redeploy with what the old 'shared' isolation segment name
             it 'raises some kind of error TBD' do
               expect {
-                Seeds.create_seed_shared_isolation_segment(Config.new({ shared_isolation_segment_name: isolation_segment_model.name }))
+                Seeds.create_seed_shared_isolation_segment(Config.new(shared_isolation_segment_name: isolation_segment_model.name))
               }.to raise_error(Sequel::ValidationFailed, /must be unique/)
             end
           end
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
     describe '.create_seed_quota_definitions' do
       let(:config) do
-        Config.new({
+        Config.new(
           quota_definitions: {
             'small' => {
               non_basic_services_allowed: false,
@@ -85,7 +85,7 @@ module VCAP::CloudController
             },
           },
           default_quota_definition: 'default',
-        })
+        )
       end
 
       before do
@@ -218,7 +218,7 @@ module VCAP::CloudController
 
     describe '.create_seed_domains' do
       let(:config) do
-        Config.new({
+        Config.new(
           app_domains: app_domains,
           system_domain: system_domain,
           system_domain_organization: 'the-system-org',
@@ -231,7 +231,7 @@ module VCAP::CloudController
             },
           },
           default_quota_definition: 'default'
-        })
+        )
       end
       let(:system_org) { Organization.find(name: 'the-system-org') }
       let(:system_domain) { 'system.example.com' }
@@ -412,7 +412,7 @@ module VCAP::CloudController
 
     describe '.create_seed_security_groups' do
       let(:config) do
-        Config.new({
+        Config.new(
           security_group_definitions: [
             {
               'name' => 'staging_default',
@@ -429,7 +429,7 @@ module VCAP::CloudController
           ],
           default_staging_security_groups: ['staging_default'],
           default_running_security_groups: ['running_default']
-        })
+        )
       end
 
       context 'when there are no security groups configured in the system' do

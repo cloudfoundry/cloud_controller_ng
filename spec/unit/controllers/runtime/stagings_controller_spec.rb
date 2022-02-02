@@ -181,7 +181,7 @@ module VCAP::CloudController
 
     before do
       Fog.unmock!
-      TestConfig.override(**staging_config)
+      TestConfig.override(staging_config)
       set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
     end
 
@@ -223,7 +223,7 @@ module VCAP::CloudController
 
       context 'when using with nginx' do
         before do
-          TestConfig.override(**staging_config)
+          TestConfig.override(staging_config)
           blob = create_test_blob
           allow(blob).to receive(:internal_download_url).and_return("/cc-packages/gu/id/#{package.guid}")
           package_blobstore = instance_double(CloudController::Blobstore::Client, blob: blob, local?: true)
@@ -240,7 +240,7 @@ module VCAP::CloudController
 
       context 'when not using with nginx' do
         before do
-          TestConfig.override(**staging_config.merge(nginx: { use_nginx: false }))
+          TestConfig.override(staging_config.merge(nginx: { use_nginx: false }))
           package_blobstore = instance_double(CloudController::Blobstore::Client, blob: create_test_blob, local?: true)
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
         end
@@ -480,7 +480,7 @@ module VCAP::CloudController
       end
 
       context 'when using with nginx' do
-        before { TestConfig.override(**staging_config) }
+        before { TestConfig.override(staging_config) }
 
         it 'succeeds for valid droplets' do
           upload_droplet
@@ -494,7 +494,7 @@ module VCAP::CloudController
       end
 
       context 'when not using with nginx' do
-        before { TestConfig.override(**staging_config.merge(nginx: { use_nginx: false })) }
+        before { TestConfig.override(staging_config.merge(nginx: { use_nginx: false })) }
 
         it 'succeeds for valid droplets' do
           encoded_expected_body = Base64.encode64(upload_droplet)

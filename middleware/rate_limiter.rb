@@ -49,14 +49,14 @@ module CloudFoundry
     class RateLimiter
       include CloudFoundry::Middleware::ClientIp
 
-      def initialize(app, opts)
+      def initialize(app, logger:, per_process_general_limit:, global_general_limit:, per_process_unauthenticated_limit:, global_unauthenticated_limit:, interval:)
         @app                               = app
-        @logger                            = opts[:logger]
-        @per_process_general_limit         = opts[:per_process_general_limit]
-        @global_general_limit              = opts[:global_general_limit]
-        @per_process_unauthenticated_limit = opts[:per_process_unauthenticated_limit]
-        @global_unauthenticated_limit      = opts[:global_unauthenticated_limit]
-        @interval                          = opts[:interval]
+        @logger                            = logger
+        @per_process_general_limit         = per_process_general_limit
+        @global_general_limit              = global_general_limit
+        @per_process_unauthenticated_limit = per_process_unauthenticated_limit
+        @global_unauthenticated_limit      = global_unauthenticated_limit
+        @interval                          = interval
         @request_counter                   = RequestCounter.instance
       end
 

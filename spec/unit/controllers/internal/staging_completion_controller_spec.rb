@@ -41,7 +41,7 @@ module VCAP::CloudController
     let(:one_hour_in_nanoseconds) { (1.hour.to_i * 1e9).to_i }
 
     before do
-      TestConfig.override(kubernetes: nil)
+      TestConfig.override({ kubernetes: nil })
 
       allow(VCAP::CloudController::Metrics::StatsdUpdater).to receive(:new).and_return(statsd_updater)
     end
@@ -190,7 +190,7 @@ module VCAP::CloudController
       describe 'authentication' do
         context 'when running in Kubernetes' do
           before do
-            TestConfig.override(kubernetes: { host_url: 'example.com' })
+            TestConfig.override({ kubernetes: { host_url: 'example.com' } })
           end
 
           context 'when missing authentication' do

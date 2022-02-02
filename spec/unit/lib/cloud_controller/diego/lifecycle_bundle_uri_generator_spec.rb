@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe LifecycleBundleUriGenerator do
       before do
-        TestConfig.override(diego: { file_server_url: 'https://file-server.example.com:1234' })
+        TestConfig.override({ diego: { file_server_url: 'https://file-server.example.com:1234' } })
       end
 
       it 'creates a file server url for a bundle path' do

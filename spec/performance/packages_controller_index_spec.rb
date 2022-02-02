@@ -17,12 +17,12 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
     let(:n) { 10 }
 
     before do
-      TestConfig.override(
+      TestConfig.override({
         db: {
           log_level: 'debug',
       }
         # logging.level: 'debug2'
-      )
+      })
       allow_user_read_access_for(user, spaces: user_spaces)
       n.times do |i|
         app = VCAP::CloudController::AppModel.make(space: user_spaces.sample, guid: "app-guid-#{i}")

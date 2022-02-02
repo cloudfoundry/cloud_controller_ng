@@ -5,11 +5,11 @@ module VCAP::CloudController
   RSpec.describe TaskCreate do
     subject(:task_create_action) { TaskCreate.new(config) }
     let(:config) do
-      Config.new({
+      Config.new(
         maximum_app_disk_in_mb: 4096,
         default_app_memory: 1024,
         default_app_disk_in_mb: 1024
-      })
+      )
     end
 
     describe '#create' do

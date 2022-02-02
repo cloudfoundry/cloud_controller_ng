@@ -10,8 +10,10 @@ module VCAP::CloudController
       before do
         StubConfig.prepare(
           self,
-          external_protocol: 'http',
-          external_domain: 'api.example.org'
+          {
+            external_protocol: 'http',
+            external_domain: 'api.example.org'
+          }
         )
       end
 
