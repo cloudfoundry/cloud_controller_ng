@@ -48,6 +48,18 @@ module CloudController
                                                           max_size: anything,
                                                           storage_options: { encryption: 'my organic algo' })
           end
+
+          context 'fog methods' do
+            context '#download_from_blobstore' do
+              it 'receives all arguments' do
+                allow_any_instance_of(FogClient).to receive(:download_from_blobstore) { nil }
+
+                client = ClientProvider.provide(options: options, directory_key: 'key')
+                expect_any_instance_of(FogClient).to receive(:download_from_blobstore).with('key', 'dest', mode: 775)
+                client.download_from_blobstore('key', 'dest', mode: 775)
+              end
+            end
+          end
         end
 
         context 'when a cdn is requested in the options' do

@@ -44,7 +44,7 @@ module CloudController
       end
 
       def download_from_blobstore(*args, **kwargs)
-        error_handling { wrapped_client.download_from_blobstore(*args) }
+        error_handling { wrapped_client.download_from_blobstore(*args, **kwargs) }
       end
 
       def delete(*args)
