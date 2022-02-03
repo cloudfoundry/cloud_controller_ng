@@ -6,10 +6,12 @@ module VCAP::CloudController::Presenters::V3
       resource,
       show_secrets: false,
       censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-      visible_space_guids:
+      all_spaces_visible: false,
+      visible_space_guids: []
     )
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
       @visible_space_guids = visible_space_guids
+      @all_spaces_visible = all_spaces_visible
     end
 
     def to_hash
@@ -42,7 +44,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def space_guid_hash_for(spaces)
-      visible_spaces = if @visible_space_guids == :all
+      visible_spaces = if @all_spaces_visible
                          spaces
                        else
                          spaces.select { |space| @visible_space_guids.include? space.guid }
