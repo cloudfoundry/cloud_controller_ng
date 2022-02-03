@@ -93,7 +93,7 @@ module VCAP::CloudController
               router_group_guid: find_routing_guid(domain),
               internal: domain['internal']
             }
-            SharedDomain.find_or_create(attrs.compact)
+            SharedDomain.find_or_create(**attrs.compact)
           end
 
           if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })

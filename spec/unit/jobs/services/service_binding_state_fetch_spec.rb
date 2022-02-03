@@ -28,10 +28,10 @@ module VCAP::CloudController
         end
 
         before do
-          TestConfig.override({
+          TestConfig.override(
             broker_client_default_async_poll_interval_seconds: default_polling_interval,
             broker_client_max_async_poll_duration_minutes: max_duration,
-          })
+          )
         end
 
         def run_job(job)
@@ -408,7 +408,7 @@ module VCAP::CloudController
 
               context 'when the last_operation is replaced with delete in progress' do
                 before do
-                  service_binding.save_with_new_operation(type: 'delete', state: 'in progress')
+                  service_binding.save_with_new_operation({ type: 'delete', state: 'in progress' })
                 end
 
                 it 'is able to run the job again' do

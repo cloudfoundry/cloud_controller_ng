@@ -57,7 +57,7 @@ module VCAP::CloudController
         interval: @config.get(:diego_sync, :frequency_in_seconds),
         timeout: @timeout_calculator.calculate(:diego_sync),
       }
-      @clock.schedule_frequent_inline_job(clock_opts) do
+      @clock.schedule_frequent_inline_job(**clock_opts) do
         Jobs::Diego::Sync.new
       end
     end
@@ -68,7 +68,7 @@ module VCAP::CloudController
           name: job_config[:name],
           interval: @config.get(job_config[:name].to_sym, :frequency_in_seconds),
         }
-        @clock.schedule_frequent_worker_job(clock_opts) do
+        @clock.schedule_frequent_worker_job(**clock_opts) do
           klass = job_config[:class]
           klass.new(@config.get(job_config[:name].to_sym, :expiration_in_seconds))
         end
@@ -83,7 +83,7 @@ module VCAP::CloudController
           priority: cleanup_config[:priority] || Clock::HIGH_PRIORITY
         }
 
-        @clock.schedule_daily_job(clock_opts) do
+        @clock.schedule_daily_job(**clock_opts) do
           klass = cleanup_config[:class]
 
           if cleanup_config[:arg_from_config]

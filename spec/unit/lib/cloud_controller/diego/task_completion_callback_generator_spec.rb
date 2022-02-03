@@ -19,7 +19,7 @@ module VCAP::CloudController
         end
 
         before do
-          TestConfig.override(task_config)
+          TestConfig.override(**task_config)
         end
 
         context 'when CC is responsible for syncing with Diego' do

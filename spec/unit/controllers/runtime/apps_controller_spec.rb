@@ -372,7 +372,7 @@ module VCAP::CloudController
 
         context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do
           before do
-            TestConfig.override({ disable_custom_buildpacks: true })
+            TestConfig.override(disable_custom_buildpacks: true)
             set_current_user(admin_user, admin: true)
           end
 
@@ -871,7 +871,7 @@ module VCAP::CloudController
 
       context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do
         before do
-          TestConfig.override({ disable_custom_buildpacks: true })
+          TestConfig.override(disable_custom_buildpacks: true)
           set_current_user(admin_user, admin: true)
           process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
         end

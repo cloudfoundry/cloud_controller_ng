@@ -822,7 +822,7 @@ RSpec.describe 'Packages' do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      TestConfig.override(test_config_overrides)
+      TestConfig.override(**test_config_overrides)
     end
 
     shared_examples :upload_bits_successfully do

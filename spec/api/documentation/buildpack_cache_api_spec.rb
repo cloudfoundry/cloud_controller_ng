@@ -30,7 +30,7 @@ RSpec.resource 'Blobstores', type: :api do
   end
 
   before do
-    TestConfig.override(blobstore_config)
+    TestConfig.override(**blobstore_config)
   end
 
   after do

@@ -13,7 +13,7 @@ module VCAP::Services
         end
 
         class InnerValidator
-          def validate(_broker_response)
+          def validate(**_broker_response)
             raise NotImpementedError.new('implement this in the spec')
           end
         end
@@ -45,15 +45,15 @@ module VCAP::Services
           context 'when the broker response body is valid' do
             let(:broker_response_body) { '{}' }
             it 'does not raise' do
-              expect { json_validator.validate(broker_response.to_hash) }.not_to raise_error
+              expect { json_validator.validate(**broker_response.to_hash) }.not_to raise_error
             end
 
             it 'returns the inner validator result' do
-              expect(json_validator.validate(broker_response.to_hash)).to eql('inner-validator-result')
+              expect(json_validator.validate(**broker_response.to_hash)).to eql('inner-validator-result')
             end
 
             it 'calls the inner validator with the same parameters it was passed' do
-              json_validator.validate(broker_response.to_hash)
+              json_validator.validate(**broker_response.to_hash)
               expect(inner_validator).to have_received(:validate).with(broker_response.to_hash)
             end
           end
@@ -63,7 +63,7 @@ module VCAP::Services
               context "and the response body is #{body}" do
                 let(:broker_response_body) { body }
                 it 'raises' do
-                  expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                  expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                     expect(e.to_h['description']).to eq(
                       "The service broker returned an invalid response: expected valid JSON object in body, broker returned '#{body}'")
                     expect(e.response_code).to eq(502)
@@ -78,7 +78,7 @@ module VCAP::Services
               let(:broker_response_body) { 'invalid' }
               it 'logs the error' do
                 begin
-                  json_validator.validate(broker_response.to_hash)
+                  json_validator.validate(**broker_response.to_hash)
                 rescue
                   # this is tested above
                 end
@@ -114,7 +114,7 @@ module VCAP::Services
               }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                   description_lines = e.to_h['description'].split("\n")
                   expect(description_lines[0]).to eq('The service broker returned an invalid response: ')
                   expect(description_lines.drop(1)).to contain_exactly("The property '#/' did not contain a required property of 'prop2'")
@@ -132,7 +132,7 @@ module VCAP::Services
               }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                   description_lines = e.to_h['description'].split("\n")
                   expect(description_lines[0]).to eq('The service broker returned an invalid response: ')
                   expect(description_lines.drop(1)).to contain_exactly(
