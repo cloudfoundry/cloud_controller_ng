@@ -28,8 +28,9 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        (key || ServiceKey.new).tap do |b|
+        ServiceKey.new.tap do |b|
           ServiceKey.db.transaction do
+            key.destroy if key
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_IN_PROGRESS_OPERATION
