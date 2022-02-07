@@ -159,23 +159,19 @@ class RolesController < ApplicationController
   end
 
   def readable_roles
-    Role.where(space_id: visible_space_ids).or(organization_id: visible_org_ids)
+    if permission_queryer.can_read_globally?
+      Role
+    else
+      Role.where(space_id: visible_space_ids).or(organization_id: visible_org_ids)
+    end
   end
 
   def visible_space_ids
-    if permission_queryer.can_read_globally?
-      Space.dataset.select(:id)
-    else
-      Space.user_visibility_filter(current_user)[:spaces__id]
-    end
+    Space.user_visibility_filter(current_user)[:spaces__id]
   end
 
   def visible_org_ids
-    if permission_queryer.can_read_globally?
-      Organization.dataset.select(:id)
-    else
-      Organization.user_visibility_filter(current_user)[:id]
-    end
+    Organization.user_visibility_filter(current_user)[:id]
   end
 
   def unprocessable_space!
