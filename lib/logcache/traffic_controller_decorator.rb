@@ -64,7 +64,9 @@ module Logcache
       # rubocop:disable Style/PreferredHashMethods
       envelope.gauge.metrics.has_key?('cpu') ||
       envelope.gauge.metrics.has_key?('memory') ||
-      envelope.gauge.metrics.has_key?('disk')
+      envelope.gauge.metrics.has_key?('memory_quota') ||
+      envelope.gauge.metrics.has_key?('disk') ||
+      envelope.gauge.metrics.has_key?('disk_quota')
       # rubocop:enable Style/PreferredHashMethods
     end
 
