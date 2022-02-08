@@ -155,10 +155,15 @@ class VCAP::CloudController::Permissions
   end
 
   def can_write_to_org?(org_guid)
-    return true if can_write_globally?
-    return false unless membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+    can_write_to_org_checks(org_guid)[0]
+  end
 
-    VCAP::CloudController::Organization.find(guid: org_guid)&.active?
+  def can_write_to_org_checks(org_guid)
+    return true, :global_check if can_write_globally?
+    return false, :role_check unless membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+
+    org_active = VCAP::CloudController::Organization.find(guid: org_guid)&.active?
+    [org_active, org_active ? :role_check : :org_active_check]
   end
 
   def readable_space_guids

@@ -303,7 +303,7 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_write_to_org?(org_guid)).to be true
           end
         end
 
@@ -355,6 +355,39 @@ module VCAP::CloudController
             org.add_manager(user)
             org.update(status: Organization::SUSPENDED)
             expect(permissions.can_write_to_org?(org_guid)).to be_falsey
+          end
+        end
+      end
+    end
+
+    describe '#can_write_to_org_checks' do
+      context 'user is an admin' do
+        it "returns true with the reason 'global_check'" do
+          set_current_user(user, { admin: true })
+          expect(permissions.can_write_to_org_checks(org_guid)).to eq [true, :global_check]
+        end
+      end
+
+      context 'user is an org user' do
+        it "returns false with the reason 'role_check'" do
+          org.add_user(user)
+          expect(permissions.can_write_to_org_checks(org_guid)).to eq [false, :role_check]
+        end
+      end
+
+      context 'user is an org manager' do
+        before do
+          org.add_manager(user)
+        end
+
+        it "returns true with the reason 'role_check'" do
+          expect(permissions.can_write_to_org_checks(org_guid)).to eq [true, :role_check]
+        end
+
+        context 'the org is suspended' do
+          it "returns false with the reason 'org_active_check'" do
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.can_write_to_org_checks(org_guid)).to eq [false, :org_active_check]
           end
         end
       end

@@ -108,6 +108,11 @@
   http_code: 429
   message: "Service broker concurrent request limit exceeded"
 
+10017:
+  name: OrgSuspended
+  http_code: 403
+  message: "You are not authorized to perform the requested action on a suspended organization"
+
 20001:
   name: UserInvalid
   http_code: 400

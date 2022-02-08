@@ -76,6 +76,28 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(422)
       end
     end
+
+    context 'when the org is suspended' do
+      before do
+        org.add_manager(user)
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it 'returns a 403 error with information that the org is suspended' do
+        request_body = {
+          name: 'space1',
+          relationships: {
+            organization: {
+              data: { guid: org.guid }
+            }
+          }
+        }.to_json
+
+        post '/v3/spaces', request_body, user_header
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to include('suspended organization')
+      end
+    end
   end
 
   describe 'GET /v3/spaces/:guid' do
@@ -1044,6 +1066,19 @@ RSpec.describe 'Spaces' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/spaces/#{space.guid}", nil, base_json_headers
         expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the org is suspended' do
+      before do
+        org.add_manager(user)
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it 'returns a 403 error with information that the org is suspended' do
+        delete "/v3/spaces/#{space.guid}", nil, user_header
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to include('suspended organization')
       end
     end
   end
