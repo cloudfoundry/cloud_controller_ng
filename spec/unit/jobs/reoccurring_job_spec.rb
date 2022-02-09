@@ -98,6 +98,148 @@ module VCAP
         expect(job.polling_interval_seconds).to eq(24.hours)
       end
 
+      context 'exponential backoff rate' do
+        context 'updates the polling interval' do
+          it 'when changing exponential backoff rate only' do
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
+            job = FakeJob.new
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(59.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(61.seconds.after(enqueued_time)) do
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            Timecop.freeze(119.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(121.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+          it 'when changing exponential backoff rate and default polling interval' do
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            job = FakeJob.new
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(9.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(11.seconds.after(enqueued_time)) do
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            Timecop.freeze(12.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(14.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+          it 'when changing exponential backoff rate and retry_after from the job' do
+            job = FakeJob.new(retry_after: ['20', '30'])
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = Time.now
+
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            Timecop.freeze(19.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(22.seconds.after(enqueued_time)) do
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            # the job should run after 30s * 1.3^1 = 39 seconds
+            Timecop.freeze(38.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(40.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+        end
+
+        it 'does not reduce the retries with the default exponential backoff rate' do
+          TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
+          Jobs::Enqueuer.new(FakeJob.new(iterations: 100), queue: Jobs::Queues.generic).enqueue_pollable
+
+          # it is expected that the job runs 58 times within 60 minutes with the
+          # default exponential backoff rate of 1.0 and the default poll interval of 60s
+          58.times do |count|
+            retry_after = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) *
+              VCAP::CloudController::Config.config.get(:broker_client_async_poll_exponential_backoff_rate)**count
+            Timecop.travel(retry_after.seconds + 1)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
+
+          # the 59th run will then time out
+          retry_after = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) *
+            VCAP::CloudController::Config.config.get(:broker_client_async_poll_exponential_backoff_rate)**58 + 1
+          Timecop.freeze(Time.now + retry_after) do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+            expect(PollableJobModel.first.state).to eq('FAILED')
+            expect(PollableJobModel.first.cf_api_error).not_to be_nil
+            error = YAML.safe_load(PollableJobModel.first.cf_api_error)
+            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['detail']).
+              to eq('The job execution has timed out.')
+          end
+        end
+
+        it 'reduces the retries when the exponential backoff rate is set higher than 1.0' do
+          TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+          TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
+          Jobs::Enqueuer.new(FakeJob.new(iterations: 100), queue: Jobs::Queues.generic).enqueue_pollable
+
+          # it is expected that the job runs 10 times within 60 minutes with a configured
+          # exponential backoff rate of 1.3 and a default poll intervall of 60s
+          10.times do |count|
+            retry_after = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) *
+              VCAP::CloudController::Config.config.get(:broker_client_async_poll_exponential_backoff_rate)**count
+            Timecop.travel(retry_after.seconds + 1)
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
+
+          # the 11th run will then time out
+          retry_after = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) *
+            VCAP::CloudController::Config.config.get(:broker_client_async_poll_exponential_backoff_rate)**10 + 1
+          Timecop.freeze(Time.now + retry_after) do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+            expect(PollableJobModel.first.state).to eq('FAILED')
+            expect(PollableJobModel.first.cf_api_error).not_to be_nil
+            error = YAML.safe_load(PollableJobModel.first.cf_api_error)
+            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['detail']).
+              to eq('The job execution has timed out.')
+          end
+        end
+      end
+
       context 'updates the polling interval if config changes' do
         it 'when changed from the job only' do
           job = FakeJob.new(retry_after: ['20', '30'])
