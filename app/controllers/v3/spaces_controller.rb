@@ -54,7 +54,9 @@ class SpacesV3Controller < ApplicationController
 
     unprocessable!(message.errors.full_messages) unless message.valid?
     unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
-    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+    unless permission_queryer.can_write_to_org?(message.organization_guid)
+      permission_queryer.is_org_active?(message.organization_guid) ? unauthorized! : suspended!
+    end
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
@@ -83,7 +85,9 @@ class SpacesV3Controller < ApplicationController
   def destroy
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_org?(space.organization.guid)
+    unless permission_queryer.can_write_to_org?(space.organization.guid)
+      permission_queryer.is_org_active?(space.organization.guid) ? unauthorized! : suspended!
+    end
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = SpaceDelete.new(user_audit_info, service_event_repository)

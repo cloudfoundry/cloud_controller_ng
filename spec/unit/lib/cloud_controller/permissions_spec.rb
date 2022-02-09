@@ -303,7 +303,7 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_write_to_org?(org_guid)).to be true
           end
         end
 
@@ -356,6 +356,21 @@ module VCAP::CloudController
             org.update(status: Organization::SUSPENDED)
             expect(permissions.can_write_to_org?(org_guid)).to be_falsey
           end
+        end
+      end
+    end
+
+    describe '#is_org_active?' do
+      context 'the org is active' do
+        it 'returns true' do
+          expect(permissions.is_org_active?(org_guid)).to be_truthy
+        end
+      end
+
+      context 'the org is suspended' do
+        it 'returns false' do
+          org.update(status: Organization::SUSPENDED)
+          expect(permissions.is_org_active?(org_guid)).to be_falsey
         end
       end
     end
