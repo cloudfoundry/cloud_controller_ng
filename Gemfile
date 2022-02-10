@@ -80,7 +80,7 @@ group :test do
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'
-  gem 'rspec', '~> 3.10.0'
+  gem 'rspec', '~> 3.11.0'
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
