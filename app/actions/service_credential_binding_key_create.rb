@@ -18,16 +18,15 @@ module VCAP::CloudController
       PERMITTED_BINDING_ATTRIBUTES = [:credentials].freeze
 
       def precursor(service_instance, message:)
-        validate!(service_instance)
+        validate_service_instance!(service_instance)
+        key = ServiceKey.first(service_instance: service_instance, name: message.name)
+        validate_key!(key, message.name)
 
         binding_details = {
           service_instance: service_instance,
           name: message.name,
           credentials: {}
         }
-
-        key = ServiceKey.first(service_instance: service_instance, name: message.name)
-        key_already_exists!(message.name) if key && !key.create_failed?
 
         (key || ServiceKey.new).tap do |b|
           ServiceKey.db.transaction do
@@ -48,13 +47,20 @@ module VCAP::CloudController
 
       private
 
-      def validate!(service_instance)
+      def validate_service_instance!(service_instance)
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
           operation_in_progress! if service_instance.operation_in_progress?
         else
           key_not_supported_for_user_provided_service!
+        end
+      end
+
+      def validate_key!(key, message_name)
+        if key
+          key_already_exists!(message_name) if key.create_succeeded? || key.create_in_progress? || key.last_operation.nil?
+          key_incomplete_deletion!(message_name) if key.delete_failed? || key.delete_in_progress?
         end
       end
 
@@ -73,6 +79,11 @@ module VCAP::CloudController
 
       def key_already_exists!(key_name)
         raise UnprocessableCreate.new("The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{key_name}'.")
+      end
+
+      def key_incomplete_deletion!(key_name)
+        raise UnprocessableCreate.new('The binding name is invalid. Key binding names must be unique. '\
+                                      "The service instance already has a key binding with the name '#{key_name}' that is getting deleted or its deletion failed.")
       end
 
       def operation_in_progress!

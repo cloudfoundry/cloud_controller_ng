@@ -8,14 +8,32 @@ module VCAP::CloudController
       !!last_operation && last_operation.state == 'in progress'
     end
 
-    def create_failed?
-      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
+    def create_succeeded?
+      return true if last_operation&.type == 'create' && last_operation.state == 'succeeded'
 
       false
     end
 
     def create_in_progress?
       return true if last_operation&.type == 'create' && last_operation.state == 'in progress'
+
+      false
+    end
+
+    def create_failed?
+      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
+
+      false
+    end
+
+    def delete_failed?
+      return true if last_operation&.type == 'delete' && last_operation.state == 'failed'
+
+      false
+    end
+
+    def delete_in_progress?
+      return true if last_operation&.type == 'delete' && last_operation.state == 'in progress'
 
       false
     end
