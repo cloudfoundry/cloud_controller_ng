@@ -15,7 +15,7 @@ module VCAP::CloudController
 
         def retry_job(retry_after_header: '')
           update_polling_interval(retry_after_header: retry_after_header)
-          if Time.now + poll_interval > end_timestamp
+          if Time.now + next_execution_in > end_timestamp
             end_timestamp_reached
           else
             enqueue_again
@@ -23,8 +23,17 @@ module VCAP::CloudController
         end
 
         def enqueue_again
-          opts = { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now + poll_interval }
+          opts = { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now + next_execution_in }
+          self.retry_number += 1
           Jobs::Enqueuer.new(self, opts).enqueue
+        end
+
+        def default_polling_exponential_backoff
+          Config.config.get(:broker_client_async_poll_exponential_backoff_rate)
+        end
+
+        def next_execution_in
+          poll_interval * default_polling_exponential_backoff**retry_number
         end
 
         def update_polling_interval(retry_after_header: '')
