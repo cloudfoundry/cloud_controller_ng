@@ -114,7 +114,7 @@ module CloudController
       end
 
       def files_for(prefix, _ignored_directory_prefixes=[])
-        if connection.is_a? Fog::Storage::Local::Real
+        if connection.is_a? Fog::Local::Storage::Real
           directory = connection.directories.get(File.join(dir.key, prefix || ''))
           directory ? directory.files : []
         else
@@ -126,7 +126,7 @@ module CloudController
         return if local?
 
         options = { max_keys: 1 }
-        options['limit'] = 1 if connection.service == Fog::Storage::OpenStack
+        options['limit'] = 1 if connection.service == Fog::OpenStack::Storage
         connection.directories.get(@directory_key, options) || connection.directories.create(key: @directory_key, public: false)
       end
 
