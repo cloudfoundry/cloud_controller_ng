@@ -75,10 +75,13 @@ module VCAP
         job.polling_interval_seconds = 95
         expect(job.polling_interval_seconds).to eq(95)
 
-        enqueued_time = Time.now
+        enqueued_time = 0
 
-        Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
-        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        Timecop.freeze do
+          Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          enqueued_time = Time.now
+        end
 
         Timecop.freeze(94.seconds.after(enqueued_time)) do
           execute_all_jobs(expected_successes: 0, expected_failures: 0)
@@ -98,15 +101,123 @@ module VCAP
         expect(job.polling_interval_seconds).to eq(24.hours)
       end
 
+      context 'exponential backoff rate' do
+        context 'updates the polling interval' do
+          it 'when changing exponential backoff rate only' do
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
+
+            enqueued_time = 0
+
+            Timecop.freeze do
+              Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              enqueued_time = Time.now
+            end
+
+            [60, 180, 420, 900, 1860].each do |seconds|
+              Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze((seconds + 1).seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
+          it 'when changing exponential backoff rate and default polling interval' do
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = 0
+
+            Timecop.freeze do
+              Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              enqueued_time = Time.now
+            end
+
+            [10, 23, 39.9, 61.8, 90.4].each do |seconds|
+              Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze((seconds.ceil + 1).seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
+          it 'when changing exponential backoff rate and retry_after from the job' do
+            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+
+            enqueued_time = 0
+
+            Timecop.freeze do
+              Jobs::Enqueuer.new(FakeJob.new(retry_after: [20, 30]), queue: Jobs::Queues.generic).enqueue_pollable
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              enqueued_time = Time.now
+            end
+
+            # the job should run after 20s * 1.3^0 = 20 seconds
+            Timecop.freeze(19.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(21.seconds.after(enqueued_time)) do
+              enqueued_time = Time.now
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+
+            # the job should run after 30s * 1.3^1 = 39 seconds
+            Timecop.freeze(38.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            end
+
+            Timecop.freeze(40.seconds.after(enqueued_time)) do
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            end
+          end
+        end
+
+        it 'takes the exponential backoff into account when checking whether the next run would exceed the maximum duration' do
+          TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+          TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
+
+          job = FakeJob.new(iterations: 100)
+          # With a backoff rate of 1.3, 11 jobs could have been executed in 60 minutes (initial run + 10 retries).
+          job.instance_variable_set(:@retry_number, 10)
+
+          enqueued_time = 0
+
+          Timecop.freeze do
+            Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
+            enqueued_time = Time.now
+          end
+
+          # The calculated backoff for the 11th retry would be 3384.321 seconds.
+          Timecop.freeze(enqueued_time + 3384.321.ceil.seconds) do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+            expect(PollableJobModel.first.state).to eq('FAILED')
+            expect(PollableJobModel.first.cf_api_error).not_to be_nil
+            error = YAML.safe_load(PollableJobModel.first.cf_api_error)
+            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['detail']).
+              to eq('The job execution has timed out.')
+          end
+        end
+      end
+
       context 'updates the polling interval if config changes' do
         it 'when changed from the job only' do
-          job = FakeJob.new(retry_after: ['20', '30'])
           TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
 
-          enqueued_time = Time.now
+          enqueued_time = 0
 
-          Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          Timecop.freeze do
+            Jobs::Enqueuer.new(FakeJob.new(retry_after: [20, 30]), queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            enqueued_time = Time.now
+          end
 
           Timecop.freeze(19.seconds.after(enqueued_time)) do
             execute_all_jobs(expected_successes: 0, expected_failures: 0)
@@ -127,13 +238,15 @@ module VCAP
         end
 
         it 'when default changed after changing from the job' do
-          job = FakeJob.new(retry_after: [20])
           TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
 
-          enqueued_time = Time.now
+          enqueued_time = 0
 
-          Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          Timecop.freeze do
+            Jobs::Enqueuer.new(FakeJob.new(retry_after: [20]), queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            enqueued_time = Time.now
+          end
 
           Timecop.freeze(19.seconds.after(enqueued_time)) do
             execute_all_jobs(expected_successes: 0, expected_failures: 0)
@@ -155,13 +268,15 @@ module VCAP
         end
 
         it 'when changing default only' do
-          job = FakeJob.new
           TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
 
-          enqueued_time = Time.now
+          enqueued_time = 0
 
-          Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          Timecop.freeze do
+            Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            enqueued_time = Time.now
+          end
 
           Timecop.freeze(9.seconds.after(enqueued_time)) do
             execute_all_jobs(expected_successes: 0, expected_failures: 0)
