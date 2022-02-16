@@ -1,5 +1,12 @@
 GIT
-  remote: git@github.com:sethboyles/azure-storage-ruby.git
+  remote: https://github.com/cloudfoundry/vcap-concurrency.git
+  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
+  ref: 2a5b0179
+  specs:
+    vcap-concurrency (0.1.0)
+
+GIT
+  remote: https://github.com/sethboyles/azure-storage-ruby.git
   revision: d4737cdfcef3f3c4c2463a54690b6b73c0f6f707
   branch: x-ms-blob-content-type-fix-1.1
   specs:
@@ -10,13 +17,6 @@ GIT
     azure-storage-common (1.1.0)
       azure-core (~> 0.1.13)
       nokogiri (~> 1.6, >= 1.6.8)
-
-GIT
-  remote: https://github.com/cloudfoundry/vcap-concurrency.git
-  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
-  ref: 2a5b0179
-  specs:
-    vcap-concurrency (0.1.0)
 
 GIT
   remote: https://github.com/sethboyles/fog-azure-rm.git
