@@ -20,7 +20,7 @@ GIT
 
 GIT
   remote: https://github.com/sethboyles/fog-azure-rm.git
-  revision: 2b3a783aa3fe53d86e14a7352ab9f791d69857f5
+  revision: 00945ea8c0728a79d3537205dc18b3c79c947f56
   branch: fix-content-length-azure-storage-rm
   specs:
     fog-azure-rm (0.4.7)
@@ -150,7 +150,7 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.10.0)
     eventmachine (1.2.7)
-    excon (0.90.0)
+    excon (0.91.0)
     faraday (0.17.4)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.7)
