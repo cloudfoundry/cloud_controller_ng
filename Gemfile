@@ -61,7 +61,7 @@ gem 'azure-storage-blob', git: 'git@github.com:sethboyles/azure-storage-ruby.git
 gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/sethboyles/fog-azure-rm.git', branch: 'fix-content-length-azure-storage-rm'
-gem 'fog-google', '~> 1.7.1'
+gem 'fog-google', '~> 1.18.0'
 gem 'fog-local'
 gem 'fog-openstack'
 gem 'fog-core', '~> 2.1.2'
