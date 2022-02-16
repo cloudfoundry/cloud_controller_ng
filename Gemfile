@@ -53,12 +53,15 @@ gem 'activemodel', '~> 6.1.4'
 gem 'railties', '~> 6.1.4'
 
 # Blobstore and Bits Service Dependencies
-gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
+# gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
 gem 'bits_service_client', '~> 3.3', '>= 3.3.0'
+
+gem 'azure-storage-blob', git: 'git@github.com:sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
+
 gem 'fog-aliyun'
 gem 'fog-aws'
-gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
-gem 'fog-google'
+gem 'fog-azure-rm', git: 'https://github.com/sethboyles/fog-azure-rm.git', branch: 'fix-content-length-azure-storage-rm'
+gem 'fog-google', '~> 1.7.1'
 gem 'fog-local'
 gem 'fog-openstack'
 
