@@ -82,11 +82,12 @@ module VCAP::CloudController
                 binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
               end
 
-              it 'updates and returns the existing binding' do
+              it 'deletes the existing binding and creates a new one' do
                 b = action.precursor(service_instance, app: app, message: message)
 
-                expect(b.id).to eq(binding.id)
+                expect(b.guid).not_to eq(binding.guid)
                 expect(b.create_in_progress?).to be_truthy
+                expect { binding.reload }.to raise_error Sequel::NoExistingObject
               end
             end
 

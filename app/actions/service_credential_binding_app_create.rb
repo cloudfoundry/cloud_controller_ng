@@ -33,13 +33,13 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        (binding || ServiceBinding.new).tap do |b|
+        ServiceBinding.new.tap do |b|
           ServiceBinding.db.transaction do
+            binding.destroy if binding
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_IN_PROGRESS_OPERATION
             )
-
             MetadataUpdate.update(b, message)
           end
         end
