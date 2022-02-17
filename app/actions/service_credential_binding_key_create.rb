@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       def validate_key!(key, message_name)
         if key
-          key_already_exists!(message_name) if key.create_succeeded? || key.create_in_progress? || key.last_operation.nil?
+          key_already_exists!(message_name) if key.create_succeeded? || key.create_in_progress?
           key_incomplete_deletion!(message_name) if key.delete_failed? || key.delete_in_progress?
         end
       end

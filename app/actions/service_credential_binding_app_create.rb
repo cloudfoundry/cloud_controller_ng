@@ -62,7 +62,7 @@ module VCAP::CloudController
 
       def validate_binding!(binding)
         if binding
-          already_bound! if binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?
+          already_bound! if binding.create_succeeded? || binding.create_in_progress?
           incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end
