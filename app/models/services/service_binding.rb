@@ -119,20 +119,6 @@ module VCAP::CloudController
       service_binding_operation
     end
 
-    def is_created?
-      return true unless last_operation
-
-      if last_operation.type == 'create' && last_operation.state != 'succeeded'
-        return false
-      end
-
-      if last_operation.type == 'delete' && last_operation.state == 'succeeded'
-        return false
-      end
-
-      true
-    end
-
     def save_with_attributes_and_new_operation(attributes, operation)
       save_with_new_operation(operation, attributes: attributes)
       self
