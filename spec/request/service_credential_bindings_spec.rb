@@ -614,6 +614,17 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
 
+    context "last binding operation is in 'create succeeded' state" do
+      before do
+        app_binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
+      end
+
+      it 'returns details' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     context "last binding operation is in 'create in progress' state" do
       before do
         app_binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
@@ -643,6 +654,38 @@ RSpec.describe 'v3 service credential bindings' do
           'title' => 'CF-ResourceNotFound',
           'code' => 10010,
         }))
+      end
+    end
+
+    context "last binding operation is in 'delete in progress' state" do
+      before do
+        app_binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+      end
+
+      it 'returns an error' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'Deletion of service binding in progress',
+          'title' => 'CF-ResourceNotFound',
+          'code' => 10010,
+        }))
+      end
+    end
+
+    context "last binding operation is in 'delete failed' state" do
+      before do
+        app_binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
+      end
+
+      it 'returns an error' do
+        api_call.call(admin_headers)
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(include({
+          'detail' => 'Deletion of service binding failed',
+          'title' => 'CF-ResourceNotFound',
+          'code' => 10010,
+         }))
       end
     end
 
