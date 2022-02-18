@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
         path: route.path,
         port: route.port,
         url: build_url,
-        destinations: route.route_mappings.map { |rm| RouteDestinationPresenter.new(rm).to_hash },
+        destinations: RouteDestinationsPresenter.new(route.route_mappings, route: route).presented_destinations,
         metadata: {
           labels: hashified_labels(route.labels),
           annotations: hashified_annotations(route.annotations),

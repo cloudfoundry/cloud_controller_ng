@@ -1142,6 +1142,118 @@ RSpec.describe 'Route Destinations Request' do
     end
   end
 
+  describe 'UPDATE /v3/routes/:guid/destinations/:destination_guid' do
+    let(:user_header) { headers_for(user) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+
+    let!(:destination_to_preserve) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'web',
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+        weight: nil
+      )
+    end
+
+    let!(:destination_to_update) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'worker',
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+        weight: nil
+      )
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, user_headers } }
+
+      let(:db_check) do
+        lambda do
+          get "/v3/routes/#{route.guid}/destinations", {}, admin_headers
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['destinations'].length).to eq(1)
+          expect(parsed_response['destinations'][0]['guid']).to eq(destination_to_preserve.guid)
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+    end
+
+    context 'when the route does not exist' do
+      it 'returns not found' do
+        patch "/v3/routes/does-not-exist/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, admin_header
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the destination does not exist' do
+      it 'returns 422 with a helpful message' do
+        patch "/v3/routes/#{route.guid}/destinations/does-not-exist", { protocol: 'http1' }.to_json, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+      end
+    end
+
+    context 'when the route has a protocol of tcp' do
+      let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+      let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
+      let(:tcp_route) do
+        UAARequests.stub_all
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+        allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
+
+        VCAP::CloudController::Route.make(:tcp, space: space)
+      end
+      let(:tcp_app) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: tcp_app,
+          route: tcp_route,
+          process_type: 'worker',
+          app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+          weight: nil
+        )
+      end
+
+      context 'and the destination has a protocol of tcp' do
+        it 'succeeds' do
+          patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'tcp' }.to_json, admin_header
+          expect(last_response.status).to eq(200)
+        end
+      end
+
+      context 'and the destination has a protocol of http1' do
+        it 'it returns 422 with a helpful message' do
+          patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http1' }.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
+        end
+      end
+
+      context 'and the destination has a protocol of http2' do
+        it 'it returns 422 with a helpful message' do
+          patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http2' }.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
+        end
+      end
+    end
+  end
+
   describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do
     let(:user_header) { headers_for(user) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }

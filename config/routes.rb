@@ -166,6 +166,7 @@ Rails.application.routes.draw do
   post '/routes/:guid/destinations', to: 'routes#insert_destinations'
   patch '/routes/:guid/destinations', to: 'routes#replace_destinations'
   delete '/routes/:guid/destinations/:destination_guid', to: 'routes#destroy_destination'
+  patch '/routes/:guid/destinations/:destination_guid', to: 'routes#update_destination'
 
   # security_groups
   post '/security_groups', to: 'security_groups#create'

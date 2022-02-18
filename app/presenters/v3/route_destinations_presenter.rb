@@ -20,18 +20,18 @@ module VCAP::CloudController::Presenters::V3
       }
     end
 
+    def presented_destinations
+      destinations.map do |route_mapping|
+        RouteDestinationPresenter.new(route_mapping).destination_hash
+      end
+    end
+
     private
 
     attr_reader :route
 
     def destinations
       @resource
-    end
-
-    def presented_destinations
-      destinations.map do |route_mapping|
-        RouteDestinationPresenter.new(route_mapping).to_hash
-      end
     end
 
     def build_links
