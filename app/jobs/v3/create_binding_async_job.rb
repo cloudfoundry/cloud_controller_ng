@@ -7,7 +7,7 @@ require 'jobs/v3/create_service_binding_job_factory'
 module VCAP::CloudController
   module V3
     class CreateBindingAsyncJob < Jobs::ReoccurringJob
-      class OperationCancelled < StandardError; end
+      class OperationCancelled < CloudController::Errors::ApiError; end
 
       class BindingNotFound < CloudController::Errors::ApiError; end
 
@@ -54,9 +54,9 @@ module VCAP::CloudController
       end
 
       def perform
-        not_found! unless resource
+        not_found! unless get_resource
 
-        cancelled! if delete_in_progress?
+        cancelled! if other_operation_in_progress?
 
         compute_maximum_duration
 
@@ -70,15 +70,13 @@ module VCAP::CloudController
         polling_status = action.poll(resource)
 
         if polling_status[:finished]
-          finish
+          return finish
         end
 
         if polling_status[:retry_after].present?
           self.polling_interval_seconds = polling_status[:retry_after]
         end
-      rescue OperationCancelled => e
-        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
-      rescue BindingNotFound => e
+      rescue BindingNotFound, OperationCancelled => e
         raise e
       rescue ServiceBindingCreate::BindingNotRetrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
@@ -88,20 +86,27 @@ module VCAP::CloudController
       end
 
       def handle_timeout
-        resource.save_with_attributes_and_new_operation(
+        error_message = "Service Broker failed to #{operation} within the required time."
+        resource.reload.save_with_attributes_and_new_operation(
           {},
           {
             type: operation_type,
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time.",
+            description: error_message,
           }
         )
+      rescue Sequel::NoExistingObject
+        log_failed_operation_for_non_existing_resource(error_message)
       end
 
       private
 
+      def get_resource # rubocop:disable Naming/AccessorMethodName
+        @resource = actor.get_resource(resource_guid)
+      end
+
       def resource
-        actor.get_resource(resource_guid)
+        @resource ||= get_resource
       end
 
       def compute_maximum_duration
@@ -110,15 +115,15 @@ module VCAP::CloudController
       end
 
       def not_found!
-        raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{@resource_guid}")
+        raise BindingNotFound.new_from_details('ResourceNotFound', "The binding could not be found: #{resource_guid}")
       end
 
-      def delete_in_progress?
-        resource.operation_in_progress? && resource.last_operation&.type == 'delete'
+      def other_operation_in_progress?
+        resource.operation_in_progress? && resource.last_operation.type != operation_type
       end
 
       def cancelled!
-        raise OperationCancelled.new("#{resource.last_operation.type} in progress")
+        raise OperationCancelled.new_from_details('UnableToPerform', operation_type, "#{resource.last_operation.type} in progress")
       end
 
       def save_failure(error_message)
@@ -132,6 +137,14 @@ module VCAP::CloudController
             }
           )
         end
+      rescue Sequel::NoExistingObject
+        log_failed_operation_for_non_existing_resource(error_message)
+      end
+
+      def log_failed_operation_for_non_existing_resource(error_message)
+        @logger ||= Steno.logger('cc.background')
+
+        @logger.info("Saving failed operation with error message '#{error_message}' for #{resource_type} '#{resource_guid}' did not succeed. The resource does not exist anymore.")
       end
     end
   end
