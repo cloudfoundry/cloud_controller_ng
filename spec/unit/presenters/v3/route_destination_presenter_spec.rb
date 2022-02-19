@@ -18,10 +18,33 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { presenter.to_hash }
-
       it 'presents the route mapping as a destination' do
         expect(presenter.to_hash).to eq(
+          guid: route_mapping.guid,
+          app: {
+            guid: route_mapping.app_guid,
+            process: {
+              type: route_mapping.process_type
+            }
+          },
+          weight: route_mapping.weight,
+          port: route_mapping.presented_port,
+          protocol: route_mapping.protocol,
+          links: {
+            destintions: {
+              href: "http://api2.vcap.me/v3/routes/#{route.guid}/destinations"
+            },
+            route: {
+              href: "http://api2.vcap.me/v3/routes/#{route.guid}"
+            }
+          }
+        )
+      end
+    end
+
+    describe '#destination_hash' do
+      it 'presents the route mapping as a destination' do
+        expect(presenter.destination_hash).to eq(
           guid: route_mapping.guid,
           app: {
             guid: route_mapping.app_guid,
