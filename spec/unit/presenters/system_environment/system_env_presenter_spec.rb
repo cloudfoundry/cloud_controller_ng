@@ -77,12 +77,21 @@ module VCAP::CloudController
             service_binding.service_binding_operation = service_binding_operation
           end
 
-          it 'includes service binding and instance information' do
-            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).items
-            binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
+          it 'does not include service binding and instance information' do
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to be_nil
+          end
+        end
 
-            expect(binding[:credentials]).to eq(service_binding.credentials)
-            expect(binding[:name]).to eq('elephantsql-vip-uat')
+        context 'when a delete service binding failed' do
+          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'failed') }
+          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+          before do
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'does not include service binding and instance information' do
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to be_nil
           end
         end
 

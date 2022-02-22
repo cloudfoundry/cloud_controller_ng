@@ -33,13 +33,13 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        (binding || ServiceBinding.new).tap do |b|
+        ServiceBinding.new.tap do |b|
           ServiceBinding.db.transaction do
+            binding.destroy if binding
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_IN_PROGRESS_OPERATION
             )
-
             MetadataUpdate.update(b, message)
           end
         end
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
       def validate_binding!(binding)
         if binding
-          already_bound! if binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?
+          already_bound! if binding.create_succeeded? || binding.create_in_progress?
           incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end

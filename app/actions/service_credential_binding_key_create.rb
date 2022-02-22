@@ -28,8 +28,9 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        (key || ServiceKey.new).tap do |b|
+        ServiceKey.new.tap do |b|
           ServiceKey.db.transaction do
+            key.destroy if key
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_IN_PROGRESS_OPERATION
@@ -59,7 +60,7 @@ module VCAP::CloudController
 
       def validate_key!(key, message_name)
         if key
-          key_already_exists!(message_name) if key.create_succeeded? || key.create_in_progress? || key.last_operation.nil?
+          key_already_exists!(message_name) if key.create_succeeded? || key.create_in_progress?
           key_incomplete_deletion!(message_name) if key.delete_failed? || key.delete_in_progress?
         end
       end

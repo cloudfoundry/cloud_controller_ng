@@ -79,7 +79,7 @@ module VCAP::CloudController
           end
 
           to_add.each do |rm|
-            validate_protocol_matches(rm)
+            validate_protocol_matches!(rm)
 
             route_mapping = RouteMappingModel.new(rm)
             route_mapping.save
@@ -204,7 +204,7 @@ module VCAP::CloudController
         raise DuplicateDestinationError.new('Destinations cannot contain duplicate entries') if new_route_mappings.any? { |rm| new_route_mappings.count(rm) > 1 }
       end
 
-      def validate_protocol_matches(route_destination)
+      def validate_protocol_matches!(route_destination)
         destination_protocol = route_destination[:protocol]
         return unless destination_protocol
 

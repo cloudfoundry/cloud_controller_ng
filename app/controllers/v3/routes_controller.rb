@@ -1,5 +1,6 @@
-require 'messages/route_create_message'
 require 'messages/route_destinations_list_message'
+require 'messages/route_create_message'
+require 'messages/route_destination_update_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
@@ -9,6 +10,7 @@ require 'decorators/include_route_domain_decorator'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/route_destinations_presenter'
 require 'presenters/v3/paginated_list_presenter'
+require 'actions/route_destination_update'
 require 'actions/route_create'
 require 'actions/route_delete'
 require 'actions/route_update'
@@ -141,6 +143,24 @@ class RoutesController < ApplicationController
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
   rescue UpdateRouteDestinations::DuplicateDestinationError => e
+    unprocessable!(e.message)
+  end
+
+  def update_destination
+    message = RouteDestinationUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: hashed_params[:guid])
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+
+    destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
+    unprocessable_destination! unless destination
+
+    RouteDestinationUpdate.update(destination, message)
+
+    render status: :ok, json: Presenters::V3::RouteDestinationPresenter.new(destination)
+  rescue RouteDestinationUpdate::Error => e
     unprocessable!(e.message)
   end
 

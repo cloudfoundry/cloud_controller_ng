@@ -9,6 +9,7 @@ module VCAP::CloudController
     end
 
     def create_succeeded?
+      return true unless last_operation
       return true if last_operation&.type == 'create' && last_operation.state == 'succeeded'
 
       false
