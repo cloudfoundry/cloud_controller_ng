@@ -50,7 +50,10 @@ module VCAP::CloudController
       end
 
       def deprioritize_job(job)
-        if job.priority == 0
+        case
+        when job.priority < 0
+          job.priority = 0
+        when job.priority == 0
           job.priority = 1
         else
           job.priority *= 2

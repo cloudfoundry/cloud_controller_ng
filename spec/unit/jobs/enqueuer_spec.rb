@@ -11,11 +11,13 @@ module VCAP::CloudController::Jobs
         jobs: {
           global: {
             timeout_in_seconds: global_timeout,
-          }
+          },
+          priorities: job_display_name
         }
       }
     end
     let(:global_timeout) { 5.hours }
+    let(:job_display_name) { nil }
 
     before do
       TestConfig.override(**config_override)
@@ -50,6 +52,15 @@ module VCAP::CloudController::Jobs
         end
         Enqueuer.new(wrapped_job, opts).public_send(method_name)
         expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration)
+      end
+
+      it 'uses the default priority' do
+        original_enqueue = Delayed::Job.method(:enqueue)
+        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+          expect(opts).not_to include(:priority)
+          original_enqueue.call(enqueued_job, opts)
+        end
+        Enqueuer.new(wrapped_job, opts).public_send(method_name)
       end
     end
 
@@ -117,6 +128,19 @@ module VCAP::CloudController::Jobs
           end
         end
       end
+
+      context 'priority from config' do
+        let(:job_display_name) { { wrapped_job.display_name => 1899 } }
+        it 'uses the configured priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts).to include({ priority: 1899 })
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        end
+      end
+
     end
 
     describe '#run_inline' do
