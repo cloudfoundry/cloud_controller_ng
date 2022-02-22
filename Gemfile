@@ -53,14 +53,17 @@ gem 'activemodel', '~> 6.1.4'
 gem 'railties', '~> 6.1.4'
 
 # Blobstore and Bits Service Dependencies
-gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
 gem 'bits_service_client', '~> 3.3', '>= 3.3.0'
+
+gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
+
 gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
-gem 'fog-google'
+gem 'fog-google', '~> 1.18.0'
 gem 'fog-local'
 gem 'fog-openstack'
+gem 'fog-core', '~> 2.1.2'
 
 gem 'cf-uaa-lib', '~> 4.0.1'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'

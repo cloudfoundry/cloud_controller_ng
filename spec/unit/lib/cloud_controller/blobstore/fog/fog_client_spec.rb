@@ -729,21 +729,21 @@ module CloudController
           end
 
           it 'gets the bucket' do
-            expect_any_instance_of(Fog::Storage::AWS::Directories).to receive(:get).with(directory_key, max_keys: 1)
+            expect_any_instance_of(Fog::AWS::Storage::Directories).to receive(:get).with(directory_key, max_keys: 1)
             subject.ensure_bucket_exists
           end
 
           context 'the bucket exists' do
             it 'does not create the bucket' do
               subject.ensure_bucket_exists
-              expect_any_instance_of(Fog::Storage::AWS::Directories).not_to receive(:create).with(key: directory_key, public: false)
+              expect_any_instance_of(Fog::AWS::Storage::Directories).not_to receive(:create).with(key: directory_key, public: false)
               subject.ensure_bucket_exists
             end
           end
 
           context 'the bucket does not exist' do
             it 'creates the bucket' do
-              expect_any_instance_of(Fog::Storage::AWS::Directories).to receive(:create).with(key: directory_key, public: false)
+              expect_any_instance_of(Fog::AWS::Storage::Directories).to receive(:create).with(key: directory_key, public: false)
               subject.ensure_bucket_exists
             end
           end
