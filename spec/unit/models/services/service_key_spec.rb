@@ -1,5 +1,5 @@
 require 'spec_helper'
-require_relative 'service_credential_binding_shared'
+require_relative 'service_operation_shared'
 
 RSpec::Matchers.define :existing_service_key_count do |c|
   match { |arg| arg.is_a?(Sequel::Dataset) && arg.count == c }
@@ -254,7 +254,7 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'a model including the ServiceCredentialBindingMixin', ServiceKey, ServiceKeyOperation, :service_key_operation
+    it_behaves_like 'a model including the ServiceOperationMixin', ServiceKey, :service_key_operation, ServiceKeyOperation, :service_key_id
 
     describe '#destroy' do
       it 'cascades deletion of related dependencies' do

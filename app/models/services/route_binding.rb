@@ -1,7 +1,10 @@
 require 'cloud_controller/process_route_handler'
+require 'models/runtime/helpers/service_operation_mixin'
 
 module VCAP::CloudController
   class RouteBinding < Sequel::Model
+    include ServiceOperationMixin
+
     plugin :after_initialize
 
     one_to_one :route_binding_operation
@@ -40,14 +43,6 @@ module VCAP::CloudController
 
     def last_operation
       route_binding_operation
-    end
-
-    def operation_in_progress?
-      !!route_binding_operation && route_binding_operation.state == 'in progress'
-    end
-
-    def terminal_state?
-      %w(succeeded failed).include? last_operation.state
     end
 
     def save_with_attributes_and_new_operation(attributes, operation)

@@ -188,7 +188,7 @@ module VCAP::CloudController
         let(:type) { :credential }
         let(:app) { AppModel.make(space: space) }
         let(:last_operation_type) { 'create' }
-        let(:last_operation_state) { 'successful' }
+        let(:last_operation_state) { 'succeeded' }
         let(:binding) do
           VCAP::CloudController::ServiceBinding.new.save_with_attributes_and_new_operation(
             { type: 'app', service_instance: service_instance, app: app, credentials: { test: 'secretPassword' } },
@@ -221,7 +221,7 @@ module VCAP::CloudController
         let(:type) { :key }
         let(:audit_event) { 'service_key' }
         let(:last_operation_type) { 'create' }
-        let(:last_operation_state) { 'successful' }
+        let(:last_operation_state) { 'succeeded' }
         let(:binding) do
           VCAP::CloudController::ServiceKey.new.save_with_attributes_and_new_operation(
             { name: 'binding_name', service_instance: service_instance, credentials: { test: 'secretPassword' } },
