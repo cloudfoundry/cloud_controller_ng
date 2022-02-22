@@ -1,19 +1,24 @@
 module VCAP::CloudController
   module ServiceOperationMixin
+    INITIAL = 'initial'.freeze
     IN_PROGRESS = 'in progress'.freeze
     SUCCEEDED = 'succeeded'.freeze
     FAILED = 'failed'.freeze
 
     def operation_in_progress?
-      last_operation? && last_operation.state == IN_PROGRESS
+      last_operation? && [INITIAL, IN_PROGRESS].include?(last_operation.state)
     end
 
     def terminal_state?
       !last_operation? || [SUCCEEDED, FAILED].include?(last_operation.state)
     end
 
+    def create_initial?
+      create? && initial?
+    end
+
     def create_in_progress?
-      create? && in_progress?
+      create? && (initial? || in_progress?)
     end
 
     def create_succeeded?
@@ -60,6 +65,10 @@ module VCAP::CloudController
 
     def delete?
       last_operation&.type == 'delete'
+    end
+
+    def initial?
+      last_operation&.state == INITIAL
     end
 
     def in_progress?

@@ -48,7 +48,7 @@ module VCAP::CloudController
             )
             expect(precursor.route_service_url).to be_nil
             expect(precursor.last_operation.type).to eq('create')
-            expect(precursor.last_operation.state).to eq('in progress')
+            expect(precursor.last_operation.state).to eq('initial')
           end
 
           context 'route is internal' do

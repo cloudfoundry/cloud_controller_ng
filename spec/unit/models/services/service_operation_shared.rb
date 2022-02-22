@@ -24,6 +24,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true for 'succeeded' and 'failed' states" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: true },
           { type: 'create', state: 'failed',      result: true },
@@ -48,8 +49,9 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     end
 
     context 'when there is an operation' do
-      it "returns true only for 'in progress' states" do
+      it "returns true for 'initial' and 'in progress' states" do
         [
+          { type: 'create', state: 'initial',     result: true },
           { type: 'create', state: 'in progress', result: true },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -66,6 +68,33 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     end
   end
 
+  describe '#create_initial?' do
+    context 'when there is no operation' do
+      it 'returns false' do
+        expect(service.create_initial?).to be false
+      end
+    end
+
+    context 'when there is an operation' do
+      it "returns true only for the 'create initial' state" do
+        [
+          { type: 'create', state: 'initial',     result: true },
+          { type: 'create', state: 'in progress', result: false },
+          { type: 'create', state: 'succeeded',   result: false },
+          { type: 'create', state: 'failed',      result: false },
+          { type: 'update', state: 'in progress', result: false },
+          { type: 'update', state: 'succeeded',   result: false },
+          { type: 'update', state: 'failed',      result: false },
+          { type: 'delete', state: 'in progress', result: false },
+          { type: 'delete', state: 'failed',      result: false },
+        ].each do |test|
+          update_operation(test[:type], test[:state])
+          expect(service.create_initial?).to be test[:result]
+        end
+      end
+    end
+  end
+
   describe '#create_in_progress?' do
     context 'when there is no operation' do
       it 'returns false' do
@@ -74,8 +103,9 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     end
 
     context 'when there is an operation' do
-      it "returns true only for the 'create in progress' state" do
+      it "returns true for the 'create initial' and 'create in progress' states" do
         [
+          { type: 'create', state: 'initial',     result: true },
           { type: 'create', state: 'in progress', result: true },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -102,6 +132,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'create succeeded' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: true },
           { type: 'create', state: 'failed',      result: false },
@@ -128,6 +159,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'create failed' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: true },
@@ -154,6 +186,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'update in progress' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -180,6 +213,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'update succeeded' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -206,6 +240,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'update failed' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -232,6 +267,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'delete in progress' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },
@@ -258,6 +294,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     context 'when there is an operation' do
       it "returns true only for the 'delete failed' state" do
         [
+          { type: 'create', state: 'initial',     result: false },
           { type: 'create', state: 'in progress', result: false },
           { type: 'create', state: 'succeeded',   result: false },
           { type: 'create', state: 'failed',      result: false },

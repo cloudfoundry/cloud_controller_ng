@@ -74,7 +74,7 @@ module VCAP::CloudController
           expect(instance.maintenance_info).to eq(maintenance_info)
 
           expect(instance.last_operation.type).to eq('create')
-          expect(instance.last_operation.state).to eq('in progress')
+          expect(instance.last_operation.state).to eq('initial')
 
           expect(instance).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
           expect(instance).to have_labels({ prefix: nil, key: 'release', value: 'stable' })

@@ -5,6 +5,7 @@ module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
     include ServiceOperationMixin
 
+    INITIAL_STRING = 'initial'.freeze
     IN_PROGRESS_STRING = 'in progress'.freeze
 
     many_to_one :service_plan
