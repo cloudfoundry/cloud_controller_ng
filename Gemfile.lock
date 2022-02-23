@@ -170,11 +170,10 @@ GEM
       fog-json
       ipaddress (~> 0.8)
       xml-simple (~> 1.1)
-    fog-aws (3.12.0)
+    fog-aws (3.13.0)
       fog-core (~> 2.1)
       fog-json (~> 1.1)
       fog-xml (~> 0.1)
-      ipaddress (~> 0.8)
     fog-core (2.1.2)
       builder
       excon (~> 0.58)
