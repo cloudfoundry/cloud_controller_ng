@@ -35,6 +35,9 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     value :INSTANCE, 1
     value :HOST, 2
   end
+  add_message "diego.bbs.models.ActualLRPInternalRoute" do
+    optional :hostname, :string, 1
+  end
   add_message "diego.bbs.models.ActualLRP" do
     optional :actual_lrp_key, :message, 1, "diego.bbs.models.ActualLRPKey"
     optional :actual_lrp_instance_key, :message, 2, "diego.bbs.models.ActualLRPInstanceKey"
@@ -46,6 +49,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :since, :int64, 8
     optional :modification_tag, :message, 9, "diego.bbs.models.ModificationTag"
     optional :presence, :enum, 10, "diego.bbs.models.ActualLRP.Presence"
+    repeated :actual_lrp_internal_routes, :message, 11, "diego.bbs.models.ActualLRPInternalRoute"
   end
   add_enum "diego.bbs.models.ActualLRP.Presence" do
     value :ORDINARY, 0
@@ -63,6 +67,7 @@ module Diego
       ActualLRPInstanceKey = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPInstanceKey").msgclass
       ActualLRPNetInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPNetInfo").msgclass
       ActualLRPNetInfo::PreferredAddress = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPNetInfo.PreferredAddress").enummodule
+      ActualLRPInternalRoute = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPInternalRoute").msgclass
       ActualLRP = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRP").msgclass
       ActualLRP::Presence = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRP.Presence").enummodule
     end
