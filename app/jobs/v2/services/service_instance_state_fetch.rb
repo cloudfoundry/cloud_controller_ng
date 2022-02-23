@@ -6,7 +6,7 @@ module VCAP::CloudController
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
         include AsynchronousOperations
 
-        attr_accessor :name, :service_instance_guid, :request_attrs, :poll_interval, :end_timestamp, :user_audit_info
+        attr_accessor :name, :service_instance_guid, :request_attrs, :poll_interval, :end_timestamp, :user_audit_info, :retry_number
 
         def initialize(name, service_instance_guid, user_audit_info, request_attrs, end_timestamp=nil)
           @name                  = name
@@ -14,6 +14,7 @@ module VCAP::CloudController
           @request_attrs         = request_attrs
           @end_timestamp         = end_timestamp || new_end_timestamp
           @user_audit_info       = user_audit_info
+          @retry_number          = 0
           update_polling_interval
         end
 
