@@ -888,19 +888,48 @@ module VCAP::CloudController
                   }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
                 end
               end
-            end
 
-            context 'when a delete is in progress for the same binding' do
-              let!(:binding) do
-                binding = ServiceBinding.make(service_instance: service_instance, app: app)
-                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
-                binding
+              context 'when a create is in progress for the same binding' do
+                let!(:binding) do
+                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+                  binding
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being created. Retry this operation later./)
+                end
               end
 
-              it 'fails with a service binding error' do
-                expect {
-                  app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': An existing binding is being deleted. Try recreating the binding later./)
+              context 'when a delete is in progress for the same binding' do
+                let!(:binding) do
+                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+                  binding
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being deleted. Retry this operation later./)
+                end
+              end
+
+              context 'when a delete failed for the same binding' do
+                let!(:binding) do
+                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
+                  binding
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+/For service 'si-name': A binding failed to be deleted. Resolve the issue with this binding before retrying this operation./)
+                end
               end
             end
           end

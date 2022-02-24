@@ -140,8 +140,11 @@ module VCAP::CloudController
       manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
-        binding_being_deleted!(service_instance, app)
-        next if binding_exists?(service_instance, app)
+        binding = ServiceBinding.first(service_instance: service_instance, app: app)
+        next if binding&.create_succeeded?
+
+        raise_binding_operation_in_progress!(service_instance, binding.last_operation.type) if binding&.operation_in_progress?
+        raise_binding_delete_failed!(service_instance) if binding&.delete_failed?
 
         begin
           binding_message = create_binding_message(service_instance.guid, app.guid, manifest_service_binding)
@@ -193,16 +196,14 @@ module VCAP::CloudController
       raise ServiceBindingError.new(error_message)
     end
 
-    def binding_exists?(service_instance, app)
-      binding = ServiceBinding.first(service_instance: service_instance, app: app)
-      binding && !binding.create_failed?
+    def raise_binding_operation_in_progress!(service_instance, operation)
+      error_message = "A binding is being #{operation}d. Retry this operation later."
+      raise_binding_error!(service_instance, error_message)
     end
 
-    def binding_being_deleted!(service_instance, app)
-      binding = ServiceBinding.first(service_instance: service_instance, app: app)
-      if binding && binding.operation_in_progress? && binding.last_operation.type == 'delete'
-        raise_binding_error!(service_instance, 'An existing binding is being deleted. Try recreating the binding later.')
-      end
+    def raise_binding_delete_failed!(service_instance)
+      error_message = 'A binding failed to be deleted. Resolve the issue with this binding before retrying this operation.'
+      raise_binding_error!(service_instance, error_message)
     end
 
     def app_instance_not_found!(app_guid)
