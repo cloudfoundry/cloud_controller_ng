@@ -42,8 +42,6 @@ Content-Type: application/json
 }
 ```
 
-Updates a destination's protocol.
-
 #### Definition
 `PATCH /v3/routes/:guid/destinations`
 
@@ -51,8 +49,7 @@ Updates a destination's protocol.
 
 | Name             | Type                                                      | Description                                                                                                                   |
 | ---------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **protocol**     | string or null | Protocol the destination will use. Valid protocols are http1 or http2 if route protocol is http, tcp if route protocol is tcp.
-A null value will set it either http1 or tcp based on the route protocol;
+| **protocol**     | _string_ or `null` | Protocol the destination will use. Valid protocols are `http1` or `http2` if route protocol is `http`, `tcp` if route protocol is `tcp`. A `null` value will set it to either `http1` or `tcp` based on the route protocol;
 
 #### Permitted roles
 
