@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'jobs/v2/services/service_binding_state_fetch'
 require_relative 'shared/when_broker_returns_retry_after_header'
+require_relative 'shared/when_exponential_backoff_is_not_set_to_default'
 
 module VCAP::CloudController
   module Jobs
@@ -15,6 +16,7 @@ module VCAP::CloudController
           service_binding.service_binding_operation = service_binding_operation
           service_binding
         end
+        let(:last_operation) { service_binding.reload.last_operation }
 
         let(:max_duration) { 10080 }
         let(:default_polling_interval) { 60 }
@@ -393,15 +395,16 @@ module VCAP::CloudController
 
               before do
                 TestConfig.config[:broker_client_default_async_poll_interval_seconds] = polling_interval
-                run_job(job)
               end
 
               it 'should not create an audit event' do
+                run_job(job)
                 event = Event.find(type: 'audit.service_binding.create')
                 expect(event).to be_nil
               end
 
               it 'should update the service binding operation' do
+                run_job(job)
                 service_binding.reload
                 expect(service_binding.last_operation.description).to eq('50%')
               end
@@ -409,6 +412,7 @@ module VCAP::CloudController
               context 'when the last_operation is replaced with delete in progress' do
                 before do
                   service_binding.save_with_new_operation({ type: 'delete', state: 'in progress' })
+                  run_job(job)
                 end
 
                 it 'is able to run the job again' do
@@ -417,66 +421,8 @@ module VCAP::CloudController
                   end
                 end
               end
-            end
 
-            context 'when the last_operation state is in progress and exponential backoff is not set to default' do
-              let(:polling_interval) { 60 }
-
-              it 'calculates the polling intervals based on the default interval and the exponential backoff rate' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
-                enqueued_time = 0
-
-                Timecop.freeze do
-                  run_job(job)
-                  enqueued_time = Time.now
-                end
-
-                [60, 180, 420, 900, 1860].each do |seconds|
-                  Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
-                  end
-
-                  Timecop.freeze((seconds + 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              it 'calculates the polling intervals based on the configured interval and the exponential backoff rate' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
-                TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
-
-                enqueued_time = 0
-
-                Timecop.freeze do
-                  run_job(job)
-                  enqueued_time = Time.now
-                end
-
-                [10, 30, 70, 150, 310].each do |seconds|
-                  Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
-                  end
-
-                  Timecop.freeze((seconds + 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              it 'takes the exponential backoff into account when checking whether the next run would exceed the maximum duration' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
-                TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
-
-                job.retry_number = 10
-                Timecop.freeze(Time.now + 3384.321.ceil.seconds) do
-                  run_job(job)
-                  service_binding.reload
-
-                  expect(service_binding.last_operation.state).to eq('failed')
-                  expect(service_binding.last_operation.description).to eq('Service Broker failed to create binding within the required time.')
-                end
-              end
+              include_examples 'when exponential backoff is not set to default'
             end
 
             context 'when the last_operation state is failed' do
