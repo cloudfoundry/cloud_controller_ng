@@ -12,12 +12,12 @@ module VCAP::CloudController::Jobs
           global: {
             timeout_in_seconds: global_timeout,
           },
-          priorities: job_display_name
+          **priorities
         }
       }
     end
     let(:global_timeout) { 5.hours }
-    let(:job_display_name) { nil }
+    let(:priorities) { {} }
 
     before do
       TestConfig.override(**config_override)
@@ -130,7 +130,7 @@ module VCAP::CloudController::Jobs
       end
 
       context 'priority from config' do
-        let(:job_display_name) { { wrapped_job.display_name.to_sym => 1899 } }
+        let(:priorities) { { priorities: { wrapped_job.display_name.to_sym => 1899 } } }
         it 'uses the configured priority' do
           original_enqueue = Delayed::Job.method(:enqueue)
           expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
