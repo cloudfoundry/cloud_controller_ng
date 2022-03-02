@@ -18,7 +18,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :paginated_list_of_domains, '/v3/organizations/:org_guid/domains' %>
+<%= yield_content :paginated_list_of_domains, '/v3/organizations/[guid]/domains' %>
 ```
 
 Retrieve all domains available in an organization for the current user. This will return unscoped domains
