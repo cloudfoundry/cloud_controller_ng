@@ -250,6 +250,7 @@ includes:
   - resources/routes/list_destinations
   - resources/routes/insert_destinations
   - resources/routes/replace_destinations
+  - resources/routes/update_destination
   - resources/routes/remove_destination
   - resources/routes/delete_unmapped
   - resources/security_groups/header
