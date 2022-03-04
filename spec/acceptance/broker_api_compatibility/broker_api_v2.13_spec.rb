@@ -160,7 +160,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'v6' do
-        let(:version) { 'draft' }
+        let(:version) { 'draft-06' }
 
         context 'when a broker catalog defines a service instance' do
           context 'with a valid create schema' do
