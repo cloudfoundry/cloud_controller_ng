@@ -1,5 +1,6 @@
 require 'clockwork'
 require 'cloud_controller/clock/job_timeout_calculator'
+require 'cloud_controller/job/job_priority_overwriter'
 require 'jobs/pollable_job_wrapper'
 require 'jobs/logging_context_job'
 require 'jobs/timeout_job'
@@ -12,6 +13,7 @@ module VCAP::CloudController
         @job = job
         @opts = opts
         @timeout_calculator = JobTimeoutCalculator.new(VCAP::CloudController::Config.config)
+        @priority_overwriter = JobPriorityOverwriter.new(VCAP::CloudController::Config.config)
         load_delayed_job_plugins
       end
 
@@ -43,6 +45,7 @@ module VCAP::CloudController
         request_id = ::VCAP::Request.current_id
         timeout_job = TimeoutJob.new(job, job_timeout)
         logging_context_job = LoggingContextJob.new(timeout_job, request_id)
+        @opts[:priority] = job_priority unless job_priority.nil?
         Delayed::Job.enqueue(logging_context_job, @opts)
       end
 
@@ -52,6 +55,10 @@ module VCAP::CloudController
 
       def job_timeout
         @timeout_calculator.calculate(@job.try(:job_name_in_configuration))
+      end
+
+      def job_priority
+        @priority_overwriter.get(@job.try(:display_name))
       end
 
       def run_immediately
