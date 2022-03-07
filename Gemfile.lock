@@ -270,7 +270,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.9.1)
+    i18n (1.10.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -300,7 +300,7 @@ GEM
       rb-inotify (~> 0.9, >= 0.9.10)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.13.0)
+    loofah (2.14.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
@@ -424,7 +424,7 @@ GEM
     rspec-mocks (3.11.0)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.11.0)
-    rspec-rails (5.1.0)
+    rspec-rails (5.1.1)
       actionpack (>= 5.2)
       activesupport (>= 5.2)
       railties (>= 5.2)
@@ -539,7 +539,7 @@ GEM
     yajl-ruby (1.4.1)
     yard (0.9.27)
       webrick (~> 1.7.0)
-    zeitwerk (2.5.3)
+    zeitwerk (2.5.4)
 
 PLATFORMS
   ruby
@@ -612,7 +612,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 5.1.0)
+  rspec-rails (~> 5.1.1)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
   rubocop (~> 1.25.1)
