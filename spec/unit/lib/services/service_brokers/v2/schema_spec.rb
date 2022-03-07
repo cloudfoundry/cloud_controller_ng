@@ -36,7 +36,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema is compliant to JSON Schema draft06' do
-        let(:version) { 'draft' }
+        let(:version) { 'draft-06' }
         let(:raw_schema) { { '$schema' => draft_schema } }
 
         it 'should be valid' do
