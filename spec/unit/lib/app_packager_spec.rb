@@ -93,6 +93,16 @@ RSpec.describe AppPackager do
         }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
       end
     end
+
+    context 'when the archive contains unicode filenames' do
+      let(:input_zip) { File.join(Paths::FIXTURES, 'unicode_filename.jar') }
+
+      it 'unzips the archive' do
+        app_packager.unzip(@tmpdir)
+
+        expect(File.exist?("#{@tmpdir}/hello/Greeterαβγ.class")).to be true
+      end
+    end
   end
 
   describe '#append_dir_contents' do
