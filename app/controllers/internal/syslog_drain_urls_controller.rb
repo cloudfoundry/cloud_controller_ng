@@ -22,7 +22,8 @@ module VCAP::CloudController
                            select(
                              "#{AppModel.table_name}__guid".to_sym,
                              "#{AppModel.table_name}__name".to_sym,
-                             aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
+                             aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls),
+                             aggregate_function("#{ServiceBinding.table_name}__id".to_sym).as(:service_binding_ids)
                            ).
                            select_append("#{Space.table_name}__name___space_name".to_sym).
                            select_append("#{Organization.table_name}__name___organization_name".to_sym).
@@ -35,6 +36,11 @@ module VCAP::CloudController
       drain_urls = {}
 
       guid_to_drain_maps.each do |guid_and_drains|
+        credentials = ServiceBinding.
+                      where(id: guid_and_drains[:service_binding_ids].split(',')).
+                      select(:credentials, :salt, :encryption_key_label, :encryption_iterations).
+                      all.
+                      map(&:credentials)
         drain_urls[guid_and_drains[:guid]] = {
           drains: guid_and_drains[:syslog_drain_urls].split(','),
           hostname: hostname_from_app_name(guid_and_drains[:organization_name], guid_and_drains[:space_name], guid_and_drains[:name])
@@ -56,7 +62,7 @@ module VCAP::CloudController
 
     def aggregate_function(column)
       if AppModel.db.database_type == :postgres
-        Sequel.function(:string_agg, column, ',')
+        Sequel.function(:string_agg, Sequel.cast(column, :text), ',')
       elsif AppModel.db.database_type == :mysql
         Sequel.function(:group_concat, column)
       else
