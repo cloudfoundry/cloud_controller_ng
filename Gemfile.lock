@@ -274,7 +274,7 @@ GEM
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
-    json (2.3.0)
+    json (2.6.1)
     json-diff (0.4.1)
     json-schema (2.8.0)
       addressable (>= 2.4)
