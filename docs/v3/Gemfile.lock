@@ -40,7 +40,9 @@ GEM
     json (2.6.1)
     kramdown (2.3.1)
       rexml
-    libv8-node (15.14.0.1)
+    libv8-node (16.10.0.0)
+    libv8-node (16.10.0.0-x86_64-darwin)
+    libv8-node (16.10.0.0-x86_64-linux)
     listen (3.0.8)
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
@@ -94,11 +96,15 @@ GEM
       middleman-core (>= 3.2)
       rouge (~> 1.0)
     mini_portile2 (2.8.0)
-    mini_racer (0.4.0)
-      libv8-node (~> 15.14.0.0)
+    mini_racer (0.6.2)
+      libv8-node (~> 16.10.0.0)
     minitest (5.14.4)
     nokogiri (1.13.3)
       mini_portile2 (~> 2.8.0)
+      racc (~> 1.4)
+    nokogiri (1.13.3-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.13.3-x86_64-linux)
       racc (~> 1.4)
     padrino-helpers (0.15.1)
       i18n (>= 0.6.7, < 2)
@@ -144,6 +150,8 @@ GEM
 
 PLATFORMS
   ruby
+  x86_64-darwin
+  x86_64-linux
 
 DEPENDENCIES
   json (>= 2.3.0)
@@ -160,4 +168,4 @@ DEPENDENCIES
   sass
 
 BUNDLED WITH
-   2.1.4
+   2.2.32
