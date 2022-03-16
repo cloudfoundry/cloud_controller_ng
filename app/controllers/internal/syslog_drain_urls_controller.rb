@@ -35,15 +35,26 @@ module VCAP::CloudController
       next_page_token = nil
       drain_urls = {}
 
+      # get all service binding ids
+      sb_ids = Array.new
       guid_to_drain_maps.each do |guid_and_drains|
-        credentials = ServiceBinding.
-                      where(id: guid_and_drains[:service_binding_ids].split(',')).
-                      select(:credentials, :salt, :encryption_key_label, :encryption_iterations).
+         sb_ids_str = guid_and_drains[:service_binding_ids]
+         sb_ids_str_array = sb_ids_str.split(',')
+         sb_ids_str_array.each { |x| sb_ids.push x }
+      end
+
+      # get all credentials of service bindings
+      credentials = ServiceBinding.
+                      where(id: sb_ids).
+                      select(:id, :credentials, :salt, :encryption_key_label, :encryption_iterations).
                       all.
-                      map(&:credentials)
+                      map{|t| [t.id.to_s, t.credentials["cert"]]}.to_h
+
+      guid_to_drain_maps.each do |guid_and_drains|
         drain_urls[guid_and_drains[:guid]] = {
           drains: guid_and_drains[:syslog_drain_urls].split(','),
-          hostname: hostname_from_app_name(guid_and_drains[:organization_name], guid_and_drains[:space_name], guid_and_drains[:name])
+          hostname: hostname_from_app_name(guid_and_drains[:organization_name], guid_and_drains[:space_name], guid_and_drains[:name]),
+          credentials: credentials.values_at(*guid_and_drains[:service_binding_ids].split(',')).compact
         }
       end
 
