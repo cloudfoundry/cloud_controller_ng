@@ -458,7 +458,7 @@ GEM
       sexp_processor (~> 4.1)
     rubyzip (2.3.2)
     sequel (5.54.0)
-    sequel_pg (1.14.0)
+    sequel_pg (1.15.0)
       pg (>= 0.18.0, != 1.2.0)
       sequel (>= 4.38.0)
     sexp_processor (4.7.0)
