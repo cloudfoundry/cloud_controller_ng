@@ -15,6 +15,10 @@ module VCAP::CloudController
                   'route' => "a_host.#{shared_domain.name}"
                 }
               ],
+              'services' => [
+                'service1',
+                'service2'
+              ],
               'processes' => [
                 {
                   'type' => process1.type,
@@ -44,6 +48,11 @@ module VCAP::CloudController
       let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
       let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
       let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
+      let!(:service1) { ServiceInstance.make(space: space, name: 'service1') }
+      let!(:service2) { ServiceInstance.make(space: space, name: 'service2') }
+      let!(:service_binding_1) { ServiceBinding.make(app: app1_model, service_instance: service1) }
+      let!(:service_binding_2) { ServiceBinding.make(app: app1_model, service_instance: service2) }
+
 
       subject { SpaceDiffManifest.generate_diff(app_manifests, space) }
 
@@ -136,25 +145,43 @@ module VCAP::CloudController
 
       context 'services are added' do
         before do
-          default_manifest['applications'][0]['services'] = [
+          default_manifest['applications'][0]['services'].concat([
             'service-without-name-label',
             {
               'name' => 'foo',
               'parameters' => { 'baz' => 'qux' }
             }
-          ]
+          ])
         end
 
         it 'returns the correct diff' do
           expect(subject).to eq([
-            { 'op' => 'add', 'path' => '/applications/0/services', 'value' => [
-              'service-without-name-label',
-              {
+            {
+              'op' => 'add',
+              'path' => '/applications/0/services/2',
+              'value' => 'service-without-name-label'
+            },
+            {
+              'op' => 'add',
+              'path' => '/applications/0/services/3',
+              'value' =>  {
                 'name' => 'foo',
                 'parameters' => { 'baz' => 'qux' }
               }
-            ] },
+            },
           ])
+        end
+      end
+
+      context 'services are removed' do
+        before do
+          default_manifest['applications'][0]['services'] = [
+            'service1'
+          ]
+        end
+
+        it 'doesn\'t show a removal diff' do
+          expect(subject).to eq([])
         end
       end
 

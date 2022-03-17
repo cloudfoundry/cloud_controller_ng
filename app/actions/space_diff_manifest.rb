@@ -8,6 +8,7 @@ module VCAP::CloudController
       'processes' => 'type',
       'routes' => 'route',
       'sidecars' => 'name',
+      'services' => 'name'
     }.freeze
 
     class << self
@@ -44,7 +45,7 @@ module VCAP::CloudController
 
             existing_value = existing_app_hash[key]
 
-            needs_pruning = %w[processes sidecars routes].include?(key)
+            needs_pruning = %w[processes sidecars routes services].include?(key)
             nested_attribute_exists = existing_value.present? && needs_pruning
 
             if nested_attribute_exists
@@ -114,7 +115,7 @@ module VCAP::CloudController
         if manifest_app_hash.key? 'services'
           manifest_app_hash['services'] = manifest_app_hash['services'].map do |hash|
             if hash.is_a? String
-              hash
+              { 'name' => hash }
             else
               hash.slice(
                 'name',
