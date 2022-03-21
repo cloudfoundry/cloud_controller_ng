@@ -60,13 +60,14 @@ module CloudFoundry
           context 'when the path is /v2/*' do
             let(:path_info) { '/v2/service_instances' }
             it 'formats the response error in v2 format' do
-              _, _, body = middleware.call(user_env)
+              _, response_headers, body = middleware.call(user_env)
               json_body = JSON.parse(body.first)
               expect(json_body).to include(
                 'code' => 10016,
                 'description' => 'Service broker concurrent request limit exceeded',
                 'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
               )
+              expect(response_headers['Retry-After']).to be_within(90.second).of Time.now
             end
           end
 
@@ -74,13 +75,14 @@ module CloudFoundry
             let(:path_info) { '/v3/service_instances' }
 
             it 'formats the response error in v3 format' do
-              _, _, body = middleware.call(user_env)
+              _, response_headers, body = middleware.call(user_env)
               json_body = JSON.parse(body.first)
               expect(json_body['errors'].first).to include(
                 'code' => 10016,
                 'detail' => 'Service broker concurrent request limit exceeded',
                 'title' => 'CF-ServiceBrokerRateLimitExceeded',
               )
+              expect(response_headers['Retry-After']).to be_within(90.second).of Time.now
             end
           end
         end
