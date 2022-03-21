@@ -23,7 +23,7 @@ class AppPackager
 
     unless status.success?
       logger.error("Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
-      invalid_zip!
+      invalid_zip!(first_mapped_error(error))
     end
   end
 
@@ -99,7 +99,25 @@ class AppPackager
     (Dir.entries(dir) - %w(.. .)).empty?
   end
 
-  def invalid_zip!
-    raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'Invalid zip archive.')
+  def invalid_zip!(error=nil)
+    message = 'Invalid zip archive'
+    message += " (#{error})" unless error.nil?
+    message += '.'
+    raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', message)
+  end
+
+  def first_mapped_error(error)
+    return if error.nil? || error.empty?
+
+    case error
+    when /end-of-central-directory\s+signature\s+not\s+found/i
+      return 'end-of-central-directory signature not found'
+    when /zipfile\s+is\s+empty/i
+      return 'zipfile is empty'
+    when /mismatching\s+"local"\s+filename/i
+      return 'mismatching local filename'
+    else
+      return
+    end
   end
 end
