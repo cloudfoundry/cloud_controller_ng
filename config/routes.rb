@@ -339,6 +339,8 @@ Rails.application.routes.draw do
   get '/info', to: 'info#v3_info'
   get '/info/usage_summary', to: 'info#show_usage_summary'
 
+  get '/metrics', to: 'metrics#index'
+
   namespace :internal do
     patch '/builds/:guid', to: 'builds#update'
   end

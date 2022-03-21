@@ -1,4 +1,6 @@
 require 'action_controller/railtie'
+require 'prometheus/middleware/collector'
+require 'prometheus/middleware/exporter'
 
 class Application < ::Rails::Application
   config.exceptions_app = self.routes
@@ -13,6 +15,8 @@ class Application < ::Rails::Application
   config.middleware.delete Rack::ConditionalGet
   config.middleware.delete Rack::ETag
   config.middleware.delete Rack::MethodOverride
+  # config.middleware.use Prometheus::Middleware::Collector
+  # config.middleware.use Prometheus::Middleware::Exporter
 
   config.generators do |g|
     g.orm             false
