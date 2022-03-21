@@ -9,9 +9,10 @@ module CloudFoundry
       let(:user_env) { { 'cf.user_guid' => 'user_guid', 'PATH_INFO' => path_info } }
       let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
       let(:concurrent_limit) { 1 }
+      let(:broker_timeout) { 60 }
       let(:middleware) {
         ServiceBrokerRequestCounter.instance.limit = concurrent_limit
-        ServiceBrokerRateLimiter.new(app, logger: logger)
+        ServiceBrokerRateLimiter.new(app, logger: logger, broker_timeout_seconds: broker_timeout)
       }
 
       before(:each) do
@@ -67,7 +68,7 @@ module CloudFoundry
                 'description' => 'Service broker concurrent request limit exceeded',
                 'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
               )
-              expect(response_headers['Retry-After']).to be_within(90.second).of Time.now
+              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
             end
           end
 
@@ -82,7 +83,20 @@ module CloudFoundry
                 'detail' => 'Service broker concurrent request limit exceeded',
                 'title' => 'CF-ServiceBrokerRateLimitExceeded',
               )
-              expect(response_headers['Retry-After']).to be_within(90.second).of Time.now
+              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
+            end
+          end
+
+          context 'when broker_client_timeout_seconds is reduced' do
+            let(:broker_timeout) { 3 }
+            let(:middleware) {
+              ServiceBrokerRequestCounter.instance.limit = concurrent_limit
+              ServiceBrokerRateLimiter.new(app, logger: logger, broker_timeout_seconds: broker_timeout)
+            }
+
+            it 'reduces the suggested delay in the Retry-After header' do
+              _, response_headers, _ = middleware.call(user_env)
+              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
             end
           end
         end

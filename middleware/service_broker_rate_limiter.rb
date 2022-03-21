@@ -26,6 +26,7 @@ module CloudFoundry
       def initialize(app, opts)
         @app                               = app
         @logger                            = opts[:logger]
+        @broker_timeout_seconds            = opts[:broker_timeout_seconds]
         @request_counter = ServiceBrokerRequestCounter.instance
       end
 
@@ -78,7 +79,8 @@ module CloudFoundry
       end
 
       def suggested_retry_time
-        Time.now.utc + rand(30..90).second
+        delay_range = @broker_timeout_seconds * 0.5..@broker_timeout_seconds * 1.5
+        Time.now.utc + rand(delay_range).to_i.second
       end
 
       def too_many_requests!(env, user_guid)

@@ -40,7 +40,10 @@ module VCAP::CloudController
         end
         if config.get(:max_concurrent_service_broker_requests) > 0
           CloudFoundry::Middleware::ServiceBrokerRequestCounter.instance.limit = config.get(:max_concurrent_service_broker_requests)
-          use CloudFoundry::Middleware::ServiceBrokerRateLimiter, logger: Steno.logger('cc.service_broker_rate_limiter')
+          use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
+            logger: Steno.logger('cc.service_broker_rate_limiter'),
+            broker_timeout_seconds: config.get(:broker_client_timeout_seconds),
+          }
         end
 
         if config.get(:security_event_logging, :enabled)
