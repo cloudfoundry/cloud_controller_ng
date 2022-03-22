@@ -114,7 +114,20 @@ module VCAP::CloudController
 
             it 'should raise' do
               expect { action.precursor(message: message) }.to raise_error(
-                                                                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance name is taken: si-test-name.'
+                                                               )
+            end
+          end
+
+          context "when the last operation is in state 'create succeeded'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
                                                                  'The service instance name is taken: si-test-name.'
                                                                )
             end
@@ -131,6 +144,71 @@ module VCAP::CloudController
               expect(service_instance.guid).to eq(instance.guid)
               expect(service_instance.last_operation.type).to eq('create')
               expect(service_instance.last_operation.state).to eq('in progress')
+            end
+          end
+
+          context "when the last operation is in state 'update in progress'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance name is taken: si-test-name.'
+                                                               )
+            end
+          end
+
+          context "when the last operation is in state 'update succeeded'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'update', state: 'succeeded' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance name is taken: si-test-name.'
+                                                               )
+            end
+          end
+
+          context "when the last operation is in state 'update failed'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'update', state: 'failed' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance name is taken: si-test-name.'
+                                                               )
+            end
+          end
+
+          context "when the last operation is in state 'delete in progress'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance is getting deleted or its deletion failed.'
+                                                               )
+            end
+          end
+
+          context "when the last operation is in state 'delete failed'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance is getting deleted or its deletion failed.'
+                                                               )
             end
           end
         end

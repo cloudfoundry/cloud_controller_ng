@@ -219,7 +219,7 @@ module VCAP::CloudController
     def has_routes?
       routes.present?
     end
-
+    
     def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
       VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end
