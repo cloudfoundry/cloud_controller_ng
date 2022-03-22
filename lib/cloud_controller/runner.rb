@@ -166,7 +166,7 @@ module VCAP::CloudController
         user_config.workers(@config.get(:puma, :workers) || 3)
         user_config.threads(@config.get(:puma, :threads, :min) || 0, @config.get(:puma, :threads, :max) || 5)
         bind_address = if @config.get(:nginx, :use_nginx)
-                         "tcp://127.0.0.1:#{@config.get(:nginx, :instance_socket)}"
+                         "unix://#{@config.get(:nginx, :instance_socket)}"
                        else
                          "tcp://#{@config.get(:external_host)}:#{@config.get(:external_port)}"
                        end
