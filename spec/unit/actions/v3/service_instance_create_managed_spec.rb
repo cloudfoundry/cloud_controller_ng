@@ -104,16 +104,34 @@ module VCAP::CloudController
           end
         end
 
-        describe 'name already in use' do
-          before do
-            ManagedServiceInstance.make(name: name, space: space)
+        context 'when service instance with the same name already exists' do
+          let(:instance) { ManagedServiceInstance.make(name: name, space: space) }
+
+          context "when the last operation is in state 'create in progress'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+            end
+
+            it 'should raise' do
+              expect { action.precursor(message: message) }.to raise_error(
+                                                                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
+                                                                 'The service instance name is taken: si-test-name.'
+                                                               )
+            end
           end
 
-          it 'should raise' do
-            expect { action.precursor(message: message) }.to raise_error(
-              ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-              'The service instance name is taken: si-test-name.'
-            )
+          context "when the last operation is in state 'create failed'" do
+            before do
+              instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+            end
+
+            it 'recreates the service instance' do
+              service_instance = action.precursor(message: message)
+
+              expect(service_instance.guid).to eq(instance.guid)
+              expect(service_instance.last_operation.type).to eq('create')
+              expect(service_instance.last_operation.state).to eq('in progress')
+            end
           end
         end
 

@@ -38,7 +38,10 @@ module VCAP::CloudController
           state: ManagedServiceInstance::INITIAL_STRING
         }
 
-        ManagedServiceInstance.new.tap do |i|
+        instance = ServiceInstance.first(name: message.name)
+        instance_already_exists!(message.name) if instance && !instance.create_failed?
+
+        (instance || ManagedServiceInstance.new).tap do |i|
           ManagedServiceInstance.db.transaction do
             i.save_with_new_operation(attr, last_operation)
             MetadataUpdate.update(i, message)
@@ -192,6 +195,10 @@ module VCAP::CloudController
 
       def plan_not_found!
         raise InvalidManagedServiceInstance.new('Service plan not found.')
+      end
+
+      def instance_already_exists!(name)
+        raise InvalidManagedServiceInstance.new("The service instance name is taken: #{name}.")
       end
 
       class ValidationErrorHandler
