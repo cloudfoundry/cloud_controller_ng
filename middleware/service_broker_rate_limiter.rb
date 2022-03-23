@@ -26,6 +26,7 @@ module CloudFoundry
       def initialize(app, opts)
         @app                               = app
         @logger                            = opts[:logger]
+        @broker_timeout_seconds            = opts[:broker_timeout_seconds]
         @request_counter = ServiceBrokerRequestCounter.instance
       end
 
@@ -77,10 +78,17 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
+      def suggested_retry_time
+        delay_range = @broker_timeout_seconds * 0.5..@broker_timeout_seconds * 1.5
+        Time.now.utc + rand(delay_range).to_i.second
+      end
+
       def too_many_requests!(env, user_guid)
+        rate_limit_headers = {}
+        rate_limit_headers['Retry-After'] = suggested_retry_time
         @logger.info("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
         message = rate_limit_error(env).to_json
-        [429, {}, [message]]
+        [429, rate_limit_headers, [message]]
       end
 
       def rate_limit_error(env)
