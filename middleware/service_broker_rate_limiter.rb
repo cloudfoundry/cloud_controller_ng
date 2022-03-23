@@ -79,7 +79,7 @@ module CloudFoundry
       end
 
       def suggested_retry_time
-        delay_range = @broker_timeout_seconds * 0.5..@broker_timeout_seconds * 1.5
+        delay_range = (@broker_timeout_seconds * 0.5).floor..(@broker_timeout_seconds * 1.5).ceil
         Time.now.utc + rand(delay_range).to_i.second
       end
 

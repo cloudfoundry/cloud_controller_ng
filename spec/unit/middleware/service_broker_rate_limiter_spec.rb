@@ -61,14 +61,16 @@ module CloudFoundry
           context 'when the path is /v2/*' do
             let(:path_info) { '/v2/service_instances' }
             it 'formats the response error in v2 format' do
-              _, response_headers, body = middleware.call(user_env)
-              json_body = JSON.parse(body.first)
-              expect(json_body).to include(
-                'code' => 10016,
-                'description' => 'Service broker concurrent request limit exceeded',
-                'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
-              )
-              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
+              Timecop.freeze do
+                _, response_headers, body = middleware.call(user_env)
+                json_body = JSON.parse(body.first)
+                expect(json_body).to include(
+                  'code' => 10016,
+                  'description' => 'Service broker concurrent request limit exceeded',
+                  'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
+                )
+                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+              end
             end
           end
 
@@ -76,14 +78,16 @@ module CloudFoundry
             let(:path_info) { '/v3/service_instances' }
 
             it 'formats the response error in v3 format' do
-              _, response_headers, body = middleware.call(user_env)
-              json_body = JSON.parse(body.first)
-              expect(json_body['errors'].first).to include(
-                'code' => 10016,
-                'detail' => 'Service broker concurrent request limit exceeded',
-                'title' => 'CF-ServiceBrokerRateLimitExceeded',
-              )
-              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
+              Timecop.freeze do
+                _, response_headers, body = middleware.call(user_env)
+                json_body = JSON.parse(body.first)
+                expect(json_body['errors'].first).to include(
+                  'code' => 10016,
+                  'detail' => 'Service broker concurrent request limit exceeded',
+                  'title' => 'CF-ServiceBrokerRateLimitExceeded',
+                )
+                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+              end
             end
           end
 
@@ -95,8 +99,10 @@ module CloudFoundry
             }
 
             it 'reduces the suggested delay in the Retry-After header' do
-              _, response_headers, _ = middleware.call(user_env)
-              expect(response_headers['Retry-After']).to be_between(Time.now + broker_timeout * 0.5, Time.now + broker_timeout * 1.5)
+              Timecop.freeze do
+                _, response_headers, _ = middleware.call(user_env)
+                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+              end
             end
           end
         end
