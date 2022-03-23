@@ -48,7 +48,7 @@ module VCAP::CloudController
                       where(id: sb_ids).
                       select(:id, :credentials, :salt, :encryption_key_label, :encryption_iterations).
                       all.
-                      map{|t| [t.id.to_s, t.credentials["cert"]]}.to_h
+                      map{|t| [t.id.to_s, (t.credentials.has_key?("cert") ? t.credentials["cert"] : "")]}.to_h
 
       guid_to_drain_maps.each do |guid_and_drains|
         drain_urls[guid_and_drains[:guid]] = {
