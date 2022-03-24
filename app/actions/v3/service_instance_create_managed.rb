@@ -38,7 +38,8 @@ module VCAP::CloudController
           state: ManagedServiceInstance::INITIAL_STRING
         }
 
-        instance = ServiceInstance.first(name: message.name)
+        space = VCAP::CloudController::Space.first(guid: message.relationships[:space][:data][:guid])
+        instance = ServiceInstance.first(name: message.name, space_id: space.id)
         validate_service_instance!(instance)
 
         (instance || ManagedServiceInstance.new).tap do |i|
