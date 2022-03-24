@@ -1,4 +1,5 @@
 require 'spec_helper'
+require_relative 'service_operation_shared'
 
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstance, type: :model do
@@ -567,65 +568,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#terminal_state?' do
-      def build_instance_with_op_state(state)
-        last_operation = ServiceInstanceOperation.make(state: state)
-        instance = ManagedServiceInstance.make
-        instance.service_instance_operation = last_operation
-        instance
-      end
-
-      it 'returns true when state is `succeeded`' do
-        instance = build_instance_with_op_state('succeeded')
-        expect(instance.terminal_state?).to be true
-      end
-
-      it 'returns true when state is `failed`' do
-        instance = build_instance_with_op_state('failed')
-        expect(instance.terminal_state?).to be true
-      end
-
-      it 'returns false otherwise' do
-        instance = build_instance_with_op_state('other')
-        expect(instance.terminal_state?).to be false
-      end
-    end
-
-    describe '#operation_in_progress?' do
-      let(:service_instance) { ManagedServiceInstance.make }
-      before do
-        service_instance.service_instance_operation = last_operation
-        service_instance.save
-      end
-
-      context 'when the last operation is `in progress`' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-        it 'returns true' do
-          expect(service_instance.operation_in_progress?).to eq true
-        end
-      end
-
-      context 'when the last operation is succeeded' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-        it 'returns false' do
-          expect(service_instance.operation_in_progress?).to eq false
-        end
-      end
-
-      context 'when the last operation is failed' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'failed') }
-        it 'returns false' do
-          expect(service_instance.operation_in_progress?).to eq false
-        end
-      end
-
-      context 'when the last operation is nil' do
-        let(:last_operation) { nil }
-        it 'returns false' do
-          expect(service_instance.operation_in_progress?).to eq false
-        end
-      end
-    end
+    it_behaves_like 'a model including the ServiceOperationMixin', ManagedServiceInstance, :service_instance_operation, ServiceInstanceOperation, :service_instance_id
 
     describe '#to_hash' do
       let(:opts)            { { attrs: [:credentials] } }

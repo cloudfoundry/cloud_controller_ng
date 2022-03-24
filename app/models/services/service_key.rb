@@ -1,6 +1,8 @@
+require 'models/runtime/helpers/service_operation_mixin'
+
 module VCAP::CloudController
   class ServiceKey < Sequel::Model
-    include ServiceCredentialBindingMixin
+    include ServiceOperationMixin
 
     class InvalidAppAndServiceRelation < StandardError; end
 

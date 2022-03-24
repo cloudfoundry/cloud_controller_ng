@@ -83,7 +83,7 @@ RSpec.describe 'v3 service route bindings' do
             service_instance_guid: service_instance_1.guid,
             route_guid: route.guid,
             last_operation_type: 'create',
-            last_operation_state: 'successful',
+            last_operation_state: 'succeeded',
             include_params_link: service_instance_1.managed_instance?,
             metadata: route_binding_1_metadata
           ),
@@ -93,7 +93,7 @@ RSpec.describe 'v3 service route bindings' do
             service_instance_guid: service_instance_2.guid,
             route_guid: route.guid,
             last_operation_type: 'create',
-            last_operation_state: 'successful',
+            last_operation_state: 'succeeded',
             include_params_link: service_instance_2.managed_instance?,
             metadata: route_binding_2_metadata
           )
@@ -268,7 +268,7 @@ RSpec.describe 'v3 service route bindings' do
     let(:route_binding) do
       VCAP::CloudController::RouteBinding.new.save_with_new_operation(
         { service_instance: service_instance, route: route, route_service_url: route_service_url },
-        { type: 'create', state: 'successful' }
+        { type: 'create', state: 'succeeded' }
       )
     end
     let(:guid) { route_binding.guid }
@@ -285,7 +285,7 @@ RSpec.describe 'v3 service route bindings' do
         service_instance_guid: service_instance.guid,
         route_guid: route.guid,
         last_operation_type: 'create',
-        last_operation_state: 'successful',
+        last_operation_state: 'succeeded',
         include_params_link: service_instance.managed_instance?,
         metadata: metadata
       )
@@ -1129,7 +1129,7 @@ RSpec.describe 'v3 service route bindings' do
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
           { service_instance: service_instance, route: route, route_service_url: route_service_url },
-          { type: 'create', state: 'successful' }
+          { type: 'create', state: 'succeeded' }
         )
       end
       let(:guid) { binding.guid }
@@ -1690,7 +1690,7 @@ RSpec.describe 'v3 service route bindings' do
           service_instance_guid: service_instance.guid,
           route_guid: route.guid,
           last_operation_type: 'create',
-          last_operation_state: 'successful',
+          last_operation_state: 'succeeded',
           include_params_link: service_instance.managed_instance?,
           metadata: {
             labels: labels,
@@ -1781,7 +1781,7 @@ RSpec.describe 'v3 service route bindings' do
     route_service_url = service_instance.route_service_url
     VCAP::CloudController::RouteBinding.new.save_with_new_operation(
       { service_instance: service_instance, route: route, route_service_url: route_service_url },
-      { type: 'create', state: 'successful' }
+      { type: 'create', state: 'succeeded' }
     )
   end
 
