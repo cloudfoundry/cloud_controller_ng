@@ -10,6 +10,7 @@ AllCops:
     - errors/**/*
     - lib/diego/bbs/models/**/*
     - lib/logcache/v2/**/*
+    - vendor/bundle/**/*
 
 Bundler/DuplicatedGem:
   Enabled: false
