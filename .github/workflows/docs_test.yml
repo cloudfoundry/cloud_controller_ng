@@ -1,0 +1,33 @@
+name: Docs Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs_test.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs_test.yml'
+
+jobs:
+  test_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite/setup
+      - name: Install Docs Dependencies
+        run: bundle install
+        working-directory: docs/v3
+      - name: Run docs tests
+        run: bundle exec rake check_doc_links
+      - uses: ravsamhq/notify-slack-action@v1.1
+        if: github.event_name == 'push'
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure' # default is 'success,failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required

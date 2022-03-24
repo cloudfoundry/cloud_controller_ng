@@ -1,0 +1,44 @@
+name: "setup"
+description: "Configure Ubuntu to run Cloud_Controller_NG and its tests"
+
+inputs:
+  BOSH_CLI_VERSION:
+    description: "Bosh CLI Version"
+    required: true
+    default: 6.4.17
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v2
+    - run: |
+        sudo apt-get update && \
+        sudo apt-get -y install \
+        build-essential \
+        curl \
+        debconf-utils \
+        git \
+        libcurl4-openssl-dev \
+        libpq-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libyaml-dev \
+        libv8-dev \
+        software-properties-common \
+        unzip \
+        wget \
+        zip \
+        zlib1g-dev
+        
+        sudo wget -O /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${{ inputs.BOSH_CLI_VERSION }}-linux-amd64 && sudo chmod +x /usr/local/bin/bosh
+      shell: bash
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler: "2.3.5"
+        bundler-cache: true
+    - name: Install dependencies
+      run: bundle install
+      shell: bash
