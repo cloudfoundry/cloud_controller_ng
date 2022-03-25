@@ -343,7 +343,9 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name) if service_instance.create_failed?
         raise InvalidServiceInstance.new('The service instance is getting deleted or its deletion failed.') if service_instance.delete_in_progress? ||
           service_instance.delete_failed?
-        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name) if service_instance.operation_in_progress?
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name) if service_instance.create_in_progress?
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name) if service_instance.update_in_progress? &&
+          !update_metadata_only?
       end
 
       def maintenance_info_match(message, object)

@@ -2560,7 +2560,6 @@ RSpec.describe 'V3 service instances' do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           space: space
         )
-        si.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'almost there, I promise' })
         si
       }
       let(:guid) { service_instance.guid }
@@ -2573,26 +2572,11 @@ RSpec.describe 'V3 service instances' do
         }
       }
 
-      context 'and the update contains metadata only' do
-        it 'updates the metadata' do
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response.dig('metadata', 'labels')).to eq({ 'unit' => 'metre', 'distance' => '1003' })
-          expect(parsed_response.dig('metadata', 'annotations')).to eq({ 'location' => 'london' })
+      context 'and it is a create operation' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress', description: 'almost there, I promise' })
         end
 
-        it 'does not update the service instance last operation' do
-          api_call.call(admin_headers)
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response['last_operation']).to include({
-            'type' => 'create',
-            'state' => 'in progress',
-            'description' => 'almost there, I promise'
-          })
-        end
-      end
-
-      context 'and the update contains more than just metadata' do
         it 'returns an error' do
           request_body[:name] = 'new-name'
           api_call.call(admin_headers)
@@ -2600,6 +2584,56 @@ RSpec.describe 'V3 service instances' do
           response = parsed_response['errors'].first
           expect(response).to include('title' => 'CF-AsyncServiceInstanceOperationInProgress')
           expect(response).to include('detail' => include("An operation for service instance #{service_instance.name} is in progress"))
+        end
+      end
+
+      context 'and it is an update operation' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress', description: 'almost there, I promise' })
+        end
+
+        context 'and the update contains metadata only' do
+          it 'updates the metadata' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response.dig('metadata', 'labels')).to eq({ 'unit' => 'metre', 'distance' => '1003' })
+            expect(parsed_response.dig('metadata', 'annotations')).to eq({ 'location' => 'london' })
+          end
+
+          it 'does not update the service instance last operation' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['last_operation']).to include({
+              'type' => 'update',
+              'state' => 'in progress',
+              'description' => 'almost there, I promise'
+            })
+          end
+        end
+
+        context 'and the update contains more than just metadata' do
+          it 'returns an error' do
+            request_body[:name] = 'new-name'
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(409)
+            response = parsed_response['errors'].first
+            expect(response).to include('title' => 'CF-AsyncServiceInstanceOperationInProgress')
+            expect(response).to include('detail' => include("An operation for service instance #{service_instance.name} is in progress"))
+          end
+        end
+      end
+
+      context 'and it is an delete operation' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress', description: 'almost there, I promise' })
+        end
+
+        it 'returns an error' do
+          request_body[:name] = 'new-name'
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          response = parsed_response['errors'].first
+          expect(response).to include('detail' => include('The service instance is getting deleted or its deletion failed.'))
         end
       end
     end
