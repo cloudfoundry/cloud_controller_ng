@@ -170,6 +170,52 @@ module VCAP::CloudController
           end
         end
 
+        describe 'when updating' do
+          let(:body) { { name: 'funky-new-name' } }
+
+          context 'when the last operation state of the service instance is create failed' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('ServiceInstanceNotFound')
+              end
+            end
+          end
+
+          context 'when the last operation state of the service instance is delete failed' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error VCAP::CloudController::V3::ServiceInstanceUpdateManaged::InvalidServiceInstance do |err|
+                expect(err.message).to eq('The service instance is getting deleted or its deletion failed.')
+              end
+            end
+          end
+
+          context 'when the last operation state of the service instance is delete in progress' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error VCAP::CloudController::V3::ServiceInstanceUpdateManaged::InvalidServiceInstance do |err|
+                expect(err.message).to eq('The service instance is getting deleted or its deletion failed.')
+              end
+            end
+          end
+        end
+
         describe 'invalid maintenance_info updates' do
           let(:body) do
             {

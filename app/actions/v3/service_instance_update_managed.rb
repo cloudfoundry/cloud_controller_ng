@@ -29,6 +29,7 @@ module VCAP::CloudController
         raise_if_invalid_plan_change!
         raise_if_invalid_maintenance_info_change!
         raise_if_cannot_update!
+        raise_if_invalid_state!
       end
 
       def try_update_sync
@@ -336,6 +337,12 @@ module VCAP::CloudController
           raise update_error.call('name') if service_instance.service_plan.service.allow_context_updates && !message.name.nil?
           raise update_error.call('maintenance_info') unless message.maintenance_info.nil? || maintenance_info_match(message, service_instance)
         end
+      end
+
+      def raise_if_invalid_state!
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name) if service_instance.create_failed?
+        raise InvalidServiceInstance.new('The service instance is getting deleted or its deletion failed.') if service_instance.delete_in_progress? ||
+          service_instance.delete_failed?
       end
 
       def maintenance_info_match(message, object)
