@@ -9,6 +9,7 @@ module VCAP::CloudController
       validate_supported_service_type!(service_instance)
       validate_service_instance_is_shareable!(service_instance)
       validate_target_spaces!(service_instance, target_spaces)
+      validate_service_instance_state!(service_instance)
 
       ServiceInstance.db.transaction do
         target_spaces.each do |space|
@@ -85,6 +86,14 @@ module VCAP::CloudController
         error_msg = "The #{service_instance.service.label} service does not support service instance sharing."
         error!(error_msg)
       end
+    end
+
+    def validate_service_instance_state!(service_instance)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name) if service_instance.create_failed?
+
+      error!('The service instance is getting deleted or its deletion failed.') if service_instance.delete_in_progress? ||
+        service_instance.delete_failed?
+      error!('Service instance is currently being created. It can be shared after its creation succeeded.') if service_instance.create_in_progress?
     end
   end
 end

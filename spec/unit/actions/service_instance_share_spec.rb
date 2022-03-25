@@ -248,6 +248,100 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the last operation state of the service instance is create in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+        end
+
+        it 'raises' do
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'Service instance is currently being created. It can be shared after its creation succeeded.')
+        end
+      end
+
+      context 'when the last operation state of the service instance is create succeeded' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
+        end
+
+        it 'creates the share' do
+          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          expect(shared_instance.shared_spaces.length).to eq 1
+        end
+      end
+
+      context 'when the last operation state of the service instance is create failed' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+        end
+
+        it 'raises' do
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('ServiceInstanceNotFound')
+          end
+        end
+      end
+
+      context 'when the last operation state of the service instance is update in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+        end
+
+        it 'creates the share' do
+          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          expect(shared_instance.shared_spaces.length).to eq 1
+        end
+      end
+
+      context 'when the last operation state of the service instance is update succeeded' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'update', state: 'succeeded' })
+        end
+
+        it 'creates the share' do
+          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          expect(shared_instance.shared_spaces.length).to eq 1
+        end
+      end
+
+      context 'when the last operation state of the service instance is update failed' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'update', state: 'failed' })
+        end
+
+        it 'creates the share' do
+          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          expect(shared_instance.shared_spaces.length).to eq 1
+        end
+      end
+
+      context 'when the last operation state of the service instance is delete in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'raises' do
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'The service instance is getting deleted or its deletion failed.')
+        end
+      end
+
+      context 'when the last operation state of the service instance is delete failed' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+        end
+
+        it 'raises' do
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'The service instance is getting deleted or its deletion failed.')
+        end
+      end
     end
   end
 end
