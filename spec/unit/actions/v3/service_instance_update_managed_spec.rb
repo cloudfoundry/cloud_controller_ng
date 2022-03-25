@@ -173,6 +173,30 @@ module VCAP::CloudController
         describe 'when updating' do
           let(:body) { { name: 'funky-new-name' } }
 
+          context 'when the last operation state of the service instance is create in progress' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+              end
+            end
+          end
+
+          context 'when the last operation state of the service instance is create succeeded' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
+            end
+
+            it 'succeeds' do
+              expect { action.preflight! }.not_to raise_error
+            end
+          end
+
           context 'when the last operation state of the service instance is create failed' do
             before do
               original_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
@@ -187,9 +211,43 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the last operation state of the service instance is delete failed' do
+          context 'when the last operation state of the service instance is update in progress' do
             before do
-              original_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+              original_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+            end
+
+            it 'raises' do
+              expect {
+                action.preflight!
+              }.to raise_error CloudController::Errors::ApiError do |err|
+                expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+              end
+            end
+          end
+
+          context 'when the last operation state of the service instance is update succeeded' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'update', state: 'succeeded' })
+            end
+
+            it 'succeeds' do
+              expect { action.preflight! }.not_to raise_error
+            end
+          end
+
+          context 'when the last operation state of the service instance is update failed' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'update', state: 'failed' })
+            end
+
+            it 'succeeds' do
+              expect { action.preflight! }.not_to raise_error
+            end
+          end
+
+          context 'when the last operation state of the service instance is delete in progress' do
+            before do
+              original_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
             end
 
             it 'raises' do
@@ -201,9 +259,9 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the last operation state of the service instance is delete in progress' do
+          context 'when the last operation state of the service instance is delete failed' do
             before do
-              original_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+              original_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
             end
 
             it 'raises' do
