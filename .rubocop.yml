@@ -9,6 +9,7 @@ AllCops:
   Exclude:
     - errors/**/*
     - lib/diego/bbs/models/**/*
+    - lib/locket/**/*
     - lib/logcache/v2/**/*
 
 Bundler/DuplicatedGem:
