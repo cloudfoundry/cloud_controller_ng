@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       describe '#precursor' do
         it 'returns a service instance precursor' do
-          instance = action.precursor(message: message)
+          instance = action.precursor(message: message, service_plan: service_plan)
 
           expect(instance).to_not be_nil
           expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
@@ -80,24 +80,13 @@ module VCAP::CloudController
           expect(instance).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
         end
 
-        describe 'service plan does not exist' do
-          let(:plan_guid) { Sham.guid }
-
-          it 'should raise' do
-            expect { action.precursor(message: message) }.to raise_error(
-              ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-              'Service plan not found.'
-            )
-          end
-        end
-
         describe 'broker is unavaliable' do
           let(:broker) { ServiceBroker.make(state: ServiceBrokerStateEnum::SYNCHRONIZING) }
           let(:offering) { Service.make(service_broker: broker) }
           let(:service_plan) { ServicePlan.make(service: offering, maintenance_info: maintenance_info) }
 
           it 'should raise' do
-            expect { action.precursor(message: message) }.to raise_error(
+            expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
               CloudController::Errors::ApiError,
               'The service instance cannot be created because there is an operation in progress for the service broker.'
             )
@@ -113,10 +102,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance name is taken: si-test-name.'
-                                                               )
+                 'The service instance name is taken: si-test-name.'
+               )
             end
           end
 
@@ -126,10 +115,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance name is taken: si-test-name.'
-                                                               )
+                 'The service instance name is taken: si-test-name.'
+               )
             end
           end
 
@@ -138,10 +127,10 @@ module VCAP::CloudController
               instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
             end
 
-            it 'recreates the service instance' do
-              service_instance = action.precursor(message: message)
+            it 'deletes the existing service instance and creates a new one' do
+              service_instance = action.precursor(message: message, service_plan: service_plan)
 
-              expect(service_instance.guid).to eq(instance.guid)
+              expect(service_instance.guid).to_not eq(instance.guid)
               expect(service_instance.last_operation.type).to eq('create')
               expect(service_instance.last_operation.state).to eq('in progress')
             end
@@ -153,10 +142,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance name is taken: si-test-name.'
-                                                               )
+                 'The service instance name is taken: si-test-name.'
+               )
             end
           end
 
@@ -166,10 +155,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance name is taken: si-test-name.'
-                                                               )
+                 'The service instance name is taken: si-test-name.'
+               )
             end
           end
 
@@ -179,10 +168,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance name is taken: si-test-name.'
-                                                               )
+                 'The service instance name is taken: si-test-name.'
+               )
             end
           end
 
@@ -192,10 +181,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance is getting deleted or its deletion failed.'
-                                                               )
+                 'The service instance is getting deleted or its deletion failed.'
+               )
             end
           end
 
@@ -205,10 +194,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message) }.to raise_error(
+              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                                                                 'The service instance is getting deleted or its deletion failed.'
-                                                               )
+                 'The service instance is getting deleted or its deletion failed.'
+               )
             end
           end
         end
@@ -220,7 +209,7 @@ module VCAP::CloudController
             expect_any_instance_of(ManagedServiceInstance).to receive(:save_with_new_operation).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect { action.precursor(message: message) }.
+            expect { action.precursor(message: message, service_plan: service_plan) }.
               to raise_error(ServiceInstanceCreateManaged::InvalidManagedServiceInstance, 'blork is busted')
           end
         end
@@ -235,7 +224,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor(message: message)
+                action.precursor(message: message, service_plan: service_plan)
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceSpaceQuotaExceeded')
               end
@@ -251,7 +240,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor(message: message)
+                action.precursor(message: message, service_plan: service_plan)
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceQuotaExceeded')
               end
@@ -268,7 +257,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor(message: message)
+                action.precursor(message: message, service_plan: service_plan)
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
               end
@@ -285,7 +274,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.precursor(message: message)
+                action.precursor(message: message, service_plan: service_plan)
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
               end
@@ -310,7 +299,7 @@ module VCAP::CloudController
             provision: provision_response,
           })
         end
-        let(:precursor) { action.precursor(message: message) }
+        let(:precursor) { action.precursor(message: message, service_plan: service_plan) }
 
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)

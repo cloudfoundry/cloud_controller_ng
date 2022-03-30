@@ -19,10 +19,7 @@ module VCAP::CloudController
         @audit_hash = audit_hash
       end
 
-      def precursor(message:)
-        service_plan = ServicePlan.first(guid: message.service_plan_guid)
-        plan_not_found! unless service_plan
-
+      def precursor(message:, service_plan:)
         broker_unavailable! unless service_plan.service_broker.available?
 
         attr = {
@@ -38,12 +35,13 @@ module VCAP::CloudController
           state: ManagedServiceInstance::INITIAL_STRING
         }
 
-        space = VCAP::CloudController::Space.first(guid: message.relationships[:space][:data][:guid])
+        space = VCAP::CloudController::Space.first(guid: message.space_guid)
         instance = ManagedServiceInstance.first(name: message.name, space_id: space.id)
         validate_service_instance!(instance)
 
-        (instance || ManagedServiceInstance.new).tap do |i|
+        ManagedServiceInstance.new.tap do |i|
           ManagedServiceInstance.db.transaction do
+            instance.destroy if instance
             i.save_with_new_operation(attr, last_operation)
             MetadataUpdate.update(i, message)
           end
@@ -191,8 +189,8 @@ module VCAP::CloudController
 
       def validate_service_instance!(instance)
         if instance
-          instance_already_exists!(instance.name) if instance.create_succeeded? || instance.create_in_progress? || instance.update_succeeded? ||
-            instance.update_in_progress? || instance.update_failed? || instance.last_operation.nil?
+          instance_already_exists!(instance.name) if instance.create_succeeded? || instance.create_in_progress? || instance.last_operation_is_update? ||
+            instance.last_operation_nil?
           incomplete_deletion! if instance.delete_failed? || instance.delete_in_progress?
         end
       end
@@ -200,10 +198,6 @@ module VCAP::CloudController
       def broker_unavailable!
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
           'The service instance cannot be created because there is an operation in progress for the service broker.')
-      end
-
-      def plan_not_found!
-        raise InvalidManagedServiceInstance.new('Service plan not found.')
       end
 
       def instance_already_exists!(name)

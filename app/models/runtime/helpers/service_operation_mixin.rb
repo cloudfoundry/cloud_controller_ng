@@ -30,15 +30,15 @@ module VCAP::CloudController
     end
 
     def update_in_progress?
-      update? && in_progress?
+      last_operation_is_update? && in_progress?
     end
 
     def update_succeeded?
-      update? && succeeded?
+      last_operation_is_update? && succeeded?
     end
 
     def update_failed?
-      update? && failed?
+      last_operation_is_update? && failed?
     end
 
     def delete_in_progress?
@@ -49,6 +49,14 @@ module VCAP::CloudController
       delete? && failed?
     end
 
+    def last_operation_nil?
+      !last_operation?
+    end
+
+    def last_operation_is_update?
+      last_operation&.type == 'update'
+    end
+
     private
 
     def last_operation?
@@ -57,10 +65,6 @@ module VCAP::CloudController
 
     def create?
       last_operation&.type == 'create'
-    end
-
-    def update?
-      last_operation&.type == 'update'
     end
 
     def delete?

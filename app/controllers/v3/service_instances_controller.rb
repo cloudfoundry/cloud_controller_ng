@@ -240,7 +240,7 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
 
     action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
-    instance = action.precursor(message: message)
+    instance = action.precursor(message: message, service_plan: service_plan)
 
     provision_job = VCAP::CloudController::V3::CreateServiceInstanceJob.new(
       instance.guid,
