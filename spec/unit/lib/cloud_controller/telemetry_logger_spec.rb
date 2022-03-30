@@ -9,6 +9,20 @@ module VCAP::CloudController
       TelemetryLogger.init(ActiveSupport::Logger.new(file.path))
     end
 
+    context 'telemetry logging disabled' do
+      # To test an uninitialized TelemetryLogger we use a dedicated subclass here.
+      class DisabledTelemetryLogger < TelemetryLogger; end
+
+      it 'still allows emit to be called without failing' do
+        expect {
+          DisabledTelemetryLogger.internal_emit(
+            'some-event',
+            { 'key' => 'value' },
+          )
+        }.not_to raise_error
+      end
+    end
+
     it 'logs job name, timestamp, and event, anonymizing by default' do
       TelemetryLogger.v3_emit(
         'some-event',

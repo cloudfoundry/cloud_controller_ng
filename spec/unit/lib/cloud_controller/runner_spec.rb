@@ -139,11 +139,40 @@ module VCAP::CloudController
       it 'only sets up logging once' do
         steno_configurer = instance_double(StenoConfigurer)
         allow(StenoConfigurer).to receive(:new).and_return(steno_configurer)
-        allow(steno_configurer).to receive(:configure).once
+        allow(steno_configurer).to receive(:configure)
 
+        subject.run!
         subject.run!
 
         expect(steno_configurer).to have_received(:configure).once
+      end
+
+      it 'sets up telemetry logging once' do
+        allow(TelemetryLogger).to receive(:init)
+
+        subject.run!
+        subject.run!
+
+        expect(TelemetryLogger).to have_received(:init).once
+      end
+
+      context 'telemetry logging disabled' do
+        let(:config_file) do
+          config = YAMLConfig.safe_load_file(valid_config_file_path)
+          config.delete('telemetry_log_path')
+          file = Tempfile.new('config')
+          file.write(YAML.dump(config))
+          file.rewind
+          file
+        end
+
+        it 'sets up telemetry logging with nil logger' do
+          allow(TelemetryLogger).to receive(:init)
+
+          subject.run!
+
+          expect(TelemetryLogger).to_not have_received(:init)
+        end
       end
 
       it 'sets up the blobstore buckets' do
