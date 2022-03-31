@@ -35,7 +35,7 @@ module VCAP::CloudController
 
         last_operation = {
           type: 'create',
-          state: ManagedServiceInstance::IN_PROGRESS_STRING
+          state: ManagedServiceInstance::INITIAL_STRING
         }
 
         ManagedServiceInstance.new.tap do |i|

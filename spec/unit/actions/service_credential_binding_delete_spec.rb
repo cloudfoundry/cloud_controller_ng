@@ -155,6 +155,15 @@ module VCAP::CloudController
       end
 
       RSpec.shared_examples 'blocking operation in progress' do
+        describe 'create initial' do
+          let(:last_operation_type) { 'create' }
+          let(:last_operation_state) { 'initial' }
+
+          it 'is blocking' do
+            expect(action.blocking_operation_in_progress?(binding)).to be_truthy
+          end
+        end
+
         describe 'delete in progress' do
           let(:last_operation_type) { 'delete' }
           let(:last_operation_state) { 'in progress' }
