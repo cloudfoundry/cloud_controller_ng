@@ -132,7 +132,7 @@ module VCAP::CloudController
 
               expect(service_instance.guid).to_not eq(instance.guid)
               expect(service_instance.last_operation.type).to eq('create')
-              expect(service_instance.last_operation.state).to eq('in progress')
+              expect(service_instance.last_operation.state).to eq('initial')
             end
           end
 
