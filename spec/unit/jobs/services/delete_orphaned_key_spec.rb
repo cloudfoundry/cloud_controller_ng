@@ -59,23 +59,27 @@ module VCAP::CloudController
           allow(client).to receive(:unbind).and_raise(StandardError.new('I always fail'))
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
 
-          start = Delayed::Job.db_time_now
-          opts = { queue: Jobs::Queues.generic, run_at: start }
-          Jobs::Enqueuer.new(job, opts).enqueue
+          first_enqueue_time = 0
+          Timecop.freeze do
+            first_enqueue_time = Delayed::Job.db_time_now
+            opts = { queue: Jobs::Queues.generic, run_at: first_enqueue_time }
+            Jobs::Enqueuer.new(job, opts).enqueue
+          end
 
-          run_at_time = start
+          run_at_time = first_enqueue_time
           10.times do |i|
-            Timecop.travel(run_at_time)
-            run_job
-            expect(Delayed::Job.first.run_at).to be_within(1.second).of(run_at_time + (2**(i + 1)).minutes)
-            run_at_time = Delayed::Job.first.run_at
+            Timecop.freeze(run_at_time) do
+              run_job
+              expect(Delayed::Job.first.run_at).to be_within(1.second).of(run_at_time + (2**(i + 1)).minutes)
+              run_at_time = Delayed::Job.first.run_at
+            end
           end
 
           Timecop.travel(run_at_time)
           run_job
           execute_all_jobs(expected_successes: 0, expected_failures: 0) # not running any jobs
 
-          expect(run_at_time).to be_within(1.minute).of(start + (2**11).minutes - 2.minutes)
+          expect(run_at_time).to be_within(1.minute).of(first_enqueue_time + (2**11).minutes - 2.minutes)
         end
       end
     end
