@@ -16,7 +16,8 @@ module VCAP::CloudController::Presenters::V3
         app_port: 1234,
         route: route,
         process_type: process.type,
-        weight: 55
+        weight: 55,
+        created_at: 10.minutes.ago
       )
     end
 
@@ -26,7 +27,8 @@ module VCAP::CloudController::Presenters::V3
         app_port: 5678,
         route: route,
         process_type: 'other-process',
-        weight: 45
+        weight: 45,
+        created_at: 5.minutes.ago
       )
     end
 
@@ -57,6 +59,14 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:destinations][1][:port]).to eq(route_mapping2.app_port)
         expect(result[:destinations][1][:weight]).to eq(route_mapping2.weight)
         expect(result[:destinations][1][:protocol]).to eq(route_mapping2.protocol)
+      end
+
+      context 'ordering' do
+        subject(:presenter) { RouteDestinationsPresenter.new(route.route_mappings.reverse, route: route) }
+        it 'orders the destinations by guid' do
+          expect(result[:destinations][0][:guid]).to eq(route_mapping.guid)
+          expect(result[:destinations][1][:guid]).to eq(route_mapping2.guid)
+        end
       end
 
       context 'links' do

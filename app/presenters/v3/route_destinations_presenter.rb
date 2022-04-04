@@ -21,7 +21,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def presented_destinations
-      destinations.map do |route_mapping|
+      destinations.sort_by { |d| [d.created_at, d.guid] }.map do |route_mapping|
         RouteDestinationPresenter.new(route_mapping).destination_hash
       end
     end
