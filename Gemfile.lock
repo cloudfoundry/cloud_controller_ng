@@ -334,7 +334,7 @@ GEM
     net-ssh (6.1.0)
     netaddr (2.0.5)
     netrc (0.11.0)
-    newrelic_rpm (8.5.0)
+    newrelic_rpm (8.6.0)
     nokogiri (1.13.3)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
