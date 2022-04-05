@@ -730,6 +730,21 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'web'
+                }
+              },
+              protocol: 'http2'
+            }
+          ]
+        }
+      end
       let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
       let(:response_json) do
         {
@@ -740,18 +755,6 @@ RSpec.describe 'Route Destinations Request' do
                 guid: app_model.guid,
                 process: {
                   type: 'web'
-                }
-              },
-              weight: nil,
-              port: 8080,
-              protocol: 'http1'
-            },
-            {
-              guid: UUID_REGEX,
-              app: {
-                guid: app_model.guid,
-                process: {
-                  type: 'worker'
                 }
               },
               weight: nil,
@@ -806,8 +809,7 @@ RSpec.describe 'Route Destinations Request' do
         it 'replaces all destinations on the route' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
           expect(last_response.status).to eq(200)
-          expect(parsed_response['destinations'][0]['protocol']).to eq('http1')
-          expect(parsed_response['destinations'][1]['protocol']).to eq('http2')
+          expect(parsed_response['destinations'].map { |d| d['protocol'] }).to contain_exactly('http1', 'http2')
         end
       end
 
