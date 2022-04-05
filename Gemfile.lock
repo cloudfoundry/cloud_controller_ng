@@ -536,7 +536,7 @@ GEM
     webrick (1.7.0)
     xml-simple (1.1.9)
       rexml
-    yajl-ruby (1.4.1)
+    yajl-ruby (1.4.2)
     yard (0.9.27)
       webrick (~> 1.7.0)
     zeitwerk (2.5.4)
