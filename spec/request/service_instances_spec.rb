@@ -686,6 +686,111 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
+    context 'when the last operation state of the service instance is create in progress' do
+      before do
+        instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+      end
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(409)
+        expect(parsed_response['errors']).to include(include({
+           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+           'code' => 60016,
+         }))
+      end
+    end
+
+    context 'when the last operation state of the service instance is create succeeded' do
+      before do
+        instance.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
+      end
+
+      it 'returns the parameters' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
+    context 'when the last operation state of the service instance is create failed' do
+      before do
+        instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+      end
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(404)
+        expect(parsed_response['errors']).to include(include({
+           'title' => 'CF-ResourceNotFound',
+           'code' => 10010,
+         }))
+      end
+    end
+
+    context 'when the last operation state of the service instance is update in progress' do
+      before do
+        instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+      end
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(409)
+        expect(parsed_response['errors']).to include(include({
+           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+           'code' => 60016,
+         }))
+      end
+    end
+
+    context 'when the last operation state of the service instance is update succeeded' do
+      before do
+        instance.save_with_new_operation({}, { type: 'update', state: 'succeeded' })
+      end
+
+      it 'returns the parameters' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
+    context 'when the last operation state of the service instance is update failed' do
+      before do
+        instance.save_with_new_operation({}, { type: 'update', state: 'failed' })
+      end
+
+      it 'returns the parameters' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
+    context 'when the last operation state of the service instance is delete in progress' do
+      before do
+        instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+      end
+
+      it 'fails with an explanatory error' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors']).to include(include({
+           'title' => 'CF-UnprocessableEntity',
+           'code' => 10008,
+           'detail' => 'The service instance is getting deleted.'
+         }))
+      end
+    end
+
+    context 'when the last operation state of the service instance is delete failed' do
+      before do
+        instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+      end
+
+      it 'returns the parameters' do
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+      end
+    end
+
     context 'when the instance is user-provided' do
       it 'responds with 404' do
         upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space)
