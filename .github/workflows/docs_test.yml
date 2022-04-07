@@ -14,16 +14,19 @@ on:
       - '.github/workflows/docs_test.yml'
 
 jobs:
-  test_docs:
+  Test-Docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Prepare setup
+        run: cp -a .ruby-version docs/v3/.ruby-version
       - uses: ./.github/workflows/composite/setup
-      - name: Install Docs Dependencies
-        run: bundle install
-        working-directory: docs/v3
+        with:
+          WORKING_DIRECTORY: docs/v3
       - name: Run docs tests
-        run: bundle exec rake check_doc_links
+        run: |
+          bundle install
+          bundle exec rake check_doc_links
       - uses: ravsamhq/notify-slack-action@v1.1
         if: github.event_name == 'push'
         with:

@@ -6,12 +6,15 @@ inputs:
     description: "Bosh CLI Version"
     required: true
     default: 6.4.17
-
+  WORKING_DIRECTORY:
+    description: "The Current Work Directory from which installs specifically bundle installs should take place"
+    required: true
+    default: "."
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v2
-    - run: |
+    - name: Install OS dependencies
+      run: |
         sudo apt-get update && \
         sudo apt-get -y install \
         build-essential \
@@ -35,10 +38,12 @@ runs:
         
         sudo wget -O /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${{ inputs.BOSH_CLI_VERSION }}-linux-amd64 && sudo chmod +x /usr/local/bin/bosh
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}
     - uses: ruby/setup-ruby@v1
       with:
-        bundler: "2.3.5"
         bundler-cache: true
-    - name: Install dependencies
+        working-directory: ${{ inputs.WORKING_DIRECTORY }}
+    - name: Install Ruby dependencies
       run: bundle install
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}

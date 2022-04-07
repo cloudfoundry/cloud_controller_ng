@@ -6,13 +6,17 @@ on:
     branches: [ main ]
     paths-ignore:
       - 'docs/**'
+      - 'decisions/**'
+      - '.github/workflows/docs_test.yml'
   push:
     branches: [ main ]
     paths-ignore:
       - 'docs/**'
+      - 'decisions/**'
+      - '.github/workflows/docs_test.yml'
 
 jobs:
-  rubocop:
+  Rubocop:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -27,7 +31,7 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
 
-  test_postgres:
+  Test-Postgres:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -58,7 +62,7 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
 
-  test_mysql:
+  Test-Mysql:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
