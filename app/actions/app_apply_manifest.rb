@@ -139,12 +139,7 @@ module VCAP::CloudController
     def create_service_bindings(manifest_service_bindings_message, app)
       manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
-        service_instance_not_found!(manifest_service_binding.name) unless service_instance
-
-        if service_instance.type == 'managed_service_instance'
-          service_instance_not_found!(service_instance.name) if service_instance.create_failed?
-          delete_in_progress_or_failed!(service_instance) if service_instance.last_operation_is_delete?
-        end
+        validate_service_instance!(service_instance)
 
         binding = ServiceBinding.first(service_instance: service_instance, app: app)
         next if binding&.create_succeeded?
@@ -195,6 +190,15 @@ module VCAP::CloudController
           }
         }
       )
+    end
+
+    def validate_service_instance!(service_instance)
+      service_instance_not_found!(manifest_service_binding.name) unless service_instance
+
+      if service_instance.type == 'managed_service_instance'
+        service_instance_not_found!(service_instance.name) if service_instance.create_failed?
+        delete_in_progress_or_failed!(service_instance) if service_instance.last_operation_is_delete?
+      end
     end
 
     def raise_binding_error!(service_instance, message)
