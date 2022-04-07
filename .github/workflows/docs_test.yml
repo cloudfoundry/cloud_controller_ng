@@ -27,8 +27,13 @@ jobs:
         run: |
           bundle install
           bundle exec rake check_doc_links
+
+  Report-Failure:
+    runs-on: ubuntu-latest
+    needs: [ Test-Docs ]
+    if: github.event_name == 'push' && failure()
+    steps:
       - uses: ravsamhq/notify-slack-action@v1.1
-        if: github.event_name == 'push'
         with:
           status: ${{ job.status }}
           notify_when: 'failure' # default is 'success,failure,warnings'
