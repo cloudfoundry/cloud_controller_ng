@@ -931,6 +931,45 @@ module VCAP::CloudController
 /For service 'si-name': A binding failed to be deleted. Resolve the issue with this binding before retrying this operation./)
                 end
               end
+
+              context 'when the last operation state of the service instance is create failed' do
+                before do
+                  service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(CloudController::Errors::NotFound,
+                                   "Service instance '#{service_instance.name}' not found")
+                end
+              end
+
+              context 'when the last operation state of the service instance is delete in progress' do
+                before do
+                  service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                                   "For service '#{service_instance.name}': The service instance is getting deleted or its deletion failed. Therefore, no binding can be created.")
+                end
+              end
+
+              context 'when the last operation state of the service instance is delete failed' do
+                before do
+                  service_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                                   "For service '#{service_instance.name}': The service instance is getting deleted or its deletion failed. Therefore, no binding can be created.")
+                end
+              end
             end
           end
         end
