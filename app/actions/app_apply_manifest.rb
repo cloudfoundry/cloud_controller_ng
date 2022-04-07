@@ -12,6 +12,7 @@ module VCAP::CloudController
   class AppApplyManifest
     class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
+    class ServiceInstanceError < StandardError; end
     class ServiceBindingError < StandardError; end
     class ServiceBrokerRespondedAsyncWhenNotAllowed < StandardError; end
     SERVICE_BINDING_TYPE = 'app'.freeze
@@ -140,6 +141,12 @@ module VCAP::CloudController
       manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
+
+        if service_instance.type == 'managed_service_instance'
+          service_instance_not_found! if service_instance.create_failed?
+          delete_in_progress_or_failed!(service_instance) if service_instance.last_operation_is_delete?
+        end
+
         binding = ServiceBinding.first(service_instance: service_instance, app: app)
         next if binding&.create_succeeded?
 
@@ -212,6 +219,10 @@ module VCAP::CloudController
 
     def service_instance_not_found!(name)
       raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Service instance '#{name}' not found")
+    end
+
+    def delete_in_progress_or_failed!(service_instance)
+      raise ServiceInstanceError.new("The service instance '#{service_instance.name}' is getting deleted or its deletion failed. Therefore, no binding can be created.")
     end
 
     def volume_services_enabled?
