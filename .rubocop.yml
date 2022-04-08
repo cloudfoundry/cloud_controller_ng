@@ -11,6 +11,7 @@ AllCops:
     - lib/diego/bbs/models/**/*
     - lib/locket/**/*
     - lib/logcache/v2/**/*
+    - vendor/bundle/**/*
 
 Bundler/DuplicatedGem:
   Enabled: false
