@@ -36,8 +36,8 @@ When deployed via capi-release only:
 * Droplets: An executable containing an app and its runtime dependencies
 * Buildpacks: Set of programs that transform packages into droplets
 * Buildpack cache: Cached dependencies and build artifacts to speed up future staging
- 
-Cloud Controller currently supports [webdav](http://www.webdav.org/) and the following [fog](http://fog.io) connectors: 
+
+Cloud Controller currently supports [webdav](http://www.webdav.org/) and the following [fog](http://fog.io) connectors:
 
 * Alibaba Cloud (Experimental)
 * Azure
@@ -83,8 +83,8 @@ It will try to connect to those databases with the following connection string:
 
 To specify a custom username, password, host, or port for either database type, you can override the default
 connection string prefix (the part before the `cc_test` database name) by setting the `MYSQL_CONNECTION_PREFIX`
-and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including 
-the database name, you can set the `DB_CONNECTION_STRING` environment variable.  This will restrict you to only 
+and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including
+the database name, you can set the `DB_CONNECTION_STRING` environment variable.  This will restrict you to only
 running tests in serial, however.
 
 For example, to run unit tests in parallel with a custom mysql username and password, you could execute:
@@ -115,6 +115,13 @@ rake db:create
 ```
 will create the above database when the `DB` environment variable is set to postgres or mysql.
 You should run this before running rake in order to ensure that the `cc_test` database exists.
+
+#### Installing mysql2
+
+If you are using macOS Monterey (12.x), you may encounter errors when installing the required mysql2 gem. Installing the gem via the command below (utilizing homebrew) provides a fix for this issue:
+```
+gem install mysql2 -v '0.5.3' -- --with-opt-dir=$(brew --prefix openssl) --with-ldflags=-L"$(brew --cellar zstd)/$(brew list --versions zstd | tr ' ' '\n' | tail -1)/lib"
+```
 
 #### Running tests on a single file
 
