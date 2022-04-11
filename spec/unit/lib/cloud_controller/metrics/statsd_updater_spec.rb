@@ -20,7 +20,7 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#record_user_count' do
+    describe '#update_user_count' do
       before do
         allow(statsd_client).to receive(:gauge)
       end
@@ -28,7 +28,7 @@ module VCAP::CloudController::Metrics
       it 'emits number of users to statsd' do
         expected_user_count = 5
 
-        updater.record_user_count(expected_user_count)
+        updater.update_user_count(expected_user_count)
 
         expect(statsd_client).to have_received(:gauge).with('cc.total_users', expected_user_count)
       end
