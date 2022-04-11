@@ -790,6 +790,14 @@ module VCAP::CloudController
 
           include_examples 'when brokers return Retry-After header', :fetch_service_binding_last_operation
         end
+
+        describe '#display_name' do
+          let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
+
+          it 'returns a display name for this action' do
+            expect(job.display_name).to eq('service_binding.state_fetch')
+          end
+        end
       end
     end
   end

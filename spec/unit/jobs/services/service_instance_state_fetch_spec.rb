@@ -581,6 +581,12 @@ module VCAP::CloudController
           end
         end
 
+        describe '#display_name' do
+          it 'returns a display name for this action' do
+            expect(job.display_name).to eq('service_instance.state_fetch')
+          end
+        end
+
         describe '#end_timestamp' do
           let(:max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
 
