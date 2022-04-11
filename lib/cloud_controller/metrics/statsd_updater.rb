@@ -10,7 +10,7 @@ module VCAP::CloudController::Metrics
       @statsd.gauge('cc.deployments.deploying', deploying_count)
     end
 
-    def record_user_count(user_count)
+    def update_user_count(user_count)
       @statsd.gauge('cc.total_users', user_count)
     end
 

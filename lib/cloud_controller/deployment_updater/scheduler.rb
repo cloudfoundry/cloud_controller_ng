@@ -10,10 +10,12 @@ module VCAP::CloudController
           with_error_logging('cc.deployment_updater') do
             config = CloudController::DependencyLocator.instance.config
             statsd_client = CloudController::DependencyLocator.instance.statsd_client
+            prometheus_updater = CloudController::DependencyLocator.instance.prometheus_updater
 
             update_step = proc { update(
               update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
-              statsd_client: statsd_client
+              statsd_client: statsd_client,
+              prometheus_updater: prometheus_updater
             )
             }
 
@@ -39,14 +41,20 @@ module VCAP::CloudController
 
         private
 
-        def update(update_frequency:, statsd_client:)
+        def update(update_frequency:, statsd_client:, prometheus_updater:)
           logger = Steno.logger('cc.deployment_updater.scheduler')
 
           update_start_time = Time.now
-          statsd_client.time('cc.deployments.update.duration') do
-            Dispatcher.dispatch
-          end
+          Dispatcher.dispatch
           update_duration = Time.now - update_start_time
+          ## NOTE: We're taking time in seconds and multiplying by 1000 because we don't have
+          ##       access to time in milliseconds. If you ever get access to reliable time in
+          ##       milliseconds, then do know that the lack of precision here is not desired
+          ##       so feed in the entire value!
+          update_duration_ms = update_duration * 1000
+          statsd_client.timing('cc.deployments.update.duration', update_duration_ms)
+          prometheus_updater.report_deployment_duration(update_duration_ms)
+
           logger.info("Update loop took #{update_duration}s")
 
           sleep_duration = update_frequency - update_duration
