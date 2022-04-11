@@ -40,6 +40,10 @@ module VCAP::CloudController
           :service_instance_state_fetch
         end
 
+        def display_name
+          'service_instance.state_fetch'
+        end
+
         def max_attempts
           1
         end

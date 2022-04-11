@@ -47,6 +47,10 @@ module VCAP::CloudController
           retry_job
         end
 
+        def display_name
+          'service_binding.state_fetch'
+        end
+
         def max_attempts
           1
         end
