@@ -12,6 +12,7 @@ AllCops:
     - lib/locket/**/*
     - lib/logcache/v2/**/*
     - vendor/bundle/**/*
+    - docs/**/*
 
 Bundler/DuplicatedGem:
   Enabled: false
