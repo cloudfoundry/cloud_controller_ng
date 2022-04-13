@@ -8,12 +8,14 @@ on:
       - 'docs/**'
       - 'decisions/**'
       - '.github/workflows/docs_test.yml'
+      - '*.md'
   push:
     branches: [ main ]
     paths-ignore:
       - 'docs/**'
       - 'decisions/**'
       - '.github/workflows/docs_test.yml'
+      - '*.md'
 
 jobs:
   Rubocop:
