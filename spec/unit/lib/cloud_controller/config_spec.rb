@@ -585,6 +585,60 @@ module VCAP::CloudController
       end
     end
 
+    describe 'broker_client_async_poll_exponential_backoff_rate' do
+      let(:cc_config_file) do
+        config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
+        config['broker_client_async_poll_exponential_backoff_rate'] = backoff_rate
+
+        file = Tempfile.new('cc_config.yml')
+        file.write(YAML.dump(config))
+        file.close
+        file
+      end
+
+      let(:config) do
+        Config.load_from_file(cc_config_file, context: schema_context)
+      end
+
+      context 'worker schema' do
+        let(:schema_context) { :worker }
+        context 'when given an Integer' do
+          let(:backoff_rate) { 1 }
+
+          it 'succeeds' do
+            expect(config.get(:broker_client_async_poll_exponential_backoff_rate)).to eq 1
+          end
+        end
+
+        context 'when given a Float' do
+          let(:backoff_rate) { 1.0 }
+
+          it 'succeeds' do
+            expect(config.get(:broker_client_async_poll_exponential_backoff_rate)).to eq 1
+          end
+        end
+      end
+
+      context 'api schema' do
+        let(:schema_context) { :api }
+        context 'when given an Integer' do
+          let(:backoff_rate) { 1 }
+
+          it 'succeeds' do
+            expect(config.get(:broker_client_async_poll_exponential_backoff_rate)).to eq 1
+          end
+        end
+
+        context 'when given a Float' do
+          let(:backoff_rate) { 1.0 }
+
+          it 'succeeds' do
+            expect(config.get(:broker_client_async_poll_exponential_backoff_rate)).to eq 1
+          end
+        end
+      end
+    end
+
     describe '#kubernetes_ca_cert' do
       subject(:config_instance) { Config.new(test_config_hash.merge(k8s_config_hash)) }
 
