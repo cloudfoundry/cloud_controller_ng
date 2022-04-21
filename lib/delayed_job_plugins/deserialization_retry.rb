@@ -5,8 +5,10 @@ class DeserializationRetry < Delayed::Plugin
 
       if deserialization_error?(db_job)
         if expired?(db_job)
+          logger.info("Deserialization for job '#{db_job.guid}' failed, job is expired")
           block.call(job, *args)
         else
+          logger.info("Deserialization for job '#{db_job.guid}' failed, rescheduling it (#{db_job.attempts + 1} attempts)")
           reschedule(db_job)
           clear_lock(db_job)
           db_job.save
@@ -34,6 +36,12 @@ class DeserializationRetry < Delayed::Plugin
     def clear_lock(job)
       job.locked_by = nil
       job.locked_at = nil
+    end
+
+    private
+
+    def logger
+      Steno.logger('cc.background.deserialization-retry')
     end
   end
 end

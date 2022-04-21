@@ -1,6 +1,12 @@
 require 'spec_helper'
 
 RSpec.describe DeserializationRetry do
+  let(:background_logger) { instance_double(Steno::Logger).as_null_object }
+
+  before do
+    allow(Steno).to receive(:logger).and_return(background_logger)
+  end
+
   context 'when a Delayed::Job fails to load because the class is missing' do
     it 'prevents DelayedJob from marking it as failed' do
       handler = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(10_000)
@@ -18,6 +24,14 @@ RSpec.describe DeserializationRetry do
 
       expect(job.run_at).to be_within(2.seconds).of Delayed::Job.db_time_now + 5.minutes
       expect(job.attempts).to eq(1)
+      expect(background_logger).to have_received(:info).with("Deserialization for job '#{job.guid}' failed, rescheduling it (1 attempts)")
+
+      Timecop.travel(Time.now + 6.minutes)
+      Delayed::Worker.new.work_off
+      job.reload
+
+      expect(job.attempts).to eq(2)
+      expect(background_logger).to have_received(:info).with("Deserialization for job '#{job.guid}' failed, rescheduling it (2 attempts)")
     end
 
     context 'and we have been retrying for more than 24 hours' do
@@ -31,6 +45,7 @@ RSpec.describe DeserializationRetry do
         Delayed::Worker.new.work_off
 
         expect(job.reload.failed_at).not_to be_nil
+        expect(background_logger).to have_received(:info).with("Deserialization for job '#{job.guid}' failed, job is expired")
       end
     end
   end
