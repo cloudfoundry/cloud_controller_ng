@@ -26,6 +26,12 @@ module VCAP::CloudController
       subject.dispatch
       expect(updater).to_not have_received(:scale)
     end
+
+    it 'processes the deployment only once' do
+      subject.dispatch
+      subject.dispatch
+      expect(logger).to have_received(:warn).with('finalized-degenerate-deployment', anything).once
+    end
   end
 
   RSpec.describe DeploymentUpdater::Dispatcher do
