@@ -48,7 +48,7 @@ module VCAP::CloudController
               status_reason: DeploymentModel::DEGENERATE_STATUS_REASON
             )
 
-            logger.warn('finalized-degenerate-deployment', { deployment: d.guid, app: d.app.guid })
+            logger.warn('finalized-degenerate-deployment', { deployment: d.guid, app: d.app_guid })
           end
         end
       end
