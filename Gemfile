@@ -47,10 +47,10 @@ gem 'vmstat', '~> 2.3'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 6.1.5'
-gem 'actionview', '~> 6.1.5'
+gem 'actionpack', '~> 6.1.5', '>= 6.1.5.1'
+gem 'actionview', '~> 6.1.5', '>= 6.1.5.1'
 gem 'activemodel', '~> 6.1.5'
-gem 'railties', '~> 6.1.5'
+gem 'railties', '~> 6.1.5', '>= 6.1.5.1'
 
 # Blobstore and Bits Service Dependencies
 gem 'bits_service_client', '~> 3.3', '>= 3.3.0'
