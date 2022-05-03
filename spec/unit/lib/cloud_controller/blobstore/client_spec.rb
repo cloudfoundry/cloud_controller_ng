@@ -10,14 +10,5 @@ module CloudController
 
       it_behaves_like 'a blobstore client'
     end
-
-    RSpec.describe '#Azure_branch_merge' do
-      it_should_be_removed(
-        by: '2022/5/1',
-        explanation: 'It\'s been ~3 months since we made this PR https://github.com/Azure/azure-storage-ruby/pull/212. '\
-        'If its not already been accepted its time for a new solution. '\
-        'See https://docs.google.com/document/d/1s4-64mDqif31K5hkCJf6QW86rad2hYV7W17AqZyHhWE/edit#heading=h.nnrp172sw8k1 for more context',
-      )
-    end
   end
 end
