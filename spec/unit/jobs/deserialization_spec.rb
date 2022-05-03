@@ -137,9 +137,11 @@ module VCAP::CloudController
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)
 
-          # We are not interested in minor differences like ordering of nodes.
+          # We are not interested in minor differences like ordering of nodes. Therefore comparing it as hash.
+          # rubocop:disable Security/YAMLLoad
           db_job = YAML.load(jobs_in_db[0][:handler]).as_json
           dumped_job = YAML.load(serialized_job).as_json
+          # rubocop:enable Security/YAMLLoad
           expect(db_job).to eq(dumped_job)
         end
 
