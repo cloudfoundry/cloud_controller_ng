@@ -69,7 +69,7 @@ gem 'cf-uaa-lib', '~> 4.0.1'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
-  gem 'mysql2', '~> 0.5.3'
+  gem 'mysql2', '~> 0.5.4'
   gem 'pg'
 end
 
