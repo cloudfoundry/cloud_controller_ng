@@ -1,0 +1,45 @@
+## Share a route with another space (experimental)
+
+Shares a route with another space.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/routes/[guid]/relationships/shared_spaces" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": [ { "guid": "space-one-guid" }, { "guid": "space-two-guid" } ]
+    }
+  }'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": {
+    [
+      "guid": "space-one-guid",
+      "guid": "space-two-guid"
+    ]
+  },
+  "links": {
+    "self": {
+      "href":"http://api.example.com/v3/routes/[guid]/relationships/shared_spaces"
+    },
+  }
+}
+```
+
+#### Permitted roles
+
+ |
+--- |
+Admin |
+Space Developer |
+Space Supporter |

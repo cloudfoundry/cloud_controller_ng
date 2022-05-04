@@ -41,6 +41,24 @@ module VCAP::CloudController
         )
       end
 
+      def record_route_share(route, actor_audit_info, target_space_guids)
+        Event.create(
+          space:          route.space,
+          type:           'audit.route.share',
+          actee:          route.guid,
+          actee_type:     'route',
+          actee_name:     route.host,
+          actor:          actor_audit_info.user_guid,
+          actor_type:     'user',
+          actor_name:     actor_audit_info.user_email,
+          actor_username: actor_audit_info.user_name,
+          timestamp:      Sequel::CURRENT_TIMESTAMP,
+          metadata:       {
+            target_space_guids: target_space_guids
+          }
+        )
+      end
+
       def record_route_delete_request(route, actor_audit_info, recursive)
         Event.create(
           type:              'audit.route.delete-request',

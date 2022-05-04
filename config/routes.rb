@@ -157,6 +157,7 @@ Rails.application.routes.draw do
   get '/routes', to: 'routes#index'
   get '/routes/:guid', to: 'routes#show'
   post '/routes', to: 'routes#create'
+  post '/routes/:guid/relationships/shared_spaces', to: 'routes#share_routes'
   patch '/routes/:guid', to: 'routes#update'
   delete '/routes/:guid', to: 'routes#destroy'
   get '/apps/:guid/routes', to: 'routes#index_by_app'

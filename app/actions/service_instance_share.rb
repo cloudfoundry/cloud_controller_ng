@@ -66,7 +66,8 @@ module VCAP::CloudController
 
     def validate_not_sharing_to_self!(service_instance, spaces)
       if spaces.include?(service_instance.space)
-        error!('Service instances cannot be shared into the space where they were created.')
+        error!("Unable to share service instance '#{service_instance.name}' with space '#{service_instance.space.guid}'. "\
+        'Service instances cannot be shared into the space where they were created.')
       end
     end
 

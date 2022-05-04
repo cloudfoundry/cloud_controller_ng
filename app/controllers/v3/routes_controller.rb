@@ -14,6 +14,7 @@ require 'actions/route_destination_update'
 require 'actions/route_create'
 require 'actions/route_delete'
 require 'actions/route_update'
+require 'actions/route_share'
 require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
 require 'fetchers/route_destinations_list_fetcher'
@@ -107,6 +108,26 @@ class RoutesController < ApplicationController
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
+  def share_routes
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+
+    message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    target_spaces = Space.where(guid: message.guids)
+    check_spaces_exist_and_are_writeable!(route, message.guids, target_spaces)
+
+    share = RouteShare.new
+    share.create(route, target_spaces, user_audit_info)
+
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
+  rescue VCAP::CloudController::RouteShare::Error => e
+    unprocessable!(e.message)
   end
 
   def index_destinations
@@ -269,5 +290,48 @@ class RoutesController < ApplicationController
 
   def routing_api_client
     @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
+  end
+
+  def can_read_space?(space)
+    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+  end
+
+  def can_write_space?(space)
+    permission_queryer.can_write_to_space?(space.guid)
+  end
+
+  def check_spaces_exist_and_are_writeable!(route, request_guids, found_spaces)
+    unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
+    unwriteable_spaces = found_spaces.reject { |s| can_write_space?(s) || unreadable_spaces.include?(s) }
+
+    not_found_space_guids = request_guids - found_spaces.map(&:guid)
+    unreadable_space_guids = not_found_space_guids + unreadable_spaces.map(&:guid)
+    unwriteable_space_guids = unwriteable_spaces.map(&:guid)
+
+    if unreadable_space_guids.any? || unwriteable_space_guids.any?
+      unreadable_error = unreadable_error_message(route.uri, unreadable_space_guids)
+      unwriteable_error = unwriteable_error_message(route.uri, unwriteable_space_guids)
+
+      error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
+
+      unprocessable!(error_msg)
+    end
+  end
+
+  def unreadable_error_message(uri, unreadable_space_guids)
+    if unreadable_space_guids.any?
+      unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+
+      "Unable to share route #{uri} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
+    end
+  end
+
+  def unwriteable_error_message(uri, unwriteable_space_guids)
+    if unwriteable_space_guids.any?
+      unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+
+      "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. "\
+      'Write permission is required in order to share a route with a space.'
+    end
   end
 end

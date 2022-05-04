@@ -27,6 +27,14 @@ module VCAP::CloudController
                         order:                   Sequel.asc(:id),
                         conditions:              { type: ProcessTypes::WEB }
 
+    many_to_many :shared_spaces,
+          left_key:          :route_guid,
+          left_primary_key:  :guid,
+          right_key:         :target_space_guid,
+          right_primary_key: :guid,
+          join_table:        :route_shares,
+          class: VCAP::CloudController::Space
+
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
 
@@ -37,6 +45,10 @@ module VCAP::CloudController
 
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
+
+    def shared?
+      return VCAP::CloudController::Space.where(routes_shared_from_other_spaces: self).empty? == false
+    end
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
