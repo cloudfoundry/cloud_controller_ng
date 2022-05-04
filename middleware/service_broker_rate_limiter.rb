@@ -10,15 +10,16 @@ module CloudFoundry
       end
 
       def limit=(limit)
-        @data.default = Concurrent::Semaphore.new(limit)
+        @limit = limit
       end
 
       def try_acquire?(user_guid)
-        return @data[user_guid].try_acquire
+        @data[user_guid] = Concurrent::Semaphore.new(@limit) unless @data.key?(user_guid)
+        @data[user_guid].try_acquire
       end
 
       def release(user_guid)
-        @data[user_guid].release
+        @data[user_guid].release if @data.key?(user_guid)
       end
     end
 

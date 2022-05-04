@@ -16,6 +16,7 @@ module CloudFoundry
       }
 
       before(:each) do
+        Singleton.__init__(ServiceBrokerRequestCounter)
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
         allow(logger).to receive(:info)
         allow(app).to receive(:call) do
@@ -47,6 +48,18 @@ module CloudFoundry
           expect(logger).to have_received(:info).with "Service broker concurrent rate limit exceeded for user 'user_guid'"
         end
 
+        it 'counts concurrent requests per user' do
+          other_user_env = { 'cf.user_guid' => 'other_user_guid', 'PATH_INFO' => path_info }
+          threads = [user_env, other_user_env].map do |env|
+            Thread.new { Thread.current[:status], _, _ = middleware.call(env) }
+          end
+          statuses = threads.map { |t| t.join[:status] }
+
+          expect(statuses).to include(200)
+          expect(statuses).not_to include(429)
+          expect(app).to have_received(:call).twice
+        end
+
         it 'still releases when an error occurs in another middleware' do
           allow(app).to receive(:call).and_raise 'an error'
           expect { middleware.call(user_env) }.to raise_error('an error')
@@ -60,6 +73,7 @@ module CloudFoundry
 
           context 'when the path is /v2/*' do
             let(:path_info) { '/v2/service_instances' }
+
             it 'formats the response error in v2 format' do
               Timecop.freeze do
                 _, response_headers, body = middleware.call(user_env)
