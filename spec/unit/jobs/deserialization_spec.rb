@@ -138,10 +138,10 @@ module VCAP::CloudController
           expect(jobs_in_db.size).to eq(1)
 
           # We are not interested in minor differences like ordering of nodes. Therefore comparing it as hash.
-          # rubocop:disable Security/YAMLLoad
-          db_job = YAML.load(jobs_in_db[0][:handler]).as_json
-          dumped_job = YAML.load(serialized_job).as_json
-          # rubocop:enable Security/YAMLLoad
+          permitted_classes = [ActiveModel::Errors, Time, Symbol, UserAuditInfo, AppApplyManifest, ManifestRoute, ManifestRoutesUpdateMessage, ManifestBuildpackMessage,
+                               AppUpdateMessage, ManifestProcessScaleMessage, AppManifestMessage, Space, SpaceApplyManifestActionJob, TimeoutJob, LoggingContextJob]
+          db_job = YAML.safe_load(jobs_in_db[0][:handler], permitted_classes: permitted_classes, aliases: true).as_json
+          dumped_job = YAML.safe_load(serialized_job, permitted_classes: permitted_classes, aliases: true).as_json
           expect(db_job).to eq(dumped_job)
         end
 
