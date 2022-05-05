@@ -21,6 +21,10 @@ module VCAP::CloudController
       allow(EventMachine).to receive(:connection_count).and_return(17)
     end
 
+    after do
+      VCAP::Request.current_id = nil
+    end
+
     describe '.request_received' do
       before do
         VCAP::Request.current_id = request_id
