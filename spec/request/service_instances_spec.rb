@@ -954,7 +954,7 @@ RSpec.describe 'V3 service instances' do
         expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
 
         expect(instance.last_operation.type).to eq('create')
-        expect(instance.last_operation.state).to eq('in progress')
+        expect(instance.last_operation.state).to eq('initial')
       end
 
       it 'responds with job resource' do
@@ -3190,6 +3190,23 @@ RSpec.describe 'V3 service instances' do
       context 'when delete is already in progress' do
         before do
           instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'responds with 422' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => include('There is an operation in progress for the service instance.'),
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008,
+          }))
+        end
+      end
+
+      context 'when the service instance creation request has not been responded to be the broker' do
+        before do
+          instance.save_with_new_operation({}, { type: 'create', state: 'initial' })
         end
 
         it 'responds with 422' do

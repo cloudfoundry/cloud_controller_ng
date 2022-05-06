@@ -156,8 +156,9 @@ module VCAP::CloudController
       return if @setup_telemetry_logging
 
       @setup_telemetry_logging = true
-      logger = ActiveSupport::Logger.new(@config.get(:telemetry_log_path))
-      TelemetryLogger.init(logger)
+
+      telemetry_log_path = @config.get(:telemetry_log_path)
+      TelemetryLogger.init(ActiveSupport::Logger.new(telemetry_log_path)) unless telemetry_log_path.nil?
     end
 
     def setup_db

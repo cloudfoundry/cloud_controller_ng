@@ -19,7 +19,7 @@ module VCAP
       app_name = @process.name
 
       if @process.is_a?(VCAP::CloudController::AppModel)
-        uris = @process.routes.map(&:fqdn)
+        uris = @process.routes.map(&:uri)
       else
         @staging_disk_in_mb ||= @process.disk_quota
         @memory_limit ||= @process.memory

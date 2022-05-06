@@ -1,10 +1,10 @@
 require 'models/helpers/process_types'
-require 'models/runtime/helpers/service_credential_binding_mixin'
+require 'models/runtime/helpers/service_operation_mixin'
 
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     include Serializer
-    include ServiceCredentialBindingMixin
+    include ServiceOperationMixin
 
     plugin :after_initialize
 

@@ -171,6 +171,19 @@ module VCAP::CloudController
         end
 
         describe 'job priority' do
+          context 'when the job priority starts at -10' do
+            before do
+              allow(job).to receive(:priority).and_return(-10)
+            end
+
+            it 'deprioritizes the job to priority 0' do
+              logging_context_job.error(job, 'exception')
+
+              expect(job).to have_received(:priority=).with(0).ordered
+              expect(job).to have_received(:save).ordered
+            end
+          end
+
           context 'when the job priority starts at 0' do
             before do
               allow(job).to receive(:priority).and_return(0)

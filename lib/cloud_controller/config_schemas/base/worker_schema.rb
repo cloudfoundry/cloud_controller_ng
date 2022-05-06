@@ -111,7 +111,7 @@ module VCAP::CloudController
             broker_client_timeout_seconds: Integer,
             broker_client_default_async_poll_interval_seconds: Integer,
             broker_client_max_async_poll_duration_minutes: Integer,
-            broker_client_async_poll_exponential_backoff_rate: Float,
+            broker_client_async_poll_exponential_backoff_rate: Numeric,
             optional(:uaa_client_name) => String,
             optional(:uaa_client_secret) => String,
             optional(:uaa_client_scope) => String,
@@ -173,6 +173,7 @@ module VCAP::CloudController
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },
+              optional(:priorities) => Hash,
             },
 
             volume_services_enabled: bool,

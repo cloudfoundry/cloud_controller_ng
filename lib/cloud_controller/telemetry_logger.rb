@@ -26,6 +26,8 @@ module VCAP::CloudController
       attr_reader :logger
 
       def emit(event_name, entries, raw_entries={})
+        return if logger.nil?
+
         converted_entries = raw_entries.merge(raw_entries.select { |k, v|
           INTEGER_FIELDS.include?(k)
         }.transform_values(&:to_i))

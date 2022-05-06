@@ -10,7 +10,7 @@ module VCAP::CloudController
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
-      CREATE_IN_PROGRESS_OPERATION = { type: 'create', state: 'in progress' }.freeze
+      CREATE_INITIAL_OPERATION = { type: 'create', state: 'initial' }.freeze
 
       def bind(binding, parameters: {}, accepts_incomplete: false)
         client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)

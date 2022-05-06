@@ -19,7 +19,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(16)
+      expect(parsed_response.length).to eq(17)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -131,6 +131,13 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/resource_matching'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'route_sharing',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/route_sharing'
         })
     end
   end

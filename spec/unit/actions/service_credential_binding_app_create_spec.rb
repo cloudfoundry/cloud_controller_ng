@@ -53,7 +53,7 @@ module VCAP::CloudController
             expect(binding.credentials).to be_empty
             expect(binding.syslog_drain_url).to be_nil
             expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq('in progress')
+            expect(binding.last_operation.state).to eq('initial')
             expect(binding).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
             expect(binding).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
           end

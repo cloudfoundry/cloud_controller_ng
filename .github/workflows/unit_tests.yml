@@ -1,20 +1,26 @@
 name: Unit Tests
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - 'decisions/**'
+      - '.github/workflows/docs_test.yml'
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - 'decisions/**'
+      - '.github/workflows/docs_test.yml'
 
 jobs:
-  rubocop:
+  Rubocop:
     runs-on: ubuntu-latest
-    container:
-      image: "cloudfoundry/capi:ruby-units"
     steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: bundle install
+    - uses: actions/checkout@v3
+    - uses: ./.github/workflows/composite/setup
     - name: Run Rubocop
       run: bundle exec rake rubocop
     - uses: ravsamhq/notify-slack-action@v1.1
@@ -24,83 +30,62 @@ jobs:
         notify_when: 'failure' # default is 'success,failure,warnings'
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
-  test_postgres:
+
+  Test-Postgres:
     runs-on: ubuntu-latest
-    container:
-      image: "cloudfoundry/capi:ruby-units"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: bundle install
-    - name: Setup PostgreSQL
-      run: service postgresql restart
-    - name: Run tests
-      run: DB=postgres bundle exec rake spec:all
-    - uses: ravsamhq/notify-slack-action@v1.1
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
-  test_mysql:
-    runs-on: ubuntu-latest
-    container:
-      image: "cloudfoundry/capi:ruby-units"
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: bundle install
-    - name: Setup MySQL
-      run: |
-        find /var/lib/mysql/mysql -exec touch -c -a {} +
-        service mysql restart
-    - name: Run tests
-      run: DB=mysql bundle exec rake spec:all
-    - uses: ravsamhq/notify-slack-action@v1.1
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
-  test_mysql8:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-    - name: Setup MySQL
-      run: |
-        sudo systemctl start mysql.service
-    - name: Run tests
-      run: DB=mysql MYSQL_CONNECTION_PREFIX=mysql2://root:root@localhost:3306 bundle exec rake spec:all
-    - uses: ravsamhq/notify-slack-action@v1.1
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
-  test_docs:
-    runs-on: ubuntu-latest
-    container:
-      image: "cloudfoundry/capi:rc-docs"
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          bundle install
-          cd docs/v3
-          bundle install
-          cd -
-      - name: Run docs tests
-        run: bundle exec rake check_doc_links
-      - uses: ravsamhq/notify-slack-action@v1.1
-        if: github.event_name == 'push'
-        with:
-          status: ${{ job.status }}
-          notify_when: 'failure' # default is 'success,failure,warnings'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["postgres:10", "postgres:14"]
+    services:
+      postgres:
+        image: ${{ matrix.image }}
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+          POSTGRES_PASSWORD: rootpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/workflows/composite/setup
+    - name: Run tests
+      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake spec
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: github.event_name == 'push'
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+
+  Test-Mysql:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["mysql:5.7", "mysql:8.0"]
+    services:
+      mysql:
+        image: ${{ matrix.image }}
+        env:
+          MYSQL_DATABASE: cc_test
+          MYSQL_ROOT_PASSWORD: password
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/workflows/composite/setup
+    - name: Run tests
+      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake spec
+    - uses: ravsamhq/notify-slack-action@v1.1
+      if: github.event_name == 'push'
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure' # default is 'success,failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required

@@ -51,7 +51,7 @@ module VCAP::CloudController
       let(:route) { Route.make(space: space) }
       let(:route_service_url) { 'https://route_service_url.com' }
       let(:last_operation_type) { 'create' }
-      let(:last_operation_state) { 'successful' }
+      let(:last_operation_state) { 'succeeded' }
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
           { service_instance: service_instance, route: route, route_service_url: route_service_url },

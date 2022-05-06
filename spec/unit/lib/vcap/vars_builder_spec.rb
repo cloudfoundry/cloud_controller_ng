@@ -4,9 +4,15 @@ require 'vcap/vars_builder'
 module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
     describe 'vcap_application' do
+      let(:space) { VCAP::CloudController::Space.make }
       let(:v3_app_model) { AppModel.make(name: 'v3-app-name', space: space) }
       let(:process) { ProcessModelFactory.make(app: v3_app_model, memory: 259, disk_quota: 799, file_descriptors: 1234) }
-      let(:space) { VCAP::CloudController::Space.make }
+
+      before do
+        shared_domain = SharedDomain.make(name: 'shared.domain')
+        route_with_path = Route.make(space: space, domain: shared_domain, host: 'some-host', path: '/some-path')
+        RouteMappingModel.make(app: v3_app_model, route: route_with_path)
+      end
 
       describe 'building hash for a v2 app model (ProcessModel)' do
         it 'has the expected values' do
@@ -21,7 +27,7 @@ module VCAP::CloudController
             application_id: v3_app_model.guid,
             application_version: process.version,
             application_name: v3_app_model.name,
-            application_uris: process.uris,
+            application_uris: ['some-host.shared.domain/some-path'],
             version: process.version,
             name: process.name,
             space_name: process.space.name,
@@ -30,7 +36,7 @@ module VCAP::CloudController
             organization_name: process.organization.name,
             process_id: process.guid,
             process_type: process.type,
-            uris: process.uris,
+            uris: ['some-host.shared.domain/some-path'],
             users: nil
           }
 
@@ -54,13 +60,13 @@ module VCAP::CloudController
                 application_name: 'v3-app-name',
                 application_version: 'some-version',
                 version: 'some-version',
-                application_uris: [],
+                application_uris: ['some-host.shared.domain/some-path'],
                 name: 'v3-app-name',
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
                 organization_id: v3_app_model.organization.guid,
                 organization_name: v3_app_model.organization.name,
-                uris: [],
+                uris: ['some-host.shared.domain/some-path'],
                 users: nil
               }
 
@@ -82,13 +88,13 @@ module VCAP::CloudController
                 limits: {},
                 application_id: v3_app_model.guid,
                 application_name: 'v3-app-name',
-                application_uris: [],
+                application_uris: ['some-host.shared.domain/some-path'],
                 name: 'v3-app-name',
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
                 organization_id: v3_app_model.organization.guid,
                 organization_name: v3_app_model.organization.name,
-                uris: [],
+                uris: ['some-host.shared.domain/some-path'],
                 users: nil
               }
 
@@ -112,7 +118,7 @@ module VCAP::CloudController
               application_id: process.guid,
               application_version: process.version,
               application_name: v3_app_model.name,
-              application_uris: process.uris,
+              application_uris: ['some-host.shared.domain/some-path'],
               version: process.version,
               name: v3_app_model.name,
               space_name: space.name,
@@ -121,7 +127,7 @@ module VCAP::CloudController
               organization_name: process.organization.name,
               process_id: process.guid,
               process_type: process.type,
-              uris: process.uris,
+              uris: ['some-host.shared.domain/some-path'],
               users: nil
             }
 
@@ -145,7 +151,7 @@ module VCAP::CloudController
               application_id: process.guid,
               application_version: process.version,
               application_name: v3_app_model.name,
-              application_uris: process.uris,
+              application_uris: ['some-host.shared.domain/some-path'],
               version: process.version,
               name: v3_app_model.name,
               space_name: process.space.name,
@@ -154,7 +160,7 @@ module VCAP::CloudController
               organization_name: process.organization.name,
               process_id: process.guid,
               process_type: process.type,
-              uris: process.uris,
+              uris: ['some-host.shared.domain/some-path'],
               users: nil
             }
 

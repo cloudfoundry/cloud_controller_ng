@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'jobs/v2/services/service_instance_state_fetch'
 require_relative 'shared/when_broker_returns_retry_after_header'
+require_relative 'shared/when_exponential_backoff_is_not_set_to_default'
 
 module VCAP::CloudController
   module Jobs
@@ -23,6 +24,7 @@ module VCAP::CloudController
           service_instance.service_instance_operation = operation
           service_instance
         end
+        let(:last_operation) { service_instance.reload.last_operation }
         let(:broker) { service_instance.service_broker }
         let(:name) { 'fake-name' }
 
@@ -372,6 +374,8 @@ module VCAP::CloudController
               expect(Event.find(type: 'audit.service_instance.create')).to be_nil
             end
 
+            include_examples 'when exponential backoff is not set to default'
+
             context 'when the last_operation is replaced with delete in progress' do
               let(:polling_interval) { 60 }
 
@@ -384,64 +388,6 @@ module VCAP::CloudController
               it 'is able to run the job again' do
                 Timecop.travel(Time.now + polling_interval.seconds) do
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                end
-              end
-            end
-
-            context 'when exponential backoff is not set to default' do
-              it 'calculates the polling intervals based on the default interval and the exponential backoff rate' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
-                enqueued_time = 0
-
-                Timecop.freeze do
-                  run_job(job)
-                  enqueued_time = Time.now
-                end
-
-                [60, 180, 420, 900, 1860].each do |seconds|
-                  Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
-                  end
-
-                  Timecop.freeze((seconds + 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              it 'calculates the polling intervals based on the configured interval and the exponential backoff rate' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
-                TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
-
-                enqueued_time = 0
-
-                Timecop.freeze do
-                  run_job(job)
-                  enqueued_time = Time.now
-                end
-
-                [10, 30, 70, 150, 310].each do |seconds|
-                  Timecop.freeze((seconds - 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
-                  end
-
-                  Timecop.freeze((seconds + 1).seconds.after(enqueued_time)) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              it 'takes the exponential backoff into account when checking whether the next run would exceed the maximum duration' do
-                TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
-                TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
-
-                job.retry_number = 10
-                Timecop.freeze(Time.now + 3384.321.ceil.seconds) do
-                  run_job(job)
-
-                  service_instance.reload
-                  expect(service_instance.last_operation.state).to eq('failed')
-                  expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
                 end
               end
             end
@@ -632,6 +578,12 @@ module VCAP::CloudController
         describe '#job_name_in_configuration' do
           it 'returns the name of the job' do
             expect(job.job_name_in_configuration).to eq(:service_instance_state_fetch)
+          end
+        end
+
+        describe '#display_name' do
+          it 'returns a display name for this action' do
+            expect(job.display_name).to eq('service_instance.state_fetch')
           end
         end
 

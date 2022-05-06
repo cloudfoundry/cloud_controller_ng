@@ -49,7 +49,7 @@ module VCAP::CloudController
             expect(binding.name).to eq(name)
             expect(binding.credentials).to be_empty
             expect(binding.last_operation.type).to eq('create')
-            expect(binding.last_operation.state).to eq('in progress')
+            expect(binding.last_operation.state).to eq('initial')
             expect(binding).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
             expect(binding).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
           end

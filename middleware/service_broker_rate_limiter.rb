@@ -10,15 +10,16 @@ module CloudFoundry
       end
 
       def limit=(limit)
-        @data.default = Concurrent::Semaphore.new(limit)
+        @limit = limit
       end
 
       def try_acquire?(user_guid)
-        return @data[user_guid].try_acquire
+        @data[user_guid] = Concurrent::Semaphore.new(@limit) unless @data.key?(user_guid)
+        @data[user_guid].try_acquire
       end
 
       def release(user_guid)
-        @data[user_guid].release
+        @data[user_guid].release if @data.key?(user_guid)
       end
     end
 
@@ -26,6 +27,7 @@ module CloudFoundry
       def initialize(app, opts)
         @app                               = app
         @logger                            = opts[:logger]
+        @broker_timeout_seconds            = opts[:broker_timeout_seconds]
         @request_counter = ServiceBrokerRequestCounter.instance
       end
 
@@ -77,10 +79,17 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
+      def suggested_retry_time
+        delay_range = (@broker_timeout_seconds * 0.5).floor..(@broker_timeout_seconds * 1.5).ceil
+        Time.now.utc + rand(delay_range).to_i.second
+      end
+
       def too_many_requests!(env, user_guid)
+        rate_limit_headers = {}
+        rate_limit_headers['Retry-After'] = suggested_retry_time
         @logger.info("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
         message = rate_limit_error(env).to_json
-        [429, {}, [message]]
+        [429, rate_limit_headers, [message]]
       end
 
       def rate_limit_error(env)

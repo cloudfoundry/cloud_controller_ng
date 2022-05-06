@@ -26,7 +26,7 @@ module VCAP::CloudController
           RouteBinding.db.transaction do
             b.save_with_attributes_and_new_operation(
               binding_details,
-              CREATE_IN_PROGRESS_OPERATION
+              CREATE_INITIAL_OPERATION
             )
             MetadataUpdate.update(b, message)
           end

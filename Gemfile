@@ -34,7 +34,7 @@ gem 'rake'
 gem 'retryable'
 gem 'rfc822'
 gem 'rubyzip', '>= 1.3.0'
-gem 'sequel', '~> 5.53'
+gem 'sequel', '~> 5.55'
 gem 'sequel_pg', require: 'sequel'
 gem 'sinatra', '~> 2.2'
 gem 'sinatra-contrib'
@@ -47,10 +47,10 @@ gem 'vmstat', '~> 2.3'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 6.1.4'
-gem 'actionview', '~> 6.1.4'
-gem 'activemodel', '~> 6.1.4'
-gem 'railties', '~> 6.1.4'
+gem 'actionpack', '~> 6.1.5', '>= 6.1.5.1'
+gem 'actionview', '~> 6.1.5', '>= 6.1.5.1'
+gem 'activemodel', '~> 6.1.5'
+gem 'railties', '~> 6.1.5', '>= 6.1.5.1'
 
 # Blobstore and Bits Service Dependencies
 gem 'bits_service_client', '~> 3.3', '>= 3.3.0'
@@ -69,7 +69,7 @@ gem 'cf-uaa-lib', '~> 4.0.1'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
-  gem 'mysql2', '~> 0.5.3'
+  gem 'mysql2', '~> 0.5.4'
   gem 'pg'
 end
 
@@ -87,10 +87,10 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-rails', '~> 5.1.0'
+  gem 'rspec-rails', '~> 5.1.2'
   gem 'rspec-wait'
   gem 'rspec_api_documentation', '>= 6.1.0'
-  gem 'rubocop', '~> 1.25.1'
+  gem 'rubocop', '~> 1.28.2'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end

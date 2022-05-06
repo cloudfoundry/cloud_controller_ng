@@ -18,7 +18,8 @@ module VCAP::CloudController
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
       def blocking_operation_in_progress?(binding)
-        binding.operation_in_progress? && binding.last_operation.type != 'create'
+        binding.operation_in_progress? &&
+          (binding.create_initial? || binding.delete_in_progress?)
       end
 
       def delete(binding)

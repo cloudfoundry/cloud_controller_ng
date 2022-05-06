@@ -1,7 +1,11 @@
 require 'vcap/request'
+require 'models/runtime/helpers/service_operation_mixin'
 
 module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
+    include ServiceOperationMixin
+
+    INITIAL_STRING = 'initial'.freeze
     IN_PROGRESS_STRING = 'in progress'.freeze
 
     many_to_one :service_plan
@@ -46,10 +50,6 @@ module VCAP::CloudController
       is_valid
     end
 
-    def last_operation
-      service_instance_operation
-    end
-
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid
@@ -78,9 +78,9 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      return super(opts) if service_instance_operation.nil?
+      return super(opts) if last_operation.nil?
 
-      last_operation_hash = service_instance_operation.to_hash({})
+      last_operation_hash = last_operation.to_hash({})
       super(opts).merge!('last_operation' => last_operation_hash)
     end
 
@@ -129,18 +129,6 @@ module VCAP::CloudController
 
     def merged_tags
       (service.tags + tags).uniq
-    end
-
-    def terminal_state?
-      ['succeeded', 'failed'].include? last_operation.state
-    end
-
-    def operation_in_progress?
-      if last_operation && last_operation.state == IN_PROGRESS_STRING
-        return true
-      end
-
-      false
     end
 
     def update_service_instance(attributes_to_update)

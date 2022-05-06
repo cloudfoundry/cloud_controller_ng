@@ -1,5 +1,5 @@
 require 'spec_helper'
-require_relative 'service_credential_binding_shared'
+require_relative 'service_operation_shared'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceBinding, type: :model do
@@ -460,7 +460,7 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'a model including the ServiceCredentialBindingMixin', ServiceBinding, ServiceBindingOperation, :service_binding_operation
+    it_behaves_like 'a model including the ServiceOperationMixin', ServiceBinding, :service_binding_operation, ServiceBindingOperation, :service_binding_id
 
     describe '#destroy' do
       it 'cascades deletion of related dependencies' do

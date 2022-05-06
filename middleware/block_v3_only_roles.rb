@@ -28,7 +28,7 @@ module CloudFoundry
       end
 
       def allowed_path?(path)
-        ['/v2/info', '/'].include?(path)
+        path.match?(%r{^(/|/v2/info|/internal/v4/.*)$})
       end
 
       def globally_authenticated?

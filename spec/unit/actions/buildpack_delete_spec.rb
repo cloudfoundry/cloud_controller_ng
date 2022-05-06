@@ -29,7 +29,7 @@ module VCAP::CloudController
 
           job = Delayed::Job.last
           expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
-          expect(job.handler).to include("key: #{buildpack.key}")
+          expect(job.handler).to match(/key: ['"]?#{buildpack.key}/)
           expect(job.handler).to include('buildpack_blobstore')
           expect(job.queue).to eq(Jobs::Queues.generic)
           expect(job.guid).not_to be_nil

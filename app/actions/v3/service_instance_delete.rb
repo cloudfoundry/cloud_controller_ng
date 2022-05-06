@@ -30,7 +30,8 @@ module VCAP::CloudController
       end
 
       def blocking_operation_in_progress?
-        service_instance.operation_in_progress? && service_instance.last_operation.type != 'create'
+        service_instance.operation_in_progress? &&
+          (service_instance.create_initial? || service_instance.update_in_progress? || service_instance.delete_in_progress?)
       end
 
       def delete

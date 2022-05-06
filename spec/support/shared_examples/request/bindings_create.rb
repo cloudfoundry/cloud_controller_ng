@@ -13,7 +13,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         expect(binding.app).to eq(app_to_bind_to) if check_app
         expect(binding.service_instance).to eq(service_instance)
 
-        expect(binding.last_operation.state).to eq('in progress')
+        expect(binding.last_operation.state).to eq('initial')
         expect(binding.last_operation.type).to eq('create')
 
         expect(binding).to have_labels({ prefix: nil, key: 'foo', value: 'bar' })
