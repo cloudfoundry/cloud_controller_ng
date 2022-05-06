@@ -102,7 +102,7 @@ module VCAP::CloudController
                 mock_logger = double
                 allow(Steno).to receive(:logger).and_return(mock_logger)
 
-                expect(mock_logger).to receive(:warn).with('stack.populate.collision', 'name' => 'cider', 'description' => 'cider-description')
+                expect(mock_logger).to receive(:warn).with('stack.populate.collision', { 'name' => 'cider', 'description' => 'cider-description' })
 
                 Stack.populate
               end
