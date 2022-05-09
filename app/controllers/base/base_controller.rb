@@ -78,6 +78,7 @@ module VCAP::CloudController::RestController
     def dispatch(operation, *args)
       logger.debug 'cc.dispatch', endpoint: operation, args: args
       check_authentication(operation)
+      check_arguments_encoding(args)
       send(operation, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
@@ -140,6 +141,14 @@ module VCAP::CloudController::RestController
         logger.error 'Unexpected condition: valid token with no user/client id ' \
                        "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
         raise CloudController::Errors::InvalidAuthToken
+      end
+    end
+
+    def check_arguments_encoding(args)
+      args.each do |arg|
+        if arg.respond_to?(:valid_encoding?) && !arg.valid_encoding?
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', "Invalid encoding for parameter: #{arg}")
+        end
       end
     end
 

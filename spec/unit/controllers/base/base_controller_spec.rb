@@ -70,6 +70,11 @@ module VCAP::CloudController
       end
       define_route :get, '/test_warnings', :test_warnings
 
+      def test_arguments(arg)
+        "arg = #{arg}"
+      end
+      define_route :get, '/test_arguments/:arg', :test_arguments
+
       def self.translate_validation_exception(error, attrs)
         RuntimeError.new('validation failed')
       end
@@ -133,6 +138,11 @@ module VCAP::CloudController
         it 'returns InvalidRelation when an Invalid Relation error occurs' do
           get '/test_invalid_relation_error'
           expect(decoded_response['code']).to eq(1002)
+        end
+
+        it 'returns InvalidRequest when arguments have invalid encoding' do
+          get '/test_arguments/%a5'
+          expect(decoded_response['code']).to eq(10004)
         end
       end
 
