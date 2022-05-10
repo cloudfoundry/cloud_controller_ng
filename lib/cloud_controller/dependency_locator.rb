@@ -516,6 +516,7 @@ module CloudController
       Logcache::Client.new(
         host: config.get(:logcache, :host),
         port: config.get(:logcache, :port),
+        timeout: config.get(:logcache, :timeout_in_seconds),
         client_ca_path: config.get(:logcache_tls, :ca_file),
         client_cert_path: config.get(:logcache_tls, :cert_file),
         client_key_path: config.get(:logcache_tls, :key_file),

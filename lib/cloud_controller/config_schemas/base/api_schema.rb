@@ -211,6 +211,7 @@ module VCAP::CloudController
             logcache: {
               host: String,
               port: Integer,
+              optional(:timeout_in_seconds) => Integer,
             },
 
             optional(:logcache_tls) => {

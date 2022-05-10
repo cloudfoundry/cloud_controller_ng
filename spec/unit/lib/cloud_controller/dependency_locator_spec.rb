@@ -489,14 +489,16 @@ RSpec.describe CloudController::DependencyLocator do
       allow(Logcache::Client).to receive(:new).and_return(logcache_client)
     end
 
-    it 'returns the tc-decorated client without TLS' do
+    it 'returns the tc-decorated client without TLS and default timeout' do
       TestConfig.override(
-        logcache_tls: nil
+        logcache_tls: nil,
+        timeout_in_seconds: nil,
       )
       expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'http://doppler.service.cf.internal',
         port: 8080,
+        timeout: nil,
         client_ca_path: nil,
         client_cert_path: nil,
         client_key_path: nil,
@@ -504,11 +506,12 @@ RSpec.describe CloudController::DependencyLocator do
       )
     end
 
-    it 'returns the tc-decorated client with TLS certificates' do
+    it 'returns the tc-decorated client with TLS certificates and custom timeout' do
       TestConfig.override(
         logcache: {
           host: 'some-logcache-host',
           port: 1234,
+          timeout_in_seconds: 10,
         },
         logcache_tls: {
           ca_file: 'logcache-ca',
@@ -521,6 +524,7 @@ RSpec.describe CloudController::DependencyLocator do
       expect(Logcache::Client).to have_received(:new).with(
         host: 'some-logcache-host',
         port: 1234,
+        timeout: 10,
         client_ca_path: 'logcache-ca',
         client_cert_path: 'logcache-client-ca',
         client_key_path: 'logcache-client-key',
