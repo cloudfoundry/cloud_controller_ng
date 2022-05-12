@@ -10,7 +10,7 @@ module VCAP::CloudController
             if entry.name == 'manifest.yml'
               raise CloudController::Errors::BuildpackError.new('buildpack manifest is too large') if entry.size > ONE_MEGABYTE
 
-              return YAML.safe_load(entry.get_input_stream.read, [Date])['stack']
+              return Psych.safe_load(entry.get_input_stream.read, permitted_classes: [Date], strict_integer: true)['stack']
             end
           end
         end

@@ -750,7 +750,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           app_events = VCAP::CloudController::Event.where(actee_type: 'app')
           expect(app_events.count).to eq(2)
           expect(app_events.map(&:actee)).to contain_exactly(app1.guid, app2.guid)
-          metadatas = app_events.map { |e| YAML.safe_load(e.metadata['request']['manifest'], [ActiveSupport::HashWithIndifferentAccess]) }
+          metadatas = app_events.map { |e| Psych.safe_load(e.metadata['request']['manifest'], permitted_classes: [ActiveSupport::HashWithIndifferentAccess], strict_integer: true) }
           expect(metadatas.map { |m| m['applications'].first['instances'] }).to contain_exactly(2, 4)
         end
       end

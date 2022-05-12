@@ -38,7 +38,7 @@ class JobPresenter < ApiPresenter
   end
 
   def error_details
-    YAML.safe_load(@object.cf_api_error, [Symbol])
+    Psych.safe_load(@object.cf_api_error, permitted_classes: [Symbol], strict_integer: true)
   end
 
   def job_exception_or_nil

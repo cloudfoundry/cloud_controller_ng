@@ -46,7 +46,7 @@ module VCAP::CloudController
         def build_errors
           return [] if job.cf_api_error.nil? || job.state == VCAP::CloudController::PollableJobModel::COMPLETE_STATE
 
-          parsed_last_error = YAML.safe_load(job.cf_api_error)
+          parsed_last_error = Psych.safe_load(job.cf_api_error, strict_integer: true)
           parsed_last_error['errors'].map(&:deep_symbolize_keys)
         end
 
