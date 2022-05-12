@@ -15,9 +15,9 @@ module VCAP::CloudController
         let(:file_contents) { 'hello: yaml' }
 
         it 'uses YAML.safe_load to parse the contents of the file' do
-          expect(YAML).to receive(:safe_load).and_wrap_original do |safe_load, f|
+          expect(Psych).to receive(:safe_load).and_wrap_original do |safe_load, f|
             expect(f.path).to eq(tmpyml.path)
-            safe_load.call(f, [Symbol])
+            safe_load.call(f, permitted_classes: [Symbol], strict_integer: true)
           end
 
           expect(YAMLConfig.safe_load_file(tmpyml.path)).to eq({ 'hello' => 'yaml' })

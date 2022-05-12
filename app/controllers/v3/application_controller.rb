@@ -85,7 +85,7 @@ class ApplicationController < ActionController::Base
     return @parsed_yaml if @parsed_yaml
 
     allow_yaml_aliases = false
-    yaml = YAML.safe_load(request.body.string, [], [], allow_yaml_aliases)
+    yaml = Psych.safe_load(request.body.string, permitted_classes: [], permitted_symbols: [], aliases: allow_yaml_aliases, strict_integer: true)
     message_parse_error!('invalid request body') if !yaml.is_a? Hash
     @parsed_yaml = yaml
   rescue Psych::BadAlias
