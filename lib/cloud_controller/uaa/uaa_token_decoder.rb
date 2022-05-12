@@ -148,7 +148,7 @@ module VCAP::CloudController
     end
 
     def access_token?(token)
-      token['jti'] && token['jti'][-2..-1] != '-r'
+      token['jti'] && token['jti'][-2..] != '-r'
     end
   end
 end

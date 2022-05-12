@@ -180,7 +180,7 @@ module CloudController
             response = with_error_handling { @client.request(:propfind, request_url, nil, nil, @headers) }
             xml = Nokogiri::XML.parse(response.body)
 
-            props = xml.xpath('//D:prop')[1..-1]
+            props = xml.xpath('//D:prop')[1..]
             props.each do |prop|
               full_path = get_full_path(path, prop.xpath('D:displayname').first.text)
               next if prefix && !full_path.start_with?(prefix)

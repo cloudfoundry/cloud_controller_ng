@@ -90,7 +90,7 @@ group :test do
   gem 'rspec-rails', '~> 5.1.2'
   gem 'rspec-wait'
   gem 'rspec_api_documentation', '>= 6.1.0'
-  gem 'rubocop', '~> 1.28.2'
+  gem 'rubocop', '~> 1.29.0'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end

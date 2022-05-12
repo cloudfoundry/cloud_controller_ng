@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def self.cc_process_version(versioned_guid)
-        versioned_guid[37..-1]
+        versioned_guid[37..]
       end
     end
   end
