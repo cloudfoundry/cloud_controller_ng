@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       def remove_prefix(order_by)
-        order_by[1..-1]
+        order_by[1..]
       end
     end
   end

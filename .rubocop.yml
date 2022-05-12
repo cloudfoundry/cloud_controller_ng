@@ -5,7 +5,7 @@ require:
   - ./spec/linters/match_requires_with_includes.rb
 
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
   Exclude:
     - errors/**/*
     - lib/diego/bbs/models/**/*

@@ -11,11 +11,7 @@ namespace :spec do
   end
 
   task serial: ['db:pick', 'db:recreate'] do
-    if ARGV[1]
-      run_specs(ARGV[1])
-    else
-      run_specs('spec')
-    end
+    run_specs(ARGV[1] || 'spec')
   end
 
   task integration: ['db:pick', 'db:recreate'] do
