@@ -43,3 +43,31 @@ Content-Type: application/json
 Admin |
 Space Developer |
 Space Supporter |
+
+
+## Unshare a route that was shared with another space (experimental)
+
+Unshares a route that was shared with another space.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/routes/[guid]/relationships/shared_spaces/[space_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json"
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+#### Permitted roles
+
+ |
+--- |
+Admin |
+Space Developer |
+Space Supporter |

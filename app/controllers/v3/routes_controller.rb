@@ -15,6 +15,7 @@ require 'actions/route_create'
 require 'actions/route_delete'
 require 'actions/route_update'
 require 'actions/route_share'
+require 'actions/route_unshare'
 require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
 require 'fetchers/route_destinations_list_fetcher'
@@ -127,6 +128,27 @@ class RoutesController < ApplicationController
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
   rescue VCAP::CloudController::RouteShare::Error => e
+    unprocessable!(e.message)
+  end
+
+  def unshare_routes
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+
+    space_guid = hashed_params[:space_guid]
+
+    target_space = Space.first(guid: space_guid)
+    resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(space_guid, target_space.organization.guid)
+
+    if permission_queryer.can_manage_apps_in_space?(target_space.guid) == false
+      unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. Ensure that the space and its containing org are not suspended.")
+    end
+
+    unshare = RouteUnshare.new
+    unshare.delete(route, target_space, user_audit_info)
+
+    head :no_content
+  rescue VCAP::CloudController::RouteUnshare::Error => e
     unprocessable!(e.message)
   end
 
