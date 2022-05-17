@@ -2705,7 +2705,7 @@ RSpec.describe 'Routes Request' do
         feature_flag.save
       end
 
-      it 'makes users unable to share services' do
+      it 'makes users unable to share routes' do
         api_call.call(space_dev_headers)
 
         expect(last_response).to have_status_code(403)
@@ -2859,12 +2859,189 @@ RSpec.describe 'Routes Request' do
           )
 
           route.reload
-          # expect(route.shared?).to be_falsey
+          expect(route.shared?).to be_falsey
         end
       end
     end
 
     describe 'errors while sharing' do
+      # isolation segments?
+    end
+  end
+
+  describe 'DELETE /v3/routes/:guid/relationships/shared_spaces/:space_guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{guid}/relationships/shared_spaces/#{unshared_space_guid}", request_body.to_json, user_headers } }
+    let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_3) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_not_shared_with_route) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space_to_unshare) { target_space_2 }
+    let(:unshared_space_guid) { space_to_unshare.guid }
+    let(:request_body) { {} }
+    let(:route) {
+      route = VCAP::CloudController::Route.make(space: space)
+      route.add_shared_space(target_space_1)
+      route.add_shared_space(target_space_2)
+      route.add_shared_space(target_space_3)
+      route
+    }
+    let(:guid) { route.guid }
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      org.add_user(user)
+      target_space_1.add_developer(user)
+      target_space_2.add_developer(user)
+      target_space_not_shared_with_route.add_developer(user)
+    end
+
+    describe 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+
+          h['admin'] = { code: 204 }
+          h['space_developer'] = { code: 204 }
+          h['space_supporter'] = { code: 204 }
+          h
+        end
+      end
+
+      context 'removing from a suspended org' do
+        let(:space_to_unshare) do
+          space = VCAP::CloudController::Space.make
+          space.organization.add_user(user)
+          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
+          space.organization.save
+          space
+        end
+
+        before do
+          space_to_unshare.add_developer(user)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) do
+            h = Hash.new(code: 403)
+
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+            h['space_developer'] = { code: 422 }
+            h['space_supporter'] = { code: 422 }
+
+            h['admin'] = { code: 204 }
+            h
+          end
+        end
+      end
+    end
+
+    it 'unshares the specified route from the target space and logs audit event' do
+      expect(route.shared_spaces).to include(target_space_1, space_to_unshare, target_space_3)
+
+      api_call.call(space_dev_headers)
+
+      expect(last_response.status).to eq(204)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.route.unshare',
+        actor: user.guid,
+        actee_type: 'route',
+        actee_name: route.host,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['target_space_guid']).to eq(unshared_space_guid)
+
+      route.reload
+      expect(route.shared_spaces).to include(target_space_1, target_space_3)
+    end
+
+    describe 'when route_sharing flag is disabled' do
+      before do
+        feature_flag.enabled = false
+        feature_flag.save
+      end
+
+      it 'makes users unable to unshare routes' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => 'Feature Disabled: route_sharing',
+              'title' => 'CF-FeatureDisabled',
+              'code' => 330002,
+            })
+        )
+      end
+    end
+
+    it 'responds with 404 when the space specified is bogus' do
+      delete "/v3/routes/#{route.guid}/relationships/shared_spaces/this-space-guid-is-jifeaioeawjfai", request_body.to_json, space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Space not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+
+    it 'responds with 204 when the route is not shared with the specified space' do
+      delete "/v3/routes/#{route.guid}/relationships/shared_spaces/#{target_space_not_shared_with_route.guid}", request_body.to_json, space_dev_headers
+
+      expect(last_response.status).to eq(204)
+    end
+
+    it "responds with 404 when the route doesn't exist" do
+      delete "/v3/routes/some-fake-guid/relationships/shared_spaces/#{target_space_1.guid}", request_body.to_json, space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Route not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+
+    context 'attempting to unshare from space that owns us' do
+      let(:space_to_unshare) { space }
+      it 'responds with 422 and does not unshare the roue' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => "Unable to unshare route '#{route.uri}' from space "\
+                           "'#{space.guid}'. Routes cannot be removed from the space that owns them.",
+              'title' => 'CF-UnprocessableEntity'
+            })
+        )
+
+        route.reload
+        expect(route.shared_spaces).to contain_exactly(target_space_1, target_space_2, target_space_3)
+      end
+    end
+
+    describe 'errors while unsharing' do
       # isolation segments?
     end
   end

@@ -130,6 +130,27 @@ class RoutesController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def unshare_routes
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+
+    space_guid = hashed_params[:space_guid]
+
+    target_space = Space.first(guid: space_guid)
+    resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(space_guid, target_space.organization.guid)
+
+    if permission_queryer.can_manage_apps_in_space?(target_space.guid) == false
+      unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. Ensure that the space and its containing org are not suspended.")
+    end
+
+    share = RouteShare.new
+    share.delete(route, target_space, user_audit_info)
+
+    head :no_content
+  rescue VCAP::CloudController::RouteShare::Error => e
+    unprocessable!(e.message)
+  end
+
   def index_destinations
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?

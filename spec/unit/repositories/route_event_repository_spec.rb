@@ -70,7 +70,27 @@ module VCAP::CloudController
           expect(event.actor_name).to eq(user_email)
           expect(event.actor_username).to eq(user_name)
           expect(event.space_guid).to eq(route.space.guid)
-          expect(event.metadata['target_space_guids']).to eq(['space-guid', 'another-guid'])
+          expect(event.metadata['target_space_guids']).to eq(target_space_guids)
+        end
+      end
+
+      describe '#record_route_unshare' do
+        let(:target_space_guid) { 'space-guid' }
+
+        it 'records event correctly' do
+          event = route_event_repository.record_route_unshare(route, actor_audit_info, target_space_guid)
+          event.reload
+          expect(event.space).to eq(route.space)
+          expect(event.type).to eq('audit.route.unshare')
+          expect(event.actee).to eq(route.guid)
+          expect(event.actee_type).to eq('route')
+          expect(event.actee_name).to eq(route.host)
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.space_guid).to eq(route.space.guid)
+          expect(event.metadata['target_space_guid']).to eq(target_space_guid)
         end
       end
 
