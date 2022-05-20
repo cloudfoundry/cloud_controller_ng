@@ -63,7 +63,9 @@ module VCAP::CloudController
         it 'does not share with any spaces' do
           expect {
             service_instance_share.create(service_instance, [target_space1, service_instance.space], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'Service instances cannot be shared into the space where they were created.')
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error,
+                           "Unable to share service instance '#{service_instance.name}' with space '#{service_instance.space.guid}'. " \
+                           'Service instances cannot be shared into the space where they were created.')
 
           instance = ServiceInstance.find(guid: service_instance.guid)
 
@@ -75,7 +77,9 @@ module VCAP::CloudController
 
           expect {
             service_instance_share.create(service_instance, [target_space1, service_instance.space], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'Service instances cannot be shared into the space where they were created.')
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error,
+                           "Unable to share service instance '#{service_instance.name}' with space '#{service_instance.space.guid}'. " \
+                           'Service instances cannot be shared into the space where they were created.')
         end
       end
 

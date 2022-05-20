@@ -54,6 +54,26 @@ module VCAP::CloudController
         end
       end
 
+      describe '#record_route_share' do
+        let(:target_space_guids) { ['space-guid', 'another-guid'] }
+
+        it 'records event correctly' do
+          event = route_event_repository.record_route_share(route, actor_audit_info, target_space_guids)
+          event.reload
+          expect(event.space).to eq(route.space)
+          expect(event.type).to eq('audit.route.share')
+          expect(event.actee).to eq(route.guid)
+          expect(event.actee_type).to eq('route')
+          expect(event.actee_name).to eq(route.host)
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.space_guid).to eq(route.space.guid)
+          expect(event.metadata['target_space_guids']).to eq(['space-guid', 'another-guid'])
+        end
+      end
+
       describe '#record_route_delete' do
         let(:recursive) { true }
 

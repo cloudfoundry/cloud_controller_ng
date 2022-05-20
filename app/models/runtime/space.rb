@@ -58,6 +58,14 @@ module VCAP::CloudController
           join_table:        :service_instance_shares,
           class: 'VCAP::CloudController::ServiceInstance'
 
+    many_to_many :routes_shared_from_other_spaces,
+          left_key:          :target_space_guid,
+          left_primary_key:  :guid,
+          right_key:         :route_guid,
+          right_primary_key: :guid,
+          join_table:        :route_shares,
+          class: 'VCAP::CloudController::Route'
+
     one_to_many :service_brokers
     one_to_many :routes
     one_to_many :tasks,

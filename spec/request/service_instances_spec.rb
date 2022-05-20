@@ -3517,6 +3517,35 @@ RSpec.describe 'V3 service instances' do
           expect(service_instance.shared?).to be_falsey
         end
       end
+
+      context 'owns the space' do
+        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            'data' => [
+              { 'guid' => space.guid },
+              { 'guid' => target_space_1.guid }
+            ]
+          }
+        end
+
+        it 'responds with 422 and does not share the instance' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to share service instance '#{service_instance.name}' with space '#{space.guid}'. "\
+                            'Service instances cannot be shared into the space where they were created.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+
+          service_instance.reload
+          expect(service_instance.shared?).to be_falsey
+        end
+      end
     end
 
     describe 'errors while sharing' do
