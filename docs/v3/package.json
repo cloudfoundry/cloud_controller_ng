@@ -20,7 +20,7 @@
   "homepage": "https://github.com/cloudfoundry-incubator/api-docs#readme",
   "devDependencies": {
     "check-pages": "^0.10.0",
-    "cheerio": "^1.0.0-rc.10",
+    "cheerio": "^1.0.0-rc.11",
     "express": "^4.18.1",
     "glob": "^8.0.3",
     "gulp": "^4.0.2",
