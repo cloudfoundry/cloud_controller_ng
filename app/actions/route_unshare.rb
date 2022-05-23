@@ -5,7 +5,7 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    def delete(route, target_space, user_audit_info)
+    def unshare(route, target_space, user_audit_info)
       validate_not_unsharing_from_owner!(route, target_space)
 
       Route.db.transaction do
