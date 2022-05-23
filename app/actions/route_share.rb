@@ -6,7 +6,7 @@ module VCAP::CloudController
     end
 
     def create(route, target_spaces, user_audit_info)
-      validate_target_spaces!(route, target_spaces)
+      validate_not_sharing_to_self!(route, target_spaces)
 
       Route.db.transaction do
         target_spaces.each do |space|
@@ -23,10 +23,6 @@ module VCAP::CloudController
 
     def error!(message)
       raise Error.new(message)
-    end
-
-    def validate_target_spaces!(route, target_spaces)
-      validate_not_sharing_to_self!(route, target_spaces)
     end
 
     def validate_not_sharing_to_self!(route, spaces)
