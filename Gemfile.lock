@@ -282,7 +282,7 @@ GEM
     jsonpath (1.1.0)
       multi_json
     jwt (2.3.0)
-    kramdown (2.3.1)
+    kramdown (2.4.0)
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
@@ -448,7 +448,7 @@ GEM
       rubocop-ast (>= 1.17.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
-    rubocop-ast (1.17.0)
+    rubocop-ast (1.18.0)
       parser (>= 3.1.1.0)
     ruby-debug-ide (0.7.3)
       rake (>= 0.8.1)
@@ -483,7 +483,7 @@ GEM
       rack-protection (= 2.2.0)
       sinatra (= 2.2.0)
       tilt (~> 2.0)
-    solargraph (0.44.3)
+    solargraph (0.45.0)
       backport (~> 1.2)
       benchmark
       bundler (>= 1.17.2)
