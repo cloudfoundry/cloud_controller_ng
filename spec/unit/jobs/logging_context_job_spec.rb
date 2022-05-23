@@ -15,6 +15,10 @@ module VCAP::CloudController
         allow(Steno).to receive(:logger).and_return(background_logger)
       end
 
+      after do
+        ::VCAP::Request.current_id = nil
+      end
+
       context '#perform' do
         it 'delegates to the handler' do
           expect(logging_context_job.perform).to eq('fake-perform')

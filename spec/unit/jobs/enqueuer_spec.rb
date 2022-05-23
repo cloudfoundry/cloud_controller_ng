@@ -32,6 +32,10 @@ module VCAP::CloudController::Jobs
         allow(timeout_calculator).to receive(:calculate).and_return(job_timeout)
       end
 
+      after do
+        ::VCAP::Request.current_id = nil
+      end
+
       it "populates LoggingContextJob's ID with the one from the thread-local Request" do
         original_enqueue = Delayed::Job.method(:enqueue)
         expect(Delayed::Job).to receive(:enqueue) do |logging_context_job, opts|
