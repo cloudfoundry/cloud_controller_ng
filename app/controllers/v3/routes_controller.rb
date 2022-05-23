@@ -131,7 +131,7 @@ class RoutesController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def unshare_routes
+  def unshare_route
     FeatureFlag.raise_unless_enabled!(:route_sharing)
     unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
 
@@ -145,7 +145,7 @@ class RoutesController < ApplicationController
     end
 
     unshare = RouteUnshare.new
-    unshare.delete(route, target_space, user_audit_info)
+    unshare.unshare(route, target_space, user_audit_info)
 
     head :no_content
   rescue VCAP::CloudController::RouteUnshare::Error => e
