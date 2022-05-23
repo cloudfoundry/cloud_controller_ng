@@ -29,7 +29,6 @@ require 'presenters/v3/build_presenter'
 require 'fetchers/app_list_fetcher'
 require 'fetchers/app_builds_list_fetcher'
 require 'fetchers/app_fetcher'
-require 'fetchers/app_delete_fetcher'
 require 'fetchers/assign_current_droplet_fetcher'
 require 'repositories/app_event_repository'
 
@@ -140,7 +139,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   end
 
   def destroy
-    app, space, org = AppDeleteFetcher.new.fetch(hashed_params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
