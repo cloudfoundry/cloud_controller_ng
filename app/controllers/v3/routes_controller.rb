@@ -152,6 +152,13 @@ class RoutesController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def relationships_shared_routes
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
+  end
+
   def index_destinations
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
