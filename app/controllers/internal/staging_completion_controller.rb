@@ -117,19 +117,13 @@ module VCAP::CloudController
       duration = Time.now.utc.to_i * 1e9 - bbs_staging_response[:created_at]
       if bbs_staging_response[:failed]
         statsd_updater.report_staging_failure_metrics(duration)
-        prometheus_updater.report_staging_failure_metrics(duration)
       else
         statsd_updater.report_staging_success_metrics(duration)
-        prometheus_updater.report_staging_success_metrics(duration)
       end
     end
 
     def statsd_updater
       @statsd_updater ||= VCAP::CloudController::Metrics::StatsdUpdater.new
-    end
-
-    def prometheus_updater
-      @prometheus_updater ||= VCAP::CloudController::Metrics::PrometheusUpdater.new # this should be using singleton
     end
 
     attr_reader :stagers

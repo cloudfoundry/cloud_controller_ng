@@ -70,7 +70,7 @@ module VCAP::CloudController::Metrics
 
     describe '#setup_updates' do
       before do
-        allow(updater1).to receive(:update_user_count)
+        allow(updater1).to receive(:record_user_count)
         allow(updater1).to receive(:update_job_queue_length)
         allow(updater1).to receive(:update_thread_info)
         allow(updater1).to receive(:update_failed_job_count)
@@ -79,7 +79,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_task_stats)
         allow(updater1).to receive(:update_deploying_count)
 
-        allow(updater2).to receive(:update_user_count)
+        allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
         allow(updater2).to receive(:update_thread_info)
         allow(updater2).to receive(:update_failed_job_count)
@@ -92,7 +92,7 @@ module VCAP::CloudController::Metrics
       end
 
       it 'bumps the number of users and sets periodic timer' do
-        expect(periodic_updater).to receive(:update_user_count).once
+        expect(periodic_updater).to receive(:record_user_count).once
         periodic_updater.setup_updates
       end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController::Metrics
 
         it 'bumps the number of users and sets periodic timer' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_user_count).once
+          expect(periodic_updater).to receive(:record_user_count).once
           expect(@periodic_timers[0][:interval]).to eq(600)
 
           @periodic_timers[0][:block].call
@@ -219,19 +219,19 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_user_count' do
+    describe '#record_user_count' do
       before do
-        allow(updater1).to receive(:update_user_count)
-        allow(updater2).to receive(:update_user_count)
+        allow(updater1).to receive(:record_user_count)
+        allow(updater2).to receive(:record_user_count)
       end
 
       it 'should include the number of users' do
         4.times { VCAP::CloudController::User.create(guid: SecureRandom.uuid) }
 
-        periodic_updater.update_user_count
+        periodic_updater.record_user_count
 
-        expect(updater1).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
-        expect(updater2).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
+        expect(updater1).to have_received(:record_user_count).with(VCAP::CloudController::User.count)
+        expect(updater2).to have_received(:record_user_count).with(VCAP::CloudController::User.count)
       end
     end
 
@@ -593,7 +593,7 @@ module VCAP::CloudController::Metrics
 
     describe '#update!' do
       before do
-        allow(updater1).to receive(:update_user_count)
+        allow(updater1).to receive(:record_user_count)
         allow(updater1).to receive(:update_job_queue_length)
         allow(updater1).to receive(:update_thread_info)
         allow(updater1).to receive(:update_failed_job_count)
@@ -602,7 +602,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_task_stats)
         allow(updater1).to receive(:update_deploying_count)
 
-        allow(updater2).to receive(:update_user_count)
+        allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
         allow(updater2).to receive(:update_thread_info)
         allow(updater2).to receive(:update_failed_job_count)
@@ -613,7 +613,7 @@ module VCAP::CloudController::Metrics
       end
 
       it 'calls all update methods' do
-        expect(periodic_updater).to receive(:update_user_count).once
+        expect(periodic_updater).to receive(:record_user_count).once
         expect(periodic_updater).to receive(:update_job_queue_length).once
         expect(periodic_updater).to receive(:update_thread_info).once
         expect(periodic_updater).to receive(:update_failed_job_count).once

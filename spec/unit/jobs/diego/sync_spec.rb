@@ -27,17 +27,20 @@ module VCAP::CloudController
         end
 
         it 'records sync duration' do
-          allow(Time).to receive(:now).and_call_original
-          allow_any_instance_of(VCAP::CloudController::Diego::ProcessesSync).to receive(:sync)
-          allow_any_instance_of(VCAP::CloudController::Diego::TasksSync).to receive(:sync)
+          yielded_block = nil
 
-          expect(processes_sync).to receive(:sync)
-          expect(tasks_sync).to receive(:sync)
-          expect(Time).to receive(:now).twice # Ensure that we get two time measurements. _Hopefully_ they get turned into an elapsed time and passed in where they need to be!
-          expect_any_instance_of(Statsd).to receive(:timing).with('cc.diego_sync.duration', kind_of(Numeric))
-          expect_any_instance_of(VCAP::CloudController::Metrics::PrometheusUpdater).to receive(:report_diego_cell_sync_duration).with(kind_of(Numeric))
+          allow_any_instance_of(Statsd).to receive(:time) do |_, metric_name, &block|
+            expect(metric_name).to eq 'cc.diego_sync.duration'
+            yielded_block = block
+          end
 
           job.perform
+          expect(processes_sync).to_not have_received(:sync)
+          expect(tasks_sync).to_not have_received(:sync)
+
+          yielded_block.call
+          expect(processes_sync).to have_received(:sync)
+          expect(tasks_sync).to have_received(:sync)
         end
       end
     end

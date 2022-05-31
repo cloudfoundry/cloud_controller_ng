@@ -3,7 +3,7 @@ require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[StatsdUpdater.new, PrometheusUpdater.new])
+    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[StatsdUpdater.new])
       @start_time = start_time
       @updaters = updaters
       @log_counter = log_counter
@@ -15,7 +15,7 @@ module VCAP::CloudController::Metrics
 
     def setup_updates
       update!
-      EM.add_periodic_timer(600) { catch_error { update_user_count } }
+      EM.add_periodic_timer(600) { catch_error { record_user_count } }
       EM.add_periodic_timer(30)  { catch_error { update_job_queue_length } }
       EM.add_periodic_timer(30)  { catch_error { update_thread_info } }
       EM.add_periodic_timer(30)  { catch_error { update_failed_job_count } }
@@ -26,7 +26,7 @@ module VCAP::CloudController::Metrics
     end
 
     def update!
-      update_user_count
+      record_user_count
       update_job_queue_length
       update_thread_info
       update_failed_job_count
@@ -67,10 +67,10 @@ module VCAP::CloudController::Metrics
       @updaters.each { |u| u.update_deploying_count(deploying_count) }
     end
 
-    def update_user_count
+    def record_user_count
       user_count = VCAP::CloudController::User.count
 
-      @updaters.each { |u| u.update_user_count(user_count) }
+      @updaters.each { |u| u.record_user_count(user_count) }
     end
 
     def update_job_queue_length
