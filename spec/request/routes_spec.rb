@@ -2591,6 +2591,85 @@ RSpec.describe 'Routes Request' do
     end
   end
 
+  describe 'GET /v3/routes/:guid/relationships/shared_spaces' do
+    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{guid}/relationships/shared_spaces", nil, user_headers } }
+    let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
+    let(:route) {
+      route = VCAP::CloudController::Route.make(space: space)
+      route.add_shared_space(target_space_1)
+      route
+    }
+    let(:guid) { route.guid }
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      org.add_user(user)
+      target_space_1.add_developer(user)
+    end
+
+    describe 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_object: {
+            data: [
+              {
+                guid: target_space_1.guid
+              }
+            ],
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/relationships\/shared_spaces) },
+            }
+          })
+
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+      end
+    end
+
+    describe 'when route_sharing flag is disabled' do
+      before do
+        feature_flag.enabled = false
+        feature_flag.save
+      end
+
+      it 'makes users unable to unshare routes' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => 'Feature Disabled: route_sharing',
+              'title' => 'CF-FeatureDisabled',
+              'code' => 330002,
+            })
+        )
+      end
+    end
+
+    it 'responds with 404 when the route does not exist' do
+      get '/v3/routes/some-fake-guid/relationships/shared_spaces', nil, space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Route not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+  end
+
   describe 'POST /v3/routes/:guid/relationships/shared_spaces' do
     let(:api_call) { lambda { |user_headers| post "/v3/routes/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
     let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
@@ -2860,72 +2939,6 @@ RSpec.describe 'Routes Request' do
 
           route.reload
           expect(route.shared?).to be_falsey
-        end
-      end
-    end
-
-    describe 'GET /v3/routes/:guid/relationships/shared_spaces' do
-      let(:api_call) { lambda { |user_headers| get "/v3/routes/#{guid}/relationships/shared_spaces", nil, user_headers } }
-      let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
-      let(:route) {
-        route = VCAP::CloudController::Route.make(space: space)
-        route.add_shared_space(target_space_1)
-        route
-      }
-      let(:guid) { route.guid }
-      let(:space_dev_headers) do
-        org.add_user(user)
-        space.add_developer(user)
-        headers_for(user)
-      end
-      let!(:feature_flag) do
-        VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil)
-      end
-
-      before do
-        org.add_user(user)
-        target_space_1.add_developer(user)
-      end
-
-      describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) do
-            h = Hash.new(code: 200, response_object: {
-              data: [
-                {
-                  guid: target_space_1.guid
-                }
-              ],
-              links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/relationships\/shared_spaces) },
-              }
-            })
-
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-            h
-          end
-        end
-      end
-
-      describe 'when route_sharing flag is disabled' do
-        before do
-          feature_flag.enabled = false
-          feature_flag.save
-        end
-
-        it 'makes users unable to unshare routes' do
-          api_call.call(space_dev_headers)
-
-          expect(last_response).to have_status_code(403)
-          expect(parsed_response['errors']).to include(
-            include(
-              {
-                'detail' => 'Feature Disabled: route_sharing',
-                'title' => 'CF-FeatureDisabled',
-                'code' => 330002,
-              })
-          )
         end
       end
     end
