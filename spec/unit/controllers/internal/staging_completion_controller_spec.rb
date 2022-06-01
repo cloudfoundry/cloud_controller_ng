@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'membrane'
 require 'cloud_controller/diego/failure_reason_sanitizer'
+require 'cloud_controller/metrics/prometheus_updater'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
@@ -37,6 +38,12 @@ module VCAP::CloudController
         report_staging_failure_metrics:    nil,
       )
     end
+    let(:prometheus_updater) do
+      instance_double(VCAP::CloudController::Metrics::PrometheusUpdater,
+        report_staging_success_metrics: nil,
+        report_staging_failure_metrics:    nil,
+      )
+    end
     let(:one_hour) { 1.hour.to_i }
     let(:one_hour_in_nanoseconds) { (1.hour.to_i * 1e9).to_i }
 
@@ -44,6 +51,7 @@ module VCAP::CloudController
       TestConfig.override(kubernetes: nil)
 
       allow(VCAP::CloudController::Metrics::StatsdUpdater).to receive(:new).and_return(statsd_updater)
+      allow(VCAP::CloudController::Metrics::PrometheusUpdater).to receive(:new).and_return(prometheus_updater)
     end
 
     context 'staging a package through /droplet_completed (legacy for rolling deploy)' do
@@ -143,6 +151,7 @@ module VCAP::CloudController
         it 'emits metrics for staging success' do
           one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
+          expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           Timecop.freeze(Time.now) do
             post url, MultiJson.dump(staging_response)
           end
@@ -161,6 +170,7 @@ module VCAP::CloudController
           it 'emits metrics for staging failure' do
             one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
+            expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             Timecop.freeze(Time.now) do
               post url, MultiJson.dump(staging_response)
             end
@@ -357,6 +367,7 @@ module VCAP::CloudController
         it 'emits metrics for staging success' do
           one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
+          expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           Timecop.freeze(Time.now) do
             post url, MultiJson.dump(staging_response)
           end
@@ -392,6 +403,7 @@ module VCAP::CloudController
           it 'emits metrics for staging failure' do
             one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
+            expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             Timecop.freeze(Time.now) do
               post url, MultiJson.dump(staging_response)
             end

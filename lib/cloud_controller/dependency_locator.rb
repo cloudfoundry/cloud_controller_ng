@@ -34,6 +34,7 @@ require 'cloud_controller/opi/apps_rest_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
 require 'cloud_controller/opi/task_client'
+require 'cloud_controller/metrics/prometheus_updater'
 
 require 'bits_service_client'
 
@@ -68,6 +69,13 @@ module CloudController
 
     def runners
       @dependencies[:runners] || register(:runners, VCAP::CloudController::Runners.new(config))
+    end
+
+    def prometheus_updater
+      unless @dependencies[:prometheus_updater]
+        register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
+      end
+      @dependencies[:prometheus_updater]
     end
 
     def stagers
