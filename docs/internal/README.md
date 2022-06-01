@@ -127,4 +127,9 @@ We do not recommend using internal API endpoints for anything other than their i
 
 **Auth Mechanism:** MTLS + Basic Auth
 
+### POST /internal/v4/metrics
+**Description:** Returns CAPI metrics
 
+**Intended Consumer:** Prom Scraper
+
+**Auth Mechanism:** MTLS
