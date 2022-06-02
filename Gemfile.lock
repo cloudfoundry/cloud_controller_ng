@@ -255,7 +255,7 @@ GEM
       google-protobuf (~> 3.18)
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.0.1)
-    honeycomb-beeline (2.10.0)
+    honeycomb-beeline (2.11.0)
       libhoney (>= 1.14.2)
     http (4.4.1)
       addressable (~> 2.3)
@@ -263,7 +263,7 @@ GEM
       http-form_data (~> 2.2)
       http-parser (~> 1.2.0)
     http-accept (1.7.0)
-    http-cookie (1.0.4)
+    http-cookie (1.0.5)
       domain_name (~> 0.5)
     http-form_data (2.3.0)
     http-parser (1.2.3)
@@ -291,7 +291,7 @@ GEM
       jsonpath (~> 1.0)
       recursive-open-struct (~> 1.1, >= 1.1.1)
       rest-client (~> 2.0)
-    libhoney (2.1.0)
+    libhoney (2.2.0)
       addressable (~> 2.0)
       excon
       http (>= 2.0, < 6.0)
@@ -527,7 +527,7 @@ GEM
     uber (0.1.0)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.8.1)
+    unf_ext (0.0.8.2)
     unicode-display_width (2.1.0)
     vhd (0.0.4)
       bit-struct
