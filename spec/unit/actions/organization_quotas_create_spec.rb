@@ -17,7 +17,8 @@ module VCAP::CloudController
               total_memory_in_mb: 1,
               per_process_memory_in_mb: 2,
               total_instances: 3,
-              per_app_tasks: 4
+              per_app_tasks: 4,
+              log_limit_in_bytes_per_second: 2000
             },
             services: {
               paid_services_allowed: false,
@@ -57,6 +58,7 @@ module VCAP::CloudController
           expect(organization_quota.instance_memory_limit).to eq(2)
           expect(organization_quota.app_instance_limit).to eq(3)
           expect(organization_quota.app_task_limit).to eq(4)
+          expect(organization_quota.log_limit).to eq(2000)
 
           expect(organization_quota.total_services).to eq(5)
           expect(organization_quota.total_service_keys).to eq(6)
@@ -79,6 +81,7 @@ module VCAP::CloudController
           expect(organization_quota.instance_memory_limit).to eq(-1)
           expect(organization_quota.app_instance_limit).to eq(-1)
           expect(organization_quota.app_task_limit).to eq(-1)
+          expect(organization_quota.log_limit).to eq(-1)
 
           expect(organization_quota.total_services).to eq(-1)
           expect(organization_quota.total_service_keys).to eq(-1)

@@ -240,6 +240,74 @@ module VCAP::CloudController
           end
         end
 
+        describe 'log_limit_in_bytes_per_second' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { log_limit_in_bytes_per_second: 'bob' },
+                relationships: relationships,
+              }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Log limit in bytes per second is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { log_limit_in_bytes_per_second: 1.1 },
+                relationships: relationships,
+              }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Log limit in bytes per second must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { log_limit_in_bytes_per_second: -1 },
+                relationships: relationships,
+              }
+            }
+
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Log limit in bytes per second must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { log_limit_in_bytes_per_second: 0 },
+                relationships: relationships,
+              }
+            }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { log_limit_in_bytes_per_second: nil },
+                relationships: relationships,
+              }
+            }
+
+            it { is_expected.to be_valid }
+          end
+        end
+
         describe 'total_instances' do
           context 'when the type is a string' do
             let(:params) {
