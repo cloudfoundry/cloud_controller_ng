@@ -27,6 +27,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 4,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
+            'log_rate_limit_per_second' => '1MB',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'new-command',
@@ -73,6 +74,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 3,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
+            'log_rate_limit_per_second' => '100KB',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'newer-command',
@@ -172,6 +174,7 @@ RSpec.describe 'Space Manifests' do
       expect(web_process.instances).to eq(4)
       expect(web_process.memory).to eq(2048)
       expect(web_process.disk_quota).to eq(1536)
+      expect(web_process.log_rate_limit).to eq(1_048_576)
       expect(web_process.command).to eq('new-command')
       expect(web_process.health_check_type).to eq('http')
       expect(web_process.health_check_http_endpoint).to eq('/health')
@@ -244,6 +247,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_rate_limit_per_second' => '1GB',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -267,6 +271,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_rate_limit_per_second' => '-1B',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -304,6 +309,7 @@ RSpec.describe 'Space Manifests' do
         expect(web_process.instances).to eq(4)
         expect(web_process.memory).to eq(2048)
         expect(web_process.disk_quota).to eq(1536)
+        expect(web_process.log_rate_limit).to eq(-1)
         expect(web_process.command).to eq('new-command')
         expect(web_process.health_check_type).to eq('http')
         expect(web_process.health_check_http_endpoint).to eq('/health')
@@ -455,6 +461,56 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when -1 is given as a log rate limit' do
+      let(:yml_manifest) do
+        {
+           'version' => 1,
+           'applications' => [
+             { 'name' => app1_model.name,
+               'log_rate_limit_per_second' => -1
+             },
+           ]
+        }.to_yaml
+      end
+
+      it 'interprets the log rate limit as unlimited' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
+          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+        app1_model.reload
+        expect(app1_model.processes.first.log_rate_limit).to eq(-1)
+      end
+    end
+
+    context 'when applying the manifest to an app which is already exceeding the log rate limit' do
+      before do
+        app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
+        space.update(space_quota_definition:
+          VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
+      end
+
+      it 'successfully applies the manifest' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        # job does not restart app, so applying the manifest succeeds
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
+          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+      end
+    end
+
     describe 'audit events' do
       let!(:process1) { nil }
 
@@ -465,6 +521,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_rate_limit_per_second' => '300B',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',

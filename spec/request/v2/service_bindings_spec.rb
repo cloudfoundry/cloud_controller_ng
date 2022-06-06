@@ -166,6 +166,7 @@ RSpec.describe 'ServiceBindings' do
                       'memory' => 1024,
                       'instances' => 1,
                       'disk_quota' => 1024,
+                      'log_rate_limit' => 1048576,
                       'state' => 'STOPPED',
                       'version' => process1.version,
                       'command' => nil,

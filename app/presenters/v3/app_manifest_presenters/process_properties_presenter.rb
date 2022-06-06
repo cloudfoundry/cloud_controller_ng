@@ -14,6 +14,7 @@ module VCAP::CloudController
               'instances' => process.instances,
               'memory' => add_units(process.memory),
               'disk_quota' => add_units(process.disk_quota),
+              'log_rate_limit_per_second' => add_units_log_rate_limit(process.log_rate_limit),
               'command' => process.command,
               'health-check-type' => process.health_check_type,
               'health-check-http-endpoint' => process.health_check_http_endpoint,
@@ -23,6 +24,18 @@ module VCAP::CloudController
 
           def add_units(val)
             "#{val}M"
+          end
+
+          def add_units_log_rate_limit(val)
+            if val == -1
+              '-1B'
+            else
+              byte_converter.human_readable_byte_value(val)
+            end
+          end
+
+          def byte_converter
+            ByteConverter.new
           end
         end
       end

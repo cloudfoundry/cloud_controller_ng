@@ -18,6 +18,7 @@ module VCAP::CloudController
             state:        task.state,
             memory_in_mb: task.memory_in_mb,
             disk_in_mb:   task.disk_in_mb,
+            log_rate_limit_in_bytes_per_second: task.log_rate_limit,
             result:       { failure_reason: task.failure_reason },
             droplet_guid: task.droplet_guid,
             relationships: { app: { data: { guid: task.app_guid } } },
