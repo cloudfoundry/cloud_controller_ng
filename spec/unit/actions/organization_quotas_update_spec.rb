@@ -15,7 +15,8 @@ module VCAP::CloudController
                 total_memory_in_mb: 5120,
                 per_process_memory_in_mb: 1024,
                 total_instances: 8,
-                per_app_tasks: nil
+                per_app_tasks: nil,
+                log_limit_in_bytes_per_second: 2000
               },
               services: {
                 paid_services_allowed: false,
@@ -49,6 +50,7 @@ module VCAP::CloudController
           expect(updated_organization_quota.instance_memory_limit).to eq(1024)
           expect(updated_organization_quota.app_instance_limit).to eq(8)
           expect(updated_organization_quota.app_task_limit).to eq(-1)
+          expect(updated_organization_quota.log_limit).to eq(2000)
 
           expect(updated_organization_quota.total_services).to eq(10)
           expect(updated_organization_quota.total_service_keys).to eq(20)
@@ -64,6 +66,7 @@ module VCAP::CloudController
           updated_organization_quota = OrganizationQuotasUpdate.update(org_quota, minimum_message)
 
           expect(updated_organization_quota.name).to eq('org_quota_name')
+          expect(updated_organization_quota.log_limit).to eq(-1)
         end
 
         context 'when a model validation fails' do

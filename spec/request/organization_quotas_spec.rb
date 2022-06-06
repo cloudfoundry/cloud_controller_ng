@@ -35,7 +35,8 @@ module VCAP::CloudController
             total_memory_in_mb: nil,
             per_process_memory_in_mb: nil,
             total_instances: nil,
-            per_app_tasks: nil
+            per_app_tasks: nil,
+            log_limit_in_bytes_per_second: nil
           },
           services: {
             paid_services_allowed: true,
@@ -91,7 +92,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_limit_in_bytes_per_second: 2000
             },
             services: {
               paid_services_allowed: false,
@@ -118,7 +120,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_limit_in_bytes_per_second: 2000
             },
             services: {
               paid_services_allowed: false,
@@ -319,7 +322,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -346,7 +350,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -423,6 +428,7 @@ module VCAP::CloudController
           expect(org_quota_to_update.reload.app_task_limit).to eq(9)
           expect(org_quota_to_update.reload.memory_limit).to eq(-1)
           expect(org_quota_to_update.reload.total_services).to eq(14)
+          expect(org_quota_to_update.reload.log_limit).to eq(-1)
           expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
         end
 
@@ -434,6 +440,7 @@ module VCAP::CloudController
             expect(org_quota_to_update.reload.app_task_limit).to eq(9)
             expect(org_quota_to_update.reload.memory_limit).to eq(-1)
             expect(org_quota_to_update.reload.total_services).to eq(14)
+            expect(org_quota_to_update.reload.log_limit).to eq(-1)
             expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
           end
         end
@@ -591,7 +598,8 @@ def generate_org_quota_single_response(list_of_orgs)
       total_memory_in_mb: 20480,
       per_process_memory_in_mb: nil,
       total_instances: nil,
-      per_app_tasks: nil
+      per_app_tasks: nil,
+      log_limit_in_bytes_per_second: nil
     },
     services: {
       paid_services_allowed: true,
@@ -639,7 +647,8 @@ def generate_default_org_quota_response(global_read)
       total_memory_in_mb: 10240,
       per_process_memory_in_mb: nil,
       total_instances: nil,
-      per_app_tasks: nil
+      per_app_tasks: nil,
+      log_limit_in_bytes_per_second: nil
     },
     services: {
       paid_services_allowed: true,

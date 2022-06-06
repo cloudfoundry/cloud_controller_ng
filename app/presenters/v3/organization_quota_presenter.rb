@@ -24,6 +24,7 @@ module VCAP::CloudController::Presenters::V3
           per_process_memory_in_mb: convert_unlimited_to_nil(organization_quota.instance_memory_limit),
           total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
           per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
+          log_limit_in_bytes_per_second: convert_unlimited_to_nil(organization_quota.log_limit),
         },
         services: {
           paid_services_allowed: organization_quota.non_basic_services_allowed,
