@@ -26,6 +26,7 @@ module VCAP::CloudController::Presenters::V3
           per_process_memory_in_mb: unlimited_to_nil(space_quota.instance_memory_limit),
           total_instances: unlimited_to_nil(space_quota.app_instance_limit),
           per_app_tasks: unlimited_to_nil(space_quota.app_task_limit),
+          log_limit_in_bytes_per_second: unlimited_to_nil(space_quota.log_limit),
         },
         services: {
           paid_services_allowed: space_quota.non_basic_services_allowed,

@@ -18,13 +18,14 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports
+      :total_service_keys, :total_reserved_route_ports, :log_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports
+      :total_service_keys, :total_reserved_route_ports, :log_limit
 
     add_association_dependencies spaces: :nullify
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def validate
       validates_presence :name
       validates_presence :non_basic_services_allowed
@@ -38,9 +39,11 @@ module VCAP::CloudController
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
+      errors.add(:log_limit, :invalid_log_limit) if log_limit && log_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
       validate_total_reserved_ports
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def validate_change_organization(new_org)
       raise CloudController::Errors::ApiError.new_from_details('OrganizationAlreadySet') unless organization.nil? || organization.guid == new_org.guid

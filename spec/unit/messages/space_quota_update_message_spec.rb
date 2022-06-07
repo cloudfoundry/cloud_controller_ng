@@ -20,6 +20,7 @@ module VCAP::CloudController
         per_process_memory_in_mb: 1024,
         total_instances: 2,
         per_app_tasks: 4,
+        log_limit_in_bytes_per_second: 2000,
       }
     end
 
@@ -49,6 +50,7 @@ module VCAP::CloudController
         expect(subject.per_process_memory_in_mb).to eq(1024)
         expect(subject.total_instances).to eq(2)
         expect(subject.per_app_tasks).to eq(4)
+        expect(subject.log_limit_in_bytes_per_second).to eq(2000)
         expect(subject.paid_services_allowed).to be_truthy
         expect(subject.total_service_instances).to eq(17)
         expect(subject.total_service_keys).to eq(19)
