@@ -3,6 +3,7 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    # rubocop:todo Metrics/CyclomaticComplexity
     def create(message, organization:)
       space_quota = nil
 
@@ -16,6 +17,7 @@ module VCAP::CloudController
           instance_memory_limit: message.per_process_memory_in_mb || SpaceQuotaDefinition::UNLIMITED,
           app_instance_limit: message.total_instances || SpaceQuotaDefinition::UNLIMITED,
           app_task_limit: message.per_app_tasks || SpaceQuotaDefinition::UNLIMITED,
+          log_limit: message.log_limit_in_bytes_per_second || QuotaDefinition::UNLIMITED,
 
           # Services
           total_services: message.total_service_instances || SpaceQuotaDefinition::DEFAULT_TOTAL_SERVICES,
@@ -35,6 +37,7 @@ module VCAP::CloudController
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 
