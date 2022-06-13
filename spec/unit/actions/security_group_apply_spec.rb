@@ -28,6 +28,11 @@ module VCAP::CloudController
           expect(security_group.spaces.count).to eq(1)
           expect(security_group.spaces[0].guid).to eq(space.guid)
         end
+
+        it 'updates the latest security group update table' do
+          subject.apply_running(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+        end
       end
 
       context 'when a model validation fails' do
@@ -104,6 +109,11 @@ module VCAP::CloudController
 
           expect(security_group.staging_spaces.count).to eq(1)
           expect(security_group.staging_spaces[0].guid).to eq(space.guid)
+        end
+
+        it 'updates the latest security group update table' do
+          subject.apply_staging(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
         end
       end
 

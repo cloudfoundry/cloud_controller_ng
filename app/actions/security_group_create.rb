@@ -16,6 +16,8 @@ module VCAP::CloudController
             staging_default: message.staging || false,
             running_default: message.running || false,
           )
+          AsgLatestUpdate.renew
+
           staging_spaces = valid_spaces(message.staging_space_guids)
           staging_spaces.each { |space| security_group.add_staging_space(space) }
 

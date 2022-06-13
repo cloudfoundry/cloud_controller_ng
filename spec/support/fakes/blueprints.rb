@@ -756,4 +756,8 @@ module VCAP::CloudController
 
   TestModelRedact.blueprint do
   end
+
+  AsgLatestUpdate.blueprint do
+    last_update { Time.now.utc }
+  end
 end

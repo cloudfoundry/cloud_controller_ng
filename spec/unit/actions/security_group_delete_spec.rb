@@ -29,6 +29,11 @@ module VCAP::CloudController
           }.to change { space.reload.security_groups.count }.by(-1)
         end
 
+        it 'updates the latest security group update table' do
+          security_group_delete.delete([security_group])
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+        end
+
         it 'deletes associated staging spaces roles' do
           expect {
             security_group_delete.delete([security_group])

@@ -20,10 +20,12 @@ module VCAP::CloudController
         if staging_or_running == :running
           SecurityGroup.db.transaction do
             spaces.each { |space| security_group.add_space(space) }
+            AsgLatestUpdate.renew
           end
         elsif staging_or_running == :staging
           SecurityGroup.db.transaction do
             spaces.each { |space| security_group.add_staging_space(space) }
+            AsgLatestUpdate.renew
           end
         end
       rescue Sequel::ValidationFailed => e
