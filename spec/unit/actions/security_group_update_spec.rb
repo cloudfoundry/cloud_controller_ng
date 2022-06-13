@@ -37,6 +37,11 @@ module VCAP::CloudController
           expect(updated_security_group.running_default).to be true
           expect(updated_security_group.staging_default).to be false
         end
+
+        it 'updates the latest security group update table' do
+          SecurityGroupUpdate.update(security_group, update_message)
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+        end
       end
 
       context 'when partially updating a security group' do

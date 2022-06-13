@@ -30,6 +30,11 @@ module VCAP::CloudController
             expect(created_group.staging_default).to eq(false)
             expect(created_group.spaces.count).to eq(0)
           end
+
+          it 'updates the latest security group update table' do
+            subject.create(message)
+            expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          end
         end
 
         context 'with provided values' do

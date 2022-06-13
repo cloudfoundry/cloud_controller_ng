@@ -21,6 +21,11 @@ module VCAP::CloudController
 
           expect(security_group.spaces.count).to eq(0)
         end
+
+        it 'updates the latest security group update table' do
+          subject.unapply_running(security_group, space)
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+        end
       end
 
       context 'when a model validation fails' do
@@ -55,6 +60,11 @@ module VCAP::CloudController
           }.to change { security_group.staging_spaces.count }.by(-1)
 
           expect(security_group.staging_spaces.count).to eq(0)
+        end
+
+        it 'updates the latest security group update table' do
+          subject.unapply_staging(security_group, space)
+          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
         end
       end
 

@@ -4,6 +4,7 @@ module VCAP::CloudController
       security_groups.each do |security_group|
         SecurityGroup.db.transaction do
           security_group.destroy
+          AsgLatestUpdate.renew
         end
       end
       []

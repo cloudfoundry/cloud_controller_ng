@@ -18,10 +18,12 @@ module VCAP::CloudController
         if is_running
           SecurityGroup.db.transaction do
             security_group.remove_space(space)
+            AsgLatestUpdate.renew
           end
         else
           SecurityGroup.db.transaction do
             security_group.remove_staging_space(space)
+            AsgLatestUpdate.renew
           end
         end
       rescue Sequel::ValidationFailed => e
