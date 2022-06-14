@@ -5,14 +5,14 @@ module VCAP::CloudController
     class << self
       def fetch(message, omniscient: false, readable_spaces_query: nil, readable_orgs_query: nil, eager_loaded_associations: [])
         dataset = select_readable(
-          ServicePlan.dataset.eager(eager_loaded_associations),
+          ServicePlan.dataset.select_all(:service_plans),
           message,
           omniscient: omniscient,
           readable_orgs_query: readable_orgs_query,
           readable_spaces_query: readable_spaces_query,
         )
 
-        filter(message, dataset).select_all(:service_plans).distinct
+        ServicePlan.dataset.select_all(:service_plans).from(filter(message, dataset).as(ServicePlan.dataset.model.table_name)).distinct
       end
 
       private

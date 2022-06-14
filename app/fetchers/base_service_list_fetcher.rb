@@ -72,15 +72,23 @@ module VCAP::CloudController
           omniscient: omniscient,
         )
 
-        dataset = join_service_plans(dataset)
-        dataset = join_plan_spaces(dataset)
-        dataset = join_broker_spaces(dataset)
+        # Build Select for plan spaces
+        plan_spaces = dataset.model.dataset.select_all(dataset.model.table_name)
+        plan_spaces = join_plan_org_visibilities(plan_spaces)
+        plan_spaces = join_plan_orgs(plan_spaces)
+        plan_spaces = join_plan_spaces(plan_spaces)
+        plan_spaces = plan_spaces.where { Sequel[:plan_spaces][:guid] =~ space_guids }
+        dataset = dataset.union(plan_spaces, :all=>true, :from_self=>false)
 
-        dataset.where do
-          (Sequel[:service_plans][:public] =~ true) |
-            (Sequel[:plan_spaces][:guid] =~ space_guids) |
-            (Sequel[:broker_spaces][:guid] =~ space_guids)
-        end
+        # Build Select for broker_spaces
+        broker_spaces = dataset.model.dataset.select_all(dataset.model.table_name)
+        broker_spaces = join_services(broker_spaces)
+        broker_spaces = join_service_brokers(broker_spaces)
+        broker_spaces = join_broker_spaces(broker_spaces)
+        broker_spaces = broker_spaces.where { Sequel[:broker_spaces][:guid] =~ space_guids }
+        dataset = dataset.union(broker_spaces, :all=>true, :from_self=>false)
+
+        dataset.where {Sequel[:service_plans][:public] =~ true}
       end
 
       def authorized_space_guids(space_guids: [], readable_space_guids: [], omniscient: false)
@@ -113,27 +121,27 @@ module VCAP::CloudController
 
       def join_broker_spaces(dataset)
         dataset = join_service_brokers(dataset)
-        join(dataset, :left, Sequel[:spaces].as(:broker_spaces), id: Sequel[:service_brokers][:space_id])
+        join(dataset, :inner, Sequel[:spaces].as(:broker_spaces), id: Sequel[:service_brokers][:space_id])
       end
 
       def join_broker_orgs(dataset)
         dataset = join_broker_spaces(dataset)
-        join(dataset, :left, Sequel[:organizations].as(:broker_orgs), id: Sequel[:broker_spaces][:organization_id])
+        join(dataset, :inner, Sequel[:organizations].as(:broker_orgs), id: Sequel[:broker_spaces][:organization_id])
       end
 
       def join_plan_org_visibilities(dataset)
         dataset = join_service_plans(dataset)
-        join(dataset, :left, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
+        join(dataset, :inner, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
       end
 
       def join_plan_orgs(dataset)
         dataset = join_plan_org_visibilities(dataset)
-        join(dataset, :left, Sequel[:organizations].as(:plan_orgs), id: Sequel[:service_plan_visibilities][:organization_id])
+        join(dataset, :inner, Sequel[:organizations].as(:plan_orgs), id: Sequel[:service_plan_visibilities][:organization_id])
       end
 
       def join_plan_spaces(dataset)
         dataset = join_plan_orgs(dataset)
-        join(dataset, :left, Sequel[:spaces].as(:plan_spaces), organization_id: Sequel[:plan_orgs][:id])
+        join(dataset, :inner, Sequel[:spaces].as(:plan_spaces), organization_id: Sequel[:plan_orgs][:id])
       end
 
       def join(dataset, type, table, on)
