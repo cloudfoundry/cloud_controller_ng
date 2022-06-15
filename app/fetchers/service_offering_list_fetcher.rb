@@ -3,25 +3,18 @@ require 'fetchers/base_service_list_fetcher'
 module VCAP::CloudController
   class ServiceOfferingListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_spaces_query: nil, readable_orgs_query: nil, eager_loaded_associations: [])
-        dataset = select_readable(
-          Service.dataset.eager(eager_loaded_associations),
-          message,
-          omniscient: omniscient,
-          readable_orgs_query: readable_orgs_query,
-          readable_spaces_query: readable_spaces_query,
-        )
-
-        filter(message, dataset).select_all(:services).distinct
+      def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
+        super(Service,
+              message,
+              omniscient: omniscient,
+              readable_orgs_query: readable_orgs_query,
+              readable_spaces_query: readable_spaces_query,
+              eager_loaded_associations: eager_loaded_associations)
       end
 
       private
 
-      def join_service_plans(dataset)
-        join(dataset, :left, :service_plans, service_id: Sequel[:services][:id])
-      end
-
-      def filter(message, dataset)
+      def filter(message, dataset, klass)
         if message.requested?(:names)
           dataset = dataset.where(Sequel[:services][:label] =~ message.names)
         end
@@ -39,7 +32,11 @@ module VCAP::CloudController
           )
         end
 
-        super(message, dataset, Service)
+        super(message, dataset, klass)
+      end
+
+      def join_service_plans(dataset)
+        join(dataset, :inner, :service_plans, service_id: Sequel[:services][:id])
       end
     end
   end
