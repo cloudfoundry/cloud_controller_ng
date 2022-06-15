@@ -1,18 +1,33 @@
-require 'fetchers/base_service_list_fetcher'
+require 'fetchers/base_service_list_fetcher_new'
 
 module VCAP::CloudController
-  class ServicePlanListFetcher < BaseServiceListFetcher
+  class ServicePlanListFetcher < BaseServiceListFetcherNew
     class << self
       def fetch(message, omniscient: false, readable_spaces_query: nil, readable_orgs_query: nil, eager_loaded_associations: [])
-        dataset = select_readable(
-          ServicePlan.dataset.select_all(:service_plans),
+        dataset = ServicePlan.dataset.eager(eager_loaded_associations).select_all(:service_plans)
+
+        public_dataset = select_public_service_plans(dataset.clone, omniscient: omniscient)
+        public_dataset = filter(message, public_dataset)
+
+        service_plan_dataset = select_service_plans(
           message,
+          dataset.clone,
           omniscient: omniscient,
           readable_orgs_query: readable_orgs_query,
           readable_spaces_query: readable_spaces_query,
-        )
+          )
+        service_plan_dataset = filter(message, service_plan_dataset)
 
-        ServicePlan.dataset.select_all(:service_plans).from(filter(message, dataset).as(ServicePlan.dataset.model.table_name)).distinct
+        service_broker_dataset = select_service_plans_by_brokers(
+          message,
+          dataset.clone,
+          omniscient: omniscient,
+          readable_orgs_query: readable_orgs_query,
+          readable_spaces_query: readable_spaces_query,
+          )
+        service_broker_dataset = filter(message, service_broker_dataset)
+
+        dataset.from(union(public_dataset,service_plan_dataset,service_broker_dataset)).distinct
       end
 
       private
@@ -55,7 +70,7 @@ module VCAP::CloudController
             resource_dataset: dataset,
             requirements: message.requirements,
             resource_klass: ServicePlan,
-          )
+            )
         end
 
         super(message, dataset, ServicePlan)
