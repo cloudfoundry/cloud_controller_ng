@@ -1,16 +1,20 @@
 module VCAP::CloudController
-  class AsgLatestUpdate < Sequel::Model
+  class AsgLatestUpdate
+    class AsgTimestamp < Sequel::Model
+    end
+    private_constant :AsgTimestamp
+
     def self.renew
-      old_update = AsgLatestUpdate.first
+      old_update = AsgTimestamp.first
       if old_update
         old_update.update(last_update: DateTime.now)
       else
-        AsgLatestUpdate.create(last_update: DateTime.now)
+        AsgTimestamp.create(last_update: DateTime.now)
       end
     end
 
     def self.last_update
-      AsgLatestUpdate.first&.last_update || Time.at(0)
+      AsgTimestamp.first&.last_update || Time.at(0, in: 'utc')
     end
   end
 end

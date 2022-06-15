@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe AsgLatestUpdate, type: :model do
     describe 'Renew' do
       it 'updates asgLatestUpdate to now' do
-        AsgLatestUpdate.make last_update: Time.new(2019)
+        expect(AsgLatestUpdate.last_update).to eq Time.at(0)
         AsgLatestUpdate.renew
         expect(AsgLatestUpdate.last_update).to be > 1.second.ago
       end
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     describe 'last_update' do
       it 'returns the last update timestamp' do
-        AsgLatestUpdate.make last_update: Time.new(2019)
+        AsgLatestUpdate.const_get(:AsgTimestamp).create last_update: Time.new(2019)
         expect(AsgLatestUpdate.last_update).to eq Time.new(2019)
       end
 
