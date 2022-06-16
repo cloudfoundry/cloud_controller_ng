@@ -27,6 +27,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 4,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
+            'log_quota' => '1MBs',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'new-command',
@@ -73,6 +74,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 3,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
+            'log_quota' => '100KBs',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'newer-command',
@@ -158,6 +160,7 @@ RSpec.describe 'Space Manifests' do
       expect(web_process.instances).to eq(4)
       expect(web_process.memory).to eq(2048)
       expect(web_process.disk_quota).to eq(1536)
+      expect(web_process.log_quota).to eq(1_048_576)
       expect(web_process.command).to eq('new-command')
       expect(web_process.health_check_type).to eq('http')
       expect(web_process.health_check_http_endpoint).to eq('/health')
@@ -230,6 +233,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_quota' => '1GBs',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -253,6 +257,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_quota' => 'unlimited',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -290,6 +295,7 @@ RSpec.describe 'Space Manifests' do
         expect(web_process.instances).to eq(4)
         expect(web_process.memory).to eq(2048)
         expect(web_process.disk_quota).to eq(1536)
+        expect(web_process.log_quota).to eq(-1)
         expect(web_process.command).to eq('new-command')
         expect(web_process.health_check_type).to eq('http')
         expect(web_process.health_check_http_endpoint).to eq('/health')
@@ -451,6 +457,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
+              'log_quota' => '300Bs',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',

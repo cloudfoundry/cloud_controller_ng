@@ -16,6 +16,7 @@ module VCAP::CloudController
         json_diff = []
         recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s)
         app_manifests = convert_byte_measurements_to_mb(app_manifests)
+        app_manifests = convert_byte_measurements_to_bps(app_manifests)
         app_manifests.each_with_index do |manifest_app_hash, index|
           manifest_app_hash = filter_manifest_app_hash(manifest_app_hash)
           existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] }
@@ -99,6 +100,7 @@ module VCAP::CloudController
               'type',
               'command',
               'disk_quota',
+              'log_quota',
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
               'health-check-type',
@@ -108,6 +110,7 @@ module VCAP::CloudController
             )
           end
           manifest_app_hash['processes'] = convert_byte_measurements_to_mb(manifest_app_hash['processes'])
+          manifest_app_hash['processes'] = convert_byte_measurements_to_bps(manifest_app_hash['processes'])
           manifest_app_hash = manifest_app_hash.except('processes') if manifest_app_hash['processes'] == [{}]
         end
 
@@ -164,6 +167,40 @@ module VCAP::CloudController
 
       def convert_to_mb(human_readable_byte_value, attribute_name)
         byte_converter.convert_to_mb(human_readable_byte_value).to_s + 'M'
+      rescue ByteConverter::InvalidUnitsError
+        "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
+      rescue ByteConverter::NonNumericError
+        "#{attribute_name} is not a number"
+      end
+
+      def convert_byte_measurements_to_bps(manifest_app_hash)
+        byte_measurement_key_words = ['log_quota']
+        manifest_app_hash.each_with_index do |process_hash, index|
+          byte_measurement_key_words.each do |key|
+            value = process_hash[key]
+            manifest_app_hash[index][key] = convert_to_bps(value, key) unless value.nil?
+          end
+        end
+        manifest_app_hash
+      end
+
+      def convert_to_bps(human_readable_byte_value, attribute_name)
+        if human_readable_byte_value.strip.to_s.match?(/.*s$/)
+          human_readable_byte_value = human_readable_byte_value.strip.chop
+        else
+          raise ByteConverter::InvalidUnitsError
+        end
+
+        val = byte_converter.convert_to_b(human_readable_byte_value)
+
+        units = ['Bs', 'KBs', 'MBs', 'GBs']
+        i = 0
+        while val % 1024 == 0 && i < units.length - 1
+          val /= 1024
+          i += 1
+        end
+
+        "#{val}#{units[i]}"
       rescue ByteConverter::InvalidUnitsError
         "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
       rescue ByteConverter::NonNumericError

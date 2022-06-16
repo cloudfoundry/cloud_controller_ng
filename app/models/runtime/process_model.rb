@@ -27,6 +27,7 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
+      self.log_quota        ||= Config.config.get(:default_app_log_quota_in_bps)
       self.metadata         ||= {}
     end
 
@@ -144,17 +145,19 @@ module VCAP::CloudController
     add_association_dependencies annotations: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-                      :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
-                      :state, :version, :command, :console, :debug, :staging_task_id,
-                      :package_state, :health_check_type, :health_check_timeout, :health_check_http_endpoint,
-                      :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh, :ports
+      :detected_buildpack, :detected_buildpack_guid, :environment_json,
+      :memory, :instances, :disk_quota, :log_quota, :state, :version, :command,
+      :console, :debug, :staging_task_id, :package_state, :health_check_type,
+      :health_check_timeout, :health_check_http_endpoint, :staging_failed_reason,
+      :staging_failed_description, :diego, :docker_image, :package_updated_at,
+      :detected_start_command, :enable_ssh, :ports
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :state, :command, :console, :debug, :staging_task_id,
-      :service_binding_guids, :route_guids, :health_check_type, :health_check_http_endpoint,
-      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh, :ports
+      :log_quota, :state, :command, :console, :debug, :staging_task_id,
+      :service_binding_guids, :route_guids, :health_check_type,
+      :health_check_http_endpoint, :health_check_timeout, :diego,
+      :docker_image, :app_guid, :enable_ssh, :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
@@ -251,6 +254,7 @@ module VCAP::CloudController
         MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
         MinDiskQuotaPolicy.new(self),
         MinMemoryPolicy.new(self),
+        MinLogQuotaPolicy.new(self),
         AppMaxMemoryPolicy.new(self, space, :space_quota_exceeded),
         AppMaxMemoryPolicy.new(self, organization, :quota_exceeded),
         AppMaxInstanceMemoryPolicy.new(self, organization, :instance_memory_limit_exceeded),

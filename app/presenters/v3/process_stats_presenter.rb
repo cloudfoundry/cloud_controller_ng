@@ -39,6 +39,7 @@ module VCAP::CloudController
             uptime:     stats[:stats][:uptime],
             mem_quota:  stats[:stats][:mem_quota],
             disk_quota: stats[:stats][:disk_quota],
+            log_quota:  stats[:stats][:log_quota],
             fds_quota:  stats[:stats][:fds_quota],
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]
@@ -74,6 +75,7 @@ module VCAP::CloudController
                                         cpu:  stats[:stats][:usage][:cpu],
                                         mem:  stats[:stats][:usage][:mem],
                                         disk: stats[:stats][:usage][:disk],
+                                        log_rate: stats[:stats][:usage][:log_rate],
                                       }
                                     else
                                       {}

@@ -89,6 +89,7 @@ class ProcessesController < ApplicationController
         'instance-count' => message.instances,
         'memory-in-mb' => message.memory_in_mb,
         'disk-in-mb' => message.disk_in_mb,
+        'log-quota-in-bps' => message.log_quota_in_bps,
         'process-type' => @process.type
       }
     )

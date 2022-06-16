@@ -39,6 +39,7 @@ RSpec.describe 'App Manifests' do
         health_check_type: 'http',
         health_check_http_endpoint: '/foobar',
         health_check_timeout: 5,
+        log_quota: 1_048_576,
       )
     end
 
@@ -107,6 +108,7 @@ RSpec.describe 'App Manifests' do
                   'instances' => process.instances,
                   'memory' => "#{process.memory}M",
                   'disk_quota' => "#{process.disk_quota}M",
+                  'log_quota' => '1MBs',
                   'health-check-type' => process.health_check_type,
                 },
                 {
@@ -114,6 +116,7 @@ RSpec.describe 'App Manifests' do
                   'instances' => worker_process.instances,
                   'memory' => "#{worker_process.memory}M",
                   'disk_quota' => "#{worker_process.disk_quota}M",
+                  'log_quota' => '1MBs',
                   'command' => worker_process.command,
                   'health-check-type' => worker_process.health_check_type,
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
@@ -170,6 +173,7 @@ RSpec.describe 'App Manifests' do
 
       before do
         app_model.update(droplet: droplet)
+        process.update(log_quota: -1)
       end
 
       let(:expected_yml_manifest) do
@@ -203,6 +207,7 @@ RSpec.describe 'App Manifests' do
                   'instances' => process.instances,
                   'memory' => "#{process.memory}M",
                   'disk_quota' => "#{process.disk_quota}M",
+                  'log_quota' => 'unlimited',
                   'health-check-type' => process.health_check_type,
                 },
                 {
@@ -210,6 +215,7 @@ RSpec.describe 'App Manifests' do
                   'instances' => worker_process.instances,
                   'memory' => "#{worker_process.memory}M",
                   'disk_quota' => "#{worker_process.disk_quota}M",
+                  'log_quota' => '1MBs',
                   'command' => worker_process.command,
                   'health-check-type' => worker_process.health_check_type,
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,

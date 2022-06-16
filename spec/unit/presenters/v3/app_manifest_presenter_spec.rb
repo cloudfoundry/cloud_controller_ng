@@ -78,6 +78,7 @@ module VCAP::CloudController::Presenters::V3
             health_check_type: 'http',
             health_check_http_endpoint: '/foobar',
             health_check_timeout: 5,
+            log_quota: 1_048_576,
             command: 'Do it now!',
             type: 'aaaaa',
           )
@@ -119,6 +120,7 @@ module VCAP::CloudController::Presenters::V3
               'type' => process1.type,
               'instances' => process1.instances,
               'memory' => "#{process1.memory}M",
+              'log_quota' => '1MBs',
               'disk_quota' => "#{process1.disk_quota}M",
               'command' => process1.command,
               'health-check-type' => process1.health_check_type,
@@ -128,6 +130,7 @@ module VCAP::CloudController::Presenters::V3
             {
               'type' => process2.type,
               'instances' => process2.instances,
+              'log_quota' => '1MBs',
               'memory' => "#{process2.memory}M",
               'disk_quota' => "#{process2.disk_quota}M",
               'health-check-type' => process2.health_check_type,
@@ -166,6 +169,7 @@ module VCAP::CloudController::Presenters::V3
               {
                 'type' => process1.type,
                 'instances' => process1.instances,
+                'log_quota' => '1MBs',
                 'memory' => "#{process1.memory}M",
                 'disk_quota' => "#{process1.disk_quota}M",
                 'health-check-type' => process1.health_check_type,
@@ -173,6 +177,7 @@ module VCAP::CloudController::Presenters::V3
               {
                 'type' => process2.type,
                 'instances' => process2.instances,
+                'log_quota' => '1MBs',
                 'memory' => "#{process2.memory}M",
                 'disk_quota' => "#{process2.disk_quota}M",
                 'health-check-type' => process2.health_check_type,
