@@ -15,5 +15,16 @@ module VCAP::CloudController
     rescue PalmCivet::InvalidByteQuantityError
       raise InvalidUnitsError
     end
+
+    def convert_to_b(human_readable_byte_value)
+      return nil unless human_readable_byte_value.present?
+      if !human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
+        raise NonNumericError
+      end
+
+      PalmCivet.to_bytes(human_readable_byte_value.to_s)
+    rescue PalmCivet::InvalidByteQuantityError
+      raise InvalidUnitsError
+    end
   end
 end

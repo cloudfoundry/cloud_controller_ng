@@ -74,6 +74,11 @@ module VCAP::CloudController
           expect(process.ports).to eq([8081, 8082])
         end
       end
+
+      it 'has a default log_quota' do
+        TestConfig.override(default_app_log_quota_in_bps: 873565)
+        expect(process.log_quota).to eq(873565)
+      end
     end
 
     describe 'Associations' do
@@ -193,6 +198,7 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(MaxDiskQuotaPolicy)
         expect_validator(MinDiskQuotaPolicy)
+        expect_validator(MinLogQuotaPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
@@ -286,6 +292,15 @@ module VCAP::CloudController
           process.disk_quota = 4096
           expect(process).to_not be_valid
           expect(process.errors.on(:disk_quota)).to be_present
+        end
+      end
+
+      describe 'log_quota' do
+        subject(:process) { ProcessModelFactory.make }
+
+        it 'does not allow a log_quota below the minimum' do
+          process.log_quota = -2
+          expect(process).to_not be_valid
         end
       end
 
@@ -403,10 +418,10 @@ module VCAP::CloudController
       describe 'quota' do
         subject(:process) { ProcessModelFactory.make }
         let(:quota) do
-          QuotaDefinition.make(memory_limit: 128)
+          QuotaDefinition.make(memory_limit: 128, log_limit: 1_048_576)
         end
         let(:space_quota) do
-          SpaceQuotaDefinition.make(memory_limit: 128, organization: org)
+          SpaceQuotaDefinition.make(memory_limit: 128, organization: org, log_limit: 1_048_576)
         end
 
         context 'app update' do
@@ -565,6 +580,7 @@ module VCAP::CloudController
           :health_check_timeout,
           :health_check_type,
           :instances,
+          :log_quota,
           :memory,
           :name,
           :package_state,
@@ -598,6 +614,7 @@ module VCAP::CloudController
           :health_check_timeout,
           :health_check_type,
           :instances,
+          :log_quota,
           :memory,
           :name,
           :production,
@@ -1330,6 +1347,22 @@ module VCAP::CloudController
         it 'should use the default quota' do
           process = ProcessModel.make
           expect(process.disk_quota).to eq(512)
+        end
+      end
+
+      describe 'default log_quota' do
+        before do
+          TestConfig.override(default_app_log_quota_in_bps: 1024)
+        end
+
+        it 'should use the provided quota' do
+          process = ProcessModel.make(log_quota: 256)
+          expect(process.log_quota).to eq(256)
+        end
+
+        it 'should use the default quota' do
+          process = ProcessModel.make
+          expect(process.log_quota).to eq(1024)
         end
       end
 

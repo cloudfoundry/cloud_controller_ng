@@ -293,6 +293,7 @@ RSpec.describe 'Spaces' do
             'health_check_timeout' => nil,
             'health_check_type' => 'port',
             'instances' => 1,
+            'log_quota' => 1_048_576,
             'memory' => 1024,
             'name' => process.name,
             'package_state' => 'STAGED',

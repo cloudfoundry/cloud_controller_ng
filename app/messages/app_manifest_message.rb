@@ -16,6 +16,7 @@ module VCAP::CloudController
       :buildpacks,
       :command,
       :disk_quota,
+      :log_quota,
       :docker,
       :env,
       :health_check_http_endpoint,
@@ -130,12 +131,13 @@ module VCAP::CloudController
     end
 
     def process_scale_attribute_mappings
-      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, instances: instances)
+      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, log_quota: log_quota, instances: instances)
 
       process_attributes(process_scale_attributes_from_app_level) do |process|
         process_scale_attributes(
           memory: process[:memory],
           disk_quota: process[:disk_quota],
+          log_quota: process[:log_quota],
           instances: process[:instances],
           type: process[:type]
         )
@@ -163,13 +165,15 @@ module VCAP::CloudController
       process_attributes
     end
 
-    def process_scale_attributes(memory: nil, disk_quota: nil, instances:, type: nil)
+    def process_scale_attributes(memory: nil, disk_quota: nil, log_quota: nil, instances:, type: nil)
       memory_in_mb = convert_to_mb(memory)
       disk_in_mb = convert_to_mb(disk_quota)
+      log_quota_in_bps = convert_to_bps(log_quota)
       {
         instances: instances,
         memory: memory_in_mb,
         disk_quota: disk_in_mb,
+        log_quota: log_quota_in_bps,
         type: type
       }.compact
     end
@@ -283,6 +287,15 @@ module VCAP::CloudController
     rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError
     end
 
+    def convert_to_bps(human_readable_byte_value)
+      return nil unless human_readable_byte_value.present?
+      return -1 if human_readable_byte_value.strip.to_s == 'unlimited'
+
+      human_readable_byte_value = human_readable_byte_value.strip.chop
+      byte_converter.convert_to_b(human_readable_byte_value)
+    rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError
+    end
+
     def validate_byte_format(human_readable_byte_value, attribute_name)
       byte_converter.convert_to_mb(human_readable_byte_value)
 
@@ -291,6 +304,23 @@ module VCAP::CloudController
       "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
     rescue ByteConverter::NonNumericError
       "#{attribute_name} is not a number"
+    end
+
+    def validate_bps_format(human_readable_byte_value, attribute_name)
+      return nil unless human_readable_byte_value.present?
+      return nil if human_readable_byte_value.strip.to_s == 'unlimited'
+
+      if human_readable_byte_value.strip.to_s.match?(/.*s$/)
+        human_readable_byte_value = human_readable_byte_value.strip.chop
+      end
+
+      byte_converter.convert_to_b(human_readable_byte_value)
+
+      nil
+    rescue ByteConverter::InvalidUnitsError
+      "#{attribute_name} must use 'unlimited' or a supported unit: Bs, Ks, KBs, Ms, MBs, Gs, GBs, Ts, or TBs"
+    rescue ByteConverter::NonNumericError
+      "#{attribute_name} is not a number nor 'unlimited'"
     end
 
     def byte_converter
@@ -378,8 +408,10 @@ module VCAP::CloudController
         type = process[:type]
         memory_error = validate_byte_format(process[:memory], 'Memory')
         disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
+        log_quota_error = validate_bps_format(process[:log_quota], 'Log quota')
         add_process_error!(memory_error, type) if memory_error
         add_process_error!(disk_error, type) if disk_error
+        add_process_error!(log_quota_error, type) if log_quota_error
       end
     end
 
@@ -400,8 +432,10 @@ module VCAP::CloudController
     def validate_top_level_web_process!
       memory_error = validate_byte_format(memory, 'Memory')
       disk_error = validate_byte_format(disk_quota, 'Disk quota')
+      log_quota_error = validate_bps_format(log_quota, 'Log quota')
       add_process_error!(memory_error, ProcessTypes::WEB) if memory_error
       add_process_error!(disk_error, ProcessTypes::WEB) if disk_error
+      add_process_error!(log_quota_error, ProcessTypes::WEB) if log_quota_error
     end
 
     def validate_buildpack_and_buildpacks_combination!

@@ -38,6 +38,7 @@ module VCAP::CloudController
 
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
+            default_app_log_quota_in_bps: Integer,
             maximum_app_disk_in_mb: Integer,
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,

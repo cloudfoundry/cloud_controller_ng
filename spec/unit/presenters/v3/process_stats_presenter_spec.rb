@@ -66,12 +66,14 @@ module VCAP::CloudController::Presenters::V3
               uptime: 12345,
               mem_quota:  process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
+              log_quota: process[:log_quota],
               fds_quota: process.file_descriptors,
               usage: {
                 time: '2015-12-08 16:54:48 -0800',
                 cpu:  80,
                 mem:  128,
                 disk: 1024,
+                log_rate: 2048,
               }
             }
           },
@@ -86,12 +88,14 @@ module VCAP::CloudController::Presenters::V3
               uptime: 42,
               mem_quota:  process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
+              log_quota: process[:log_quota],
               fds_quota: process.file_descriptors,
               usage: {
                 time: '2015-03-13 16:54:48 -0800',
                 cpu:  70,
                 mem:  128,
                 disk: 1024,
+                log_rate: 7168,
               }
             }
           },
@@ -116,11 +120,13 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:uptime]).to eq(12345)
         expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
         expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
+        expect(result[0][:log_quota]).to eq(process[:log_quota])
         expect(result[0][:fds_quota]).to eq(process.file_descriptors)
         expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
                                           cpu: 80,
                                           mem: 128,
-                                          disk: 1024 })
+                                          disk: 1024,
+                                          log_rate: 2048 })
 
         expect(result[1][:type]).to eq(process.type)
         expect(result[1][:index]).to eq(1)
@@ -133,7 +139,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:usage]).to eq({ time: '2015-03-13 16:54:48 -0800',
                                           cpu: 70,
                                           mem: 128,
-                                          disk: 1024 })
+                                          disk: 1024,
+                                          log_rate: 7168 })
 
         expect(result[2]).to eq(
           type:  process.type,
@@ -190,11 +197,13 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:uptime]).to eq(12345)
           expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
           expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
+          expect(result[0][:log_quota]).to eq(process[:log_quota])
           expect(result[0][:fds_quota]).to eq(process.file_descriptors)
           expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
             cpu: 80,
             mem: 128,
-            disk: 1024 })
+            disk: 1024,
+            log_rate: 2048 })
         end
       end
 
@@ -230,6 +239,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:uptime]).to eq(12345)
           expect(result[0][:mem_quota]).to be_nil
           expect(result[0][:disk_quota]).to be_nil
+          expect(result[0][:log_quota]).to be_nil
           expect(result[0][:fds_quota]).to eq(process.file_descriptors)
           expect(result[0][:usage]).to eq({})
         end
