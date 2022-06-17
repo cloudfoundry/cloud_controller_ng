@@ -29,14 +29,7 @@ module VCAP::CloudController
           def add_units_log_quota(val)
             return 'unlimited' if val == -1
 
-            units = ['Bs', 'KBs', 'MBs', 'GBs']
-            i = 0
-            while val % 1024 == 0 && i < units.length - 1
-              val /= 1024
-              i += 1
-            end
-
-            "#{val}#{units[i]}"
+            "#{val}Bs"
           end
         end
       end

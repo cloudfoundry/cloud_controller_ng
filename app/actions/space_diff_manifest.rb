@@ -193,14 +193,7 @@ module VCAP::CloudController
 
         val = byte_converter.convert_to_b(human_readable_byte_value)
 
-        units = ['Bs', 'KBs', 'MBs', 'GBs']
-        i = 0
-        while val % 1024 == 0 && i < units.length - 1
-          val /= 1024
-          i += 1
-        end
-
-        "#{val}#{units[i]}"
+        "#{val}Bs"
       rescue ByteConverter::InvalidUnitsError
         "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
       rescue ByteConverter::NonNumericError
