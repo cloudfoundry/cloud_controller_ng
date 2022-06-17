@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'instances' => 1,
           'memory' => '1024M',
           'disk_quota' => '1024M',
-          'log_quota' => '1MBs',
+          'log_quota' => '1048576Bs',
           'health-check-type' => 'port',
         })
       end
@@ -56,11 +56,11 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
         end
       end
 
-      it 'selects the best unit possible' do
+      it 'is consistant with other quotas with output' do
         expect(subject.add_units_log_quota(256)).to eq('256Bs')
-        expect(subject.add_units_log_quota(2048)).to eq('2KBs')
-        expect(subject.add_units_log_quota(4_194_304)).to eq('4MBs')
-        expect(subject.add_units_log_quota(6_442_450_944)).to eq('6GBs')
+        expect(subject.add_units_log_quota(2_048)).to eq('2048Bs')
+        expect(subject.add_units_log_quota(4_194_304)).to eq('4194304Bs')
+        expect(subject.add_units_log_quota(6_442_450_944)).to eq('6442450944Bs')
       end
     end
   end
