@@ -176,6 +176,33 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
     end
   end
 
+  describe '#last_operation_is_update?' do
+    context 'when there is no operation' do
+      it 'returns false' do
+        expect(service.last_operation_is_update?).to be false
+      end
+    end
+
+    context 'when there is an operation' do
+      it 'returns true when last operation was an update' do
+        [
+          { type: 'create', state: 'initial',     result: false },
+          { type: 'create', state: 'in progress', result: false },
+          { type: 'create', state: 'succeeded',   result: false },
+          { type: 'create', state: 'failed',      result: false },
+          { type: 'update', state: 'in progress', result: true },
+          { type: 'update', state: 'succeeded',   result: true },
+          { type: 'update', state: 'failed',      result: true },
+          { type: 'delete', state: 'in progress', result: false },
+          { type: 'delete', state: 'failed',      result: false },
+        ].each do |test|
+          update_operation(test[:type], test[:state])
+          expect(service.last_operation_is_update?).to be test[:result]
+        end
+      end
+    end
+  end
+
   describe '#update_in_progress?' do
     context 'when there is no operation' do
       it 'returns false' do
