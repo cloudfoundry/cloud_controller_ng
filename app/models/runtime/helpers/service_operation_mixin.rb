@@ -49,10 +49,6 @@ module VCAP::CloudController
       delete? && failed?
     end
 
-    def last_operation_nil?
-      !last_operation?
-    end
-
     def last_operation_is_update?
       last_operation&.type == 'update'
     end

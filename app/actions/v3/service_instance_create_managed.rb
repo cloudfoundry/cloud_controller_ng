@@ -188,8 +188,10 @@ module VCAP::CloudController
 
       def validate_service_instance!(instance)
         if instance
-          instance_already_exists!(instance.name) if instance.create_succeeded? || instance.create_in_progress? || instance.last_operation_is_update? ||
-            instance.last_operation_nil?
+          if instance.create_succeeded? || instance.create_in_progress? || instance.last_operation_is_update?
+            instance_already_exists!(instance.name)
+          end
+
           incomplete_deletion! if instance.delete_failed? || instance.delete_in_progress?
         end
       end
