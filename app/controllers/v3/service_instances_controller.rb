@@ -287,8 +287,7 @@ class ServiceInstancesV3Controller < ApplicationController
     else
       render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
     end
-  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate,
-         V3::ServiceInstanceUpdateManaged::InvalidServiceInstance => api_err
+  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
     unprocessable!(api_err.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
