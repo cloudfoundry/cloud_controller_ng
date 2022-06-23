@@ -48,7 +48,7 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Either `create`, `update`, or `delete`
-**state** | _string_ | Either `in progress`, `succeeded`, or `failed`
+**state** | _string_ | Either `initial`, `in progress`, `succeeded`, or `failed`<br>_Note: The `initial` state indicates that no response from the service broker has been received yet._
 **description** | _string_ | A textual explanation associated with this state
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the operation started
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the operation was last updated
