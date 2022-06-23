@@ -188,11 +188,12 @@ module VCAP::CloudController
 
       def validate_service_instance!(instance)
         if instance
-          if instance.create_succeeded? || instance.create_in_progress? || instance.last_operation_is_update?
+          if instance.create_succeeded? || instance.create_in_progress? ||
+              instance.last_operation_is_update? || instance.delete_failed?
             instance_already_exists!(instance.name)
           end
 
-          incomplete_deletion! if instance.delete_failed? || instance.delete_in_progress?
+          incomplete_deletion! if instance.delete_in_progress?
         end
       end
 
@@ -206,7 +207,7 @@ module VCAP::CloudController
       end
 
       def incomplete_deletion!
-        raise InvalidManagedServiceInstance.new('The service instance is getting deleted or its deletion failed.')
+        raise InvalidManagedServiceInstance.new('The service instance is getting deleted.')
       end
 
       class ValidationErrorHandler

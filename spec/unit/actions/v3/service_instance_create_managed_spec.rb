@@ -183,7 +183,7 @@ module VCAP::CloudController
             it 'should raise' do
               expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance is getting deleted or its deletion failed.'
+                 'The service instance is getting deleted.'
                )
             end
           end
@@ -196,7 +196,7 @@ module VCAP::CloudController
             it 'should raise' do
               expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance is getting deleted or its deletion failed.'
+                 'The service instance name is taken: si-test-name.'
                )
             end
           end

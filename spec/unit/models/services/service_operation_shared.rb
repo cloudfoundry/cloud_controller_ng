@@ -232,8 +232,8 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
 
   describe '#update_succeeded?' do
     context 'when there is no operation' do
-      it 'returns true' do
-        expect(service.update_succeeded?).to be true
+      it 'returns false' do
+        expect(service.update_succeeded?).to be false
       end
     end
 
