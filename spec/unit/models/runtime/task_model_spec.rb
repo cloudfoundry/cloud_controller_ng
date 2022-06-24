@@ -305,6 +305,60 @@ module VCAP::CloudController
             end
           end
 
+          describe 'when the log rate limit quota is unlimited' do
+            let(:quota) { SpaceQuotaDefinition.make(log_limit: -1, organization: org) }
+
+            it 'allows tasks to run with unlimited rate limits' do
+              expect {
+                TaskModel.make(
+                  log_quota: -1,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'allows tasks to run with rate limits' do
+              expect {
+                TaskModel.make(
+                  log_quota: 1_000_000_000_000,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+          end
+
+          describe 'when the quota has a log_quota' do
+            let(:quota) { SpaceQuotaDefinition.make(log_limit: 200, organization: org) }
+
+            it 'allows tasks that fit in the available log rate' do
+              expect {
+                TaskModel.make(
+                  log_quota: 100,
+                  app: app,
+                )
+              }.not_to raise_error
+            end
+
+            it 'raises an error if the task does not fit in the remaining space' do
+              expect {
+                TaskModel.make(
+                  log_quota: 201,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'log_quota exceeds space log rate quota'
+            end
+
+            it 'raises an error if the task has an unlimited rate limit' do
+              expect {
+                TaskModel.make(
+                  log_quota: -1,
+                  app: app,
+                )
+              }.to raise_error Sequel::ValidationFailed, 'log_quota app_requires_log_quota_to_be_specified'
+            end
+
+          end
+
           describe 'when the quota has a memory_limit' do
             let(:quota) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
 
@@ -407,9 +461,32 @@ module VCAP::CloudController
               expect {
                 TaskModel.make(
                   memory_in_mb: 21,
+                  log_quota: 21_000,
                   app: app,
                 )
               }.not_to raise_error
+            end
+          end
+
+          describe 'when the quota has a log_limit' do
+            let(:quota) { QuotaDefinition.make(log_limit: 200) }
+
+            it "does allow a task that fits in the limit to start" do
+              expect {
+                TaskModel.make(
+                  log_quota: 199,
+                  app: app,
+                )
+              }.to_not raise_error
+            end
+
+            it "does not allow a task that exceeds the limit to start" do
+              expect {
+                TaskModel.make(
+                  log_quota: 10_000,
+                  app: app,
+                )
+              }.to raise_error /log_quota exceeds organization log rate/
             end
           end
 

@@ -254,7 +254,6 @@ module VCAP::CloudController
         MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
         MinDiskQuotaPolicy.new(self),
         MinMemoryPolicy.new(self),
-        MinLogQuotaPolicy.new(self),
         AppMaxMemoryPolicy.new(self, space, :space_quota_exceeded),
         AppMaxMemoryPolicy.new(self, organization, :quota_exceeded),
         AppMaxInstanceMemoryPolicy.new(self, organization, :instance_memory_limit_exceeded),
@@ -262,6 +261,9 @@ module VCAP::CloudController
         InstancesPolicy.new(self),
         MaxAppInstancesPolicy.new(self, organization, organization && organization.quota_definition, :app_instance_limit_exceeded),
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
+        MinLogQuotaPolicy.new(self),
+        AppMaxLogQuotaPolicy.new(self, space, 'exceeds space log rate quota'),
+        AppMaxLogQuotaPolicy.new(self, organization, 'exceeds organization log rate quota'),
         HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
         DockerPolicy.new(self),
         PortsPolicy.new(self)
