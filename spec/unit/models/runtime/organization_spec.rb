@@ -508,6 +508,58 @@ module VCAP::CloudController
       end
     end
 
+    describe '#has_remaining_log_quota' do
+      let(:log_limit) { 10 }
+      let(:quota) { QuotaDefinition.make(log_limit: log_limit) }
+      let(:org) { Organization.make(quota_definition: quota) }
+      let(:org2) { Organization.make(quota_definition: quota) }
+      let(:space) { Space.make(organization: org) }
+      let(:space2) { Space.make(organization: org) }
+      let(:space_org2) { Space.make(organization: org2) }
+
+      context 'when the quota is unlimited' do
+        let(:log_limit) { QuotaDefinition::UNLIMITED }
+
+        it 'handles large log quotas' do
+          expect(org.has_remaining_log_quota(10_000_000)).to be_truthy
+        end
+      end
+
+      context 'when nothing is running' do
+        it 'uses the log_limit' do
+          expect(org.has_remaining_log_quota(10)).to be_truthy
+          expect(org.has_remaining_log_quota(11)).to be_falsey
+        end
+      end
+
+      context 'when something else is running' do
+        it 'takes all things in the org into account' do
+          ProcessModelFactory.make(space: space, log_quota: 5, state: 'STARTED')
+          expect(org.has_remaining_log_quota(5)).to be_truthy
+          expect(org.has_remaining_log_quota(6)).to be_falsey
+
+          ProcessModelFactory.make(space: space, log_quota: 1, state: 'STARTED')
+          expect(org.has_remaining_log_quota(4)).to be_truthy
+          expect(org.has_remaining_log_quota(5)).to be_falsey
+
+          ProcessModelFactory.make(space: space2, log_quota: 1, instances: 2, state: 'STARTED')
+          expect(org.has_remaining_log_quota(2)).to be_truthy
+          expect(org.has_remaining_log_quota(3)).to be_falsey
+        end
+
+        context 'when something else is running in another org' do
+          it 'only accounts for things running in the owning org' do
+            ProcessModelFactory.make(space: space_org2, log_quota: 1, instances: 2, state: 'STARTED')
+            expect(org.has_remaining_log_quota(10)).to be_truthy
+            expect(org.has_remaining_log_quota(11)).to be_falsey
+
+            expect(org2.has_remaining_log_quota(8)).to be_truthy
+            expect(org2.has_remaining_log_quota(9)).to be_falsey
+          end
+        end
+      end
+    end
+
     describe '#instance_memory_limit' do
       let(:quota) { QuotaDefinition.make(instance_memory_limit: 50) }
       let(:org) { Organization.make quota_definition: quota }

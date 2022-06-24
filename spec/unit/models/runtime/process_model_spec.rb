@@ -198,7 +198,6 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(MaxDiskQuotaPolicy)
         expect_validator(MinDiskQuotaPolicy)
-        expect_validator(MinLogQuotaPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
@@ -417,11 +416,12 @@ module VCAP::CloudController
 
       describe 'quota' do
         subject(:process) { ProcessModelFactory.make }
+        let(:log_limit) { 1024 }
         let(:quota) do
-          QuotaDefinition.make(memory_limit: 128, log_limit: 1_048_576)
+          QuotaDefinition.make(memory_limit: 128, log_limit: log_limit)
         end
         let(:space_quota) do
-          SpaceQuotaDefinition.make(memory_limit: 128, organization: org, log_limit: 1_048_576)
+          SpaceQuotaDefinition.make(memory_limit: 128, organization: org, log_limit: log_limit)
         end
 
         context 'app update' do
@@ -435,11 +435,40 @@ module VCAP::CloudController
           let(:org) { Organization.make(quota_definition: quota) }
           let(:space) { Space.make(name: 'hi', organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
-          subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
+          subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, log_quota: 512, instances: 2, state: 'STARTED') }
 
           it 'should raise error when quota is exceeded' do
             process.memory = 65
-            expect { process.save }.to raise_error(/quota_exceeded/)
+            expect { process.save }.to raise_error(/memory quota_exceeded/)
+          end
+
+          it 'should raise error when log quota is exceeded' do
+            number = (log_limit/2) + 1
+            process.log_quota = number
+            expect { process.save }.to raise_error(/exceeds space log rate quota/)
+          end
+
+          context "when only exceeding the org quota" do
+            before do
+              org.quota_definition = QuotaDefinition.make(log_limit: 5)
+              org.save
+            end
+
+            it 'raises an error' do
+              process.log_quota = 10
+              expect { process.save }.to raise_error(/exceeds organization log rate quota/)
+            end
+          end
+
+          it 'should not raise error when log quota is not exceeded' do
+            number = (log_limit/2)
+            process.log_quota = number
+            expect { process.save }.not_to raise_error
+          end
+
+          it 'should raise an error when starting an app with unlimited log rate and a limited quota' do
+            process.log_quota = -1
+            expect { process.save }.to raise_error(/app_requires_log_quota_to_be_specified/)
           end
 
           it 'should not raise error when quota is not exceeded' do
