@@ -195,9 +195,9 @@ module VCAP::CloudController
     def validate_service_instance!(service_instance)
       service_instance_not_found!(manifest_service_binding.name) unless service_instance
 
-      if service_instance.type == 'managed_service_instance'
+      if service_instance.managed_instance?
         service_instance_not_found!(service_instance.name) if service_instance.create_failed?
-        delete_in_progress_or_failed!(service_instance) if service_instance.last_operation_is_delete?
+        delete_in_progress!(service_instance) if service_instance.delete_in_progress?
       end
     end
 
@@ -224,8 +224,8 @@ module VCAP::CloudController
       raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Service instance '#{name}' not found")
     end
 
-    def delete_in_progress_or_failed!(service_instance)
-      error_message = 'The service instance is getting deleted or its deletion failed. Therefore, no binding can be created.'
+    def delete_in_progress!(service_instance)
+      error_message = 'The service instance is getting deleted. Therefore, no binding can be created.'
       raise_binding_error!(service_instance, error_message)
     end
 
