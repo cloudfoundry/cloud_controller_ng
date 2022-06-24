@@ -327,7 +327,7 @@ module VCAP::CloudController
         it 'raises' do
           expect {
             service_instance_share.create(service_instance, [target_space1], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'The service instance is getting deleted or its deletion failed.')
+          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'The service instance is getting deleted.')
         end
       end
 
@@ -336,10 +336,9 @@ module VCAP::CloudController
           service_instance.save_with_new_operation({}, { type: 'delete', state: 'failed' })
         end
 
-        it 'raises' do
-          expect {
-            service_instance_share.create(service_instance, [target_space1], user_audit_info)
-          }.to raise_error(VCAP::CloudController::ServiceInstanceShare::Error, 'The service instance is getting deleted or its deletion failed.')
+        it 'creates the share' do
+          shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          expect(shared_instance.shared_spaces.length).to eq 1
         end
       end
     end

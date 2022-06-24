@@ -89,11 +89,13 @@ module VCAP::CloudController
     end
 
     def validate_service_instance_state!(service_instance)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name) if service_instance.create_failed?
-
-      error!('The service instance is getting deleted or its deletion failed.') if service_instance.delete_in_progress? ||
-        service_instance.delete_failed?
-      error!('Service instance is currently being created. It can be shared after its creation succeeded.') if service_instance.create_in_progress?
+      if service_instance.create_failed?
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name)
+      elsif service_instance.create_in_progress?
+        error!('Service instance is currently being created. It can be shared after its creation succeeded.')
+      elsif service_instance.delete_in_progress?
+        error!('The service instance is getting deleted.')
+      end
     end
   end
 end
