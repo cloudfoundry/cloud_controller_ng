@@ -72,13 +72,11 @@ init_block = proc do
 
   require 'posix/spawn'
 
-  require 'rspec_api_documentation'
   require 'services'
 
   require 'support/bootstrap/spec_bootstrap'
   require 'rspec/collection_matchers'
   require 'rspec/its'
-  require 'rspec/wait'
 end
 
 each_run_block = proc do
@@ -198,16 +196,6 @@ each_run_block = proc do
     end
 
     rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
-
-    RspecApiDocumentation.configure do |c|
-      c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config_instance,
-                                                              VCAP::CloudController::Metrics::RequestMetrics.new,
-                                                              VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('request.logs')))
-      c.format = [:html, :json]
-      c.api_name = 'Cloud Foundry API'
-      c.template_path = 'spec/api/documentation/templates'
-      c.curl_host = 'https://api.[your-domain.com]'
-    end
   end
 end
 
