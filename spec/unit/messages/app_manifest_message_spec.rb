@@ -104,9 +104,9 @@ module VCAP::CloudController
         end
       end
 
-      describe 'log_quota' do
-        context 'when log_quota unit is not part of expected set of values' do
-          let(:params_from_yaml) { { name: 'eugene', log_quota: '200INVALID' } }
+      describe 'log_rate_limit' do
+        context 'when log_rate_limit unit is not part of expected set of values' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: '200INVALID' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -119,20 +119,20 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_quota is not a positive amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_quota: '-1MBs' } }
+        context 'when log_rate_limit is not a positive amount' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: '-1MBs' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors.full_messages).to include('Process "web": Log quota must be an integer greater than or equal to 0Bs')
+            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to 0Bs')
           end
         end
 
-        context 'when log_quota is not numeric' do
-          let(:params_from_yaml) { { name: 'eugene', log_quota: 'gerg herscheisers' } }
+        context 'when log_rate_limit is not numeric' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: 'gerg herscheisers' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -145,8 +145,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_quota is unlimited amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_quota: 'unlimited' } }
+        context 'when log_rate_limit is unlimited amount' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: 'unlimited' } }
 
           it 'is valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)

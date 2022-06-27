@@ -43,24 +43,24 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'instances' => 1,
           'memory' => '1024M',
           'disk_quota' => '1024M',
-          'log_quota' => '1048576Bs',
+          'log_rate_limit' => '1048576Bs',
           'health-check-type' => 'port',
         })
       end
     end
 
-    describe '#add_units_log_quota' do
-      context 'log_quota is -1 (unlimited)' do
+    describe '#add_units_log_rate_limit' do
+      context 'log_rate_limit is -1 (unlimited)' do
         it 'returns unlimited' do
-          expect(subject.add_units_log_quota(-1)).to eq('unlimited')
+          expect(subject.add_units_log_rate_limit(-1)).to eq('unlimited')
         end
       end
 
       it 'is consistant with other quotas with output' do
-        expect(subject.add_units_log_quota(256)).to eq('256Bs')
-        expect(subject.add_units_log_quota(2_048)).to eq('2048Bs')
-        expect(subject.add_units_log_quota(4_194_304)).to eq('4194304Bs')
-        expect(subject.add_units_log_quota(6_442_450_944)).to eq('6442450944Bs')
+        expect(subject.add_units_log_rate_limit(256)).to eq('256Bs')
+        expect(subject.add_units_log_rate_limit(2_048)).to eq('2048Bs')
+        expect(subject.add_units_log_rate_limit(4_194_304)).to eq('4194304Bs')
+        expect(subject.add_units_log_rate_limit(6_442_450_944)).to eq('6442450944Bs')
       end
     end
   end

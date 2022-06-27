@@ -68,13 +68,13 @@ module VCAP::CloudController
         end
       end
 
-      describe 'log_limit' do
+      describe 'log_rate_limit' do
         it 'cannot be less than -1' do
-          space_quota_definition.log_limit = -2
+          space_quota_definition.log_rate_limit = -2
           expect(space_quota_definition).not_to be_valid
-          expect(space_quota_definition.errors.on(:log_limit)).to include(:invalid_log_limit)
+          expect(space_quota_definition.errors.on(:log_rate_limit)).to include(:invalid_log_rate_limit)
 
-          space_quota_definition.log_limit = -1
+          space_quota_definition.log_rate_limit = -1
           expect(space_quota_definition).to be_valid
         end
       end
@@ -174,13 +174,13 @@ module VCAP::CloudController
       it do
         is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
           :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_limit
+          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
 
       it do
         is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
           :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_limit
+          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
     end
 

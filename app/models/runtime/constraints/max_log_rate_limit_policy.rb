@@ -1,6 +1,6 @@
-require 'cloud_controller/app_services/process_log_quota_calculator'
+require 'cloud_controller/app_services/process_log_rate_limit_calculator'
 
-class BaseMaxLogQuotaPolicy
+class BaseMaxLogRateLimitPolicy
   def initialize(resource, policy_target, error_name)
     @resource = resource
     @policy_target = policy_target
@@ -11,13 +11,13 @@ class BaseMaxLogQuotaPolicy
     return unless policy_target
     return unless additional_checks
 
-    if resource.log_quota == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
-       policy_target.log_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
+    if resource.log_rate_limit == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
+       policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
 
-       resource.errors.add(field, :app_requires_log_quota_to_be_specified)
+       resource.errors.add(field, :app_requires_log_rate_limit_to_be_specified)
     end
 
-    unless policy_target.has_remaining_log_quota(requested_log_quota)
+    unless policy_target.has_remaining_log_rate_limit(requested_log_rate_limit)
       resource.errors.add(field, error_name)
     end
   end
@@ -30,29 +30,29 @@ class BaseMaxLogQuotaPolicy
     true
   end
 
-  def requested_log_quota
+  def requested_log_rate_limit
     resource.public_send field
   end
 
   def field
-    :log_quota
+    :log_rate_limit
   end
 end
 
-class AppMaxLogQuotaPolicy < BaseMaxLogQuotaPolicy
+class AppMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   private
 
   def additional_checks
     resource.scaling_operation?
   end
 
-  def requested_log_quota
-    calculator = VCAP::CloudController::ProcessLogQuotaCalculator.new(resource)
-    calculator.additional_log_quota_requested
+  def requested_log_rate_limit
+    calculator = VCAP::CloudController::ProcessLogRateLimitCalculator.new(resource)
+    calculator.additional_log_rate_limit_requested
   end
 end
 
-class TaskMaxLogQuotaPolicy < BaseMaxLogQuotaPolicy
+class TaskMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   IGNORED_STATES = [
     VCAP::CloudController::TaskModel::CANCELING_STATE,
     VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
@@ -66,6 +66,6 @@ class TaskMaxLogQuotaPolicy < BaseMaxLogQuotaPolicy
   end
 
   def field
-    :log_quota
+    :log_rate_limit
   end
 end

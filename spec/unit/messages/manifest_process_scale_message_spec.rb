@@ -141,40 +141,40 @@ module VCAP::CloudController
         end
       end
 
-      describe '#log_quota' do
-        context 'when log_quota is not an number' do
-          let(:params) { { log_quota: 'silly string thing' } }
+      describe '#log_rate_limit' do
+        context 'when log_rate_limit is not an number' do
+          let(:params) { { log_rate_limit: 'silly string thing' } }
 
           it 'is not valid' do
             message = ManifestProcessScaleMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log quota must be an integer greater than or equal to 0Bs')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to 0Bs')
           end
         end
 
-        context 'when log_quota is < -1' do
-          let(:params) { { log_quota: -2 } }
+        context 'when log_rate_limit is < -1' do
+          let(:params) { { log_rate_limit: -2 } }
 
           it 'is not valid' do
             message = ManifestProcessScaleMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log quota must be an integer greater than or equal to 0Bs')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to 0Bs')
           end
         end
 
-        context 'when log_quota is not an integer' do
-          let(:params) { { log_quota: 3.5 } }
+        context 'when log_rate_limit is not an integer' do
+          let(:params) { { log_rate_limit: 3.5 } }
 
           it 'is not valid' do
             message = ManifestProcessScaleMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log quota must be an integer greater than or equal to 0Bs')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to 0Bs')
           end
         end
       end
@@ -199,7 +199,7 @@ module VCAP::CloudController
       let(:manifest_message) { ManifestProcessScaleMessage.new(params) }
 
       context 'when all params are given' do
-        let(:params) { { instances: 3, memory: 1024, disk_quota: 2048, log_quota: 1024 } }
+        let(:params) { { instances: 3, memory: 1024, disk_quota: 2048, log_rate_limit: 1024 } }
 
         it 'returns a process_scale_message with the appropriate values' do
           scale_message = manifest_message.to_process_scale_message
@@ -207,7 +207,7 @@ module VCAP::CloudController
           expect(scale_message.instances).to eq(3)
           expect(scale_message.memory_in_mb).to eq(1024)
           expect(scale_message.disk_in_mb).to eq(2048)
-          expect(scale_message.log_quota_in_bps).to eq(1024)
+          expect(scale_message.log_rate_limit_in_bps).to eq(1024)
         end
       end
 
@@ -223,13 +223,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'when no log_quota is given' do
+      context 'when no log_rate_limit is given' do
         let(:params) { { instances: 3, memory: 1024 } }
 
-        it 'does not set anything for log_quota_in_bps' do
+        it 'does not set anything for log_rate_limit_in_bps' do
           scale_message = manifest_message.to_process_scale_message
 
-          expect(scale_message.log_quota_in_bps).to be_falsey
+          expect(scale_message.log_rate_limit_in_bps).to be_falsey
         end
       end
 

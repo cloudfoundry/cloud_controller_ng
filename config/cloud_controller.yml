@@ -53,7 +53,7 @@ completed_tasks:
 
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
-default_app_log_quota_in_bps: 1_048_576
+default_app_log_rate_limit_in_bps: 1_048_576
 maximum_app_disk_in_mb: 2048
 max_retained_deployments_per_app: 100
 max_retained_builds_per_app: 100

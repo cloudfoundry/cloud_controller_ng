@@ -16,7 +16,7 @@ module VCAP::CloudController
       :buildpacks,
       :command,
       :disk_quota,
-      :log_quota,
+      :log_rate_limit,
       :docker,
       :env,
       :health_check_http_endpoint,
@@ -131,13 +131,13 @@ module VCAP::CloudController
     end
 
     def process_scale_attribute_mappings
-      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, log_quota: log_quota, instances: instances)
+      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, log_rate_limit: log_rate_limit, instances: instances)
 
       process_attributes(process_scale_attributes_from_app_level) do |process|
         process_scale_attributes(
           memory: process[:memory],
           disk_quota: process[:disk_quota],
-          log_quota: process[:log_quota],
+          log_rate_limit: process[:log_rate_limit],
           instances: process[:instances],
           type: process[:type]
         )
@@ -165,15 +165,15 @@ module VCAP::CloudController
       process_attributes
     end
 
-    def process_scale_attributes(memory: nil, disk_quota: nil, log_quota: nil, instances:, type: nil)
+    def process_scale_attributes(memory: nil, disk_quota: nil, log_rate_limit: nil, instances:, type: nil)
       memory_in_mb = convert_to_mb(memory)
       disk_in_mb = convert_to_mb(disk_quota)
-      log_quota_in_bps = convert_to_bps(log_quota)
+      log_rate_limit_in_bps = convert_to_bps(log_rate_limit)
       {
         instances: instances,
         memory: memory_in_mb,
         disk_quota: disk_in_mb,
-        log_quota: log_quota_in_bps,
+        log_rate_limit: log_rate_limit_in_bps,
         type: type
       }.compact
     end
@@ -408,10 +408,10 @@ module VCAP::CloudController
         type = process[:type]
         memory_error = validate_byte_format(process[:memory], 'Memory')
         disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
-        log_quota_error = validate_bps_format(process[:log_quota], 'Log quota')
+        log_rate_limit_error = validate_bps_format(process[:log_rate_limit], 'Log quota')
         add_process_error!(memory_error, type) if memory_error
         add_process_error!(disk_error, type) if disk_error
-        add_process_error!(log_quota_error, type) if log_quota_error
+        add_process_error!(log_rate_limit_error, type) if log_rate_limit_error
       end
     end
 
@@ -432,10 +432,10 @@ module VCAP::CloudController
     def validate_top_level_web_process!
       memory_error = validate_byte_format(memory, 'Memory')
       disk_error = validate_byte_format(disk_quota, 'Disk quota')
-      log_quota_error = validate_bps_format(log_quota, 'Log quota')
+      log_rate_limit_error = validate_bps_format(log_rate_limit, 'Log quota')
       add_process_error!(memory_error, ProcessTypes::WEB) if memory_error
       add_process_error!(disk_error, ProcessTypes::WEB) if disk_error
-      add_process_error!(log_quota_error, ProcessTypes::WEB) if log_quota_error
+      add_process_error!(log_rate_limit_error, ProcessTypes::WEB) if log_rate_limit_error
     end
 
     def validate_buildpack_and_buildpacks_combination!
