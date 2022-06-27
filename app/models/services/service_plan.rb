@@ -54,9 +54,20 @@ module VCAP::CloudController
 
     strip_attributes :name
 
-    alias_method :public?, :public
+    # When selecting a UNION of multiple sub-queries, MySQL does not maintain the original type - i.e. tinyint(1) - and
+    # thus Sequel does not convert the value to a boolean.
+    # See https://bugs.mysql.com/bug.php?id=30886
+    def free?
+      ActiveModel::Type::Boolean.new.cast(free)
+    end
 
-    alias_method :active?, :active
+    def public?
+      ActiveModel::Type::Boolean.new.cast(public)
+    end
+
+    def active?
+      ActiveModel::Type::Boolean.new.cast(active)
+    end
 
     alias_method :broker_provided_id, :unique_id
 
@@ -187,7 +198,7 @@ module VCAP::CloudController
     end
 
     def validate_private_broker_plan_not_public
-      if broker_space_scoped? && self.public
+      if broker_space_scoped? && self.public?
         errors.add(:public, 'may not be true for plans belonging to private service brokers')
       end
     end

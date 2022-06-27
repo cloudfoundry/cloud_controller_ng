@@ -24,7 +24,7 @@ module VCAP::CloudController
             name: service_plan.name,
             visibility_type: service_plan.visibility_type,
             available: service_plan.active?,
-            free: service_plan.free,
+            free: service_plan.free?,
             costs: costs,
             description: service_plan.description,
             maintenance_info: maintenance_info,

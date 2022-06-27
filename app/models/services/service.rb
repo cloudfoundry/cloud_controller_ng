@@ -88,8 +88,32 @@ module VCAP::CloudController
 
     serialize_attributes :json, :tags, :requires
 
-    alias_method :bindable?, :bindable
-    alias_method :active?, :active
+    # When selecting a UNION of multiple sub-queries, MySQL does not maintain the original type - i.e. tinyint(1) - and
+    # thus Sequel does not convert the value to a boolean.
+    # See https://bugs.mysql.com/bug.php?id=30886
+    def active?
+      ActiveModel::Type::Boolean.new.cast(active)
+    end
+
+    def bindable?
+      ActiveModel::Type::Boolean.new.cast(bindable)
+    end
+
+    def plan_updateable?
+      ActiveModel::Type::Boolean.new.cast(plan_updateable)
+    end
+
+    def bindings_retrievable?
+      ActiveModel::Type::Boolean.new.cast(bindings_retrievable)
+    end
+
+    def instances_retrievable?
+      ActiveModel::Type::Boolean.new.cast(instances_retrievable)
+    end
+
+    def allow_context_updates?
+      ActiveModel::Type::Boolean.new.cast(allow_context_updates)
+    end
 
     def tags
       super || []

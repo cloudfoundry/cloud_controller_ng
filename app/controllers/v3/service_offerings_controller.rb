@@ -28,15 +28,15 @@ class ServiceOfferingsController < ApplicationController
               elsif permission_queryer.can_read_globally?
                 ServiceOfferingListFetcher.fetch(
                   message,
-                  omniscient: true,
                   eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                  omniscient: true
                 )
               else
                 ServiceOfferingListFetcher.fetch(
                   message,
-                  readable_orgs_query: permission_queryer.readable_orgs_query,
-                  readable_spaces_query: permission_queryer.readable_space_scoped_spaces_query,
                   eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                  readable_orgs_query: permission_queryer.readable_orgs_query,
+                  readable_spaces_query: permission_queryer.readable_space_scoped_spaces_query
                 )
               end
 
