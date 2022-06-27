@@ -27,7 +27,7 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
-      self.log_quota        ||= Config.config.get(:default_app_log_quota_in_bps)
+      self.log_rate_limit        ||= Config.config.get(:default_app_log_rate_limit_in_bps)
       self.metadata         ||= {}
     end
 
@@ -146,7 +146,7 @@ module VCAP::CloudController
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :detected_buildpack_guid, :environment_json,
-      :memory, :instances, :disk_quota, :log_quota, :state, :version, :command,
+      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version, :command,
       :console, :debug, :staging_task_id, :package_state, :health_check_type,
       :health_check_timeout, :health_check_http_endpoint, :staging_failed_reason,
       :staging_failed_description, :diego, :docker_image, :package_updated_at,
@@ -154,7 +154,7 @@ module VCAP::CloudController
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :log_quota, :state, :command, :console, :debug, :staging_task_id,
+      :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
       :service_binding_guids, :route_guids, :health_check_type,
       :health_check_http_endpoint, :health_check_timeout, :diego,
       :docker_image, :app_guid, :enable_ssh, :ports
@@ -261,9 +261,9 @@ module VCAP::CloudController
         InstancesPolicy.new(self),
         MaxAppInstancesPolicy.new(self, organization, organization && organization.quota_definition, :app_instance_limit_exceeded),
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
-        MinLogQuotaPolicy.new(self),
-        AppMaxLogQuotaPolicy.new(self, space, 'exceeds space log rate quota'),
-        AppMaxLogQuotaPolicy.new(self, organization, 'exceeds organization log rate quota'),
+        MinLogRateLimitPolicy.new(self),
+        AppMaxLogRateLimitPolicy.new(self, space, 'exceeds space log rate quota'),
+        AppMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota'),
         HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
         DockerPolicy.new(self),
         PortsPolicy.new(self)

@@ -13,11 +13,11 @@ module VCAP::CloudController
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
       :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_limit
+      :log_rate_limit
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
       :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_limit
+      :log_rate_limit
 
     # rubocop:disable Metrics/CyclomaticComplexity
     def validate
@@ -34,7 +34,7 @@ module VCAP::CloudController
       errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < UNLIMITED
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
       errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
-      errors.add(:log_limit, :invalid_log_limit) if log_limit && log_limit < UNLIMITED
+      errors.add(:log_rate_limit, :invalid_log_rate_limit) if log_rate_limit && log_rate_limit < UNLIMITED
       errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
     end
     # rubocop:enable Metrics/CyclomaticComplexity

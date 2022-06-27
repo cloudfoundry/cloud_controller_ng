@@ -100,7 +100,7 @@ module VCAP::CloudController
               'type',
               'command',
               'disk_quota',
-              'log_quota',
+              'log_rate_limit',
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
               'health-check-type',
@@ -174,7 +174,7 @@ module VCAP::CloudController
       end
 
       def convert_byte_measurements_to_bps(manifest_app_hash)
-        byte_measurement_key_words = ['log_quota']
+        byte_measurement_key_words = ['log_rate_limit']
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
             value = process_hash[key]

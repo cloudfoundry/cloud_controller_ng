@@ -33,7 +33,7 @@ module VCAP::CloudController
       attribute :docker_credentials, Hash, default: {}
       attribute :debug, String, default: nil
       attribute :disk_quota, Integer, default: nil
-      attribute :log_quota, Integer, default: nil
+      attribute :log_rate_limit, Integer, default: nil
       attribute :environment_json, Hash, default: {}, redact_in: [:create, :update]
       attribute :health_check_http_endpoint, String, default: nil
       attribute :health_check_type, String, default: 'port'

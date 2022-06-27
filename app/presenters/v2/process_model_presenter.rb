@@ -21,7 +21,7 @@ module CloudController
             'memory'                     => process.memory,
             'instances'                  => process.instances,
             'disk_quota'                 => process.disk_quota,
-            'log_quota'                  => process.log_quota,
+            'log_rate_limit'                  => process.log_rate_limit,
             'state'                      => process.state,
             'version'                    => process.version,
             'command'                    => process.command.presence,

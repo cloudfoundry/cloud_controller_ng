@@ -286,10 +286,10 @@ module VCAP::CloudController
       space_quota_definition.memory_limit == SpaceQuotaDefinition::UNLIMITED || memory_remaining >= mem
     end
 
-    def has_remaining_log_quota(log_quota_desired)
+    def has_remaining_log_rate_limit(log_rate_limit_desired)
       return true unless space_quota_definition
 
-      space_quota_definition.log_limit == SpaceQuotaDefinition::UNLIMITED || log_limit_remaining >= log_quota_desired
+      space_quota_definition.log_rate_limit == SpaceQuotaDefinition::UNLIMITED || log_rate_limit_remaining >= log_rate_limit_desired
     end
 
     def instance_memory_limit
@@ -300,9 +300,9 @@ module VCAP::CloudController
       end
     end
 
-    def log_limit
+    def log_rate_limit
       if space_quota_definition
-        space_quota_definition.log_limit
+        space_quota_definition.log_rate_limit
       else
         SpaceQuotaDefinition::UNLIMITED
       end
@@ -343,8 +343,8 @@ module VCAP::CloudController
       space_quota_definition.memory_limit - memory_used
     end
 
-    def log_limit_remaining
-      space_quota_definition.log_limit - started_app_log_limit
+    def log_rate_limit_remaining
+      space_quota_definition.log_rate_limit - started_app_log_rate_limit
     end
 
     def running_task_memory
@@ -355,8 +355,8 @@ module VCAP::CloudController
       processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:memory, :instances)) || 0
     end
 
-    def started_app_log_limit
-      processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:log_quota, :instances)) || 0
+    def started_app_log_rate_limit
+      processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:log_rate_limit, :instances)) || 0
     end
 
     def running_and_pending_tasks_count

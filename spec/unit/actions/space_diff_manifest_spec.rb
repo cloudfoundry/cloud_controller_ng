@@ -21,7 +21,7 @@ module VCAP::CloudController
                   'instances' => process1.instances,
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
-                  'log_quota' => '1Ms',
+                  'log_rate_limit' => '1Ms',
                   'health-check-type' =>  process1.health_check_type
                 },
                 {
@@ -29,7 +29,7 @@ module VCAP::CloudController
                   'instances' => process2.instances,
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
-                  'log_quota' => '1Ms',
+                  'log_rate_limit' => '1Ms',
                   'health-check-type' =>  process2.health_check_type
                 }
               ]
@@ -266,7 +266,7 @@ module VCAP::CloudController
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '1G'
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '1G'
-            default_manifest['applications'][0]['processes'][0]['log_quota'] = '1024Ks'
+            default_manifest['applications'][0]['processes'][0]['log_rate_limit'] = '1024Ks'
           end
           it 'returns an empty diff' do
             expect(subject).to eq([])
@@ -277,13 +277,13 @@ module VCAP::CloudController
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '4G'
-            default_manifest['applications'][0]['processes'][0]['log_quota'] = '2Gs'
+            default_manifest['applications'][0]['processes'][0]['log_rate_limit'] = '2Gs'
           end
           it 'returns the diff formatted' do
             expect(subject).to eq([
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log_quota', 'value' => '2147483648Bs', 'was' => '1048576Bs' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log_rate_limit', 'value' => '2147483648Bs', 'was' => '1048576Bs' },
             ])
           end
         end
@@ -325,7 +325,7 @@ module VCAP::CloudController
           before do
             default_manifest['applications'][0]['memory'] = '1G'
             default_manifest['applications'][0]['disk_quota'] = '1G'
-            default_manifest['applications'][0]['log_quota'] = '1024Ks'
+            default_manifest['applications'][0]['log_rate_limit'] = '1024Ks'
           end
 
           it 'returns an empty diff if the field is equivalent' do

@@ -14,7 +14,7 @@ module VCAP::CloudController
               'instances' => process.instances,
               'memory' => add_units(process.memory),
               'disk_quota' => add_units(process.disk_quota),
-              'log_quota' => add_units_log_quota(process.log_quota),
+              'log_rate_limit' => add_units_log_rate_limit(process.log_rate_limit),
               'command' => process.command,
               'health-check-type' => process.health_check_type,
               'health-check-http-endpoint' => process.health_check_http_endpoint,
@@ -26,7 +26,7 @@ module VCAP::CloudController
             "#{val}M"
           end
 
-          def add_units_log_quota(val)
+          def add_units_log_rate_limit(val)
             return 'unlimited' if val == -1
 
             "#{val}Bs"

@@ -9,7 +9,7 @@ module VCAP::CloudController
         instances: 2,
         memory_in_mb: 100,
         disk_in_mb: 200,
-        log_quota_in_bps: 409_600
+        log_rate_limit_in_bps: 409_600
       }
     end
     let(:message) { ProcessScaleMessage.new(valid_message_params) }
@@ -22,14 +22,14 @@ module VCAP::CloudController
         expect(process.instances).not_to eq(2)
         expect(process.memory).not_to eq(100)
         expect(process.disk_quota).not_to eq(200)
-        expect(process.log_quota).not_to eq(409_600)
+        expect(process.log_rate_limit).not_to eq(409_600)
 
         process_scale.scale
 
         expect(process.reload.instances).to eq(2)
         expect(process.reload.memory).to eq(100)
         expect(process.reload.disk_quota).to eq(200)
-        expect(process.log_quota).to eq(409_600)
+        expect(process.log_rate_limit).to eq(409_600)
       end
 
       it 'does not set instances if the user did not request it' do
@@ -60,12 +60,12 @@ module VCAP::CloudController
       end
 
       it 'does not set log quota if the user did not request it' do
-        valid_message_params.delete(:log_quota_in_bps)
-        original_value = process.log_quota
+        valid_message_params.delete(:log_rate_limit_in_bps)
+        original_value = process.log_rate_limit
 
         process_scale.scale
 
-        expect(process.log_quota).to eq(original_value)
+        expect(process.log_rate_limit).to eq(original_value)
       end
 
       describe 'audit events' do
@@ -77,7 +77,7 @@ module VCAP::CloudController
               'instances'    => 2,
               'memory_in_mb' => 100,
               'disk_in_mb'   => 200,
-              'log_quota_in_bps' => 409_600,
+              'log_rate_limit_in_bps' => 409_600,
             },
             manifest_triggered: false
           )
@@ -96,7 +96,7 @@ module VCAP::CloudController
                 'instances'    => 2,
                 'memory_in_mb' => 100,
                 'disk_in_mb'   => 200,
-                'log_quota_in_bps' => 409_600,
+                'log_rate_limit_in_bps' => 409_600,
               },
               manifest_triggered: true
             )
@@ -129,14 +129,14 @@ module VCAP::CloudController
           expect(process.instances).to eq(1)
           expect(process.memory).to eq(1024)
           expect(process.disk_quota).to eq(50)
-          expect(process.log_quota).to eq(1_048_576)
+          expect(process.log_rate_limit).to eq(1_048_576)
 
           process_scale.scale
 
           expect(process.reload.instances).to eq(2)
           expect(process.reload.memory).to eq(100)
           expect(process.reload.disk_quota).to eq(200)
-          expect(process.reload.log_quota).to eq(409_600)
+          expect(process.reload.log_rate_limit).to eq(409_600)
         end
 
         it 'fails if the process is web' do
@@ -145,14 +145,14 @@ module VCAP::CloudController
           expect(process.instances).to eq(1)
           expect(process.memory).to eq(1024)
           expect(process.disk_quota).to eq(50)
-          expect(process.log_quota).to eq(1_048_576)
+          expect(process.log_rate_limit).to eq(1_048_576)
 
           expect { process_scale.scale }.to raise_error(ProcessScale::InvalidProcess, 'Cannot scale this process while a deployment is in flight.')
 
           expect(process.reload.instances).to eq(1)
           expect(process.reload.memory).to eq(1024)
           expect(process.reload.disk_quota).to eq(50)
-          expect(process.reload.log_quota).to eq(1_048_576)
+          expect(process.reload.log_rate_limit).to eq(1_048_576)
         end
       end
     end

@@ -150,10 +150,10 @@ module VCAP::CloudController::Presenters::V3
 
       context 'log quota is -1' do
         before do
-          process.log_quota = -1
+          process.log_rate_limit = -1
         end
         it 'displays it as unlimited' do
-          expect(result[:log_quota_in_bps]).to eq('unlimited')
+          expect(result[:log_rate_limit_in_bps]).to eq('unlimited')
         end
       end
     end
