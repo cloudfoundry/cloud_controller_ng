@@ -29,6 +29,7 @@ module VCAP::CloudController
           command:               command(message, template_process),
           disk_in_mb:            disk_in_mb(message, template_process),
           memory_in_mb:          memory_in_mb(message, template_process),
+          log_rate_limit:        log_rate_limit(message, template_process),
           sequence_id:           app.max_task_sequence_id
         )
 
@@ -73,6 +74,11 @@ module VCAP::CloudController
       return message.memory_in_mb if message.memory_in_mb
 
       template_process.present? ? template_process.memory : config.get(:default_app_memory)
+    end
+
+    def log_rate_limit(message, template_process)
+      message.log_rate_limit_in_bps
+      #FIXME: Add in the ability to have process defaults at some point in the future!
     end
 
     def disk_in_mb(message, template_process)

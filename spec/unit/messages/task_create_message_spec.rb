@@ -141,6 +141,59 @@ module VCAP::CloudController
         end
       end
 
+      describe 'log_rate_limit_in_bps' do
+        it 'can be nil' do
+          body.delete 'log_rate_limit_in_bps'
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+
+        it 'must be numerical' do
+          body['log_rate_limit_in_bps'] = 'trout'
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include('Log rate limit in bps is not a number')
+        end
+
+        it 'may not have a floating point' do
+          body['log_rate_limit_in_bps'] = 4.5
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include('Log rate limit in bps must be an integer')
+        end
+
+        it 'may be -1' do
+          body['log_rate_limit_in_bps'] = -1
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+
+        it 'may be zero' do
+          body['log_rate_limit_in_bps'] = 0
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+
+        it 'may not be smaller than -1' do
+          body['log_rate_limit_in_bps'] = -2
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include('Log rate limit in bps must be greater than -2')
+        end
+      end
+
       describe 'template' do
         it 'can be nil' do
           body.delete 'template'
