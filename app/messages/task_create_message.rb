@@ -2,7 +2,7 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class TaskCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:name, :command, :disk_in_mb, :memory_in_mb, :droplet_guid, :template]
+    register_allowed_keys [:name, :command, :disk_in_mb, :memory_in_mb, :log_rate_limit_in_bps, :droplet_guid, :template]
 
     validates_with NoAdditionalKeysValidator
 
@@ -12,6 +12,7 @@ module VCAP::CloudController
 
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :log_rate_limit_in_bps, numericality: { only_integer: true, greater_than: -2 }, allow_nil: true
     validates :droplet_guid, guid: true, allow_nil: true
     validates :template_process_guid, guid: true, if: validate_template?
     validate :has_command

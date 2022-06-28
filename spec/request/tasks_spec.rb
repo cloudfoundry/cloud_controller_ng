@@ -2,9 +2,14 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Tasks' do
+  let(:org_quota_definition) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: org_log_rate_limit) }
+  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
+  let(:space_log_rate_limit) { -1 }
+  let(:org_log_rate_limit) { -1 }
+  let(:task_log_rate_limit_in_bps) { -1 }
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { space.organization }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
+  let(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota_definition, organization: org) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(
@@ -975,6 +980,7 @@ RSpec.describe 'Tasks' do
       command:      'be rake && true',
       memory_in_mb: 1234,
       disk_in_mb:   1000,
+      log_rate_limit_in_bps: task_log_rate_limit_in_bps,
       metadata: {
         labels: {
           bananas: 'gros_michel',
@@ -1058,6 +1064,56 @@ RSpec.describe 'Tasks' do
           'memory_in_mb' => 1234,
         }
       })
+    end
+
+    context 'when there are org or space log rate limits' do
+      let(:space_log_rate_limit) { 200 }
+      let(:org_log_rate_limit) { 201 }
+
+      context 'when the task specifies a rate limit that fits in the quota' do
+        let(:task_log_rate_limit_in_bps) { 199 }
+
+        it 'succeeds' do
+          post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+          expect(last_response.status).to eq(202)
+        end
+      end
+
+      context 'when the task specifies no log rate limit' do
+        let(:task_log_rate_limit_in_bps) { -1 }
+
+        it 'returns an error' do
+          post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
+        end
+      end
+
+      context 'when the task specifies a rate limit that does not fit in the quota' do
+        let(:task_log_rate_limit_in_bps) { 202 }
+
+        context 'fails to fit in space quota' do
+          let(:space_log_rate_limit) { 200 }
+          let(:org_log_rate_limit) { -1 }
+
+          it 'returns an error' do
+            post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+          end
+        end
+
+        context 'fails to fit in org quota' do
+          let(:space_log_rate_limit) { -1 }
+          let(:org_log_rate_limit) { 200 }
+
+          it 'returns an error' do
+            post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+          end
+        end
+      end
     end
 
     context 'when requesting a specific droplet' do
