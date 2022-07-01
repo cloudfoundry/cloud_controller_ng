@@ -204,10 +204,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_read_space?(service_instance.space)
 
-    if service_instance.managed_instance?
-      service_instance_not_found! if service_instance.create_failed?
-      delete_in_progress! if service_instance.delete_in_progress?
-    end
+    service_instance_not_found! if service_instance.managed_instance? && service_instance.create_failed?
 
     begin
       render status: :ok, json: ServiceInstanceRead.new.fetch_parameters(service_instance)
@@ -416,9 +413,5 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
-  end
-
-  def delete_in_progress!
-    unprocessable!('The service instance is getting deleted.')
   end
 end

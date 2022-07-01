@@ -771,11 +771,10 @@ RSpec.describe 'V3 service instances' do
 
       it 'fails with an explanatory error' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
-        expect(last_response).to have_status_code(422)
+        expect(last_response).to have_status_code(409)
         expect(parsed_response['errors']).to include(include({
-           'title' => 'CF-UnprocessableEntity',
-           'code' => 10008,
-           'detail' => 'The service instance is getting deleted.'
+           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+           'code' => 60016,
          }))
       end
     end
