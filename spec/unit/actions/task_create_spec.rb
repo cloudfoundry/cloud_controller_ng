@@ -193,6 +193,30 @@ module VCAP::CloudController
         end
       end
 
+      describe 'log_rate_limit' do
+        before { config.set(:default_app_log_rate_limit_in_bps, 999) }
+
+        context 'when log_rate_limit is specified' do
+          let(:message) { TaskCreateMessage.new name: name, command: command, log_rate_limit_in_bps: 100 }
+
+          it 'returns what is in the message' do
+            task = task_create_action.create(app, message, user_audit_info)
+
+            expect(task.log_rate_limit).to eq(100)
+          end
+        end
+
+        context 'when log_rate_limit is not specified' do
+          let(:message) { TaskCreateMessage.new name: name, command: command }
+
+          it 'returns the default' do
+            task = task_create_action.create(app, message, user_audit_info)
+
+            expect(task.log_rate_limit).to eq(999)
+          end
+        end
+      end
+
       describe 'disk_in_mb' do
         before { config.set(:default_app_disk_in_mb, 200) }
 
@@ -323,6 +347,32 @@ module VCAP::CloudController
             it 'uses the memory from the template process' do
               task = task_create_action.create(app, message, user_audit_info)
               expect(task.memory_in_mb).to eq(2048)
+            end
+          end
+        end
+
+        describe 'log_rate_limit' do
+          before do
+            config.set(:default_app_log_rate_limit_in_bps, 999)
+          end
+
+          context 'when there is a template and the message does not specify log_rate_limit_in_bps' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the template process' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.log_rate_limit).to eq(23)
+            end
+          end
+
+          context 'when there is a template and the message specifies log_rate_limit_in_bps' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', log_rate_limit_in_bps: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the message' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.log_rate_limit).to eq(2048)
             end
           end
         end
