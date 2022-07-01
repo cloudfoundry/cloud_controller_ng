@@ -1088,51 +1088,66 @@ RSpec.describe 'Tasks' do
       })
     end
 
-    context 'when there are org or space log rate limits' do
-      let(:space_log_rate_limit) { 200 }
-      let(:org_log_rate_limit) { 201 }
 
-      context 'when the task specifies a rate limit that fits in the quota' do
-        let(:task_log_rate_limit_in_bps) { 199 }
+    describe 'log_rate_limit' do
+      context 'when the request does not specify a log rate limit' do
+        before do
+          TestConfig.config[:default_app_log_rate_limit_in_bps] = 9876
+        end
 
-        it 'succeeds' do
-          post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+        it 'the default is applied' do
+          post "/v3/apps/#{app_model.guid}/tasks", body.except(:log_rate_limit_in_bps).to_json, developer_headers
           expect(last_response.status).to eq(202)
+          expect(VCAP::CloudController::TaskModel.last.log_rate_limit).to eq(9876)
         end
       end
 
-      context 'when the task specifies no log rate limit' do
-        let(:task_log_rate_limit_in_bps) { -1 }
+      context 'when there are org or space log rate limits' do
+        let(:space_log_rate_limit) { 200 }
+        let(:org_log_rate_limit) { 201 }
 
-        it 'returns an error' do
-          post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-          expect(last_response.status).to eq(422)
-          expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
-        end
-      end
+        context 'when the task specifies a rate limit that fits in the quota' do
+          let(:task_log_rate_limit_in_bps) { 199 }
 
-      context 'when the task specifies a rate limit that does not fit in the quota' do
-        let(:task_log_rate_limit_in_bps) { 202 }
-
-        context 'fails to fit in space quota' do
-          let(:space_log_rate_limit) { 200 }
-          let(:org_log_rate_limit) { -1 }
-
-          it 'returns an error' do
+          it 'succeeds' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-            expect(last_response.status).to eq(422)
-            expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+            expect(last_response.status).to eq(202)
           end
         end
 
-        context 'fails to fit in org quota' do
-          let(:space_log_rate_limit) { -1 }
-          let(:org_log_rate_limit) { 200 }
+        context 'when the task specifies unlimited rate limit' do
+          let(:task_log_rate_limit_in_bps) { -1 }
 
           it 'returns an error' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
             expect(last_response.status).to eq(422)
-            expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+            expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
+          end
+        end
+
+        context 'when the task specifies a rate limit that does not fit in the quota' do
+          let(:task_log_rate_limit_in_bps) { 202 }
+
+          context 'fails to fit in space quota' do
+            let(:space_log_rate_limit) { 200 }
+            let(:org_log_rate_limit) { -1 }
+
+            it 'returns an error' do
+              post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+              expect(last_response.status).to eq(422)
+              expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+            end
+          end
+
+          context 'fails to fit in org quota' do
+            let(:space_log_rate_limit) { -1 }
+            let(:org_log_rate_limit) { 200 }
+
+            it 'returns an error' do
+              post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+              expect(last_response.status).to eq(422)
+              expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+            end
           end
         end
       end
