@@ -36,11 +36,10 @@ module VCAP::CloudController
         }
 
         instance = ManagedServiceInstance.first(name: message.name, space: Space.where(guid: message.space_guid))
-        validate_service_instance!(instance)
 
         ManagedServiceInstance.new.tap do |i|
           ManagedServiceInstance.db.transaction do
-            instance.destroy if instance
+            instance.destroy if instance&.create_failed?
             i.save_with_new_operation(attr, last_operation)
             MetadataUpdate.update(i, message)
           end
@@ -186,28 +185,9 @@ module VCAP::CloudController
         }
       end
 
-      def validate_service_instance!(instance)
-        if instance
-          if instance.create_succeeded? || instance.create_in_progress? ||
-              instance.last_operation_is_update? || instance.delete_failed?
-            instance_already_exists!(instance.name)
-          end
-
-          incomplete_deletion! if instance.delete_in_progress?
-        end
-      end
-
       def broker_unavailable!
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
           'The service instance cannot be created because there is an operation in progress for the service broker.')
-      end
-
-      def instance_already_exists!(name)
-        raise InvalidManagedServiceInstance.new("The service instance name is taken: #{name}.")
-      end
-
-      def incomplete_deletion!
-        raise InvalidManagedServiceInstance.new('The service instance is getting deleted.')
       end
 
       class ValidationErrorHandler
