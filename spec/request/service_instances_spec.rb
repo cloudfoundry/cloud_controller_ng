@@ -2652,9 +2652,10 @@ RSpec.describe 'V3 service instances' do
         context 'and the update contains metadata only' do
           it 'returns an error' do
             api_call.call(admin_headers)
-            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_status_code(409)
             response = parsed_response['errors'].first
-            expect(response).to include('detail' => include('The service instance is getting deleted.'))
+            expect(response).to include('title' => 'CF-AsyncServiceInstanceOperationInProgress')
+            expect(response).to include('detail' => include("An operation for service instance #{service_instance.name} is in progress"))
           end
         end
 
@@ -2662,9 +2663,10 @@ RSpec.describe 'V3 service instances' do
           it 'returns an error' do
             request_body[:name] = 'new-name'
             api_call.call(admin_headers)
-            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_status_code(409)
             response = parsed_response['errors'].first
-            expect(response).to include('detail' => include('The service instance is getting deleted.'))
+            expect(response).to include('title' => 'CF-AsyncServiceInstanceOperationInProgress')
+            expect(response).to include('detail' => include("An operation for service instance #{service_instance.name} is in progress"))
           end
         end
       end

@@ -242,12 +242,8 @@ module VCAP::CloudController
               original_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
             end
 
-            it 'raises' do
-              expect {
-                action.preflight!
-              }.to raise_error VCAP::CloudController::V3::ServiceInstanceUpdateManaged::UnprocessableUpdate do |err|
-                expect(err.message).to eq('The service instance is invalid: The service instance is getting deleted.')
-              end
+            it 'succeeds' do
+              expect { action.preflight! }.not_to raise_error
             end
           end
 

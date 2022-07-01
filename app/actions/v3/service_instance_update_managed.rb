@@ -24,12 +24,12 @@ module VCAP::CloudController
       end
 
       def preflight!
+        raise_if_invalid_state!
         raise_if_invalid_update!
         raise_if_renaming_shared_service_instance!
         raise_if_invalid_plan_change!
         raise_if_invalid_maintenance_info_change!
         raise_if_cannot_update!
-        raise_if_invalid_state!
       end
 
       def try_update_sync
@@ -342,8 +342,6 @@ module VCAP::CloudController
       def raise_if_invalid_state!
         if service_instance.create_failed?
           raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name)
-        elsif service_instance.delete_in_progress?
-          raise UnprocessableUpdate.new_from_details('ServiceInstanceInvalid', 'The service instance is getting deleted.')
         end
       end
 
