@@ -79,6 +79,10 @@ module VCAP::CloudController
           context 'with an empty request' do
             let(:req_body) { {} }
 
+            before do
+              # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
+              headers[:multipart] = false
+            end
             it 'fails to upload' do
               make_request
 
@@ -94,6 +98,10 @@ module VCAP::CloudController
           context 'with empty resources and no application' do
             let(:req_body) { { resources: '[]' } }
 
+            before do
+              # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
+              headers[:multipart] = false
+            end
             it 'fails to upload' do
               make_request
 
@@ -108,6 +116,11 @@ module VCAP::CloudController
 
           context 'with at least one resource and no application' do
             let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
+
+            before do
+              # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
+              headers[:multipart] = false
+            end
 
             it 'succeeds to upload' do
               make_request
@@ -328,7 +341,7 @@ module VCAP::CloudController
 
         describe 'resources' do
           context 'with a bad file path' do
-            let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
+            let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
 
             it 'fails to upload' do
               expect {
@@ -347,7 +360,7 @@ module VCAP::CloudController
 
           context 'with a bad file mode' do
             context 'when the file is not readable by owner' do
-              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]) } }
+              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]), application: valid_zip } }
 
               before do
                 FeatureFlag.make(name: 'app_bits_upload', enabled: true)
@@ -369,7 +382,7 @@ module VCAP::CloudController
             end
 
             context 'when the file is not writable by owner' do
-              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]) } }
+              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
 
               it 'fails to upload' do
                 expect {
