@@ -139,7 +139,7 @@ module VCAP::CloudController
     def create_service_bindings(manifest_service_bindings_message, app)
       manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
         service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
-        validate_service_instance!(service_instance)
+        service_instance_not_found!(manifest_service_binding.name) unless service_instance
 
         binding = ServiceBinding.first(service_instance: service_instance, app: app)
         next if binding&.create_succeeded?
@@ -192,15 +192,6 @@ module VCAP::CloudController
       )
     end
 
-    def validate_service_instance!(service_instance)
-      service_instance_not_found!(manifest_service_binding.name) unless service_instance
-
-      if service_instance.managed_instance?
-        service_instance_not_found!(service_instance.name) if service_instance.create_failed?
-        delete_in_progress!(service_instance) if service_instance.delete_in_progress?
-      end
-    end
-
     def raise_binding_error!(service_instance, message)
       error_message = "For service '#{service_instance.name}': #{message}"
       raise ServiceBindingError.new(error_message)
@@ -222,11 +213,6 @@ module VCAP::CloudController
 
     def service_instance_not_found!(name)
       raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Service instance '#{name}' not found")
-    end
-
-    def delete_in_progress!(service_instance)
-      error_message = 'The service instance is getting deleted. Therefore, no binding can be created.'
-      raise_binding_error!(service_instance, error_message)
     end
 
     def volume_services_enabled?

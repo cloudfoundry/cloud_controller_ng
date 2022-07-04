@@ -934,6 +934,21 @@ module VCAP::CloudController
             end
 
             context 'different service instance states' do
+              context 'when the last operation state is create in progress' do
+                before do
+                  service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+                  allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
+'There is an operation in progress for the service instance')
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
+                end
+              end
+
               context 'when the last operation state is create succeeded' do
                 before do
                   service_instance.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
@@ -958,13 +973,29 @@ module VCAP::CloudController
               context 'when the last operation state is create failed' do
                 before do
                   service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+                  allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate, 'Service instance not found')
                 end
 
                 it 'fails with a service binding error' do
                   expect {
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(CloudController::Errors::NotFound,
-                     "Service instance '#{service_instance.name}' not found")
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                     "For service '#{service_instance.name}': Service instance not found")
+                end
+              end
+
+              context 'when the last operation state is update in progress' do
+                before do
+                  service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+                  allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
+'There is an operation in progress for the service instance')
+                end
+
+                it 'fails with a service binding error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
                 end
               end
 
@@ -1013,13 +1044,15 @@ module VCAP::CloudController
               context 'when the last operation state is delete in progress' do
                 before do
                   service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+                  allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
+'There is an operation in progress for the service instance')
                 end
 
                 it 'fails with a service binding error' do
                   expect {
                     app_apply_manifest.apply(app.guid, message)
                   }.to raise_error(AppApplyManifest::ServiceBindingError,
-                     "For service '#{service_instance.name}': The service instance is getting deleted. Therefore, no binding can be created.")
+                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
                 end
               end
 
