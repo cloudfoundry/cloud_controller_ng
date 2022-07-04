@@ -179,7 +179,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
   describe '#update_in_progress?' do
     context 'when there is no operation' do
       it 'returns false' do
-        expect(service.create_in_progress?).to be false
+        expect(service.update_in_progress?).to be false
       end
     end
 
@@ -205,8 +205,8 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
 
   describe '#update_succeeded?' do
     context 'when there is no operation' do
-      it 'returns true' do
-        expect(service.create_succeeded?).to be true
+      it 'returns false' do
+        expect(service.update_succeeded?).to be false
       end
     end
 
@@ -233,7 +233,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
   describe '#update_failed?' do
     context 'when there is no operation' do
       it 'returns false' do
-        expect(service.create_failed?).to be false
+        expect(service.update_failed?).to be false
       end
     end
 
