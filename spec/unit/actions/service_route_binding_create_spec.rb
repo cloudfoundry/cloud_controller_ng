@@ -155,6 +155,19 @@ module VCAP::CloudController
               )
             end
           end
+
+          context "when the service instance is in state 'create failed'" do
+            it 'raises an error' do
+              service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+
+              expect {
+                action.precursor(service_instance, route, message: message)
+              }.to raise_error(
+                ServiceRouteBindingCreate::UnprocessableCreate,
+                'Service instance not found'
+              )
+            end
+          end
         end
 
         context 'user-provided service instance' do

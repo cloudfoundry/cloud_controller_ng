@@ -5,9 +5,6 @@ module VCAP::CloudController
     class ServiceCredentialBindingKeyCreate < V3::ServiceBindingCreate
       include ServiceCredentialBindingCreateMixin
 
-      class UnprocessableCreate < StandardError
-      end
-
       def initialize(user_audit_info, audit_hash)
         super()
         @user_audit_info = user_audit_info
@@ -52,6 +49,7 @@ module VCAP::CloudController
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
+          service_instance_not_found! if service_instance.create_failed?
           operation_in_progress! if service_instance.operation_in_progress?
         else
           key_not_supported_for_user_provided_service!
@@ -87,10 +85,6 @@ module VCAP::CloudController
                                       "The service instance already has a key binding with the name '#{key_name}' that is getting deleted or its deletion failed.")
       end
 
-      def operation_in_progress!
-        raise UnprocessableCreate.new('There is an operation in progress for the service instance.')
-      end
-
       def service_not_bindable!
         raise UnprocessableCreate.new('Service plan does not allow bindings.')
       end
@@ -105,7 +99,7 @@ module VCAP::CloudController
 
       class ValidationErrorHandler
         def error!(message)
-          raise UnprocessableCreate.new(message)
+          raise ServiceCredentialBindingKeyCreate::UnprocessableCreate.new(message)
         end
       end
     end
