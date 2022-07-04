@@ -56,6 +56,7 @@ module VCAP::CloudController
           service_not_bindable! unless service_instance.service_plan.bindable?
           service_not_available! unless service_instance.service_plan.active?
           volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
+          service_instance_not_found! if service_instance.create_failed?
           operation_in_progress! if service_instance.operation_in_progress?
         end
       end
@@ -82,6 +83,10 @@ module VCAP::CloudController
 
       def operation_in_progress!
         raise UnprocessableCreate.new('There is an operation in progress for the service instance')
+      end
+
+      def service_instance_not_found!
+        raise UnprocessableCreate.new('Service instance not found')
       end
 
       def app_is_required!

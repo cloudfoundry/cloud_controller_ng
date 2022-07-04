@@ -230,6 +230,19 @@ module VCAP::CloudController
               end
             end
 
+            context "when the service instance is in state 'create failed'" do
+              it 'raises an error' do
+                service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
+                }.to raise_error(
+                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                       'Service instance not found'
+                     )
+              end
+            end
+
             context 'when the service is a volume service and service volume mounting is enabled' do
               let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **si_details) }
 
