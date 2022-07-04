@@ -24,6 +24,7 @@ module VCAP::CloudController
       end
 
       def preflight!
+        raise_if_invalid_state!
         raise_if_invalid_update!
         raise_if_renaming_shared_service_instance!
         raise_if_invalid_plan_change!
@@ -335,6 +336,12 @@ module VCAP::CloudController
           raise update_error.call('parameters') unless message.parameters.nil?
           raise update_error.call('name') if service_instance.service_plan.service.allow_context_updates && !message.name.nil?
           raise update_error.call('maintenance_info') unless message.maintenance_info.nil? || maintenance_info_match(message, service_instance)
+        end
+      end
+
+      def raise_if_invalid_state!
+        if service_instance.create_failed?
+          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name)
         end
       end
 
