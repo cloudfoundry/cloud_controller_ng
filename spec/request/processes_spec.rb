@@ -773,7 +773,7 @@ RSpec.describe 'Processes' do
         instances: 5,
         memory_in_mb: 10,
         disk_in_mb: 20,
-        log_quota_in_bps: 40,
+        log_rate_limit_in_bps: 40,
       }
     end
 
