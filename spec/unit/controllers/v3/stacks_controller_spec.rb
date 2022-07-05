@@ -12,7 +12,6 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-
         'reader_and_writer' => 200,
       }.freeze
 
@@ -74,7 +73,6 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-
         'reader_and_writer' => 200,
       }.freeze
 
@@ -136,7 +134,6 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 201,
-
         'reader_and_writer' => 403,
       }.freeze
 

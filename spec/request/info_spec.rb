@@ -89,7 +89,7 @@ RSpec.describe 'Info Request' do
       h['admin'] = { code: 200, response_object: info_summary }
       h['admin_read_only'] = { code: 200, response_object: info_summary }
       h['global_auditor'] = { code: 200, response_object: info_summary }
-      h.freeze
+      h
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

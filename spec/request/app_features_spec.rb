@@ -42,12 +42,9 @@ RSpec.describe 'App Features' do
         h = Hash.new(code: 404)
         %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
            space_supporter].each do |r|
-          h[r] = {
-            code: 200,
-            response_object: features_response_object
-          }
+          h[r] = { code: 200, response_object: features_response_object }
         end
-        h.freeze
+        h
       end
 
       before do
@@ -63,12 +60,9 @@ RSpec.describe 'App Features' do
       h = Hash.new(code: 404)
       %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
          space_supporter].each do |r|
-        h[r] = {
-          code: 200,
-          response_object: feature_response_object
-        }
+        h[r] = { code: 200, response_object: feature_response_object }
       end
-      h.freeze
+      h
     end
 
     before do
@@ -120,20 +114,27 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        %w[no_role org_auditor org_billing_manager].each do |r|
-          h[r] = { code: 404 }
-        end
-        %w[admin space_developer].each do |r|
-          h[r] = {
-            code: 200,
-            response_object: feature_response_object
-          }
-        end
-        h.freeze
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'revisions app feature' do
@@ -147,20 +148,29 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        %w[no_role org_auditor org_billing_manager].each do |r|
-          h[r] = { code: 404 }
-        end
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer space_supporter].each do |r|
-          h[r] = {
-            code: 200,
-            response_object: feature_response_object
-          }
+          h[r] = { code: 200, response_object: feature_response_object }
         end
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
   end
 end

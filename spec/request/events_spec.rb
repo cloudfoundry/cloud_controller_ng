@@ -289,7 +289,7 @@ RSpec.describe 'Events' do
               code: 200,
               response_object: event_json
             )
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', %w(admin admin_read_only global_auditor org_auditor)
@@ -377,7 +377,7 @@ RSpec.describe 'Events' do
             code: 404,
             response_object: []
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -392,7 +392,7 @@ RSpec.describe 'Events' do
               code: 200,
               response_object: event_json
             )
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', %w(admin admin_read_only global_auditor)
@@ -455,7 +455,7 @@ RSpec.describe 'Events' do
               response_object: event_json
             }
           end
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

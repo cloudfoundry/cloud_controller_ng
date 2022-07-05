@@ -47,7 +47,7 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
-          Hash.new({ code: 401 })
+          Hash.new(code: 401)
         end
 
         it_behaves_like 'permissions for single object endpoint', UNAUTHENTICATED

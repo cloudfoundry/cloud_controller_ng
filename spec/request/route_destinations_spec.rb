@@ -290,10 +290,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
         h['space_supporter'] = { code: 200, response_object: response_json }
@@ -326,6 +323,20 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
 
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json
@@ -352,17 +363,6 @@ RSpec.describe 'Route Destinations Request' do
         it 'returns not found' do
           post '/v3/routes/does-not-exist/destinations', params.to_json, user_header
           expect(last_response.status).to eq(404)
-        end
-      end
-
-      context 'when the org is suspended' do
-        before do
-          space.organization.status = 'suspended'
-          space.organization.save
-        end
-        it 'returns a 403' do
-          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-          expect(last_response.status).to eq(403)
         end
       end
 
@@ -769,10 +769,7 @@ RSpec.describe 'Route Destinations Request' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
         h['space_supporter'] = { code: 200, response_object: response_json }
@@ -782,6 +779,20 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -817,17 +828,6 @@ RSpec.describe 'Route Destinations Request' do
         it 'returns not found' do
           patch '/v3/routes/does-not-exist/destinations', params.to_json, user_header
           expect(last_response.status).to eq(404)
-        end
-      end
-
-      context 'when the org is suspended' do
-        before do
-          space.organization.status = 'suspended'
-          space.organization.save
-        end
-        it 'returns a 403' do
-          patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-          expect(last_response.status).to eq(403)
         end
       end
 
@@ -1182,16 +1182,27 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 200 }
         h['space_developer'] = { code: 200 }
         h['space_supporter'] = { code: 200 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1294,10 +1305,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
         h['space_supporter'] = { code: 204 }
@@ -1326,6 +1334,20 @@ RSpec.describe 'Route Destinations Request' do
             }.to_json,
           }
         end
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 

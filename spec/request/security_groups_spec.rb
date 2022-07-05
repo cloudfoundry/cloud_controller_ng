@@ -270,7 +270,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -282,6 +282,20 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the security group is globally enabled' do
@@ -421,7 +435,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -433,6 +447,20 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the security group is globally enabled' do
@@ -1258,7 +1286,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1266,6 +1294,20 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the security group does not exist' do
@@ -1343,7 +1385,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1351,6 +1393,20 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the security group does not exist' do

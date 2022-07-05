@@ -291,10 +291,7 @@ RSpec.describe 'v3 service route bindings' do
       )
     end
     let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(
-        expected_body,
-        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles + ['space_supporter']
-      )
+      responses_for_space_restricted_single_endpoint(expected_body)
     end
 
     context 'user-provided service instance' do
@@ -898,26 +895,18 @@ RSpec.describe 'v3 service route bindings' do
         end
       end
 
-      describe 'permissions' do
+      context 'permissions' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
-            Hash.new(code: 403).tap do |h|
-              h['admin'] = { code: 202 }
-              h['space_supporter'] = { code: 202 }
-              h['space_developer'] = { code: 202 }
-
-              h['no_role'] = { code: 422 }
-              h['org_auditor'] = { code: 422 }
-              h['org_billing_manager'] = { code: 422 }
-            end
+            responses_for_space_restricted_create_endpoint(
+              success_code: 202,
+              permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+            )
           end
         end
 
-        context 'when the organization is suspended' do
-          it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
-            let(:expected_codes) {}
-          end
-        end
+        it_behaves_like 'permissions for create endpoint when organization is suspended', 202,
+                        SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
       end
 
       context 'service offering not configured for route binding' do
@@ -1001,23 +990,15 @@ RSpec.describe 'v3 service route bindings' do
       context 'permissions' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
-            Hash.new(code: 403).tap do |h|
-              h['admin'] = { code: 201 }
-              h['space_supporter'] = { code: 201 }
-              h['space_developer'] = { code: 201 }
-
-              h['no_role'] = { code: 422 }
-              h['org_auditor'] = { code: 422 }
-              h['org_billing_manager'] = { code: 422 }
-            end
+            responses_for_space_restricted_create_endpoint(
+              success_code: 201,
+              permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+            )
           end
         end
 
-        context 'when the organization is suspended' do
-          it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
-            let(:expected_codes) {}
-          end
-        end
+        it_behaves_like 'permissions for create endpoint when organization is suspended', 201,
+                        SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
       end
 
       describe 'a successful creation' do
@@ -1144,10 +1125,6 @@ RSpec.describe 'v3 service route bindings' do
       context 'user-provided service instance' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
 
-        let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint(
-          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
-        )
-        }
         let(:db_check) {
           lambda do
             expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -1155,8 +1132,6 @@ RSpec.describe 'v3 service route bindings' do
             expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
           end
         }
-
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
 
         it 'creates an audit log' do
           api_call.call(admin_headers)
@@ -1174,10 +1149,17 @@ RSpec.describe 'v3 service route bindings' do
           })
         end
 
-        context 'when the organization is suspended' do
-          it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
-            let(:expected_codes) {}
+        context 'permissions' do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              responses_for_space_restricted_delete_endpoint(
+                permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+              )
+            end
           end
+
+          it_behaves_like 'permissions for delete endpoint when organization is suspended', 204,
+                          SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
         end
       end
 
@@ -1186,10 +1168,6 @@ RSpec.describe 'v3 service route bindings' do
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
         let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
 
-        let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint(
-          permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
-        )
-        }
         let(:db_check) { lambda {} }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
         let(:broker_base_url) { service_instance.service_broker.broker_url }
@@ -1204,8 +1182,6 @@ RSpec.describe 'v3 service route bindings' do
             accepts_incomplete: true,
           }
         end
-
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
 
         it 'responds with a job resource' do
           api_call.call(space_dev_headers)
@@ -1223,10 +1199,17 @@ RSpec.describe 'v3 service route bindings' do
           expect(parsed_response['guid']).to eq(job.guid)
         end
 
-        context 'when the organization is suspended' do
-          it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
-            let(:expected_codes) {}
+        context 'permissions' do
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) do
+              responses_for_space_restricted_async_delete_endpoint(
+                permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+              )
+            end
           end
+
+          it_behaves_like 'permissions for delete endpoint when organization is suspended', 202,
+                          SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
         end
 
         describe 'the pollable job' do
@@ -1573,23 +1556,39 @@ RSpec.describe 'v3 service route bindings' do
       let(:broker_response) { { parameters: { abra: 'kadabra', kadabra: 'alakazan' } } }
       let(:parameters_response) { { code: 200, response_object: broker_response[:parameters] } }
 
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['admin'] = parameters_response
-          h['admin_readonly'] = parameters_response
-          h['space_developer'] = parameters_response
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-        end
-      end
-
       before do
         stub_request(:get, broker_fetch_binding_url).
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      context 'permissions' do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403, errors: CF_NOT_AUTHORIZED).tap do |h|
+            h['admin'] = parameters_response
+            h['admin_readonly'] = parameters_response
+            h['space_developer'] = parameters_response
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
 
       it 'calls the broker with the identity header' do
         api_call.call(space_dev_headers)
@@ -1648,18 +1647,35 @@ RSpec.describe 'v3 service route bindings' do
         error: 'User provided service instances do not support fetching service binding parameters.'
       }
       }
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['admin'] = { code: 400, response_object: error_response }
-          h['admin_readonly'] = { code: 400, response_object: error_response }
-          h['space_developer'] = { code: 400, response_object: error_response }
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
+
+      context 'permissions' do
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403, errors: CF_NOT_AUTHORIZED).tap do |h|
+            h['admin'] = { code: 400, response_object: error_response }
+            h['admin_readonly'] = { code: 400, response_object: error_response }
+            h['space_developer'] = { code: 400, response_object: error_response }
+            h['org_auditor'] = { code: 404 }
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'returns the appropriate error' do
         api_call.call(admin_headers)
@@ -1698,39 +1714,28 @@ RSpec.describe 'v3 service route bindings' do
 
     it_behaves_like 'metadata update for service binding', 'service_route_binding'
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:response_object) {
-        expected_json(
-          binding_guid: binding.guid,
-          route_service_url: route_service_url,
-          service_instance_guid: service_instance.guid,
-          route_guid: route.guid,
-          last_operation_type: 'create',
-          last_operation_state: 'succeeded',
-          include_params_link: service_instance.managed_instance?,
-          metadata: {
-            labels: labels,
-            annotations: annotations
-          }
-        )
-      }
+    context 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:response_object) {
+          expected_json(
+            binding_guid: binding.guid,
+            route_service_url: route_service_url,
+            service_instance_guid: service_instance.guid,
+            route_guid: route.guid,
+            last_operation_type: 'create',
+            last_operation_state: 'succeeded',
+            include_params_link: service_instance.managed_instance?,
+            metadata: {
+              labels: labels,
+              annotations: annotations
+            }
+          )
+        }
 
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
-          h['admin'] = { code: 200, response_object: response_object }
-          h['space_developer'] = { code: 200, response_object: response_object }
-          h['no_role'] = { code: 404 }
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['space_supporter'] = { code: 403 }
-        end
+        let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200, success_body: response_object) }
       end
-    end
 
-    context 'when the organization is suspended' do
-      it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
-        let(:expected_codes) { nil }
-      end
+      it_behaves_like 'permissions for update endpoint when organization is suspended', 200
     end
   end
 

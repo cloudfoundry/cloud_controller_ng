@@ -120,38 +120,52 @@ RSpec.describe 'Builds' do
     end
 
     context 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| post '/v3/builds', create_request.to_json, user_headers } }
-        let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+      let(:api_call) { lambda { |user_headers| post '/v3/builds', create_request.to_json, user_headers } }
+      let(:org) { space.organization }
+      let(:user) { VCAP::CloudController::User.make }
 
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 422
+        )
+        h['admin'] = {
+          code: 201,
+        }
+        h['space_developer'] = {
+          code: 201,
+        }
+        h['space_supporter'] = {
+          code: 201,
+        }
+        h
+      end
+
+      let(:expected_event_hash) do
+        {
+          type: 'audit.app.build.create',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: app_model.name,
+          metadata: { build_guid: parsed_response['guid'], package_guid: parsed_response['package']['guid'] }.to_json,
+          space_guid: space.guid,
+          organization_guid: org.guid,
+        }
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 422
-          )
-          h['admin'] = {
-            code: 201,
-          }
-          h['space_developer'] = {
-            code: 201,
-          }
-          h['space_supporter'] = {
-            code: 201,
-          }
-          h.freeze
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 422 } }
+          h
         end
 
-        let(:expected_event_hash) do
-          {
-            type: 'audit.app.build.create',
-            actee: app_model.guid,
-            actee_type: 'app',
-            actee_name: app_model.name,
-            metadata: { build_guid: parsed_response['guid'], package_guid: parsed_response['package']['guid'] }.to_json,
-            space_guid: space.guid,
-            organization_guid: org.guid,
-          }
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -690,20 +704,34 @@ RSpec.describe 'Builds' do
       end
 
       describe 'permissions' do
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:org) { space.organization }
-          let(:user) { VCAP::CloudController::User.make }
-          let(:api_call) { lambda { |user_headers| patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, user_headers } }
+        let(:org) { space.organization }
+        let(:user) { VCAP::CloudController::User.make }
+        let(:api_call) { lambda { |user_headers| patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, user_headers } }
 
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h['admin'] = { code: 200 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h['space_developer'] = { code: 200 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
-            h['admin'] = { code: 200 }
-            h['org_auditor'] = { code: 404 }
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-            h['space_developer'] = { code: 200 }
+            h = super()
+            h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
             h
           end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
 

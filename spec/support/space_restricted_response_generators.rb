@@ -25,10 +25,23 @@ module SpaceRestrictedResponseGenerators
     )
   end
 
-  def responses_for_space_restricted_single_endpoint(
-    response_object,
-    permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-  )
+  def self.default_suspended_roles
+    %w(
+      space_developer
+    )
+  end
+
+  def self.forbidden_response
+    [{
+      'detail' => 'You are not authorized to perform the requested action',
+      'title' => 'CF-NotAuthorized',
+      'code' => 10003,
+    }]
+  end
+
+  def responses_for_space_restricted_single_endpoint(response_object, permitted_roles: nil)
+    permitted_roles ||= SpaceRestrictedResponseGenerators.default_permitted_roles
+
     Hash.new(code: 404).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 200, response_object: response_object }
@@ -36,123 +49,106 @@ module SpaceRestrictedResponseGenerators
     end
   end
 
-  def responses_for_space_restricted_create_endpoint(
-    success_code: 202,
-    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
-  )
-    forbidden_response =       {
-      'detail' => 'You are not authorized to perform the requested action',
-      'title' => 'CF-NotAuthorized',
-      'code' => 10003,
-    }
+  def responses_for_space_restricted_create_endpoint(success_code:, permitted_roles: nil)
+    permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new({ code: 403, response_object: forbidden_response }).tap do |h|
+    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
-      h['no_role'] = { code: 422 } # TODO: this is not correct for all endpoints
-      h['org_auditor'] = { code: 422 }
-      h['org_billing_manager'] = { code: 422 }
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 422 } # TODO: status code 422 for 'no_role' is not correct for all endpoints
+      end
     end
   end
 
-  def responses_for_space_restricted_update_endpoint(
-    success_code: 202,
-    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
-  )
-    forbidden_response =       {
-      'detail' => 'You are not authorized to perform the requested action',
-      'title' => 'CF-NotAuthorized',
-      'code' => 10003,
-    }
+  def responses_for_space_restricted_update_endpoint(success_code:, success_body: nil)
+    permitted_roles = SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new({ code: 403, response_object: forbidden_response }).tap do |h|
+    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+      permitted_roles.each do |role|
+        h[role] = { code: success_code, response_object: success_body }
+      end
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 404 }
+      end
+    end
+  end
+
+  def responses_for_org_suspended_space_restricted_create_endpoint(success_code:, suspended_roles: nil)
+    permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
+    suspended_roles ||= SpaceRestrictedResponseGenerators.default_suspended_roles
+
+    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
-      h['no_role'] = { code: 404 }
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
+      suspended_roles.each do |role|
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
+      end
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 422 } # TODO: status code 422 for 'no_role' is not correct for all endpoints
+      end
     end
   end
 
-  def responses_for_org_suspended_space_restricted_create_endpoint(
-    success_code: 202,
-    permitted_roles: SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
-  )
-    forbidden_response =       {
-      'detail' => 'You are not authorized to perform the requested action',
-      'title' => 'CF-NotAuthorized',
-      'code' => 10003,
-    }
+  def responses_for_org_suspended_space_restricted_update_endpoint(success_code:)
+    permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
+    suspended_roles = SpaceRestrictedResponseGenerators.default_suspended_roles
 
-    Hash.new({ code: 403, response_object: forbidden_response }).tap do |h|
+    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
-      h['no_role'] = { code: 422 } # TODO: this is not correct for all endpoints
-      h['org_auditor'] = { code: 422 }
-      h['org_billing_manager'] = { code: 422 }
+      suspended_roles.each do |role|
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
+      end
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 404 }
+      end
     end
   end
 
-  def responses_for_org_suspended_space_restricted_update_endpoint(
-    success_code: 202,
-    permitted_roles: SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
-  )
-    forbidden_response =       {
-      'detail' => 'You are not authorized to perform the requested action',
-      'title' => 'CF-NotAuthorized',
-      'code' => 10003,
-    }
-    Hash.new(code: 403, response_object: forbidden_response).tap do |h|
+  def responses_for_org_suspended_space_restricted_delete_endpoint(success_code:, suspended_roles: nil)
+    permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
+    suspended_roles ||= SpaceRestrictedResponseGenerators.default_suspended_roles
+
+    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
-      h['no_role'] = { code: 404 }
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
-    end
-  end
-
-  def responses_for_org_suspended_space_restricted_delete_endpoint(
-    success_code: 202,
-    permitted_roles: SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
-  )
-    forbidden_response =       {
-      'detail' => 'You are not authorized to perform the requested action',
-      'title' => 'CF-NotAuthorized',
-      'code' => 10003,
-    }
-    Hash.new(code: 403, response_object: forbidden_response).tap do |h|
-      permitted_roles.each do |role|
-        h[role] = { code: success_code }
+      suspended_roles.each do |role|
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
       end
-      h['no_role'] = { code: 404 }
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 404 }
+      end
     end
   end
 
-  def responses_for_space_restricted_delete_endpoint(
-    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
-    )
+  def responses_for_space_restricted_delete_endpoint(permitted_roles: nil)
+    permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
+
     Hash.new(code: 403).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 204 }
       end
-      h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 404 }
+      end
     end
   end
 
-  def responses_for_space_restricted_async_delete_endpoint(
-    permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles
-  )
+  def responses_for_space_restricted_async_delete_endpoint(permitted_roles: nil)
+    permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
+
     Hash.new(code: 403).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 202 }
       end
-      h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = { code: 404 }
+      %w[no_role org_auditor org_billing_manager].each do |role|
+        h[role] = { code: 404 }
+      end
     end
   end
 end

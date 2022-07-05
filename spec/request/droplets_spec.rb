@@ -34,77 +34,89 @@ RSpec.describe 'Droplets' do
     end
 
     describe 'when creating a droplet' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
+      let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
 
-        let(:droplet_json) do
-          {
-            guid: UUID_REGEX,
-            state: 'AWAITING_UPLOAD',
-            error: nil,
-            lifecycle: {
-              type: 'buildpack',
-              data: {}
-            },
-            execution_metadata: '',
-            process_types: {
-              web: 'please_run_my_process.sh'
-            },
-            checksum: nil,
-            buildpacks: [],
-            stack: nil,
-            image: nil,
-            created_at: iso8601,
-            updated_at: iso8601,
-            relationships: { app: { data: { guid: app_model.guid } } },
-            metadata: {
-              labels: {},
-              annotations: {}
-            },
-            links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
-              app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
-              assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
-              upload: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}\/upload), method: 'POST' }
-            }
+      let(:droplet_json) do
+        {
+          guid: UUID_REGEX,
+          state: 'AWAITING_UPLOAD',
+          error: nil,
+          lifecycle: {
+            type: 'buildpack',
+            data: {}
+          },
+          execution_metadata: '',
+          process_types: {
+            web: 'please_run_my_process.sh'
+          },
+          checksum: nil,
+          buildpacks: [],
+          stack: nil,
+          image: nil,
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: { app: { data: { guid: app_model.guid } } },
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+            app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+            assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+            upload: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}\/upload), method: 'POST' }
           }
-        end
+        }
+      end
 
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['org_auditor'] = {
+          code: 422
+        }
+        h['org_billing_manager'] = {
+          code: 422
+        }
+        h['no_role'] = {
+          code: 422
+        }
+        h['admin'] = {
+          code: 201,
+          response_object: droplet_json
+        }
+        h['space_developer'] = {
+          code: 201,
+          response_object: droplet_json
+        }
+        h
+      end
+
+      let(:expected_event_hash) do
+        {
+          type: 'audit.app.droplet.create',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: app_model.name,
+          metadata: { droplet_guid: parsed_response['guid'] }.to_json,
+          space_guid: space.guid,
+          organization_guid: org.guid,
+        }
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403
-          )
-          h['org_auditor'] = {
-            code: 422
-          }
-          h['org_billing_manager'] = {
-            code: 422
-          }
-          h['no_role'] = {
-            code: 422
-          }
-          h['admin'] = {
-            code: 201,
-            response_object: droplet_json
-          }
-          h['space_developer'] = {
-            code: 201,
-            response_object: droplet_json
-          }
-          h.freeze
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
         end
 
-        let(:expected_event_hash) do
-          {
-            type: 'audit.app.droplet.create',
-            actee: app_model.guid,
-            actee_type: 'app',
-            actee_name: app_model.name,
-            metadata: { droplet_guid: parsed_response['guid'] }.to_json,
-            space_guid: space.guid,
-            organization_guid: org.guid,
-          }
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -255,7 +267,7 @@ RSpec.describe 'Droplets' do
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       before do
@@ -325,7 +337,7 @@ RSpec.describe 'Droplets' do
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -377,7 +389,7 @@ RSpec.describe 'Droplets' do
         h['no_role'] = {
           code: 404
         }
-        h.freeze
+        h
       end
 
       before do
@@ -996,26 +1008,40 @@ RSpec.describe 'Droplets' do
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
-    it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
-      let(:db_check) do
-        lambda do
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+    let(:api_call) { lambda { |user_headers| delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
 
-          execute_all_jobs(expected_successes: 2, expected_failures: 0)
-          get "/v3/droplets/#{droplet.guid}", {}, developer_headers
-          expect(last_response.status).to eq(404)
-        end
+        execute_all_jobs(expected_successes: 2, expected_failures: 0)
+        get "/v3/droplets/#{droplet.guid}", {}, developer_headers
+        expect(last_response.status).to eq(404)
       end
+    end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h['admin'] = { code: 202 }
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['space_developer'] = { code: 202 }
+      h['no_role'] = { code: 404 }
+      h
+    end
+
+    it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+    context 'when organization is suspended' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        h['admin'] = { code: 202 }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['space_developer'] = { code: 202 }
-        h['no_role'] = { code: 404 }
+        h = super()
+        h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
         h
       end
+
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'deleting metadata' do
@@ -1265,7 +1291,7 @@ RSpec.describe 'Droplets' do
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1460,7 +1486,7 @@ RSpec.describe 'Droplets' do
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1495,46 +1521,59 @@ RSpec.describe 'Droplets' do
       og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, user_headers } }
-      let(:expected_copied_response) do
-        {
-          'guid' => UUID_REGEX,
-          'state' => VCAP::CloudController::DropletModel::COPYING_STATE,
-          'error' => nil,
-          'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {}
-          },
-          'checksum' => nil,
-          'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-          'stack' => 'stack-name',
-          'execution_metadata' => 'some-data',
-          'image' => nil,
-          'process_types' => { 'web' => 'start-command' },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'relationships' => { 'app' => { 'data' => { 'guid' => new_app.guid } } },
-          'links' => {
-            'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
-            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-          },
-          'metadata' => {
-            'labels' => {},
-            'annotations' => {}
-          },
-        }
-      end
+    let(:api_call) { lambda { |user_headers| post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, user_headers } }
+    let(:expected_copied_response) do
+      {
+        'guid' => UUID_REGEX,
+        'state' => VCAP::CloudController::DropletModel::COPYING_STATE,
+        'error' => nil,
+        'lifecycle' => {
+          'type' => 'buildpack',
+          'data' => {}
+        },
+        'checksum' => nil,
+        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+        'stack' => 'stack-name',
+        'execution_metadata' => 'some-data',
+        'image' => nil,
+        'process_types' => { 'web' => 'start-command' },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'relationships' => { 'app' => { 'data' => { 'guid' => new_app.guid } } },
+        'links' => {
+          'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
+          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
+        },
+        'metadata' => {
+          'labels' => {},
+          'annotations' => {}
+        },
+      }
+    end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h['admin'] = { code: 201, response_object: expected_copied_response }
+      h['org_auditor'] = { code: 404 }
+      h['org_billing_manager'] = { code: 404 }
+      h['space_developer'] = { code: 201, response_object: expected_copied_response }
+      h['no_role'] = { code: 404 }
+      h
+    end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when organization is suspended' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        h['admin'] = { code: 201, response_object: expected_copied_response }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['space_developer'] = { code: 201, response_object: expected_copied_response }
-        h['no_role'] = { code: 404 }
+        h = super()
+        h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
         h
       end
+
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1586,9 +1625,7 @@ RSpec.describe 'Droplets' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(
-        code: 403,
-      )
+      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
       h['admin'] = {
         code: 202,
         response_object: droplet_json
@@ -1606,7 +1643,7 @@ RSpec.describe 'Droplets' do
       h['no_role'] = {
         code: 404
       }
-      h.freeze
+      h
     end
 
     before do
@@ -1617,18 +1654,31 @@ RSpec.describe 'Droplets' do
       allow(File).to receive(:stat).and_return(instance_double(File::Stat, size: 12))
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:expected_event_hash) do
-        {
-          type: 'audit.app.droplet.upload',
-          actee: app_model.guid,
-          actee_type: 'app',
-          actee_name: app_model.name,
-          metadata: { droplet_guid: parsed_response['guid'] }.to_json,
-          space_guid: space.guid,
-          organization_guid: org.guid,
-        }
+    let(:expected_event_hash) do
+      {
+        type: 'audit.app.droplet.upload',
+        actee: app_model.guid,
+        actee_type: 'app',
+        actee_name: app_model.name,
+        metadata: { droplet_guid: parsed_response['guid'] }.to_json,
+        space_guid: space.guid,
+        organization_guid: org.guid,
+      }
+    end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when organization is suspended' do
+      let(:expected_codes_and_responses) do
+        h = super()
+        h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        h
       end
+
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     it 'enqueues a processing job' do
@@ -1728,65 +1778,78 @@ RSpec.describe 'Droplets' do
     context 'when the droplet exists' do
       let(:guid) { og_droplet.guid }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:droplet_json) do
-          {
-            guid: og_droplet.guid,
-            state: 'STAGED',
-            error: nil,
-            lifecycle: {
-              type: 'buildpack',
-              data: {}
-            },
-            execution_metadata: 'some-data',
-            process_types: {
-              web: 'start-command'
-            },
-            checksum: {
-             type: 'sha256',
-             value: 'droplet-checksum-sha256'
-            },
-            buildpacks: [
-              {
-                name: 'http://buildpack.git.url.com',
-                detect_output: nil,
-                buildpack_name: nil,
-                version: nil
-              }
-            ],
-            stack: 'stack-name',
-            image: nil,
-            created_at: iso8601,
-            updated_at: iso8601,
-            relationships: { app: { data: { guid: app_model.guid } } },
-            metadata: {
-              labels: {
-                'release' => 'stable',
-                'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-              },
-              annotations: {
-                'potato' => 'sieglinde',
-                'key' => ''
-              }
-            },
-            links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
-              app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
-              assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
-              package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{UUID_REGEX}) },
-              download: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}\/download) },
+      let(:droplet_json) do
+        {
+          guid: og_droplet.guid,
+          state: 'STAGED',
+          error: nil,
+          lifecycle: {
+            type: 'buildpack',
+            data: {}
+          },
+          execution_metadata: 'some-data',
+          process_types: {
+            web: 'start-command'
+          },
+          checksum: {
+           type: 'sha256',
+           value: 'droplet-checksum-sha256'
+          },
+          buildpacks: [
+            {
+              name: 'http://buildpack.git.url.com',
+              detect_output: nil,
+              buildpack_name: nil,
+              version: nil
             }
+          ],
+          stack: 'stack-name',
+          image: nil,
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: { app: { data: { guid: app_model.guid } } },
+          metadata: {
+            labels: {
+              'release' => 'stable',
+              'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+            },
+            annotations: {
+              'potato' => 'sieglinde',
+              'key' => ''
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+            app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+            assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+            package: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/packages\/#{UUID_REGEX}) },
+            download: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}\/download) },
           }
-        end
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['admin'] = { code: 200, response_object: droplet_json }
+        h['space_developer'] = { code: 200, response_object: droplet_json }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
-          h['admin'] = { code: 200, response_object: droplet_json }
-          h['space_developer'] = { code: 200, response_object: droplet_json }
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
           h
         end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when the message is invalid' do

@@ -27,10 +27,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(
-          create_managed_json(instance),
-          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-        )
+        responses_for_space_restricted_single_endpoint(create_managed_json(instance))
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -41,10 +38,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(
-          create_user_provided_json(instance),
-          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-        )
+        responses_for_space_restricted_single_endpoint(create_user_provided_json(instance))
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -60,10 +54,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(
-          create_managed_json(instance),
-          permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-        )
+        responses_for_space_restricted_single_endpoint(create_managed_json(instance))
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -514,7 +505,7 @@ RSpec.describe 'V3 service instances' do
 
         h['global_auditor'] = h['space_supporter'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
     end
 
@@ -674,7 +665,7 @@ RSpec.describe 'V3 service instances' do
 
           h['space_supporter'] = h['space_developer'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
           h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-          h.freeze
+          h
         end
       end
     end
@@ -833,12 +824,12 @@ RSpec.describe 'V3 service instances' do
       headers_for(user)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 201) }
-    end
+    context 'permissions' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 201) }
+      end
 
-    it_behaves_like 'permissions for create endpoint when organization is suspended', 201 do
-      let(:expected_codes) {}
+      it_behaves_like 'permissions for create endpoint when organization is suspended', 201
     end
 
     context 'when service_instance_creation flag is disabled' do
@@ -1609,14 +1600,14 @@ RSpec.describe 'V3 service instances' do
       {}
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    context 'permissions' do
       let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
-      let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
-    end
 
-    it_behaves_like 'permissions for update endpoint when organization is suspended', 200 do
-      let(:guid) { VCAP::CloudController::ServiceInstance.make(space: space).guid }
-      let(:expected_codes) {}
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
+      end
+
+      it_behaves_like 'permissions for update endpoint when organization is suspended', 200
     end
 
     context 'service instance does not exist' do
@@ -2793,9 +2784,7 @@ RSpec.describe 'V3 service instances' do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
-      it_behaves_like 'permissions for delete endpoint when organization is suspended', 204 do
-        let(:expected_codes) {}
-      end
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', 204
     end
 
     context 'user provided service instances' do
@@ -3512,17 +3501,18 @@ RSpec.describe 'V3 service instances' do
       target_space_2.add_developer(user)
     end
 
-    describe 'permissions' do
+    context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
       end
 
-      context 'sharing to a suspended org' do
+      it_behaves_like 'permissions for update endpoint when organization is suspended', 200
+
+      context 'when target organization is suspended' do
         let(:target_space_1) do
           space = VCAP::CloudController::Space.make
           space.organization.add_user(user)
-          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
-          space.organization.save
+          space.organization.update(status: VCAP::CloudController::Organization::SUSPENDED)
           space
         end
 
@@ -3759,7 +3749,7 @@ RSpec.describe 'V3 service instances' do
       share_service_instance(service_instance, target_space)
     end
 
-    describe 'permissions' do
+    context 'permissions' do
       let(:db_check) {
         lambda {
           si = VCAP::CloudController::ServiceInstance.first(guid: guid)
@@ -3771,9 +3761,7 @@ RSpec.describe 'V3 service instances' do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
       end
 
-      it_behaves_like 'permissions for delete endpoint when organization is suspended', ALL_PERMISSIONS do
-        let(:expected_codes) { responses_for_org_suspended_space_restricted_delete_endpoint(success_code: 204) }
-      end
+      it_behaves_like 'permissions for delete endpoint when organization is suspended', 204
     end
 
     it 'unshares the service instance from the target space and logs audit event' do
@@ -3910,10 +3898,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         let(:expected_codes_and_responses) do
-          responses_for_space_restricted_single_endpoint(
-            expected_response,
-            permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-          )
+          responses_for_space_restricted_single_endpoint(expected_response)
         end
       end
     end

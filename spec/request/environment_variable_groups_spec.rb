@@ -77,7 +77,7 @@ RSpec.describe 'Environment group variables' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:api_call) { lambda { |user_headers| get '/v3/environment_variable_groups/running', nil, user_headers } }
-      let(:expected_codes_and_responses) { Hash.new(code: 200).freeze }
+      let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
       before do
         space.organization.add_user(user)

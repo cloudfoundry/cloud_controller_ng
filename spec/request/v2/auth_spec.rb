@@ -33,7 +33,7 @@ RSpec.describe 'Auth' do
     let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:api_call) { lambda { |user_headers| get '/v2/apps', nil, user_headers } }
-    let(:expected_codes_and_responses) { Hash.new(code: 200).freeze }
+    let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
     before do
       space.organization.add_user(user)

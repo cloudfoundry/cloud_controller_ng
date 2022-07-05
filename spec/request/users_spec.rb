@@ -158,7 +158,7 @@ RSpec.describe 'Users Request' do
               current_user_json
             ]
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -210,7 +210,7 @@ RSpec.describe 'Users Request' do
               current_user_json
             ]
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -229,7 +229,7 @@ RSpec.describe 'Users Request' do
               current_user_json
             ]
           )
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -265,7 +265,7 @@ RSpec.describe 'Users Request' do
               current_user_json,
             ]
           )
-          h.freeze
+          h
         end
 
         before do
@@ -293,7 +293,7 @@ RSpec.describe 'Users Request' do
               current_user_json,
             ]
           )
-          h.freeze
+          h
         end
 
         before do
@@ -449,7 +449,7 @@ RSpec.describe 'Users Request' do
           code: 200,
           response_object: client_json
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -465,7 +465,7 @@ RSpec.describe 'Users Request' do
           code: 404,
           response_object: []
         }
-        h.freeze
+        h
       end
 
       before do
@@ -629,7 +629,7 @@ RSpec.describe 'Users Request' do
           code: 201,
           response_object: user_json
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -676,7 +676,7 @@ RSpec.describe 'Users Request' do
             code: 201,
             response_object: user_json
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -723,7 +723,7 @@ RSpec.describe 'Users Request' do
             code: 201,
             response_object: user_json
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -849,7 +849,7 @@ RSpec.describe 'Users Request' do
           h['global_auditor'] = {
             code: 403,
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -867,7 +867,7 @@ RSpec.describe 'Users Request' do
           h['no_role'] = {
             code: 404
           }
-          h.freeze
+          h
         end
 
         before do

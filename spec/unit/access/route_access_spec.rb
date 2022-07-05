@@ -95,8 +95,7 @@ module VCAP::CloudController
 
     describe 'in a suspended org' do
       before(:each) do
-        org.status = VCAP::CloudController::Organization::SUSPENDED
-        org.save
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
 
       it_behaves_like('an access control', :create, restricted_write_table)

@@ -17,6 +17,12 @@ LOCAL_ROLES = %w[
 
 ALL_PERMISSIONS = (LOCAL_ROLES + GLOBAL_SCOPES).freeze
 
+CF_NOT_AUTHORIZED = [
+  detail: 'You are not authorized to perform the requested action',
+  title: 'CF-NotAuthorized',
+  code: 10003
+].freeze
+
 RSpec.shared_examples 'paginated response' do |endpoint|
   it 'returns pagination information' do
     expect_filtered_resources(endpoint, 'per_page=1', resources[0, 1])
@@ -143,6 +149,11 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
           if expected_events
             expect(expected_events.call(email)).to be_reported_as_events
           end
+        elsif (400...499).cover? expected_response_code
+          expected_errors = expected_codes_and_responses[role][:errors]
+          unless expected_errors.nil?
+            expect({ errors: errors_without_test_mode_info(parsed_response) }).to match_json_response({ errors: expected_errors })
+          end
         end
 
         expected_response_guid = expected_codes_and_responses[role][:response_guid]
@@ -152,6 +163,11 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
       end
     end
   end
+end
+
+def errors_without_test_mode_info(parsed_response)
+  expect(parsed_response).to include('errors')
+  parsed_response['errors'].map { |e| e.except('test_mode_info') }
 end
 
 RSpec.shared_examples 'permissions for delete endpoint' do |roles|

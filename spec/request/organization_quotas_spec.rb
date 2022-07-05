@@ -68,7 +68,7 @@ module VCAP::CloudController
           code: 201,
           response_object: organization_quota_json
         }
-        h.freeze
+        h
       end
 
       context 'using the default params' do
@@ -379,7 +379,7 @@ module VCAP::CloudController
           code: 200,
           response_object: organization_quota_json
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

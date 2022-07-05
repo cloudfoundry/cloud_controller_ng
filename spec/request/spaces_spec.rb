@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 
+NON_SPACE_PERMISSIONS = (ALL_PERMISSIONS - %w[space_developer space_manager space_auditor space_supporter]).freeze
+
 RSpec.describe 'Spaces' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
@@ -15,8 +17,8 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'POST /v3/spaces' do
-    it 'creates a new space with the given name and org' do
-      request_body = {
+    let(:request_body) do
+      {
         name: 'space1',
         relationships: {
           organization: {
@@ -32,7 +34,9 @@ RSpec.describe 'Spaces' do
           }
         }
       }.to_json
+    end
 
+    it 'creates a new space with the given name and org' do
       expect {
         post '/v3/spaces', request_body, admin_header
       }.to change {
@@ -64,6 +68,33 @@ RSpec.describe 'Spaces' do
           }
         }
       )
+    end
+
+    context 'permissions' do
+      let(:space) { nil }
+      let(:api_call) { lambda { |user_headers| post '/v3/spaces', request_body, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[admin org_manager].each { |r| h[r] = { code: 201 } }
+        h['no_role'] = { code: 422 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', NON_SPACE_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', NON_SPACE_PERMISSIONS
+      end
     end
 
     context 'when a relationships hash is not provided' do
@@ -606,7 +637,6 @@ RSpec.describe 'Spaces' do
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
 
       let(:expected_codes_and_responses) do
-        responses_for_space_restricted_single_endpoint(response_object)
         h = Hash.new(code: 404)
         h['admin'] = { code: 200, response_objects: response_object }
         h['admin_read_only'] = { code: 200, response_objects: response_object }
@@ -616,7 +646,7 @@ RSpec.describe 'Spaces' do
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
         h['space_supporter'] = { code: 200, response_objects: response_object }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -768,7 +798,7 @@ RSpec.describe 'Spaces' do
         h['space_auditor'] = { code: 200, response_objects: response_object }
         h['space_developer'] = { code: 200, response_objects: response_object }
         h['space_supporter'] = { code: 200, response_objects: response_object }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -833,7 +863,7 @@ RSpec.describe 'Spaces' do
       let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}", request_body, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -878,6 +908,20 @@ RSpec.describe 'Spaces' do
             organization_guid: space.organization_guid,
           }
         end
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[org_manager space_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1014,7 +1058,7 @@ RSpec.describe 'Spaces' do
 
     context 'when the user is a member in the spaces org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -1037,6 +1081,20 @@ RSpec.describe 'Spaces' do
             organization_guid: org.guid,
           }
         end
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1075,7 +1133,7 @@ RSpec.describe 'Spaces' do
 
     context 'when the user is a member in the spaces org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -1088,6 +1146,20 @@ RSpec.describe 'Spaces' do
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when user does not specify unmapped query param' do
@@ -1450,7 +1522,7 @@ RSpec.describe 'Spaces' do
             client_json
           ]
         }
-        h.freeze
+        h
       end
 
       before do

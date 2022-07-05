@@ -90,9 +90,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['org_billing_manager'] = { code: 422 }
         h['org_auditor'] = { code: 422 }
         h['no_role'] = { code: 422 }
@@ -104,7 +102,7 @@ RSpec.describe 'Apps' do
           code: 201,
           response_object: app_model_response_object
         }
-        h.freeze
+        h
       end
 
       before do
@@ -112,6 +110,20 @@ RSpec.describe 'Apps' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user can create an app' do
@@ -1604,7 +1616,7 @@ RSpec.describe 'Apps' do
         h['space_supporter'] = { code: 200, response_object: app_model_empty_system_env_response_object }
         h['global_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = { code: 403 }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1736,7 +1748,7 @@ RSpec.describe 'Apps' do
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response }
         h['space_supporter'] = { code: 200, response_object: expected_response_system_env_redacted }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1751,7 +1763,7 @@ RSpec.describe 'Apps' do
             h = Hash.new(code: 403)
             h['admin'] = h['admin_read_only'] = { code: 200, response_object: expected_response }
             h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-            h.freeze
+            h
           end
         end
       end
@@ -2007,19 +2019,30 @@ RSpec.describe 'Apps' do
       let(:api_call) { lambda { |user_headers| delete "/v3/apps/#{app_model.guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 202)
-        h['admin_read_only'] = { code: 403 }
-        h['global_auditor'] = { code: 403 }
+        %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
+          h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        end
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
-        h['org_manager'] = { code: 403 }
         h['no_role'] = { code: 404 }
-        h['space_auditor'] = { code: 403 }
-        h['space_manager'] = { code: 403 }
-        h['space_supporter'] = { code: 403 }
         h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'deleting metadata' do
@@ -2195,19 +2218,30 @@ RSpec.describe 'Apps' do
       let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_object: expected_response_object)
-        h['admin_read_only'] = { code: 403 }
-        h['global_auditor'] = { code: 403 }
+        %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
+          h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        end
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
-        h['org_manager'] = { code: 403 }
         h['no_role'] = { code: 404 }
-        h['space_auditor'] = { code: 403 }
-        h['space_manager'] = { code: 403 }
-        h['space_supporter'] = { code: 403 }
         h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'telemetry' do
@@ -2306,7 +2340,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2322,7 +2356,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h.freeze
+          h
         end
 
         before do
@@ -2330,6 +2364,20 @@ RSpec.describe 'Apps' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'events' do
@@ -2461,7 +2509,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2477,7 +2525,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_start_response_object
           }
-          h.freeze
+          h
         end
 
         before do
@@ -2485,6 +2533,20 @@ RSpec.describe 'Apps' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
   end
@@ -2556,7 +2618,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2572,7 +2634,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: app_stop_response_object
         }
-        h.freeze
+        h
       end
 
       before do
@@ -2580,6 +2642,20 @@ RSpec.describe 'Apps' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'events' do
@@ -2704,7 +2780,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2720,7 +2796,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h.freeze
+          h
         end
 
         before do
@@ -2728,6 +2804,20 @@ RSpec.describe 'Apps' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'telemetry' do
@@ -2812,7 +2902,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2828,7 +2918,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_restart_response_object
           }
-          h.freeze
+          h
         end
 
         before do
@@ -2836,6 +2926,20 @@ RSpec.describe 'Apps' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
   end
@@ -2977,7 +3081,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2993,7 +3097,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: current_droplet_response_object
         }
-        h.freeze
+        h
       end
 
       before do
@@ -3001,6 +3105,20 @@ RSpec.describe 'Apps' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_supporter space_developer].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'events' do
@@ -3149,49 +3267,64 @@ RSpec.describe 'Apps' do
       space.organization.add_user(user)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:update_request) do
-        {
-          var: {
-              override: 'new-value',
-              new_key: 'brand-new-value'
-          }
+    let(:update_request) do
+      {
+        var: {
+            override: 'new-value',
+            new_key: 'brand-new-value'
         }
-      end
-      let(:app_model) {
-        VCAP::CloudController::AppModel.make(
-          name: 'name1',
-          space: space,
-          desired_state: 'STOPPED',
-          environment_variables: {
-            override: 'original',
-            preserve: 'keep'
-          }
-        )
       }
-      let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_headers } }
-      let(:app_model_response_object) do
-        {
-          'var' => {
-              'override' => 'new-value',
-              'new_key' => 'brand-new-value',
-              'preserve' => 'keep'
-          },
-          'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          }
+    end
+    let(:app_model) {
+      VCAP::CloudController::AppModel.make(
+        name: 'name1',
+        space: space,
+        desired_state: 'STOPPED',
+        environment_variables: {
+          override: 'original',
+          preserve: 'keep'
         }
+      )
+    }
+    let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_headers } }
+    let(:app_model_response_object) do
+      {
+        'var' => {
+            'override' => 'new-value',
+            'new_key' => 'brand-new-value',
+            'preserve' => 'keep'
+        },
+        'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+        }
+      }
+    end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 404)
+      %w[global_auditor admin_read_only org_manager space_auditor space_manager].each do |r|
+        h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
       end
+      h['admin'] = h['space_developer'] = h['space_supporter'] = {
+        code: 200,
+        response_object: app_model_response_object
+      }
+      h
+    end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when organization is suspended' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
-        h['global_auditor'] = h['admin_read_only'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = { code: 403 }
-        h['admin'] = h['space_developer'] = h['space_supporter'] = {
-          code: 200,
-          response_object: app_model_response_object
-        }
-        h.freeze
+        h = super()
+        %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+        h
       end
+
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -3222,7 +3355,7 @@ RSpec.describe 'Apps' do
           code: 200,
           response_object: app_model_response_object
         }
-        h.freeze
+        h
       end
     end
 
@@ -3239,7 +3372,7 @@ RSpec.describe 'Apps' do
             code: 200,
             response_object: app_model_response_object
           }
-          h.freeze
+          h
         end
       end
     end
@@ -3275,7 +3408,7 @@ RSpec.describe 'Apps' do
       h['space_auditor'] = { code: 200, response_object: read_basic_response }
       h['space_developer'] = { code: 200, response_object: read_all_response }
       h['space_supporter'] = { code: 200, response_object: read_basic_response }
-      h.freeze
+      h
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
