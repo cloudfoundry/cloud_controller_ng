@@ -12,9 +12,9 @@ class BaseMaxLogRateLimitPolicy
     return unless additional_checks
 
     if resource.log_rate_limit == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
-       policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
+      policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
 
-       resource.errors.add(field, :app_requires_log_rate_limit_to_be_specified)
+      resource.errors.add(field, :app_requires_log_rate_limit_to_be_specified)
     end
 
     unless policy_target.has_remaining_log_rate_limit(requested_log_rate_limit)

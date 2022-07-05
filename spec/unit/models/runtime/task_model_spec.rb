@@ -356,7 +356,6 @@ module VCAP::CloudController
                 )
               }.to raise_error Sequel::ValidationFailed, 'log_rate_limit app_requires_log_rate_limit_to_be_specified'
             end
-
           end
 
           describe 'when the quota has a memory_limit' do
@@ -471,7 +470,7 @@ module VCAP::CloudController
           describe 'when the quota has a log_rate_limit' do
             let(:quota) { QuotaDefinition.make(log_rate_limit: 200) }
 
-            it "does allow a task that fits in the limit to start" do
+            it 'does allow a task that fits in the limit to start' do
               expect {
                 TaskModel.make(
                   log_rate_limit: 199,
@@ -480,7 +479,7 @@ module VCAP::CloudController
               }.to_not raise_error
             end
 
-            it "does not allow a task that exceeds the limit to start" do
+            it 'does not allow a task that exceeds the limit to start' do
               expect {
                 TaskModel.make(
                   log_rate_limit: 10_000,

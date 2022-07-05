@@ -2403,7 +2403,7 @@ RSpec.describe 'Apps' do
           end
 
           describe 'space quotas' do
-            context "when both the space and the app do not specify a log rate limit" do
+            context 'when both the space and the app do not specify a log rate limit' do
               let(:log_rate_limit) { -1 }
               let(:space_log_rate_limit) { -1 }
 
@@ -2433,7 +2433,7 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit app_requires_log_rate_limit_to_be_specified")
+                expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
               end
             end
 
@@ -2445,7 +2445,7 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit exceeds space log rate quota")
+                expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
               end
             end
 
@@ -2458,13 +2458,13 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit exceeds space log rate quota")
+                expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
               end
             end
           end
 
           describe 'organization quotas' do
-            context "when both the org and the app do not specify a log rate limit" do
+            context 'when both the org and the app do not specify a log rate limit' do
               let(:log_rate_limit) { -1 }
               let(:org_log_rate_limit) { -1 }
 
@@ -2494,7 +2494,7 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit app_requires_log_rate_limit_to_be_specified")
+                expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
               end
             end
 
@@ -2506,7 +2506,7 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit exceeds organization log rate quota")
+                expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
               end
             end
 
@@ -2519,7 +2519,7 @@ RSpec.describe 'Apps' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
                 expect(last_response.status).to eq(422)
-                expect(last_response).to have_error_message("log_rate_limit exceeds organization log rate quota")
+                expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
               end
             end
           end

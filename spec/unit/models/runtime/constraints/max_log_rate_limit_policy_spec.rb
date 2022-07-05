@@ -9,7 +9,7 @@ RSpec.describe 'max log_rate_limit policies' do
 
     context 'when the app specifies a log quota' do
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: 100, state: 'STARTED') }
-      
+
       context 'when performing a scaling operation' do
         before do
           process.log_rate_limit = 150

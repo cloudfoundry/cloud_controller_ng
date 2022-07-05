@@ -27,7 +27,7 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
-      self.log_rate_limit        ||= Config.config.get(:default_app_log_rate_limit_in_bps)
+      self.log_rate_limit   ||= Config.config.get(:default_app_log_rate_limit_in_bps)
       self.metadata         ||= {}
     end
 

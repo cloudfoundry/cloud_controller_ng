@@ -443,12 +443,12 @@ module VCAP::CloudController
           end
 
           it 'should raise error when log quota is exceeded' do
-            number = (log_rate_limit/2) + 1
+            number = (log_rate_limit / 2) + 1
             process.log_rate_limit = number
             expect { process.save }.to raise_error(/exceeds space log rate quota/)
           end
 
-          context "when only exceeding the org quota" do
+          context 'when only exceeding the org quota' do
             before do
               org.quota_definition = QuotaDefinition.make(log_rate_limit: 5)
               org.save
@@ -461,7 +461,7 @@ module VCAP::CloudController
           end
 
           it 'should not raise error when log quota is not exceeded' do
-            number = (log_rate_limit/2)
+            number = (log_rate_limit / 2)
             process.log_rate_limit = number
             expect { process.save }.not_to raise_error
           end
