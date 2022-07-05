@@ -33,8 +33,6 @@ module VCAP::CloudController
         end
       end
 
-      class UnprocessableCreate < StandardError; end
-
       class RouteBindingAlreadyExists < StandardError; end
 
       private
@@ -51,7 +49,10 @@ module VCAP::CloudController
         space_mismatch! unless route.space == service_instance.space
         already_exists! if route.service_instance == service_instance
         already_bound! if route.service_instance
-        operation_in_progress! if service_instance.operation_in_progress?
+        if service_instance.managed_instance?
+          service_instance_not_found! if service_instance.create_failed?
+          operation_in_progress! if service_instance.operation_in_progress?
+        end
       end
 
       def permitted_binding_attributes
@@ -60,10 +61,6 @@ module VCAP::CloudController
 
       def post_bind_action(binding)
         binding.notify_diego
-      end
-
-      def operation_in_progress!
-        raise UnprocessableCreate.new('There is an operation in progress for the service instance')
       end
 
       def route_is_internal!

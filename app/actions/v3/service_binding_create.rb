@@ -6,6 +6,9 @@ module VCAP::CloudController
     end
 
     class ServiceBindingCreate
+      class UnprocessableCreate < StandardError
+      end
+
       PollingStatus = Struct.new(:finished, :retry_after).freeze
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
@@ -123,6 +126,14 @@ module VCAP::CloudController
 
       def not_retrievable!
         raise BindingNotRetrievable.new('The broker responded asynchronously but does not support fetching binding data')
+      end
+
+      def service_instance_not_found!
+        raise UnprocessableCreate.new('Service instance not found')
+      end
+
+      def operation_in_progress!
+        raise UnprocessableCreate.new('There is an operation in progress for the service instance')
       end
     end
   end

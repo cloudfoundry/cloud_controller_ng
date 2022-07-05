@@ -185,7 +185,20 @@ module VCAP::CloudController
                   action.precursor(service_instance, message: message)
                 }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-                  'There is an operation in progress for the service instance.'
+                  'There is an operation in progress for the service instance'
+                )
+              end
+            end
+
+            context "when the service instance is in state 'create failed'" do
+              it 'raises an error' do
+                service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+
+                expect {
+                  action.precursor(service_instance, message: message)
+                }.to raise_error(
+                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
+                  'Service instance not found'
                 )
               end
             end

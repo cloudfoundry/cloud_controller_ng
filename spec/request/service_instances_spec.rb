@@ -2748,7 +2748,7 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
-      context 'and it is an delete operation' do
+      context 'and it is a delete operation' do
         before do
           service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress', description: 'almost there, I promise' })
         end

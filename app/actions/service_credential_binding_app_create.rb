@@ -5,9 +5,6 @@ require 'actions/v3/service_binding_create'
 module VCAP::CloudController
   module V3
     class ServiceCredentialBindingAppCreate < V3::ServiceBindingCreate
-      class UnprocessableCreate < StandardError
-      end
-
       class Unimplemented < StandardError
       end
 
@@ -79,14 +76,6 @@ module VCAP::CloudController
       def event_repository
         @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
           Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING)
-      end
-
-      def operation_in_progress!
-        raise UnprocessableCreate.new('There is an operation in progress for the service instance')
-      end
-
-      def service_instance_not_found!
-        raise UnprocessableCreate.new('Service instance not found')
       end
 
       def app_is_required!
