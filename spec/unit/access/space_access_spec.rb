@@ -14,8 +14,7 @@ module VCAP::CloudController
 
     describe 'when the parent organization is suspended' do
       before(:each) do
-        org.status = VCAP::CloudController::Organization::SUSPENDED
-        org.save
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
 
       index_table = {

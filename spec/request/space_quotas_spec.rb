@@ -40,7 +40,7 @@ module VCAP::CloudController
           h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
           h['global_auditor'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
           h['org_manager'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -56,7 +56,7 @@ module VCAP::CloudController
           h['admin'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
           h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
           h['global_auditor'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -81,8 +81,6 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/space_quotas/:guid' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
-
       let(:params) do
         {
           name: 'don-quixote',
@@ -140,17 +138,34 @@ module VCAP::CloudController
         }
       end
 
-      let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        h['admin'] = { code: 200, response_object: updated_space_quota_json }
-        h['org_manager'] = { code: 200, response_object: updated_space_quota_json }
-        h['org_auditor'] = { code: 404 }
-        h['org_billing_manager'] = { code: 404 }
-        h['no_role'] = { code: 404 }
-        h.freeze
-      end
+      context 'permissions' do
+        let(:api_call) { lambda { |user_headers| patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h['admin'] = { code: 200, response_object: updated_space_quota_json }
+          h['org_manager'] = { code: 200, response_object: updated_space_quota_json }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
 
       context 'when the space quota does not exist' do
         it 'returns a 404 with a helpful message' do
@@ -297,7 +312,7 @@ module VCAP::CloudController
           h['space_auditor'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
           h['space_developer'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
           h['space_supporter'] = { code: 200, response_objects: [make_space_quota_json(space_quota)] }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -418,9 +433,7 @@ module VCAP::CloudController
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = {
             code: 201,
             response_object: space_quota_json
@@ -429,7 +442,7 @@ module VCAP::CloudController
             code: 201,
             response_object: space_quota_json
           }
-          h.freeze
+          h
         end
 
         it 'creates a space_quota' do
@@ -441,6 +454,20 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'passing empty limit objects' do
@@ -506,7 +533,7 @@ module VCAP::CloudController
             code: 201,
             response_object: space_quota_json
           }
-          h.freeze
+          h
         end
 
         it 'creates a space_quota' do
@@ -716,7 +743,7 @@ module VCAP::CloudController
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200, response_object: data_json }
           h['org_manager'] = { code: 200, response_object: data_json }
           h['org_auditor'] = { code: 404 }
@@ -726,6 +753,20 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when a space does not exist' do
@@ -768,7 +809,7 @@ module VCAP::CloudController
 
       context 'when removing a space quota from a space' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 204 }
           h['org_manager'] = { code: 204 }
           h['org_auditor'] = { code: 404 }
@@ -785,6 +826,20 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the space does not exist' do
@@ -819,8 +874,7 @@ module VCAP::CloudController
           h = Hash.new(code: 404)
           h['admin'] = { code: 202 }
           h['org_manager'] = { code: 202 }
-          h['admin_read_only'] = { code: 403 }
-          h['global_auditor'] = { code: 403 }
+          %w[admin_read_only global_auditor].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
           h
         end
 
@@ -843,6 +897,20 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       context 'when the space quota does not exist' do

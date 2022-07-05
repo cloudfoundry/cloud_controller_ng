@@ -31,7 +31,7 @@ RSpec.describe 'App Usage Events' do
         code: 200,
         response_object: usage_event_json
       }
-      h.freeze
+      h
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -78,7 +78,7 @@ RSpec.describe 'App Usage Events' do
         code: 200,
         response_objects: [app_usage_event_json, app_usage_event_2_json]
       }
-      h.freeze
+      h
     end
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -153,7 +153,7 @@ RSpec.describe 'App Usage Events' do
     let(:expected_codes_and_responses) do
       h = Hash.new(code: 403)
       h['admin'] = { code: 200 }
-      h.freeze
+      h
     end
 
     after 'clean-up to avoid test pollution' do

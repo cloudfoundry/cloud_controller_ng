@@ -214,7 +214,7 @@ RSpec.describe 'Domains Request' do
                 not_visible_private_domain_json,
                 shared_domain_json
               ]
-            ).freeze
+            )
           end
 
           it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
@@ -252,7 +252,7 @@ RSpec.describe 'Domains Request' do
                 shared_domain_json
               ]
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
@@ -291,7 +291,7 @@ RSpec.describe 'Domains Request' do
                 shared_domain_json
               ]
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
@@ -319,7 +319,7 @@ RSpec.describe 'Domains Request' do
             code: 200,
             response_objects: []
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -364,7 +364,7 @@ RSpec.describe 'Domains Request' do
             code: 200,
             response_objects: []
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -400,7 +400,7 @@ RSpec.describe 'Domains Request' do
                 visible_shared_private_domain_json,
                 not_visible_private_domain_json
               ]
-            ).freeze
+            )
           end
 
           it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
@@ -423,7 +423,7 @@ RSpec.describe 'Domains Request' do
               code: 200,
               response_objects: []
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
@@ -647,7 +647,7 @@ RSpec.describe 'Domains Request' do
         h['no_role'] = {
           code: 404,
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -675,7 +675,7 @@ RSpec.describe 'Domains Request' do
           h['no_role'] = {
             code: 404,
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -702,7 +702,7 @@ RSpec.describe 'Domains Request' do
           h['no_role'] = {
             code: 404,
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -738,7 +738,7 @@ RSpec.describe 'Domains Request' do
             code: 200,
             response_object: matching_route_json
           )
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -845,7 +845,7 @@ RSpec.describe 'Domains Request' do
           code: 201,
           response_object: domain_json
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -968,51 +968,37 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = {
             code: 201,
             response_object: domain_json
-
           }
           h['org_manager'] = {
             code: 201,
             response_object: domain_json
-
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
 
       describe 'invalid private domains' do
         let(:headers) { set_user_with_header_as_role(user: user, role: 'org_manager', org: org) }
-        context 'when the org is suspended' do
-          before do
-            org.status = 'suspended'
-            org.save
-          end
-
-          context 'when the user is not an admin' do
-            it 'returns a 403' do
-              post '/v3/domains', private_domain_params.to_json, headers
-
-              expect(last_response.status).to eq(403)
-              expect(parsed_response['errors'][0]['detail']).to eq('You are not authorized to perform the requested action')
-            end
-          end
-
-          context 'when the user is an admin' do
-            let(:headers) { set_user_with_header_as_role(role: 'admin') }
-            it 'allows creation' do
-              post '/v3/domains', private_domain_params.to_json, headers
-
-              expect(last_response.status).to eq(201)
-            end
-          end
-        end
 
         context 'when the feature flag is disabled' do
           let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: 'my name is bob') }
@@ -1139,6 +1125,45 @@ RSpec.describe 'Domains Request' do
 
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', unwriteable_shared_org.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq "You do not have sufficient permissions for organization '#{shared_org3.name}' to share domain."
+          end
+        end
+
+        context 'when one of the shared orgs is suspended' do
+          let(:shared_org3) do
+            VCAP::CloudController::Organization.make(
+              guid: 'shared-org3',
+              status: VCAP::CloudController::Organization::SUSPENDED
+            )
+          end
+
+          let(:suspended_shared_org) do
+            {
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                },
+                shared_organizations: {
+                  data: [
+                    { guid: shared_org3.guid },
+                    { guid: shared_org1.guid }
+                  ]
+                }
+              }
+            }.merge(params)
+          end
+
+          before do
+            shared_org3.add_manager(user)
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            post '/v3/domains', suspended_shared_org.to_json, headers
 
             expect(last_response.status).to eq(422)
 
@@ -1492,23 +1517,33 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { lambda { |user_headers| post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = {
             code: 200,
             response_object: domain_shared_orgs
-
           }
           h['org_manager'] = {
             code: 200,
             response_object: domain_shared_orgs
-
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when organization is suspended' do
+          let(:expected_codes_and_responses) do
+            h = super()
+            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
 
@@ -1550,7 +1585,7 @@ RSpec.describe 'Domains Request' do
         h['global_auditor'] = {
           code: 403
         }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1580,7 +1615,7 @@ RSpec.describe 'Domains Request' do
           code: 202
         }
 
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
@@ -1610,16 +1645,29 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 202 }
         h['org_manager'] = { code: 202 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
-
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when deleting a shared private domain as an org manager of the shared organization' do
@@ -1657,8 +1705,9 @@ RSpec.describe 'Domains Request' do
   end
 
   describe 'DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid' do
+    let(:owning_org) { org }
     let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
-    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: owning_org) }
     let(:user_header) { admin_headers_for(user) }
 
     context 'when there are non role related permissions issues' do
@@ -1765,6 +1814,46 @@ RSpec.describe 'Domains Request' do
       end
     end
 
+    context 'when the owning org is suspended' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
+        h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        h['admin'] = { code: 204 }
+        h
+      end
+
+      before do
+        private_domain.add_shared_organization(shared_org1)
+        owning_org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the shared org is suspended' do
+      let(:owning_org) { VCAP::CloudController::Organization.make(guid: 'owning-org') }
+      let(:shared_org1) { org } # permissions apply to shared org
+      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
+        h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        h['admin'] = { code: 204 }
+        h
+      end
+
+      before do
+        private_domain.add_shared_organization(shared_org1)
+        shared_org1.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
     describe 'when unsharing orgs for a private domain' do
       let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
       let(:db_check) { lambda do
@@ -1795,7 +1884,7 @@ RSpec.describe 'Domains Request' do
             code: 204
           }
 
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
@@ -1823,7 +1912,7 @@ RSpec.describe 'Domains Request' do
           h['no_role'] = {
             code: 404
           }
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
@@ -1880,7 +1969,7 @@ RSpec.describe 'Domains Request' do
           code: 200,
           response_object: shared_domain_json
         )
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1933,7 +2022,7 @@ RSpec.describe 'Domains Request' do
           h['no_role'] = {
             code: 404,
           }
-          h.freeze
+          h
         end
 
         let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
@@ -1996,7 +2085,7 @@ RSpec.describe 'Domains Request' do
             Hash.new(
               code: 200,
               response_object: private_domain_json
-            ).freeze
+            )
           end
 
           it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
@@ -2009,7 +2098,7 @@ RSpec.describe 'Domains Request' do
             Hash.new(
               code: 200,
               response_object: private_domain_json
-            ).freeze
+            )
           end
 
           it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
@@ -2093,7 +2182,7 @@ RSpec.describe 'Domains Request' do
 
         h['admin'] = { code: 200, response_object: domain_json }
 
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -2144,17 +2233,31 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
         h['admin'] = { code: 200, response_object: domain_json }
         h['org_manager'] = { code: 200, response_object: domain_json }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
 
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'updating an existing, shared private domain' do
@@ -2208,7 +2311,7 @@ RSpec.describe 'Domains Request' do
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
 
-        h.freeze
+        h
       end
 
       before do

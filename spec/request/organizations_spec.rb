@@ -575,7 +575,7 @@ module VCAP::CloudController
               code: 404,
               response_objects: []
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -594,7 +594,7 @@ module VCAP::CloudController
             h['no_role'] = {
               code: 404,
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -613,7 +613,7 @@ module VCAP::CloudController
             h['no_role'] = {
               code: 404,
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -636,7 +636,7 @@ module VCAP::CloudController
             h['no_role'] = {
               code: 404,
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -852,7 +852,7 @@ module VCAP::CloudController
             response_object: domain_json
           )
           h['no_role'] = { code: 404 }
-          h.freeze
+          h
         end
 
         let(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: organization1.guid) }
@@ -871,7 +871,7 @@ module VCAP::CloudController
             )
             h['org_billing_manager'] = { code: 404 }
             h['no_role'] = { code: 404 }
-            h.freeze
+            h
           end
 
           let(:domain_json) do
@@ -951,7 +951,7 @@ module VCAP::CloudController
           h = Hash.new(
             code: 404,
           )
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -964,7 +964,7 @@ module VCAP::CloudController
           h = Hash.new(
             code: 404,
           )
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -975,7 +975,7 @@ module VCAP::CloudController
           h = Hash.new(
             code: 404,
           )
-          h.freeze
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1015,7 +1015,7 @@ module VCAP::CloudController
           response_object: org_summary_json
         )
         h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1042,42 +1042,64 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
-      let(:update_request) do
-        {
-          data: { guid: isolation_segment.guid }
-        }.to_json
-      end
-      let(:assigner) { IsolationSegmentAssign.new }
+      context 'as admin' do
+        let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
+        let(:update_request) do
+          {
+            data: { guid: isolation_segment.guid }
+          }.to_json
+        end
+        let(:assigner) { IsolationSegmentAssign.new }
 
-      before do
-        set_current_user(user, { admin: true })
-        allow_user_read_access_for(user, orgs: [organization1])
-        assigner.assign(isolation_segment, [organization1])
-      end
+        before do
+          set_current_user(user, { admin: true })
+          allow_user_read_access_for(user, orgs: [organization1])
+          assigner.assign(isolation_segment, [organization1])
+        end
 
-      it 'updates the default isolation segment for the organization' do
-        expect(organization1.default_isolation_segment_guid).to be_nil
+        it 'updates the default isolation segment for the organization' do
+          expect(organization1.default_isolation_segment_guid).to be_nil
 
-        patch "/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+          patch "/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment", update_request,
+                admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
 
-        expected_response = {
-          'data' => {
-            'guid' => isolation_segment.guid
-          },
-          'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
-            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+          expected_response = {
+            'data' => {
+              'guid' => isolation_segment.guid
+            },
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+              'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+            }
           }
-        }
 
-        parsed_response = MultiJson.load(last_response.body)
+          parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
 
-        organization1.reload
-        expect(organization1.default_isolation_segment_guid).to eq(isolation_segment.guid)
+          organization1.reload
+          expect(organization1.default_isolation_segment_guid).to eq(isolation_segment.guid)
+        end
+      end
+
+      context 'when organization is suspended' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+        let(:api_call) { lambda { |user_headers| patch "/v3/organizations/#{org.guid}/relationships/default_isolation_segment", nil, user_headers } }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h['admin'] = { code: 200 }
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1112,7 +1134,7 @@ module VCAP::CloudController
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when the org is suspended' do
+      context 'when organization is suspended' do
         before do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
           expected_response_object['suspended'] = true
@@ -1123,123 +1145,29 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organizations/:guid' do
-      before do
-        set_current_user(user, { admin: true })
-        allow_user_read_access_for(user, orgs: [organization1])
-      end
-
-      it 'updates the name for the organization' do
-        update_request = {
-          name: 'New Name World',
-          metadata: {
-            labels: {
-              freaky: 'thursday'
-            },
-            annotations: {
-              quality: 'p sus'
-            }
-          },
-        }.to_json
-
-        patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
-
-        expected_response = {
-          'name' => 'New Name World',
-          'guid' => organization1.guid,
-          'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
-          'links' => {
-            'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
-            'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
-            'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
-          },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'metadata' => {
-            'labels' => { 'freaky' => 'thursday' },
-            'annotations' => { 'quality' => 'p sus' }
-          },
-          'suspended' => false
-        }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        organization1.reload
-        expect(organization1.name).to eq('New Name World')
-      end
-
-      context 'when the new name is already taken' do
+      context 'as admin' do
         before do
-          Organization.make(name: 'new-name')
+          set_current_user(user, { admin: true })
+          allow_user_read_access_for(user, orgs: [organization1])
         end
 
-        it 'returns a 422 with a helpful error message' do
-          update_request = { name: 'new-name' }.to_json
-
-          expect {
-            patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
-          }.not_to change { organization1.reload.name }
-
-          expect(last_response.status).to eq(422)
-          expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
-        end
-      end
-
-      it 'updates the suspended field for the organization' do
-        update_request = {
-          name: 'New Name World',
-          suspended: true,
-        }.to_json
-
-        patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
-
-        expected_response = {
-          'name' => 'New Name World',
-          'guid' => organization1.guid,
-          'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
-          'links' => {
-            'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
-            'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
-            'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
-          },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'suspended' => true
-        }
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        organization1.reload
-        expect(organization1.name).to eq('New Name World')
-        expect(organization1).to be_suspended
-      end
-
-      context 'deleting labels' do
-        let!(:org1Fruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: organization1) }
-        let!(:org1Animal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: organization1) }
-        let(:update_request) do
-          {
+        it 'updates the name for the organization' do
+          update_request = {
+            name: 'New Name World',
             metadata: {
               labels: {
-                fruit: nil
+                freaky: 'thursday'
+              },
+              annotations: {
+                quality: 'p sus'
               }
             },
           }.to_json
-        end
 
-        it 'updates the label metadata' do
           patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
 
           expected_response = {
-            'name' => organization1.name,
+            'name' => 'New Name World',
             'guid' => organization1.guid,
             'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
             'links' => {
@@ -1251,8 +1179,8 @@ module VCAP::CloudController
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => {
-              'labels' => { 'animal' => 'horse' },
-              'annotations' => {}
+              'labels' => { 'freaky' => 'thursday' },
+              'annotations' => { 'quality' => 'p sus' }
             },
             'suspended' => false
           }
@@ -1261,7 +1189,122 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
+
+          organization1.reload
+          expect(organization1.name).to eq('New Name World')
         end
+
+        context 'when the new name is already taken' do
+          before do
+            Organization.make(name: 'new-name')
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            update_request = { name: 'new-name' }.to_json
+
+            expect {
+              patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+            }.not_to change { organization1.reload.name }
+
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
+          end
+        end
+
+        it 'updates the suspended field for the organization' do
+          update_request = {
+            name: 'New Name World',
+            suspended: true,
+          }.to_json
+
+          patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+          expected_response = {
+            'name' => 'New Name World',
+            'guid' => organization1.guid,
+            'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
+            'links' => {
+              'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
+              'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
+              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+              'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
+            },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'suspended' => true
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
+
+          organization1.reload
+          expect(organization1.name).to eq('New Name World')
+          expect(organization1).to be_suspended
+        end
+
+        context 'deleting labels' do
+          let!(:org1Fruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: organization1) }
+          let!(:org1Animal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: organization1) }
+          let(:update_request) do
+            {
+              metadata: {
+                labels: {
+                  fruit: nil
+                }
+              },
+            }.to_json
+          end
+
+          it 'updates the label metadata' do
+            patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+            expected_response = {
+              'name' => organization1.name,
+              'guid' => organization1.guid,
+              'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
+              'links' => {
+                'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
+                'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
+                'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+                'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'metadata' => {
+                'labels' => { 'animal' => 'horse' },
+                'annotations' => {}
+              },
+              'suspended' => false
+            }
+
+            parsed_response = MultiJson.load(last_response.body)
+
+            expect(last_response.status).to eq(200)
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
+        end
+      end
+
+      context 'when organization is suspended' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+        let(:api_call) { lambda { |user_headers| patch "/v3/organizations/#{org.guid}", nil, user_headers } }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h['admin'] = { code: 200 }
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -1572,7 +1615,7 @@ module VCAP::CloudController
             }
           end
 
-          h.freeze
+          h
         end
 
         before do

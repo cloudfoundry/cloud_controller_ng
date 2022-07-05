@@ -70,6 +70,7 @@ RSpec.describe 'Sidecars' do
         expect(last_response.status).to eq(201), last_response.body
       end
     end
+
     describe 'deleting an app with a sidecar' do
       it 'deletes the sidecar' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
@@ -125,6 +126,40 @@ RSpec.describe 'Sidecars' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
         expect(last_response.status).to eq(422)
         expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
+      end
+    end
+
+    context 'permissions' do
+      let(:org) { app_model.space.organization }
+      let(:space) { app_model.space }
+      let(:api_call) { lambda { |user_headers| post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_headers } }
+
+      before do
+        space.remove_developer(user)
+        org.remove_user(user)
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 201 } }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
@@ -289,6 +324,40 @@ RSpec.describe 'Sidecars' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
         expect(last_response.status).to eq(422)
         expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
+      end
+    end
+
+    context 'permissions' do
+      let(:org) { app_model.space.organization }
+      let(:space) { app_model.space }
+      let(:api_call) { lambda { |user_headers| patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_headers } }
+
+      before do
+        space.remove_developer(user)
+        org.remove_user(user)
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200 } }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
@@ -667,7 +736,7 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'DELETE /v3/sidecars/:guid' do
-    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
     let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
     let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
@@ -680,6 +749,40 @@ RSpec.describe 'Sidecars' do
       delete "/v3/sidecars/#{sidecar.guid}", nil, user_header
       expect(last_response.status).to eq(204), last_response.body
       expect(app_model.reload.sidecars.size).to eq(0)
+    end
+
+    context 'permissions' do
+      let(:org) { app_model.space.organization }
+      let(:space) { app_model.space }
+      let(:api_call) { lambda { |user_headers| delete "/v3/sidecars/#{sidecar.guid}", nil, user_headers } }
+
+      before do
+        space.remove_developer(user)
+        org.remove_user(user)
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 204 } }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
   end
 end

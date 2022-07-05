@@ -19,38 +19,6 @@ RSpec.describe ApplicationController, type: :controller do
       head 201
     end
 
-    def read_access
-      render status: 200, json: can_read_from_space?(params[:space_guid], params[:org_guid])
-    end
-
-    def write_to_org_access
-      render status: 200, json: can_write_to_org?(params[:org_guid])
-    end
-
-    def read_from_org_access
-      render status: 200, json: can_read_from_org?(params[:org_guid])
-    end
-
-    def secret_access
-      render status: 200, json: can_read_secrets_in_space?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
-    end
-
-    def write_globally_access
-      render status: 200, json: can_write_globally?
-    end
-
-    def read_globally_access
-      render status: 200, json: can_read_globally?
-    end
-
-    def isolation_segment_read_access
-      render status: 200, json: can_read_from_isolation_segment?(VCAP::CloudController::IsolationSegmentModel.find(guid: params[:iso_seg]))
-    end
-
-    def write_access
-      render status: 200, json: can_write_to_space?(params[:space_guid])
-    end
-
     def api_explode
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
     end
@@ -68,10 +36,6 @@ RSpec.describe ApplicationController, type: :controller do
 
     def not_found
       raise CloudController::Errors::NotFound.new_from_details('NotFound')
-    end
-
-    def yaml_rejection
-      render status: 200, body: params[:body]
     end
 
     def warnings_is_nil

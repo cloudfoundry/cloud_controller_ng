@@ -479,7 +479,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    describe 'permissions' do
+    context 'permissions' do
       let(:update_request_body) {
         {
           authentication: {
@@ -523,11 +523,10 @@ RSpec.describe 'V3 service brokers' do
             space: space
           )
         end
+        let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
-
-          let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint }
+          let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 202) }
 
           let(:expected_events) do
             ->(email) do
@@ -538,10 +537,7 @@ RSpec.describe 'V3 service brokers' do
           end
         end
 
-        it_behaves_like 'permissions for update endpoint when organization is suspended', 202 do
-          let(:expected_codes) { responses_for_org_suspended_space_restricted_update_endpoint }
-          let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
-        end
+        it_behaves_like 'permissions for update endpoint when organization is suspended', 202
       end
     end
 
@@ -1083,18 +1079,7 @@ RSpec.describe 'V3 service brokers' do
           }
         }
       end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
-
-        let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint }
-
-        let(:after_request_check) do
-          lambda do
-            assert_broker_state(space_scoped_service_broker)
-          end
-        end
-      end
+      let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
       context 'when feature flag space_scoped_private_broker_creation is disabled' do
         before do
@@ -1129,9 +1114,18 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
-      it_behaves_like 'permissions for create endpoint when organization is suspended', 202 do
-        let(:expected_codes) {}
-        let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
+      context 'permissions' do
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+          let(:expected_codes_and_responses) { responses_for_space_restricted_create_endpoint(success_code: 202) }
+
+          let(:after_request_check) do
+            lambda do
+              assert_broker_state(space_scoped_service_broker)
+            end
+          end
+        end
+
+        it_behaves_like 'permissions for create endpoint when organization is suspended', 202
       end
     end
 
@@ -1470,29 +1464,29 @@ RSpec.describe 'V3 service brokers' do
         end
       }
 
-      context 'global broker' do
-        let(:broker) { global_broker }
+      context 'permissions' do
+        context 'global broker' do
+          let(:broker) { global_broker }
 
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) {
-            Hash.new(code: 404).tap do |h|
-              h['admin'] = { code: 202 }
-              h['admin_read_only'] = { code: 403 }
-              h['global_auditor'] = { code: 403 }
-            end
-          }
-        end
-      end
-
-      context 'space-scoped broker' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
-
-        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) {
+              Hash.new(code: 404).tap do |h|
+                h['admin'] = { code: 202 }
+                h['admin_read_only'] = { code: 403 }
+                h['global_auditor'] = { code: 403 }
+              end
+            }
+          end
         end
 
-        it_behaves_like 'permissions for delete endpoint when organization is suspended', 202 do
-          let(:expected_codes) {}
+        context 'space-scoped broker' do
+          let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
+
+          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+            let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
+          end
+
+          it_behaves_like 'permissions for delete endpoint when organization is suspended', 202
         end
       end
 

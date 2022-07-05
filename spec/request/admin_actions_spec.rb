@@ -17,7 +17,7 @@ RSpec.describe 'admin actions' do
       h['admin'] = {
         code: 202,
       }
-      h.freeze
+      h
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do

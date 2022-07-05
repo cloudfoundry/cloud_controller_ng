@@ -292,7 +292,7 @@ RSpec.describe 'Tasks' do
           code: 200,
           response_objects: []
         }
-        h.freeze
+        h
       end
     end
 
@@ -448,7 +448,7 @@ RSpec.describe 'Tasks' do
         h = Hash.new(code: 200, response_object: expected_response)
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response_with_command }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
     end
   end
@@ -562,90 +562,112 @@ RSpec.describe 'Tasks' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+    context 'permissions' do
+      let(:api_call) { lambda { |headers| patch "/v3/tasks/#{task_guid}", request_body, headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200 } }
+        h
+      end
+
       before do
         space.remove_developer(user)
       end
 
-      let(:api_call) { lambda { |headers| patch "/v3/tasks/#{task_guid}", request_body, headers } }
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      let(:expected_codes_and_responses) {
-        h = Hash.new(code: 404)
-        h['space_supporter'] = { code: 403 }
-        h['space_manager'] = { code: 403 }
-        h['org_manager'] = { code: 403 }
-        h['global_auditor'] = { code: 403 }
-        h['space_auditor'] = { code: 403 }
-        h['admin_read_only'] = { code: 403 }
-        h['space_developer'] = { code: 200 }
-        h['admin'] = { code: 200 }
-        h
-      }
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
   end
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
     let(:task) { VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid }
+    let(:api_call) { lambda { |user_headers| post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
+    let(:expected_response) do
+      {
+        guid: task.guid,
+        sequence_id: task.sequence_id,
+        name: 'task',
+        command: 'echo task',
+        state: 'CANCELING',
+        memory_in_mb: 256,
+        disk_in_mb: nil,
+        result: {
+          failure_reason: nil
+        },
+        droplet_guid: task.droplet.guid,
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          app: {
+            data: {
+              guid: app_model.guid
+            }
+          }
+        },
+        links: {
+          self: {
+            href: %r(#{link_prefix}/v3/tasks/#{task.guid})
+          },
+          app: {
+            href: "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          cancel: {
+            href: %r(#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel),
+            method: 'POST'
+          },
+          droplet: {
+            href: %r(#{link_prefix}/v3/droplets/#{task.droplet.guid})
+          }
+        }
+      }
+    end
+    let(:expected_codes_and_responses) do
+      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
+      h['admin'] = h['space_developer'] = h['space_supporter'] = {
+        code: 202,
+        response_object: expected_response
+      }
+      h
+    end
 
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
       allow(bbs_task_client).to receive(:cancel_task)
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
-      let(:expected_response) do
-        {
-          guid: task.guid,
-          sequence_id: task.sequence_id,
-          name: 'task',
-          command: 'echo task',
-          state: 'CANCELING',
-          memory_in_mb: 256,
-          disk_in_mb: nil,
-          result: {
-            failure_reason: nil
-          },
-          droplet_guid: task.droplet.guid,
-          metadata: {
-            labels: {},
-            annotations: {}
-          },
-          created_at: iso8601,
-          updated_at: iso8601,
-          relationships: {
-            app: {
-              data: {
-                guid: app_model.guid
-              }
-            }
-          },
-          links: {
-            self: {
-              href: %r(#{link_prefix}/v3/tasks/#{task.guid})
-            },
-            app: {
-              href: "#{link_prefix}/v3/apps/#{app_model.guid}"
-            },
-            cancel: {
-              href: %r(#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel),
-              method: 'POST'
-            },
-            droplet: {
-              href: %r(#{link_prefix}/v3/droplets/#{task.droplet.guid})
-            }
-          }
-        }
-      end
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when organization is suspended' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h['admin'] = h['space_developer'] = h['space_supporter'] = {
-          code: 202,
-          response_object: expected_response
-        }
-        h.freeze
+        h = super()
+        %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+        h
       end
+
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -856,7 +878,7 @@ RSpec.describe 'Tasks' do
         h = Hash.new(code: 200, response_objects: expected_response)
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_objects: expected_response_with_command }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
-        h.freeze
+        h
       end
     end
 
@@ -1163,6 +1185,36 @@ RSpec.describe 'Tasks' do
 
           expect(last_response.status).to eq(202)
         end
+      end
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |headers| post "/v3/apps/#{app_model.guid}/tasks", body.to_json, headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 202 } }
+        h
+      end
+
+      before do
+        space.remove_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end

@@ -66,7 +66,7 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -134,6 +134,20 @@ RSpec.describe 'Roles Request' do
         end
       end
 
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when role already exists' do
         before do
           org.add_user(user_with_role)
@@ -191,7 +205,7 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -229,6 +243,20 @@ RSpec.describe 'Roles Request' do
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Invalid organization. Ensure that the organization exists and you have access to it.')
         end
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when role already exists' do
@@ -1551,7 +1579,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 202 }
         h['space_manager'] = { code: 202 }
         h['org_manager'] = { code: 202 }
@@ -1562,13 +1590,27 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when deleting an org role' do
       let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 202 }
         h['org_manager'] = { code: 202 }
         h['no_role'] = { code: 404 }
@@ -1576,6 +1618,20 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
       context 'and the user still has a role in a space within that org' do
         let(:org_user_role) { VCAP::CloudController::OrganizationUser.find(user_id: user_with_role.id) }

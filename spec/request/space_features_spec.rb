@@ -26,10 +26,7 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(
-        space_features_json,
-        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-      )
+      responses_for_space_restricted_single_endpoint(space_features_json)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -49,10 +46,7 @@ RSpec.describe 'Space Features' do
     end
 
     let(:expected_codes_and_responses) do
-      responses_for_space_restricted_single_endpoint(
-        space_ssh_feature_json,
-        permitted_roles: SpaceRestrictedResponseGenerators.default_permitted_roles
-      )
+      responses_for_space_restricted_single_endpoint(space_ssh_feature_json)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -77,18 +71,34 @@ RSpec.describe 'Space Features' do
       }
     end
 
-    let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403)
-      h['admin'] = { code: 200, response_object: space_ssh_feature_json }
-      h['space_manager'] = { code: 200, response_object: space_ssh_feature_json }
-      h['org_manager'] = { code: 200, response_object: space_ssh_feature_json }
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
-      h['no_role'] = { code: 404 }
-      h
-    end
+    context 'permissions' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['admin'] = { code: 200, response_object: space_ssh_feature_json }
+        h['space_manager'] = { code: 200, response_object: space_ssh_feature_json }
+        h['org_manager'] = { code: 200, response_object: space_ssh_feature_json }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
 
     context 'when the space does not exist' do
       let(:fake_space_guid) { 'grapefruit' }

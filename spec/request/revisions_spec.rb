@@ -510,6 +510,37 @@ RSpec.describe 'Revisions' do
         }
       )
     end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/revisions/#{revision.guid}", update_request, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200 } }
+        h
+      end
+
+      before do
+        space.remove_developer(user)
+        space.organization.remove_user(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
   end
 
   describe 'GET /v3/revision/:revguid/environment_variables' do

@@ -121,24 +121,38 @@ RSpec.describe 'Space Manifests' do
     end
 
     context 'permissions' do
+      let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
+      let(:org) { space.organization }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = { code: 202 }
+        h['space_developer'] = { code: 202 }
+
+        h
+      end
+
       before do
         space.remove_developer(user)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
-        let(:org) { space.organization }
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
-          h['org_auditor'] = { code: 404 }
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
-
-          h['admin'] = { code: 202 }
-          h['space_developer'] = { code: 202 }
-
-          h.freeze
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
         end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -522,9 +536,6 @@ RSpec.describe 'Space Manifests' do
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
-    let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
-
-    let(:org) { space.organization }
     let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
     let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app1_model, type: 'worker', memory: 2048, disk_quota: 2048) }
@@ -559,25 +570,6 @@ RSpec.describe 'Space Manifests' do
           },
         ]
       }
-    end
-
-    let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403)
-      h['org_auditor'] = { code: 404 }
-      h['org_billing_manager'] = { code: 404 }
-      h['no_role'] = { code: 404 }
-
-      h['admin'] = {
-        code: 201,
-        response_object: diff_json
-      }
-
-      h['space_developer'] = {
-        code: 201,
-        response_object: diff_json
-      }
-
-      h.freeze
     end
 
     context 'when a v2 manifest has a change to the web process' do
@@ -657,7 +649,42 @@ RSpec.describe 'Space Manifests' do
         default_manifest.to_yaml
       end
 
+      let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+      let(:org) { space.organization }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = {
+          code: 201,
+          response_object: diff_json
+        }
+
+        h['space_developer'] = {
+          code: 201,
+          response_object: diff_json
+        }
+
+        h
+      end
+
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the app name has changed' do

@@ -1200,7 +1200,7 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1279,7 +1279,7 @@ RSpec.describe 'Routes Request' do
                 code: 201,
                 response_object: route_json
               }
-              h.freeze
+              h
             end
 
             let(:expected_event_hash) do
@@ -1363,7 +1363,7 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1461,7 +1461,7 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1532,7 +1532,7 @@ RSpec.describe 'Routes Request' do
             h['space_supporter'] = {
               code: 422,
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1619,7 +1619,7 @@ RSpec.describe 'Routes Request' do
             code: 201,
             response_object: route_json
           }
-          h.freeze
+          h
         end
 
         context 'and the user provides a valid port' do
@@ -1690,7 +1690,7 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    context 'when creating a route in an suspended org' do
+    context 'when creating a route in a suspended org' do
       before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
@@ -1747,14 +1747,13 @@ RSpec.describe 'Routes Request' do
         let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = {
             code: 201,
             response_object: route_json
           }
-          h.freeze
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1875,7 +1874,7 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
-            h.freeze
+            h
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -2105,7 +2104,7 @@ RSpec.describe 'Routes Request' do
           code: 201,
           response_object: route_json
         }
-        h.freeze
+        h
       end
 
       before do
@@ -2406,10 +2405,7 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user logged in' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 200, response_object: route_json }
         h['no_role'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2419,6 +2415,20 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user is not a member in the routes org' do
@@ -2557,11 +2567,9 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
-
         h['admin'] = { code: 202 }
         h['space_developer'] = { code: 202 }
         h['space_supporter'] = { code: 202 }
@@ -2580,6 +2588,20 @@ RSpec.describe 'Routes Request' do
             organization_guid: org.guid,
           }
         end
+      end
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -2700,46 +2722,49 @@ RSpec.describe 'Routes Request' do
     end
 
     describe 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
 
-          h['admin'] = { code: 200 }
-          h['space_developer'] = { code: 200 }
-          h['space_supporter'] = { code: 200 }
-          h
-        end
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h
       end
 
-      context 'sharing to a suspended org' do
-        let(:target_space_1) do
-          space = VCAP::CloudController::Space.make
-          space.organization.add_user(user)
-          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
-          space.organization.save
-          space
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
         end
 
         before do
-          target_space_1.add_developer(user)
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-            h['space_developer'] = { code: 422 }
-            h['space_supporter'] = { code: 422 }
-
-            h['admin'] = { code: 200 }
-            h
-          end
+      context 'when target organization is suspended' do
+        let(:target_space_1) do
+          space = VCAP::CloudController::Space.make
+          space.organization.add_user(user)
+          space.organization.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          space
         end
+
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 422 } }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -2982,46 +3007,50 @@ RSpec.describe 'Routes Request' do
     end
 
     describe 'permissions' do
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
 
-          h['org_billing_manager'] = { code: 404 }
-          h['no_role'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
 
-          h['admin'] = { code: 204 }
-          h['space_developer'] = { code: 204 }
-          h['space_supporter'] = { code: 204 }
-          h
-        end
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_supporter'] = { code: 204 }
+        h
       end
 
-      context 'removing from a suspended org' do
-        let(:space_to_unshare) do
-          space = VCAP::CloudController::Space.make
-          space.organization.add_user(user)
-          space.organization.status = VCAP::CloudController::Organization::SUSPENDED
-          space.organization.save
-          space
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
         end
 
         before do
-          space_to_unshare.add_developer(user)
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-          let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
-            h['org_billing_manager'] = { code: 404 }
-            h['no_role'] = { code: 404 }
-            h['space_developer'] = { code: 422 }
-            h['space_supporter'] = { code: 422 }
-
-            h['admin'] = { code: 204 }
-            h
-          end
+      context 'when target organization is suspended' do
+        let(:space_to_unshare) do
+          space = VCAP::CloudController::Space.make
+          space.organization.add_user(user)
+          space.add_developer(user)
+          space.organization.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          space
         end
+
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 422 } }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 

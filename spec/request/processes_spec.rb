@@ -664,7 +664,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { lambda { |user_headers| patch "/v3/processes/#{process.guid}", update_request, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 200, response_object: expected_response }
         h['space_developer'] = { code: 200, response_object: expected_response }
         h['space_supporter'] = { code: 200, response_object: expected_response }
@@ -675,6 +675,20 @@ RSpec.describe 'Processes' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     it 'updates the process' do
@@ -738,6 +752,14 @@ RSpec.describe 'Processes' do
       )
     end
 
+    let(:scale_request) do
+      {
+        instances:    5,
+        memory_in_mb: 10,
+        disk_in_mb:   20,
+      }
+    end
+
     let(:expected_response) do
       {
         'guid'         => process.guid,
@@ -772,12 +794,6 @@ RSpec.describe 'Processes' do
     end
 
     it 'scales the process' do
-      scale_request = {
-        instances:    5,
-        memory_in_mb: 10,
-        disk_in_mb:   20,
-      }
-
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
@@ -813,6 +829,37 @@ RSpec.describe 'Processes' do
           'disk_in_mb'   => 20
         }
       })
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['admin'] = { code: 202, response_object: expected_response }
+        h['space_developer'] = { code: 202, response_object: expected_response }
+        h['space_supporter'] = { code: 202, response_object: expected_response }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user is assigned the space_supporter role' do
@@ -958,7 +1005,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { lambda { |user_headers| delete "/v3/processes/#{process.guid}/instances/0", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
         h['space_supporter'] = { code: 204 }
@@ -969,6 +1016,20 @@ RSpec.describe 'Processes' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
   end
 
