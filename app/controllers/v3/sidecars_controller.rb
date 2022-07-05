@@ -49,7 +49,8 @@ class SidecarsController < ApplicationController
   def create
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     message = SidecarCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -79,7 +80,8 @@ class SidecarsController < ApplicationController
     resource_not_found!(:sidecar) unless sidecar
     space = sidecar.app.space
     resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     message = SidecarUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -96,7 +98,8 @@ class SidecarsController < ApplicationController
     resource_not_found!(:sidecar) unless sidecar
     space = sidecar.app.space
     resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     SidecarDelete.delete(sidecar)
     head :no_content

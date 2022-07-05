@@ -81,8 +81,9 @@ class ServiceInstancesV3Controller < ApplicationController
     message = build_create_message(hashed_params[:body])
 
     space = Space.first(guid: message.space_guid)
-    unprocessable_space! unless space && can_read_space?(space)
-    unauthorized! unless can_write_space?(space)
+    unprocessable_space! unless space && can_read_from_space?(space)
+    unauthorized! unless can_write_to_active_space?(space)
+    suspended! unless is_space_active?(space)
 
     case message.type
     when 'user-provided'
@@ -130,7 +131,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless can_write_space?(service_instance.space)
+    unauthorized! unless can_write_to_active_space?(service_instance.space)
+    suspended! unless is_space_active?(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -151,7 +153,8 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless can_write_space?(service_instance.space)
+    unauthorized! unless can_write_to_active_space?(service_instance.space)
+    suspended! unless is_space_active?(service_instance.space)
 
     space_guid = hashed_params[:space_guid]
     target_space = Space.first(guid: space_guid)
@@ -170,7 +173,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def relationships_shared_spaces
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_from_space?(service_instance.space)
 
     message = SharedSpacesShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -186,7 +189,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def shared_spaces_usage_summary
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance.present? && can_read_space?(service_instance.space)
+    service_instance_not_found! unless service_instance.present? && can_read_from_space?(service_instance.space)
 
     render status: :ok, json: Presenters::V3::SharedSpacesUsageSummaryPresenter.new(service_instance)
   end
@@ -202,7 +205,7 @@ class ServiceInstancesV3Controller < ApplicationController
   def parameters
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless can_read_space?(service_instance.space)
+    unauthorized! unless can_read_from_space?(service_instance.space)
 
     service_instance_not_found! if service_instance.managed_instance? && service_instance.create_failed?
 
@@ -296,8 +299,8 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
-    unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
-    unwriteable_spaces = found_spaces.reject { |s| can_write_space?(s) || unreadable_spaces.include?(s) }
+    unreadable_spaces = found_spaces.reject { |s| can_read_from_space?(s) }
+    unwriteable_spaces = found_spaces.reject { |s| can_write_to_active_space?(s) && is_space_active?(s) || unreadable_spaces.include?(s) }
 
     not_found_space_guids = request_guids - found_spaces.map(&:guid)
     unreadable_space_guids = not_found_space_guids + unreadable_spaces.map(&:guid)
@@ -330,7 +333,9 @@ class ServiceInstancesV3Controller < ApplicationController
   def fetch_writable_service_instance(guid)
     service_instance = ServiceInstance.first(guid: guid)
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless can_write_space?(service_instance.space)
+    unauthorized! unless can_write_to_active_space?(service_instance.space)
+    suspended! unless is_space_active?(service_instance.space)
+
     service_instance
   end
 
@@ -365,12 +370,16 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   end
 
-  def can_read_space?(space)
+  def can_read_from_space?(space)
     permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
   end
 
-  def can_write_space?(space)
-    permission_queryer.can_write_to_space?(space.guid)
+  def can_write_to_active_space?(space)
+    permission_queryer.can_write_to_active_space?(space.guid)
+  end
+
+  def is_space_active?(space)
+    permission_queryer.is_space_active?(space.guid)
   end
 
   def admin?

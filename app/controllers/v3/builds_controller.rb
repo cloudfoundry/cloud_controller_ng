@@ -33,7 +33,8 @@ class BuildsController < ApplicationController
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).first
     unprocessable_package! unless package &&
-      permission_queryer.can_manage_apps_in_space?(package.space.guid)
+      permission_queryer.can_manage_apps_in_active_space?(package.space.guid) &&
+      permission_queryer.is_space_active?(package.space.guid)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 
@@ -81,7 +82,8 @@ class BuildsController < ApplicationController
     if hashed_params[:body].key?(:state)
       unauthorized! unless permission_queryer.can_update_build_state?
     else
-      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+      suspended! unless permission_queryer.is_space_active?(space.guid)
     end
 
     build = BuildUpdate.new.update(build, create_valid_update_message)

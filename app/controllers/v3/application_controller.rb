@@ -22,6 +22,10 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
 
+  def suspended!
+    raise CloudController::Errors::ApiError.new_from_details('OrgSuspended')
+  end
+
   def resource_not_found_with_message!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end

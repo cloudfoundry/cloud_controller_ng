@@ -155,7 +155,7 @@ module VCAP::CloudController
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -458,7 +458,7 @@ module VCAP::CloudController
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -757,7 +757,7 @@ module VCAP::CloudController
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -830,7 +830,7 @@ module VCAP::CloudController
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -901,7 +901,7 @@ module VCAP::CloudController
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 

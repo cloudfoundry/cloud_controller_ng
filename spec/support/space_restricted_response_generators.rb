@@ -39,6 +39,14 @@ module SpaceRestrictedResponseGenerators
     }]
   end
 
+  def self.suspended_response
+    [{
+      'detail' => 'The organization is suspended',
+      'title' => 'CF-OrgSuspended',
+      'code' => 10017,
+    }]
+  end
+
   def responses_for_space_restricted_single_endpoint(response_object, permitted_roles: nil)
     permitted_roles ||= SpaceRestrictedResponseGenerators.default_permitted_roles
 
@@ -84,7 +92,7 @@ module SpaceRestrictedResponseGenerators
         h[role] = { code: success_code }
       end
       suspended_roles.each do |role|
-        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.suspended_response }
       end
       %w[no_role org_auditor org_billing_manager].each do |role|
         h[role] = { code: 422 } # TODO: status code 422 for 'no_role' is not correct for all endpoints
@@ -101,7 +109,7 @@ module SpaceRestrictedResponseGenerators
         h[role] = { code: success_code }
       end
       suspended_roles.each do |role|
-        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.suspended_response }
       end
       %w[no_role org_auditor org_billing_manager].each do |role|
         h[role] = { code: 404 }
@@ -118,7 +126,7 @@ module SpaceRestrictedResponseGenerators
         h[role] = { code: success_code }
       end
       suspended_roles.each do |role|
-        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }
+        h[role] = { code: 403, errors: SpaceRestrictedResponseGenerators.suspended_response }
       end
       %w[no_role org_auditor org_billing_manager].each do |role|
         h[role] = { code: 404 }

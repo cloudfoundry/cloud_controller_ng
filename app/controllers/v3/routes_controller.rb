@@ -71,7 +71,8 @@ class RoutesController < ApplicationController
 
     unprocessable_space! unless space
     unprocessable_domain! unless domain
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
     route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
@@ -91,7 +92,8 @@ class RoutesController < ApplicationController
     message = RouteUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
 
@@ -102,7 +104,8 @@ class RoutesController < ApplicationController
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     delete_action = RouteDeleteAction.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Route, route.guid, delete_action)
@@ -114,7 +117,8 @@ class RoutesController < ApplicationController
   def share_routes
     FeatureFlag.raise_unless_enabled!(:route_sharing)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -133,16 +137,20 @@ class RoutesController < ApplicationController
 
   def unshare_route
     FeatureFlag.raise_unless_enabled!(:route_sharing)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     space_guid = hashed_params[:space_guid]
 
     target_space = Space.first(guid: space_guid)
     resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(space_guid, target_space.organization.guid)
 
-    if permission_queryer.can_manage_apps_in_space?(target_space.guid) == false
-      unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. Ensure that the space and its containing org are not suspended.")
-    end
+    target_space_error = if !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
+                           "You don't have write permission for the target space."
+                         elsif !permission_queryer.is_space_active?(target_space.guid)
+                           'The target organization is suspended.'
+                         end
+    unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. #{target_space_error}") unless target_space_error.nil?
 
     unshare = RouteUnshare.new
     unshare.unshare(route, target_space, user_audit_info)
@@ -174,7 +182,8 @@ class RoutesController < ApplicationController
     message = RouteUpdateDestinationsMessage.new(hashed_params[:body])
 
     unprocessable!(message.errors.full_messages) unless message.valid?
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     UpdateRouteDestinations.add(message.destinations_array, route, apps_hash(message), user_audit_info)
 
@@ -187,7 +196,8 @@ class RoutesController < ApplicationController
     message = RouteUpdateDestinationsMessage.new(hashed_params[:body], replace: true)
 
     unprocessable!(message.errors.full_messages) unless message.valid?
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash(message), user_audit_info)
 
@@ -202,7 +212,8 @@ class RoutesController < ApplicationController
 
     route = Route.find(guid: hashed_params[:guid])
     route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
     unprocessable_destination! unless destination
@@ -236,7 +247,8 @@ class RoutesController < ApplicationController
   def destroy_destination
     route = Route.find(guid: hashed_params[:guid])
     route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(route.space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
     unprocessable_destination! unless destination
@@ -326,7 +338,7 @@ class RoutesController < ApplicationController
   end
 
   def can_write_space?(space)
-    permission_queryer.can_write_to_space?(space.guid)
+    permission_queryer.can_write_to_active_space?(space.guid) && permission_queryer.is_space_active?(space.guid)
   end
 
   def check_spaces_exist_and_are_writeable!(route, request_guids, found_spaces)
@@ -360,7 +372,7 @@ class RoutesController < ApplicationController
       unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
 
       "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. "\
-      'Write permission is required in order to share a route with a space.'
+      'Write permission is required in order to share a route with a space and the containing organization must not be suspended.'
     end
   end
 end

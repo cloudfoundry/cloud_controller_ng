@@ -13,7 +13,7 @@ class SpaceManifestsController < ApplicationController
   def apply_manifest
     space = Space.find(guid: hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    can_write_space(space)
 
     messages = parsed_app_manifests.map { |app_manifest| AppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
@@ -45,7 +45,7 @@ class SpaceManifestsController < ApplicationController
   def diff_manifest
     space = Space.find(guid: hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    can_write_space(space)
 
     parsed_manifests = parsed_app_manifests.map(&:to_hash)
 
@@ -59,6 +59,11 @@ class SpaceManifestsController < ApplicationController
   end
 
   private
+
+  def can_write_space(space)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
+  end
 
   def errors_for_message(message, index)
     return [] if message.valid?
