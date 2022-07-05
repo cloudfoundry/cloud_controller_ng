@@ -46,14 +46,28 @@ RSpec.describe 'max log_rate_limit policies' do
         allow(org_or_space).to receive(:has_remaining_log_rate_limit).and_return(true)
       end
 
-      context 'when the org or space specifies a log quota' do
+      context 'when the org specifies a log quota' do
         before do
+          allow(org_or_space).to receive(:name).and_return('some-org')
           allow(org_or_space).to receive(:log_rate_limit).and_return(5000)
         end
 
         it 'is unhappy and adds an error' do
           validator.validate
-          expect(process.errors.on(:log_rate_limit)).to include(:app_requires_log_rate_limit_to_be_specified)
+          expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in organization 'some-org'.")
+        end
+      end
+
+      context 'when the space specifies a log quota' do
+        before do
+          allow(org_or_space).to receive(:name).and_return('some-space')
+          allow(org_or_space).to receive(:log_rate_limit).and_return(5000)
+          allow(org_or_space).to receive(:organization_guid).and_return('some-org-guid')
+        end
+
+        it 'is unhappy and adds an error' do
+          validator.validate
+          expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in space 'some-space'.")
         end
       end
 

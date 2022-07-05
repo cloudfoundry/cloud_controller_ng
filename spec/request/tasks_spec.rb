@@ -1120,7 +1120,8 @@ RSpec.describe 'Tasks' do
           it 'returns an error' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
             expect(last_response.status).to eq(422)
-            expect(last_response).to have_error_message('log_rate_limit app_requires_log_rate_limit_to_be_specified')
+            expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in organization '#{org.name}'.")
+            expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in space '#{space.name}'.")
           end
         end
 

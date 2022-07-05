@@ -468,7 +468,9 @@ module VCAP::CloudController
 
           it 'should raise an error when starting an app with unlimited log rate and a limited quota' do
             process.log_rate_limit = -1
-            expect { process.save }.to raise_error(/app_requires_log_rate_limit_to_be_specified/)
+            expect { process.save }.to raise_error(Sequel::ValidationFailed)
+            expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in organization '#{org.name}'.")
+            expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in space '#{space.name}'.")
           end
 
           it 'should not raise error when quota is not exceeded' do

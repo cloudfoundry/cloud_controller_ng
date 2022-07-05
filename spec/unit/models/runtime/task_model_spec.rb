@@ -354,7 +354,7 @@ module VCAP::CloudController
                   log_rate_limit: -1,
                   app: app,
                 )
-              }.to raise_error Sequel::ValidationFailed, 'log_rate_limit app_requires_log_rate_limit_to_be_specified'
+              }.to raise_error Sequel::ValidationFailed, "log_rate_limit cannot be unlimited in space '#{space.name}'."
             end
           end
 
