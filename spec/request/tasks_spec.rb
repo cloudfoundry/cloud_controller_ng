@@ -1066,7 +1066,6 @@ RSpec.describe 'Tasks' do
       })
     end
 
-
     describe 'log_rate_limit' do
       context 'when the request does not specify a log rate limit' do
         before do

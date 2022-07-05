@@ -554,7 +554,7 @@ RSpec.describe 'Processes' do
           'mem_quota'      => 1073741824,
           'disk_quota'     => 1073741824,
           'fds_quota'      => 16384,
-          'log_rate_limit'      => 1_048_576
+          'log_rate_limit' => 1_048_576
         }]
     }
     end
@@ -749,7 +749,7 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
-        log_rate_limit:  1_048_576,
+        log_rate_limit: 1_048_576,
         command:    'rackup',
       )
     end

@@ -63,7 +63,7 @@ module VCAP::CloudController
           let(:process) { ProcessModel.new }
           before do
             process.instances = 1
-            process.log_rate_limit    = 100
+            process.log_rate_limit = 100
           end
 
           it 'returns the total requested log_rate_limit' do
