@@ -1484,6 +1484,7 @@ RSpec.describe 'Processes' do
         disk_quota: 1024,
         log_rate_limit:  1_048_576,
         command:    'rackup',
+        state: 'STARTED',
       )
     end
 
@@ -1566,6 +1567,28 @@ RSpec.describe 'Processes' do
           'log_rate_limit_in_bps' => 40,
         }
       })
+    end
+
+    context 'when the log rate limit would be exceeded by adding additional instances' do
+      let(:scale_request) do
+        {
+          instances: 5
+        }
+      end
+
+      before do
+        org.update(quota_definition: VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 2_097_152))
+      end
+
+      it 'fails to scale the process' do
+        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'log_rate_limit exceeds organization log rate quota'
+
+        process.reload
+        expect(process.instances).to eq(2)
+      end
     end
 
     context 'when the user is assigned the space_supporter role' do

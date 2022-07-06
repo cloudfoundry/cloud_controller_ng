@@ -10,18 +10,18 @@ RSpec.describe 'max log_rate_limit policies' do
     context 'when the app specifies a log quota' do
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: 100, state: 'STOPPED') }
 
-      context 'when performing a scaling operation' do
+      context 'when the app is being started' do
         before do
           process.state = 'STARTED'
           process.log_rate_limit = 150
         end
 
-        it 'registers error when quota is exceeded' do
+        it 'registers an error when quota is exceeded' do
           expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(150).and_return(false)
           expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
         end
 
-        it 'does not register error when quota is not exceeded' do
+        it 'does not register an error when quota is not exceeded' do
           expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(150).and_return(true)
           expect(validator).to validate_without_error(process)
         end
@@ -33,10 +33,40 @@ RSpec.describe 'max log_rate_limit policies' do
         end
       end
 
-      context 'when not performing a scaling operation' do
-        it 'does not register error' do
-          process.state = 'STOPPED'
+      context 'when the app is already started' do
+        let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: 100, state: 'STARTED') }
+
+        it 'does not register an error when quota is exceeded' do
           expect(validator).to validate_without_error(process)
+        end
+
+        context 'when the instance count has changed and would exceed the quota' do
+          before do
+            process.instances = 5
+          end
+          it 'registers an error' do
+            expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(400).and_return(false)
+            expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
+          end
+        end
+      end
+
+      context 'when the app is being stopped' do
+        before do
+          process.state = 'STOPPED'
+        end
+
+        it 'does not register an error' do
+          expect(validator).to validate_without_error(process)
+        end
+
+        context 'when the instance count has changed and would exceed the quota' do
+          before do
+            process.instances = 5
+          end
+          it 'does not register an error' do
+            expect(validator).to validate_without_error(process)
+          end
         end
       end
     end
@@ -108,8 +138,8 @@ RSpec.describe 'max log_rate_limit policies' do
       end
     end
 
-    context 'when cancelling a task' do
-      it 'does not register error' do
+    context 'when canceling a task' do
+      it 'does not register an error' do
         task.state = VCAP::CloudController::TaskModel::CANCELING_STATE
         expect(validator).to validate_without_error(task)
       end

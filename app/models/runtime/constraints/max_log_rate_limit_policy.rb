@@ -49,7 +49,8 @@ class AppMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   private
 
   def additional_checks
-    resource.being_started?
+    resource.started? &&
+      (resource.column_changed?(:state) || resource.column_changed?(:instances))
   end
 
   def requested_log_rate_limit
