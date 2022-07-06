@@ -47,11 +47,11 @@ module VCAP::CloudController
     end
 
     def has_service_instances?
-      !VCAP::CloudController::ServiceInstance.
+      VCAP::CloudController::ServiceInstance.
         join(:service_plans, id: :service_plan_id).
         join(:services, id: :service_id).
         where(services__service_broker_id: id).
-        empty?
+        any?
     end
 
     def self.user_visibility_filter(user)
