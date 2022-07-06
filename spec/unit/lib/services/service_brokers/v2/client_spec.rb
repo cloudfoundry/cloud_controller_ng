@@ -19,7 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     before do
       allow(HttpClient).to receive(:new).
-        with(url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password).
+        with({ url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password }).
         and_return(http_client)
 
       allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).
