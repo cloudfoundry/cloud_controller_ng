@@ -11,16 +11,16 @@ class BaseMaxLogRateLimitPolicy
     return unless policy_target
     return unless additional_checks
 
-    if resource.log_rate_limit == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
+    if requested_log_rate_limit == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
       policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
 
-      resource_type = if policy_target.respond_to?(:organization_guid)
-                        'space'
-                      else
-                        'organization'
-                      end
+      policy_target_type = if policy_target.respond_to?(:organization_guid)
+                             'space'
+                           else
+                             'organization'
+                           end
 
-      resource.errors.add(field, "cannot be unlimited in #{resource_type} '#{policy_target.name}'.")
+      resource.errors.add(field, "cannot be unlimited in #{policy_target_type} '#{policy_target.name}'.")
     end
 
     unless policy_target.has_remaining_log_rate_limit(requested_log_rate_limit)
@@ -49,7 +49,7 @@ class AppMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   private
 
   def additional_checks
-    resource.scaling_operation?
+    resource.being_started?
   end
 
   def requested_log_rate_limit

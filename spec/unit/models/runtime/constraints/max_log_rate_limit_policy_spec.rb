@@ -8,25 +8,26 @@ RSpec.describe 'max log_rate_limit policies' do
     subject(:validator) { AppMaxLogRateLimitPolicy.new(process, org_or_space, error_name) }
 
     context 'when the app specifies a log quota' do
-      let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: 100, state: 'STARTED') }
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: 100, state: 'STOPPED') }
 
       context 'when performing a scaling operation' do
         before do
+          process.state = 'STARTED'
           process.log_rate_limit = 150
         end
 
         it 'registers error when quota is exceeded' do
-          allow(org_or_space).to receive(:has_remaining_log_rate_limit).with(50).and_return(false)
+          expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(150).and_return(false)
           expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
         end
 
         it 'does not register error when quota is not exceeded' do
-          allow(org_or_space).to receive(:has_remaining_log_rate_limit).with(50).and_return(true)
+          expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(150).and_return(true)
           expect(validator).to validate_without_error(process)
         end
 
         it 'adds the given error to the model' do
-          allow(org_or_space).to receive(:has_remaining_log_rate_limit).with(50).and_return(false)
+          expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(150).and_return(false)
           validator.validate
           expect(process.errors.on(:log_rate_limit)).to include(error_name)
         end
@@ -41,9 +42,9 @@ RSpec.describe 'max log_rate_limit policies' do
     end
 
     context 'when the app does not specify a log quota' do
-      let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: -1, state: 'STARTED') }
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: -1, state: 'STOPPED') }
       before do
-        allow(org_or_space).to receive(:has_remaining_log_rate_limit).and_return(true)
+        process.state = 'STARTED'
       end
 
       context 'when the org specifies a log quota' do
@@ -73,7 +74,8 @@ RSpec.describe 'max log_rate_limit policies' do
 
       context 'when both the space and the org specify an infinite log quota' do
         before do
-          allow(org_or_space).to receive(:log_rate_limit).and_return(VCAP::CloudController::QuotaDefinition::UNLIMITED)
+          expect(org_or_space).to receive(:log_rate_limit).and_return(VCAP::CloudController::QuotaDefinition::UNLIMITED)
+          expect(org_or_space).to receive(:has_remaining_log_rate_limit).and_return(true)
         end
 
         it 'is happy' do

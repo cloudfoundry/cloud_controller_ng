@@ -461,6 +461,26 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when applying the manifest to an app which is exceeding the log rate limit' do
+      before do
+        app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED)
+        space.update(space_quota_definition:
+          VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
+      end
+      it 'does not error' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
+          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+      end
+    end
+
     describe 'audit events' do
       let!(:process1) { nil }
 
