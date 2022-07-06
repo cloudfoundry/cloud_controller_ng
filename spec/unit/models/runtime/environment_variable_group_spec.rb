@@ -24,7 +24,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new database object with the right name' do
-          expect(EnvironmentVariableGroup).to receive(:create).with(name: 'staging')
+          expect(EnvironmentVariableGroup).to receive(:create).with({ name: 'staging' })
           EnvironmentVariableGroup.staging
         end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new database object with the right name' do
-          expect(EnvironmentVariableGroup).to receive(:create).with(name: 'running')
+          expect(EnvironmentVariableGroup).to receive(:create).with({ name: 'running' })
           EnvironmentVariableGroup.running
         end
 
