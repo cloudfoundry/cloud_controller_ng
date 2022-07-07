@@ -271,7 +271,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
-              'log_rate_limit_per_second' => 'unlimited',
+              'log_rate_limit_per_second' => '-1B',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',

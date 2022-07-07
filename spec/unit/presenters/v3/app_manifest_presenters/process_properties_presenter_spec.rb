@@ -50,13 +50,8 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
     end
 
     describe '#add_units_log_rate_limit' do
-      context 'log_rate_limit is -1 (unlimited)' do
-        it 'returns unlimited' do
-          expect(subject.add_units_log_rate_limit(-1)).to eq('unlimited')
-        end
-      end
-
       it 'is consistant with other quotas with output' do
+        expect(subject.add_units_log_rate_limit(-1)).to eq('-1B')
         expect(subject.add_units_log_rate_limit(256)).to eq('256B')
         expect(subject.add_units_log_rate_limit(2_048)).to eq('2048B')
         expect(subject.add_units_log_rate_limit(4_194_304)).to eq('4194304B')

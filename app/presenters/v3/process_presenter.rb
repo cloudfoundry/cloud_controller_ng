@@ -18,7 +18,6 @@ module VCAP::CloudController
         def to_hash
           health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
-          log_rate_limit = process.log_rate_limit == -1 ? 'unlimited' : process.log_rate_limit
           {
             guid:             process.guid,
             created_at:       process.created_at,
@@ -28,7 +27,7 @@ module VCAP::CloudController
             instances:        process.instances,
             memory_in_mb:     process.memory,
             disk_in_mb:       process.disk_quota,
-            log_rate_limit_in_bps: log_rate_limit,
+            log_rate_limit_in_bps: process.log_rate_limit,
             health_check: {
               type: process.health_check_type,
               data: health_check_data

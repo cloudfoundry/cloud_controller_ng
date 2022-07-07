@@ -27,8 +27,6 @@ module VCAP::CloudController
           end
 
           def add_units_log_rate_limit(val)
-            return 'unlimited' if val == -1
-
             "#{val}B"
           end
         end
