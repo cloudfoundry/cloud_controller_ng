@@ -104,9 +104,9 @@ module VCAP::CloudController
         end
       end
 
-      describe 'log_rate_limit' do
-        context 'when log_rate_limit unit is not part of expected set of values' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: '200INVALID' } }
+      describe 'log_rate_limit_per_second' do
+        context 'when log_rate_limit_per_second unit is not part of expected set of values' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '200INVALID' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -114,25 +114,25 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include(
-              'Process "web": Log quota must use \'unlimited\' or a supported unit: Bs, Ks, KBs, Ms, MBs, Gs, GBs, Ts, or TBs'
+              'Process "web": Log quota per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
             )
           end
         end
 
-        context 'when log_rate_limit is not a positive amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: '-1MBs' } }
+        context 'when log_rate_limit_per_second is not a positive amount' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1MB' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to 0Bs')
+            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to 0B')
           end
         end
 
-        context 'when log_rate_limit is not numeric' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: 'gerg herscheisers' } }
+        context 'when log_rate_limit_per_second is not numeric' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 'gerg herscheisers' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -140,13 +140,13 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include(
-              'Process "web": Log quota is not a number nor \'unlimited\''
+              'Process "web": Log quota per second is not a number'
             )
           end
         end
 
-        context 'when log_rate_limit is unlimited amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit: 'unlimited' } }
+        context 'when log_rate_limit_per_second is unlimited amount' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 'unlimited' } }
 
           it 'is valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)

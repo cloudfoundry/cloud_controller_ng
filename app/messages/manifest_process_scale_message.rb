@@ -6,7 +6,7 @@ module VCAP::CloudController
     INVALID_MB_VALUE_ERROR = 'must be greater than 0MB'.freeze
     # NOTE: -1 is valid for log_rate_limit representing unlimited, that conversion
     # will be complete prior to this validation
-    INVALID_QUOTA_VALUE_ERROR = 'must be an integer greater than or equal to 0Bs'.freeze
+    INVALID_QUOTA_VALUE_ERROR = 'must be an integer greater than or equal to 0B'.freeze
 
     validates_with NoAdditionalKeysValidator
 
