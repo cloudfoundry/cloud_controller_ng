@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/fog/fog-azure-rm.git
-  revision: 69ba1d7e9f82b7a71214b92fa6fa95169b539ed3
+  revision: 379e352cce817f8e67618062bf7095095d8f5c4c
   branch: fog-arm-cf
   specs:
     fog-azure-rm (0.4.7)
@@ -151,7 +151,7 @@ GEM
     erubi (1.10.0)
     eventmachine (1.2.7)
     excon (0.92.3)
-    faraday (0.17.4)
+    faraday (0.17.5)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.7)
       faraday (>= 0.8.0)
@@ -326,7 +326,7 @@ GEM
     msgpack (1.4.2)
     multi_json (1.15.0)
     multipart-parser (0.1.1)
-    multipart-post (2.1.1)
+    multipart-post (2.2.3)
     mustache (1.1.1)
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
