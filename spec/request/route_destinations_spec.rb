@@ -221,6 +221,7 @@ RSpec.describe 'Route Destinations Request' do
     let(:user_header) { headers_for(user) }
     let!(:existing_destination) do
       VCAP::CloudController::RouteMappingModel.make(
+        guid: '00000000', # early guid to ensure order
         app: app_model,
         route: route,
         process_type: 'worker',
