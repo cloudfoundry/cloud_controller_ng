@@ -283,7 +283,7 @@ module VCAP::CloudController
             expect(subject).to eq([
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log_rate_limit_per_second', 'value' => '2147483648B', 'was' => '1048576B' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log_rate_limit_per_second', 'value' => '2G', 'was' => '1M' },
             ])
           end
         end

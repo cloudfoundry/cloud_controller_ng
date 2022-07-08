@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'instances' => 1,
           'memory' => '1024M',
           'disk_quota' => '1024M',
-          'log_rate_limit_per_second' => '1048576B',
+          'log_rate_limit_per_second' => '1M',
           'health-check-type' => 'port',
         })
       end
@@ -53,9 +53,9 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
       it 'is consistant with other quotas with output' do
         expect(subject.add_units_log_rate_limit(-1)).to eq('-1B')
         expect(subject.add_units_log_rate_limit(256)).to eq('256B')
-        expect(subject.add_units_log_rate_limit(2_048)).to eq('2048B')
-        expect(subject.add_units_log_rate_limit(4_194_304)).to eq('4194304B')
-        expect(subject.add_units_log_rate_limit(6_442_450_944)).to eq('6442450944B')
+        expect(subject.add_units_log_rate_limit(2_048)).to eq('2K')
+        expect(subject.add_units_log_rate_limit(4_194_304)).to eq('4M')
+        expect(subject.add_units_log_rate_limit(6_442_450_944)).to eq('6G')
       end
     end
   end

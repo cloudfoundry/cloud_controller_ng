@@ -120,7 +120,7 @@ module VCAP::CloudController::Presenters::V3
               'type' => process1.type,
               'instances' => process1.instances,
               'memory' => "#{process1.memory}M",
-              'log_rate_limit_per_second' => '1048576B',
+              'log_rate_limit_per_second' => '1M',
               'disk_quota' => "#{process1.disk_quota}M",
               'command' => process1.command,
               'health-check-type' => process1.health_check_type,
@@ -130,7 +130,7 @@ module VCAP::CloudController::Presenters::V3
             {
               'type' => process2.type,
               'instances' => process2.instances,
-              'log_rate_limit_per_second' => '1048576B',
+              'log_rate_limit_per_second' => '1M',
               'memory' => "#{process2.memory}M",
               'disk_quota' => "#{process2.disk_quota}M",
               'health-check-type' => process2.health_check_type,
@@ -169,7 +169,7 @@ module VCAP::CloudController::Presenters::V3
               {
                 'type' => process1.type,
                 'instances' => process1.instances,
-                'log_rate_limit_per_second' => '1048576B',
+                'log_rate_limit_per_second' => '1M',
                 'memory' => "#{process1.memory}M",
                 'disk_quota' => "#{process1.disk_quota}M",
                 'health-check-type' => process1.health_check_type,
@@ -177,7 +177,7 @@ module VCAP::CloudController::Presenters::V3
               {
                 'type' => process2.type,
                 'instances' => process2.instances,
-                'log_rate_limit_per_second' => '1048576B',
+                'log_rate_limit_per_second' => '1M',
                 'memory' => "#{process2.memory}M",
                 'disk_quota' => "#{process2.disk_quota}M",
                 'health-check-type' => process2.health_check_type,

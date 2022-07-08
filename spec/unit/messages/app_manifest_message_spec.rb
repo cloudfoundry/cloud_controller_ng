@@ -119,8 +119,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is not a positive amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1MB' } }
+        context 'when log_rate_limit_per_second is less than -1 bytes' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1M' } }
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)

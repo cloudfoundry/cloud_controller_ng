@@ -126,5 +126,78 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#convert_to_b' do
+      context 'when given 1M' do
+        let(:byte_value) { '1M' }
+
+        it 'returns the value in bytes' do
+          expect(subject.convert_to_b(byte_value)).to eq(1_048_576)
+        end
+      end
+    end
+
+    describe '#human_readable_byte_value' do
+      context 'when given nil' do
+        let(:byte_value) { nil }
+
+        it 'returns nil' do
+          expect(subject.human_readable_byte_value(byte_value)).to be_nil
+        end
+      end
+
+      context 'when given 1M in bytes' do
+        let(:byte_value) { 1_048_576 }
+
+        it 'returns the human readable value' do
+          expect(subject.human_readable_byte_value(byte_value)).to eq('1M')
+        end
+      end
+
+      context 'when given 1G in bytes' do
+        let(:byte_value) { 1_073_741_824 }
+
+        it 'returns the human readable value' do
+          expect(subject.human_readable_byte_value(byte_value)).to eq('1G')
+        end
+      end
+
+      context 'when given 1.1M in bytes' do
+        let(:byte_value) { 1_153_434 }
+
+        it 'returns the human readable value in bytes to avoid losing precision' do
+          expect(subject.human_readable_byte_value(byte_value)).to eq('1153434B')
+        end
+      end
+
+      context 'when given 1M + 1K' do
+        let(:byte_value) { 1049600 }
+
+        it 'returns the human readable value in kilobytes to avoid losing precision' do
+          expect(subject.human_readable_byte_value(byte_value)).to eq('1025K')
+        end
+      end
+
+      context 'when given a string' do
+        let(:byte_value) { 'not-a-number' }
+
+        it 'raises an error' do
+          expect {
+            subject.human_readable_byte_value(byte_value)
+          }.to raise_error(ByteConverter::InvalidBytesError)
+        end
+      end
+
+      context 'when given a float' do
+        let(:byte_value) { 1.1 }
+
+        it 'raises an error' do
+          expect {
+            subject.human_readable_byte_value(byte_value)
+          }.to raise_error(ByteConverter::InvalidBytesError)
+        end
+      end
+
+    end
   end
 end

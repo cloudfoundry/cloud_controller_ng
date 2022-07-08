@@ -2,6 +2,7 @@ require 'palm_civet'
 
 module VCAP::CloudController
   class ByteConverter
+    class InvalidBytesError < StandardError; end
     class InvalidUnitsError < StandardError; end
     class NonNumericError < StandardError; end
 
@@ -25,6 +26,24 @@ module VCAP::CloudController
       PalmCivet.to_bytes(human_readable_byte_value.to_s)
     rescue PalmCivet::InvalidByteQuantityError
       raise InvalidUnitsError
+    end
+
+    def human_readable_byte_value(bytes)
+      return nil unless bytes.present?
+
+      if !bytes.is_a?(Integer)
+        raise InvalidBytesError
+      end
+
+      units = %w(B K M G T)
+      while units.any?
+        unit_in_bytes = 1024**(units.length - 1)
+        if bytes.remainder(unit_in_bytes).zero?
+          return "#{bytes / unit_in_bytes}#{units.last}"
+        end
+
+        units.pop
+      end
     end
   end
 end
