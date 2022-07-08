@@ -25,7 +25,7 @@ module VCAP::Services
           attributes = client.bind(binding)
           # save to the database to ensure attributes match tables
           binding.set(attributes[:binding])
-          binding.save
+          binding.save_changes
 
           expect(binding.credentials).to eq(instance.credentials)
           expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
@@ -37,7 +37,7 @@ module VCAP::Services
             attributes = client.bind(binding)
             # save to the database to ensure attributes match tables
             binding.set(attributes[:binding])
-            binding.save
+            binding.save_changes
 
             expect(binding.credentials).to eq(instance.credentials)
             expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
@@ -58,7 +58,7 @@ module VCAP::Services
           attributes = client.bind(binding)
           # save to the database to ensure attributes match tables
           binding.set(attributes[:binding])
-          binding.save
+          binding.save_changes
 
           expect(binding.route_service_url).to eq(instance.route_service_url)
         end

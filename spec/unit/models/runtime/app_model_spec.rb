@@ -177,35 +177,35 @@ module VCAP::CloudController
         it 'should allow standard ascii characters' do
           app.name = "A -_- word 2!?()\'\"&+."
           expect {
-            app.save
+            app.save_changes
           }.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           app.name = 'a \\ word'
           expect {
-            app.save
+            app.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           app.name = '防御力¡'
           expect {
-            app.save
+            app.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           app.name = "a \n word"
           expect {
-            app.save
+            app.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           app.name = "a \e word"
           expect {
-            app.save
+            app.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -253,7 +253,7 @@ module VCAP::CloudController
             droplet.state = state
             expect {
               app_model.droplet = droplet
-              app_model.save
+              app_model.save_changes
             }.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
           end
         end
@@ -288,7 +288,7 @@ module VCAP::CloudController
         before do
           app_model.buildpack_lifecycle_data = nil
           app_model.kpack_lifecycle_data = nil
-          app_model.save
+          app_model.save_changes
         end
 
         it 'returns the string "docker"' do
@@ -512,13 +512,13 @@ module VCAP::CloudController
           expect(app.encryption_key_label).to be_nil
 
           app.environment_variables = { building: 'house' }
-          app.save
+          app.save_changes
           app.reload
           expect(app.encryption_key_label).to be_nil
 
           TestConfig.override(database_encryption: { current_key_label: 'k2', keys: { k1: 'moose' } })
           app.environment_variables = app.environment_variables.merge({ 'building' => 'outhouse' })
-          app.save
+          app.save_changes
           app.reload
           expect(app.encryption_key_label).to eq('k2')
 

@@ -20,10 +20,10 @@ module VCAP::CloudController
       before do
         staging_group = EnvironmentVariableGroup.staging
         staging_group.environment_json = { 'another' => 'var', 'STAGING_ENV' => 'staging_value' }
-        staging_group.save
+        staging_group.save_changes
 
         app.environment_variables = app.environment_variables.merge({ 'another' => 'override' })
-        app.save
+        app.save_changes
       end
 
       it 'records the environment variables used for staging' do

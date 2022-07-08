@@ -34,7 +34,7 @@ module VCAP::CloudController
         binding = ServiceBinding.make
         binding.name = too_long
 
-        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /must be less than 256 characters/)
+        expect { binding.save_changes }.to raise_error(Sequel::ValidationFailed, /must be less than 256 characters/)
       end
 
       it 'validates max length of volume_mounts' do
@@ -43,7 +43,7 @@ module VCAP::CloudController
         binding = ServiceBinding.make
         binding.volume_mounts = too_long
 
-        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+        expect { binding.save_changes }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
       end
 
       context 'validates name characters' do
@@ -72,7 +72,7 @@ module VCAP::CloudController
           binding = ServiceBinding.make
           binding.syslog_drain_url = overly_long_url
 
-          expect { binding.save }.to raise_error Sequel::ValidationFailed, /syslog_drain_url max_length/
+          expect { binding.save_changes }.to raise_error Sequel::ValidationFailed, /syslog_drain_url max_length/
         end
       end
 
@@ -112,24 +112,24 @@ module VCAP::CloudController
         describe 'the associated app' do
           it 'allows changing to the same app' do
             binding.app = binding.app
-            expect { binding.save }.not_to raise_error
+            expect { binding.save_changes }.not_to raise_error
           end
 
           it 'does not allow changing app after it has been set' do
             binding.app = AppModel.make
-            expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
+            expect { binding.save_changes }.to raise_error Sequel::ValidationFailed, /app/
           end
         end
 
         describe 'the associated service instance' do
           it 'allows changing to the same service instance' do
             binding.service_instance = binding.service_instance
-            expect { binding.save }.not_to raise_error
+            expect { binding.save_changes }.not_to raise_error
           end
 
           it 'does not allow changing service_instance after it has been set' do
             binding.service_instance = ServiceInstance.make(space: binding.app.space)
-            expect { binding.save }.to raise_error Sequel::ValidationFailed, /service_instance/
+            expect { binding.save_changes }.to raise_error Sequel::ValidationFailed, /service_instance/
           end
         end
       end
@@ -247,7 +247,7 @@ module VCAP::CloudController
           expect {
             service_binding = ServiceBinding.make(service_instance: service_instance)
             service_binding.syslog_drain_url = nil
-            service_binding.save
+            service_binding.save_changes
           }.not_to raise_error
         end
 
@@ -255,7 +255,7 @@ module VCAP::CloudController
           expect {
             service_binding = ServiceBinding.make(service_instance: service_instance)
             service_binding.syslog_drain_url = ''
-            service_binding.save
+            service_binding.save_changes
           }.not_to raise_error
         end
       end
@@ -267,7 +267,7 @@ module VCAP::CloudController
           expect {
             service_binding = ServiceBinding.make(service_instance: service_instance)
             service_binding.syslog_drain_url = 'http://syslogurl.com'
-            service_binding.save
+            service_binding.save_changes
           }.not_to raise_error
         end
       end

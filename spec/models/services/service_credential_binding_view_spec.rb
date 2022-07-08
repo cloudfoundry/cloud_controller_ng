@@ -78,7 +78,7 @@ module VCAP::CloudController
 
         describe 'operation_sti_eager_load' do
           it 'eager loads successfully' do
-            binding = ServiceBinding.make.save
+            binding = ServiceBinding.make.save_changes
             bo = ServiceBindingOperation.make(service_binding_id: binding.id)
             key = ServiceKey.make
             ko = ServiceKeyOperation.make(service_key_id: key.id)

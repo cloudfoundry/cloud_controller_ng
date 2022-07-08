@@ -14,7 +14,7 @@ module VCAP::CloudController
         buildpack.enabled = message.enabled if message.requested?(:enabled)
         buildpack.locked = message.locked if message.requested?(:locked)
         buildpack.name = message.name if message.requested?(:name)
-        buildpack.save
+        buildpack.save_changes
       end
       buildpack
     rescue Sequel::ValidationFailed => e

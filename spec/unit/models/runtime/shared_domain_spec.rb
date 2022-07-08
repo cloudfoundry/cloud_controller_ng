@@ -79,7 +79,7 @@ module VCAP::CloudController
         context 'and when there is a router_group_guid set' do
           it 'is not valid' do
             subject.router_group_guid = router_group_guid
-            expect { subject.save }.to raise_error(Sequel::ValidationFailed, /cannot be specified for internal domains/)
+            expect { subject.save_changes }.to raise_error(Sequel::ValidationFailed, /cannot be specified for internal domains/)
           end
         end
       end
@@ -240,7 +240,7 @@ module VCAP::CloudController
 
         before do
           allow(Steno).to receive(:logger).and_return(fake_logger)
-          expect_any_instance_of(SharedDomain).not_to receive(:save)
+          expect_any_instance_of(SharedDomain).not_to receive(:save_changes)
         end
 
         context 'when the domain is internal' do

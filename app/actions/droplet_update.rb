@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         LabelsUpdate.update(droplet, message.labels, DropletLabelModel)
         AnnotationsUpdate.update(droplet, message.annotations, DropletAnnotationModel)
-        droplet.save
+        droplet.save_changes
       end
 
       droplet

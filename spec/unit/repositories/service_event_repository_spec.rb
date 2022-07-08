@@ -184,7 +184,7 @@ module VCAP::CloudController
 
           it 'records a create event' do
             repository.with_service_event(service) do
-              service.save
+              service.save_changes
             end
 
             event = VCAP::CloudController::Event.first(type: 'audit.service.create')
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
           it 'records every field of the service in the metadata of the event' do
             repository.with_service_event(service) do
-              service.save
+              service.save_changes
             end
 
             event = Event.first(type: 'audit.service.create')
@@ -238,7 +238,7 @@ module VCAP::CloudController
 
           it 'creates an update event' do
             repository.with_service_event(service) do
-              service.save
+              service.save_changes
             end
 
             event = VCAP::CloudController::Event.first(type: 'audit.service.update')
@@ -257,7 +257,7 @@ module VCAP::CloudController
 
           it 'records in the metadata only those fields which were changed' do
             repository.with_service_event(service) do
-              service.save
+              service.save_changes
             end
 
             metadata = VCAP::CloudController::Event.first(type: 'audit.service.update').metadata
@@ -287,7 +287,7 @@ module VCAP::CloudController
 
           it 'records a create event' do
             repository.with_service_plan_event(plan) do
-              plan.save
+              plan.save_changes
             end
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')
@@ -306,7 +306,7 @@ module VCAP::CloudController
 
           it 'records every field of the service plan in the metadata of the event' do
             repository.with_service_plan_event(plan) do
-              plan.save
+              plan.save_changes
             end
 
             event = Event.first(type: 'audit.service_plan.create')
@@ -332,7 +332,7 @@ module VCAP::CloudController
 
           it 'creates an update event' do
             repository.with_service_plan_event(plan) do
-              plan.save
+              plan.save_changes
             end
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
@@ -351,7 +351,7 @@ module VCAP::CloudController
 
           it 'records in the metadata only those fields which were changed' do
             repository.with_service_plan_event(plan) do
-              plan.save
+              plan.save_changes
             end
 
             metadata = VCAP::CloudController::Event.first(type: 'audit.service_plan.update').metadata
@@ -764,7 +764,7 @@ module VCAP::CloudController
             active: false,
             public: false
           )
-          repository.with_service_plan_event(plan) { plan.save }
+          repository.with_service_plan_event(plan) { plan.save_changes }
           expect(logger).to have_received(:error)
         end
 
@@ -779,7 +779,7 @@ module VCAP::CloudController
             plan_updateable: false,
             unique_id:       'broker-provided-id',
           )
-          repository.with_service_event(service) { service.save }
+          repository.with_service_event(service) { service.save_changes }
           expect(logger).to have_received(:error)
         end
       end

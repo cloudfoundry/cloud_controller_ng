@@ -73,7 +73,7 @@ module VCAP::CloudController
         before do
           errors = Sequel::Model::Errors.new
           errors.add(:blork, 'is busted')
-          allow(security_group).to receive(:save).
+          allow(security_group).to receive(:save_changes).
             and_raise(Sequel::ValidationFailed.new(errors))
         end
 

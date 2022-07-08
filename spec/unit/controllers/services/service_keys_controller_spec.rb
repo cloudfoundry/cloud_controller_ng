@@ -245,7 +245,7 @@ module VCAP::CloudController
         context 'when attempting to create service key for an unbindable service' do
           before do
             service.bindable = false
-            service.save
+            service.save_changes
 
             req = {
               name: name,
@@ -302,7 +302,7 @@ module VCAP::CloudController
             context 'when the instance has a previous operation' do
               before do
                 instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
-                instance.save
+                instance.save_changes
               end
 
               it 'reverts the last_operation of the instance to its previous operation' do
@@ -315,7 +315,7 @@ module VCAP::CloudController
             context 'when the instance does not have a last_operation' do
               before do
                 instance.service_instance_operation = nil
-                instance.save
+                instance.save_changes
               end
 
               it 'does not save a last_operation' do
@@ -448,9 +448,9 @@ module VCAP::CloudController
       let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
 
       before do
-        service_key_a.save
-        service_key_b.save
-        service_key_c.save
+        service_key_a.save_changes
+        service_key_b.save_changes
+        service_key_c.save_changes
         set_current_user(developer)
       end
 

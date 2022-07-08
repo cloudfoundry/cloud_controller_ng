@@ -152,7 +152,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
   describe 'HTTP Reserved Routes' do
     before do
       route.path = route_path
-      route.save
+      route.save_changes
     end
     get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :host, 'The host portion of the route. Required for shared-domains.'

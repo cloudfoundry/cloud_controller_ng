@@ -132,7 +132,7 @@ module VCAP::CloudController
         it 're-raises when there is an unknown error' do
           message = BuildpackUpdateMessage.new({})
           buildpack1.errors.add(:foo, 'unknown error')
-          allow(buildpack1).to receive(:save).and_raise(Sequel::ValidationFailed.new(buildpack1))
+          allow(buildpack1).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new(buildpack1))
 
           expect {
             BuildpackUpdate.new.update(buildpack1, message)

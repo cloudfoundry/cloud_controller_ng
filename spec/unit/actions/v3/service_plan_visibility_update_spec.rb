@@ -177,7 +177,7 @@ module VCAP
             before do
               errors = Sequel::Model::Errors.new
               errors.add(:type, 'is invalid')
-              expect(service_plan).to receive(:save).
+              expect(service_plan).to receive(:save_changes).
                 and_raise(Sequel::ValidationFailed.new(errors))
             end
 

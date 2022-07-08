@@ -69,7 +69,7 @@ module Sequel::Plugins::VcapSerialization
       # update updated_at timestamp when no changes are being made.
       # Arguably this should avoid updating updated_at if nothing changed.
       set(update_opts)
-      save
+      save_changes
     end
   end
 

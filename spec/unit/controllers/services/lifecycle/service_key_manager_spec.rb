@@ -42,7 +42,7 @@ module VCAP::CloudController
         context 'when the instance does not have a last_operation' do
           before do
             service_key.service_instance.service_instance_operation = nil
-            service_key.service_instance.save
+            service_key.service_instance.save_changes
           end
 
           it 'still does not have last_operation after delete of its key' do
@@ -56,7 +56,7 @@ module VCAP::CloudController
         context 'when the instance has a last_operation' do
           before do
             service_key.service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
-            service_key.service_instance.save
+            service_key.service_instance.save_changes
           end
 
           it 'maintains the last_operation state and type' do
@@ -73,7 +73,7 @@ module VCAP::CloudController
             let(:service_key) { ServiceKey.make(service_instance: instance) }
             before do
               instance.service_instance_operation = last_operation
-              instance.save
+              instance.save_changes
             end
 
             it 'should raise an error for unbind operation' do

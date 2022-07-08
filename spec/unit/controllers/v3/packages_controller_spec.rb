@@ -160,7 +160,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'when the package type is not bits' do
       before do
         package.type = 'docker'
-        package.save
+        package.save_changes
       end
 
       it 'returns a 422 Unprocessable' do
@@ -195,7 +195,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'when the bits have already been uploaded' do
       before do
         package.state = VCAP::CloudController::PackageModel::READY_STATE
-        package.save
+        package.save_changes
       end
 
       it 'returns a 400 PackageBitsAlreadyUploaded error' do
@@ -286,7 +286,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'when the package is not of type bits' do
       before do
         package.type = 'docker'
-        package.save
+        package.save_changes
       end
 
       it 'returns 422' do
@@ -300,7 +300,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'when the package has no bits' do
       before do
         package.state = VCAP::CloudController::PackageModel::CREATED_STATE
-        package.save
+        package.save_changes
       end
 
       it 'returns 422' do

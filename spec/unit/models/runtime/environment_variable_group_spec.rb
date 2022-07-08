@@ -35,7 +35,7 @@ module VCAP::CloudController
         it 'updates the object on save' do
           staging = EnvironmentVariableGroup.staging
           staging.environment_json = { 'abc' => 'easy as 123' }
-          staging.save
+          staging.save_changes
 
           expect(EnvironmentVariableGroup.staging.environment_json).to eq({ 'abc' => 'easy as 123' })
         end
@@ -45,7 +45,7 @@ module VCAP::CloudController
         before do
           staging_group = EnvironmentVariableGroup.find(name: 'staging')
           staging_group.environment_json = { 'abc' => 123 }
-          staging_group.save
+          staging_group.save_changes
         end
 
         it 'returns the existing object' do
@@ -72,7 +72,7 @@ module VCAP::CloudController
         it 'updates the object on save' do
           running = EnvironmentVariableGroup.running
           running.environment_json = { 'abc' => 'easy as 123' }
-          running.save
+          running.save_changes
 
           expect(EnvironmentVariableGroup.running.environment_json).to eq({ 'abc' => 'easy as 123' })
         end
@@ -82,7 +82,7 @@ module VCAP::CloudController
         before do
           running_group = EnvironmentVariableGroup.find(name: 'running')
           running_group.environment_json = { 'abc' => 123 }
-          running_group.save
+          running_group.save_changes
         end
 
         it 'returns the existing object' do

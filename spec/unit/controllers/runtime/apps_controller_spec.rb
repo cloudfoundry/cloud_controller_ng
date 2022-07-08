@@ -186,7 +186,7 @@ module VCAP::CloudController
         context 'when allow_ssh is enabled on the space' do
           before do
             space.allow_ssh = true
-            space.save
+            space.save_changes
           end
 
           it 'allows enable_ssh to be set to true' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
         context 'when allow_ssh is disabled on the space' do
           before do
             space.allow_ssh = false
-            space.save
+            space.save_changes
           end
 
           it 'allows enable_ssh to be set to false' do
@@ -241,7 +241,7 @@ module VCAP::CloudController
         context 'when allow_ssh is enabled on the space' do
           before do
             space.allow_ssh = true
-            space.save
+            space.save_changes
           end
 
           it 'errors when attempting to set enable_ssh to true' do
@@ -258,7 +258,7 @@ module VCAP::CloudController
         context 'when allow_ssh is disabled on the space' do
           before do
             space.allow_ssh = false
-            space.save
+            space.save_changes
           end
 
           it 'errors when attempting to set enable_ssh to true' do
@@ -823,7 +823,7 @@ module VCAP::CloudController
 
         context 'when the update fails' do
           before do
-            allow_any_instance_of(ProcessModel).to receive(:save).and_raise('Error saving')
+            allow_any_instance_of(ProcessModel).to receive(:save_changes).and_raise('Error saving')
             allow(app_event_repository).to receive(:record_app_update)
           end
 
@@ -1501,7 +1501,7 @@ module VCAP::CloudController
           before do
             staging_group                  = EnvironmentVariableGroup.staging
             staging_group.environment_json = { POTATO: 'delicious' }
-            staging_group.save
+            staging_group.save_changes
           end
 
           it 'returns staging_env_json with those variables' do
@@ -1518,7 +1518,7 @@ module VCAP::CloudController
           before do
             running_group                  = EnvironmentVariableGroup.running
             running_group.environment_json = { PIE: 'sweet' }
-            running_group.save
+            running_group.save_changes
           end
 
           it 'returns staging_env_json with those variables' do

@@ -10,7 +10,7 @@ module VCAP::CloudController
         droplet.lock!
 
         droplet.state = DropletModel::PROCESSING_UPLOAD_STATE
-        droplet.save
+        droplet.save_changes
 
         Repositories::DropletEventRepository.record_upload(
           droplet,

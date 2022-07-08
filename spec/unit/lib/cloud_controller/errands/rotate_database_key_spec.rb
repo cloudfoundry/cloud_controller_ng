@@ -73,13 +73,13 @@ module VCAP::CloudController
 
           # These models' encryption_key_labels will be 'new'
           app_new_key_label.environment_variables = env_vars_2
-          app_new_key_label.save
+          app_new_key_label.save_changes
 
           service_binding_new_key_label.credentials = credentials_2
-          service_binding_new_key_label.save
+          service_binding_new_key_label.save_changes
 
           service_instance_new_key_label.credentials = instance_credentials_2
-          service_instance_new_key_label.save
+          service_instance_new_key_label.save_changes
 
           allow(Encryptor).to receive(:encrypt).and_call_original
           allow(Encryptor).to receive(:decrypt).and_call_original
@@ -165,10 +165,10 @@ module VCAP::CloudController
             allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
 
             app2.environment_variables = { password: 'hunter2' }
-            app2.save
+            app2.save_changes
 
             app3.environment_variables = { feature: 'activate' }
-            app3.save
+            app3.save_changes
 
             allow(Encryptor).to receive(:current_encryption_key_label) { 'new' }
           end
@@ -286,7 +286,7 @@ module VCAP::CloudController
 
         context 'when an unexpected error occurs while updating a record' do
           before do
-            allow_any_instance_of(AppModel).to receive(:save).and_raise(StandardError.new('nooooooooo!!!'))
+            allow_any_instance_of(AppModel).to receive(:save_changes).and_raise(StandardError.new('nooooooooo!!!'))
           end
 
           it 'logs information about the record and re-raises the error' do

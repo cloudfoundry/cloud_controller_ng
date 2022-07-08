@@ -37,7 +37,7 @@ module VCAP::CloudController
         before do
           broker = object.service_broker
           broker.space = space
-          broker.save
+          broker.save_changes
         end
 
         it { is_expected.to allow_op_on_object :delete, object }

@@ -48,9 +48,9 @@ module VCAP::CloudController
         @obj_b = SpaceQuotaDefinition.make(organization_guid: @org_b.guid)
 
         @space_a.space_quota_definition = @obj_a
-        @space_a.save
+        @space_a.save_changes
         @space_b.space_quota_definition = @obj_b
-        @space_b.save
+        @space_b.save_changes
       end
 
       describe 'Org Level Permissions' do

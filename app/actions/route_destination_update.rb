@@ -12,7 +12,7 @@ module VCAP::CloudController
 
           destination.protocol = message.protocol if message.requested? :protocol
 
-          destination.save
+          destination.save_changes
         end
       end
 

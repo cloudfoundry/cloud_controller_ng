@@ -114,7 +114,7 @@ module VCAP::CloudController
         }
         e = Event.new(required_attrs)
         expect(fake_logger).to receive(:info).with('Audit event: audit.test enacted by pork chop on vulcan Mr. Spock')
-        e.save
+        e.save_changes
       end
     end
 

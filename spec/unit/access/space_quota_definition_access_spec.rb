@@ -58,7 +58,7 @@ module VCAP::CloudController
     context 'when it is applied to the space' do
       before do
         space.space_quota_definition = object
-        space.save
+        space.save_changes
       end
 
       context 'space manager' do

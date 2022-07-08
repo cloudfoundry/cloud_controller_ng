@@ -41,7 +41,7 @@ module VCAP::CloudController
         apply_sidecars(app, rollback_target_revision.sidecars) if rollback_target_revision
 
         app.update(environment_variables: environment_variables)
-        app.save
+        app.save_changes
       end
     end
 

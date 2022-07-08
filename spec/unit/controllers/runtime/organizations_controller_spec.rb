@@ -1629,7 +1629,7 @@ module VCAP::CloudController
 
       before do
         org.add_manager org_manager
-        org.save
+        org.save_changes
       end
 
       describe 'removing the last org manager' do
@@ -1673,7 +1673,7 @@ module VCAP::CloudController
 
       before do
         org.add_billing_manager billing_manager
-        org.save
+        org.save_changes
       end
 
       describe 'removing the last billing manager' do
@@ -1716,7 +1716,7 @@ module VCAP::CloudController
 
       before do
         org.add_auditor auditor
-        org.save
+        org.save_changes
       end
 
       describe 'removing the last auditor' do
@@ -1899,7 +1899,7 @@ module VCAP::CloudController
 
               context 'when the feature flag "set_roles_by_username" is disabled' do
                 before do
-                  FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+                  FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save_changes
                 end
 
                 it 'raises a feature flag error for non-admins' do
@@ -2093,7 +2093,7 @@ module VCAP::CloudController
 
           context 'when the feature flag "set_roles_by_username" is disabled' do
             before do
-              FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
+              FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save_changes
             end
 
             it 'raises a feature flag error for non-admins' do

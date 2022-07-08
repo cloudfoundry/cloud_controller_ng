@@ -399,7 +399,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         before do
           assigner.assign(isolation_segment, [organization])
           organization.default_isolation_segment_guid = isolation_segment.guid
-          organization.save
+          organization.save_changes
         end
 
         example 'Deleting the organization\'s default isolation segment' do

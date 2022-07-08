@@ -229,7 +229,7 @@ module VCAP::CloudController
         it 'allows nil value' do
           process.app.lifecycle_data.update(buildpacks: nil)
           expect {
-            process.save
+            process.save_changes
           }.to_not raise_error
           expect(process.buildpack).to eq(AutoDetectionBuildpack.new)
         end
@@ -237,7 +237,7 @@ module VCAP::CloudController
         it 'allows a public url' do
           process.app.lifecycle_data.update(buildpacks: ['git://user@github.com/repo.git'])
           expect {
-            process.save
+            process.save_changes
           }.to_not raise_error
           expect(process.buildpack).to eq(CustomBuildpack.new('git://user@github.com/repo.git'))
         end
@@ -245,7 +245,7 @@ module VCAP::CloudController
         it 'allows a public http url' do
           process.app.lifecycle_data.update(buildpacks: ['http://example.com/foo'])
           expect {
-            process.save
+            process.save_changes
           }.to_not raise_error
           expect(process.buildpack).to eq(CustomBuildpack.new('http://example.com/foo'))
         end
@@ -254,7 +254,7 @@ module VCAP::CloudController
           admin_buildpack = Buildpack.make
           process.app.lifecycle_data.update(buildpacks: [admin_buildpack.name])
           expect {
-            process.save
+            process.save_changes
           }.to_not raise_error
 
           expect(process.buildpack).to eql(admin_buildpack)
@@ -263,7 +263,7 @@ module VCAP::CloudController
         it 'does not allow a non-url string' do
           process.app.lifecycle_data.buildpacks = ['Hello, world!']
           expect {
-            process.save
+            process.save_changes
           }.to raise_error(Sequel::ValidationFailed, /Specified unknown buildpack name: "Hello, world!"/)
         end
       end
@@ -393,7 +393,7 @@ module VCAP::CloudController
           expect(process.metadata).to eq({})
           process.metadata['some_key'] = 'some val'
           expect(process.metadata['some_key']).to eq('some val')
-          process.save
+          process.save_changes
           expect(process.metadata['some_key']).to eq('some val')
           process.refresh
           expect(process.metadata['some_key']).to eq('some val')
@@ -424,17 +424,17 @@ module VCAP::CloudController
 
           it 'should raise error when quota is exceeded' do
             process.memory = 65
-            expect { process.save }.to raise_error(/quota_exceeded/)
+            expect { process.save_changes }.to raise_error(/quota_exceeded/)
           end
 
           it 'should not raise error when quota is not exceeded' do
             process.memory = 63
-            expect { process.save }.to_not raise_error
+            expect { process.save_changes }.to_not raise_error
           end
 
           it 'can delete an app that somehow has exceeded its memory quota' do
             quota.memory_limit = 32
-            quota.save
+            quota.save_changes
             process.memory = 100
             process.save(validate: false)
             expect(process.reload).to_not be_valid
@@ -443,12 +443,12 @@ module VCAP::CloudController
 
           it 'allows scaling down instances of an app from above quota to below quota' do
             org.quota_definition = QuotaDefinition.make(memory_limit: 72)
-            act_as_cf_admin { org.save }
+            act_as_cf_admin { org.save_changes }
 
             expect(process.reload).to_not be_valid
             process.instances = 1
 
-            process.save
+            process.save_changes
 
             expect(process.reload).to be_valid
             expect(process.instances).to eq(1)
@@ -457,56 +457,56 @@ module VCAP::CloudController
           it 'should raise error when instance quota is exceeded' do
             quota.app_instance_limit = 4
             quota.memory_limit       = 512
-            quota.save
+            quota.save_changes
 
             process.instances = 5
-            expect { process.save }.to raise_error(/instance_limit_exceeded/)
+            expect { process.save_changes }.to raise_error(/instance_limit_exceeded/)
           end
 
           it 'should raise error when space instance quota is exceeded' do
             space_quota.app_instance_limit = 4
             space_quota.memory_limit       = 512
-            space_quota.save
+            space_quota.save_changes
             quota.memory_limit = 512
-            quota.save
+            quota.save_changes
 
             process.instances = 5
-            expect { process.save }.to raise_error(/instance_limit_exceeded/)
+            expect { process.save_changes }.to raise_error(/instance_limit_exceeded/)
           end
 
           it 'raises when scaling down number of instances but remaining above quota' do
             org.quota_definition = QuotaDefinition.make(memory_limit: 32)
-            act_as_cf_admin { org.save }
+            act_as_cf_admin { org.save_changes }
 
             process.reload
             process.instances = 1
 
-            expect { process.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+            expect { process.save_changes }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
             process.reload
             expect(process.instances).to eq(2)
           end
 
           it 'allows stopping an app that is above quota' do
             org.quota_definition = QuotaDefinition.make(memory_limit: 72)
-            act_as_cf_admin { org.save }
+            act_as_cf_admin { org.save_changes }
 
             expect(process.reload).to be_started
 
             process.state = 'STOPPED'
-            process.save
+            process.save_changes
 
             expect(process).to be_stopped
           end
 
           it 'allows reducing memory from above quota to at/below quota' do
             org.quota_definition = QuotaDefinition.make(memory_limit: 64)
-            act_as_cf_admin { org.save }
+            act_as_cf_admin { org.save_changes }
 
             process.memory = 40
-            expect { process.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+            expect { process.save_changes }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
 
             process.memory = 32
-            process.save
+            process.save_changes
             expect(process.memory).to eq(32)
           end
         end
@@ -522,7 +522,7 @@ module VCAP::CloudController
 
           it 'allows empty ports' do
             process.ports = []
-            expect { process.save }.to_not raise_error
+            expect { process.save_changes }.to_not raise_error
           end
         end
 
@@ -533,14 +533,14 @@ module VCAP::CloudController
 
           it 'disallows empty ports' do
             process.ports = []
-            expect { process.save }.to raise_error(/ports array/)
+            expect { process.save_changes }.to raise_error(/ports array/)
           end
         end
 
         describe 'health check type is not specified' do
           it 'disallows empty ports' do
             process = ProcessModel.new(ports: [], app: parent_app)
-            expect { process.save }.to raise_error(/ports array/)
+            expect { process.save_changes }.to raise_error(/ports array/)
           end
         end
       end
@@ -824,7 +824,7 @@ module VCAP::CloudController
       it 'saves the field as nil when set to nil' do
         process         = ProcessModelFactory.make(command: 'echo hi')
         process.command = nil
-        process.save
+        process.save_changes
         process.refresh
         expect(process.command).to eq(nil)
       end
@@ -832,7 +832,7 @@ module VCAP::CloudController
       it 'does not fall back to metadata value if command is not present' do
         process         = ProcessModelFactory.make(metadata: { command: 'echo hi' })
         process.command = nil
-        process.save
+        process.save_changes
         process.refresh
         expect(process.command).to be_nil
       end
@@ -842,7 +842,7 @@ module VCAP::CloudController
       it 'stores the command in the metadata' do
         process = ProcessModelFactory.make(console: true)
         expect(process.metadata).to eq('console' => true)
-        process.save
+        process.save_changes
         expect(process.metadata).to eq('console' => true)
         process.refresh
         expect(process.metadata).to eq('console' => true)
@@ -868,7 +868,7 @@ module VCAP::CloudController
       it 'stores the command in the metadata' do
         process = ProcessModelFactory.make(debug: 'suspend')
         expect(process.metadata).to eq('debug' => 'suspend')
-        process.save
+        process.save_changes
         expect(process.metadata).to eq('debug' => 'suspend')
         process.refresh
         expect(process.metadata).to eq('debug' => 'suspend')
@@ -1144,7 +1144,7 @@ module VCAP::CloudController
 
       it 'should update the version when changing :state' do
         process.state = 'STARTED'
-        expect { process.save }.to change(process, :version)
+        expect { process.save_changes }.to change(process, :version)
       end
 
       it 'should update the version on update of :state' do
@@ -1170,7 +1170,7 @@ module VCAP::CloudController
               process.instances = 3
 
               expect {
-                process.save
+                process.save_changes
                 process.reload
               }.not_to change { process.version }
             end
@@ -1181,7 +1181,7 @@ module VCAP::CloudController
               process.memory = 17
 
               expect {
-                process.save
+                process.save_changes
                 process.reload
               }.to change { process.version }
             end
@@ -1192,7 +1192,7 @@ module VCAP::CloudController
               process.ports = [1753]
 
               expect {
-                process.save
+                process.save_changes
                 process.reload
               }.to change { process.version }
             end
@@ -1206,28 +1206,28 @@ module VCAP::CloudController
 
           it 'should not update the version for memory' do
             process.memory = 2048
-            expect { process.save }.not_to change(process, :version)
+            expect { process.save_changes }.not_to change(process, :version)
           end
 
           it 'should not update the version for health_check_type' do
             process.health_check_type = 'process'
-            expect { process.save }.not_to change(process, :version)
+            expect { process.save_changes }.not_to change(process, :version)
           end
 
           it 'should not update the version for health_check_http_endpoint' do
             process.health_check_http_endpoint = '/two'
-            expect { process.save }.not_to change(process, :version)
+            expect { process.save_changes }.not_to change(process, :version)
           end
 
           it 'should not update the version for changes to the port' do
             process.ports = [8081]
-            expect { process.save }.not_to change(process, :version)
+            expect { process.save_changes }.not_to change(process, :version)
           end
         end
 
         it 'should update the version when changing :memory' do
           process.memory = 2048
-          expect { process.save }.to change(process, :version)
+          expect { process.save_changes }.to change(process, :version)
         end
 
         it 'should update the version on update of :memory' do
@@ -1236,12 +1236,12 @@ module VCAP::CloudController
 
         it 'should update the version when changing :health_check_type' do
           process.health_check_type = 'none'
-          expect { process.save }.to change(process, :version)
+          expect { process.save_changes }.to change(process, :version)
         end
 
         it 'should not update the version when changing :instances' do
           process.instances = 8
-          expect { process.save }.to_not change(process, :version)
+          expect { process.save_changes }.to_not change(process, :version)
         end
 
         it 'should not update the version on update of :instances' do
@@ -1510,7 +1510,7 @@ module VCAP::CloudController
         process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
         PackageModel.make(:docker, app: process.app)
         expect {
-          process.save
+          process.save_changes
         }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
 
@@ -1555,7 +1555,7 @@ module VCAP::CloudController
         it 'calls the app observer with the app', isolation: :truncation do
           expect(ProcessObserver).not_to have_received(:updated).with(process)
           process.ports = [1111, 2222]
-          process.save
+          process.save_changes
           expect(ProcessObserver).to have_received(:updated).with(process)
         end
 
@@ -1563,7 +1563,7 @@ module VCAP::CloudController
           expect {
             process.ports  = [1111, 2222]
             process.memory = 2048
-            process.save
+            process.save_changes
           }.to change(process, :version)
         end
       end
@@ -1641,7 +1641,7 @@ module VCAP::CloudController
             context 'when the user provided ports' do
               before do
                 process.ports = [1111]
-                process.save
+                process.save_changes
               end
 
               it 'saves to db and returns the user provided ports' do

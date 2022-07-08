@@ -86,7 +86,7 @@ module VCAP::CloudController
 
       context 'when model validation fails' do
         before do
-          allow_any_instance_of(PackageModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
+          allow_any_instance_of(PackageModel).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('the message'))
         end
 
         it 'raises an InvalidPackage error' do

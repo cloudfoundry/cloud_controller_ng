@@ -398,35 +398,35 @@ module VCAP::CloudController
         it 'should allow standard ascii characters' do
           sec_group.name = "A -_- word 2!?()\'\"&+."
           expect {
-            sec_group.save
+            sec_group.save_changes
           }.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           sec_group.name = 'a\\word'
           expect {
-            sec_group.save
+            sec_group.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           sec_group.name = 'Ω∂∂ƒƒß√˜˙∆ß'
           expect {
-            sec_group.save
+            sec_group.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           sec_group.name = "one\ntwo"
           expect {
-            sec_group.save
+            sec_group.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           sec_group.name = "a\e word"
           expect {
-            sec_group.save
+            sec_group.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -958,13 +958,13 @@ module VCAP::CloudController
 
       it 'includes security groups that are the running default' do
         security_group.running_default = true
-        security_group.save
+        security_group.save_changes
         expect(filtered_security_groups).to contain_exactly(security_group)
       end
 
       it 'includes security groups that are the staging default' do
         security_group.staging_default = true
-        security_group.save
+        security_group.save_changes
         expect(filtered_security_groups).to contain_exactly(security_group)
       end
 

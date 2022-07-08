@@ -62,7 +62,7 @@ module VCAP::CloudController
       end
 
       it 're-raises validation errors' do
-        allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('invalid'))
+        allow(app_model).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('invalid'))
         expect {
           app_assign_droplet.assign(app_model, droplet)
         }.to raise_error(AppAssignDroplet::InvalidApp)

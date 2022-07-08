@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       feature_flag.enabled = feature_flag_attributes['enabled']
       feature_flag.error_message = feature_flag_attributes['error_message']
-      feature_flag.save
+      feature_flag.save_changes
 
       [
         HTTP::OK,

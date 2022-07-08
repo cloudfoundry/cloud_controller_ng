@@ -14,7 +14,7 @@ module VCAP::CloudController
     describe '#stack' do
       it 'persists the stack' do
         lifecycle_data.stack = 'cflinuxfs3'
-        lifecycle_data.save
+        lifecycle_data.save_changes
         expect(lifecycle_data.reload.stack).to eq 'cflinuxfs3'
       end
     end
@@ -30,7 +30,7 @@ module VCAP::CloudController
       context 'when passed in nil' do
         it 'does not persist any buildpacks' do
           lifecycle_data.buildpacks = nil
-          lifecycle_data.save
+          lifecycle_data.save_changes
           expect(lifecycle_data.reload.buildpacks).to eq []
         end
       end
@@ -38,13 +38,13 @@ module VCAP::CloudController
       context 'when using a buildpack URL' do
         it 'persists the buildpack and reads it back' do
           lifecycle_data.buildpacks = ['http://buildpack.example.com']
-          lifecycle_data.save
+          lifecycle_data.save_changes
           expect(lifecycle_data.reload.buildpacks).to eq ['http://buildpack.example.com']
         end
 
         it 'persists multiple buildpacks and reads them back' do
           lifecycle_data.buildpacks = ['http://buildpack-1.example.com', 'http://buildpack-2.example.com']
-          lifecycle_data.save
+          lifecycle_data.save_changes
           expect(lifecycle_data.reload.buildpacks).to eq ['http://buildpack-1.example.com', 'http://buildpack-2.example.com']
         end
 
@@ -57,7 +57,7 @@ module VCAP::CloudController
             expect(lifecycle_data.buildpacks).to eq ['http://original-buildpack-1.example.com', 'http://original-buildpack-2.example.com']
 
             lifecycle_data.buildpacks = ['http://new-buildpack.example.com']
-            lifecycle_data.save
+            lifecycle_data.save_changes
             expect(lifecycle_data.reload.buildpacks).to eq ['http://new-buildpack.example.com']
           end
 
@@ -74,14 +74,14 @@ module VCAP::CloudController
         context 'when using a buildpack name' do
           it 'persists the buildpack and reads it back' do
             lifecycle_data.buildpacks = ['some-buildpack']
-            lifecycle_data.save
+            lifecycle_data.save_changes
             expect(lifecycle_data.reload.buildpacks).to eq ['some-buildpack']
             expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.map(&:admin_buildpack_name)).to eq ['some-buildpack']
           end
 
           it 'persists multiple buildpacks and reads them back' do
             lifecycle_data.buildpacks = ['some-buildpack', 'another-buildpack']
-            lifecycle_data.save
+            lifecycle_data.save_changes
             expect(lifecycle_data.reload.buildpacks).to eq ['some-buildpack', 'another-buildpack']
           end
 
@@ -121,7 +121,7 @@ module VCAP::CloudController
 
             it 'persists the multi-field buildpacks and reads them back' do
               lifecycle_data.buildpacks = lifecycle_buildpacks
-              lifecycle_data.save
+              lifecycle_data.save_changes
               new_buildpacks = lifecycle_data.reload.buildpacks
               expect(new_buildpacks.size).to eq(lifecycle_buildpacks.size)
               expect(new_buildpacks).to match_array(['pleasant-valley-buildpack', 'stepping-stone-buildpack', 'git://my-buildpacks.tv/fred/barney.git'])
@@ -153,7 +153,7 @@ module VCAP::CloudController
               expect(lifecycle_data.buildpacks).to eq ['some-buildpack', 'another-buildpack']
 
               lifecycle_data.buildpacks = ['new-buildpack']
-              lifecycle_data.save
+              lifecycle_data.save_changes
               expect(lifecycle_data.reload.buildpacks).to eq ['new-buildpack']
             end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
         context 'when using both a buildpack name and buildpack url' do
           it 'persists the buildpacks and reads them back' do
             lifecycle_data.buildpacks = ['some-buildpack', 'http://foo:bar@buildpackurl.com']
-            lifecycle_data.save
+            lifecycle_data.save_changes
             expect(lifecycle_data.reload.buildpacks).to eq ['some-buildpack', 'http://foo:bar@buildpackurl.com']
             expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.map(&:buildpack_url)).to eq [nil, 'http://foo:bar@buildpackurl.com']
             expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.map(&:admin_buildpack_name)).to eq ['some-buildpack', nil]
@@ -182,14 +182,14 @@ module VCAP::CloudController
           context 'when the first buildpack specified is a custom url' do
             it 'persists the buildpack with legacy fields' do
               lifecycle_data.buildpacks = ['http://buildpack.example.com']
-              lifecycle_data.save
+              lifecycle_data.save_changes
               expect(lifecycle_data.reload.legacy_buildpack_url).to eq 'http://buildpack.example.com'
               expect(lifecycle_data.reload.legacy_admin_buildpack_name).to be_nil
             end
 
             it 'reads a buildpack that was saved with legacy buildpack_url field' do
               lifecycle_data.legacy_buildpack_url = 'http://buildpack.example.com'
-              lifecycle_data.save
+              lifecycle_data.save_changes
               expect(lifecycle_data.reload.buildpacks).to eq ['http://buildpack.example.com']
             end
           end
@@ -197,14 +197,14 @@ module VCAP::CloudController
           context 'when the first buildpack specified is an admin buildpack' do
             it 'persists the buildpack with legacy fields' do
               lifecycle_data.buildpacks = ['ruby']
-              lifecycle_data.save
+              lifecycle_data.save_changes
               expect(lifecycle_data.reload.legacy_buildpack_url).to be_nil
               expect(lifecycle_data.reload.legacy_admin_buildpack_name).to eq 'ruby'
             end
 
             it 'reads a buildpack that was saved with legacy admin_buildpack_name field' do
               lifecycle_data.legacy_admin_buildpack_name = 'ruby'
-              lifecycle_data.save
+              lifecycle_data.save_changes
               expect(lifecycle_data.reload.buildpacks).to eq ['ruby']
             end
           end
@@ -216,14 +216,14 @@ module VCAP::CloudController
 
         it 'persists the buildpack' do
           lifecycle_data.buildpacks = ['ruby']
-          lifecycle_data.save
+          lifecycle_data.save_changes
           expect(lifecycle_data.reload.buildpacks).to eq ['ruby']
         end
 
         context 'when supporting rolling deploys' do
           it 'also persists the buildpack under the legacy column' do
             lifecycle_data.buildpacks = ['ruby']
-            lifecycle_data.save
+            lifecycle_data.save_changes
             expect(lifecycle_data.reload.legacy_admin_buildpack_name).to eq 'ruby'
           end
         end
@@ -391,7 +391,7 @@ module VCAP::CloudController
         Buildpack.make(name: 'ruby')
         lifecycle_data.stack = stack
         lifecycle_data.buildpacks = buildpacks
-        lifecycle_data.save
+        lifecycle_data.save_changes
       end
 
       it 'returns the lifecycle data as a hash' do
@@ -465,21 +465,21 @@ module VCAP::CloudController
       it 'can be associated with a droplet' do
         droplet = DropletModel.make
         lifecycle_data.droplet = droplet
-        lifecycle_data.save
+        lifecycle_data.save_changes
         expect(lifecycle_data.reload.droplet).to eq(droplet)
       end
 
       it 'can be associated with apps' do
         app = AppModel.make
         lifecycle_data.app = app
-        lifecycle_data.save
+        lifecycle_data.save_changes
         expect(lifecycle_data.reload.app).to eq(app)
       end
 
       it 'can be associated with a build' do
         build = BuildModel.make
         lifecycle_data.build = build
-        lifecycle_data.save
+        lifecycle_data.save_changes
         expect(lifecycle_data.reload.build).to eq(build)
       end
     end

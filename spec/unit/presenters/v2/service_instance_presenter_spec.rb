@@ -23,7 +23,7 @@ module CloudController::Presenters::V2
 
         before do
           service_instance.service_plan_id = service_plan.id
-          service_instance.save
+          service_instance.save_changes
         end
 
         it 'returns the service instance entity' do

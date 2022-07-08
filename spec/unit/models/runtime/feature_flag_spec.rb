@@ -14,7 +14,7 @@ module VCAP::CloudController
         existing_flag       = FeatureFlag.make
         duplicate_flag      = FeatureFlag.new
         duplicate_flag.name = existing_flag.name
-        expect { duplicate_flag.save }.to raise_error(Sequel::ValidationFailed, /name unique/)
+        expect { duplicate_flag.save_changes }.to raise_error(Sequel::ValidationFailed, /name unique/)
       end
 
       context 'name validation' do
@@ -41,42 +41,42 @@ module VCAP::CloudController
         it 'shoud allow standard ascii characters' do
           feature_flag.error_message = "A -_- word 2!?()\'\'&+."
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           feature_flag.error_message = 'a\\word'
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           feature_flag.error_message = '防御力¡'
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           feature_flag.error_message = "one\ntwo"
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           feature_flag.error_message = "a\e word"
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should allow an empty error_message' do
           feature_flag.error_message = nil
           expect {
-            feature_flag.save
+            feature_flag.save_changes
           }.to_not raise_error
         end
       end
@@ -178,7 +178,7 @@ module VCAP::CloudController
       context 'when the flag is enabled' do
         before do
           feature_flag.enabled = true
-          feature_flag.save
+          feature_flag.save_changes
         end
 
         it 'does not raise an error' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
       context 'when the flag is disabled' do
         before do
           feature_flag.enabled = false
-          feature_flag.save
+          feature_flag.save_changes
         end
 
         context 'and there is no custom error message defined' do

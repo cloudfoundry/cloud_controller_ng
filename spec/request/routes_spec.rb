@@ -2660,7 +2660,7 @@ RSpec.describe 'Routes Request' do
     describe 'when route_sharing flag is disabled' do
       before do
         feature_flag.enabled = false
-        feature_flag.save
+        feature_flag.save_changes
       end
 
       it 'makes users unable to unshare routes' do
@@ -2806,7 +2806,7 @@ RSpec.describe 'Routes Request' do
     describe 'when route_sharing flag is disabled' do
       before do
         feature_flag.enabled = false
-        feature_flag.save
+        feature_flag.save_changes
       end
 
       it 'makes users unable to share routes' do
@@ -3079,7 +3079,7 @@ RSpec.describe 'Routes Request' do
     describe 'when route_sharing flag is disabled' do
       before do
         feature_flag.enabled = false
-        feature_flag.save
+        feature_flag.save_changes
       end
 
       it 'makes users unable to unshare routes' do

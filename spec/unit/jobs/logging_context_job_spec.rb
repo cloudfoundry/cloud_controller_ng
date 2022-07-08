@@ -88,7 +88,7 @@ module VCAP::CloudController
         it 'saves the exception on the job as cf_api_error' do
           expect(YAML).to receive(:dump).with('sanitized exception hash').and_return('marshaled hash')
           expect(job).to receive(:cf_api_error=).with('marshaled hash')
-          expect(job).to receive(:save)
+          expect(job).to receive(:save_changes)
 
           logging_context_job.error(job, 'exception')
         end
@@ -184,7 +184,7 @@ module VCAP::CloudController
               logging_context_job.error(job, 'exception')
 
               expect(job).to have_received(:priority=).with(0).ordered
-              expect(job).to have_received(:save).ordered
+              expect(job).to have_received(:save_changes).ordered
             end
           end
 
@@ -197,7 +197,7 @@ module VCAP::CloudController
               logging_context_job.error(job, 'exception')
 
               expect(job).to have_received(:priority=).with(1).ordered
-              expect(job).to have_received(:save).ordered
+              expect(job).to have_received(:save_changes).ordered
             end
           end
 
@@ -210,7 +210,7 @@ module VCAP::CloudController
               logging_context_job.error(job, 'exception')
 
               expect(job).to have_received(:priority=).with(34).ordered
-              expect(job).to have_received(:save).ordered
+              expect(job).to have_received(:save_changes).ordered
             end
           end
         end

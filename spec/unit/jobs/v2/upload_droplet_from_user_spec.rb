@@ -14,7 +14,7 @@ module VCAP::CloudController
         before do
           allow_any_instance_of(Jobs::V3::DropletUpload).to receive(:perform) do
             droplet.mark_as_staged
-            droplet.save
+            droplet.save_changes
           end
         end
 

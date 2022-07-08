@@ -23,7 +23,7 @@ module VCAP::CloudController
       domain.router_group_guid = message.router_group_guid
 
       Domain.db.transaction do
-        domain.save
+        domain.save_changes
 
         MetadataUpdate.update(domain, message)
 

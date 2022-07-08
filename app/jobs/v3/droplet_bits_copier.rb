@@ -36,14 +36,14 @@ module VCAP::CloudController
             destination_droplet.droplet_hash = source_droplet.droplet_hash
             destination_droplet.sha256_checksum = source_droplet.sha256_checksum
             destination_droplet.state = source_droplet.state
-            destination_droplet.save
+            destination_droplet.save_changes
           end
         rescue => e
           destination_droplet.db.transaction do
             destination_droplet.lock!
             destination_droplet.error_description = "failed to copy - #{e.message}"
             destination_droplet.state = DropletModel::FAILED_STATE
-            destination_droplet.save
+            destination_droplet.save_changes
           end
           raise
         end

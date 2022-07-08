@@ -250,7 +250,7 @@ module VCAP::CloudController
                   before do
                     assigner.assign(shared_isolation_segment, [org])
                     space.isolation_segment_model = shared_isolation_segment
-                    space.save
+                    space.save_changes
                     space.reload
                   end
 
@@ -266,7 +266,7 @@ module VCAP::CloudController
                   before do
                     assigner.assign(isolation_segment_model_2, [org])
                     space.isolation_segment_model = isolation_segment_model_2
-                    space.save
+                    space.save_changes
                   end
 
                   it 'sets the IS from the space' do
@@ -286,7 +286,7 @@ module VCAP::CloudController
                 before do
                   assigner.assign(isolation_segment_model, [org])
                   space.isolation_segment_model = isolation_segment_model
-                  space.save
+                  space.save_changes
                 end
 
                 it 'sets the isolation segment' do

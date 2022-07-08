@@ -1770,7 +1770,7 @@ RSpec.describe 'V3 service brokers' do
     service = VCAP::CloudController::Service.where(service_broker_id: broker.id).first
     plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
     plan.public = true
-    plan.save
+    plan.save_changes
 
     request_body = {
       type: 'managed',

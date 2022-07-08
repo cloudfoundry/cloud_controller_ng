@@ -69,7 +69,7 @@ module VCAP::CloudController
           it 'raises an error' do
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
-            expect(space_quota).to receive(:save).and_raise(Sequel::ValidationFailed.new(errors))
+            expect(space_quota).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new(errors))
 
             message = VCAP::CloudController::SpaceQuotaUpdateMessage.new(name: 'foobar')
             expect {

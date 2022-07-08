@@ -477,7 +477,7 @@ RSpec.describe 'Deployments' do
 
       before do
         app_model.update(desired_state: VCAP::CloudController::ProcessModel::STOPPED)
-        app_model.save
+        app_model.save_changes
       end
 
       it 'creates a deployment object in state DEPLOYED' do
@@ -793,7 +793,7 @@ RSpec.describe 'Deployments' do
 
       before do
         org.quota_definition = smol_quota
-        org.save
+        org.save_changes
       end
 
       it 'should return a 422 when a quota is violated' do

@@ -91,7 +91,7 @@ module VCAP::CloudController
         self.package_hash = checksums[:sha1]
         self.sha256_checksum = checksums[:sha256]
         self.state = VCAP::CloudController::PackageModel::READY_STATE
-        self.save
+        self.save_changes
       end
     end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
         self.lock!
         self.state = VCAP::CloudController::PackageModel::FAILED_STATE
         self.error = err_msg
-        self.save
+        self.save_changes
       end
     end
   end

@@ -46,7 +46,7 @@ module VCAP::CloudController
     describe '#buildpack_url' do
       it 'persists the buildpack' do
         buildpack.buildpack_url = 'http://buildpack.example.com'
-        buildpack.save
+        buildpack.save_changes
         expect(buildpack.reload.buildpack_url).to eq 'http://buildpack.example.com'
       end
     end
@@ -55,7 +55,7 @@ module VCAP::CloudController
       it 'persists the version' do
         buildpack.buildpack_url = 'http://buildpack.example.com'
         buildpack.version = '1.2.3'
-        buildpack.save
+        buildpack.save_changes
         expect(buildpack.reload.version).to eq('1.2.3')
       end
     end
@@ -64,7 +64,7 @@ module VCAP::CloudController
       it 'persists the buildpack_name' do
         buildpack.admin_buildpack_name = 'ruby'
         buildpack.buildpack_name = 'fez_buildpack'
-        buildpack.save
+        buildpack.save_changes
         expect(buildpack.reload.buildpack_name).to eq('fez_buildpack')
       end
     end
@@ -72,7 +72,7 @@ module VCAP::CloudController
     describe '#admin_buildpack_name' do
       it 'persists the buildpack' do
         buildpack.admin_buildpack_name = 'ruby'
-        buildpack.save
+        buildpack.save_changes
         expect(buildpack.reload.admin_buildpack_name).to eq 'ruby'
       end
     end

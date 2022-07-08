@@ -29,7 +29,7 @@ module VCAP::CloudController::Presenters::V3
           droplet.lifecycle_data.stack = 'the-happiest-stack'
           droplet.buildpack_receipt_buildpack = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
-          droplet.save
+          droplet.save_changes
         end
 
         it 'presents the droplet as a hash' do
@@ -162,7 +162,7 @@ module VCAP::CloudController::Presenters::V3
           droplet.lifecycle_data.stack = 'the-happiest-stack'
           droplet.buildpack_receipt_buildpack = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = buildpack_receipt_detect_output
-          droplet.save
+          droplet.save_changes
         end
 
         it 'presents the droplet as a hash and presents new buildpack info' do
@@ -212,7 +212,7 @@ module VCAP::CloudController::Presenters::V3
 
         before do
           droplet.docker_receipt_image = 'test-image'
-          droplet.save
+          droplet.save_changes
         end
 
         it 'presents the docker image and lifecycle data' do
@@ -242,7 +242,7 @@ module VCAP::CloudController::Presenters::V3
 
         before do
           droplet.docker_receipt_image = 'test-image'
-          droplet.save
+          droplet.save_changes
         end
 
         it 'presents the docker image and lifecycle data' do
@@ -298,7 +298,7 @@ module VCAP::CloudController::Presenters::V3
       context 'when the droplet is AWAITING_UPLOAD' do
         before do
           droplet.state = VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE
-          droplet.save
+          droplet.save_changes
         end
 
         it 'adds the upload link' do
@@ -320,7 +320,7 @@ module VCAP::CloudController::Presenters::V3
       context 'when the droplet is STAGED' do
         before do
           droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
-          droplet.save
+          droplet.save_changes
         end
 
         it 'adds the upload link' do

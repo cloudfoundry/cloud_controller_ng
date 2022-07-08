@@ -51,7 +51,7 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
   describe 'Standard endpoints' do
     before do
       service_broker.space = space
-      service_broker.save
+      service_broker.save_changes
     end
 
     standard_model_list :service_broker, VCAP::CloudController::ServiceBrokersController

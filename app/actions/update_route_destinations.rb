@@ -82,7 +82,7 @@ module VCAP::CloudController
             validate_protocol_matches!(rm)
 
             route_mapping = RouteMappingModel.new(rm)
-            route_mapping.save
+            route_mapping.save_changes
 
             Copilot::Adapter.map_route(route_mapping)
             route_mapping.processes.each do |process|

@@ -19,8 +19,8 @@ module VCAP::CloudController
         allow(calculator).to receive(:minimum_limit).and_return(minimum_limit)
         space.space_quota_definition = space_quota_definition
         org.quota_definition = quota_definition
-        space.save
-        org.save
+        space.save_changes
+        org.save_changes
       end
 
       it 'uses the requested_limit' do

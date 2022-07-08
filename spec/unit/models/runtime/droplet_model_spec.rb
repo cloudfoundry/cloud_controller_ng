@@ -57,7 +57,7 @@ module VCAP::CloudController
       it 'is a persistable hash' do
         info                        = { web: 'started', worker: 'started' }
         droplet_model.process_types = info
-        droplet_model.save
+        droplet_model.save_changes
         expect(droplet_model.reload.process_types['web']).to eq('started')
         expect(droplet_model.reload.process_types['worker']).to eq('started')
       end
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
         before do
           droplet_model.buildpack_lifecycle_data = lifecycle_data
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns the string "buildpack"' do
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         before do
           droplet_model.kpack_lifecycle_data = lifecycle_data
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns the string "kpack"' do
@@ -98,7 +98,7 @@ module VCAP::CloudController
         before do
           droplet_model.buildpack_lifecycle_data = nil
           droplet_model.kpack_lifecycle_data = nil
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns the string "docker"' do
@@ -119,7 +119,7 @@ module VCAP::CloudController
 
         before do
           droplet_model.buildpack_lifecycle_data = lifecycle_data
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns buildpack_lifecycle_data if it is on the model' do
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         before do
           droplet_model.kpack_lifecycle_data = lifecycle_data
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns kpack_lifecycle_data if it is on the model' do
@@ -172,7 +172,7 @@ module VCAP::CloudController
         before do
           droplet_model.kpack_lifecycle_data = nil
           droplet_model.buildpack_lifecycle_data = nil
-          droplet_model.save
+          droplet_model.save_changes
         end
 
         it 'returns a docker lifecycle model' do

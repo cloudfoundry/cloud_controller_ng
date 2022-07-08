@@ -18,7 +18,7 @@ module VCAP::CloudController
       package.docker_image = source_package.docker_image
 
       package.db.transaction do
-        package.save
+        package.save_changes
 
         if source_package.type == 'bits'
           @enqueued_job = Jobs::Enqueuer.new(

@@ -746,7 +746,7 @@ module VCAP::CloudController
           it 'returns 400 SpaceQuotaTotalRoutesExceeded' do
             quota_definition             = SpaceQuotaDefinition.make(total_routes: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
-            space.save
+            space.save_changes
 
             post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: shared_domain.guid, space_guid: space.guid)
 
@@ -761,7 +761,7 @@ module VCAP::CloudController
             quota_definition                            = space.organization.quota_definition
             quota_definition.total_reserved_route_ports = 0
             quota_definition.total_routes               = 0
-            quota_definition.save
+            quota_definition.save_changes
 
             post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: shared_domain.guid, space_guid: space.guid)
 
@@ -776,7 +776,7 @@ module VCAP::CloudController
           it 'returns 400 OrgQuotaTotalReservedRoutePortsExceeded' do
             quota_definition                            = space.organization.quota_definition
             quota_definition.total_reserved_route_ports = 0
-            quota_definition.save
+            quota_definition.save_changes
 
             post '/v2/routes', MultiJson.dump(domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
 
@@ -792,7 +792,7 @@ module VCAP::CloudController
           it 'returns 400 SpaceQuotaTotalReservedRoutePortsExceeded' do
             quota_definition             = SpaceQuotaDefinition.make(total_reserved_route_ports: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
-            space.save
+            space.save_changes
 
             post '/v2/routes', MultiJson.dump(domain_guid: tcp_domain.guid, space_guid: space.guid, port: 1234)
 

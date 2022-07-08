@@ -56,7 +56,7 @@ module VCAP::CloudController
           enqueuer.enqueue
           Repositories::ServiceBindingEventRepository.record_start_create(binding, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
         else
-          binding.save
+          binding.save_changes
           Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
         end
       rescue => e

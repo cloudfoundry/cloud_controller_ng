@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         begin
           service_key.set(attributes_to_update)
-          service_key.save
+          service_key.save_changes
         rescue => e
           @logger.error "Failed to save state of create for service key #{service_key.guid} with exception: #{e}"
           service_resource_cleanup = DatabaseErrorServiceResourceCleanup.new(@logger)

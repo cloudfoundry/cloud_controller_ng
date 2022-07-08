@@ -146,7 +146,7 @@ RSpec.describe 'ServiceInstances' do
       service_instance.dashboard_url   = 'someurl.com'
       service_instance.service_plan_id = service_plan.id
       service_instance.maintenance_info = { version: '2.0', description: 'Test description' }
-      service_instance.save
+      service_instance.save_changes
     end
 
     context 'with a managed service instance' do

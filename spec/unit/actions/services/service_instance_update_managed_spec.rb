@@ -277,7 +277,7 @@ module VCAP::CloudController
 
             it 'should reset the service instance maintenance_info to nil' do
               service_instance.maintenance_info = { 'version' => '0.1' }
-              service_instance.save
+              service_instance.save_changes
               service_instance_update.update_service_instance(service_instance, request_attrs)
 
               expect(service_instance.reload.maintenance_info).to eq(nil)
@@ -335,7 +335,7 @@ module VCAP::CloudController
       context 'when the service instance already has a dashboard url' do
         before do
           service_instance.dashboard_url = 'http://previous-dashboard-url.com'
-          service_instance.save
+          service_instance.save_changes
         end
 
         context 'and when there is a new dashboard url on update' do

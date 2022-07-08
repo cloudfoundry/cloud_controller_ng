@@ -296,7 +296,7 @@ module VCAP::CloudController
             domain = SharedDomain.make
             route = Route.make(domain: domain)
             route.domain = route.domain = domain
-            expect { route.save }.not_to raise_error
+            expect { route.save_changes }.not_to raise_error
           end
 
           it "fails if it's different" do
@@ -312,7 +312,7 @@ module VCAP::CloudController
           it 'succeeds if it is the same domain' do
             route = Route.make(space: space, domain: domain)
             route.domain = domain
-            expect { route.save }.not_to raise_error
+            expect { route.save_changes }.not_to raise_error
           end
 
           it 'fails if its a different domain' do
@@ -740,7 +740,7 @@ module VCAP::CloudController
             context 'when not exceeding total allowed routes' do
               before do
                 org_quota.total_routes = 10
-                org_quota.save
+                org_quota.save_changes
               end
 
               it 'does not have an error on organization' do
@@ -753,7 +753,7 @@ module VCAP::CloudController
               before do
                 org_quota.total_routes = 0
                 org_quota.total_reserved_route_ports = 0
-                org_quota.save
+                org_quota.save_changes
               end
 
               it 'has the error on organization' do
@@ -765,13 +765,13 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              subject.save
+              subject.save_changes
 
               expect(subject).to be_valid
 
               org_quota.total_routes = 0
               org_quota.total_reserved_route_ports = 0
-              org_quota.save
+              org_quota.save_changes
 
               expect(subject).to be_valid
             end
@@ -786,7 +786,7 @@ module VCAP::CloudController
             context 'when not exceeding total allowed routes' do
               before do
                 space_quota.total_routes = 10
-                space_quota.save
+                space_quota.save_changes
               end
 
               it 'does not have an error on the space' do
@@ -798,7 +798,7 @@ module VCAP::CloudController
             context 'when exceeding total allowed routes' do
               before do
                 space_quota.total_routes = 0
-                space_quota.save
+                space_quota.save_changes
               end
 
               it 'has the error on the space' do
@@ -817,7 +817,7 @@ module VCAP::CloudController
 
               before do
                 space_quota.total_reserved_route_ports = 0
-                space_quota.save
+                space_quota.save_changes
               end
 
               it 'is invalid' do
@@ -829,12 +829,12 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              subject.save
+              subject.save_changes
 
               expect(subject).to be_valid
 
               space_quota.total_routes = 0
-              space_quota.save
+              space_quota.save_changes
 
               expect(subject).to be_valid
             end
@@ -849,8 +849,8 @@ module VCAP::CloudController
             org_quota.total_reserved_route_ports = 0
             space_quota.total_routes = 10
 
-            org_quota.save
-            space_quota.save
+            org_quota.save_changes
+            space_quota.save_changes
           end
 
           it 'fails when the space quota is valid and the organization quota is exceeded' do
@@ -902,7 +902,7 @@ module VCAP::CloudController
               TestConfig.override(kubernetes: nil)
               org_quota.total_routes = 2
               org_quota.total_reserved_route_ports = 1
-              org_quota.save
+              org_quota.save_changes
             end
 
             it 'is valid' do
@@ -913,7 +913,7 @@ module VCAP::CloudController
               subject(:another_route) { Route.new(space: space, domain: http_domain, host: 'foo') }
 
               before do
-                http_route.save
+                http_route.save_changes
               end
 
               it 'is valid' do
@@ -930,7 +930,7 @@ module VCAP::CloudController
 
               context 'when exceeding total_reserved_route_ports in org quota' do
                 before do
-                  tcp_route.save
+                  tcp_route.save_changes
                 end
                 it 'is invalid' do
                   expect(subject).to_not be_valid
@@ -942,11 +942,11 @@ module VCAP::CloudController
                 before do
                   org_quota.total_routes = 10
                   org_quota.total_reserved_route_ports = 2
-                  org_quota.save
+                  org_quota.save_changes
                   space_quota.total_reserved_route_ports = 1
-                  space_quota.save
+                  space_quota.save_changes
 
-                  tcp_route.save
+                  tcp_route.save_changes
                 end
 
                 it 'is invalid' do
@@ -961,7 +961,7 @@ module VCAP::CloudController
             before do
               org_quota.total_routes = 1
               org_quota.total_reserved_route_ports = 0
-              org_quota.save
+              org_quota.save_changes
             end
 
             it 'has the error on organization' do
@@ -973,7 +973,7 @@ module VCAP::CloudController
               before do
                 org_quota.total_routes = 0
                 org_quota.total_reserved_route_ports = -1
-                org_quota.save
+                org_quota.save_changes
               end
 
               it 'has the error on organization' do
@@ -988,7 +988,7 @@ module VCAP::CloudController
               before do
                 org_quota.total_routes = 1
                 org_quota.total_reserved_route_ports = 0
-                org_quota.save
+                org_quota.save_changes
               end
 
               it 'is valid' do
@@ -1002,15 +1002,15 @@ module VCAP::CloudController
           before do
             TestConfig.override(kubernetes: nil)
             org_quota.total_reserved_route_ports = 1
-            org_quota.save
+            org_quota.save_changes
           end
 
           it 'should not validate the total routes limit if already existing' do
             expect(subject).to be_valid
-            subject.save
+            subject.save_changes
 
             org_quota.total_reserved_route_ports = 0
-            org_quota.save
+            org_quota.save_changes
 
             expect(subject).to be_valid
           end

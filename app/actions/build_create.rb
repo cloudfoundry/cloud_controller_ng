@@ -55,7 +55,7 @@ module VCAP::CloudController
       )
 
       BuildModel.db.transaction do
-        build.save
+        build.save_changes
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
         if metadata

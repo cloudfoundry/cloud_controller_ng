@@ -20,10 +20,10 @@ module VCAP::CloudController
       let(:message) { ServiceBrokersListMessage.from_params(filters) }
 
       before do
-        broker.save
-        space_scoped_broker_1.save
-        space_scoped_broker_2.save
-        space_scoped_broker_3.save
+        broker.save_changes
+        space_scoped_broker_1.save_changes
+        space_scoped_broker_2.save_changes
+        space_scoped_broker_3.save_changes
 
         expect(message).to be_valid
       end

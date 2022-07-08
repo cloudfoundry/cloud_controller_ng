@@ -605,7 +605,7 @@ module VCAP::CloudController
         context 'when it is an instance of an unbindable service' do
           before do
             service_instance.service.bindable = false
-            service_instance.service.save
+            service_instance.service.save_changes
           end
 
           it_behaves_like 'UnbindableServiceInstance'
@@ -614,7 +614,7 @@ module VCAP::CloudController
         context 'when it is an instance of an unbindable service plan' do
           before do
             service_instance.service_plan.bindable = false
-            service_instance.service_plan.save
+            service_instance.service_plan.save_changes
           end
 
           it_behaves_like 'UnbindableServiceInstance'
@@ -675,7 +675,7 @@ module VCAP::CloudController
           context 'when the instance has a previous operation' do
             before do
               service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
-              service_instance.save
+              service_instance.save_changes
             end
 
             it 'reverts the last_operation of the instance to its previous operation' do
@@ -693,7 +693,7 @@ module VCAP::CloudController
           context 'when the instance does not have a last_operation' do
             before do
               service_instance.service_instance_operation = nil
-              service_instance.save
+              service_instance.save_changes
             end
 
             it 'does not save a last_operation' do
@@ -1069,7 +1069,7 @@ module VCAP::CloudController
           context 'when the instance does not have a last_operation' do
             before do
               service_binding.service_instance.service_instance_operation = nil
-              service_binding.service_instance.save
+              service_binding.service_instance.save_changes
             end
 
             it 'does not save a last_operation' do
@@ -1095,7 +1095,7 @@ module VCAP::CloudController
           context 'when the instance has a last_operation' do
             before do
               service_binding.service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
-              service_binding.service_instance.save
+              service_binding.service_instance.save_changes
             end
 
             it 'reverts to the previous last_operation' do
@@ -1126,7 +1126,7 @@ module VCAP::CloudController
 
           before do
             service_binding.service_binding_operation = last_operation
-            service_binding.save
+            service_binding.save_changes
           end
 
           it 'should be able to trigger delete binding' do
@@ -1157,7 +1157,7 @@ module VCAP::CloudController
           let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
           before do
             service_instance.service_instance_operation = last_operation
-            service_instance.save
+            service_instance.save_changes
           end
 
           it 'should show an error message for unbind operation' do
@@ -1560,7 +1560,7 @@ module VCAP::CloudController
 
             before do
               binding.service_binding_operation = last_operation
-              binding.save
+              binding.save_changes
             end
 
             it 'should show an error message for get parameter operation' do

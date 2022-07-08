@@ -37,7 +37,7 @@ module VCAP::CloudController
           process.skip_process_version_update = true
         end
 
-        process.save
+        process.save_changes
 
         Repositories::ProcessEventRepository.record_update(process, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
       end

@@ -107,7 +107,7 @@ module VCAP::CloudController
       it 'deletes the last operation for each managed service instance' do
         instance_operation_1 = ServiceInstanceOperation.make(state: 'succeeded')
         route_service_instance.service_instance_operation = instance_operation_1
-        route_service_instance.save
+        route_service_instance.save_changes
 
         errors, warnings = service_instance_delete.delete(service_instance_dataset)
         expect(errors).to be_empty

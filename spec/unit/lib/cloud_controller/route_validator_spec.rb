@@ -132,7 +132,7 @@ module VCAP::CloudController
 
             before do
               TestConfig.override(kubernetes: nil)
-              route.save
+              route.save_changes
             end
 
             it 'adds a route_port_taken error to the route' do
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
             before do
               TestConfig.override(kubernetes: nil)
-              route.save
+              route.save_changes
             end
 
             it 'adds a route_port_taken error to the route' do
@@ -163,7 +163,7 @@ module VCAP::CloudController
 
           before do
             TestConfig.override(kubernetes: nil)
-            route.save
+            route.save_changes
           end
 
           it 'does not add an error to the route' do

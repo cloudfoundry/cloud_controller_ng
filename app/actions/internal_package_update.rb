@@ -20,7 +20,7 @@ module VCAP::CloudController
         package.sha256_checksum = message.sha256 if message.requested?(:checksums)
         package.error           = message.error if message.requested?(:error)
 
-        package.save
+        package.save_changes
       end
 
       @logger.info("Finished updating package #{package.guid}")

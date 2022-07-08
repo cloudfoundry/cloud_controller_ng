@@ -112,35 +112,35 @@ module VCAP::CloudController
         it 'should allow standard ascii characters' do
           task.name = "A -_- word 2!?()\'\"&+."
           expect {
-            task.save
+            task.save_changes
           }.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           task.name = 'a \\ word'
           expect {
-            task.save
+            task.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           task.name = '詩子¡'
           expect {
-            task.save
+            task.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           task.name = "a \n word"
           expect {
-            task.save
+            task.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           task.name = "a \e word"
           expect {
-            task.save
+            task.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -198,7 +198,7 @@ module VCAP::CloudController
 
         it 'is unique per app' do
           task.sequence_id = 0
-          task.save
+          task.save_changes
 
           expect {
             TaskModel.make app: task.app, sequence_id: 0
@@ -207,7 +207,7 @@ module VCAP::CloudController
 
         it 'is NOT unique across different apps' do
           task.sequence_id = 0
-          task.save
+          task.save_changes
 
           other_app = AppModel.make space_guid: space.guid
 
@@ -231,7 +231,7 @@ module VCAP::CloudController
 
           it 'limits the length' do
             expect {
-              TaskModel.make(environment_variables: { 123 => 123 }).save
+              TaskModel.make(environment_variables: { 123 => 123 }).save_changes
             }.to raise_error(Sequel::ValidationFailed, /exceeded the maximum length allowed of 5 characters as json/)
           end
         end
@@ -382,7 +382,7 @@ module VCAP::CloudController
 
               task.state = TaskModel::RUNNING_STATE
 
-              expect { task.save }.not_to raise_error
+              expect { task.save_changes }.not_to raise_error
             end
 
             context 'when the number of running tasks is equal to the app task limit' do
@@ -490,7 +490,7 @@ module VCAP::CloudController
 
               task.state = TaskModel::RUNNING_STATE
 
-              expect { task.save }.not_to raise_error
+              expect { task.save_changes }.not_to raise_error
             end
 
             context 'when the number of running tasks is equal to the app task limit' do

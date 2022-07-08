@@ -10,7 +10,7 @@ NUM_USERS.times do |i|
   space = org.spaces.sample
   user = User.create(guid: "user-#{i}")
   org.add_user(user)
-  org.save
+  org.save_changes
   if space.nil? || [true, false].sample
     org.send("add_#{org_roles.sample}", user)
   else

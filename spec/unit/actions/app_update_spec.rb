@@ -203,7 +203,7 @@ module VCAP::CloudController
 
       context 'when the app is invalid' do
         before do
-          allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
+          allow(app_model).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('something'))
         end
 
         it 'raises an invalid app error' do

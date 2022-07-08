@@ -381,7 +381,7 @@ module VCAP::CloudController
 
             before do
               web_process.update(instances: 5)
-              web_process.save
+              web_process.save_changes
             end
 
             context 'when the existing deployment is DEPLOYING' do
@@ -447,7 +447,7 @@ module VCAP::CloudController
           context 'when the app is stopped' do
             before do
               app.update(desired_state: ProcessModel::STOPPED)
-              app.save
+              app.save_changes
             end
 
             it 'sets the current droplet of the app to be the provided droplet' do
@@ -615,7 +615,7 @@ module VCAP::CloudController
           context 'when the app is stopped' do
             before do
               app.update(desired_state: ProcessModel::STOPPED)
-              app.save
+              app.save_changes
             end
 
             it 'starts the app' do
@@ -867,7 +867,7 @@ module VCAP::CloudController
         context 'when the app is stopped' do
           before do
             app.update(desired_state: ProcessModel::STOPPED)
-            app.save
+            app.save_changes
           end
 
           it 'sets the current droplet of the app to be the droplet associated with the revision' do

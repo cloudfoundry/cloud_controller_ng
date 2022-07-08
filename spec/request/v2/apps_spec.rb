@@ -1269,15 +1269,15 @@ RSpec.describe 'Apps' do
       )
 
       process.revision_guid = revision.guid
-      process.save
+      process.save_changes
 
       group                  = VCAP::CloudController::EnvironmentVariableGroup.staging
       group.environment_json = { STAGING_ENV: 'staging_value' }
-      group.save
+      group.save_changes
 
       group                  = VCAP::CloudController::EnvironmentVariableGroup.running
       group.environment_json = { RUNNING_ENV: 'running_value' }
-      group.save
+      group.save_changes
     end
 
     it 'shows the apps env' do

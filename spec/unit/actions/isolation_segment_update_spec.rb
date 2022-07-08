@@ -85,7 +85,7 @@ module VCAP::CloudController
 
     context 'when the isolation_segment is invalid' do
       before do
-        allow_any_instance_of(IsolationSegmentModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('booooooo'))
+        allow_any_instance_of(IsolationSegmentModel).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('booooooo'))
       end
 
       it 'raises an InvalidIsolationSegment error' do

@@ -87,7 +87,7 @@ module VCAP::CloudController
           before do
             org_quota_definition = space_quota_definition.organization.quota_definition
             org_quota_definition.total_reserved_route_ports = 10
-            org_quota_definition.save
+            org_quota_definition.save_changes
           end
 
           it "should not exceed space's total_routes" do
@@ -115,7 +115,7 @@ module VCAP::CloudController
 
             org_quota_definition = space_quota_definition.organization.quota_definition
             org_quota_definition.total_reserved_route_ports = -1
-            org_quota_definition.save
+            org_quota_definition.save_changes
 
             space_quota_definition.total_reserved_route_ports = 1_000
             expect(space_quota_definition).to be_valid
@@ -177,7 +177,7 @@ module VCAP::CloudController
       it 'nullifies space_quota_definition on space' do
         space = Space.make(organization: space_quota_definition.organization)
         space.space_quota_definition = space_quota_definition
-        space.save
+        space.save_changes
         expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)
       end
     end

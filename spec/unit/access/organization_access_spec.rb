@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
 
     before do
-      flag.save
+      flag.save_changes
     end
 
     index_table = {
@@ -110,7 +110,7 @@ module VCAP::CloudController
       context 'when the flag is enabled' do
         before do
           flag.enabled = true
-          flag.save
+          flag.save_changes
         end
 
         it_behaves_like('an access control', :create, flag_enabled_create_table)

@@ -24,7 +24,7 @@ module VCAP::CloudController
         LabelsUpdate.update(app, message.labels, AppLabelModel)
         AnnotationsUpdate.update(app, message.annotations, AppAnnotationModel)
 
-        app.save
+        app.save_changes
 
         raise InvalidApp.new(lifecycle.errors.full_messages.join(', ')) unless lifecycle.valid?
 

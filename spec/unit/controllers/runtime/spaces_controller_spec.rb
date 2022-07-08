@@ -1531,7 +1531,7 @@ module VCAP::CloudController
         before do
           set_current_user_as_admin
           org.add_user(other_user)
-          org.save
+          org.save_changes
           org.reload
         end
 
@@ -1928,7 +1928,7 @@ module VCAP::CloudController
       context 'when a space is associated with an isolation segment' do
         before do
           space.isolation_segment_guid = isolation_segment_model.guid
-          space.save
+          space.save_changes
         end
 
         context 'and we have permission' do
@@ -2342,7 +2342,7 @@ module VCAP::CloudController
 
             context 'when the feature flag "set_roles_by_username" is disabled' do
               before do
-                FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+                FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save_changes
               end
 
               it 'raises a feature flag error for non-admins' do
@@ -2538,7 +2538,7 @@ module VCAP::CloudController
 
             context 'when the feature flag "unset_roles_by_username" is disabled' do
               before do
-                FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
+                FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save_changes
               end
 
               it 'raises a feature flag error for non-admins' do

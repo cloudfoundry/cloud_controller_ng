@@ -139,7 +139,7 @@ module VCAP::CloudController
 
           expect {
             process.set_new_version
-            process.save
+            process.save_changes
           }.to change {
             runners.processes_from_diego_process_guids(process_guid)
           }.from([process]).to([])

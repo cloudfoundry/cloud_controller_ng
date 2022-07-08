@@ -24,7 +24,7 @@ module VCAP::CloudController
             service_plan.remove_all_service_plan_visibilities
           end
 
-          service_plan.save
+          service_plan.save_changes
         end
 
         service_plan.reload

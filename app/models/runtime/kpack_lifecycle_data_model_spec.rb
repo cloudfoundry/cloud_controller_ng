@@ -14,7 +14,7 @@ module VCAP::CloudController
       before do
         Buildpack.make(name: 'ruby')
         lifecycle_data.buildpacks = buildpacks
-        lifecycle_data.save
+        lifecycle_data.save_changes
       end
 
       it 'returns the lifecycle data as a hash' do

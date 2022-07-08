@@ -23,7 +23,7 @@ module VCAP::CloudController
         @process.memory = @message.memory_in_mb if @message.requested?(:memory_in_mb)
         @process.disk_quota = @message.disk_in_mb if @message.requested?(:disk_in_mb)
 
-        @process.save
+        @process.save_changes
 
         record_audit_event
       end

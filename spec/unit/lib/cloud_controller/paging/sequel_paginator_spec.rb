@@ -109,7 +109,7 @@ module VCAP::CloudController
         options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
         request_count_dataset = RequestCount.dataset
-        RequestCount.make.save
+        RequestCount.make.save_changes
         paginated_result = nil
         expect {
           paginated_result = paginator.get_page(request_count_dataset, pagination_options)

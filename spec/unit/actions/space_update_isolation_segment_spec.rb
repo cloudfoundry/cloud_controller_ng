@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         context 'when the space is invalid' do
           before do
-            allow(space).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
+            allow(space).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('something'))
           end
 
           it 'raises an error' do

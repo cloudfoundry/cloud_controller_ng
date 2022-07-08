@@ -55,7 +55,7 @@ module VCAP::CloudController
 
       context 'when broker request is successful but the database fails to save the key (hail mary)' do
         before do
-          allow_any_instance_of(ServiceKey).to receive(:save).and_raise
+          allow_any_instance_of(ServiceKey).to receive(:save_changes).and_raise
         end
 
         it 'immediately attempts to unbind the service instance' do

@@ -45,7 +45,7 @@ module VCAP::CloudController
         allow_any_instance_of(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:build_app_task)
 
         app.droplet = droplet
-        app.save
+        app.save_changes
       end
 
       it 'creates and returns a task using the given app and its droplet' do
@@ -238,7 +238,7 @@ module VCAP::CloudController
 
       context 'when the task is invalid' do
         before do
-          allow_any_instance_of(TaskModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('booooooo'))
+          allow_any_instance_of(TaskModel).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('booooooo'))
         end
 
         it 'raises an InvalidTask error' do

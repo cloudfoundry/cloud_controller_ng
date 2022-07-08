@@ -41,7 +41,7 @@ module VCAP::CloudController
           validate_custom_buildpack!(process)
           validate_package_exists!(process, request_attrs)
 
-          process.save
+          process.save_changes
 
           @access_validator.validate_access(:create, process, request_attrs)
         end

@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         org.default_isolation_segment_guid = iso_seg_guid if message.requested?(:data)
 
-        org.save
+        org.save_changes
       end
     rescue Sequel::ValidationFailed => e
       raise Error.new(e.message)

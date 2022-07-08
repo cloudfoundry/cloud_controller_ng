@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     before do
       build_model.buildpack_lifecycle_data = lifecycle_data
-      build_model.save
+      build_model.save_changes
     end
 
     describe 'associations' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
         before do
           build_model.buildpack_lifecycle_data = nil
           build_model.kpack_lifecycle_data = kpack_lifecycle_data
-          build_model.save
+          build_model.save_changes
         end
 
         it 'returns the string "kpack" if kpack_lifecycle_data is on the model' do
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       it 'returns the string "docker" if there is no buildpack_lifecycle_data is on the model' do
         build_model.buildpack_lifecycle_data = nil
-        build_model.save
+        build_model.save_changes
 
         expect(build_model.lifecycle_type).to eq('docker')
       end
@@ -81,7 +81,7 @@ module VCAP::CloudController
         before do
           build_model.buildpack_lifecycle_data = nil
           build_model.kpack_lifecycle_data = kpack_lifecycle_data
-          build_model.save
+          build_model.save_changes
         end
         it 'returns kpack_lifecycle_data if it is on the model' do
           expect(build_model.lifecycle_data).to eq(kpack_lifecycle_data)
@@ -95,7 +95,7 @@ module VCAP::CloudController
 
       it 'returns a docker lifecycle model if there is no buildpack_lifecycle_model' do
         build_model.buildpack_lifecycle_data = nil
-        build_model.save
+        build_model.save_changes
 
         expect(build_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
       end

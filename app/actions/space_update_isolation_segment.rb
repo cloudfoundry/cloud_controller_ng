@@ -20,7 +20,7 @@ module VCAP::CloudController
         space.lock!
 
         space.isolation_segment_guid = isolation_segment_guid || nil
-        space.save
+        space.save_changes
 
         Repositories::SpaceEventRepository.new.record_space_update(
           space,

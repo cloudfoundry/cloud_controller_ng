@@ -16,7 +16,7 @@ module VCAP::CloudController
         it 'should allow standard ascii character' do
           space.name = "A -_- word 2!?()\'\"&+."
           expect {
-            space.save
+            space.save_changes
           }.to_not raise_error
         end
 
@@ -39,28 +39,28 @@ module VCAP::CloudController
         it 'should allow backslash character' do
           space.name = 'a\\word'
           expect {
-            space.save
+            space.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           space.name = '防御力¡'
           expect {
-            space.save
+            space.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline character' do
           space.name = "a \n word"
           expect {
-            space.save
+            space.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape character' do
           space.name = "a \e word"
           expect {
-            space.save
+            space.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -90,7 +90,7 @@ module VCAP::CloudController
         it 'fails when the space quota is from another organization' do
           new_quota = SpaceQuotaDefinition.make
           space.space_quota_definition = new_quota
-          expect { space.save }.to raise_error(Sequel::ValidationFailed)
+          expect { space.save_changes }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'allows nil' do
@@ -601,7 +601,7 @@ module VCAP::CloudController
       it 'nullifies any default_users' do
         user = User.make
         space.add_default_user(user)
-        space.save
+        space.save_changes
         expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
 
@@ -770,7 +770,7 @@ module VCAP::CloudController
         it 'raises an error' do
           expect {
             space.space_quota_definition_guid = space_quota_definition_guid
-            space.save
+            space.save_changes
           }.to raise_error(CloudController::Errors::ApiError,
             /Could not find SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end

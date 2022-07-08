@@ -13,7 +13,7 @@ module VCAP::CloudController
         sidecar.memory  = message.memory_in_mb if message.requested?(:memory_in_mb)
 
         SidecarModel.db.transaction do
-          sidecar.save
+          sidecar.save_changes
 
           if message.requested?(:process_types)
             sidecar.sidecar_process_types_dataset.destroy

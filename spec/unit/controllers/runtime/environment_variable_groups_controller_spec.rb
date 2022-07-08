@@ -25,7 +25,7 @@ module VCAP::CloudController
               'foo' => 'bar',
               'to all' => 'a good morrow'
             }
-            group.save
+            group.save_changes
 
             get '/v2/config/environment_variable_groups/running'
             expect(last_response.status).to eq(200)
@@ -47,7 +47,7 @@ module VCAP::CloudController
               'foo' => 'bar',
               'to all' => 'a good morrow'
             }
-            group.save
+            group.save_changes
 
             get '/v2/config/environment_variable_groups/staging'
             expect(last_response.status).to eq(200)
@@ -106,7 +106,7 @@ module VCAP::CloudController
               it 'does not update the group' do
                 group = EnvironmentVariableGroup.staging
                 group.environment_json = { 'foo' => 'bar' }
-                group.save
+                group.save_changes
 
                 set_current_user_as_admin
                 put '/v2/config/environment_variable_groups/staging', 'jam sandwich'
@@ -155,7 +155,7 @@ module VCAP::CloudController
               it 'does not update the group' do
                 group = EnvironmentVariableGroup.running
                 group.environment_json = { 'foo' => 'bar' }
-                group.save
+                group.save_changes
 
                 set_current_user_as_admin
                 put '/v2/config/environment_variable_groups/running', req_body
@@ -177,7 +177,7 @@ module VCAP::CloudController
               it 'does not update the group' do
                 group = EnvironmentVariableGroup.running
                 group.environment_json = { 'foo' => 'bar' }
-                group.save
+                group.save_changes
 
                 set_current_user_as_admin
                 put '/v2/config/environment_variable_groups/running', req_body
@@ -199,7 +199,7 @@ module VCAP::CloudController
               it 'does not update the group' do
                 group = EnvironmentVariableGroup.running
                 group.environment_json = { 'foo' => 'bar' }
-                group.save
+                group.save_changes
 
                 set_current_user_as_admin
                 put '/v2/config/environment_variable_groups/running', req_body

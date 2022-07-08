@@ -147,7 +147,7 @@ module VCAP::Services::ServiceBrokers
 
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
         plan_to_deactivate.active = false
-        plan_to_deactivate.save
+        plan_to_deactivate.save_changes
 
         deactivated_plans_warning.add(plan_to_deactivate) if plan_to_deactivate.service_instances_dataset.count >= 1
       end

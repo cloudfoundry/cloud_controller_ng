@@ -34,7 +34,7 @@ module VCAP::CloudController
       context 'when the organization is suspended' do
         before do
           org.status = 'suspended'
-          org.save
+          org.save_changes
         end
 
         it_behaves_like :read_only_access

@@ -878,13 +878,13 @@ RSpec.describe 'Apps' do
         stack3 = VCAP::CloudController::Stack.make(name: 'name3')
 
         app_model1.lifecycle_data.stack = stack2.name
-        app_model1.lifecycle_data.save
+        app_model1.lifecycle_data.save_changes
 
         app_model2.lifecycle_data.stack = stack2.name
-        app_model2.lifecycle_data.save
+        app_model2.lifecycle_data.save_changes
 
         app_model3.lifecycle_data.stack = stack3.name
-        app_model3.lifecycle_data.save
+        app_model3.lifecycle_data.save_changes
 
         get "/v3/apps?stacks=#{stack2.name}", nil, admin_header
 
@@ -913,13 +913,13 @@ RSpec.describe 'Apps' do
         stack3 = VCAP::CloudController::Stack.make(name: 'name3')
 
         app_model1.lifecycle_data.stack = nil
-        app_model1.lifecycle_data.save
+        app_model1.lifecycle_data.save_changes
 
         app_model2.lifecycle_data.stack = stack2.name
-        app_model2.lifecycle_data.save
+        app_model2.lifecycle_data.save_changes
 
         app_model3.lifecycle_data.stack = stack3.name
-        app_model3.lifecycle_data.save
+        app_model3.lifecycle_data.save_changes
 
         get '/v3/apps?stacks=', nil, admin_header
 
@@ -945,7 +945,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::AppModel.make(name: 'name3')
 
         docker_app_model.buildpack_lifecycle_data = nil
-        docker_app_model.save
+        docker_app_model.save_changes
 
         get '/v3/apps?lifecycle_type=buildpack', nil, admin_header
 
@@ -1347,7 +1347,7 @@ RSpec.describe 'Apps' do
       space.organization.add_user(user)
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
+      app_model.lifecycle_data.save_changes
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
     end
@@ -1626,11 +1626,11 @@ RSpec.describe 'Apps' do
       before do
         group = VCAP::CloudController::EnvironmentVariableGroup.staging
         group.environment_json = { STAGING_ENV: 'staging_value' }
-        group.save
+        group.save_changes
 
         group = VCAP::CloudController::EnvironmentVariableGroup.running
         group.environment_json = { RUNNING_ENV: 'running_value' }
-        group.save
+        group.save_changes
       end
 
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/env", nil, user_headers } }
@@ -2292,9 +2292,9 @@ RSpec.describe 'Apps' do
       before do
         app_model.lifecycle_data.buildpacks = ['http://example.com/git']
         app_model.lifecycle_data.stack = stack.name
-        app_model.lifecycle_data.save
+        app_model.lifecycle_data.save_changes
         app_model.droplet = droplet
-        app_model.save
+        app_model.save_changes
       end
 
       context 'starting an app' do
@@ -2570,9 +2570,9 @@ RSpec.describe 'Apps' do
     before do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
+      app_model.lifecycle_data.save_changes
       app_model.droplet = droplet
-      app_model.save
+      app_model.save_changes
     end
 
     context 'stopping an app' do
@@ -2732,9 +2732,9 @@ RSpec.describe 'Apps' do
       before do
         app_model.lifecycle_data.buildpacks = ['http://example.com/git']
         app_model.lifecycle_data.stack = stack.name
-        app_model.lifecycle_data.save
+        app_model.lifecycle_data.save_changes
         app_model.droplet = droplet
-        app_model.save
+        app_model.save_changes
       end
 
       context 'restarting an app' do
@@ -2970,7 +2970,7 @@ RSpec.describe 'Apps' do
 
     before do
       app_model.droplet_guid = droplet_model.guid
-      app_model.save
+      app_model.save_changes
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -3033,7 +3033,7 @@ RSpec.describe 'Apps' do
     before do
       droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
-      app_model.save
+      app_model.save_changes
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -3063,7 +3063,7 @@ RSpec.describe 'Apps' do
     before do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
-      app_model.lifecycle_data.save
+      app_model.lifecycle_data.save_changes
     end
 
     context 'assigning the current droplet of the app' do

@@ -53,7 +53,7 @@ module VCAP::CloudController
       service_instance.service_bindings_dataset.each do |sb|
         sb.credentials = updates[:credentials] if updates.key?(:credentials)
         sb.syslog_drain_url = updates[:syslog_drain_url] if updates.key?(:syslog_drain_url)
-        sb.save
+        sb.save_changes
       end
     end
 

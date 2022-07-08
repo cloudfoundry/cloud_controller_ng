@@ -867,7 +867,7 @@ module VCAP::CloudController
 
         before do
           other_space.add_developer(developer)
-          other_space.save
+          other_space.save_changes
         end
 
         it 'raises an error' do

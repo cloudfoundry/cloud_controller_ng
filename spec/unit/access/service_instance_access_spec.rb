@@ -101,7 +101,7 @@ module VCAP::CloudController
         before do
           broker = service.service_broker
           broker.space = space
-          broker.save
+          broker.save_changes
         end
 
         it 'returns true for purge' do

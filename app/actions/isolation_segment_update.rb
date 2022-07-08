@@ -14,7 +14,7 @@ module VCAP::CloudController
         LabelsUpdate.update(isolation_segment, message.labels, IsolationSegmentLabelModel)
         AnnotationsUpdate.update(isolation_segment, message.annotations, IsolationSegmentAnnotationModel)
 
-        isolation_segment.save
+        isolation_segment.save_changes
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidIsolationSegment.new(e.message)

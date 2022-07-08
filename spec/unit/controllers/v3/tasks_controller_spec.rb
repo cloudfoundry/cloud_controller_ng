@@ -31,7 +31,7 @@ RSpec.describe TasksController, type: :controller do
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
       app_model.droplet = droplet
-      app_model.save
+      app_model.save_changes
 
       CloudController::DependencyLocator.instance.register(:bbs_task_client, client)
       allow_any_instance_of(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:build_app_task)

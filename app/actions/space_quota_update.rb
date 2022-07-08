@@ -22,7 +22,7 @@ module VCAP::CloudController
         quota.total_reserved_route_ports = total_reserved_route_ports(message) if message.routes_limits_message.requested? :total_reserved_ports
         quota.total_routes = total_routes(message) if message.routes_limits_message.requested? :total_routes
 
-        quota.save
+        quota.save_changes
       end
 
       quota

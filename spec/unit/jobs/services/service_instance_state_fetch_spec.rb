@@ -17,9 +17,9 @@ module VCAP::CloudController
             service_plan_guid: proposed_service_plan.guid,
             maintenance_info: proposed_maintenance_info,
           })
-          operation.save
+          operation.save_changes
           service_instance = ManagedServiceInstance.make(service_plan: service_plan)
-          service_instance.save
+          service_instance.save_changes
 
           service_instance.service_instance_operation = operation
           service_instance
@@ -248,7 +248,7 @@ module VCAP::CloudController
             context 'when the last operation type is `update`' do
               before do
                 service_instance.last_operation.type = 'update'
-                service_instance.last_operation.save
+                service_instance.last_operation.save_changes
               end
 
               it 'should create an update event' do
@@ -396,7 +396,7 @@ module VCAP::CloudController
           context 'when saving to the database fails' do
             let(:state) { 'in progress' }
             before do
-              allow(service_instance).to receive(:save) do |instance|
+              allow(service_instance).to receive(:save_changes) do |instance|
                 raise Sequel::Error.new(instance)
               end
             end

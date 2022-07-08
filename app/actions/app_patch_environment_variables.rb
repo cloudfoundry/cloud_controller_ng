@@ -16,7 +16,7 @@ module VCAP::CloudController
         if message.requested?(:var)
           new_values                     = message.var
           app.environment_variables      = existing_environment_variables_for(app).merge(new_values).compact
-          app.save
+          app.save_changes
         end
 
         Repositories::AppEventRepository.new.record_app_update(

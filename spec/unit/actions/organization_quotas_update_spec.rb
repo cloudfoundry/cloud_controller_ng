@@ -70,7 +70,7 @@ module VCAP::CloudController
           it 'raises an error' do
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
-            expect(org_quota).to receive(:save).
+            expect(org_quota).to receive(:save_changes).
               and_raise(Sequel::ValidationFailed.new(errors))
 
             message = VCAP::CloudController::OrganizationQuotasCreateMessage.new(name: 'foobar')

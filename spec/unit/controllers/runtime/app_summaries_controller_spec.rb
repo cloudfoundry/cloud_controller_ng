@@ -9,7 +9,7 @@ module VCAP::CloudController
       @free_mem_size = 128
 
       @shared_domain = SharedDomain.make
-      @shared_domain.save
+      @shared_domain.save_changes
 
       @space = Space.make
       @environment_json = { 'HELLO' => 'WORLD' }

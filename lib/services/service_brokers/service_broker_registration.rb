@@ -17,7 +17,7 @@ module VCAP::Services::ServiceBrokers
       validate_catalog!
       route_service_warning unless @route_services_enabled
       volume_mount_service_warning unless @volume_services_enabled
-      broker.save
+      broker.save_changes
 
       begin
         synchronize_dashboard_clients!
@@ -36,7 +36,7 @@ module VCAP::Services::ServiceBrokers
       return unless broker.valid?
 
       if only_updating_broker_name?
-        broker.save
+        broker.save_changes
         return self
       end
 
@@ -46,7 +46,7 @@ module VCAP::Services::ServiceBrokers
       synchronize_dashboard_clients!
 
       broker.db.transaction do
-        broker.save
+        broker.save_changes
         synchronize_services_and_plans!
       end
       self

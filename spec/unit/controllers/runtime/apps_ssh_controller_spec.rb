@@ -85,7 +85,7 @@ module VCAP::CloudController
         context 'when the space allow_ssh is set to false' do
           before do
             space.allow_ssh = false
-            space.save
+            space.save_changes
           end
 
           it 'returns a 400' do

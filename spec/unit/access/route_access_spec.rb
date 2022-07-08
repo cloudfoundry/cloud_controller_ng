@@ -14,7 +14,7 @@ module VCAP::CloudController
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
     before do
-      flag.save
+      flag.save_changes
     end
 
     index_table = {
@@ -108,7 +108,7 @@ module VCAP::CloudController
       describe 'when route creation is enabled' do
         before(:each) do
           flag.enabled = true
-          flag.save
+          flag.save_changes
         end
 
         describe 'in a shared domain' do

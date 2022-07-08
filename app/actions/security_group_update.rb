@@ -16,7 +16,7 @@ module VCAP::CloudController
           security_group.staging_default = message.staging if message.requested?(:globally_enabled) && !message.staging.nil?
           security_group.running_default = message.running if message.requested?(:globally_enabled) && !message.running.nil?
 
-          security_group.save
+          security_group.save_changes
 
           AsgLatestUpdate.renew
         end

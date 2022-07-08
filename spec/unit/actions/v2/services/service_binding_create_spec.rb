@@ -220,7 +220,7 @@ module VCAP::CloudController
       context 'when the service is not bindable' do
         before do
           service_instance.service.bindable = false
-          service_instance.service.save
+          service_instance.service.save_changes
         end
 
         it 'raises ServiceInstanceNotBindable' do
@@ -420,7 +420,7 @@ module VCAP::CloudController
             stub_request(:delete, service_binding_url_pattern)
 
             allow(service_binding_create).to receive(:logger).and_return(logger)
-            allow_any_instance_of(ServiceBinding).to receive(:save).and_raise('meow')
+            allow_any_instance_of(ServiceBinding).to receive(:save_changes).and_raise('meow')
             allow(logger).to receive(:error)
             allow(logger).to receive(:info)
           end

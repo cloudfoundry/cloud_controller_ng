@@ -27,7 +27,7 @@ module VCAP::CloudController
             droplet.mark_as_staged unless @skip_state_transition
             droplet.droplet_hash = sha1_digest
             droplet.sha256_checksum = sha256_digest
-            droplet.save
+            droplet.save_changes
           end
 
           FileUtils.rm_f(@local_path)
@@ -37,7 +37,7 @@ module VCAP::CloudController
               droplet.lock!
               droplet.error_description = e.message
               droplet.state = DropletModel::FAILED_STATE
-              droplet.save
+              droplet.save_changes
             end
           end
           raise

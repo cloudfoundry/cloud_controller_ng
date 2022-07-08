@@ -23,7 +23,7 @@ module VCAP::CloudController
         synchronize_sidecars(app)
         create_processes(app)
 
-        app.save
+        app.save_changes
       end
 
       app

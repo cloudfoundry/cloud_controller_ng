@@ -19,7 +19,7 @@ module VCAP::CloudController
       )
 
       DropletModel.db.transaction do
-        droplet.save
+        droplet.save_changes
         VCAP::CloudController::BuildpackLifecycleDataModel.create(
           droplet: droplet
         )
@@ -42,7 +42,7 @@ module VCAP::CloudController
         docker_receipt_username: build.package.docker_username,
         docker_receipt_password: build.package.docker_password,
       )
-      droplet.save
+      droplet.save_changes
 
       Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
       record_audit_event(droplet, build.package, user_audit_info_from_build(build))
@@ -53,7 +53,7 @@ module VCAP::CloudController
       droplet = droplet_from_build(build)
 
       DropletModel.db.transaction do
-        droplet.save
+        droplet.save_changes
         droplet.buildpack_lifecycle_data = build.buildpack_lifecycle_data
       end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
       droplet = droplet_from_build(build)
 
       DropletModel.db.transaction do
-        droplet.save
+        droplet.save_changes
         droplet.kpack_lifecycle_data = build.kpack_lifecycle_data
       end
 

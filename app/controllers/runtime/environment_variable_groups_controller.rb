@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       group.environment_json = json_req
-      group.save
+      group.save_changes
 
       [HTTP::OK, MultiJson.dump(group.environment_json, pretty: true)]
     end

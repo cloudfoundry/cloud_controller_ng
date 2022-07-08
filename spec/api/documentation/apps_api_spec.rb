@@ -245,11 +245,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     before do
       group = VCAP::CloudController::EnvironmentVariableGroup.staging
       group.environment_json = { STAGING_ENV: 'staging_value' }
-      group.save
+      group.save_changes
 
       group = VCAP::CloudController::EnvironmentVariableGroup.running
       group.environment_json = { RUNNING_ENV: 'running_value' }
-      group.save
+      group.save_changes
     end
 
     example 'Get the env for an App' do

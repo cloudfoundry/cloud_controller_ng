@@ -124,7 +124,7 @@ module VCAP::CloudController
 
         it "doesn't list any buildpacks with null keys" do
           @another_buildpack.key = nil
-          @another_buildpack.save
+          @another_buildpack.save_changes
 
           expect(all_buildpacks).to_not include(@another_buildpack)
           expect(all_buildpacks).to have(2).items
@@ -132,7 +132,7 @@ module VCAP::CloudController
 
         it 'randomly orders any buildpacks with the same position (for now we did not want to make clever logic of shifting stuff around: up to the user to get it all correct)' do
           @another_buildpack.position = 1
-          @another_buildpack.save
+          @another_buildpack.save_changes
 
           expect(all_buildpacks[2].key).to eq('a key')
         end

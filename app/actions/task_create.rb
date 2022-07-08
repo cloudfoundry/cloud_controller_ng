@@ -124,7 +124,7 @@ module VCAP::CloudController
         task.lock!
         task.state = TaskModel::FAILED_STATE
         task.failure_reason = 'Unable to request task to be run'
-        task.save
+        task.save_changes
       end
     end
 
@@ -132,7 +132,7 @@ module VCAP::CloudController
       task.db.transaction do
         task.lock!
         task.state = TaskModel::RUNNING_STATE
-        task.save
+        task.save_changes
       end
     end
   end

@@ -67,7 +67,7 @@ module VCAP::CloudController
 
           before do
             service_instance.service_instance_operation = last_operation
-            service_instance.save
+            service_instance.save_changes
           end
 
           it 'should raise an async operation in progress error' do
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
             before do
               service_instance.service_instance_operation = last_operation
-              service_instance.save
+              service_instance.save_changes
             end
 
             it 'should raise a NotSupporedError instead of ' do

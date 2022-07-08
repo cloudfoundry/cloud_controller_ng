@@ -95,7 +95,7 @@ module VCAP::CloudController
         let(:mock_service_resource_cleanup) { double(:mock_service_resource_cleanup, attempt_deprovision_instance: nil) }
         before do
           allow(DatabaseErrorServiceResourceCleanup).to receive(:new).and_return(mock_service_resource_cleanup)
-          allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
+          allow_any_instance_of(ManagedServiceInstance).to receive(:save_changes).and_raise
           allow(logger).to receive(:error)
         end
 

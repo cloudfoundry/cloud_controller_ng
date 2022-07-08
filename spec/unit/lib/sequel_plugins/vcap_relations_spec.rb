@@ -364,14 +364,14 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     let!(:middle) do
       middle_klass.create.tap do |m|
         m.bottom_ids = bottoms.collect(&:id)
-        m.save
+        m.save_changes
       end
     end
 
     let!(:top) do
       top_klass.create.tap do |t|
         t.middle_ids = [middle.id]
-        t.save
+        t.save_changes
       end
     end
 
@@ -409,7 +409,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
         bottom = bottoms.first
         expect(bottom.middle_guid).to eq('middle-guid')
         bottom.middle_guid = 'other_middle_guid'
-        bottom.save
+        bottom.save_changes
         expect(bottom.middle_guid).to eq('other_middle_guid')
       end
     end

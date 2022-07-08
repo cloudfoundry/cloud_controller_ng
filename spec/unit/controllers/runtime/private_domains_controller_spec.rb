@@ -124,7 +124,7 @@ module VCAP::CloudController
       it 'returns the OrgQuotaTotalPrivateDomainExceed message' do
         quota_definition = organization.quota_definition
         quota_definition.total_private_domains = 0
-        quota_definition.save
+        quota_definition.save_changes
 
         set_current_user_as_admin
         post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid)

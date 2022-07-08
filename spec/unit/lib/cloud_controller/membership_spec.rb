@@ -133,8 +133,8 @@ module VCAP::CloudController
             space.add_manager(user)
             space.add_auditor(user)
             organization.status = 'suspended'
-            organization.save
-            space.save
+            organization.save_changes
+            space.save_changes
           end
 
           it 'returns true' do
@@ -305,8 +305,8 @@ module VCAP::CloudController
             organization.add_billing_manager(user)
             organization.add_auditor(user)
             organization.status = 'suspended'
-            organization.save
-            space.save
+            organization.save_changes
+            space.save_changes
           end
 
           it 'returns true' do

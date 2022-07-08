@@ -93,7 +93,7 @@ module VCAP::CloudController
 
     def save_route_binding(route_binding)
       route_binding.db.transaction do
-        route_binding.save
+        route_binding.save_changes
       end
     rescue => e
       @logger.error "Failed to save binding for route: #{route_binding.route.guid} and service instance: #{route_binding.service_instance.guid} with exception: #{e}"

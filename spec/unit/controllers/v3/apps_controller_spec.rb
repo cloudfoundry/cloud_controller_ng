@@ -564,7 +564,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           before do
             app_model.lifecycle_data.stack = 'some-stack-name'
             app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://buildpack.com']
-            app_model.lifecycle_data.save
+            app_model.lifecycle_data.save_changes
           end
 
           it 'uses the existing lifecycle on app' do
@@ -686,7 +686,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           before do
             app_model.lifecycle_data.buildpacks = ['some-buildpack']
-            app_model.lifecycle_data.save
+            app_model.lifecycle_data.save_changes
           end
 
           it 'sets the buildpack to nil' do
@@ -754,7 +754,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           before do
             app_model.lifecycle_data.stack = VCAP::CloudController::Stack.default.name
-            app_model.lifecycle_data.save
+            app_model.lifecycle_data.save_changes
           end
 
           it 'does not modify the lifecycle data' do

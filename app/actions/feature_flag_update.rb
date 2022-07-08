@@ -7,7 +7,7 @@ module VCAP::CloudController
       FeatureFlag.db.transaction do
         feature_flag.error_message = message.custom_error_message if message.requested?(:custom_error_message)
         feature_flag.enabled = message.enabled if message.requested?(:enabled)
-        feature_flag.save
+        feature_flag.save_changes
       end
       feature_flag
     end

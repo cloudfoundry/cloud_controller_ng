@@ -741,7 +741,7 @@ module VCAP::CloudController
 
             before do
               plan.maximum_polling_duration = max_poll_duration
-              plan.save
+              plan.save_changes
               stub_request(:get, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 200, body: {
@@ -868,7 +868,7 @@ module VCAP::CloudController
 
           before do
             stub_delete_and_return(403, '{}')
-            allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(CloudController::Errors::ApiError.new_from_details(save_error_text))
+            allow_any_instance_of(ManagedServiceInstance).to receive(:save_changes).and_raise(CloudController::Errors::ApiError.new_from_details(save_error_text))
           end
 
           it 'raises the save error' do
@@ -1075,7 +1075,7 @@ module VCAP::CloudController
                 service_plan_guid: plan.guid
               )
 
-              allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
+              allow_any_instance_of(ManagedServiceInstance).to receive(:save_changes).and_raise
 
               expect {
                 post '/v2/service_instances', req
@@ -1272,7 +1272,7 @@ module VCAP::CloudController
             it 'filters by service_plan_guid' do
               service_plan1 = ServicePlan.make(active: false)
               instance1.service_plan_id = service_plan1.id
-              instance1.save
+              instance1.save_changes
               get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
 
               expect(last_response.status).to eq(200), last_response.body
@@ -1328,7 +1328,7 @@ module VCAP::CloudController
             it 'filters by service_binding_guid' do
               service_plan1 = ServicePlan.make(active: false)
               instance1.service_plan_id = service_plan1.id
-              instance1.save
+              instance1.save_changes
               get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
 
               expect(last_response.status).to eq(200), last_response.body
@@ -1538,7 +1538,7 @@ module VCAP::CloudController
         before do
           service_instance.dashboard_url = 'this.should.be.visible.com'
           service_instance.service_plan_id = service_plan.id
-          service_instance.save
+          service_instance.save_changes
         end
 
         it 'returns the dashboard url in the response' do
@@ -1744,7 +1744,7 @@ module VCAP::CloudController
 
           before do
             service_instance.service_instance_operation = last_operation
-            service_instance.save
+            service_instance.save_changes
           end
 
           it 'updates service instance name in the database' do
@@ -2007,7 +2007,7 @@ module VCAP::CloudController
             let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
             before do
               service_instance.service_instance_operation = last_operation
-              service_instance.save
+              service_instance.save_changes
             end
 
             it 'should show an error message for update operation' do
@@ -2424,7 +2424,7 @@ module VCAP::CloudController
 
           before do
             service_instance.service_instance_operation = last_operation
-            service_instance.save
+            service_instance.save_changes
           end
 
           it 'updates service instance name in the database' do
@@ -2475,7 +2475,7 @@ module VCAP::CloudController
             let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
             before do
               service_instance.service_instance_operation = last_operation
-              service_instance.save
+              service_instance.save_changes
             end
 
             it 'should show an error message for update operation' do
@@ -3991,7 +3991,7 @@ module VCAP::CloudController
       context 'when attempting to bind to an unbindable service' do
         before do
           service_instance.service.bindable = false
-          service_instance.service.save
+          service_instance.service.save_changes
 
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
         end
@@ -4006,7 +4006,7 @@ module VCAP::CloudController
       context 'when attempting to bind to an unbindable service plan' do
         before do
           service_instance.service_plan.bindable = false
-          service_instance.service_plan.save
+          service_instance.service_plan.save_changes
 
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
         end
@@ -4051,7 +4051,7 @@ module VCAP::CloudController
 
         before do
           other_space.add_developer(developer)
-          other_space.save
+          other_space.save_changes
         end
 
         it 'raises an error' do
@@ -4860,7 +4860,7 @@ module VCAP::CloudController
 
           before do
             instance.service_instance_operation = last_operation
-            instance.save
+            instance.save_changes
           end
 
           it 'should show an error message for get parameter operation' do
@@ -4886,7 +4886,7 @@ module VCAP::CloudController
 
           before do
             instance.service_instance_operation = last_operation
-            instance.save
+            instance.save_changes
           end
 
           it 'returns a 400 with error rather than a 409' do
@@ -5202,7 +5202,7 @@ module VCAP::CloudController
 
       it 'returns space quota exceeded message correctly' do
         space.space_quota_definition = SpaceQuotaDefinition.make(total_services: 0, organization: space.organization)
-        space.save
+        space.save_changes
         service_instance_params = {
           name: 'name',
           space_guid: space.guid,
@@ -5216,7 +5216,7 @@ module VCAP::CloudController
 
       it 'returns service plan not allowed by space quota message correctly' do
         space.space_quota_definition = SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: space.organization)
-        space.save
+        space.save_changes
         service_instance_params = {
           name: 'name',
           space_guid: space.guid,
@@ -5230,7 +5230,7 @@ module VCAP::CloudController
 
       it 'returns quota exceeded message correctly' do
         org.quota_definition.total_services = 0
-        org.quota_definition.save
+        org.quota_definition.save_changes
         service_instance_params = {
           name: 'name',
           space_guid: space.guid,
@@ -5244,7 +5244,7 @@ module VCAP::CloudController
 
       it 'returns service plan not allowed by quota message correctly' do
         org.quota_definition.non_basic_services_allowed = false
-        org.quota_definition.save
+        org.quota_definition.save_changes
         service_instance_params = {
           name: 'name',
           space_guid: space.guid,

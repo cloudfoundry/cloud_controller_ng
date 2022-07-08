@@ -45,7 +45,7 @@ module VCAP::CloudController
       context 'when the state is not cancelable' do
         it 'raises InvalidCancel for FAILED' do
           task.state = TaskModel::FAILED_STATE
-          task.save
+          task.save_changes
 
           expect {
             task_cancel.cancel(task: task, user_audit_info: user_audit_info)
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
         it 'raises InvalidCancel for SUCCEEDED' do
           task.state = TaskModel::SUCCEEDED_STATE
-          task.save
+          task.save_changes
 
           expect {
             task_cancel.cancel(task: task, user_audit_info: user_audit_info)

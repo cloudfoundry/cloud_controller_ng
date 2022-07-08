@@ -131,7 +131,7 @@ module VCAP::Services::SSO
                 VCAP::CloudController::ServiceDashboardClient.new(
                   uaa_id: catalog_service.dashboard_client['id'],
                   service_broker: service_broker
-                ).save
+                ).save_changes
               end
 
               it 'creates the clients that do not currently exist' do
@@ -231,12 +231,12 @@ module VCAP::Services::SSO
               VCAP::CloudController::ServiceDashboardClient.new(
                 uaa_id: unused_id,
                 service_broker: service_broker
-              ).save
+              ).save_changes
 
               VCAP::CloudController::ServiceDashboardClient.new(
                 uaa_id: dashboard_client_attrs_1['id'],
                 service_broker: service_broker
-              ).save
+              ).save_changes
             end
 
             it 'deletes the client from the uaa' do
@@ -330,7 +330,7 @@ module VCAP::Services::SSO
               VCAP::CloudController::ServiceDashboardClient.new(
                 uaa_id: unused_id,
                 service_broker: service_broker
-              ).save
+              ).save_changes
             end
 
             it 'does not add new claims' do
@@ -351,7 +351,7 @@ module VCAP::Services::SSO
               VCAP::CloudController::ServiceDashboardClient.new(
                 uaa_id: dashboard_client_attrs_2['id'],
                 service_broker: nil
-              ).save
+              ).save_changes
 
               manager.synchronize_clients_with_catalog(catalog) rescue nil
 
@@ -436,12 +436,12 @@ module VCAP::Services::SSO
           VCAP::CloudController::ServiceDashboardClient.new(
             uaa_id: client_to_delete_1,
             service_broker: service_broker
-          ).save
+          ).save_changes
 
           VCAP::CloudController::ServiceDashboardClient.new(
             uaa_id: client_to_delete_2,
             service_broker: service_broker
-          ).save
+          ).save_changes
 
           allow(client_manager).to receive(:get_clients).and_return(
             [

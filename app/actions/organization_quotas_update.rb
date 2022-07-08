@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         quota.total_private_domains = total_private_domains(message) if message.domains_limits_message.requested? :total_domains
 
-        quota.save
+        quota.save_changes
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 

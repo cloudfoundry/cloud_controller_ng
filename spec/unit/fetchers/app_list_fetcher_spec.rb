@@ -171,7 +171,7 @@ module VCAP::CloudController
 
         before do
           docker_app.buildpack_lifecycle_data = nil
-          docker_app.save
+          docker_app.save_changes
         end
 
         context 'of type buildpack' do

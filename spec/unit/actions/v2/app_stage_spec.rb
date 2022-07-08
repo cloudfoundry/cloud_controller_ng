@@ -167,7 +167,7 @@ module VCAP::CloudController
 
               app = AppModel.make
               app.buildpack_lifecycle_data = buildpack_lifecycle_data
-              app.save
+              app.save_changes
               process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
               PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
 

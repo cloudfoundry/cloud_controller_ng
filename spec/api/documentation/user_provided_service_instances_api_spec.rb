@@ -78,7 +78,7 @@ RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
       before do
         binding = VCAP::CloudController::RouteBinding.make(route: associated_route, service_instance: service_instance)
         associated_route.route_binding = binding
-        associated_route.save
+        associated_route.save_changes
       end
 
       standard_model_list :routes, VCAP::CloudController::RoutesController, outer_model: :user_provided_service_instance

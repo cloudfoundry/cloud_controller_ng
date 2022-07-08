@@ -526,7 +526,7 @@ module VCAP::CloudController
         context 'when there are started apps' do
           before do
             process.state = 'STARTED'
-            process.save
+            process.save_changes
             ProcessModelFactory.make(state: 'STOPPED')
           end
 
@@ -683,7 +683,7 @@ module VCAP::CloudController
           3.times do
             event            = repository.create_from_process(ProcessModel.make)
             event.created_at = old
-            event.save
+            event.save_changes
           end
         end
 

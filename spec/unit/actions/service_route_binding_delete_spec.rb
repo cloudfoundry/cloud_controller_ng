@@ -149,7 +149,7 @@ module VCAP::CloudController
 
         before do
           binding.last_operation.broker_provided_operation = broker_provided_operation
-          binding.save
+          binding.save_changes
 
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
           allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_return(last_operation_response)

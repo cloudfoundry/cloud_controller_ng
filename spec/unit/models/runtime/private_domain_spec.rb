@@ -120,7 +120,7 @@ module VCAP::CloudController
           context 'when not exceeding total private domains' do
             before do
               org_quota.total_private_domains = 10
-              org_quota.save
+              org_quota.save_changes
             end
 
             it 'does not have an error on organization' do
@@ -132,7 +132,7 @@ module VCAP::CloudController
           context 'when exceeding total private domains' do
             before do
               org_quota.total_private_domains = 0
-              org_quota.save
+              org_quota.save_changes
             end
 
             it 'has the error on organization' do
@@ -144,12 +144,12 @@ module VCAP::CloudController
 
         context 'on update' do
           it 'should not validate the total private domains limit if already existing' do
-            subject.save
+            subject.save_changes
 
             expect(subject).to be_valid
 
             org_quota.total_private_domains = 0
-            org_quota.save
+            org_quota.save_changes
 
             expect(subject).to be_valid
           end

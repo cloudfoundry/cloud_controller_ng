@@ -20,7 +20,7 @@ module VCAP::CloudController
       )
 
       Route.db.transaction do
-        route.save
+        route.save_changes
 
         MetadataUpdate.update(route, message)
       end

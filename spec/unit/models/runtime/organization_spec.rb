@@ -134,35 +134,35 @@ module VCAP::CloudController
         it 'should allow standard ascii characters' do
           org.name = "A -_- word 2!?()\'\"&+."
           expect {
-            org.save
+            org.save_changes
           }.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           org.name = 'a\\word'
           expect {
-            org.save
+            org.save_changes
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           org.name = '防御力¡'
           expect {
-            org.save
+            org.save_changes
           }.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           org.name = "one\ntwo"
           expect {
-            org.save
+            org.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           org.name = "a\e word"
           expect {
-            org.save
+            org.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -250,7 +250,7 @@ module VCAP::CloudController
           ['active', 'suspended'].each do |status|
             org.status = status
             expect {
-              org.save
+              org.save_changes
             }.not_to raise_error
             expect(org.status).to eq(status)
           end
@@ -259,14 +259,14 @@ module VCAP::CloudController
         it 'should not allow arbitrary status values' do
           org.status = 'unknown'
           expect {
-            org.save
+            org.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow a nil status' do
           org.status = nil
           expect {
-            org.save
+            org.save_changes
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -901,7 +901,7 @@ module VCAP::CloudController
         let(:org) { Organization.create_from_hash(name: 'myorg') }
 
         it 'uses the default' do
-          org.save
+          org.save_changes
           expect(org.quota_definition_id).to eq(QuotaDefinition.default.id)
         end
 
@@ -912,7 +912,7 @@ module VCAP::CloudController
           end
 
           it 'raises an exception' do
-            expect { org.save }.to raise_error(CloudController::Errors::ApiError, /Quota Definition could not be found: default/)
+            expect { org.save_changes }.to raise_error(CloudController::Errors::ApiError, /Quota Definition could not be found: default/)
           end
         end
       end
@@ -925,7 +925,7 @@ module VCAP::CloudController
           let(:quota_definition_guid) { my_quota.guid }
 
           it 'uses what is provided' do
-            org.save
+            org.save_changes
             expect(org.quota_definition).to eq(my_quota)
           end
         end
@@ -935,7 +935,7 @@ module VCAP::CloudController
 
           it 'uses what is provided' do
             expect {
-              org.save
+              org.save_changes
             }.to raise_error(CloudController::Errors::ApiError, /Could not find QuotaDefinition with guid: #{quota_definition_guid}/)
           end
         end

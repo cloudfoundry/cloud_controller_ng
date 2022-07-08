@@ -165,7 +165,7 @@ module VCAP::CloudController
           3.times do
             event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
             event.created_at = old
-            event.save
+            event.save_changes
           end
         end
 

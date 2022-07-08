@@ -47,20 +47,20 @@ module VCAP::CloudController
   AppModel.blueprint do
     name       { Sham.name }
     space      { Space.make }
-    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save_changes) }
   end
 
   AppModel.blueprint(:kpack) do
     name { Sham.name }
     space { Space.make }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save_changes } }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save_changes) }
   end
 
   AppModel.blueprint(:docker) do
     name { Sham.name }
     space { Space.make }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    buildpack_lifecycle_data { nil.tap { |_| object.save_changes } }
   end
 
   BuildModel.blueprint do
@@ -73,23 +73,23 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet_guid: guid) }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    buildpack_lifecycle_data { nil.tap { |_| object.save_changes } }
   end
 
   BuildModel.blueprint(:kpack) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet_guid: guid) }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save_changes) }
     package { PackageModel.make(app: app) }
-    droplet { DropletModel.make(:docker, build: object.save) }
+    droplet { DropletModel.make(:docker, build: object.save_changes) }
   end
 
   BuildModel.blueprint(:buildpack) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make }
-    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(build: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(build: object.save_changes) }
   end
 
   PackageModel.blueprint do
@@ -115,7 +115,7 @@ module VCAP::CloudController
     app { AppModel.make(droplet_guid: guid) }
     droplet_hash { Sham.guid }
     sha256_checksum { Sham.guid }
-    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save_changes) }
   end
 
   DropletModel.blueprint(:docker) do
@@ -124,8 +124,8 @@ module VCAP::CloudController
     sha256_checksum { nil }
     state { VCAP::CloudController::DropletModel::STAGED_STATE }
     app { AppModel.make(droplet_guid: guid) }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { nil.tap { |_| object.save } }
+    buildpack_lifecycle_data { nil.tap { |_| object.save_changes } }
+    kpack_lifecycle_data { nil.tap { |_| object.save_changes } }
   end
 
   DropletModel.blueprint(:kpack) do
@@ -135,8 +135,8 @@ module VCAP::CloudController
     docker_receipt_image { nil }
     app { AppModel.make(:kpack, droplet_guid: guid) }
     state { VCAP::CloudController::DropletModel::STAGED_STATE }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(droplet: object.save) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save_changes } }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(droplet: object.save_changes) }
   end
 
   DeploymentModel.blueprint do
@@ -705,7 +705,7 @@ module VCAP::CloudController
       break [] if object.droplet.process_types.blank?
 
       object.droplet.process_types.map do |type, _|
-        RevisionProcessCommandModel.make(revision: object.save, process_type: type, process_command: nil).guid
+        RevisionProcessCommandModel.make(revision: object.save_changes, process_type: type, process_command: nil).guid
       end
     end
   end
@@ -718,7 +718,7 @@ module VCAP::CloudController
       break [] if object.droplet.process_types.blank?
 
       object.droplet.process_types.map do |type, _|
-        process_command = RevisionProcessCommandModel.make(revision: object.save, process_type: type, process_command: nil)
+        process_command = RevisionProcessCommandModel.make(revision: object.save_changes, process_type: type, process_command: nil)
         process_command.update(process_command: 'custom_web_command') if type == 'web'
         process_command.guid
       end
@@ -734,7 +734,7 @@ module VCAP::CloudController
     name { 'sleepy' }
     command { 'sleep infinity' }
     revision { RevisionModel.make }
-    revision_sidecar_process_type_guids { [RevisionSidecarProcessTypeModel.make(revision_sidecar: object.save).guid] }
+    revision_sidecar_process_type_guids { [RevisionSidecarProcessTypeModel.make(revision_sidecar: object.save_changes).guid] }
   end
 
   RevisionSidecarProcessTypeModel.blueprint do

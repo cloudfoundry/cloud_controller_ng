@@ -29,11 +29,11 @@ module VCAP::CloudController
 
       DropletModel.db.transaction do
         if @source_droplet.buildpack?
-          new_droplet.save
+          new_droplet.save_changes
           copy_buildpack_droplet(new_droplet)
         elsif @source_droplet.docker?
           new_droplet.state = @source_droplet.state
-          new_droplet.save
+          new_droplet.save_changes
         end
 
         Repositories::DropletEventRepository.record_create_by_copying(

@@ -39,7 +39,7 @@ module VCAP::CloudController
         route_handler = ProcessRouteHandler.new(process)
 
         RouteMappingModel.db.transaction do
-          route_mapping.save
+          route_mapping.save_changes
           route_handler.update_route_information
 
           app_event_repository.record_map_route(

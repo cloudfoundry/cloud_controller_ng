@@ -531,7 +531,7 @@ module VCAP::CloudController
         org.add_user user
         org.add_billing_manager billing_manager
         allow(uaa_client).to receive(:usernames_for_ids).and_return({})
-        org.save
+        org.save_changes
       end
 
       describe 'removing the last billing manager' do

@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       context 'when the package is invalid' do
         before do
-          allow(package).to receive(:save).and_raise(Sequel::ValidationFailed.new('message'))
+          allow(package).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('message'))
         end
 
         it 'raises InvalidPackage' do

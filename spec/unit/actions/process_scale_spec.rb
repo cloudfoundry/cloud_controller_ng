@@ -88,7 +88,7 @@ module VCAP::CloudController
 
       context 'when the process is invalid' do
         before do
-          allow(process).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
+          allow(process).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('the message'))
         end
 
         it 'raises an invalid error' do

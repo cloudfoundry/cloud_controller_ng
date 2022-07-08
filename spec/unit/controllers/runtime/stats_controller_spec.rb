@@ -38,7 +38,7 @@ module VCAP::CloudController
 
             process.state     = 'STARTED'
             process.instances = 1
-            process.save
+            process.save_changes
 
             process.refresh
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
             process.state     = 'STARTED'
             process.instances = 1
-            process.save
+            process.save_changes
 
             process.refresh
 
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
             process.state     = 'STARTED'
             process.instances = 1
-            process.save
+            process.save_changes
 
             process.refresh
 
@@ -232,7 +232,7 @@ module VCAP::CloudController
 
               process.state = 'STARTED'
               process.instances = 1
-              process.save
+              process.save_changes
 
               process.refresh
 
@@ -248,7 +248,7 @@ module VCAP::CloudController
 
             process.state     = 'STARTED'
             process.instances = 1
-            process.save
+            process.save_changes
 
             process.refresh
 

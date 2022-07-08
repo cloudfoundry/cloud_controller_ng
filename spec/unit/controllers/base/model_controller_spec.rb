@@ -621,7 +621,7 @@ module VCAP::CloudController
 
         context 'when removing an associated object' do
           it 'succeeds when user has access to both objects in the association' do
-            associated_model2.save
+            associated_model2.save_changes
             expect(model.test_model_many_to_ones).to_not be_empty
 
             delete "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model2.guid}", '{}'
@@ -778,7 +778,7 @@ module VCAP::CloudController
 
         before do
           model.test_model = associated_model
-          model.save
+          model.save_changes
         end
 
         describe 'reading' do

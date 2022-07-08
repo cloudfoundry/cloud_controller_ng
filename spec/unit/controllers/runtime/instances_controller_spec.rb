@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         it 'returns 400 when there is an error finding the instances' do
           process.state = 'STOPPED'
-          process.save
+          process.save_changes
 
           get "/v2/apps/#{process.app.guid}/instances"
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
           before do
             process.state     = 'STARTED'
             process.instances = 1
-            process.save
+            process.save_changes
 
             process.refresh
           end

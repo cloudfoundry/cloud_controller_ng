@@ -3547,7 +3547,7 @@ RSpec.describe 'V3 service instances' do
     describe 'when service_instance_sharing flag is disabled' do
       before do
         feature_flag.enabled = false
-        feature_flag.save
+        feature_flag.save_changes
       end
 
       it 'makes users unable to share services' do

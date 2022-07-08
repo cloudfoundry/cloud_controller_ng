@@ -205,7 +205,7 @@ module VCAP::CloudController
 
       it 'creates events for existing service instances' do
         reseed_time = Sequel.datetime_class.now
-        instance.save
+        instance.save_changes
 
         post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances'
 

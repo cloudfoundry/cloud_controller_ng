@@ -321,7 +321,7 @@ module VCAP::CloudController
 
             before do
               space.space_quota_definition = free_quota
-              space.space_quota_definition.save
+              space.space_quota_definition.save_changes
             end
 
             context 'when changing the instance parameters' do

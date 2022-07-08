@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     def update_lifecycle_data_model(app)
       if [update_lifecycle_data_buildpacks(app)].any?
-        app.lifecycle_data.save
+        app.lifecycle_data.save_changes
       end
     end
 

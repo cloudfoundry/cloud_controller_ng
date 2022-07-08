@@ -86,7 +86,7 @@ module VCAP::CloudController
       context 'when the org is invalid' do
         before do
           assigner.assign(isolation_segment, [org])
-          allow(org).to receive(:save).and_raise(Sequel::ValidationFailed.new('some message'))
+          allow(org).to receive(:save_changes).and_raise(Sequel::ValidationFailed.new('some message'))
         end
 
         it 'raises an InvalidOrg error' do

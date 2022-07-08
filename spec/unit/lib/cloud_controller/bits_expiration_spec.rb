@@ -157,7 +157,7 @@ module VCAP::CloudController
 
       it 'does not blow up if the current droplet has no package' do
         app.droplet.update(package_guid: nil)
-        app.droplet.save
+        app.droplet.save_changes
 
         expect { BitsExpiration.new.expire_packages!(app) }.not_to raise_error
       end

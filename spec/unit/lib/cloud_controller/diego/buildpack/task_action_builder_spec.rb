@@ -94,7 +94,7 @@ module VCAP::CloudController
 
             before do
               task.droplet.sha256_checksum = nil
-              task.droplet.save
+              task.droplet.save_changes
             end
 
             it 'uses sha1 in the download droplet action' do
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
               before do
                 task.droplet.sha256_checksum = nil
-                task.droplet.save
+                task.droplet.save_changes
               end
 
               it 'creates a action to download the droplet' do
@@ -160,7 +160,7 @@ module VCAP::CloudController
               # this test can be removed once legacy sha1 checksummed droplets are obsolete
               before do
                 task.droplet.sha256_checksum = nil
-                task.droplet.save
+                task.droplet.save_changes
               end
 
               it 'creates a image layer for each cached dependency' do

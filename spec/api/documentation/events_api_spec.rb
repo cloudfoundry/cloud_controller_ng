@@ -564,7 +564,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       VCAP::CloudController::ServiceDashboardClient.new(
         uaa_id:         client_attrs['id'],
         service_broker: VCAP::CloudController::ServiceBroker.make
-      ).save
+      ).save_changes
 
       service_event_repository.record_service_dashboard_client_event(:create, client_attrs, test_broker)
 
@@ -593,7 +593,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       VCAP::CloudController::ServiceDashboardClient.new(
         uaa_id:         client_attrs['id'],
         service_broker: VCAP::CloudController::ServiceBroker.make
-      ).save
+      ).save_changes
 
       service_event_repository.record_service_dashboard_client_event(:delete, client_attrs, test_broker)
 
@@ -629,7 +629,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         maintenance_info: '{}'
       )
       service_event_repository.with_service_plan_event(new_plan) do
-        new_plan.save
+        new_plan.save_changes
       end
 
       client.get '/v2/events?q=type:audit.service_plan.create', {}, headers
@@ -665,7 +665,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Plan Update Events' do
       test_plan.name = 'new name'
       service_event_repository.with_service_plan_event(test_plan) do
-        test_plan.save
+        test_plan.save_changes
       end
 
       client.get '/v2/events?q=type:audit.service_plan.update', {}, headers
@@ -779,7 +779,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         active:          true,
       )
       service_event_repository.with_service_event(new_service) do
-        new_service.save
+        new_service.save_changes
       end
 
       client.get '/v2/events?q=type:audit.service.create', {}, headers
@@ -819,7 +819,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Update Events' do
       test_service.label = 'new label'
       service_event_repository.with_service_event(test_service) do
-        test_service.save
+        test_service.save_changes
       end
 
       client.get '/v2/events?q=type:audit.service.update', {}, headers

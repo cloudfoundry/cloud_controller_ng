@@ -118,7 +118,7 @@ module VCAP::CloudController::Presenters::V3
         before do
           build.droplet = droplet
           build.state = droplet.state
-          build.save
+          build.save_changes
         end
 
         it 'shows the droplet guid and state as STAGED' do

@@ -137,13 +137,13 @@ module VCAP::CloudController
 
           it 'does not generate a unique_id' do
             expect {
-              plan.save rescue nil
+              plan.save_changes rescue nil
             }.to_not change(plan, :unique_id)
           end
 
           it 'raises a validation error' do
             expect {
-              plan.save
+              plan.save_changes
             }.to raise_error(Sequel::ValidationFailed)
           end
         end

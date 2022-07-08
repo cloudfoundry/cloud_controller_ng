@@ -12,7 +12,7 @@ module VCAP::CloudController
         package.lock!
 
         package.state = PackageModel::PENDING_STATE
-        package.save
+        package.save_changes
 
         enqueued_job = Jobs::Enqueuer.new(upload_job, queue: Jobs::Queues.local(config)).enqueue
 

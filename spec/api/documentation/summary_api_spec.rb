@@ -52,7 +52,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
     example 'Get App summary' do
       VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
-      service_binding.save
+      service_binding.save_changes
       client.get "/v2/apps/#{process.guid}/summary", {}, headers
 
       expect(status).to eq 200
@@ -96,7 +96,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
     example 'Get Space summary' do
       VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
-      service_binding.save
+      service_binding.save_changes
       client.get "/v2/spaces/#{space.guid}/summary", {}, headers
 
       expect(status).to eq 200

@@ -26,7 +26,7 @@ module VCAP::CloudController
           assign_process_values(process, request_attrs)
           validate_package_exists!(process, request_attrs, original_process_state)
 
-          process.save
+          process.save_changes
           app.reload
           process.reload
 
@@ -64,7 +64,7 @@ module VCAP::CloudController
         app.space_guid            = request_attrs['space_guid'] if request_attrs.key?('space_guid')
         app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
         app.enable_ssh = request_attrs['enable_ssh'] if request_attrs.key?('enable_ssh')
-        app.save
+        app.save_changes
       end
 
       def update_lifecycle(app, process, request_attrs)
@@ -79,7 +79,7 @@ module VCAP::CloudController
             app.update(droplet: nil)
           end
 
-          app.lifecycle_data.save
+          app.lifecycle_data.save_changes
           validate_custom_buildpack!(process.reload)
 
         elsif docker_type_requested && docker_data_changed(process, request_attrs)

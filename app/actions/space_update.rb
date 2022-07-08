@@ -13,7 +13,7 @@ module VCAP::CloudController
         space.name = message.name if message.requested?(:name)
         MetadataUpdate.update(space, message)
 
-        space.save
+        space.save_changes
         Repositories::SpaceEventRepository.new.record_space_update(space, @user_audit_info, message.audit_hash)
       end
 

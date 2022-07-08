@@ -18,7 +18,7 @@ module VCAP::CloudController
           org.status = message.suspended ? Organization::SUSPENDED : Organization::ACTIVE
         end
 
-        org.save
+        org.save_changes
         Repositories::OrganizationEventRepository.new.record_organization_update(org, @user_audit_info, message.audit_hash)
       end
 

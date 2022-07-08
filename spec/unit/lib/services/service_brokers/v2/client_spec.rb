@@ -1156,7 +1156,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets the credentials on the key' do
         attributes = client.create_service_key(key)
         key.set(attributes)
-        key.save
+        key.save_changes
 
         expect(key.credentials).to eq({
           'username' => 'admin',
@@ -1361,7 +1361,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes = client.bind(binding)
         # ensure attributes return match ones for the database
         binding.set(attributes[:binding])
-        binding.save
+        binding.save_changes
 
         expect(binding.credentials).to eq({
           'username' => 'admin',
@@ -1570,7 +1570,7 @@ module VCAP::Services::ServiceBrokers::V2
           attributes = client.bind(binding)
           # ensure attributes return match ones for the database
           binding.set(attributes[:binding])
-          binding.save
+          binding.save_changes
 
           expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
         end
@@ -1621,7 +1621,7 @@ module VCAP::Services::ServiceBrokers::V2
           attributes = client.bind(binding)
 
           binding.set(attributes[:binding])
-          binding.save
+          binding.save_changes
 
           expect(binding.volume_mounts).to match_array([
             { 'device_type' => 'none', 'device' => { 'volume_id' => 'olympus' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' },

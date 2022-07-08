@@ -226,10 +226,10 @@ module VCAP::CloudController
 
           before do
             org.quota_definition = organization_quota
-            org.save
+            org.save_changes
 
             other_org.quota_definition = organization_quota
-            other_org.save
+            other_org.save_changes
           end
 
           it 'returns the list of quotas filtered by names and guids' do

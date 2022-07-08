@@ -8,7 +8,7 @@ module VCAP::CloudController
         env_var_group.lock!
 
         env_var_group.environment_json = merge_environment_variables(env_var_group.environment_json || {}, message.var)
-        env_var_group.save
+        env_var_group.save_changes
       end
 
       env_var_group

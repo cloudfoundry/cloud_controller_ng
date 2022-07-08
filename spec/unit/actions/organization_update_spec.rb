@@ -62,7 +62,7 @@ module VCAP::CloudController
           it 'errors' do
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
-            expect(org).to receive(:save).
+            expect(org).to receive(:save_changes).
               and_raise(Sequel::ValidationFailed.new(errors))
 
             expect {
@@ -105,7 +105,7 @@ module VCAP::CloudController
           it 'errors' do
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
-            expect(org).to receive(:save).
+            expect(org).to receive(:save_changes).
               and_raise(Sequel::ValidationFailed.new(errors))
 
             expect {

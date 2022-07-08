@@ -11,7 +11,7 @@ class DeserializationRetry < Delayed::Plugin
           logger.info("Deserialization for job '#{db_job.guid}' failed, rescheduling it (#{db_job.attempts + 1} attempts)")
           reschedule(db_job)
           clear_lock(db_job)
-          db_job.save
+          db_job.save_changes
         end
       else
         block.call(job, *args)

@@ -97,7 +97,7 @@ module VCAP::CloudController
               it 'should warn' do
                 cider = Stack.find(name: 'cider')
                 cider.description = 'cider-description has changed'
-                cider.save
+                cider.save_changes
 
                 mock_logger = double
                 allow(Steno).to receive(:logger).and_return(mock_logger)

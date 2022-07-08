@@ -8,7 +8,7 @@ module VCAP::CloudController
         deployment.lock!
         LabelsUpdate.update(deployment, message.labels, DeploymentLabelModel)
         AnnotationsUpdate.update(deployment, message.annotations, DeploymentAnnotationModel)
-        deployment.save
+        deployment.save_changes
       end
 
       deployment
