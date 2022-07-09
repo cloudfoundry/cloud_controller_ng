@@ -131,8 +131,10 @@ module VCAP::CloudController
     end
 
     def process_scale_attribute_mappings
-      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, log_rate_limit_per_second: log_rate_limit_per_second,
-instances: instances)
+      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory,
+                                                                         disk_quota: disk_quota,
+                                                                         log_rate_limit_per_second: log_rate_limit_per_second,
+                                                                         instances: instances)
 
       process_attributes(process_scale_attributes_from_app_level) do |process|
         process_scale_attributes(
@@ -391,7 +393,7 @@ instances: instances)
         type = process[:type]
         memory_error = validate_byte_format(process[:memory], 'Memory')
         disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
-        log_rate_limit_error = validate_byte_format(process[:log_rate_limit], 'Log quota per second')
+        log_rate_limit_error = validate_byte_format(process[:log_rate_limit_per_second], 'Log quota per second')
         add_process_error!(memory_error, type) if memory_error
         add_process_error!(disk_error, type) if disk_error
         add_process_error!(log_rate_limit_error, type) if log_rate_limit_error

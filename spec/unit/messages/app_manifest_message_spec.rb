@@ -623,6 +623,7 @@ module VCAP::CloudController
                 'instances' => -30,
                 'memory' => 'potato',
                 'disk_quota' => '100',
+                'log_rate_limit_per_second' => 'kumara',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -636,6 +637,7 @@ module VCAP::CloudController
                 'instances' => 'cassava',
                 'memory' => 'potato',
                 'disk_quota' => '100',
+                'log_rate_limit_per_second' => '100',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -653,10 +655,11 @@ module VCAP::CloudController
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).to_not be_valid
-              expect(message.errors).to have(16).items
+              expect(message.errors).to have(18).items
               expect(message.errors.full_messages).to match_array([
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type1": Log quota per second is not a number',
                 'Process "type1": Instances must be greater than or equal to 0',
                 'Process "type1": Memory is not a number',
                 'Process "type1": Timeout is not a number',
@@ -665,6 +668,7 @@ module VCAP::CloudController
                 'Process "type1": Health check invocation timeout is not a number',
                 'Process "type2": Command must be between 1 and 4096 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type2": Log quota per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',
                 'Process "type2": Memory is not a number',
                 'Process "type2": Timeout is not a number',

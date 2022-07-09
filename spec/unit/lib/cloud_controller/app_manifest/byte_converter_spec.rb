@@ -197,7 +197,6 @@ module VCAP::CloudController
           }.to raise_error(ByteConverter::InvalidBytesError)
         end
       end
-
     end
   end
 end
