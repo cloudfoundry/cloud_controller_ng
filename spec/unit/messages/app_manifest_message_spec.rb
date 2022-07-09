@@ -114,7 +114,7 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include(
-              'Process "web": Log quota per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+              'Process "web": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
             )
           end
         end
@@ -140,7 +140,7 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include(
-              'Process "web": Log quota per second is not a number'
+              'Process "web": Log rate limit per second is not a number'
             )
           end
         end
@@ -659,7 +659,7 @@ module VCAP::CloudController
               expect(message.errors.full_messages).to match_array([
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-                'Process "type1": Log quota per second is not a number',
+                'Process "type1": Log rate limit per second is not a number',
                 'Process "type1": Instances must be greater than or equal to 0',
                 'Process "type1": Memory is not a number',
                 'Process "type1": Timeout is not a number',
@@ -668,7 +668,7 @@ module VCAP::CloudController
                 'Process "type1": Health check invocation timeout is not a number',
                 'Process "type2": Command must be between 1 and 4096 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-                'Process "type2": Log quota per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type2": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',
                 'Process "type2": Memory is not a number',
                 'Process "type2": Timeout is not a number',

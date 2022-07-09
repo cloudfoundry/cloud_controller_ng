@@ -393,7 +393,7 @@ module VCAP::CloudController
         type = process[:type]
         memory_error = validate_byte_format(process[:memory], 'Memory')
         disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
-        log_rate_limit_error = validate_byte_format(process[:log_rate_limit_per_second], 'Log quota per second')
+        log_rate_limit_error = validate_byte_format(process[:log_rate_limit_per_second], 'Log rate limit per second')
         add_process_error!(memory_error, type) if memory_error
         add_process_error!(disk_error, type) if disk_error
         add_process_error!(log_rate_limit_error, type) if log_rate_limit_error
@@ -417,7 +417,7 @@ module VCAP::CloudController
     def validate_top_level_web_process!
       memory_error = validate_byte_format(memory, 'Memory')
       disk_error = validate_byte_format(disk_quota, 'Disk quota')
-      log_rate_limit_error = validate_byte_format(log_rate_limit_per_second, 'Log quota per second')
+      log_rate_limit_error = validate_byte_format(log_rate_limit_per_second, 'Log rate limit per second')
       add_process_error!(memory_error, ProcessTypes::WEB) if memory_error
       add_process_error!(disk_error, ProcessTypes::WEB) if disk_error
       add_process_error!(log_rate_limit_error, ProcessTypes::WEB) if log_rate_limit_error
