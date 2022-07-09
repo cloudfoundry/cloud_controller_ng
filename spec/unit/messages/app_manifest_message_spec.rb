@@ -153,6 +153,16 @@ module VCAP::CloudController
             expect(message).to be_valid
           end
         end
+
+        context 'when log_rate_limit_per_second is in megabytes' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '1MB' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+          end
+        end
+
       end
 
       describe 'buildpack' do
