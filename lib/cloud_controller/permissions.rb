@@ -98,7 +98,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_write_space_scoped_service_broker?(space_guid)
-    can_write_to_space?(space_guid)
+    can_write_to_active_space?(space_guid)
   end
 
   def can_read_space_scoped_service_broker?(service_broker)
@@ -154,11 +154,27 @@ class VCAP::CloudController::Permissions
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
   end
 
-  def can_write_to_org?(org_guid)
+  def can_write_to_active_org?(org_guid)
     return true if can_write_globally?
-    return false unless membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
 
-    VCAP::CloudController::Organization.find(guid: org_guid)&.active?
+    membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+  end
+
+  def is_org_active?(org_guid)
+    return true if can_write_globally? # admins can modify suspended orgs
+
+    !VCAP::CloudController::Organization.
+      where(guid: org_guid, status: VCAP::CloudController::Organization::ACTIVE).
+      empty?
+  end
+
+  def is_space_active?(space_guid)
+    return true if can_write_globally? # admins can modify suspended orgs
+
+    !VCAP::CloudController::Organization.
+      join(:spaces, organization_id: :id).
+      where(spaces__guid: space_guid, organizations__status: VCAP::CloudController::Organization::ACTIVE).
+      empty?
   end
 
   def readable_space_guids
@@ -190,27 +206,22 @@ class VCAP::CloudController::Permissions
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SERVICES_READING, space_guid, org_guid)
   end
 
-  def can_write_to_space?(space_guid)
+  def can_write_to_active_space?(space_guid)
     return true if can_write_globally?
 
-    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
-
-    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
+    membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
   end
 
-  def can_manage_apps_in_space?(space_guid)
+  def can_manage_apps_in_active_space?(space_guid)
     return true if can_write_globally?
 
-    return false unless membership.has_any_roles?(ROLES_FOR_APP_MANAGING, space_guid)
-
-    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
+    membership.has_any_roles?(ROLES_FOR_APP_MANAGING, space_guid)
   end
 
-  def can_update_space?(space_guid, org_guid)
+  def can_update_active_space?(space_guid, org_guid)
     return true if can_write_globally?
-    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid, org_guid)
 
-    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
+    membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid, org_guid)
   end
 
   def can_read_from_isolation_segment?(isolation_segment)

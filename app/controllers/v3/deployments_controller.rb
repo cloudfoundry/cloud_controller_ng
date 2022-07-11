@@ -33,7 +33,9 @@ class DeploymentsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.find(guid: message.app_guid)
-    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_manage_apps_in_space?(app.space.guid)
+    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.') unless app &&
+      permission_queryer.can_manage_apps_in_active_space?(app.space.guid) &&
+      permission_queryer.is_space_active?(app.space.guid)
     unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
     begin
@@ -59,7 +61,8 @@ class DeploymentsController < ApplicationController
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
     resource_not_found!(:deployment) unless deployment &&
       permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(deployment.app.space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(deployment.app.space.guid)
+    suspended! unless permission_queryer.is_space_active?(deployment.app.space.guid)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -81,7 +84,9 @@ class DeploymentsController < ApplicationController
   def cancel
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
-    resource_not_found!(:deployment) unless deployment && permission_queryer.can_manage_apps_in_space?(deployment.app.space_guid)
+    resource_not_found!(:deployment) unless deployment &&
+      permission_queryer.can_manage_apps_in_active_space?(deployment.app.space_guid) &&
+      permission_queryer.is_space_active?(deployment.app.space_guid)
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)

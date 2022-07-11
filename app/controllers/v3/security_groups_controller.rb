@@ -33,12 +33,7 @@ class SecurityGroupsController < ApplicationController
 
     message = SecurityGroupApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    unwritable_space_guids = message.space_guids.select do |space_guid|
-      org = Space.find(guid: space_guid)&.organization
-      org && !permission_queryer.can_update_space?(space_guid, org.guid)
-    end
-    unauthorized! if unwritable_space_guids.any?
+    check_unwritable_spaces(message.space_guids)
 
     SecurityGroupApply.apply_running(security_group, message, **presenter_args)
 
@@ -58,12 +53,7 @@ class SecurityGroupsController < ApplicationController
 
     message = SecurityGroupApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    unwritable_space_guids = message.space_guids.select do |space_guid|
-      org = Space.find(guid: space_guid)&.organization
-      org && !permission_queryer.can_update_space?(space_guid, org.guid)
-    end
-    unauthorized! if unwritable_space_guids.any?
+    check_unwritable_spaces(message.space_guids)
 
     SecurityGroupApply.apply_staging(security_group, message, **presenter_args)
 
@@ -131,7 +121,8 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     unprocessable_space! unless security_group.spaces.include?(space)
 
     SecurityGroupUnapply.unapply_running(security_group, space)
@@ -147,7 +138,8 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     unprocessable_space! unless security_group.staging_spaces.include?(space)
 
     SecurityGroupUnapply.unapply_staging(security_group, space)
@@ -175,6 +167,24 @@ class SecurityGroupsController < ApplicationController
   end
 
   private
+
+  def check_unwritable_spaces(space_guids)
+    unauthorized_space = false
+    suspended_space = false
+    space_guids.each do |space_guid|
+      org = Space.find(guid: space_guid)&.organization
+      if org
+        if !permission_queryer.can_update_active_space?(space_guid, org.guid)
+          unauthorized_space = true
+          break
+        elsif !suspended_space && !permission_queryer.is_space_active?(space_guid)
+          suspended_space = true
+        end
+      end
+    end
+    unauthorized! if unauthorized_space
+    suspended! if suspended_space
+  end
 
   def presenter_args
     if permission_queryer.can_read_globally?

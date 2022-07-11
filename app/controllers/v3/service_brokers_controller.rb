@@ -59,6 +59,7 @@ class ServiceBrokersController < ApplicationController
       space = Space.where(guid: message.space_guid).first
       unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+      suspended! unless permission_queryer.is_space_active?(space.guid)
     else
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     end
@@ -82,6 +83,7 @@ class ServiceBrokersController < ApplicationController
       space = service_broker.space
       broker_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+      suspended! unless permission_queryer.is_space_active?(space.guid)
     else
       broker_not_found! unless permission_queryer.can_read_globally?
       unauthorized! unless permission_queryer.can_write_global_service_broker?
@@ -110,6 +112,7 @@ class ServiceBrokersController < ApplicationController
     else
       broker_not_found! unless permission_queryer.can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
+      suspended! unless permission_queryer.is_space_active?(service_broker.space.guid)
     end
 
     broker_has_instances!(service_broker.name) if service_broker.has_service_instances?

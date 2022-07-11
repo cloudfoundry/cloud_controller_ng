@@ -50,7 +50,8 @@ class TasksController < ApplicationController
     app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: hashed_params[:app_guid], droplet_guid: message.droplet_guid)
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
@@ -70,7 +71,8 @@ class TasksController < ApplicationController
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
@@ -84,7 +86,8 @@ class TasksController < ApplicationController
 
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     task = TaskUpdate.new.update(task, message)
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task)

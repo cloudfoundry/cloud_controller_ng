@@ -59,11 +59,13 @@ class ServiceCredentialBindingsController < ApplicationController
     case message.type
     when 'app'
       app = get_app!(message.app_guid)
-      unauthorized! unless can_create_and_destroy_service_bindings?(app.space)
+      unauthorized! unless can_bind_in_active_space?(app.space)
+      suspended! unless is_space_active?(app.space)
 
       create_app_binding(message, service_instance, app)
     when 'key'
-      unauthorized! unless can_update_service_credentials_binding?(service_instance.space)
+      unauthorized! unless can_write_to_active_space?(service_instance.space)
+      suspended! unless is_space_active?(service_instance.space)
 
       create_key_binding(message, service_instance)
     end
@@ -74,7 +76,8 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def update
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_update_service_credentials_binding?(binding_space)
+    unauthorized! unless can_write_to_active_space?(binding_space)
+    suspended! unless is_space_active?(binding_space)
 
     unprocessable!('The service binding is being deleted') if delete_in_progress?(service_credential_binding)
 
@@ -100,7 +103,8 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def destroy
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_create_and_destroy_service_bindings?(binding_space)
+    unauthorized! unless can_bind_in_active_space?(binding_space)
+    suspended! unless is_space_active?(binding_space)
 
     type = service_credential_binding.is_a?(ServiceKey) ? :key : :credential
 
@@ -278,12 +282,12 @@ class ServiceCredentialBindingsController < ApplicationController
     end
   end
 
-  def can_create_and_destroy_service_bindings?(space)
-    permission_queryer.can_manage_apps_in_space?(space.guid)
+  def can_bind_in_active_space?(space)
+    permission_queryer.can_manage_apps_in_active_space?(space.guid)
   end
 
-  def can_update_service_credentials_binding?(space)
-    permission_queryer.can_write_to_space?(space.guid)
+  def can_write_to_active_space?(space)
+    permission_queryer.can_write_to_active_space?(space.guid)
   end
 
   AVAILABLE_DECORATORS = [
@@ -353,6 +357,10 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def can_read_from_space?(space)
     permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+  end
+
+  def is_space_active?(space)
+    permission_queryer.is_space_active?(space.guid)
   end
 
   def binding_space

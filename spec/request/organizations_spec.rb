@@ -1090,7 +1090,7 @@ module VCAP::CloudController
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200 }
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h['no_role'] = { code: 404 }
           h
         end
@@ -1295,7 +1295,7 @@ module VCAP::CloudController
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200 }
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h['no_role'] = { code: 404 }
           h
         end

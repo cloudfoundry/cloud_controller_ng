@@ -62,7 +62,8 @@ class DropletsController < ApplicationController
     droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     delete_action = DropletDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
@@ -77,7 +78,8 @@ class DropletsController < ApplicationController
     if hashed_params[:body].key?(:image)
       unauthorized! unless permission_queryer.can_update_build_state?
     else
-      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+      suspended! unless permission_queryer.is_space_active?(space.guid)
     end
     message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -96,7 +98,8 @@ class DropletsController < ApplicationController
 
     destination_app = AppModel.where(guid: message.app_guid).first
     app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.guid)
+    suspended! unless permission_queryer.is_space_active?(destination_app.space.guid)
 
     DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
   end
@@ -107,7 +110,8 @@ class DropletsController < ApplicationController
 
     app = AppModel.where(guid: message.relationships_message.app_guid).first
     unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.guid)
+    suspended! unless permission_queryer.is_space_active?(app.space.guid)
 
     DropletCreate.new.create(app, message, user_audit_info)
   end
@@ -119,7 +123,8 @@ class DropletsController < ApplicationController
     droplet = DropletModel.where(guid: hashed_params[:guid]).first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
 
-    unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(droplet.space.guid)
+    suspended! unless permission_queryer.is_space_active?(droplet.space.guid)
 
     unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
       unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.')

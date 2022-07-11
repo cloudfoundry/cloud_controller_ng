@@ -23,6 +23,12 @@ CF_NOT_AUTHORIZED = [
   code: 10003
 ].freeze
 
+CF_ORG_SUSPENDED = [
+  detail: 'The organization is suspended',
+  title: 'CF-OrgSuspended',
+  code: 10017
+].freeze
+
 RSpec.shared_examples 'paginated response' do |endpoint|
   it 'returns pagination information' do
     expect_filtered_resources(endpoint, 'per_page=1', resources[0, 1])

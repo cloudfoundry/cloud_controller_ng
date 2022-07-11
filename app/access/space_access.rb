@@ -48,7 +48,7 @@ module VCAP::CloudController
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
 
-      context.queryer.can_write_to_org?(space.organization.guid)
+      context.queryer.can_write_to_active_org?(space.organization.guid)
     end
 
     def can_remove_related_object?(space, params)
@@ -61,7 +61,7 @@ module VCAP::CloudController
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
 
-      context.queryer.can_write_to_org?(space.organization.guid) || context.queryer.can_update_space?(space.guid, space.organization.guid)
+      context.queryer.can_write_to_active_org?(space.organization.guid) || context.queryer.can_update_active_space?(space.guid, space.organization.guid)
     end
 
     def update?(space, params=nil)

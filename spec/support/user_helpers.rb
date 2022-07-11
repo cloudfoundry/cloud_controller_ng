@@ -213,8 +213,8 @@ module UserHelpers
   end
 
   def allow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(true)
-    allow(permissions_double(user)).to receive(:can_manage_apps_in_space?).with(space.guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.guid).and_return(true)
   end
 
   def allow_user_read_access_for(user, orgs: [], spaces: [])
@@ -266,8 +266,8 @@ module UserHelpers
   end
 
   def disallow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_space?).with(space.guid).and_return(false)
-    allow(permissions_double(user)).to receive(:can_manage_apps_in_space?).with(space.guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.guid).and_return(false)
   end
 
   def stub_readable_space_guids_for(user, spaces)

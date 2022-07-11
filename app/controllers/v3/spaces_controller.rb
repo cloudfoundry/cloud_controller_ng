@@ -54,7 +54,8 @@ class SpacesV3Controller < ApplicationController
 
     unprocessable!(message.errors.full_messages) unless message.valid?
     unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
-    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
+    suspended! unless permission_queryer.is_org_active?(message.organization_guid)
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
@@ -68,7 +69,8 @@ class SpacesV3Controller < ApplicationController
   def update
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -83,7 +85,8 @@ class SpacesV3Controller < ApplicationController
   def destroy
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_org?(space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization.guid)
+    suspended! unless permission_queryer.is_org_active?(space.organization.guid)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
@@ -138,7 +141,8 @@ class SpacesV3Controller < ApplicationController
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable

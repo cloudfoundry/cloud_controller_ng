@@ -137,7 +137,7 @@ RSpec.describe 'Roles Request' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
           h
         end
 
@@ -248,7 +248,7 @@ RSpec.describe 'Roles Request' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 
@@ -1594,7 +1594,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          %w[space_manager org_manager].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
           h
         end
 
@@ -1622,7 +1622,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 

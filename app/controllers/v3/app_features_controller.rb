@@ -42,10 +42,11 @@ class AppFeaturesController < ApplicationController
     name = hashed_params[:name]
     resource_not_found!(:feature) unless APP_FEATURES.include?(name)
     if UNTRUSTED_APP_FEATURES.include?(name)
-      unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+      unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
     else
-      unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
     end
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     message = VCAP::CloudController::AppFeatureUpdateMessage.new(hashed_params['body'])
     unprocessable!(message.errors.full_messages) unless message.valid?

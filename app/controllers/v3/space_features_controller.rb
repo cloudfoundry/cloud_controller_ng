@@ -28,7 +28,8 @@ class SpaceFeaturesController < ApplicationController
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     resource_not_found!(:feature) unless SPACE_FEATURE == hashed_params[:name]
-    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     space.update(allow_ssh: message.enabled)
 

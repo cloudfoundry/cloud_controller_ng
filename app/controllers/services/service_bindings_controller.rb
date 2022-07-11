@@ -55,9 +55,12 @@ module VCAP::CloudController
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
+      permissions = Permissions.new(SecurityContext.current_user)
+
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid']) unless app
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(app.space_guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(app.space_guid)
+      raise CloudController::Errors::ApiError.new_from_details('OrgSuspended') unless permissions.is_space_active?(app.space_guid)
 
       creator = ServiceBindingCreate.new(UserAuditInfo.from_context(SecurityContext))
       service_binding = creator.create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
@@ -84,8 +87,11 @@ module VCAP::CloudController
 
     def delete(guid)
       service_binding = ServiceBinding.find(guid: guid)
+      permissions = Permissions.new(SecurityContext.current_user)
+
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless service_binding
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(service_binding.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(service_binding.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('OrgSuspended') unless permissions.is_space_active?(service_binding.space.guid)
 
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 

@@ -87,7 +87,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     space = Space.where(guid: message.space_guid).first
     unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     # TODO: only fail if also not `kpack` app lifecycle
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -117,7 +118,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -142,7 +144,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
@@ -158,7 +161,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -180,7 +184,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   def stop
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     AppStop.stop(app: app, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -200,7 +205,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -273,7 +279,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -290,7 +297,8 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_manage_apps_in_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.guid)
     deployment_in_progress! if app.deploying?
 
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)

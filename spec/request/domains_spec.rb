@@ -985,7 +985,7 @@ RSpec.describe 'Domains Request' do
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -1167,7 +1167,7 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq "You do not have sufficient permissions for organization '#{shared_org3.name}' to share domain."
+            expect(parsed_response['errors'][0]['detail']).to eq "Organization '#{shared_org3.name}' is suspended."
           end
         end
 
@@ -1534,7 +1534,7 @@ RSpec.describe 'Domains Request' do
         context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
-            h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
             h
           end
 
@@ -1658,7 +1658,7 @@ RSpec.describe 'Domains Request' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 
@@ -1820,7 +1820,7 @@ RSpec.describe 'Domains Request' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
-        h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
         h['admin'] = { code: 204 }
         h
       end
@@ -1841,7 +1841,7 @@ RSpec.describe 'Domains Request' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
-        h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+        h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
         h['admin'] = { code: 204 }
         h
       end
@@ -2248,7 +2248,7 @@ RSpec.describe 'Domains Request' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 

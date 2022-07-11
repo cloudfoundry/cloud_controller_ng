@@ -298,7 +298,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#can_write_to_org?' do
+    describe '#can_write_to_active_org?' do
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
@@ -310,21 +310,21 @@ module VCAP::CloudController
         context 'and user is a read only admin' do
           it 'returns false' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org_guid)).to be false
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_write_to_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org_guid)).to be false
           end
         end
       end
@@ -332,30 +332,66 @@ module VCAP::CloudController
       context 'user has valid membership' do
         it 'returns false for org user' do
           org.add_user(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org_guid)).to be false
         end
 
         it 'returns false for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org_guid)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be true
+          expect(permissions.can_write_to_active_org?(org_guid)).to be true
         end
 
         it 'returns false for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_write_to_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org_guid)).to be false
+        end
+      end
+    end
+
+    describe '#is_org_active?' do
+      it 'returns true' do
+        expect(permissions.is_org_active?(org_guid)).to be true
+      end
+
+      context 'org is suspended' do
+        before do
+          org.update(status: Organization::SUSPENDED)
         end
 
-        context 'the org is suspended' do
-          it 'returns false for org manager' do
-            org.add_manager(user)
-            org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_org?(org_guid)).to be_falsey
-          end
+        it 'returns false' do
+          set_current_user(user)
+          expect(permissions.is_org_active?(org_guid)).to be false
+        end
+
+        it 'returns true for an admin' do
+          set_current_user(user, { admin: true })
+          expect(permissions.is_org_active?(org_guid)).to be true
+        end
+      end
+    end
+
+    describe '#is_space_active?' do
+      it 'returns true' do
+        expect(permissions.is_space_active?(space_guid)).to be true
+      end
+
+      context 'org is suspended' do
+        before do
+          space.organization.update(status: Organization::SUSPENDED)
+        end
+
+        it 'returns false' do
+          set_current_user(user)
+          expect(permissions.is_space_active?(space_guid)).to be false
+        end
+
+        it 'returns true for an admin' do
+          set_current_user(user, { admin: true })
+          expect(permissions.is_space_active?(space_guid)).to be true
         end
       end
     end
@@ -660,33 +696,33 @@ module VCAP::CloudController
       end
     end
 
-    describe '#can_write_to_space?' do
+    describe '#can_write_to_active_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_write_to_space?(space_guid)).to be true
+            expect(permissions.can_write_to_active_space?(space_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(permissions.can_write_to_active_space?(space_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(permissions.can_write_to_active_space?(space_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_write_to_space?(space_guid)).to be false
+            expect(permissions.can_write_to_active_space?(space_guid)).to be false
           end
         end
       end
@@ -695,64 +731,55 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be true
-        end
-
-        context "and the space's org is suspended" do
-          it 'returns false for the space developer' do
-            org.add_user(user)
-            space.add_developer(user)
-            org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
-          end
+          expect(permissions.can_write_to_active_space?(space_guid)).to be true
         end
 
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(permissions.can_write_to_active_space?(space_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(permissions.can_write_to_active_space?(space_guid)).to be false
         end
 
         it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_write_to_space?(space_guid)).to be false
+          expect(permissions.can_write_to_active_space?(space_guid)).to be false
         end
       end
     end
 
-    describe '#can_manage_apps_in_space?' do
+    describe '#can_manage_apps_in_active_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be true
+            expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+            expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+            expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+            expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
           end
         end
       end
@@ -761,77 +788,61 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_manage_apps_in_space?(space_guid)).to be true
+          expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be true
         end
 
         it 'returns true for space supporter' do
           org.add_user(user)
           space.add_supporter(user)
-          expect(permissions.can_manage_apps_in_space?(space_guid)).to be true
-        end
-
-        context "and the space's org is suspended" do
-          it 'returns false for the space developer' do
-            org.add_user(user)
-            space.add_developer(user)
-            org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be_falsey
-          end
-
-          it 'returns false for the space supporter' do
-            org.add_user(user)
-            space.add_supporter(user)
-            org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_manage_apps_in_space?(space_guid)).to be_falsey
-          end
+          expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be true
         end
 
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+          expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+          expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
         end
 
         it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_manage_apps_in_space?(space_guid)).to be false
+          expect(permissions.can_manage_apps_in_active_space?(space_guid)).to be false
         end
       end
     end
 
-    describe '#can_update_space?' do
+    describe '#can_update_active_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be true
+            expect(permissions.can_update_active_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -840,33 +851,24 @@ module VCAP::CloudController
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
-        end
-
-        context "and the space's org is suspended" do
-          it 'returns false for the space manager' do
-            org.add_user(user)
-            space.add_developer(user)
-            org.update(status: Organization::SUSPENDED)
-            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
-          end
+          expect(permissions.can_update_active_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns false for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+          expect(permissions.can_update_active_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
+          expect(permissions.can_update_active_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
+          expect(permissions.can_update_active_space?(space_guid, org_guid)).to be true
         end
       end
     end

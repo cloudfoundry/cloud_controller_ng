@@ -85,7 +85,7 @@ RSpec.describe 'Spaces' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 
@@ -913,7 +913,7 @@ RSpec.describe 'Spaces' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          %w[org_manager space_manager].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          %w[org_manager space_manager].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
           h
         end
 
@@ -1086,7 +1086,7 @@ RSpec.describe 'Spaces' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          h['org_manager'] = { code: 403, errors: CF_NOT_AUTHORIZED }
+          h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h
         end
 
@@ -1150,7 +1150,7 @@ RSpec.describe 'Spaces' do
       context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
           h
         end
 
