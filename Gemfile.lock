@@ -332,7 +332,7 @@ GEM
       ruby2_keywords (~> 0.0.1)
     mysql2 (0.5.4)
     net-ssh (7.0.1)
-    netaddr (2.0.5)
+    netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (8.8.0)
     nokogiri (1.13.6)
