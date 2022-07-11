@@ -203,13 +203,28 @@ module VCAP::CloudController
       let(:service) { Service.make(service_broker: service_broker) }
       let!(:service_plan) { ServicePlan.make(service: service) }
 
-      it 'returns true when there are service instances' do
-        ManagedServiceInstance.make(service_plan: service_plan)
-        expect(service_broker.has_service_instances?).to eq(true)
+      context 'when there are service instances' do
+        before do
+          ManagedServiceInstance.make(service_plan: service_plan)
+        end
+
+        it 'returns true' do
+          expect(service_broker.has_service_instances?).to eq(true)
+        end
+
+        it 'does a single db query' do
+          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select/i, 1)
+        end
       end
 
-      it 'return false when there are no service instances' do
-        expect(service_broker.has_service_instances?).to eq(false)
+      context 'when there are no service instances' do
+        it 'returns false' do
+          expect(service_broker.has_service_instances?).to eq(false)
+        end
+
+        it 'does a single db query' do
+          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select/i, 1)
+        end
       end
     end
   end
