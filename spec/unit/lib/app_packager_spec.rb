@@ -84,13 +84,58 @@ RSpec.describe AppPackager do
 
     context 'when there is an error unzipping' do
       before do
-        allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
+        allow(Open3).to receive(:capture3).and_return(['', multiline_error_message, double(success?: false)])
       end
 
-      it 'raises an exception' do
-        expect {
-          app_packager.unzip(@tmpdir)
-        }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
+      context 'end-of-central-directory signature not found' do
+        let(:multiline_error_message) do
+          <<~EOF
+            [archive]
+              End-of-central-directory signature not found.  Either this file is not
+              a zipfile, or it constitutes one disk of a multi-part archive.  In the
+              latter case the central directory and zipfile comment will be found on
+              the last disk(s) of this archive.
+            unzip:  cannot find zipfile directory in one of archive or
+                    archive.zip, and cannot find archive.ZIP, period.
+          EOF
+        end
+
+        it 'raises an exception' do
+          expect {
+            app_packager.unzip(@tmpdir)
+          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (end-of-central-directory signature not found).')
+        end
+      end
+
+      context 'end-of-central-directory signature not found' do
+        let(:multiline_error_message) do
+          <<~EOF
+            warning [archive]:  zipfile is empty
+          EOF
+        end
+
+        it 'raises an exception' do
+          expect {
+            app_packager.unzip(@tmpdir)
+          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (zipfile is empty).')
+        end
+      end
+
+      context 'mismatching "local" filename' do
+        let(:multiline_error_message) do
+          <<~EOF
+            a_is_++:  mismatching "local" filename (a_is_α),
+                     continuing with "central" filename version
+            b_is_++:  mismatching "local" filename (b_is_β),
+                     continuing with "central" filename version
+          EOF
+        end
+
+        it 'raises an exception' do
+          expect {
+            app_packager.unzip(@tmpdir)
+          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (mismatching local filename).')
+        end
       end
     end
   end
