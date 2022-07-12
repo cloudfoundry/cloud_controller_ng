@@ -127,7 +127,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to -1B')
+            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to -1')
           end
         end
 
@@ -145,12 +145,22 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is unlimited amount' do
-          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1B' } }
+        context 'when log_rate_limit_per_second is an unlimited amount' do
+          context 'specified as -1' do
+            let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: -1 } }
 
-          it 'is valid' do
-            message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to be_valid
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
+          end
+          context 'with a bytes suffix' do
+            let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1B' } }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
           end
         end
 
@@ -162,7 +172,6 @@ module VCAP::CloudController
             expect(message).to be_valid
           end
         end
-
       end
 
       describe 'buildpack' do
@@ -702,6 +711,27 @@ module VCAP::CloudController
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to include('Process "foo" may only be present once')
             expect(message.errors.full_messages).to include('Process "bob" may only be present once')
+          end
+        end
+
+        context 'log_rate_limit_per_second' do
+          context 'when log_rate_limit_per_second is an unlimited amount' do
+            context 'specified as -1' do
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log_rate_limit_per_second' => -1 }] } }
+
+              it 'is valid' do
+                message = AppManifestMessage.create_from_yml(params_from_yaml)
+                expect(message).to be_valid
+              end
+            end
+            context 'with a bytes suffix' do
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log_rate_limit_per_second' => '-1B' }] } }
+
+              it 'is valid' do
+                message = AppManifestMessage.create_from_yml(params_from_yaml)
+                expect(message).to be_valid
+              end
+            end
           end
         end
       end

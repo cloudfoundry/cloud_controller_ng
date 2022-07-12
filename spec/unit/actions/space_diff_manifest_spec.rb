@@ -334,6 +334,23 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the log_rate_limit_per_second is unlimited' do
+        before do
+          default_manifest['applications'][0]['log_rate_limit_per_second'] = -1
+        end
+
+        it 'displays -1 in the diff' do
+          expect(subject).to include(
+            {
+              'op' => 'replace',
+              'path' => '/applications/0/log_rate_limit_per_second',
+              'value' => -1,
+              'was' => '1M'
+            }
+          )
+        end
+      end
+
       context 'when the user passes in a v2 manifest' do
         let(:default_manifest) {
           {

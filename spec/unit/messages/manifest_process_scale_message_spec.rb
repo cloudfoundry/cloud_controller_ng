@@ -150,7 +150,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1B')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1')
           end
         end
 
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1B')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1')
           end
         end
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1B')
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1')
           end
         end
       end

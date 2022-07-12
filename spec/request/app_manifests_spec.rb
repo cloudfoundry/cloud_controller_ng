@@ -207,7 +207,7 @@ RSpec.describe 'App Manifests' do
                   'instances' => process.instances,
                   'memory' => "#{process.memory}M",
                   'disk_quota' => "#{process.disk_quota}M",
-                  'log_rate_limit_per_second' => '-1B',
+                  'log_rate_limit_per_second' => -1,
                   'health-check-type' => process.health_check_type,
                 },
                 {
