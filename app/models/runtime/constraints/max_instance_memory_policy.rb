@@ -39,7 +39,7 @@ class AppMaxInstanceMemoryPolicy < BaseMaxInstanceMemoryPolicy
   private
 
   def additional_checks
-    resource.scaling_operation?
+    resource.started?
   end
 end
 
