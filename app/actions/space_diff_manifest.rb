@@ -165,7 +165,7 @@ module VCAP::CloudController
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
             value = process_hash[key]
-            manifest_app_hash[index][key] = normalize_unit(value, key) unless value.nil?
+            manifest_app_hash[index][key] = normalize_unit(value, key) unless value.nil? || value == -1
           end
         end
         manifest_app_hash
