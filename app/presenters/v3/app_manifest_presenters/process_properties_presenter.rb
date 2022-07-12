@@ -27,11 +27,9 @@ module VCAP::CloudController
           end
 
           def add_units_log_rate_limit(val)
-            if val == -1
-              '-1B'
-            else
-              byte_converter.human_readable_byte_value(val)
-            end
+            return -1 if val == -1
+
+            byte_converter.human_readable_byte_value(val)
           end
 
           def byte_converter

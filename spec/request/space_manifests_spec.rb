@@ -461,6 +461,33 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when -1 is given as a log rate limit' do
+      let(:yml_manifest) do
+        {
+           'version' => 1,
+           'applications' => [
+             { 'name' => app1_model.name,
+               'log_rate_limit_per_second' => -1
+             },
+           ]
+        }.to_yaml
+      end
+      it 'interprets the log rate limit as unlimited' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
+          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+        app1_model.reload
+        expect(app1_model.processes.first.log_rate_limit).to eq(-1)
+      end
+    end
+
     context 'when applying the manifest to an app which is exceeding the log rate limit' do
       before do
         app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
