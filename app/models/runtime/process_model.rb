@@ -379,10 +379,6 @@ module VCAP::CloudController
       column_changed?(:state) && stopped?
     end
 
-    def scaling_operation?
-      started?
-    end
-
     def desired_instances
       started? ? instances : 0
     end

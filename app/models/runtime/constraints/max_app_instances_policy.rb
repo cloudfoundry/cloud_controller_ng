@@ -11,7 +11,7 @@ class MaxAppInstancesPolicy
 
   def validate
     return unless @quota_definition
-    return unless @process.scaling_operation?
+    return unless @process.started?
     return if @quota_definition.app_instance_limit == -1 || @process.stopped?
 
     other_apps = @space_or_org.processes.reject { |process| process.guid == @process.guid }
