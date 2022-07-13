@@ -25,6 +25,7 @@ jobs:
           WORKING_DIRECTORY: docs/v3
       - name: Run docs tests
         run: |
+          bundle config set --local without 'development'
           bundle install
           bundle exec rake check_doc_links
       - uses: ravsamhq/notify-slack-action@v1.1
