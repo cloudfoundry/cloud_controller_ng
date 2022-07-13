@@ -153,7 +153,7 @@ module VCAP::CloudController::Presenters::V3
           process.log_rate_limit = -1
         end
         it 'displays it as unlimited' do
-          expect(result[:log_rate_limit_in_bps]).to eq(-1)
+          expect(result[:log_rate_limit_in_bytes_per_second]).to eq(-1)
         end
       end
     end

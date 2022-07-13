@@ -171,12 +171,12 @@ module VCAP::CloudController
     def process_scale_attributes(memory: nil, disk_quota: nil, log_rate_limit_per_second: nil, instances:, type: nil)
       memory_in_mb = convert_to_mb(memory)
       disk_in_mb = convert_to_mb(disk_quota)
-      log_rate_limit_in_bps = convert_to_bps(log_rate_limit_per_second)
+      log_rate_limit_in_bytes_per_second = convert_to_bytes_per_second(log_rate_limit_per_second)
       {
         instances: instances,
         memory: memory_in_mb,
         disk_quota: disk_in_mb,
-        log_rate_limit: log_rate_limit_in_bps,
+        log_rate_limit: log_rate_limit_in_bytes_per_second,
         type: type
       }.compact
     end
@@ -290,7 +290,7 @@ module VCAP::CloudController
     rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError
     end
 
-    def convert_to_bps(human_readable_byte_value)
+    def convert_to_bytes_per_second(human_readable_byte_value)
       return nil unless human_readable_byte_value.present?
       return -1 if human_readable_byte_value == -1 # unlimited
 

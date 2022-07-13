@@ -75,7 +75,7 @@ module VCAP::CloudController
     end
 
     def log_rate_limit(message, template_process)
-      message.log_rate_limit_in_bps || template_process.try(:log_rate_limit) || config.get(:default_app_log_rate_limit_in_bps)
+      message.log_rate_limit_in_bytes_per_second || template_process.try(:log_rate_limit) || config.get(:default_app_log_rate_limit_in_bytes_per_second)
     end
 
     def disk_in_mb(message, template_process)

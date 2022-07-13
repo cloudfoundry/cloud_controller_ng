@@ -118,7 +118,7 @@ RSpec.describe 'Processes' do
             'instances'        => 2,
             'memory_in_mb'     => 1024,
             'disk_in_mb'       => 1024,
-            'log_rate_limit_in_bps' => 1_048_576,
+            'log_rate_limit_in_bytes_per_second' => 1_048_576,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -148,7 +148,7 @@ RSpec.describe 'Processes' do
             'instances'        => 1,
             'memory_in_mb'     => 100,
             'disk_in_mb'       => 200,
-            'log_rate_limit_in_bps' => 400,
+            'log_rate_limit_in_bytes_per_second' => 400,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -406,7 +406,7 @@ RSpec.describe 'Processes' do
         'instances'        => 2,
         'memory_in_mb'     => 1024,
         'disk_in_mb'       => 1024,
-        'log_rate_limit_in_bps' => 1_048_576,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -648,7 +648,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'log_rate_limit_in_bps' => 1_048_576,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'process',
           'data' => {
@@ -773,7 +773,7 @@ RSpec.describe 'Processes' do
         instances: 5,
         memory_in_mb: 10,
         disk_in_mb: 20,
-        log_rate_limit_in_bps: 40,
+        log_rate_limit_in_bytes_per_second: 40,
       }
     end
 
@@ -790,7 +790,7 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'log_rate_limit_in_bps' => 40,
+        'log_rate_limit_in_bytes_per_second' => 40,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -846,7 +846,7 @@ RSpec.describe 'Processes' do
           'instances'    => 5,
           'memory_in_mb' => 10,
           'disk_in_mb'   => 20,
-          'log_rate_limit_in_bps' => 40,
+          'log_rate_limit_in_bytes_per_second' => 40,
         }
       })
     end
@@ -895,7 +895,7 @@ RSpec.describe 'Processes' do
           instances:    5,
           memory_in_mb: 10,
           disk_in_mb:   20,
-          log_rate_limit_in_bps: 40,
+          log_rate_limit_in_bytes_per_second: 40,
         }
 
         post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, headers_for(space_supporter)
@@ -948,13 +948,13 @@ RSpec.describe 'Processes' do
 
     it 'returns a helpful error when the log quota is too small' do
       scale_request = {
-        log_rate_limit_in_bps: -2,
+        log_rate_limit_in_bytes_per_second: -2,
       }
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
       expect(last_response.status).to eq(422)
-      expect(parsed_response['errors'][0]['detail']).to eq 'Log rate limit in bps must be greater than or equal to -1'
+      expect(parsed_response['errors'][0]['detail']).to eq 'Log rate limit in bytes per second must be greater than or equal to -1'
 
       process.reload
       expect(process.log_rate_limit).to eq(1_048_576)
@@ -978,7 +978,7 @@ RSpec.describe 'Processes' do
           instances:    5,
           memory_in_mb: 10,
           disk_in_mb:   20,
-          log_rate_limit_in_bps: 40,
+          log_rate_limit_in_bytes_per_second: 40,
         }
       end
 
@@ -992,7 +992,7 @@ RSpec.describe 'Processes' do
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
-              'log-rate-in-bps' => 40,
+              'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
               'app-id' => Digest::SHA256.hexdigest(process.app.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),
@@ -1144,7 +1144,7 @@ RSpec.describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'log_rate_limit_in_bps' => 1_048_576,
+            'log_rate_limit_in_bytes_per_second' => 1_048_576,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -1178,7 +1178,7 @@ RSpec.describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
-            'log_rate_limit_in_bps' => 400,
+            'log_rate_limit_in_bytes_per_second' => 400,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -1297,7 +1297,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'log_rate_limit_in_bps' => 1_048_576,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -1399,7 +1399,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'log_rate_limit_in_bps' => 1_048_576,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'http',
           'data' => {
@@ -1492,7 +1492,7 @@ RSpec.describe 'Processes' do
       instances:    5,
       memory_in_mb: 10,
       disk_in_mb:   20,
-      log_rate_limit_in_bps: 40,
+      log_rate_limit_in_bytes_per_second: 40,
     }
     end
 
@@ -1509,7 +1509,7 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'log_rate_limit_in_bps' => 40,
+        'log_rate_limit_in_bytes_per_second' => 40,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -1564,7 +1564,7 @@ RSpec.describe 'Processes' do
           'instances'    => 5,
           'memory_in_mb' => 10,
           'disk_in_mb'   => 20,
-          'log_rate_limit_in_bps' => 40,
+          'log_rate_limit_in_bytes_per_second' => 40,
         }
       })
     end
@@ -1624,7 +1624,7 @@ RSpec.describe 'Processes' do
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
-              'log-rate-in-bps' => 40,
+              'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
               'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),

@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       it 'has a default log_rate_limit' do
-        TestConfig.override(default_app_log_rate_limit_in_bps: 873565)
+        TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 873565)
         expect(process.log_rate_limit).to eq(873565)
       end
     end
@@ -1398,7 +1398,7 @@ module VCAP::CloudController
 
       describe 'default log_rate_limit' do
         before do
-          TestConfig.override(default_app_log_rate_limit_in_bps: 1024)
+          TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 1024)
         end
 
         it 'should use the provided quota' do

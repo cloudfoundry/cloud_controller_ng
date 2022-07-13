@@ -9,7 +9,7 @@ module VCAP::CloudController
         instances: 2,
         memory_in_mb: 100,
         disk_in_mb: 200,
-        log_rate_limit_in_bps: 409_600
+        log_rate_limit_in_bytes_per_second: 409_600
       }
     end
     let(:message) { ProcessScaleMessage.new(valid_message_params) }
@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       it 'does not set log quota if the user did not request it' do
-        valid_message_params.delete(:log_rate_limit_in_bps)
+        valid_message_params.delete(:log_rate_limit_in_bytes_per_second)
         original_value = process.log_rate_limit
 
         process_scale.scale
@@ -77,7 +77,7 @@ module VCAP::CloudController
               'instances'    => 2,
               'memory_in_mb' => 100,
               'disk_in_mb'   => 200,
-              'log_rate_limit_in_bps' => 409_600,
+              'log_rate_limit_in_bytes_per_second' => 409_600,
             },
             manifest_triggered: false
           )
@@ -96,7 +96,7 @@ module VCAP::CloudController
                 'instances'    => 2,
                 'memory_in_mb' => 100,
                 'disk_in_mb'   => 200,
-                'log_rate_limit_in_bps' => 409_600,
+                'log_rate_limit_in_bytes_per_second' => 409_600,
               },
               manifest_triggered: true
             )

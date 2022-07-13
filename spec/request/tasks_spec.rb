@@ -6,7 +6,7 @@ RSpec.describe 'Tasks' do
   let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
   let(:space_log_rate_limit) { -1 }
   let(:org_log_rate_limit) { -1 }
-  let(:task_log_rate_limit_in_bps) { -1 }
+  let(:task_log_rate_limit_in_bytes_per_second) { -1 }
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
   let(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota_definition, organization: org) }
@@ -1002,7 +1002,7 @@ RSpec.describe 'Tasks' do
       command:      'be rake && true',
       memory_in_mb: 1234,
       disk_in_mb:   1000,
-      log_rate_limit_in_bps: task_log_rate_limit_in_bps,
+      log_rate_limit_in_bytes_per_second: task_log_rate_limit_in_bytes_per_second,
       metadata: {
         labels: {
           bananas: 'gros_michel',
@@ -1091,11 +1091,11 @@ RSpec.describe 'Tasks' do
     describe 'log_rate_limit' do
       context 'when the request does not specify a log rate limit' do
         before do
-          TestConfig.config[:default_app_log_rate_limit_in_bps] = 9876
+          TestConfig.config[:default_app_log_rate_limit_in_bytes_per_second] = 9876
         end
 
         it 'the default is applied' do
-          post "/v3/apps/#{app_model.guid}/tasks", body.except(:log_rate_limit_in_bps).to_json, developer_headers
+          post "/v3/apps/#{app_model.guid}/tasks", body.except(:log_rate_limit_in_bytes_per_second).to_json, developer_headers
           expect(last_response.status).to eq(202)
           expect(VCAP::CloudController::TaskModel.last.log_rate_limit).to eq(9876)
         end
@@ -1106,7 +1106,7 @@ RSpec.describe 'Tasks' do
         let(:org_log_rate_limit) { 201 }
 
         context 'when the task specifies a rate limit that fits in the quota' do
-          let(:task_log_rate_limit_in_bps) { 199 }
+          let(:task_log_rate_limit_in_bytes_per_second) { 199 }
 
           it 'succeeds' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
@@ -1115,7 +1115,7 @@ RSpec.describe 'Tasks' do
         end
 
         context 'when the task specifies unlimited rate limit' do
-          let(:task_log_rate_limit_in_bps) { -1 }
+          let(:task_log_rate_limit_in_bytes_per_second) { -1 }
 
           it 'returns an error' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
@@ -1126,7 +1126,7 @@ RSpec.describe 'Tasks' do
         end
 
         context 'when the task specifies a rate limit that does not fit in the quota' do
-          let(:task_log_rate_limit_in_bps) { 202 }
+          let(:task_log_rate_limit_in_bytes_per_second) { 202 }
 
           context 'fails to fit in space quota' do
             let(:space_log_rate_limit) { 200 }

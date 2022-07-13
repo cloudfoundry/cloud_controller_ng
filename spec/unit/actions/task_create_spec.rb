@@ -194,10 +194,10 @@ module VCAP::CloudController
       end
 
       describe 'log_rate_limit' do
-        before { config.set(:default_app_log_rate_limit_in_bps, 999) }
+        before { config.set(:default_app_log_rate_limit_in_bytes_per_second, 999) }
 
         context 'when log_rate_limit is specified' do
-          let(:message) { TaskCreateMessage.new name: name, command: command, log_rate_limit_in_bps: 100 }
+          let(:message) { TaskCreateMessage.new name: name, command: command, log_rate_limit_in_bytes_per_second: 100 }
 
           it 'returns what is in the message' do
             task = task_create_action.create(app, message, user_audit_info)
@@ -353,10 +353,10 @@ module VCAP::CloudController
 
         describe 'log_rate_limit' do
           before do
-            config.set(:default_app_log_rate_limit_in_bps, 999)
+            config.set(:default_app_log_rate_limit_in_bytes_per_second, 999)
           end
 
-          context 'when there is a template and the message does not specify log_rate_limit_in_bps' do
+          context 'when there is a template and the message does not specify log_rate_limit_in_bytes_per_second' do
             let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
@@ -366,9 +366,9 @@ module VCAP::CloudController
             end
           end
 
-          context 'when there is a template and the message specifies log_rate_limit_in_bps' do
+          context 'when there is a template and the message specifies log_rate_limit_in_bytes_per_second' do
             let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
-            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', log_rate_limit_in_bps: 2048, template: { process: { guid: process.guid } }) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', log_rate_limit_in_bytes_per_second: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the message' do
               task = task_create_action.create(app, message, user_audit_info)

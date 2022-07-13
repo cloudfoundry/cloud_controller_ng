@@ -20,7 +20,7 @@ module VCAP::CloudController
         instances: instances,
         memory_in_mb: memory,
         disk_in_mb: disk_quota,
-        log_rate_limit_in_bps: log_rate_limit,
+        log_rate_limit_in_bytes_per_second: log_rate_limit,
       }.compact)
     end
   end

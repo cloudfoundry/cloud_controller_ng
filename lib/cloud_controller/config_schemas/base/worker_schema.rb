@@ -166,7 +166,7 @@ module VCAP::CloudController
             default_app_disk_in_mb: Integer,
             instance_file_descriptor_limit: Integer,
             maximum_app_disk_in_mb: Integer,
-            default_app_log_rate_limit_in_bps: Integer,
+            default_app_log_rate_limit_in_bytes_per_second: Integer,
             default_app_ssh_access: bool,
 
             jobs: {

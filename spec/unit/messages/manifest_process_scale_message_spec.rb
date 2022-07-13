@@ -207,7 +207,7 @@ module VCAP::CloudController
           expect(scale_message.instances).to eq(3)
           expect(scale_message.memory_in_mb).to eq(1024)
           expect(scale_message.disk_in_mb).to eq(2048)
-          expect(scale_message.log_rate_limit_in_bps).to eq(1024)
+          expect(scale_message.log_rate_limit_in_bytes_per_second).to eq(1024)
         end
       end
 
@@ -226,10 +226,10 @@ module VCAP::CloudController
       context 'when no log_rate_limit is given' do
         let(:params) { { instances: 3, memory: 1024 } }
 
-        it 'does not set anything for log_rate_limit_in_bps' do
+        it 'does not set anything for log_rate_limit_in_bytes_per_second' do
           scale_message = manifest_message.to_process_scale_message
 
-          expect(scale_message.log_rate_limit_in_bps).to be_falsey
+          expect(scale_message.log_rate_limit_in_bytes_per_second).to be_falsey
         end
       end
 
