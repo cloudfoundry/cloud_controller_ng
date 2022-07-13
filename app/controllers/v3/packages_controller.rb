@@ -204,6 +204,19 @@ class PackagesController < ApplicationController
     BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
   end
 
+  def validate_content_type!
+    return if Mime::Type.lookup(request.content_type) == :url_encoded_form
+
+    logger.error("Invalid content-type: #{request.content_type}")
+    bad_request!('Invalid Content-Type')
+  end
+
+  def validate_request_format!
+    return unless hashed_params.include?(:format)
+
+    bad_request!('Invalid format requested')
+  end
+
   def unprocessable_non_bits_package!
     unprocessable!('Cannot create Docker package for a buildpack app.')
   end
