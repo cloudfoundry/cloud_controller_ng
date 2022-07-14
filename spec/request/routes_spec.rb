@@ -3154,6 +3154,66 @@ RSpec.describe 'Routes Request' do
     end
   end
 
+  describe 'PATCH /v3/routes/:guid/transfer-owner' do
+    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: '') }
+    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/transfer_owner", params.to_json, user_headers } }
+    let(:other_space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:params) do
+      {
+        space: other_space.guid.to_s
+      }
+    end
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      org.add_user(user)
+      other_space.add_developer(user)
+    end
+
+    context 'when the user logged in' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['admin'] = { code: 200 }
+        h['no_role'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when route_sharing flag is disabled' do
+      before do
+        feature_flag.enabled = false
+        feature_flag.save
+      end
+
+      it 'makes users unable to transfer-owner' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => 'Feature Disabled: route_sharing',
+              'title' => 'CF-FeatureDisabled',
+              'code' => 330002,
+            })
+        )
+      end
+    end
+  end
+
   describe 'GET /v3/apps/:app_guid/routes' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:route1) { VCAP::CloudController::Route.make(space: space) }
