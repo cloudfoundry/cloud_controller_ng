@@ -3155,13 +3155,12 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'PATCH /v3/routes/:guid/transfer-owner' do
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
-    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: '') }
-    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/transfer_owner", params.to_json, user_headers } }
-    let(:other_space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:params) do
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/transfer_owner", request_body.to_json, user_headers } }
+    let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:request_body) do
       {
-        space: other_space.guid.to_s
+        'space' => target_space.guid
       }
     end
     let(:space_dev_headers) do
@@ -3175,7 +3174,7 @@ RSpec.describe 'Routes Request' do
 
     before do
       org.add_user(user)
-      other_space.add_developer(user)
+      target_space.add_developer(user)
     end
 
     context 'when the user logged in' do
@@ -3190,6 +3189,54 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'target space to transfer to' do
+      context 'does not exist' do
+        let(:target_space_guid) { 'fake-target' }
+        let(:request_body) do
+          {
+            'space' => target_space_guid
+          }
+        end
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to transfer owner of route #{route.uri} to space '#{target_space_guid}'. " \
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have access to the target space' do
+        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            'space' => no_access_target_space.guid
+          }
+        end
+
+        it 'responds with 422 and does not share the route' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to transfer owner of route #{route.uri} to space '#{no_access_target_space.guid}'. "\
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
     end
 
     describe 'when route_sharing flag is disabled' do
