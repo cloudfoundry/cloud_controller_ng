@@ -167,6 +167,17 @@ class RoutesController < ApplicationController
       "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
   end
 
+  def transfer_owner
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
+
+    # target_space_guid = hashed_params['space']
+    # target_space = Space.where(guid: target_space_guid)
+    # check_spaces_exist_and_are_writeable!(route, [target_space_guid], [target_space])
+    # resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(target_space_guid, target_space.organization.guid)
+    render status: :ok, json: { status: 'ok' }
+  end
+
   def index_destinations
     message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
