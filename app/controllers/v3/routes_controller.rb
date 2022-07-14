@@ -171,10 +171,12 @@ class RoutesController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:route_sharing)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
 
-    # target_space_guid = hashed_params['space']
-    # target_space = Space.where(guid: target_space_guid)
-    # check_spaces_exist_and_are_writeable!(route, [target_space_guid], [target_space])
-    # resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(target_space_guid, target_space.organization.guid)
+    target_space_guid = hashed_params['space']
+    target_space = Space.first(guid: target_space_guid)
+    if target_space.nil? || !can_write_space?(target_space)
+      unprocessable!("Unable to transfer owner of route #{route.uri} to space '#{target_space_guid}'. " \
+                     'Ensure the space exists and that you have access to it.')
+    end
     render status: :ok, json: { status: 'ok' }
   end
 
