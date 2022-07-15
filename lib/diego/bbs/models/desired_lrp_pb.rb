@@ -53,6 +53,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     repeated :image_layers, :message, 24, "diego.bbs.models.ImageLayer"
     map :metric_tags, :string, :message, 25, "diego.bbs.models.MetricTagValue"
     repeated :sidecars, :message, 26, "diego.bbs.models.Sidecar"
+    optional :log_rate_limit_bytes_per_second, :int64, 27
   end
   add_message "diego.bbs.models.ProtoRoutes" do
     map :routes, :string, :bytes, 1
@@ -114,6 +115,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     repeated :image_layers, :message, 34, "diego.bbs.models.ImageLayer"
     map :metric_tags, :string, :message, 35, "diego.bbs.models.MetricTagValue"
     repeated :sidecars, :message, 36, "diego.bbs.models.Sidecar"
+    optional :log_rate_limit_bytes_per_second, :int64, 37
   end
 end
 
