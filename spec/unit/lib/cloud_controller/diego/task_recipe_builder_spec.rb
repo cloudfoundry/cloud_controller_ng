@@ -344,6 +344,7 @@ module VCAP::CloudController
             app: app,
             disk_in_mb: 1024,
             memory_in_mb: 2048,
+            log_rate_limit: 3072,
             sequence_id: 9
           )
         end
@@ -468,6 +469,7 @@ module VCAP::CloudController
             expect(result.log_guid).to eq(app.guid)
             expect(result.memory_mb).to eq(2048)
             expect(result.disk_mb).to eq(1024)
+            expect(result.log_rate_limit_bytes_per_second).to eq(3072)
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
             expect(result.legacy_download_user).to eq('vcap')
             expect(result.root_fs).to eq('preloaded:potato-stack')
@@ -610,6 +612,7 @@ module VCAP::CloudController
 
             expect(result.disk_mb).to eq(1024)
             expect(result.memory_mb).to eq(2048)
+            expect(result.log_rate_limit_bytes_per_second).to eq(3072)
             expect(result.log_guid).to eq(app.guid)
             expect(result.privileged).to be(false)
             expect(result.egress_rules).to eq([
