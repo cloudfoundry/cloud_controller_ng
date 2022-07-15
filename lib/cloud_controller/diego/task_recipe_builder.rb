@@ -26,6 +26,7 @@ module VCAP::CloudController
           disk_mb:                          task.disk_in_mb,
           egress_rules:                     @egress_rules.running_protobuf_rules(task.app),
           log_guid:                         task.app.guid,
+          log_rate_limit_bytes_per_second:  task.log_rate_limit,
           log_source:                       TASK_LOG_SOURCE,
           max_pids:                         config.get(:diego, :pid_limit),
           memory_mb:                        task.memory_in_mb,

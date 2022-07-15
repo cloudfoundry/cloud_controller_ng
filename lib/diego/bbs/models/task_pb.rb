@@ -38,6 +38,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :image_username, :string, 23
     optional :image_password, :string, 24
     repeated :image_layers, :message, 25, "diego.bbs.models.ImageLayer"
+    optional :log_rate_limit_bytes_per_second, :int64, 26
   end
   add_message "diego.bbs.models.Task" do
     optional :task_definition, :message, 1, "diego.bbs.models.TaskDefinition"
