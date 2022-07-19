@@ -367,23 +367,23 @@ module VCAP::CloudController
 
       context 'when the org quota is exceeded' do
         before do
-          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, "some-message")
+          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, 'some-message')
         end
-        it 'raises a OrgQuotaExceeded error' do
+        it 'raises a LogRateLimitOrgQuotaExceeded error' do
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to raise_error(::VCAP::CloudController::BuildCreate::OrgQuotaExceeded, "some-message")
+          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitOrgQuotaExceeded, 'some-message')
         end
       end
 
       context 'when the space quota is exceeded' do
         before do
-          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, "some-message")
+          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, 'some-message')
         end
-        it 'raises a SpaceQuotaExceeded error' do
+        it 'raises a LogRateLimitSpaceQuotaExceeded error' do
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to raise_error(::VCAP::CloudController::BuildCreate::SpaceQuotaExceeded, "some-message")
+          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitSpaceQuotaExceeded, 'some-message')
         end
       end
 

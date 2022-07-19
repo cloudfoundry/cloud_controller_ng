@@ -40,12 +40,16 @@ module VCAP::CloudController
         process.last_stager_response = build_creator.staging_response
       rescue Diego::Runner::CannotCommunicateWithDiegoError => e
         logger.error("failed communicating with diego backend: #{e.message}")
-      rescue BuildCreate::SpaceQuotaExceeded => e
+      rescue BuildCreate::MemorySpaceQuotaExceeded => e
         raise CloudController::Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded', e.message)
-      rescue BuildCreate::OrgQuotaExceeded => e
+      rescue BuildCreate::MemoryOrgQuotaExceeded => e
         raise CloudController::Errors::ApiError.new_from_details('AppMemoryQuotaExceeded', e.message)
       rescue BuildCreate::DiskLimitExceeded
         raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'too much disk requested')
+      rescue BuildCreate::LogRateLimitSpaceQuotaExceeded => e
+        raise CloudController::Errors::ApiError.new_from_details('SpaceQuotaLogRateLimitExceeded', e.message)
+      rescue BuildCreate::LogRateLimitOrgQuotaExceeded => e
+        raise CloudController::Errors::ApiError.new_from_details('OrgQuotaLogRateLimitExceeded', e.message)
       rescue BuildCreate::BuildError => e
         raise CloudController::Errors::ApiError.new_from_details('AppInvalid', e.message)
       end

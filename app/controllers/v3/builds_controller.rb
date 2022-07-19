@@ -59,12 +59,16 @@ class BuildsController < ApplicationController
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e
     bad_request!(e.message)
-  rescue BuildCreate::SpaceQuotaExceeded => e
+  rescue BuildCreate::MemorySpaceQuotaExceeded => e
     unprocessable!("space's memory limit exceeded: #{e.message}")
-  rescue BuildCreate::OrgQuotaExceeded => e
+  rescue BuildCreate::MemoryOrgQuotaExceeded => e
     unprocessable!("organization's memory limit exceeded: #{e.message}")
   rescue BuildCreate::DiskLimitExceeded
     unprocessable!('disk limit exceeded')
+  rescue BuildCreate::LogRateLimitSpaceQuotaExceeded => e
+    unprocessable!("space's log rate limit exceeded: #{e.message}")
+  rescue BuildCreate::LogRateLimitOrgQuotaExceeded => e
+    unprocessable!("organization's log rate limit exceeded: #{e.message}")
   rescue BuildCreate::StagingInProgress
     raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
   rescue BuildCreate::BuildError => e
