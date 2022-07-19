@@ -12,11 +12,15 @@ module VCAP::CloudController
     end
     class InvalidPackage < BuildError
     end
-    class SpaceQuotaExceeded < BuildError
+    class MemorySpaceQuotaExceeded < BuildError
     end
-    class OrgQuotaExceeded < BuildError
+    class MemoryOrgQuotaExceeded < BuildError
     end
     class DiskLimitExceeded < BuildError
+    end
+    class LogRateLimitSpaceQuotaExceeded < BuildError
+    end
+    class LogRateLimitOrgQuotaExceeded < BuildError
     end
     class StagingInProgress < BuildError
     end
@@ -152,14 +156,18 @@ module VCAP::CloudController
       limit = requested_limit || app.newest_web_process&.memory
       @memory_limit_calculator.get_limit(limit, space, org)
     rescue QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded => e
-      raise SpaceQuotaExceeded.new e.message
+      raise MemorySpaceQuotaExceeded.new e.message
     rescue QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded => e
-      raise OrgQuotaExceeded.new e.message
+      raise MemoryOrgQuotaExceeded.new e.message
     end
 
     def get_log_rate_limit(requested_limit, app, space, org)
       limit = requested_limit || app.newest_web_process&.log_rate_limit
       @log_rate_limit_calculator.get_limit(limit, space, org)
+    rescue QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded => e
+      raise LogRateLimitSpaceQuotaExceeded.new e.message
+    rescue QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded => e
+      raise LogRateLimitOrgQuotaExceeded.new e.message
     end
 
     def logger
