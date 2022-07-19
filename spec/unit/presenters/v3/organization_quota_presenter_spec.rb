@@ -3,12 +3,18 @@ require 'presenters/v3/organization_quota_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationQuotaPresenter do
-    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid') }
     let(:org) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid') }
     let(:visible_org_guids) { [org.guid] }
+    let(:all_orgs_visible) { false }
 
+    before do
+      organization_quota.add_organization(org)
+      organization_quota.add_organization(org2)
+    end
     describe '#to_hash' do
-      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_org_guids).to_hash }
+      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_org_guids, all_orgs_visible: all_orgs_visible).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(organization_quota.guid)
@@ -30,17 +36,20 @@ module VCAP::CloudController::Presenters::V3
 
         expect(result[:domains][:total_domains]).to eq(nil)
 
-        expect(result[:relationships][:organizations][:data]).to eq([])
+        expect(result[:relationships][:organizations][:data]).to eq([{ guid: org.guid }])
         expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
       end
 
-      context 'when there are associated orgs' do
-        before do
-          organization_quota.add_organization(org)
-        end
+      context 'when user is admin and there are no visible orgs' do
+        let(:all_orgs_visible) { true }
+        let(:visible_org_guids) { [] }
 
-        it 'presents the org quota with the list of orgs' do
-          expect(result[:relationships][:organizations][:data]).to eq([{ guid: org.guid }])
+        it 'displays all orgs' do
+          expect(result[:relationships][:organizations][:data]).to match_array([
+            { guid: org.guid },
+            { guid: org2.guid }
+          ]
+                                                                   )
         end
       end
     end

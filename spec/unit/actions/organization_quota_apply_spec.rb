@@ -50,7 +50,7 @@ module VCAP::CloudController
         it 'raises a human-friendly error' do
           expect {
             subject.apply(org_quota, message_with_invalid_org_guid)
-          }.to raise_error(OrganizationQuotaApply::Error, "Organizations with guids [\"#{invalid_org_guid}\"] do not exist, or you do not have access to them.")
+          }.to raise_error(OrganizationQuotaApply::Error, "Organizations with guids [\"#{invalid_org_guid}\"] do not exist")
         end
       end
     end

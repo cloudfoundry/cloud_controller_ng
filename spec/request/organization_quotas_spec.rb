@@ -500,7 +500,7 @@ module VCAP::CloudController
         it 'returns a 422 with a helpful message' do
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
-          expect(last_response).to have_error_message('Organizations with guids ["not a real guid"] do not exist, or you do not have access to them.')
+          expect(last_response).to have_error_message('Organizations with guids ["not a real guid"] do not exist')
         end
       end
 
