@@ -160,6 +160,10 @@ module VCAP::CloudController
     def get_log_rate_limit(requested_limit, app, space, org)
       limit = requested_limit || app.newest_web_process&.log_rate_limit
       @log_rate_limit_calculator.get_limit(limit, space, org)
+    rescue QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded => e
+      raise SpaceQuotaExceeded.new e.message
+    rescue QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded => e
+      raise OrgQuotaExceeded.new e.message
     end
 
     def logger
