@@ -1778,6 +1778,7 @@ RSpec.describe 'Apps' do
         app: app_model,
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 789,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
         created_by_user_email: 'bob@loblaw.com'
@@ -1789,6 +1790,7 @@ RSpec.describe 'Apps' do
         app: app_model,
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 789,
         created_at: build.created_at - 1.day,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
@@ -1874,6 +1876,7 @@ RSpec.describe 'Apps' do
               'error' => nil,
               'staging_memory_in_mb' => 123,
               'staging_disk_in_mb' => 456,
+              'staging_log_rate_limit_bytes_per_second' => 789,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -1902,6 +1905,7 @@ RSpec.describe 'Apps' do
               'error' => nil,
               'staging_memory_in_mb' => 123,
               'staging_disk_in_mb' => 456,
+              'staging_log_rate_limit_bytes_per_second' => 789,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {

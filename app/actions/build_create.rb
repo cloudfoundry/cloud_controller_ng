@@ -1,3 +1,4 @@
+require 'cloud_controller/backends/quota_validating_staging_log_rate_limit_calculator'
 require 'cloud_controller/backends/quota_validating_staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
@@ -25,12 +26,14 @@ module VCAP::CloudController
     def initialize(user_audit_info: UserAuditInfo.from_context(SecurityContext),
       memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
       disk_limit_calculator: StagingDiskCalculator.new,
+      log_rate_limit_calculator: QuotaValidatingStagingLogRateLimitCalculator.new,
       environment_presenter: StagingEnvironmentBuilder.new)
 
       @user_audit_info         = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
-      @environment_builder     = environment_presenter
+      @log_rate_limit_calculator = log_rate_limit_calculator
+      @environment_builder = environment_presenter
     end
 
     def create_and_stage(package:, lifecycle:, metadata: nil, start_after_staging: false)
@@ -49,6 +52,7 @@ module VCAP::CloudController
         app:                   package.app,
         staging_memory_in_mb:  staging_details.staging_memory_in_mb,
         staging_disk_in_mb:    staging_details.staging_disk_in_mb,
+        staging_log_rate_limit: staging_details.staging_log_rate_limit_bytes_per_second,
         created_by_user_guid:  @user_audit_info.user_guid,
         created_by_user_name:  @user_audit_info.user_name,
         created_by_user_email: @user_audit_info.user_email
@@ -117,6 +121,7 @@ module VCAP::CloudController
 
       memory_limit          = get_memory_limit(lifecycle.staging_message.staging_memory_in_mb, app, space, org)
       disk_limit            = get_disk_limit(lifecycle.staging_message.staging_disk_in_mb, app)
+      log_rate_limit        = get_log_rate_limit(lifecycle.staging_message.staging_log_rate_limit_bytes_per_second, app, space, org)
       environment_variables = @environment_builder.build(app,
         space,
         lifecycle,
@@ -128,6 +133,7 @@ module VCAP::CloudController
       staging_details.package               = package
       staging_details.staging_memory_in_mb  = memory_limit
       staging_details.staging_disk_in_mb    = disk_limit
+      staging_details.staging_log_rate_limit_bytes_per_second = log_rate_limit
       staging_details.environment_variables = environment_variables
       staging_details.lifecycle             = lifecycle
       staging_details.isolation_segment     = IsolationSegmentSelector.for_space(space)
@@ -149,6 +155,11 @@ module VCAP::CloudController
       raise SpaceQuotaExceeded.new e.message
     rescue QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded => e
       raise OrgQuotaExceeded.new e.message
+    end
+
+    def get_log_rate_limit(requested_limit, app, space, org)
+      limit = requested_limit || app.newest_web_process&.log_rate_limit
+      @log_rate_limit_calculator.get_limit(limit, space, org)
     end
 
     def logger
