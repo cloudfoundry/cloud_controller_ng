@@ -22,6 +22,7 @@ module VCAP::CloudController
             state: build.state,
             staging_memory_in_mb: build.staging_memory_in_mb,
             staging_disk_in_mb: build.staging_disk_in_mb,
+            staging_log_rate_limit_bytes_per_second: build.staging_log_rate_limit,
             error: error,
             lifecycle: {
               type: build.lifecycle_type,

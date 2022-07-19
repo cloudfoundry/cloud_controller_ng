@@ -14,6 +14,7 @@ module VCAP::CloudController
             details.environment_variables = [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'nightshade_fruit', value: 'potato')]
             details.staging_memory_in_mb  = 42
             details.staging_disk_in_mb    = 51
+            details.staging_log_rate_limit_bytes_per_second = 67
             details.start_after_staging   = true
             details.lifecycle             = lifecycle
             details.isolation_segment     = isolation_segment
@@ -152,6 +153,7 @@ module VCAP::CloudController
 
             expect(result.memory_mb).to eq(42)
             expect(result.disk_mb).to eq(51)
+            expect(result.log_rate_limit_bytes_per_second).to eq(67)
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cpu_weight).to eq(50)
 
