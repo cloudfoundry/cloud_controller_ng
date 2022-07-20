@@ -19,7 +19,7 @@ module VCAP::CloudController
       return orgs if orgs.length == org_guids.length
 
       invalid_org_guids = org_guids - orgs.map(&:guid)
-      error!("Organizations with guids #{invalid_org_guids} do not exist, or you do not have access to them.")
+      error!("Organizations with guids #{invalid_org_guids} do not exist")
     end
 
     def error!(message)

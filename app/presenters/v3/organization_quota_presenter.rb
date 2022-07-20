@@ -7,9 +7,11 @@ module VCAP::CloudController::Presenters::V3
       resource,
         show_secrets: false,
         censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        visible_org_guids:
+        all_orgs_visible: false,
+        visible_org_guids: []
     )
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      @all_orgs_visible = all_orgs_visible
       @visible_org_guids = visible_org_guids
     end
 
@@ -49,9 +51,12 @@ module VCAP::CloudController::Presenters::V3
     private
 
     def filtered_visible_orgs
-      VCAP::CloudController::Organization.where(quota_definition_id: @resource.id, guid: @visible_org_guids).select(:guid).map do |org|
-        { guid: org[:guid] }
-      end
+      visible_orgs = if @all_orgs_visible
+                       organization_quota.organizations
+                     else
+                       organization_quota.organizations.select { |org| @visible_org_guids.include? org.guid }
+                     end
+      visible_orgs.map { |org| { guid: org.guid } }
     end
 
     def organization_quota

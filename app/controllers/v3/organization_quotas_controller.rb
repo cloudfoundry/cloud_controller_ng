@@ -17,9 +17,8 @@ class OrganizationQuotasController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organization_quota = OrganizationQuotasCreate.new.create(message)
-    visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :created
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :created
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end
@@ -34,9 +33,8 @@ class OrganizationQuotasController < ApplicationController
     resource_not_found!(:organization_quota) unless organization_quota
 
     organization_quota = OrganizationQuotasUpdate.update(organization_quota, message)
-    visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
   rescue OrganizationQuotasUpdate::Error => e
     unprocessable!(e.message)
   end
@@ -45,9 +43,7 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
     resource_not_found!(:organization_quota) unless organization_quota
 
-    visible_organizations_guids = permission_queryer.readable_org_guids
-
-    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end
@@ -63,7 +59,7 @@ class OrganizationQuotasController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/organization_quotas',
       message: message,
-      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids },
+      extra_presenter_args: presenter_args,
     )
   end
 
@@ -104,5 +100,13 @@ class OrganizationQuotasController < ApplicationController
     )
   rescue OrganizationQuotaApply::Error => e
     unprocessable!(e.message)
+  end
+
+  def presenter_args
+    if permission_queryer.can_read_globally?
+      { all_orgs_visible: true }
+    else
+      { visible_org_guids: permission_queryer.readable_org_guids }
+    end
   end
 end
