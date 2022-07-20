@@ -134,7 +134,7 @@ We do not recommend using internal API endpoints for anything other than their i
 
 **Auth Mechanism:** MTLS
 
-### GET /internal/v4/asg_lastest_update
+### GET /internal/v4/asg_latest_update
 **Description:** Returns timestamp of the last Application Security Group update
 
 **Intended Consumer:** Diego
