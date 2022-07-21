@@ -153,7 +153,7 @@ module VCAP::CloudController
 
             expect(result.memory_mb).to eq(42)
             expect(result.disk_mb).to eq(51)
-            expect(result.log_rate_limit_bytes_per_second).to eq(67)
+            expect(result.log_rate_limit.bytes_per_second).to eq(67)
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cpu_weight).to eq(50)
 
@@ -471,7 +471,7 @@ module VCAP::CloudController
             expect(result.log_guid).to eq(app.guid)
             expect(result.memory_mb).to eq(2048)
             expect(result.disk_mb).to eq(1024)
-            expect(result.log_rate_limit_bytes_per_second).to eq(3072)
+            expect(result.log_rate_limit.bytes_per_second).to eq(3072)
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
             expect(result.legacy_download_user).to eq('vcap')
             expect(result.root_fs).to eq('preloaded:potato-stack')
@@ -614,7 +614,7 @@ module VCAP::CloudController
 
             expect(result.disk_mb).to eq(1024)
             expect(result.memory_mb).to eq(2048)
-            expect(result.log_rate_limit_bytes_per_second).to eq(3072)
+            expect(result.log_rate_limit.bytes_per_second).to eq(3072)
             expect(result.log_guid).to eq(app.guid)
             expect(result.privileged).to be(false)
             expect(result.egress_rules).to eq([
