@@ -4,6 +4,7 @@ require 'messages/route_destination_update_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
+require 'messages/route_transfer_owner_message'
 require 'messages/route_update_destinations_message'
 require 'actions/update_route_destinations'
 require 'decorators/include_route_domain_decorator'
@@ -16,6 +17,7 @@ require 'actions/route_delete'
 require 'actions/route_update'
 require 'actions/route_share'
 require 'actions/route_unshare'
+require 'actions/route_transfer_owner'
 require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
 require 'fetchers/route_destinations_list_fetcher'
@@ -169,14 +171,24 @@ class RoutesController < ApplicationController
 
   def transfer_owner
     FeatureFlag.raise_unless_enabled!(:route_sharing)
+
+    message = RouteTransferOwnerMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space.guid)
 
-    target_space_guid = hashed_params['space']
-    target_space = Space.first(guid: target_space_guid)
-    if target_space.nil? || !can_write_space?(target_space)
-      unprocessable!("Unable to transfer owner of route #{route.uri} to space '#{target_space_guid}'. " \
-                     'Ensure the space exists and that you have access to it.')
-    end
+    target_space = Space.first(guid: message.guid)
+    target_space_error = if target_space.nil? || !can_read_space?(target_space)
+                           'Ensure the space exists and that you have access to it.'
+                         elsif !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
+                           'Ensure that you have write permission for the target space.'
+                         elsif !permission_queryer.is_space_active?(target_space.guid)
+                           'The target organization is suspended.'
+                         end
+    unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.guid}'. #{target_space_error}") unless target_space_error.nil?
+
+    RouteTransferOwner.transfer(route, target_space, user_audit_info)
+
     render status: :ok, json: { status: 'ok' }
   end
 
