@@ -216,6 +216,18 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   end
 
+  def show_permissions
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
+    service_instance_not_found! if service_instance.managed_instance? && service_instance.create_failed?
+    unauthorized! unless can_read_from_space?(service_instance.space)
+
+    render status: :ok, json: {
+      "manage": current_user_can_write?(service_instance),
+      "read": can_read_service_instance?(service: service_instance),
+    }
+  end
+
   private
 
   DECORATORS = [
