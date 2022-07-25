@@ -121,6 +121,54 @@ module VCAP::CloudController
         end
       end
 
+      describe 'RateLimiterV2API' do
+        before do
+          allow(CloudFoundry::Middleware::RateLimiterV2API).to receive(:new)
+        end
+
+        context 'when configuring a limit' do
+          before do
+            builder.build(TestConfig.override(rate_limiter_v2_api: {
+              enabled: true,
+              reset_interval_in_minutes: 5,
+              per_process_general_limit: 10,
+              global_general_limit: 100,
+              per_process_admin_limit: 20,
+              global_admin_limit: 200,
+            }), request_metrics, request_logs).to_app
+          end
+
+          it 'enables the RateLimiterV2API middleware' do
+            expect(CloudFoundry::Middleware::RateLimiterV2API).to have_received(:new).with(
+              anything,
+              logger: instance_of(Steno::Logger),
+              per_process_general_limit: 10,
+              global_general_limit: 100,
+              per_process_admin_limit: 20,
+              global_admin_limit: 200,
+              interval: 5
+            )
+          end
+        end
+
+        context 'when not configuring a limit' do
+          before do
+            builder.build(TestConfig.override(rate_limiter_v2_api: {
+              enabled: false,
+              per_process_general_limit: 10,
+              global_general_limit: 100,
+              per_process_admin_limit: 20,
+              global_admin_limit: 200,
+              reset_interval_in_minutes: 5,
+            }), request_metrics, request_logs).to_app
+          end
+
+          it 'does not enable the ServiceBrokerRateLimiter middleware' do
+            expect(CloudFoundry::Middleware::RateLimiterV2API).not_to have_received(:new)
+          end
+        end
+      end
+
       describe 'New Relic custom attributes' do
         before do
           allow(CloudFoundry::Middleware::NewRelicCustomAttributes).to receive(:new)
