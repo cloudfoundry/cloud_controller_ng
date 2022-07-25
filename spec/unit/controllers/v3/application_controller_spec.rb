@@ -19,6 +19,14 @@ RSpec.describe ApplicationController, type: :controller do
       head 201
     end
 
+    def destroy
+      head 202
+    end
+
+    def update
+      head 200
+    end
+
     def api_explode
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
     end
@@ -118,6 +126,42 @@ RSpec.describe ApplicationController, type: :controller do
       it 'should show a specific item' do
         get :show, params: { id: 1 }
         expect(response.status).to eq(204)
+      end
+    end
+
+    context 'cloud_controller_service_permissions.read' do
+      let(:name) { before do
+        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller_service_permissions.read'])
+      end
+      }
+
+      let(:name) do
+        get :show, params: { id: 1 }
+      end
+
+      it 'cannot show' do
+        name
+        expect(response.status).to eq(403)
+      end
+
+      it 'cannot index' do
+        get :index
+        expect(response.status).to eq(403)
+      end
+
+      it 'cannot create' do
+        post :create
+        expect(response.status).to eq(403)
+      end
+
+      it 'cannot update' do
+        patch :update, params: { id: 1 }, as: :json
+        expect(response.status).to eq(403)
+      end
+
+      it 'cannot delete' do
+        delete :destroy, params: { id: 1 }, as: :json
+        expect(response.status).to eq(403)
       end
     end
 

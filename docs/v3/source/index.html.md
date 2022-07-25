@@ -301,16 +301,17 @@ includes:
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/create
-  - resources/service_instances/list
   - resources/service_instances/get
-  - resources/service_instances/credentials
-  - resources/service_instances/parameters
-  - resources/service_instances/update
+  - resources/service_instances/list
   - resources/service_instances/delete
+  - resources/service_instances/update
+  - resources/service_instances/credentials
+  - resources/service_instances/get_shared_spaces_usage_summary
   - resources/service_instances/list_shared_spaces
+  - resources/service_instances/parameters
+  - resources/service_instances/permissions
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
-  - resources/service_instances/get_shared_spaces_usage_summary
   - resources/service_credential_bindings/header
   - resources/service_credential_bindings/object
   - resources/service_credential_bindings/create

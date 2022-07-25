@@ -38,6 +38,13 @@ module UserHeaderHelpers
   end
 
   # rubocop:disable all
+  def set_user_with_header_as_cloud_controller_service_permissions_reader(opts = {})
+    # rubocop:enable all
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    set_user_with_header(user, { cloud_controller_service_permissions_reader: true }.merge(opts))
+  end
+
+  # rubocop:disable all
   def set_user_with_header_as_unauthenticated(opts = {})
     # rubocop:enable all
     set_user_with_header(nil, opts)
@@ -85,6 +92,9 @@ module UserHeaderHelpers
       set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
     when 'global_auditor'
       set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
+    when 'cloud_controller_service_permissions_reader'
+      set_user_with_header_as_cloud_controller_service_permissions_reader(user: current_user, scopes: ['cloud_controller_service_permissions.read'], user_name: user_name,
+email: email)
     when 'space_developer'
       space.add_developer(current_user)
       set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
