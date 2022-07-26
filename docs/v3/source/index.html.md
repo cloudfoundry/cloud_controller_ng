@@ -247,9 +247,10 @@ includes:
   - resources/routes/update
   - resources/routes/delete
   - resources/routes/check_route_reservations
-  - resources/routes/list_shared_routes
+  - resources/routes/list_shared_spaces
   - resources/routes/share_routes
   - resources/routes/unshare_routes
+  - resources/routes/transfer_route_ownership
   - resources/routes/list_destinations
   - resources/routes/insert_destinations
   - resources/routes/replace_destinations
