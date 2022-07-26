@@ -295,7 +295,7 @@ module VCAP::CloudController
             max_concurrent_service_broker_requests: Integer,
             shared_isolation_segment_name: String,
 
-            rate_limiter_v2_api: {
+            optional(:rate_limiter_v2_api) => {
               enabled: bool,
               per_process_general_limit: Integer,
               global_general_limit: Integer,

@@ -7,20 +7,20 @@ module CloudFoundry
         RateLimiterV2API.new(
           app,
           {
-            logger:                            logger,
-            per_process_general_limit:         per_process_general_limit,
-            global_general_limit:              global_general_limit,
-            per_process_admin_limit: per_process_admin_limit,
-            global_admin_limit:      global_admin_limit,
-            interval:                          interval,
+            logger:                    logger,
+            per_process_general_limit: per_process_general_limit,
+            global_general_limit:      global_general_limit,
+            per_process_admin_limit:   per_process_admin_limit,
+            global_admin_limit:        global_admin_limit,
+            interval:                  interval,
           }
         )
       end
-      let(:REQUEST_COUNTER_V2_API) { double }
+      let(:request_counter) { double }
       before(:each) {
-        middleware.instance_variable_set('@V2_API_REQUEST_COUNTER', REQUEST_COUNTER_V2_API)
-        allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([0, Time.now.utc])
-        allow(REQUEST_COUNTER_V2_API).to receive(:increment)
+        middleware.instance_variable_set('@request_counter', request_counter)
+        allow(request_counter).to receive(:get).and_return([0, Time.now.utc])
+        allow(request_counter).to receive(:increment)
       }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
@@ -33,7 +33,7 @@ module CloudFoundry
 
       let(:path_info) { '/v2/service_instances' }
       let(:default_env) { { some: 'env' } }
-      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass'), 'PATH_INFO' => path_info } }
+      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
       let(:user_1_guid) { 'user-id-1' }
       let(:user_2_guid) { 'user-id-2' }
       let(:user_1_env) { { 'cf.user_guid' => user_1_guid, 'PATH_INFO' => path_info } }
@@ -49,18 +49,18 @@ module CloudFoundry
 
         describe 'X-RateLimit-Remaining-V2-API' do
           it 'shows the user the number of remaining requests rounded down to nearest 10%' do
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([0, Time.now.utc])
+            allow(request_counter).to receive(:get).and_return([0, Time.now.utc])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
 
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([10, Time.now.utc])
+            allow(request_counter).to receive(:get).and_return([10, Time.now.utc])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('80')
           end
 
-          it 'tracks user\'s remaining requests independently' do
-            expect(REQUEST_COUNTER_V2_API).to receive(:get).with(user_1_guid, interval, logger).and_return([0, Time.now.utc])
-            expect(REQUEST_COUNTER_V2_API).to receive(:get).with(user_2_guid, interval, logger).and_return([10, Time.now.utc])
+          it "tracks user's remaining requests independently" do
+            expect(request_counter).to receive(:get).with(user_1_guid, interval, logger).and_return([0, Time.now.utc])
+            expect(request_counter).to receive(:get).with(user_2_guid, interval, logger).and_return([10, Time.now.utc])
 
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
@@ -73,7 +73,7 @@ module CloudFoundry
         describe 'X-RateLimit-Reset-V2-API' do
           it 'shows the user when the interval will expire' do
             valid_until = Time.now.utc.beginning_of_hour + interval.minutes
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([0, valid_until])
+            allow(request_counter).to receive(:get).and_return([0, valid_until])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Reset-V2-API'].to_i).to eq(valid_until.utc.to_i)
           end
@@ -93,11 +93,11 @@ module CloudFoundry
 
         describe 'X-RateLimit-Remaining-V2-API' do
           it 'shows the user the number of remaining requests rounded down to nearest 10%' do
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([0, Time.now.utc])
+            allow(request_counter).to receive(:get).and_return([0, Time.now.utc])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('900')
 
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([10, Time.now.utc])
+            allow(request_counter).to receive(:get).and_return([10, Time.now.utc])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('800')
           end
@@ -106,7 +106,7 @@ module CloudFoundry
         describe 'X-RateLimit-Reset-V2-API' do
           it 'shows the user when the interval will expire' do
             valid_until = Time.now.utc.beginning_of_hour + interval.minutes
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([0, valid_until])
+            allow(request_counter).to receive(:get).and_return([0, valid_until])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Reset-V2-API'].to_i).to eq(valid_until.utc.to_i)
           end
@@ -115,7 +115,7 @@ module CloudFoundry
 
       it 'increments the counter and allows the request to continue' do
         _, _, _ = middleware.call(user_1_env)
-        expect(REQUEST_COUNTER_V2_API).to have_received(:increment).with(user_1_guid)
+        expect(request_counter).to have_received(:increment).with(user_1_guid)
         expect(app).to have_received(:call)
       end
 
@@ -133,8 +133,8 @@ module CloudFoundry
             it 'exempts them from rate limiting' do
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               _, response_headers, _ = middleware.call(default_env)
-              expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-              expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
+              expect(request_counter).not_to have_received(:get)
+              expect(request_counter).not_to have_received(:increment)
               expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
               expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
               expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
@@ -147,8 +147,8 @@ module CloudFoundry
 
             it 'rate limits them' do
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              expect(REQUEST_COUNTER_V2_API).to receive(:get).with('forwarded_ip', interval, logger).and_return([0, Time.now.utc])
-              expect(REQUEST_COUNTER_V2_API).to receive(:increment).with('forwarded_ip')
+              expect(request_counter).to receive(:get).with('forwarded_ip', interval, logger).and_return([0, Time.now.utc])
+              expect(request_counter).to receive(:increment).with('forwarded_ip')
               _, response_headers, _ = middleware.call(default_env)
               expect(response_headers['X-RateLimit-Limit-V2-API']).to_not be_nil
               expect(response_headers['X-RateLimit-Remaining-V2-API']).to_not be_nil
@@ -160,70 +160,40 @@ module CloudFoundry
         context 'when the user is hitting a root path /' do
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/') }
 
-          it 'exempts them from rate limiting' do
-            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+          it_behaves_like 'endpoint exempts from rate limiting', '-V2-API' do
+            let(:env) { default_env }
           end
         end
 
         context 'when the user is hitting a root path /v2/info' do
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
 
-          it 'exempts them from rate limiting' do
-            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+          it_behaves_like 'endpoint exempts from rate limiting', '-V2-API' do
+            let(:env) { default_env }
           end
         end
 
         context 'when the user is hitting a root path /v3' do
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3') }
 
-          it 'exempts them from rate limiting' do
-            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+          it_behaves_like 'endpoint exempts from rate limiting', '-V2-API' do
+            let(:env) { default_env }
           end
         end
 
         context 'when the user is hitting a root path /v3/services' do
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/services') }
 
-          it 'exempts them from rate limiting' do
-            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+          it_behaves_like 'endpoint exempts from rate limiting', '-V2-API' do
+            let(:env) { default_env }
           end
         end
 
         context 'when the user is hitting a root path /healthz' do
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/healthz') }
 
-          it 'exempts them from rate limiting' do
-            allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-            expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+          it_behaves_like 'endpoint exempts from rate limiting', '-V2-API' do
+            let(:env) { default_env }
           end
         end
       end
@@ -232,8 +202,8 @@ module CloudFoundry
         describe 'when the user has basic auth credentials' do
           it 'exempts them from rate limiting' do
             _, response_headers, _ = middleware.call(basic_auth_env)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:get)
-            expect(REQUEST_COUNTER_V2_API).not_to have_received(:increment)
+            expect(request_counter).not_to have_received(:get)
+            expect(request_counter).not_to have_received(:increment)
             expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
             expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
@@ -258,15 +228,15 @@ module CloudFoundry
             valid_until_2 = Time.now.utc
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            expect(REQUEST_COUNTER_V2_API).to receive(:get).with(forwarded_ip, interval, logger).and_return([0, valid_until])
-            expect(REQUEST_COUNTER_V2_API).to receive(:increment).with(forwarded_ip)
+            expect(request_counter).to receive(:get).with(forwarded_ip, interval, logger).and_return([0, valid_until])
+            expect(request_counter).to receive(:increment).with(forwarded_ip)
             _, response_headers, _ = middleware.call(default_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq(valid_until.to_i.to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
-            expect(REQUEST_COUNTER_V2_API).to receive(:get).with(forwarded_ip_2, interval, logger).and_return([2, valid_until_2])
-            expect(REQUEST_COUNTER_V2_API).to receive(:increment).with(forwarded_ip_2)
+            expect(request_counter).to receive(:get).with(forwarded_ip_2, interval, logger).and_return([2, valid_until_2])
+            expect(request_counter).to receive(:increment).with(forwarded_ip_2)
             _, response_headers, _ = middleware.call(default_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('160')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq(valid_until_2.to_i.to_s)
@@ -283,18 +253,18 @@ module CloudFoundry
           it 'identifies them by the request ip' do
             valid_until = Time.now.utc.beginning_of_hour
             valid_until_2 = Time.now.utc.beginning_of_hour + 5.minutes
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).with(ip, interval, logger).and_return([0, valid_until])
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).with(ip_2, interval, logger).and_return([2, valid_until_2])
+            allow(request_counter).to receive(:get).with(ip, interval, logger).and_return([0, valid_until])
+            allow(request_counter).to receive(:get).with(ip_2, interval, logger).and_return([2, valid_until_2])
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).to have_received(:increment).with(ip)
+            expect(request_counter).to have_received(:increment).with(ip)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq(valid_until.utc.to_i.to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
             _, response_headers, _ = middleware.call(default_env)
-            expect(REQUEST_COUNTER_V2_API).to have_received(:increment).with(ip_2)
+            expect(request_counter).to have_received(:increment).with(ip_2)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('160')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq(valid_until_2.utc.to_i.to_s)
           end
@@ -306,7 +276,7 @@ module CloudFoundry
         let(:middleware_env) do
           { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
         end
-        before(:each) { allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
+        before(:each) { allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
 
         it 'returns 429 response' do
           status, _, _ = middleware.call(middleware_env)
@@ -315,18 +285,18 @@ module CloudFoundry
 
         it 'does not increment the request counter' do
           _, _, _ = middleware.call(middleware_env)
-          expect(REQUEST_COUNTER_V2_API).to_not have_received(:increment)
+          expect(request_counter).to_not have_received(:increment)
         end
 
         it 'prevents "X-RateLimit-Remaining-V2-API" from going lower than zero' do
-          allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([per_process_general_limit + 100, Time.now.utc])
+          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 100, Time.now.utc])
           _, response_headers, _ = middleware.call(middleware_env)
           expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('0')
         end
 
         it 'contains the correct headers' do
           valid_until = Time.now.utc
-          allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([per_process_general_limit + 1, valid_until])
+          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, valid_until])
           error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
           allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
@@ -348,16 +318,20 @@ module CloudFoundry
             'code' => 10018,
             'description' => 'Rate Limit of V2 API Exceeded. Please consider to use V3 API',
             'error_code' => 'CF-RateLimitV2APIExceeded',
-                                 )
+          )
         end
 
         context 'when the user is admin' do
           let(:path_info) { '/v2/foo' }
           let(:default_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
+          end
+
           it 'contains the correct headers' do
             valid_until = Time.now.utc
-            allow(REQUEST_COUNTER_V2_API).to receive(:get).and_return([per_process_admin_limit + 1, valid_until])
+            allow(request_counter).to receive(:get).and_return([per_process_admin_limit + 1, valid_until])
             error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 

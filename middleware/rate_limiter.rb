@@ -1,12 +1,10 @@
-require 'mixins/client_ip'
-require 'mixins/user_reset_interval'
 require 'base_rate_limiter'
 
 module CloudFoundry
   module Middleware
-    REQUEST_COUNTER = BaseRequestCounter.new
-
     class RateLimiter < BaseRateLimiter
+      REQUEST_COUNTER = RequestCounter.new
+
       def initialize(app, opts)
         @per_process_general_limit         = opts[:per_process_general_limit]
         @global_general_limit              = opts[:global_general_limit]
@@ -17,9 +15,9 @@ module CloudFoundry
 
       private
 
-      def skip_rate_limiting?(env, request)
-        auth = Rack::Auth::Basic::Request.new(env)
-        basic_auth?(auth) || internal_api?(request) || root_api?(request) || admin?
+      def apply_rate_limiting?(env)
+        request = ActionDispatch::Request.new(env)
+        !basic_auth?(env) && !internal_api?(request) && !root_api?(request) && !admin?
       end
 
       def root_api?(request)

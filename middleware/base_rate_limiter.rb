@@ -1,16 +1,14 @@
+require 'mixins/client_ip'
+require 'mixins/user_reset_interval'
+
 module CloudFoundry
   module Middleware
-    RequestCount = Struct.new(:requests, :valid_until)
-
-    class BaseRequestCounter
+    class RequestCounter
       include CloudFoundry::Middleware::UserResetInterval
 
-      def initialize
-        reset
-      end
+      RequestCount = Struct.new(:requests, :valid_until)
 
-      # needed for testing
-      def reset
+      def initialize
         @mutex = Mutex.new
         @data = {}
       end
@@ -58,7 +56,7 @@ module CloudFoundry
         @remaining = nil
       end
 
-      def as_hash
+      def to_hash
         return {} if [@limit, @reset, @remaining].all?(&:nil?)
 
         { "#{@prefix}-Limit#{@suffix}" => @limit, "#{@prefix}-Reset#{@suffix}" => @reset, "#{@prefix}-Remaining#{@suffix}" => @remaining }
@@ -81,7 +79,7 @@ module CloudFoundry
 
         request = ActionDispatch::Request.new(env)
 
-        unless skip_rate_limiting?(env, request)
+        if apply_rate_limiting?(env)
           user_guid = user_token?(env) ? env['cf.user_guid'] : client_ip(request)
 
           count, valid_until = @request_counter.get(user_guid, @reset_interval, @logger)
@@ -97,21 +95,25 @@ module CloudFoundry
         end
 
         status, headers, body = @app.call(env)
-        [status, headers.merge(rate_limit_headers.as_hash), body]
+        [status, headers.merge(rate_limit_headers.to_hash), body]
       end
 
       private
 
-      def skip_rate_limiting?(env, request)
-        raise NotImplementedError
+      def apply_rate_limiting?(env)
+        raise 'method should be implemented in concrete class'
       end
 
       def global_request_limit(env)
-        raise NotImplementedError
+        raise 'method should be implemented in concrete class'
       end
 
       def rate_limit_error(env)
-        raise NotImplementedError
+        raise 'method should be implemented in concrete class'
+      end
+
+      def per_process_request_limit(env)
+        raise 'method should be implemented in concrete class'
       end
 
       def exceeded_rate_limit(count, env)
@@ -131,8 +133,9 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
-      def basic_auth?(auth)
-        (auth.provided? && auth.basic?)
+      def basic_auth?(env)
+        auth = Rack::Auth::Basic::Request.new(env)
+        auth.provided? && auth.basic?
       end
 
       def admin?
@@ -145,7 +148,7 @@ module CloudFoundry
         headers['Content-Type'] = 'text/plain; charset=utf-8'
         message = rate_limit_error(env).to_json
         headers['Content-Length'] = message.length.to_s
-        [429, rate_limit_headers.as_hash.merge(headers), [message]]
+        [429, rate_limit_headers.to_hash.merge(headers), [message]]
       end
     end
   end
