@@ -4,15 +4,15 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SyslogDrainUrlsInternalController do
-    let(:org) { Organization.make(name: 'org-1') }
-    let(:space) { Space.make(name: 'space-1', organization: org) }
-    let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
-    let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
-    let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
-
     describe 'GET /internal/v4/syslog_drain_urls' do
+      let(:org) { Organization.make(name: 'org-1') }
+      let(:space) { Space.make(name: 'space-1', organization: org) }
+      let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
+      let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1, credentials: nil) }
+      let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2, credentials: 'super secret') }
+
       it 'returns a list of syslog drain urls' do
         get '/internal/v4/syslog_drain_urls', '{}'
         expect(last_response).to be_successful
@@ -174,10 +174,6 @@ module VCAP::CloudController
         end
       end
 
-      def decoded_results
-        decoded_response.fetch('results')
-      end
-
       describe 'paging' do
         before do
           3.times do
@@ -275,6 +271,88 @@ module VCAP::CloudController
           end
         end
       end
+    end
+
+    describe 'GET /internal/v5/syslog_drain_urls' do
+      let(:org) { Organization.make(name: 'org-1') }
+      let(:space) { Space.make(name: 'space-1', organization: org) }
+      let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
+      let(:app_obj2) { AppModel.make(name: 'app-2', space: space) }
+      let(:app_obj3) { AppModel.make(name: 'app-3', space: space) }
+      let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance3) { UserProvidedServiceInstance.make(space: app_obj2.space) }
+      let(:instance4) { UserProvidedServiceInstance.make(space: app_obj3.space) }
+      let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
+      let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
+      let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
+      let!(:binding_with_drain4) { ServiceBinding.make(
+        syslog_drain_url: 'barfoo',
+        app: app_obj3,
+        service_instance: instance4,
+        credentials: { 'cert' => 'a cert', 'key' => 'a key' })
+      }
+
+      it 'returns a list of syslog drain urls and their credentials' do
+        get '/internal/v5/syslog_drain_urls', '{}'
+        expect(last_response).to be_successful
+        expect(decoded_results.count).to eq(3)
+        expect(decoded_results).to include(
+          { 'apps' =>
+             [{ 'app_id' => app_obj.guid,
+               'hostname' => 'org-1.space-1.app-1' },
+              { 'app_id' => app_obj2.guid,
+               'hostname' => 'org-1.space-1.app-2' }],
+            'cert' => '',
+            'key' => '',
+            'url' => 'foobar' }
+        )
+        expect(decoded_results).to include(
+          { 'apps' =>
+             [{ 'app_id' => app_obj.guid,
+               'hostname' => 'org-1.space-1.app-1' }],
+            'cert' => '',
+            'key' => '',
+            'url' => 'fish%2cfinger' }
+        )
+        expect(decoded_results).to include(
+          { 'apps' =>
+             [{ 'app_id' => app_obj3.guid,
+               'hostname' => 'org-1.space-1.app-3' }],
+            'cert' => 'a cert',
+            'key' => 'a key',
+            'url' => 'barfoo' }
+        )
+      end
+
+      it 'supports paging' do
+        get '/internal/v5/syslog_drain_urls', {
+          'batch_size' => 2,
+        }
+        expect(last_response).to be_successful
+        expect(decoded_next_id).to be(2)
+        get '/internal/v5/syslog_drain_urls', {
+          'batch_size' => 2,
+          'next_id' => decoded_next_id
+        }
+        expect(last_response).to be_successful
+        expect(decoded_next_id).to be(4)
+        get '/internal/v5/syslog_drain_urls', {
+          'batch_size' => 2,
+          'next_id' => decoded_next_id
+        }
+        expect(last_response).to be_successful
+        expect(decoded_next_id).to be(nil)
+        expect(decoded_results.length).to be(0)
+      end
+    end
+
+    def decoded_results
+      decoded_response.fetch('results')
+    end
+
+    def decoded_next_id
+      decoded_response.fetch('next_id')
     end
   end
 end
