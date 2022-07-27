@@ -3187,7 +3187,7 @@ RSpec.describe 'Routes Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    it 'changes the route owner to the given space and logs an event' do
+    it 'changes the route owner to the given space and logs an event', isolation: :truncation do
       api_call.call(space_dev_headers)
 
       expect(last_response.status).to eq(200)
