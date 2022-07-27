@@ -2,9 +2,6 @@ require 'repositories/route_event_repository'
 
 module VCAP::CloudController
   class RouteTransferOwner
-    class Error < ::StandardError
-    end
-
     class << self
       def transfer(route, target_space, user_audit_info)
         return route if target_space.name == route.space.name
@@ -18,12 +15,6 @@ module VCAP::CloudController
         end
         Repositories::RouteEventRepository.new.record_route_transfer_owner(
           route, user_audit_info, original_space, target_space.guid)
-      end
-
-      private
-
-      def error!(message)
-        raise Error.new(message)
       end
     end
   end
