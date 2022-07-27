@@ -48,7 +48,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'records a transfer event' do
+      it 'records a transfer event', isolation: :truncation do
         expect_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_transfer_owner).with(
           route, user_audit_info, original_owning_space, target_space.guid)
 
