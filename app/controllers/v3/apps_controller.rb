@@ -13,6 +13,9 @@ require 'actions/app_assign_droplet'
 require 'decorators/include_space_decorator'
 require 'decorators/include_organization_decorator'
 require 'decorators/include_space_organization_decorator'
+require 'decorators/include_app_route_decorator'
+require 'decorators/include_app_process_decorator'
+require 'decorators/include_app_domain_decorator'
 require 'messages/apps_list_message'
 require 'messages/app_show_message'
 require 'messages/app_update_message'
@@ -73,6 +76,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     decorators = []
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
     decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
+    decorators << IncludeAppRouteDecorator if IncludeAppRouteDecorator.match?(message.include)
+    decorators << IncludeAppProcessDecorator if IncludeAppProcessDecorator.match?(message.include)
+    decorators << IncludeAppDomainDecorator if IncludeAppDomainDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,
