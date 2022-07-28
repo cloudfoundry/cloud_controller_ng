@@ -762,32 +762,70 @@ RSpec.describe 'V3 service offerings' do
     end
 
     context 'when purge=true' do
-      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
-      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
-      let(:guid) { service_instance.service_plan.service.guid }
-      let(:email) { Sham.email }
-      let(:admin_header) { admin_headers_for(user, email: email) }
+      context 'when user is a space developer' do
+        let(:user) { VCAP::CloudController::User.make }
 
-      it 'deletes the service offering and its dependencies' do
-        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+        before do
+          org.add_user(user)
+          space.add_developer(user)
+        end
 
-        expect(last_response).to have_status_code(204)
-        expect(VCAP::CloudController::Service.all).to be_empty
-        expect(VCAP::CloudController::ServicePlan.all).to be_empty
-        expect(VCAP::CloudController::ManagedServiceInstance.all).to be_empty
-        expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+        context 'when broker is space-scoped' do
+          let!(:org) { VCAP::CloudController::Organization.make }
+          let!(:space) { VCAP::CloudController::Space.make(organization: org) }
+          let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+          let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+
+          it 'deletes the service offering and its dependencies' do
+            delete "/v3/service_offerings/#{service_offering.guid}?purge=true", nil, headers_for(user)
+
+            expect(last_response).to have_status_code(204)
+            expect(VCAP::CloudController::Service.all).to be_empty
+            expect(VCAP::CloudController::ServicePlan.all).to be_empty
+            expect(VCAP::CloudController::ManagedServiceInstance.all).to be_empty
+            expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+          end
+        end
+
+        context 'when broker is global' do
+          let(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+
+          it 'deletes the service offering and its dependencies' do
+            delete "/v3/service_offerings/#{service_offering.guid}?purge=true", nil, headers_for(user)
+
+            expect(last_response).to have_status_code(403)
+          end
+        end
       end
 
-      it 'emits audit events for all the deleted resources' do
-        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+      context 'when user is admin' do
+        let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
+        let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+        let(:guid) { service_instance.service_plan.service.guid }
+        let(:email) { Sham.email }
+        let(:admin_header) { admin_headers_for(user, email: email) }
 
-        expect([
-          { type: 'audit.service.delete', actor: email },
-          { type: 'audit.service_instance.purge', actor: email },
-          { type: 'audit.service_binding.delete', actor: email },
-          { type: 'audit.service_key.delete', actor: email },
-        ]).to be_reported_as_events
+        it 'deletes the service offering and its dependencies' do
+          delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+          expect(last_response).to have_status_code(204)
+          expect(VCAP::CloudController::Service.all).to be_empty
+          expect(VCAP::CloudController::ServicePlan.all).to be_empty
+          expect(VCAP::CloudController::ManagedServiceInstance.all).to be_empty
+          expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+        end
+
+        it 'emits audit events for all the deleted resources' do
+          delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+          expect([
+            { type: 'audit.service.delete', actor: email },
+            { type: 'audit.service_instance.purge', actor: email },
+            { type: 'audit.service_binding.delete', actor: email },
+            { type: 'audit.service_key.delete', actor: email },
+          ]).to be_reported_as_events
+        end
       end
     end
   end
