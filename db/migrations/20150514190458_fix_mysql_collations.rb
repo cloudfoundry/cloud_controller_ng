@@ -19,7 +19,7 @@ Sequel.migration do
         columns_to_change = ds.with_sql("SHOW FULL COLUMNS FROM `#{table}`").to_a.select do |column_definition|
           next if case_insensitive_columns[table] && case_insensitive_columns[table].include?(column_definition[:Field].to_sym)
 
-          column_definition[:Collation] == 'utf8_general_ci'
+          %w(utf8_general_ci utf8mb3_general_ci).include?(column_definition[:Collation])
         end
         unless columns_to_change.empty?
           modify_column_strings = columns_to_change.collect do |column_definition|
