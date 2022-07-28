@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["mysql:5.7", "mysql:8.0"]
+        image: ["mysql:5.7", "mysql:8.0.29"]
     services:
       mysql:
         image: ${{ matrix.image }}
