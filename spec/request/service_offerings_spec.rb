@@ -763,18 +763,14 @@ RSpec.describe 'V3 service offerings' do
 
     context 'when purge=true' do
       context 'when user is a space developer' do
-        let(:user) { VCAP::CloudController::User.make }
-
         before do
           org.add_user(user)
           space.add_developer(user)
         end
 
         context 'when broker is space-scoped' do
-          let!(:org) { VCAP::CloudController::Organization.make }
-          let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-          let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
-          let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+          let(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
 
           it 'deletes the service offering and its dependencies' do
             delete "/v3/service_offerings/#{service_offering.guid}?purge=true", nil, headers_for(user)
@@ -790,7 +786,7 @@ RSpec.describe 'V3 service offerings' do
         context 'when broker is global' do
           let(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
 
-          it 'deletes the service offering and its dependencies' do
+          it 'responds with 403' do
             delete "/v3/service_offerings/#{service_offering.guid}?purge=true", nil, headers_for(user)
 
             expect(last_response).to have_status_code(403)
