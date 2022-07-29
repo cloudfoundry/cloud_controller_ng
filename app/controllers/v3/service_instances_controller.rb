@@ -109,7 +109,7 @@ class ServiceInstancesV3Controller < ApplicationController
     purge = params['purge'] == 'true'
 
     if purge
-      unauthorized! unless admin? || writable_space_scoped?(service_instance.service.service_broker.space)
+      unauthorized! unless service_instance.is_a?(UserProvidedServiceInstance) || current_user_can_write?(service_instance.service)
       ServiceInstancePurge.new(service_event_repository).purge(service_instance)
       return [:no_content, nil]
     end
