@@ -7,9 +7,8 @@ module VCAP::CloudController
 
       def decorate(hash, apps)
         hash[:included] ||= {}
-        process_guids = apps.map(&:process_guids).uniq
 
-        processes = ProcessModel.where(guid: process_guids).order(:created_at).
+        processes = ProcessModel.distinct.where(app: apps).order(:created_at).
           eager(Presenters::V3::ProcessPresenter.associated_resources).all
 
         hash[:included][:processes] = processes.map { |process| Presenters::V3::ProcessPresenter.new(process).to_hash }

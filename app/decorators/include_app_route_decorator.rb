@@ -7,10 +7,12 @@ module VCAP::CloudController
 
       def decorate(hash, apps)
         hash[:included] ||= {}
-        route_guids = apps.map(&:route_guids).flatten.uniq
 
-        routes = Route.where(guid: route_guids).order(:created_at).
-          eager(Presenters::V3::RoutePresenter.associated_resources).all
+        app_guids = apps.map(&:guid)
+
+        routes = Route.inner_join(:route_mappings, route_guid: :guid).
+          where(route_mappings__app_guid: app_guids).
+          order(:created_at).all
 
         hash[:included][:routes] = routes.map { |route| Presenters::V3::RoutePresenter.new(route).to_hash }
         hash
