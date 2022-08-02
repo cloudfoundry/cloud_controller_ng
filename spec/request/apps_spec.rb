@@ -1403,6 +1403,16 @@ RSpec.describe 'Apps' do
     end
 
     context 'when the user has permission to view the app' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
+      let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+      let!(:destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          process_type: 'existing',
+          app_port: 3001,
+          )
+      end
       before do
         space.add_developer(user)
       end
@@ -1568,6 +1578,223 @@ RSpec.describe 'Apps' do
               }
             },
             'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
+          }
+        )
+      end
+
+      it 'gets a specific app including domain' do
+        get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        domains = parsed_response['included']['domains']
+
+        expect(domains[0]).to be_a_response_like(
+          {
+             'guid' => domain.guid,
+             'created_at' => iso8601,
+             'updated_at' => iso8601,
+             'name' => domain.name,
+             'internal' => domain.internal,
+             'router_group' => nil,
+             'supported_protocols' => [
+               'http'
+             ],
+             'relationships' => {
+               'organization' => {
+                 'data' => nil
+               },
+               'shared_organizations' => {
+                 'data' => []
+               }
+             },
+             'metadata' => {
+               'labels' => {},
+               'annotations' => {},
+             },
+             'links' => {
+               'self' => {
+                 'href' => "#{link_prefix}/v3/domains/#{domain.guid}",
+               },
+               'route_reservations' => {
+                 'href' => "#{link_prefix}/v3/domains/#{domain.guid}/route_reservations"
+               }
+             }
+          }
+         )
+      end
+
+      it 'gets a specific app including route' do
+        get "/v3/apps/#{app_model.guid}?include=route", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        routes = parsed_response['included']['routes']
+
+        expect(routes[0]).to be_a_response_like(
+          {
+            'guid' => route.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'protocol' => route.protocol,
+            'host' => route.host,
+            'path' => route.path,
+            'port' => route.port,
+            'url' => "#{route.host}.#{route.domain.name}#{route.path}",
+            'destinations' => [
+              'guid' => destination.guid,
+              'app' => {
+                'guid' => app_model.guid,
+                'process' => {
+                  'type' => destination.process_type
+                },
+              },
+              'weight' => destination.weight,
+              'port' => destination.presented_port,
+              'protocol' => destination.protocol
+            ],
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
+            },
+            'relationships' => {
+              'space' => {
+                'data' => {
+                  'guid' => space.guid
+                }
+              },
+              'domain' => {
+                'data' => {
+                  'guid' => domain.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/routes/#{route.guid}",
+              },
+              'space' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space.guid}"
+              },
+              'destinations' => {
+                'href' => "#{link_prefix}/v3/routes/#{route.guid}/destinations"
+              },
+              'domain' => {
+                'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
+              }
+            }
+          }
+        )
+      end
+
+      it 'gets a specific app including process' do
+        get "/v3/apps/#{app_model.guid}?include=process", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        process_1 = app_model.processes[0]
+        process_2 = app_model.processes[1]
+
+        parsed_response = MultiJson.load(last_response.body)
+        processes = parsed_response['included']['processes']
+
+        expect(processes.length).to equal 2
+        expect(processes[0]).to be_a_response_like(
+          {
+             'guid' => process_1.guid,
+             'created_at' => iso8601,
+             'updated_at' => iso8601,
+             'type' => process_1.type,
+             'command' => '',
+             'instances' => process_1.instances,
+             'memory_in_mb' => process_1.memory,
+             'disk_in_mb' => process_1.disk_quota,
+             'health_check' => {
+               'type' => process_1.health_check_type,
+               'data' => {
+                 'timeout' => process_1.health_check_timeout,
+                 'invocation_timeout' => process_1.health_check_invocation_timeout
+               },
+             },
+             'metadata' => {
+               'labels' => {},
+               'annotations' => {},
+             },
+             'relationships' => {
+               'app' => {
+                 'data' => {
+                   'guid' => app_model.guid
+                 }
+               },
+               'revision' => nil
+             },
+             'links' => {
+               'self' => {
+                 'href' => "#{link_prefix}/v3/processes/#{process_1.guid}",
+               },
+               'space' => {
+                 'href' => "#{link_prefix}/v3/spaces/#{space.guid}"
+               },
+               'scale' => {
+                 'href' => "#{link_prefix}/v3/processes/#{process_1.guid}/actions/scale",
+                 'method' => 'POST'
+               },
+               'app' => {
+                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+               },
+               'stats' => {
+                 'href' => "#{link_prefix}/v3/processes/#{process_1.guid}/stats"
+               }
+             }
+          }
+        )
+
+        expect(processes[1]).to be_a_response_like(
+          {
+            'guid' => process_2.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'type' => process_2.type,
+            'command' => '',
+            'instances' => process_2.instances,
+            'memory_in_mb' => process_2.memory,
+            'disk_in_mb' => process_2.disk_quota,
+            'health_check' => {
+              'type' => process_2.health_check_type,
+              'data' => {
+                'timeout' => process_2.health_check_timeout,
+                'invocation_timeout' => process_2.health_check_invocation_timeout
+              },
+            },
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
+            },
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              },
+              'revision' => nil
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/processes/#{process_2.guid}",
+              },
+              'space' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space.guid}"
+              },
+              'scale' => {
+                'href' => "#{link_prefix}/v3/processes/#{process_2.guid}/actions/scale",
+                'method' => 'POST'
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'stats' => {
+                'href' => "#{link_prefix}/v3/processes/#{process_2.guid}/stats"
+              }
+            }
           }
         )
       end
