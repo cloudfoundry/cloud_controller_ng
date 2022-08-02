@@ -289,6 +289,16 @@ module VCAP::CloudController
       end
 
       describe 'quotas' do
+
+        it 'errors when log_rate_limit is below -1' do
+          expect {
+            TaskModel.make(
+              log_rate_limit: -2,
+              app: app,
+            )
+          }.to raise_error
+        end
+
         describe 'space quotas' do
           let(:space) { Space.make organization: org, space_quota_definition: quota }
 

@@ -67,6 +67,8 @@ module VCAP::CloudController
       validates_presence :name
       validate_org_quotas
       validate_space_quotas
+
+      MinLogRateLimitPolicy.new(self).validate
     end
 
     def validate_space_quotas
