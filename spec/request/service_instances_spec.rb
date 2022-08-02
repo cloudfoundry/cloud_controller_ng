@@ -2827,7 +2827,7 @@ RSpec.describe 'V3 service instances' do
 
       context 'with purge' do
         let(:query_params) { 'purge=true' }
-        before(:each) do
+        before do
           @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
           @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
         end
@@ -3322,29 +3322,80 @@ RSpec.describe 'V3 service instances' do
 
       context 'when purge is true' do
         let(:query_params) { 'purge=true' }
-        let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-        before(:each) do
-          @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
-          @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
-          @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
 
-          api_call.call(admin_headers)
+        context 'when broker is space scoped' do
+          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding), service_broker: service_broker) }
+
+          context 'as developer' do
+            let(:space_dev_headers) do
+              org.add_user(user)
+              space.add_developer(user)
+              headers_for(user)
+            end
+
+            it 'deletes the service instance' do
+              api_call.call(space_dev_headers)
+
+              expect(last_response).to have_status_code(204)
+              expect { instance.reload }.to raise_error Sequel::NoExistingObject
+            end
+          end
+
+          context 'as admin' do
+            it 'deletes the service instance' do
+              api_call.call(admin_headers)
+
+              expect(last_response).to have_status_code(204)
+              expect { instance.reload }.to raise_error Sequel::NoExistingObject
+            end
+          end
         end
 
-        it 'removes all associations' do
-          expect { @binding.reload }.to raise_error Sequel::NoExistingObject
-          expect { @key.reload }.to raise_error Sequel::NoExistingObject
-          expect { @route.reload }.to raise_error Sequel::NoExistingObject
-        end
+        context 'when broker is global' do
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
 
-        it 'deletes the service instance' do
-          expect { instance.reload }.to raise_error Sequel::NoExistingObject
-        end
+          before do
+            @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+            @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+            @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
+          end
 
-        it 'responds with 204' do
-          expect(last_response).to have_status_code(204)
+          context 'as developer' do
+            let(:space_dev_headers) do
+              org.add_user(user)
+              space.add_developer(user)
+              headers_for(user)
+            end
+
+            it 'responds with 403' do
+              api_call.call(space_dev_headers)
+
+              expect(last_response).to have_status_code(403)
+            end
+          end
+
+          context 'as admin' do
+            before do
+              api_call.call(admin_headers)
+            end
+
+            it 'removes all associations' do
+              expect { @binding.reload }.to raise_error Sequel::NoExistingObject
+              expect { @key.reload }.to raise_error Sequel::NoExistingObject
+              expect { @route.reload }.to raise_error Sequel::NoExistingObject
+            end
+
+            it 'deletes the service instance' do
+              expect { instance.reload }.to raise_error Sequel::NoExistingObject
+            end
+
+            it 'responds with 204' do
+              expect(last_response).to have_status_code(204)
+            end
+          end
         end
       end
 
@@ -3880,7 +3931,7 @@ RSpec.describe 'V3 service instances' do
     let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:other_space) { VCAP::CloudController::Space.make }
 
-    before(:each) do
+    before do
       share_service_instance(instance, other_space)
     end
 
