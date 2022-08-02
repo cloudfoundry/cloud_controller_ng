@@ -472,6 +472,7 @@ RSpec.describe 'Space Manifests' do
            ]
         }.to_yaml
       end
+
       it 'interprets the log rate limit as unlimited' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
@@ -488,12 +489,13 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
-    context 'when applying the manifest to an app which is exceeding the log rate limit' do
+    context 'when applying the manifest to an app which is already exceeding the log rate limit' do
       before do
         app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
         space.update(space_quota_definition:
           VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
       end
+
       it 'does not error' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
