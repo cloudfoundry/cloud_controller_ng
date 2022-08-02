@@ -269,7 +269,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.10.0)
+    i18n (1.12.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -312,7 +312,7 @@ GEM
     mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
-    minitest (5.15.0)
+    minitest (5.16.2)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -352,7 +352,7 @@ GEM
     pg (1.4.2)
     posix-spawn (0.3.15)
     prometheus-client (3.0.0)
-    protobuf (3.6.12)
+    protobuf (3.10.6)
       activesupport (>= 3.2)
       middleware
       thor
@@ -523,7 +523,7 @@ GEM
     timecop (0.9.5)
     timeliness (0.4.4)
     trailblazer-option (0.1.2)
-    tzinfo (2.0.4)
+    tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     uber (0.1.0)
     unf (0.1.4)
@@ -543,7 +543,7 @@ GEM
     yajl-ruby (1.4.3)
     yard (0.9.27)
       webrick (~> 1.7.0)
-    zeitwerk (2.5.4)
+    zeitwerk (2.6.0)
 
 PLATFORMS
   ruby
@@ -602,7 +602,7 @@ DEPENDENCIES
   pg
   posix-spawn (~> 0.3.15)
   prometheus-client
-  protobuf (= 3.6.12)
+  protobuf (= 3.10.6)
   pry-byebug
   psych (>= 4.0.4)
   public_suffix
