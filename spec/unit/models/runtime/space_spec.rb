@@ -671,6 +671,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org, space_quota_definition: quota) }
       let(:space2) { Space.make(organization: org, space_quota_definition: quota) }
+      let!(:app_model) { AppModel.make(space: space) }
 
       context 'when the quota is unlimited' do
         let(:log_rate_limit) { QuotaDefinition::UNLIMITED }
@@ -688,7 +689,7 @@ module VCAP::CloudController
       end
 
       context 'when something else is running' do
-        it 'takes all things in the org into account' do
+        it 'takes all things in the space into account' do
           ProcessModelFactory.make(space: space, log_rate_limit: 5, state: 'STARTED')
           expect(space.has_remaining_log_rate_limit(5)).to be_truthy
           expect(space.has_remaining_log_rate_limit(6)).to be_falsey
@@ -697,9 +698,9 @@ module VCAP::CloudController
           expect(space.has_remaining_log_rate_limit(4)).to be_truthy
           expect(space.has_remaining_log_rate_limit(5)).to be_falsey
 
-          ProcessModelFactory.make(space: space, log_rate_limit: 1, instances: 2, state: 'STARTED')
-          expect(space.has_remaining_log_rate_limit(2)).to be_truthy
-          expect(space.has_remaining_log_rate_limit(3)).to be_falsey
+          TaskModel.make(app: app_model, log_rate_limit: 1, state: TaskModel::RUNNING_STATE)
+          expect(space.has_remaining_log_rate_limit(3)).to be_truthy
+          expect(space.has_remaining_log_rate_limit(4)).to be_falsey
         end
 
         context 'when processes are running in another space' do

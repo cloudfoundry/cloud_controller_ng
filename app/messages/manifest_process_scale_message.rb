@@ -4,9 +4,8 @@ module VCAP::CloudController
   class ManifestProcessScaleMessage < BaseMessage
     register_allowed_keys [:instances, :memory, :disk_quota, :log_rate_limit, :type]
     INVALID_MB_VALUE_ERROR = 'must be greater than 0MB'.freeze
-    # NOTE: -1B is valid for log_rate_limit representing unlimited, that conversion
-    # will be complete prior to this validation
-    INVALID_QUOTA_VALUE_ERROR = 'must be an integer greater than or equal to -1B'.freeze
+    # NOTE: -1 is valid for log_rate_limit representing unlimited
+    INVALID_QUOTA_VALUE_ERROR = 'must be an integer greater than or equal to -1'.freeze
 
     validates_with NoAdditionalKeysValidator
 

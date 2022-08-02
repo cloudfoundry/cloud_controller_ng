@@ -323,7 +323,7 @@ module VCAP::CloudController
     end
 
     def log_rate_limit_remaining
-      quota_definition.log_rate_limit - started_app_log_rate_limit
+      quota_definition.log_rate_limit - (started_app_log_rate_limit + running_task_log_rate_limit)
     end
 
     def running_task_memory
@@ -332,6 +332,10 @@ module VCAP::CloudController
 
     def started_app_memory
       processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:memory, :instances)) || 0
+    end
+
+    def running_task_log_rate_limit
+      tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:log_rate_limit) || 0
     end
 
     def started_app_log_rate_limit
