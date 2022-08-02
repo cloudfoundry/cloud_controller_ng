@@ -294,7 +294,7 @@ module VCAP::CloudController
       return nil unless human_readable_byte_value.present?
       return -1 if human_readable_byte_value == -1 # unlimited
 
-      byte_converter.convert_to_b(human_readable_byte_value.strip) 
+      byte_converter.convert_to_b(human_readable_byte_value.strip)
     rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError
     end
 

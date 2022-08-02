@@ -19,7 +19,6 @@ module VCAP::CloudController
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
       :log_rate_limit
 
-    # rubocop:disable Metrics/CyclomaticComplexity
     def validate
       validates_presence :name
       validates_unique :name
@@ -29,15 +28,14 @@ module VCAP::CloudController
       validates_presence :memory_limit
       validate_total_reserved_route_ports
 
-      errors.add(:memory_limit, :invalid_memory_limit) if memory_limit && memory_limit < UNLIMITED
-      errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < UNLIMITED
-      errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < UNLIMITED
-      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
-      errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
-      errors.add(:log_rate_limit, :invalid_log_rate_limit) if log_rate_limit && log_rate_limit < UNLIMITED
-      errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
+      validates_limit(:memory_limit, memory_limit)
+      validates_limit(:instance_memory_limit, instance_memory_limit)
+      validates_limit(:total_private_domains, total_private_domains)
+      validates_limit(:app_instance_limit, app_instance_limit)
+      validates_limit(:app_task_limit, app_task_limit)
+      validates_limit(:log_rate_limit, log_rate_limit)
+      validates_limit(:total_service_keys, total_service_keys)
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
 
     def before_destroy
       if organizations.present?
@@ -68,6 +66,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def validates_limit(limit_name, limit)
+      errors.add(limit_name, :"invalid_#{limit_name}") if limit && limit < UNLIMITED
+    end
 
     def validate_total_reserved_route_ports
       return unless total_reserved_route_ports
