@@ -264,6 +264,14 @@ rate_limiter:
   global_unauthenticated_limit: 1000
   reset_interval_in_minutes: 60
 
+rate_limiter_v2_api:
+  enabled: false
+  per_process_general_limit: 1000
+  global_general_limit: 10000
+  per_process_admin_limit: 2000
+  global_admin_limit: 20000
+  reset_interval_in_minutes: 60
+
 max_concurrent_service_broker_requests: 0
 
 diego:

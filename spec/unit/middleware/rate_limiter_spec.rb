@@ -60,7 +60,7 @@ module CloudFoundry
             expect(response_headers['X-RateLimit-Remaining']).to eq('800')
           end
 
-          it 'tracks user\'s remaining requests independently' do
+          it "tracks user's remaining requests independently" do
             expect(request_counter).to receive(:get).with(user_1_guid, interval, logger).and_return([0, Time.now.utc])
             expect(request_counter).to receive(:get).with(user_2_guid, interval, logger).and_return([10, Time.now.utc])
 
@@ -110,14 +110,8 @@ module CloudFoundry
           context 'when the user is hitting a path starting with "/internal"' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/internal/pants/1234') }
 
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            it_behaves_like 'endpoint exempts from rate limiting' do
+              let(:env) { unauthenticated_env }
             end
           end
 
@@ -141,56 +135,32 @@ module CloudFoundry
           context 'when the user is hitting a root path /' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/') }
 
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            it_behaves_like 'endpoint exempts from rate limiting' do
+              let(:env) { unauthenticated_env }
             end
           end
 
           context 'when the user is hitting a root path /v2/info' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
 
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            it_behaves_like 'endpoint exempts from rate limiting' do
+              let(:env) { unauthenticated_env }
             end
           end
 
           context 'when the user is hitting a root path /v3' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3') }
 
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            it_behaves_like 'endpoint exempts from rate limiting' do
+              let(:env) { unauthenticated_env }
             end
           end
 
           context 'when the user is hitting a root path /healthz' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/healthz') }
 
-            it 'exempts them from rate limiting' do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(unauthenticated_env)
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to be_nil
-              expect(response_headers['X-RateLimit-Reset']).to be_nil
+            it_behaves_like 'endpoint exempts from rate limiting' do
+              let(:env) { unauthenticated_env }
             end
           end
         end
@@ -372,7 +342,7 @@ module CloudFoundry
     end
 
     RSpec.describe RequestCounter do
-      let(:request_counter) { RequestCounter.instance }
+      let(:request_counter) { RequestCounter.new }
       let(:reset_interval_in_minutes) { 60 }
       let(:logger) { double('logger', info: nil) }
       let(:user_guid) { 'user-id' }
@@ -381,13 +351,12 @@ module CloudFoundry
       describe 'get' do
         before(:each) do
           Timecop.freeze
-          Singleton.__init__(RequestCounter)
         end
         after(:each) do Timecop.return end
 
         it 'should return next offset valid until interval and 0 requests for a new user' do
           new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).and_return(new_valid_until)
+          expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
 
           count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           expect(count).to eq(0)
@@ -396,18 +365,18 @@ module CloudFoundry
 
         it 'should return offset valid untils for different users' do
           new_valid_until_1 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).with(user_guid, reset_interval_in_minutes).and_return(new_valid_until_1)
+          expect(request_counter).to receive(:next_reset_interval).with(user_guid, reset_interval_in_minutes).and_return(new_valid_until_1)
           _, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           expect(valid_until).to eq(new_valid_until_1)
 
           new_valid_until_2 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes - 5.minutes
-          expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).with(user_guid_2, reset_interval_in_minutes).and_return(new_valid_until_2)
+          expect(request_counter).to receive(:next_reset_interval).with(user_guid_2, reset_interval_in_minutes).and_return(new_valid_until_2)
           _, valid_until = request_counter.get(user_guid_2, reset_interval_in_minutes, logger)
           expect(valid_until).to eq(new_valid_until_2)
         end
 
         it 'should return valid until and requests for an existing user' do
-          expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
           _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           request_counter.increment(user_guid)
 
@@ -419,13 +388,13 @@ module CloudFoundry
         end
 
         it 'should return new valid until and 0 requests for an existing user with expired rate limit' do
-          expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
           _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           request_counter.increment(user_guid)
 
           Timecop.travel(original_valid_until + 1.minutes) do
             new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-            expect_any_instance_of(RequestCounter).to receive(:next_reset_interval).and_return(new_valid_until)
+            expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
             count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
             expect(count).to eq(0)
             expect(valid_until).to eq(new_valid_until)

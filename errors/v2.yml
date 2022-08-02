@@ -113,6 +113,11 @@
   http_code: 403
   message: "The organization is suspended"
 
+10018:
+  name: RateLimitV2APIExceeded
+  http_code: 429
+  message: "Rate Limit of V2 API Exceeded. Please consider to use V3 API"
+
 20001:
   name: UserInvalid
   http_code: 400

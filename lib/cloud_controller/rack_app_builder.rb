@@ -7,6 +7,7 @@ require 'cef_logs'
 require 'security_context_setter'
 require 'rate_limiter'
 require 'service_broker_rate_limiter'
+require 'rate_limiter_v2_api'
 require 'new_relic_custom_attributes'
 require 'zipkin'
 require 'block_v3_only_roles'
@@ -43,6 +44,16 @@ module VCAP::CloudController
           use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
             logger: Steno.logger('cc.service_broker_rate_limiter'),
             broker_timeout_seconds: config.get(:broker_client_timeout_seconds),
+          }
+        end
+        if config.get(:rate_limiter_v2_api, :enabled)
+          use CloudFoundry::Middleware::RateLimiterV2API, {
+            logger: Steno.logger('cc.rate_limiter_v2_api'),
+            per_process_general_limit: config.get(:rate_limiter_v2_api, :per_process_general_limit),
+            global_general_limit: config.get(:rate_limiter_v2_api, :global_general_limit),
+            per_process_admin_limit: config.get(:rate_limiter_v2_api, :per_process_admin_limit),
+            global_admin_limit: config.get(:rate_limiter_v2_api, :global_admin_limit),
+            interval: config.get(:rate_limiter_v2_api, :reset_interval_in_minutes),
           }
         end
 
