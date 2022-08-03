@@ -176,6 +176,7 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     target_space = Space.first(guid: message.guid)
     target_space_error = if target_space.nil? || !can_read_space?(target_space)
