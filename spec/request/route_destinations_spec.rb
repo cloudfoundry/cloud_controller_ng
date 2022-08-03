@@ -366,6 +366,33 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
 
+      context "when an app in the route's shared space" do
+        let(:app_model) { VCAP::CloudController::AppModel.make }
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: {
+                  guid: app_model.guid,
+                  process: {
+                    type: 'web'
+                  }
+                }
+              }
+            ]
+          }
+        end
+
+        before do
+          route.add_shared_space app_model.space
+          set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+        end
+
+        it 'succeeds' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+          expect(last_response.status).to eq(200)
+        end
+      end
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
           let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -1140,6 +1167,35 @@ RSpec.describe 'Route Destinations Request' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
         expect(last_response.status).to eq 422
         expect(parsed_response['errors'][0]['detail']).to eq 'Destinations cannot contain duplicate entries'
+      end
+    end
+
+    context "when an app in the route's shared space" do
+      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'web'
+                }
+              }
+            }
+          ]
+        }
+      end
+
+      before do
+        route.add_shared_space app_model.space
+        set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
+        set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+      end
+
+      it 'succeeds' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+        expect(last_response.status).to eq(200)
       end
     end
   end
