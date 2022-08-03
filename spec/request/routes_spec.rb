@@ -3184,6 +3184,20 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     it 'changes the route owner to the given space and logs an event', isolation: :truncation do
