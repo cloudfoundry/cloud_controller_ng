@@ -3180,7 +3180,6 @@ RSpec.describe 'Routes Request' do
         h['no_role'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['space_developer'] = { code: 200 }
-        h['space_supporter'] = { code: 200 }
         h
       end
 
