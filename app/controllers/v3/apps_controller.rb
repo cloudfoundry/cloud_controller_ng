@@ -78,7 +78,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
     decorators << IncludeAppRouteDecorator if IncludeAppRouteDecorator.match?(message.include)
     decorators << IncludeAppProcessDecorator if IncludeAppProcessDecorator.match?(message.include)
-    decorators << IncludeAppDomainDecorator if IncludeAppDomainDecorator.match?(message.include)
+    decorators << IncludeAppDomainDecorator.new(presenter_args) if IncludeAppDomainDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,
@@ -403,5 +403,13 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
   def instances_reporters
     CloudController::DependencyLocator.instance.instances_reporters
+  end
+
+  def presenter_args
+    if permission_queryer.can_read_globally?
+      { all_orgs_visible: true }
+    else
+      { visible_org_guids: permission_queryer.readable_org_guids }
+    end
   end
 end

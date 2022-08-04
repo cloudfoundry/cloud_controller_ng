@@ -1342,6 +1342,16 @@ RSpec.describe 'Apps' do
       droplet_guid: 'a-droplet-guid'
     )
     }
+    let(:domain) { VCAP::CloudController::SharedDomain.make }
+    let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+    let!(:destination) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'existing',
+        app_port: 3001,
+        )
+    end
 
     before do
       space.organization.add_user(user)
@@ -1403,16 +1413,6 @@ RSpec.describe 'Apps' do
     end
 
     context 'when the user has permission to view the app' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make }
-      let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
-      let!(:destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          process_type: 'existing',
-          app_port: 3001,
-          )
-      end
       before do
         space.add_developer(user)
       end
@@ -1582,7 +1582,7 @@ RSpec.describe 'Apps' do
         )
       end
 
-      it 'gets a specific app including domain' do
+      it 'gets a specific app including domains' do
         get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
         expect(last_response.status).to eq(200)
 
@@ -1622,6 +1622,246 @@ RSpec.describe 'Apps' do
              }
           }
          )
+      end
+
+      context 'when there are several routes with the same domain' do
+        let(:route_2) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+        let!(:destination_2) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_model,
+            route: route_2,
+            process_type: 'existing',
+            app_port: 3001,
+            )
+        end
+
+        it 'gets a specific app including distinct domains' do
+          get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
+          expect(last_response.status).to eq(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          domains = parsed_response['included']['domains']
+
+          expect(domains.length).to eq 1
+          expect(domains[0]).to be_a_response_like(
+            {
+              'guid' => domain.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => domain.name,
+              'internal' => domain.internal,
+              'router_group' => nil,
+              'supported_protocols' => [
+                'http'
+              ],
+              'relationships' => {
+                'organization' => {
+                  'data' => nil
+                },
+                'shared_organizations' => {
+                  'data' => []
+                }
+              },
+              'metadata' => {
+                'labels' => {},
+                'annotations' => {},
+              },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}",
+                },
+                'route_reservations' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}/route_reservations"
+                }
+              }
+            }
+          )
+        end
+      end
+
+      context 'when the domain is a private domain' do
+        let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+        let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+        let!(:destination) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_model,
+            route: route,
+            process_type: 'existing',
+            app_port: 3001,
+            )
+        end
+
+        it 'gets a specific app including private domains' do
+          get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
+          expect(last_response.status).to eq(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          domains = parsed_response['included']['domains']
+
+          expect(domains.length).to eq 1
+          expect(domains[0]).to be_a_response_like(
+            {
+              'guid' => domain.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => domain.name,
+              'internal' => domain.internal,
+              'router_group' => nil,
+              'supported_protocols' => [
+                'http'
+              ],
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => org.guid
+                  }
+                },
+                'shared_organizations' => {
+                  'data' => []
+                }
+              },
+              'metadata' => {
+                'labels' => {},
+                'annotations' => {},
+              },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}",
+                },
+                'route_reservations' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}/route_reservations"
+                },
+                'organization' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{org.guid}"
+                },
+                'shared_organizations' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations"
+                }
+              }
+            }
+          )
+        end
+
+        context 'and is shared with other orgs' do
+          let(:org_2) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
+          before do
+            VCAP::CloudController::DomainUpdateSharedOrgs.update(domain: domain, shared_organizations: [org_2])
+          end
+
+          context 'which the user cannot see' do
+            it 'gets a specific app including private domains without shared orgs' do
+              get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
+              expect(last_response.status).to eq(200)
+
+              parsed_response = MultiJson.load(last_response.body)
+              domains = parsed_response['included']['domains']
+
+              expect(domains.length).to eq 1
+              expect(domains[0]).to be_a_response_like(
+                {
+                  'guid' => domain.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => domain.name,
+                  'internal' => domain.internal,
+                  'router_group' => nil,
+                  'supported_protocols' => [
+                    'http'
+                  ],
+                  'relationships' => {
+                    'organization' => {
+                      'data' => {
+                        'guid' => org.guid
+                      }
+                    },
+                    'shared_organizations' => {
+                      'data' => []
+                    }
+                  },
+                  'metadata' => {
+                    'labels' => {},
+                    'annotations' => {},
+                  },
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}",
+                    },
+                    'route_reservations' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}/route_reservations"
+                    },
+                    'organization' => {
+                      'href' => "#{link_prefix}/v3/organizations/#{org.guid}"
+                    },
+                    'shared_organizations' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations"
+                    }
+                  }
+                }
+              )
+            end
+          end
+
+          context 'which the user can see' do
+            before do
+              org_2.add_user(user)
+            end
+
+            it 'gets a specific app including private domains and the visible shared orgs' do
+              get "/v3/apps/#{app_model.guid}?include=domain", nil, user_header
+              expect(last_response.status).to eq(200)
+
+              parsed_response = MultiJson.load(last_response.body)
+              domains = parsed_response['included']['domains']
+
+              expect(domains.length).to eq 1
+              expect(domains[0]).to be_a_response_like(
+                {
+                  'guid' => domain.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => domain.name,
+                  'internal' => domain.internal,
+                  'router_group' => nil,
+                  'supported_protocols' => [
+                    'http'
+                  ],
+                  'relationships' => {
+                    'organization' => {
+                      'data' => {
+                        'guid' => org.guid
+                      }
+                    },
+                    'shared_organizations' => {
+                      'data' => [
+                        {
+                          'guid' => org_2.guid
+                        }
+                      ]
+                    }
+                  },
+                  'metadata' => {
+                    'labels' => {},
+                    'annotations' => {},
+                  },
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}",
+                    },
+                    'route_reservations' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}/route_reservations"
+                    },
+                    'organization' => {
+                      'href' => "#{link_prefix}/v3/organizations/#{org.guid}"
+                    },
+                    'shared_organizations' => {
+                      'href' => "#{link_prefix}/v3/domains/#{domain.guid}/relationships/shared_organizations"
+                    }
+                  }
+                }
+              )
+            end
+          end
+        end
       end
 
       it 'gets a specific app including route' do
