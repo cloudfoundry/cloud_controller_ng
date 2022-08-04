@@ -366,7 +366,7 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
 
-      context "when an app in the route's shared space" do
+      context "when the app is in the route's shared space" do
         let(:app_model) { VCAP::CloudController::AppModel.make }
         let(:params) do
           {
@@ -418,6 +418,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a 403' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
 
@@ -883,6 +884,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a 403' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
 
@@ -1170,7 +1172,7 @@ RSpec.describe 'Route Destinations Request' do
       end
     end
 
-    context "when an app in the route's shared space" do
+    context "when the app is in the route's shared space" do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:params) do
         {
