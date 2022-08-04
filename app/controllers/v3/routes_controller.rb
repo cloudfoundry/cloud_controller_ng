@@ -145,14 +145,14 @@ class RoutesController < ApplicationController
     space_guid = hashed_params[:space_guid]
 
     target_space = Space.first(guid: space_guid)
-    resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(space_guid, target_space.organization.guid)
-
-    target_space_error = if !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
+    target_space_error = if target_space.nil? || !can_read_space?(target_space)
+                           'Ensure the space exists and that you have access to it.'
+                         elsif !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
                            "You don't have write permission for the target space."
                          elsif !permission_queryer.is_space_active?(target_space.guid)
                            'The target organization is suspended.'
                          end
-    unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. #{target_space_error}") unless target_space_error.nil?
+    unprocessable!("Unable to unshare route '#{route.uri}' from space '#{space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
     unshare = RouteUnshare.new
     unshare.unshare(route, target_space, user_audit_info)
@@ -182,7 +182,7 @@ class RoutesController < ApplicationController
     target_space_error = if target_space.nil? || !can_read_space?(target_space)
                            'Ensure the space exists and that you have access to it.'
                          elsif !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
-                           'Ensure that you have write permission for the target space.'
+                           "You don't have write permission for the target space."
                          elsif !permission_queryer.is_space_active?(target_space.guid)
                            'The target organization is suspended.'
                          end
