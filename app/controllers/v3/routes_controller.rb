@@ -145,13 +145,7 @@ class RoutesController < ApplicationController
     space_guid = hashed_params[:space_guid]
 
     target_space = Space.first(guid: space_guid)
-    target_space_error = if target_space.nil? || !can_read_space?(target_space)
-                           'Ensure the space exists and that you have access to it.'
-                         elsif !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
-                           "You don't have write permission for the target space."
-                         elsif !permission_queryer.is_space_active?(target_space.guid)
-                           'The target organization is suspended.'
-                         end
+    target_space_error = check_if_space_is_accessible(target_space)
     unprocessable!("Unable to unshare route '#{route.uri}' from space '#{space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
     unshare = RouteUnshare.new
@@ -179,13 +173,7 @@ class RoutesController < ApplicationController
     suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
     target_space = Space.first(guid: message.guid)
-    target_space_error = if target_space.nil? || !can_read_space?(target_space)
-                           'Ensure the space exists and that you have access to it.'
-                         elsif !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
-                           "You don't have write permission for the target space."
-                         elsif !permission_queryer.is_space_active?(target_space.guid)
-                           'The target organization is suspended.'
-                         end
+    target_space_error = check_if_space_is_accessible(target_space)
     unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.guid}'. #{target_space_error}") unless target_space_error.nil?
 
     RouteTransferOwner.transfer(route, target_space, user_audit_info)
@@ -400,5 +388,17 @@ class RoutesController < ApplicationController
       "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. "\
       'Write permission is required in order to share a route with a space and the containing organization must not be suspended.'
     end
+  end
+
+  def check_if_space_is_accessible(space)
+    if space.nil? || !can_read_space?(space)
+      return 'Ensure the space exists and that you have access to it.'
+    elsif !permission_queryer.can_manage_apps_in_active_space?(space.guid)
+      return "You don't have write permission for the target space."
+    elsif !permission_queryer.is_space_active?(space.guid)
+      return 'The target organization is suspended.'
+    end
+
+    nil
   end
 end
