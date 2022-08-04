@@ -3207,10 +3207,10 @@ RSpec.describe 'Routes Request' do
     end
   end
 
-  describe 'PATCH /v3/routes/:guid/transfer_owner' do
+  describe 'PATCH /v3/routes/:guid/relationships/space' do
     let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
     let(:route) { VCAP::CloudController::Route.make(space: space, domain: shared_domain) }
-    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/transfer_owner", request_body.to_json, user_headers } }
+    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/relationships/space", request_body.to_json, user_headers } }
     let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
       {
@@ -3385,7 +3385,7 @@ RSpec.describe 'Routes Request' do
     end
 
     it 'responds with 404 when the route does not exist' do
-      patch '/v3/routes/some-fake-guid/transfer_owner', request_body.to_json, space_dev_headers
+      patch '/v3/routes/some-fake-guid/relationships/space', request_body.to_json, space_dev_headers
 
       expect(last_response).to have_status_code(404)
       expect(parsed_response['errors']).to include(

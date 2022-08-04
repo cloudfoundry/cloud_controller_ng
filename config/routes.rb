@@ -160,7 +160,7 @@ Rails.application.routes.draw do
   post '/routes/:guid/relationships/shared_spaces', to: 'routes#share_routes'
   delete '/routes/:guid/relationships/shared_spaces/:space_guid', to: 'routes#unshare_route'
   get '/routes/:guid/relationships/shared_spaces', to: 'routes#relationships_shared_routes'
-  patch '/routes/:guid/transfer_owner', to: 'routes#transfer_owner'
+  patch '/routes/:guid/relationships/space', to: 'routes#transfer_owner'
   patch '/routes/:guid', to: 'routes#update'
   delete '/routes/:guid', to: 'routes#destroy'
   get '/apps/:guid/routes', to: 'routes#index_by_app'
