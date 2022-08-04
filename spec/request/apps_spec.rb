@@ -1931,8 +1931,7 @@ RSpec.describe 'Apps' do
         get "/v3/apps/#{app_model.guid}?include=process", nil, user_header
         expect(last_response.status).to eq(200)
 
-        process_1 = app_model.processes[0]
-        process_2 = app_model.processes[1]
+        process_1, process_2 = app_model.processes[0..1]
 
         parsed_response = MultiJson.load(last_response.body)
         processes = parsed_response['included']['processes']
