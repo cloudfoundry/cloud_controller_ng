@@ -415,6 +415,7 @@ includes:
   - upgrade_guide/changed_resources/header
   - upgrade_guide/changed_resources/audit_events_in_v3
   - upgrade_guide/changed_resources/domains_in_v3
+  - upgrade_guide/changed_resources/info_in_v3
   - upgrade_guide/changed_resources/organization_quotas_in_v3
   - upgrade_guide/changed_resources/routes_in_v3
   - upgrade_guide/changed_resources/security_groups_in_v3

@@ -10,6 +10,7 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Environment Variable Groups|Environment Variable Groups|
 |Events|Audit Events|[Audit Events in V3](#audit-events-in-v3)|
 |Feature Flags|Feature Flags|
+|Info|Info|[Info in V3](#info-in-v3)
 |Jobs|Jobs|
 |Organizations|Organizations|
 |Quota Definitions|Organization Quotas|[Organization Quotas in V3](#organization-quotas-in-v3)
