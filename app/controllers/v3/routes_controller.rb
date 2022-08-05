@@ -172,9 +172,9 @@ class RoutesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.guid)
     suspended! unless permission_queryer.is_space_active?(route.space.guid)
 
-    target_space = Space.first(guid: message.guid)
+    target_space = Space.first(guid: message.space_guid)
     target_space_error = check_if_space_is_accessible(target_space)
-    unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.guid}'. #{target_space_error}") unless target_space_error.nil?
+    unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
     RouteTransferOwner.transfer(route, target_space, user_audit_info)
 

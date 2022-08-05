@@ -3214,7 +3214,7 @@ RSpec.describe 'Routes Request' do
     let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
       {
-        'guid' => target_space.guid
+        data: { 'guid' => target_space.guid }
       }
     end
     let(:space_dev_headers) do
@@ -3261,7 +3261,7 @@ RSpec.describe 'Routes Request' do
         let(:suspended_space) { VCAP::CloudController::Space.make }
         let(:request_body) do
           {
-            'guid' => suspended_space.guid
+            data: { 'guid' => suspended_space.guid }
           }
         end
 
@@ -3315,7 +3315,7 @@ RSpec.describe 'Routes Request' do
         let(:target_space_guid) { 'fake-target' }
         let(:request_body) do
           {
-            'guid' => target_space_guid
+            data: { 'guid' => target_space_guid }
           }
         end
 
@@ -3338,7 +3338,7 @@ RSpec.describe 'Routes Request' do
         let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
         let(:request_body) do
           {
-            'guid' => no_access_target_space.guid
+            data: { 'guid' => no_access_target_space.guid }
           }
         end
 
@@ -3360,7 +3360,7 @@ RSpec.describe 'Routes Request' do
         let(:no_write_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
         let(:request_body) do
           {
-            'guid' => no_write_access_target_space.guid
+            data: { 'guid' => no_write_access_target_space.guid }
           }
         end
 
@@ -3401,7 +3401,7 @@ RSpec.describe 'Routes Request' do
       context 'when there are additional keys' do
         let(:request_body) do
           {
-            'guid' => target_space.guid,
+            data: { 'guid' => target_space.guid },
             'fake-key' => 'foo'
           }
         end
