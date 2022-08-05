@@ -183,6 +183,31 @@ module VCAP::CloudController
         expect(ServiceInstanceAnnotationModel.where(id: annotation.id)).to be_empty
       end
 
+      it 'cascade deletes all ServiceInstanceOperations for this instance' do
+        last_operation = ServiceInstanceOperation.make
+        service_instance.service_instance_operation = last_operation
+
+        service_instance.destroy
+
+        expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+        expect(ServiceInstanceOperation.find(guid: last_operation.guid)).to be_nil
+      end
+
+      it 'cascades deletion of related dependencies' do
+        binding = ServiceInstance.make
+        ServiceInstanceLabelModel.make(key_name: 'foo', value: 'bar', service_instance: binding)
+        ServiceInstanceAnnotationModel.make(key_name: 'baz', value: 'wow', service_instance: binding)
+        last_operation = ServiceInstanceOperation.make
+        binding.service_instance_operation = last_operation
+
+        binding.destroy
+
+        expect(ServiceInstance.find(guid: binding.guid)).to be_nil
+        expect(ServiceInstanceOperation.find(id: last_operation.id)).to be_nil
+        expect(ServiceInstanceLabelModel.find(resource_guid: binding.guid)).to be_nil
+        expect(ServiceInstanceAnnotationModel.find(resource_guid: binding.guid)).to be_nil
+      end
+
       it 'creates a DELETED service usage event' do
         expect {
           service_instance.destroy
