@@ -151,7 +151,7 @@ class OrganizationsV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(domains, message.try(:pagination_options)),
       path: "/v3/organizations/#{org.guid}/domains",
       message: message,
-      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids }
+      extra_presenter_args: { visible_org_guids_query: permission_queryer.readable_org_guids_query }
     )
   end
 
@@ -163,7 +163,7 @@ class OrganizationsV3Controller < ApplicationController
     domain_not_found! unless domain
     domain_not_found! if domain.private? && permission_queryer.readable_org_guids_for_domains_query.where(guid: org.guid).empty?
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids_query: permission_queryer.readable_org_guids_query)
   end
 
   def list_members

@@ -243,7 +243,7 @@ class DomainsController < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_guids: permission_queryer.readable_org_guids }
+      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
     end
   end
 end
