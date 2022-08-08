@@ -2,9 +2,9 @@
 
 ## Introduction
 
-CC's internal API is a patchwork of endpoints used by internal components. 
-They evolved over time and were individually designed for specific purposes. 
-We do not recommend using internal API endpoints for anything other than their intended purposes. 
+CC's internal API is a patchwork of endpoints used by internal components.
+They evolved over time and were individually designed for specific purposes.
+We do not recommend using internal API endpoints for anything other than their intended purposes.
 
 ## Endpoints
 
@@ -94,6 +94,13 @@ We do not recommend using internal API endpoints for anything other than their i
 
 ### GET /internal/v4/syslog_drain_urls
 **Description:** Return list of syslog drain urls from logging services
+
+**Intended Consumer:** Loggregator
+
+**Auth Mechanism:** MTLS
+
+### GET /internal/v5/syslog_drain_urls
+**Description:** Return list of syslog drain urls from logging services. Intends to replace v4 version. 
 
 **Intended Consumer:** Loggregator
 
