@@ -1,7 +1,7 @@
 ### Transfer ownership (experimental)
 
 Transfers a the ownership of a route to a another space.  Users must have write access for both spaces to perform this action.
-The original owning space will still retain read and write access to route via [shared spaces](#share-a-route-with-other-spaces-experimental).
+The original owning space will still retain access to the route as a [shared space](#share-a-route-with-other-spaces-experimental).
 To completely remove a space from a route, users will have to use [unshare route](#unshare-a-route-that-was-shared-with-another-space-experimental).
 
 ```
@@ -9,11 +9,15 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/routes/:route-guid/transfer_owner" \
+curl "https://api.example.org/v3/routes/:route-guid/relationships/space" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json"
-  -d '{ "guid": "space-2-guid" }'
+  -d '{ "data": { "guid": "space-guid"} }'
+```
+
+```
+Example Response
 ```
 
 ```http
@@ -21,7 +25,7 @@ HTTP/1.1 204 No Content
 ```
 
 #### Definition
-`PATCH /v3/routes/:route-guid/transfer_owner`
+`PATCH /v3/routes/:route-guid/relationships/space`
 
 #### Permitted roles
 
