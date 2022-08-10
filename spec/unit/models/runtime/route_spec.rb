@@ -150,7 +150,26 @@ module VCAP::CloudController
       end
 
       context 'changing space' do
-        context 'apps' do
+        context 'when the route sharing flag is enabled' do
+          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil) }
+
+          it 'succeeds with no mapped apps' do
+            route = Route.make(space: ProcessModelFactory.make.space, domain: SharedDomain.make)
+
+            expect { route.space = Space.make }.not_to raise_error
+          end
+
+          it 'succeeds when there are apps mapped to it' do
+            process = ProcessModelFactory.make
+            route = Route.make(space: process.space, domain: SharedDomain.make)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+
+            expect { route.space = Space.make }.not_to raise_error
+          end
+        end
+        context 'when the route sharing flag is disabled' do
+          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: false, error_message: nil) }
+
           it 'succeeds with no mapped apps' do
             route = Route.make(space: ProcessModelFactory.make.space, domain: SharedDomain.make)
 
