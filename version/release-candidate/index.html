@@ -18780,7 +18780,7 @@ belongs to a space the user does not belong to.</p>
 </tbody></table>
 <h3 id="share-a-route-with-other-spaces-experimental">Share a route with other spaces (experimental)</h3>
 
-<p>This endpoint shares the route with the specified spaces. In order to share into a space the requesting user must have write permission in the target space.</p>
+<p>This endpoint shares the route with the specified spaces. This allows users with read and write access in both the route&rsquo;s space and a shared space to bind a route to an app in the shared space. In order to share into a space the requesting user must have write permission in the target space.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/relationships/shared_spaces"</span> <span class="se">\</span>
