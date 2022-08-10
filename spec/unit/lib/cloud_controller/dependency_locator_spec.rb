@@ -477,13 +477,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  context '#traffic_controller_client' do
-    it 'returns the tc client' do
-      expect(locator.traffic_controller_client).to be_an_instance_of(TrafficController::Client)
-    end
-  end
-
-  describe '#traffic_controller_compatible_logcache_client' do
+  describe '#log_cache_metrics_client' do
     let(:logcache_client) { instance_double(Logcache::Client) }
     before do
       allow(Logcache::Client).to receive(:new).and_return(logcache_client)
@@ -493,7 +487,7 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.override(
         logcache_tls: nil
       )
-      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(locator.log_cache_metrics_client).to be_an_instance_of(Logcache::ContainerMetricBatcher)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'http://doppler.service.cf.internal',
         port: 8080,
@@ -517,7 +511,7 @@ RSpec.describe CloudController::DependencyLocator do
           subject_name: 'some-tls-cert-san'
         }
       )
-      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(locator.log_cache_metrics_client).to be_an_instance_of(Logcache::ContainerMetricBatcher)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'some-logcache-host',
         port: 1234,

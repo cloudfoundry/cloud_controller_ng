@@ -1,4 +1,3 @@
-require 'traffic_controller/client'
 require 'logcache/client'
 require 'cloud_controller/diego/reporters/reporter_mixins'
 
@@ -70,14 +69,16 @@ module VCAP::CloudController
       def metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index)
         if log_cache_errors.blank?
           {
-            mem_quota:  quota_stats[index]&.memoryBytesQuota,
-            disk_quota: quota_stats[index]&.diskBytesQuota,
+            mem_quota:  quota_stats[index]&.memory_bytes_quota,
+            disk_quota: quota_stats[index]&.disk_bytes_quota,
+            log_rate_limit: quota_stats[index]&.log_rate_limit,
             usage:      stats[index] || missing_process_stats(formatted_current_time)
           }
         else
           {
             mem_quota: nil,
             disk_quota: nil,
+            log_rate_limit: nil,
             usage: {}
           }
         end
@@ -89,6 +90,7 @@ module VCAP::CloudController
           cpu:  0,
           mem:  0,
           disk: 0,
+          log_rate: 0,
         }
       end
 
@@ -96,8 +98,8 @@ module VCAP::CloudController
         log_cache_data.
           map { |e|
             [
-              e.containerMetric.instanceIndex,
-              converted_container_metrics(e.containerMetric, formatted_current_time),
+              e.instance_index,
+              converted_container_metrics(e, formatted_current_time),
             ]
           }.to_h
       end
@@ -106,8 +108,8 @@ module VCAP::CloudController
         log_cache_data.
           map { |e|
             [
-              e.containerMetric.instanceIndex,
-              e.containerMetric,
+              e.instance_index,
+              e
             ]
           }.to_h
       end
@@ -136,18 +138,20 @@ module VCAP::CloudController
       end
 
       def converted_container_metrics(container_metrics, formatted_current_time)
-        cpu = container_metrics.cpuPercentage
-        mem = container_metrics.memoryBytes
-        disk = container_metrics.diskBytes
+        cpu = container_metrics.cpu_percentage
+        mem = container_metrics.memory_bytes
+        disk = container_metrics.disk_bytes
+        log_rate = container_metrics.log_rate
 
-        if cpu.nil? || mem.nil? || disk.nil?
+        if cpu.nil? || mem.nil? || disk.nil? || log_rate.nil?
           missing_process_stats(formatted_current_time)
         else
           {
             time: formatted_current_time,
             cpu: cpu / 100,
             mem:  mem,
-            disk: disk
+            disk: disk,
+            log_rate: log_rate
           }
         end
       end

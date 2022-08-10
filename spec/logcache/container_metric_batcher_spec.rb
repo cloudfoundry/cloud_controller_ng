@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'logcache/traffic_controller_decorator'
+require 'logcache/container_metric_batcher'
 require 'utils/time_utils'
 
-RSpec.describe Logcache::TrafficControllerDecorator do
+RSpec.describe Logcache::ContainerMetricBatcher do
   subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid, logcache_filter: filter) }
   let(:wrapped_logcache_client) { instance_double(Logcache::Client, container_metrics: logcache_response) }
 
@@ -22,12 +22,9 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 4),
             }),
           instance_id: (offset + i).to_s,
-          tags: {
-            'source_id' => process.app.guid,
-            'process_id' => process.guid,
-          },
         ),
         Loggregator::V2::Envelope.new(
           timestamp: last_timestamp,
@@ -38,17 +35,13 @@ RSpec.describe Logcache::TrafficControllerDecorator do
               'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 3),
           }),
           instance_id: (offset + i).to_s,
-          tags: {
-            'source_id' => process.app.guid,
-            'process_id' => process.guid,
-          },
         )
       ]
     end
     Loggregator::V2::EnvelopeBatch.new(batch: batch)
   end
 
-  describe 'converting from Logcache to TrafficController' do
+  describe 'batches envelopes' do
     let(:filter) { ->(_) { true } }
 
     before do
@@ -73,6 +66,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
               }),
               instance_id: '1'
             ),
@@ -82,6 +76,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
               }),
               instance_id: '2'
             ),
@@ -91,6 +86,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 9),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 8),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 7),
               }),
               instance_id: '1'
           ),
@@ -103,11 +99,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         subject
 
         expect(subject).to have(1).items
-        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(11)
-        expect(subject.first.containerMetric.diskBytes).to eq(12)
+        expect(subject.first.instance_index).to eq(1)
+        expect(subject.first.cpu_percentage).to eq(10)
+        expect(subject.first.memory_bytes).to eq(11)
+        expect(subject.first.disk_bytes).to eq(12)
+        expect(subject.first.log_rate).to eq(13)
       end
     end
 
@@ -138,6 +134,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                     'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                     'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                     'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
                 }),
               instance_id: '1'
             ),
@@ -156,6 +153,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                     'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                     'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                     'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
                 }),
               instance_id: '2'
             ),
@@ -174,6 +172,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                     'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
                     'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
                     'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
                 }),
               instance_id: '3'
             )
@@ -182,25 +181,25 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       }
       let(:num_instances) { 3 }
 
-      it 'returns an array of envelopes, formatted as Traffic Controller would' do
-        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(11)
-        expect(subject.first.containerMetric.diskBytes).to eq(12)
+      it 'returns an array of batched metrics' do
+        expect(subject.first.instance_index).to eq(1)
+        expect(subject.first.cpu_percentage).to eq(10)
+        expect(subject.first.memory_bytes).to eq(11)
+        expect(subject.first.disk_bytes).to eq(12)
+        expect(subject.first.log_rate).to eq(13)
 
-        expect(subject.second.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.second.containerMetric.instanceIndex).to eq(2)
-        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
-        expect(subject.second.containerMetric.memoryBytes).to eq(21)
-        expect(subject.second.containerMetric.diskBytes).to eq(22)
+        expect(subject.second.instance_index).to eq(2)
+        expect(subject.second.cpu_percentage).to eq(20)
+        expect(subject.second.memory_bytes).to eq(21)
+        expect(subject.second.disk_bytes).to eq(22)
+        expect(subject.second.log_rate).to eq(23)
 
-        cm = subject[2].containerMetric
-        expect(cm.applicationId).to eq(process_guid)
-        expect(cm.instanceIndex).to eq(3)
-        expect(cm.cpuPercentage).to eq(30)
-        expect(cm.memoryBytes).to eq(31)
-        expect(cm.diskBytes).to eq(32)
+        cm = subject[2]
+        expect(cm.instance_index).to eq(3)
+        expect(cm.cpu_percentage).to eq(30)
+        expect(cm.memory_bytes).to eq(31)
+        expect(cm.disk_bytes).to eq(32)
+        expect(cm.log_rate).to eq(33)
       end
     end
 
@@ -210,48 +209,28 @@ RSpec.describe Logcache::TrafficControllerDecorator do
           batch: [Loggregator::V2::Envelope.new(
             source_id: process_guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-              'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
-              'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
+              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0.10),
+              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11.0),
+              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12.0),
+              'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13.0),
+              'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24.0),
+              'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25.0),
+              'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26.0),
             }),
             instance_id: '1'
           )]
         )
       }
 
-      it 'returns an array of one envelope, formatted as Traffic Controller would' do
-        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(11)
-        expect(subject.first.containerMetric.diskBytes).to eq(12)
-        expect(subject.first.containerMetric.diskBytesQuota).to eq(24)
-        expect(subject.first.containerMetric.memoryBytesQuota).to eq(25)
-      end
-    end
-
-    context 'when the envelope does not have tags' do
-      let(:envelopes) {
-        Loggregator::V2::EnvelopeBatch.new(
-          batch: [
-            Loggregator::V2::Envelope.new(
-              source_id: process_guid,
-              gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-              }),
-              instance_id: '1',
-              tags: {},
-            ),
-          ]
-        )
-      }
-
-      it 'returns an envelope with an empty array of tags' do
-        expect(subject.first.tags).to be_empty
+      it 'returns an array of one batched envelope' do
+        expect(subject.first.instance_index).to eql(1)
+        expect(subject.first.cpu_percentage).to eql(0.10)
+        expect(subject.first.memory_bytes).to eql(11)
+        expect(subject.first.disk_bytes).to eql(12)
+        expect(subject.first.log_rate).to eql(13)
+        expect(subject.first.disk_bytes_quota).to eql(24)
+        expect(subject.first.memory_bytes_quota).to eql(25)
+        expect(subject.first.log_rate_limit).to eql(26)
       end
     end
 
@@ -265,14 +244,12 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
                 'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
-                 'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
+                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
+                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26),
               }),
               instance_id: '1',
-              tags: {
-                'source_id' => process.app.guid,
-                'process_id' => process.guid,
-              },
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
@@ -280,14 +257,12 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
                 'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 34),
                 'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 35),
+                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 36),
              }),
               instance_id: '2',
-              tags: {
-                'source_id' => process.app.guid,
-                'process_id' => process.guid,
-              },
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
@@ -295,50 +270,46 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
                 'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 44),
                 'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 45),
+                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 46),
             }),
               instance_id: '3',
-              tags: {
-                'source_id' => process.app.guid,
-                'process_id' => process.guid,
-              },
             )
           ]
         )
       }
       let(:num_instances) { 3 }
 
-      it 'returns an array of envelopes, formatted as Traffic Controller would' do
-        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(11)
-        expect(subject.first.containerMetric.diskBytes).to eq(12)
-        expect(subject.first.containerMetric.diskBytesQuota).to eq(24)
-        expect(subject.first.containerMetric.memoryBytesQuota).to eq(25)
+      it 'returns an array of batched metrics' do
+        expect(subject.first.instance_index).to eq(1)
+        expect(subject.first.cpu_percentage).to eq(10)
+        expect(subject.first.memory_bytes).to eq(11)
+        expect(subject.first.disk_bytes).to eq(12)
+        expect(subject.first.log_rate).to eq(13)
+        expect(subject.first.disk_bytes_quota).to eq(24)
+        expect(subject.first.memory_bytes_quota).to eq(25)
+        expect(subject.first.log_rate_limit).to eq(26)
 
-        expect(subject.first.tags[0].key).to eq('source_id')
-        expect(subject.first.tags[0].value).to eq(process.app.guid)
-        expect(subject.first.tags[1].key).to eq('process_id')
-        expect(subject.first.tags[1].value).to eq(process.guid)
+        expect(subject.second.instance_index).to eq(2)
+        expect(subject.second.cpu_percentage).to eq(20)
+        expect(subject.second.memory_bytes).to eq(21)
+        expect(subject.second.disk_bytes).to eq(22)
+        expect(subject.second.log_rate).to eq(23)
+        expect(subject.second.disk_bytes_quota).to eq(34)
+        expect(subject.second.memory_bytes_quota).to eq(35)
+        expect(subject.second.log_rate_limit).to eq(36)
 
-        expect(subject.second.containerMetric.applicationId).to eq(process_guid)
-        expect(subject.second.containerMetric.instanceIndex).to eq(2)
-        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
-        expect(subject.second.containerMetric.memoryBytes).to eq(21)
-        expect(subject.second.containerMetric.diskBytes).to eq(22)
-        expect(subject.second.containerMetric.diskBytesQuota).to eq(34)
-        expect(subject.second.containerMetric.memoryBytesQuota).to eq(35)
-
-        cm = subject[2].containerMetric
-        expect(cm.applicationId).to eq(process_guid)
-        expect(cm.instanceIndex).to eq(3)
-        expect(cm.cpuPercentage).to eq(30)
-        expect(cm.memoryBytes).to eq(31)
-        expect(cm.diskBytes).to eq(32)
-        expect(cm.diskBytesQuota).to eq(44)
-        expect(cm.memoryBytesQuota).to eq(45)
+        cm = subject[2]
+        expect(cm.instance_index).to eq(3)
+        expect(cm.cpu_percentage).to eq(30)
+        expect(cm.memory_bytes).to eq(31)
+        expect(cm.disk_bytes).to eq(32)
+        expect(cm.log_rate).to eq(33)
+        expect(cm.disk_bytes_quota).to eq(44)
+        expect(cm.memory_bytes_quota).to eq(45)
+        expect(cm.log_rate_limit).to eq(46)
       end
     end
 
@@ -352,6 +323,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
               }),
               instance_id: '1'
             ),
@@ -361,6 +333,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
               }),
               instance_id: '2'
             ),
@@ -370,6 +343,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
               }),
               instance_id: '1'
             )
@@ -380,9 +354,9 @@ RSpec.describe Logcache::TrafficControllerDecorator do
 
       it 'returns only the newest metric' do
         expect(subject.count).to eq(2)
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.second.containerMetric.instanceIndex).to eq(2)
+        expect(subject.first.instance_index).to eq(1)
+        expect(subject.first.cpu_percentage).to eq(10)
+        expect(subject.second.instance_index).to eq(2)
       end
     end
 
@@ -409,8 +383,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         Timecop.freeze(call_time) do
           expect(subject).to have(1000).items
 
-          expect(subject.first.containerMetric.instanceIndex).to eq(1)
-          expect(subject.first.containerMetric.cpuPercentage).to eq(34.0)
+          expect(subject.first.instance_index).to eq(1)
+          expect(subject.first.cpu_percentage).to eq(34.0)
         end
       end
     end
@@ -443,9 +417,17 @@ RSpec.describe Logcache::TrafficControllerDecorator do
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
                   'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                   'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                   'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
               }),
               instance_id: '2'
             )
@@ -457,15 +439,17 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       it 'returns a single envelope per instance' do
         expect(subject.count).to eq(2)
 
-        expect(subject.first.containerMetric.instanceIndex).to eq(1)
-        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(11)
-        expect(subject.first.containerMetric.diskBytes).to eq(12)
+        expect(subject.first.instance_index).to eq(1)
+        expect(subject.first.cpu_percentage).to eq(10)
+        expect(subject.first.memory_bytes).to eq(11)
+        expect(subject.first.disk_bytes).to eq(12)
+        expect(subject.first.log_rate).to eq(13)
 
-        expect(subject.second.containerMetric.instanceIndex).to eq(2)
-        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
-        expect(subject.second.containerMetric.memoryBytes).to eq(21)
-        expect(subject.second.containerMetric.diskBytes).to eq(22)
+        expect(subject.second.instance_index).to eq(2)
+        expect(subject.second.cpu_percentage).to eq(20)
+        expect(subject.second.memory_bytes).to eq(21)
+        expect(subject.second.disk_bytes).to eq(22)
+        expect(subject.second.log_rate).to eq(23)
       end
     end
 

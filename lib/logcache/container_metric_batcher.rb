@@ -1,8 +1,9 @@
 require 'logcache/client'
 require 'utils/time_utils'
+require 'logcache/container_metric_batch'
 
 module Logcache
-  class TrafficControllerDecorator
+  class ContainerMetricBatcher
     MAX_REQUEST_COUNT = 100
 
     def initialize(logcache_client)
@@ -40,7 +41,7 @@ module Logcache
         uniq { |e| e.gauge.metrics.keys << e.instance_id }.
         sort_by(&:instance_id).
         chunk(&:instance_id).
-        map { |envelopes_by_instance| convert_to_traffic_controller_envelope(source_guid, envelopes_by_instance) }
+        map { |envelopes_by_instance| batch_metrics(source_guid, envelopes_by_instance) }
     end
 
     private
@@ -66,47 +67,45 @@ module Logcache
       envelope.gauge.metrics.has_key?('memory') ||
       envelope.gauge.metrics.has_key?('memory_quota') ||
       envelope.gauge.metrics.has_key?('disk') ||
-      envelope.gauge.metrics.has_key?('disk_quota')
+      envelope.gauge.metrics.has_key?('disk_quota') ||
+      envelope.gauge.metrics.has_key?('log_rate') ||
+      envelope.gauge.metrics.has_key?('log_rate_limit')
       # rubocop:enable Style/PreferredHashMethods
     end
 
-    def convert_to_traffic_controller_envelope(source_guid, envelopes_by_instance)
-      tc_envelope = TrafficController::Models::Envelope.new(
-        containerMetric: TrafficController::Models::ContainerMetric.new({
-          applicationId: source_guid,
-          instanceIndex: envelopes_by_instance.first,
-        }),
-      )
+    def batch_metrics(source_guid, envelopes_by_instance)
+      metric_batch = ContainerMetricBatch.new
+      metric_batch.instance_index = envelopes_by_instance.first.to_i
 
-      tags = {}
       envelopes_by_instance.second.each { |e|
-        tc_envelope.containerMetric.instanceIndex = e.instance_id
         # rubocop seems to think that there is a 'key?' method
         # on envelope.gauge.metrics - but it does not
         # rubocop:disable Style/PreferredHashMethods
         if e.gauge.metrics.has_key?('cpu')
-          tc_envelope.containerMetric.cpuPercentage = e.gauge.metrics['cpu'].value
+          metric_batch.cpu_percentage = e.gauge.metrics['cpu'].value
         end
         if e.gauge.metrics.has_key?('memory')
-          tc_envelope.containerMetric.memoryBytes = e.gauge.metrics['memory'].value
+          metric_batch.memory_bytes = e.gauge.metrics['memory'].value.to_i
         end
         if e.gauge.metrics.has_key?('disk')
-          tc_envelope.containerMetric.diskBytes = e.gauge.metrics['disk'].value
+          metric_batch.disk_bytes = e.gauge.metrics['disk'].value.to_i
+        end
+        if e.gauge.metrics.has_key?('log_rate')
+          metric_batch.log_rate = e.gauge.metrics['log_rate'].value.to_i
         end
         if e.gauge.metrics.has_key?('disk_quota')
-          tc_envelope.containerMetric.diskBytesQuota = e.gauge.metrics['disk_quota'].value
+          metric_batch.disk_bytes_quota = e.gauge.metrics['disk_quota'].value.to_i
         end
         if e.gauge.metrics.has_key?('memory_quota')
-          tc_envelope.containerMetric.memoryBytesQuota = e.gauge.metrics['memory_quota'].value
+          metric_batch.memory_bytes_quota = e.gauge.metrics['memory_quota'].value.to_i
+        end
+        if e.gauge.metrics.has_key?('log_rate_limit')
+          metric_batch.log_rate_limit = e.gauge.metrics['log_rate_limit'].value.to_i
         end
         # rubocop:enable Style/PreferredHashMethods
-
-        tags.merge!(e.tags.to_h)
       }
 
-      tc_envelope.tags = tags.map { |k, v| TrafficController::Models::Envelope::TagsEntry.new(key: k, value: v) }
-
-      tc_envelope
+      metric_batch
     end
 
     def logger

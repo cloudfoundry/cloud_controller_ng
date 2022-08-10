@@ -4,12 +4,12 @@ require 'cloud_controller/diego/reporters/instances_stats_reporter'
 module VCAP::CloudController
   module Diego
     RSpec.describe InstancesStatsReporter do
-      subject(:instances_reporter) { InstancesStatsReporter.new(bbs_instances_client, traffic_controller_client) }
+      subject(:instances_reporter) { InstancesStatsReporter.new(bbs_instances_client, log_cache_client) }
       let(:app) { AppModel.make }
       let(:process) { ProcessModel.make(instances: desired_instances, app: app) }
       let(:desired_instances) { 1 }
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
-      let(:traffic_controller_client) { instance_double(TrafficController::Client) }
+      let(:log_cache_client) { instance_double(Logcache::ContainerMetricBatcher) }
 
       let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
       let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
@@ -61,22 +61,17 @@ module VCAP::CloudController
             actual_lrp.actual_lrp_net_info = lrp_1_net_info
           end
         end
-        let(:traffic_controller_response) do
-          [
-            ::TrafficController::Models::Envelope.new(
-              origin:          'does-anyone-even-know?',
-              eventType:       ::TrafficController::Models::Envelope::EventType::ContainerMetric,
-              containerMetric: ::TrafficController::Models::ContainerMetric.new(
-                instanceIndex: 0,
-                cpuPercentage: 3.92,
-                memoryBytes:   564,
-                diskBytes:     5000,
-                memoryBytesQuota:   1234,
-                diskBytesQuota:     10234,
-              ),
-              tags: [::TrafficController::Models::Envelope::TagsEntry.new(key: 'process_id', value: process.guid)],
-            ),
-          ]
+        let(:log_cache_response) do
+          container_metric_batch = ::Logcache::ContainerMetricBatch.new
+          container_metric_batch.instance_index = 0
+          container_metric_batch.cpu_percentage = 3.92
+          container_metric_batch.memory_bytes = 564
+          container_metric_batch.disk_bytes = 5000
+          container_metric_batch.memory_bytes_quota = 1234
+          container_metric_batch.disk_bytes_quota = 10234
+          container_metric_batch.log_rate = 5
+          container_metric_batch.log_rate_limit = 10
+          [container_metric_batch]
         end
 
         let(:expected_stats_response) do
@@ -93,12 +88,14 @@ module VCAP::CloudController
                 uptime:     two_days_in_seconds,
                 mem_quota:  1234,
                 disk_quota: 10234,
+                log_rate_limit: 10,
                 fds_quota:  process.file_descriptors,
                 usage:      {
                   time: formatted_current_time,
                   cpu:  0.0392,
                   mem:  564,
                   disk: 5000,
+                  log_rate: 5,
                 }
               },
               details: 'some-details',
@@ -109,9 +106,9 @@ module VCAP::CloudController
         before do
           allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_actual_lrps_response)
           allow(bbs_instances_client).to receive(:desired_lrp_instance).and_return(bbs_desired_lrp_response)
-          allow(traffic_controller_client).to receive(:container_metrics).
+          allow(log_cache_client).to receive(:container_metrics).
             with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
-            and_return(traffic_controller_response)
+            and_return(log_cache_response)
           allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
         end
 
@@ -122,9 +119,9 @@ module VCAP::CloudController
         it 'passes a process_id filter' do
           filter = nil
 
-          allow(traffic_controller_client).to receive(:container_metrics) { |args|
+          allow(log_cache_client).to receive(:container_metrics) { |args|
             filter = args[:logcache_filter]
-          }.and_return(traffic_controller_response)
+          }.and_return(log_cache_response)
 
           expected_envelope = Loggregator::V2::Envelope.new(
             source_id: process.app.guid,
@@ -162,28 +159,24 @@ module VCAP::CloudController
               'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
             }
           }
-          let(:traffic_controller_response) do
-            [
-              ::TrafficController::Models::Envelope.new(
-                origin:          'does-anyone-even-know?',
-                eventType:       ::TrafficController::Models::Envelope::EventType::ContainerMetric,
-                containerMetric: ::TrafficController::Models::ContainerMetric.new(
-                  instanceIndex: 0,
-                  cpuPercentage: 3.92,
-                  memoryBytes:   564,
-                  diskBytes:     5000,
-                  memoryBytesQuota:   1234,
-                  diskBytesQuota:     10234,
-                ),
-              ),
-            ]
+          let(:log_cache_response) do
+            container_metric_batch = ::Logcache::ContainerMetricBatch.new
+            container_metric_batch.instance_index = 0
+            container_metric_batch.cpu_percentage = 3.92
+            container_metric_batch.memory_bytes = 564
+            container_metric_batch.disk_bytes = 5000
+            container_metric_batch.log_rate = 5
+            container_metric_batch.memory_bytes_quota = 1234
+            container_metric_batch.disk_bytes_quota = 10234
+            container_metric_batch.log_rate_limit = 10
+            [container_metric_batch]
           end
 
           it 'gets metrics for the process and does not filter on the source_id' do
-            expect(traffic_controller_client).
+            expect(log_cache_client).
               to receive(:container_metrics).
               with(auth_token: 'my-token', source_guid: process.guid, logcache_filter: anything).
-              and_return(traffic_controller_response)
+              and_return(log_cache_response)
 
             expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
           end
@@ -215,19 +208,13 @@ module VCAP::CloudController
           end
         end
 
-        context 'when traffic controller somehow returns a partial response without cpuPercentage' do
+        context 'when log cache somehow returns a partial response without cpu_percentage' do
           # We aren't exactly sure how this happens, but it can happen on an overloaded deployment, see #156707836
-          let(:traffic_controller_response) do
-            [
-              ::TrafficController::Models::Envelope.new(
-                origin:          'does-anyone-even-know?',
-                eventType:       ::TrafficController::Models::Envelope::EventType::ContainerMetric,
-                containerMetric: ::TrafficController::Models::ContainerMetric.new(
-                  instanceIndex: 0,
-                  memoryBytes:   564,
-                ),
-              ),
-            ]
+          let(:log_cache_response) do
+            container_metric_batch = ::Logcache::ContainerMetricBatch.new
+            container_metric_batch.instance_index = 0
+            container_metric_batch.memory_bytes = 564
+            [container_metric_batch]
           end
 
           it 'sets all the stats to zero' do
@@ -237,6 +224,7 @@ module VCAP::CloudController
               cpu:  0,
               mem:  0,
               disk: 0,
+              log_rate: 0,
             })
           end
         end
@@ -278,6 +266,7 @@ module VCAP::CloudController
                   uptime:     two_days_in_seconds,
                   mem_quota:  nil,
                   disk_quota: nil,
+                  log_rate_limit: nil,
                   fds_quota:  process.file_descriptors,
                   usage:      {}
                 },
@@ -287,7 +276,7 @@ module VCAP::CloudController
           end
 
           before do
-            allow(traffic_controller_client).to receive(:container_metrics).and_raise(error)
+            allow(log_cache_client).to receive(:container_metrics).and_raise(error)
             allow(instances_reporter).to receive(:logger).and_return(mock_logger)
           end
 
@@ -316,7 +305,7 @@ module VCAP::CloudController
 
           context 'when number of actual lrps > desired number of instances' do
             let(:desired_instances) { 0 }
-            let(:traffic_controller_response) { [] }
+            let(:log_cache_response) { [] }
 
             it 'ignores superfluous instances' do
               expect(instances_reporter.stats_for_app(process)).to eq([{}, []])
@@ -324,7 +313,7 @@ module VCAP::CloudController
           end
 
           context 'when number of container metrics < desired number of instances' do
-            let(:traffic_controller_response) { [] }
+            let(:log_cache_response) { [] }
 
             it 'provides defaults for unreported instances' do
               result, _ = instances_reporter.stats_for_app(process)
@@ -334,6 +323,7 @@ module VCAP::CloudController
                 cpu: 0,
                 mem: 0,
                 disk: 0,
+                log_rate: 0,
               })
             end
           end
@@ -360,11 +350,11 @@ module VCAP::CloudController
             end
           end
 
-          context 'when an error is raised communicating with traffic controller' do
+          context 'when an error is raised communicating with log cache' do
             let(:error) { StandardError.new('tomato') }
             let(:mock_logger) { double(:logger, error: nil, debug: nil) }
             before do
-              allow(traffic_controller_client).to receive(:container_metrics).
+              allow(log_cache_client).to receive(:container_metrics).
                 with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
                 and_raise(error)
               allow(instances_reporter).to receive(:logger).and_return(mock_logger)
@@ -402,6 +392,7 @@ module VCAP::CloudController
                   uptime:     two_days_in_seconds,
                   mem_quota:  nil,
                   disk_quota: nil,
+                  log_rate_limit: nil,
                   fds_quota:  process.file_descriptors,
                   usage:      {}
                 },
@@ -411,7 +402,7 @@ module VCAP::CloudController
           end
 
           before do
-            allow(traffic_controller_client).to receive(:container_metrics).
+            allow(log_cache_client).to receive(:container_metrics).
               with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
               and_raise(error)
             allow(instances_reporter).to receive(:logger).and_return(mock_logger)

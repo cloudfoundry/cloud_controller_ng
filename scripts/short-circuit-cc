@@ -45,7 +45,6 @@ blobstore.service.cf.internal \
 cc-uploader.service.cf.internal \
 cell.service.cf.internal \
 cloud-controller-ng.service.cf.internal \
-loggregator-trafficcontroller.service.cf.internal \
 sql-db.service.cf.internal \
 uaa.service.cf.internal"
   ip_to_dns="$(bosh ssh "${BOSH_API_INSTANCE}" -c "for addr in ${internal_hostnames}; do ip=\"\$(dig +short \${addr})\" && echo \"\${ip:-\"UNKNOWN\"} \${addr}\"; done"  -r --column=Stdout | cat)"

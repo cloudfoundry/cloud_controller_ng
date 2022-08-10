@@ -13,7 +13,6 @@ readiness_port:
 external_protocol: http
 external_domain: api2.vcap.me
 temporary_disable_deployments: true
-temporary_use_logcache: false
 deployment_updater:
   update_frequency_in_seconds: 30
   lock_key: 'cf-deployment-updater'
