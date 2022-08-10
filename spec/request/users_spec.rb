@@ -103,6 +103,7 @@ RSpec.describe 'Users Request' do
       end
 
       it_behaves_like 'list query endpoint' do
+        let(:excluded_params) { [:partial_usernames] }
         let(:request) { 'v3/users' }
         let(:message) { VCAP::CloudController::UsersListMessage }
         let(:user_header) { admin_header }
@@ -326,7 +327,7 @@ RSpec.describe 'Users Request' do
           get '/v3/users', 'origins=uaa', admin_header
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq(
-            'Origins filter cannot be provided without usernames filter.')
+            'Origins filter cannot be provided without usernames or partial_usernames filter.')
         end
       end
 

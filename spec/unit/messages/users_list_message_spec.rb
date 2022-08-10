@@ -35,6 +35,21 @@ module VCAP::CloudController
         expect(message.requested?(:origins)).to be_truthy
       end
 
+      context 'partial_usernames is used in .from_params' do
+        let(:params) do
+          {
+            partial_usernames: ['bob'],
+            origins: ['uaa']
+          }
+        end
+
+        it 'is valid' do
+          message = UsersListMessage.from_params(params)
+          expect(message).to be_valid
+          expect(message.partial_usernames).to eq(%w[bob])
+        end
+      end
+
       context 'guids, usernames, origins are nil' do
         let(:params) do
           {
@@ -84,10 +99,32 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
+      it 'accepts partial_usernames and origins' do
+        message = UsersListMessage.from_params({ partial_usernames: ['bob'], origins: ['uaa'] })
+        expect(message).to be_valid
+      end
+
       it 'does NOT accept origins without usernames' do
         message = UsersListMessage.from_params({ origins: ['uaa'] })
         expect(message).to be_invalid
-        expect(message.errors[:origins]).to include('filter cannot be provided without usernames filter.')
+        expect(message.errors[:origins]).to include('filter cannot be provided without usernames or partial_usernames filter.')
+      end
+    end
+
+    describe 'usernames_or_partial_usernames' do
+      it 'accepts usernames' do
+        message = UsersListMessage.from_params({ usernames: ['bob'] })
+        expect(message).to be_valid
+      end
+      it 'accepts partial_usernames' do
+        message = UsersListMessage.from_params({ partial_usernames: ['bob'] })
+        expect(message).to be_valid
+      end
+
+      it 'does NOT accept partial_usernames and usernames' do
+        message = UsersListMessage.from_params({ partial_usernames: ['juan'], usernames: ['bob'] })
+        expect(message).to be_invalid
+        expect(message.errors[:usernames]).to include('filter cannot be provided with both usernames and partial_usernames filter.')
       end
     end
   end

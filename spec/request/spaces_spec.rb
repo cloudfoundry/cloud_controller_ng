@@ -1293,6 +1293,7 @@ RSpec.describe 'Spaces' do
           allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
         end
 
+        let(:excluded_params) { [:partial_usernames] }
         let(:request) { "/v3/spaces/#{space1.guid}/users" }
         let(:message) { VCAP::CloudController::UsersListMessage }
         let(:user_header) { admin_header }
