@@ -122,6 +122,33 @@ RSpec.describe 'Users Request' do
           }
         end
       end
+
+      context 'uses partial_usernames' do
+        it_behaves_like 'list query endpoint' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+          end
+
+          let(:excluded_params) { [:usernames] }
+          let(:request) { '/v3/users' }
+          let(:message) { VCAP::CloudController::UsersListMessage }
+          let(:user_header) { admin_header }
+
+          let(:params) do
+            {
+              guids: ['foo', 'bar'],
+              partial_usernames: ['foo', 'bar'],
+              origins: ['foo', 'bar'],
+              page:   '2',
+              per_page:   '10',
+              order_by:   'updated_at',
+              label_selector:   'foo,bar',
+              created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+              updated_ats: { gt: Time.now.utc.iso8601 },
+            }
+          end
+        end
+      end
     end
 
     describe 'without filters' do

@@ -9,6 +9,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'guids' => 'user1-guid,user2-guid',
+          'partial_usernames' => 'user',
           'usernames' => 'user1-name,user2-name',
           'origins' => 'user1-origin,user2-origin',
         }
@@ -22,6 +23,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.guids).to eq(%w[user1-guid user2-guid])
         expect(message.usernames).to eq(%w[user1-name user2-name])
+        expect(message.partial_usernames).to eq(%w[user])
         expect(message.origins).to eq(%w[user1-origin user2-origin])
       end
 
@@ -84,18 +86,16 @@ module VCAP::CloudController
       end
     end
 
-    describe 'origin_requires_username' do
-      it 'accepts usernames and origins' do
-        message = UsersListMessage.from_params({ usernames: ['bob'], origins: ['uaa'] })
-        expect(message).to be_valid
-      end
-      it 'accepts no usernames no origins' do
+    describe 'accepts no usernames no origins' do
+      it 'is valid' do
         message = UsersListMessage.from_params({})
         expect(message).to be_valid
       end
+    end
 
-      it 'accepts usernames without origins' do
-        message = UsersListMessage.from_params({ usernames: ['bob'] })
+    describe 'origin_requires_username_or_partial_usernames' do
+      it 'accepts usernames and origins' do
+        message = UsersListMessage.from_params({ usernames: ['bob'], origins: ['uaa'] })
         expect(message).to be_valid
       end
 

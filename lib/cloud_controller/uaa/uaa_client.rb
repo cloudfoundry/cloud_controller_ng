@@ -81,12 +81,11 @@ module VCAP::CloudController
     end
 
     def construct_filter_string(username_filter_string, origin_filter_string)
-      filter_string = username_filter_string || origin_filter_string
-
       if username_filter_string && origin_filter_string
-        filter_string = "( #{username_filter_string} ) and ( #{origin_filter_string} )"
+        "( #{username_filter_string} ) and ( #{origin_filter_string} )"
+      else
+        username_filter_string || origin_filter_string
       end
-      return filter_string
     end
 
     def origins_for_username(username)

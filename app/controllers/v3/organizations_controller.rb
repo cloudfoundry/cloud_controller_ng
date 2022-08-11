@@ -168,7 +168,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def list_members
     message = UsersListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
     org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)

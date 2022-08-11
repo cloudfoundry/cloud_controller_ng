@@ -568,7 +568,7 @@ module VCAP::CloudController
 
           WebMock::API.stub_request(:get, "#{url}/Users").
             with(query: { 'filter' => "username co \"#{partial_username}\"",
-                          'attributes' => "id" }).
+                          'attributes' => 'id' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
@@ -685,8 +685,8 @@ module VCAP::CloudController
     end
 
     describe '#construct_filter_string' do
-      let(:username_filter_string) {'username eq \"someone\"'}
-      let(:origin_filter_string) {'origin eq \"Okta\"'}
+      let(:username_filter_string) { 'username eq \"someone\"' }
+      let(:origin_filter_string) { 'origin eq \"Okta\"' }
 
       context 'when username_filter_string and origin_filter string are provided' do
         it 'returns a new string with the two filter strings combined' do
@@ -701,7 +701,6 @@ module VCAP::CloudController
           expect(filter_string).to eq(username_filter_string)
         end
       end
-
     end
 
     describe '#origins_for_username' do

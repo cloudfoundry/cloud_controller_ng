@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
 
-    validate :origin_requires_username
+    validate :origin_requires_username_or_partial_usernames
     validate :usernames_or_partial_usernames
 
     validates :usernames, allow_nil: true, array: true
@@ -21,7 +21,7 @@ module VCAP::CloudController
       super(params, %w(usernames partial_usernames origins))
     end
 
-    def origin_requires_username
+    def origin_requires_username_or_partial_usernames
       if @origins
         unless @usernames || @partial_usernames
           errors.add(:origins, 'filter cannot be provided without usernames or partial_usernames filter.')
