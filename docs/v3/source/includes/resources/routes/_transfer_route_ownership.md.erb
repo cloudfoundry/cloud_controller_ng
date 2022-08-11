@@ -9,11 +9,11 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/routes/:route-guid/transfer_owner" \
+curl "https://api.example.org/v3/routes/:route-guid/relationships/space" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json"
-  -d '{ "guid": "space-2-guid" }'
+  -d '{ "data": { "guid":"space-2-guid" } }'
 ```
 
 ```http
