@@ -96,7 +96,7 @@ GEM
       middleman-core (>= 3.2)
       rouge (~> 1.0)
     mini_portile2 (2.8.0)
-    mini_racer (0.6.2)
+    mini_racer (0.6.3)
       libv8-node (~> 16.10.0.0)
     minitest (5.15.0)
     nokogiri (1.13.8)
