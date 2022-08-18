@@ -378,17 +378,28 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the log-rate-limit-per-second is unlimited' do
-        before do
-          default_manifest['applications'][0]['log-rate-limit-per-second'] = '-1B'
-        end
+      describe 'log-rate-limit-per-second' do
+        it 'can handle -1 for unlimted' do
+          default_manifest['applications'][0]['log-rate-limit-per-second'] = '-1'
 
-        it 'displays -1 in the diff' do
           expect(subject).to include(
             {
               'op' => 'replace',
               'path' => '/applications/0/log-rate-limit-per-second',
-              'value' => '-1B',
+              'value' => '-1',
+              'was' => '1M'
+            }
+          )
+        end
+
+        it 'can handle 0 without units' do
+          default_manifest['applications'][0]['log-rate-limit-per-second'] = '0'
+
+          expect(subject).to include(
+            {
+              'op' => 'replace',
+              'path' => '/applications/0/log-rate-limit-per-second',
+              'value' => '0',
               'was' => '1M'
             }
           )

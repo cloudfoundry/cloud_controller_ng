@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         context 'when log-rate-limit-per-second is an unlimited amount' do
           context 'specified as -1' do
-            let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: -1 } }
+            let(:params_from_yaml) { { name: 'eugene', 'log-rate-limit-per-second' => '-1' } }
 
             it 'is valid' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -170,6 +170,26 @@ module VCAP::CloudController
           it 'is valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
             expect(message).to be_valid
+          end
+        end
+
+        context 'when log-rate-limit-per-second is 0' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '0' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
+          end
+        end
+
+        context 'when log-rate-limit-per-second is 0TB' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '0TB' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
           end
         end
       end
@@ -717,11 +737,12 @@ module VCAP::CloudController
         context 'log-rate-limit-per-second' do
           context 'when log-rate-limit-per-second is an unlimited amount' do
             context 'specified as -1' do
-              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => -1 }] } }
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => '-1' }] } }
 
               it 'is valid' do
                 message = AppManifestMessage.create_from_yml(params_from_yaml)
                 expect(message).to be_valid
+                expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(-1)
               end
             end
             context 'with a bytes suffix' do

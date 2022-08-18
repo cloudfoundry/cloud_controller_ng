@@ -182,7 +182,11 @@ module VCAP::CloudController
       end
 
       def normalize_unit(non_normalized_value, attribute_name)
-        byte_converter.human_readable_byte_value(byte_converter.convert_to_b(non_normalized_value))
+        if %w[-1 0].include?(non_normalized_value)
+          non_normalized_value
+        else
+          byte_converter.human_readable_byte_value(byte_converter.convert_to_b(non_normalized_value))
+        end
       rescue ByteConverter::InvalidUnitsError
         "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
       rescue ByteConverter::NonNumericError
