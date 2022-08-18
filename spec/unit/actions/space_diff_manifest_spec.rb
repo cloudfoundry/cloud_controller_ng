@@ -21,7 +21,7 @@ module VCAP::CloudController
                   'instances' => process1.instances,
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
-                  'log_rate_limit_per_second' => '1M',
+                  'log-rate-limit-per-second' => '1M',
                   'health-check-type' =>  process1.health_check_type
                 },
                 {
@@ -29,7 +29,7 @@ module VCAP::CloudController
                   'instances' => process2.instances,
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
-                  'log_rate_limit_per_second' => '1M',
+                  'log-rate-limit-per-second' => '1M',
                   'health-check-type' =>  process2.health_check_type
                 }
               ]
@@ -71,13 +71,13 @@ module VCAP::CloudController
 
       context 'when there are changes in the manifest' do
         before do
-          default_manifest['applications'][0]['random_route'] = true
+          default_manifest['applications'][0]['random-route'] = true
           default_manifest['applications'][0]['stack'] = 'big brother'
         end
 
         it 'returns the correct diff' do
           expect(subject).to match_array([
-            { 'op' => 'add', 'path' => '/applications/0/random_route', 'value' => true },
+            { 'op' => 'add', 'path' => '/applications/0/random-route', 'value' => true },
             { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' },
           ])
         end
@@ -266,7 +266,7 @@ module VCAP::CloudController
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '1G'
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '1G'
-            default_manifest['applications'][0]['processes'][0]['log_rate_limit_per_second'] = '1024K'
+            default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '1024K'
           end
           it 'returns an empty diff' do
             expect(subject).to eq([])
@@ -277,13 +277,15 @@ module VCAP::CloudController
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '4G'
-            default_manifest['applications'][0]['processes'][0]['log_rate_limit_per_second'] = '2G'
+            default_manifest['applications'][0]['processes'][0]['health-check-type'] = 'process'
+            default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '2G'
           end
           it 'returns the diff formatted' do
             expect(subject).to eq([
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log_rate_limit_per_second', 'value' => '2G', 'was' => '1M' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/log-rate-limit-per-second', 'value' => '2G', 'was' => '1M' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/health-check-type', 'value' => 'process', 'was' => 'port' },
             ])
           end
         end
@@ -322,29 +324,71 @@ module VCAP::CloudController
         end
 
         context 'when updating app-level configurations' do
-          before do
-            default_manifest['applications'][0]['memory'] = '1G'
-            default_manifest['applications'][0]['disk_quota'] = '1G'
-            default_manifest['applications'][0]['log_rate_limit_per_second'] = '1024K'
+          context 'when nothing has changed' do
+            before do
+              default_manifest['applications'][0]['log-rate-limit-per-second'] = '1024K'
+            end
+
+            it 'returns an empty diff if the field is equivalent' do
+              expect(subject).to eq([])
+            end
           end
 
-          it 'returns an empty diff if the field is equivalent' do
-            expect(subject).to eq([])
+          context 'when trying to change memory and disk quota' do
+            before do
+              default_manifest['applications'][0]['memory'] = '99G'
+              default_manifest['applications'][0]['disk_quota'] = '99G'
+            end
+
+            it 'returns an empty diff because for some reason we ignore these fields at the app level' do
+              expect(subject).to eq([])
+            end
+          end
+
+          context 'when things have changed' do
+            before do
+              default_manifest['applications'][0]['health-check-type'] = 'process'
+              default_manifest['applications'][0]['instances'] = 9
+              default_manifest['applications'][0]['log-rate-limit-per-second'] = '1G'
+            end
+
+            it 'displays in the diff' do
+              expect(subject).to eq([
+                {
+                  'op' => 'replace',
+                  'path' => '/applications/0/health-check-type',
+                  'was' => 'port',
+                  'value' => 'process'
+                },
+                {
+                  'op' => 'replace',
+                  'path' => '/applications/0/instances',
+                  'was' => 1,
+                  'value' => 9
+                },
+                {
+                  'op' => 'replace',
+                  'path' => '/applications/0/log-rate-limit-per-second',
+                  'was' => '1M',
+                  'value' => '1G'
+                }
+              ])
+            end
           end
         end
       end
 
-      context 'when the log_rate_limit_per_second is unlimited' do
+      context 'when the log-rate-limit-per-second is unlimited' do
         before do
-          default_manifest['applications'][0]['log_rate_limit_per_second'] = -1
+          default_manifest['applications'][0]['log-rate-limit-per-second'] = '-1B'
         end
 
         it 'displays -1 in the diff' do
           expect(subject).to include(
             {
               'op' => 'replace',
-              'path' => '/applications/0/log_rate_limit_per_second',
-              'value' => -1,
+              'path' => '/applications/0/log-rate-limit-per-second',
+              'value' => '-1B',
               'was' => '1M'
             }
           )

@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'instances' => 1,
           'memory' => '1024M',
           'disk_quota' => '1024M',
-          'log_rate_limit_per_second' => '1M',
+          'log-rate-limit-per-second' => '1M',
           'health-check-type' => 'port',
         })
       end

@@ -104,8 +104,8 @@ module VCAP::CloudController
         end
       end
 
-      describe 'log_rate_limit_per_second' do
-        context 'when log_rate_limit_per_second unit is not part of expected set of values' do
+      describe 'log-rate-limit-per-second' do
+        context 'when log-rate-limit-per-second unit is not part of expected set of values' do
           let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '200INVALID' } }
 
           it 'is not valid' do
@@ -119,7 +119,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is less than -1 bytes' do
+        context 'when log-rate-limit-per-second is less than -1 bytes' do
           let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1M' } }
 
           it 'is not valid' do
@@ -131,7 +131,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is not numeric' do
+        context 'when log-rate-limit-per-second is not numeric' do
           let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 'gerg herscheisers' } }
 
           it 'is not valid' do
@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is an unlimited amount' do
+        context 'when log-rate-limit-per-second is an unlimited amount' do
           context 'specified as -1' do
             let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: -1 } }
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when log_rate_limit_per_second is in megabytes' do
+        context 'when log-rate-limit-per-second is in megabytes' do
           let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '1MB' } }
 
           it 'is valid' do
@@ -642,7 +642,7 @@ module VCAP::CloudController
                 'instances' => -30,
                 'memory' => 'potato',
                 'disk_quota' => '100',
-                'log_rate_limit_per_second' => 'kumara',
+                'log-rate-limit-per-second' => 'kumara',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -656,7 +656,7 @@ module VCAP::CloudController
                 'instances' => 'cassava',
                 'memory' => 'potato',
                 'disk_quota' => '100',
-                'log_rate_limit_per_second' => '100',
+                'log-rate-limit-per-second' => '100',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -714,10 +714,10 @@ module VCAP::CloudController
           end
         end
 
-        context 'log_rate_limit_per_second' do
-          context 'when log_rate_limit_per_second is an unlimited amount' do
+        context 'log-rate-limit-per-second' do
+          context 'when log-rate-limit-per-second is an unlimited amount' do
             context 'specified as -1' do
-              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log_rate_limit_per_second' => -1 }] } }
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => -1 }] } }
 
               it 'is valid' do
                 message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -725,7 +725,7 @@ module VCAP::CloudController
               end
             end
             context 'with a bytes suffix' do
-              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log_rate_limit_per_second' => '-1B' }] } }
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => '-1B' }] } }
 
               it 'is valid' do
                 message = AppManifestMessage.create_from_yml(params_from_yaml)

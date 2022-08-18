@@ -14,7 +14,9 @@ module VCAP::CloudController
       # rubocop:todo Metrics/CyclomaticComplexity
       def generate_diff(app_manifests, space)
         json_diff = []
-        recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s)
+
+        recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s).map(&:dasherize)
+
         app_manifests = normalize_units(app_manifests)
         app_manifests.each_with_index do |manifest_app_hash, index|
           manifest_app_hash = filter_manifest_app_hash(manifest_app_hash)
@@ -99,7 +101,7 @@ module VCAP::CloudController
               'type',
               'command',
               'disk_quota',
-              'log_rate_limit_per_second',
+              'log-rate-limit-per-second',
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
               'health-check-type',
@@ -161,7 +163,7 @@ module VCAP::CloudController
           end
         end
 
-        byte_measurement_key_words = ['log_rate_limit_per_second']
+        byte_measurement_key_words = ['log-rate-limit-per-second']
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
             value = process_hash[key]

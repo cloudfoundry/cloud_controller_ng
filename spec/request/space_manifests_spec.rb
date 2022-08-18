@@ -27,7 +27,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 4,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
-            'log_rate_limit_per_second' => '1MB',
+            'log-rate-limit-per-second' => '1MB',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'new-command',
@@ -74,7 +74,7 @@ RSpec.describe 'Space Manifests' do
             'instances' => 3,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
-            'log_rate_limit_per_second' => '100KB',
+            'log-rate-limit-per-second' => '100KB',
             'buildpack' => buildpack.name,
             'stack' => buildpack.stack,
             'command' => 'newer-command',
@@ -247,7 +247,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
-              'log_rate_limit_per_second' => '1GB',
+              'log-rate-limit-per-second' => '1GB',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -271,7 +271,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
-              'log_rate_limit_per_second' => '-1B',
+              'log-rate-limit-per-second' => '-1B',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
@@ -467,7 +467,7 @@ RSpec.describe 'Space Manifests' do
            'version' => 1,
            'applications' => [
              { 'name' => app1_model.name,
-               'log_rate_limit_per_second' => -1
+               'log-rate-limit-per-second' => -1
              },
            ]
         }.to_yaml
@@ -521,7 +521,7 @@ RSpec.describe 'Space Manifests' do
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',
-              'log_rate_limit_per_second' => '300B',
+              'log-rate-limit-per-second' => '300B',
               'buildpack' => buildpack.name,
               'stack' => buildpack.stack,
               'command' => 'new-command',
