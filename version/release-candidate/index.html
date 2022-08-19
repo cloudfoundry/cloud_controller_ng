@@ -18884,22 +18884,24 @@ belongs to a space the user does not belong to.</p>
 <h3 id="transfer-ownership-experimental">Transfer ownership (experimental)</h3>
 
 <p>Transfers a the ownership of a route to a another space.  Users must have write access for both spaces to perform this action.
-The original owning space will still retain read and write access to route via <a href="#share-a-route-with-other-spaces-experimental">shared spaces</a>.
+The original owning space will still retain access to the route as a <a href="#share-a-route-with-other-spaces-experimental">shared space</a>.
 To completely remove a space from a route, users will have to use <a href="#unshare-a-route-that-was-shared-with-another-space-experimental">unshare route</a>.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/:route-guid/transfer_owner"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/:route-guid/relationships/space"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span>
-  -d <span class="s1">'{ "guid": "space-2-guid" }'</span>
+  -d <span class="s1">'{ "data": { "guid": "space-guid"} }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/routes/:route-guid/transfer_owner</code></p>
+<p><code class="prettyprint">PATCH /v3/routes/:route-guid/relationships/space</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
