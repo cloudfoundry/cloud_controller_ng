@@ -227,11 +227,23 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the value is out of bounds' do
+      context 'when the value is less than -1' do
         let(:params) do
           {
             package: { guid: 'some-guid' },
             staging_log_rate_limit_bytes_per_second: -2
+          }
+        end
+        it 'is invalid' do
+          expect(build_create_message.valid?).to be false
+        end
+      end
+
+      context 'when the value is too large' do
+        let(:params) do
+          {
+            package: { guid: 'some-guid' },
+            staging_log_rate_limit_bytes_per_second: 2**63
           }
         end
         it 'is invalid' do

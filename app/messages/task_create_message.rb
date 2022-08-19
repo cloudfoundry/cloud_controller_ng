@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-    validates :log_rate_limit_in_bytes_per_second, numericality: { only_integer: true, greater_than: -2 }, allow_nil: true
+    validates :log_rate_limit_in_bytes_per_second, numericality: { only_integer: true, greater_than: -2, less_than_or_equal_to: MAX_DB_BIGINT }, allow_nil: true
     validates :droplet_guid, guid: true, allow_nil: true
     validates :template_process_guid, guid: true, if: validate_template?
     validate :has_command

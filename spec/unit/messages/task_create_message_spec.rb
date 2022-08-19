@@ -192,6 +192,15 @@ module VCAP::CloudController
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include('Log rate limit in bytes per second must be greater than -2')
         end
+
+        it 'may not be too large' do
+          body['log_rate_limit_in_bytes_per_second'] = 2**63
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include('Log rate limit in bytes per second must be less than or equal to 9223372036854775807')
+        end
       end
 
       describe 'template' do

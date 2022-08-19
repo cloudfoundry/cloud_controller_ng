@@ -12,7 +12,9 @@ module VCAP::CloudController
     validates :instances, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 2000000 }, allow_nil: true
     validates :memory, numericality: { only_integer: true, greater_than: 0, message: INVALID_MB_VALUE_ERROR }, allow_nil: true
     validates :disk_quota, numericality: { only_integer: true, greater_than: 0, message: INVALID_MB_VALUE_ERROR }, allow_nil: true
-    validates :log_rate_limit, numericality: { only_integer: true, greater_than_or_equal_to: -1, message: INVALID_QUOTA_VALUE_ERROR }, allow_nil: true
+    validates :log_rate_limit,
+      numericality: { only_integer: true, greater_than_or_equal_to: -1, less_than_or_equal_to: MAX_DB_BIGINT, message: INVALID_QUOTA_VALUE_ERROR },
+      allow_nil: true
 
     def to_process_scale_message
       ProcessScaleMessage.new({

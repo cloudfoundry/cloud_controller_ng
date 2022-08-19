@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     validates :staging_disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :staging_memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-    validates :staging_log_rate_limit_bytes_per_second, numericality: { only_integer: true, greater_than_or_equal_to: -1 }, allow_nil: true
+    validates :staging_log_rate_limit_bytes_per_second, numericality: { only_integer: true, greater_than_or_equal_to: -1, less_than_or_equal_to: MAX_DB_BIGINT }, allow_nil: true
 
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?

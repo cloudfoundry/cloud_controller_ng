@@ -177,6 +177,18 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1')
           end
         end
+
+        context 'when log_rate_limit is too large' do
+          let(:params) { { log_rate_limit: 2**63 } }
+
+          it 'is not valid' do
+            message = ManifestProcessScaleMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Log rate limit must be an integer greater than or equal to -1')
+          end
+        end
       end
 
       context 'when we have more than one error' do
