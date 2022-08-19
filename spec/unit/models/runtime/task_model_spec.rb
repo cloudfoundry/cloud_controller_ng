@@ -295,7 +295,7 @@ module VCAP::CloudController
               log_rate_limit: -2,
               app: app,
             )
-          }.to raise_error
+          }.to raise_error(Sequel::ValidationFailed, /log_rate_limit must be greater than or equal to -1/)
         end
 
         describe 'space quotas' do
