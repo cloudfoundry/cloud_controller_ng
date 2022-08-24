@@ -366,8 +366,6 @@ module VCAP::CloudController
               write_key: String,
               dataset: String,
             },
-
-            optional(:use_optimized_json_encoder) => bool,
           }
         end
         # rubocop:enable Metrics/BlockLength
