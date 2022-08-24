@@ -182,8 +182,8 @@ module VCAP
           describe 'when there is a model level validation error' do
             before do
               allow_any_instance_of(ServiceBroker).to receive(:validate) do |record|
-                # Make setting the state to 'AVAILABLE' fail, but nothing else
-                if record.state == 'AVAILABLE'
+                # Make setting the name to 'new-name' fail, but nothing else
+                if record.name == 'new-name'
                   record.errors.add(:something, 'is not right')
                 end
               end
@@ -198,6 +198,31 @@ module VCAP
 
               broker.reload
               expect(broker.state).to eq(ServiceBrokerStateEnum::DELETE_FAILED)
+            end
+          end
+
+          describe 'when there is a model level validation error i.e. blank credentials' do
+            let(:update_broker_request) do
+              ServiceBrokerUpdateRequest.create(
+                authentication: '{"credentials":{"username":"","password":""}}',
+                service_broker_id: broker.id
+              )
+            end
+
+            it 'fails to update and raises InvalidServiceBroker' do
+              expect {
+                job.perform
+              }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker) { |error|
+                expect(error.message).to include('auth_username presence')
+                expect(error.message).to include('auth_password presence')
+              }
+
+              broker.reload
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
+              expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
           end
 
