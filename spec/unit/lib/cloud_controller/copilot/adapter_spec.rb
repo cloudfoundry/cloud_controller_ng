@@ -101,6 +101,18 @@ module VCAP::CloudController
           expect(copilot_client).not_to have_received(:upsert_route)
         end
       end
+
+      context 'when copilot is not present in the config', job_context: :worker do
+        it 'does not log an error' do
+          adapter.create_route(route)
+          expect(fake_logger).not_to have_received(:error)
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.create_route(route)
+          expect(copilot_client).not_to have_received(:upsert_route)
+        end
+      end
     end
 
     describe '#map_route' do
