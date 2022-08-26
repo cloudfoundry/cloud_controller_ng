@@ -26,7 +26,7 @@ module CCInitializers
         if Rails.env.test?
           Oj.dump(v, time_format: :ruby)
         else
-          Oj.dump(v, options.merge(pretty: true, time_format: :ruby))
+          Oj.dump(v, options.merge(time_format: :ruby))
         end
       end
     end
