@@ -260,6 +260,18 @@ module VCAP::CloudController
           expect(last_response).to include_error_message("Unknown field(s): 'wat'")
         end
       end
+      context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            "Current usage exceeds new quota values. Space '#{space.name}' assigned this quota contains apps running with an unlimited log rate limit.")
+        end
+      end
     end
 
     describe 'GET /v3/space_quotas' do
@@ -808,6 +820,19 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[1] guid should be a string.')
+        end
+      end
+      context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
+        let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'space-quota-guid', organization: org, log_rate_limit: 100) }
+        let!(:other_space) { VCAP::CloudController::Space.make(guid: 'other-space-guid', organization: org, space_quota_definition: space_quota) }
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: other_space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. The space(s) being assigned this quota contain apps running with an unlimited log rate limit.')
         end
       end
     end

@@ -34,6 +34,7 @@ module VCAP::CloudController
     NO_APP_PORT_SPECIFIED = -1
     DEFAULT_HTTP_PORT     = 8080
     DEFAULT_PORTS         = [DEFAULT_HTTP_PORT].freeze
+    UNLIMITED_LOG_RATE    = -1
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :revision, class: 'VCAP::CloudController::RevisionModel', key: :revision_guid, primary_key: :guid, without_guid_generation: true

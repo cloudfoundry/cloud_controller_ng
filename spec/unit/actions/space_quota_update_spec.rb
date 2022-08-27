@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
 
     describe 'update' do
-      context 'when updating an organization quota' do
+      context 'when updating a space quota' do
         let!(:space_quota) do
           VCAP::CloudController::SpaceQuotaDefinition.make(
             name: 'space_quota_name',
@@ -42,7 +42,7 @@ module VCAP::CloudController
           VCAP::CloudController::SpaceQuotaUpdateMessage.new({})
         end
 
-        it 'updates an organization quota with the given values' do
+        it 'updates a space quota with the given values' do
           updated_space_quota = SpaceQuotaUpdate.update(space_quota, message)
 
           expect(updated_space_quota.name).to eq('don-quixote')
@@ -61,7 +61,7 @@ module VCAP::CloudController
           expect(updated_space_quota.total_routes).to eq(8)
         end
 
-        it 'updates an organization quota with only the given values' do
+        it 'updates a space quota with only the given values' do
           updated_space_quota = SpaceQuotaUpdate.update(space_quota, minimum_message)
 
           expect(updated_space_quota.name).to eq('space_quota_name')
@@ -89,6 +89,67 @@ module VCAP::CloudController
               expect {
                 SpaceQuotaUpdate.update(space_quota, update_message)
               }.to raise_error(SpaceQuotaUpdate::Error, "Space Quota '#{name}' already exists.")
+            end
+          end
+        end
+
+        context 'when there are affected processes that have an unlimited log rate limit' do
+          def create_spaces_with_unlimited_log_rate_process(count)
+            count.downto(1) do |i|
+              space = VCAP::CloudController::Space.make(guid: "space-guid-#{i}", name: "space-name-#{i}", organization: org, space_quota_definition: space_quota)
+              app_model = VCAP::CloudController::AppModel.make(name: "app-#{i}", space: space)
+              VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1)
+            end
+          end
+
+          context 'and they are only in a single space' do
+            before do
+              create_spaces_with_unlimited_log_rate_process(1)
+            end
+            it 'errors with a message telling the user the affected space' do
+              expect do
+                SpaceQuotaUpdate.update(space_quota, message)
+              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Space 'space-name-1' " \
+                                 'assigned this quota contains apps running with an unlimited log rate limit.')
+            end
+          end
+
+          context 'and they are in two spaces' do
+            before do
+              create_spaces_with_unlimited_log_rate_process(2)
+            end
+            it 'errors with a message telling the user the affected spaces' do
+              expect do
+                SpaceQuotaUpdate.update(space_quota, message)
+              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Spaces 'space-name-1', 'space-name-2' " \
+                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+            end
+          end
+
+          context 'and they are spread across five spaces' do
+            before do
+              create_spaces_with_unlimited_log_rate_process(5)
+            end
+            it 'errors with a message telling the user some of the affected spaces and a total count' do
+              expect do
+                SpaceQuotaUpdate.update(space_quota, message)
+              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Spaces 'space-name-1', 'space-name-2' and 3 other spaces " \
+                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+            end
+          end
+
+          context 'and there is more than one affected process within a space' do
+            let!(:org) { VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name') }
+            let!(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', name: 'space-name', organization: org, space_quota_definition: space_quota) }
+            let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app', space: space) }
+            let!(:process_1) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+            let!(:process_2) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+            it 'only names the space once in the error message' do
+              expect do
+                SpaceQuotaUpdate.update(space_quota, message)
+              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Space 'space-name' assigned this quota contains apps " \
+                                                          'running with an unlimited log rate limit.')
             end
           end
         end
