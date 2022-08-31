@@ -18,6 +18,7 @@ Name | Type | Description
 **state** | _string_ | State of the task Possible states are `PENDING`, `RUNNING`, `SUCCEEDED`, `CANCELING`, and `FAILED`
 **memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB
 **disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB
+**log_rate_limit_per_second** | _integer_ | Amount of log rate to allocate for the task in bytes
 **result** | _object_ | Results from the task
 **result.failure_reason** | _string_ | Null if the task succeeds, contains the error message if it fails
 **droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command
