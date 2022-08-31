@@ -352,7 +352,7 @@ GEM
       ast (~> 2.4.1)
     pg (1.4.3)
     posix-spawn (0.3.15)
-    prometheus-client (3.0.0)
+    prometheus-client (4.0.0)
     protobuf (3.6.12)
       activesupport (>= 3.2)
       middleware
