@@ -76,7 +76,7 @@ module VCAP::CloudController
         end
 
         def with_guardrails(route: nil)
-          return unless Config.config.get(:copilot, :enabled)
+          return unless copilot_enabled?
 
           if route
             return unless Config.config.get(:copilot, :temporary_istio_domains).include?(route.domain.name)
@@ -89,6 +89,12 @@ module VCAP::CloudController
 
         def logger
           Steno.logger('copilot_adapter')
+        end
+
+        def copilot_enabled?
+          Config.config.get(:copilot, :enabled)
+        rescue Config::InvalidConfigPath
+          false
         end
       end
     end
