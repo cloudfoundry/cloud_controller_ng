@@ -1,4 +1,4 @@
-### Update a destination for a route
+### Update a destination protocol for a route
 
 ```
 Example Request
@@ -42,8 +42,10 @@ Content-Type: application/json
 }
 ```
 
+This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
+
 #### Definition
-`PATCH /v3/routes/:guid/destinations`
+`PATCH /v3/routes/:guid/destinations/:guid`
 
 #### Optional parameters
 
