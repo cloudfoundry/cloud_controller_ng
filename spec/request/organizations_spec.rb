@@ -1448,6 +1448,7 @@ module VCAP::CloudController
             allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
           end
 
+          let(:excluded_params) { [:partial_usernames] }
           let(:request) { "/v3/organizations/#{organization1.guid}/users" }
           let(:message) { VCAP::CloudController::UsersListMessage }
           let(:user_header) { admin_header }
@@ -1464,6 +1465,33 @@ module VCAP::CloudController
               created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
               updated_ats: { gt: Time.now.utc.iso8601 },
             }
+          end
+        end
+
+        context 'uses partial_usernames' do
+          it_behaves_like 'list query endpoint' do
+            before do
+              allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+            end
+
+            let(:excluded_params) { [:usernames] }
+            let(:request) { "/v3/organizations/#{organization1.guid}/users" }
+            let(:message) { VCAP::CloudController::UsersListMessage }
+            let(:user_header) { admin_header }
+
+            let(:params) do
+              {
+                guids: ['foo', 'bar'],
+                partial_usernames: ['foo', 'bar'],
+                origins: ['foo', 'bar'],
+                page:   '2',
+                per_page:   '10',
+                order_by:   'updated_at',
+                label_selector:   'foo,bar',
+                created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+                updated_ats: { gt: Time.now.utc.iso8601 },
+              }
+            end
           end
         end
 
@@ -1504,6 +1532,33 @@ module VCAP::CloudController
               'total_pages' => 1,
               'first' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/users?origins=Okta&page=1&per_page=50&usernames=rob-mcjames" },
               'last' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/users?origins=Okta&page=1&per_page=50&usernames=rob-mcjames" },
+              'next' => nil,
+              'previous' => nil
+            }
+
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(org_manager.guid)
+            expect(parsed_response['pagination']).to eq(expected_pagination)
+          end
+        end
+
+        context 'by partial_usernames and origins' do
+          before do
+            allow(uaa_client).to receive(:users_for_ids).with([org_manager.guid]).and_return({
+              org_manager.guid => { 'username' => 'rob-mcjam', 'origin' => 'Okta' },
+            })
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['b-mcjam'], ['Okta'], false).and_return([org_manager.guid])
+          end
+
+          it 'returns 200 and the filtered users' do
+            get "/v3/organizations/#{organization1.guid}/users?partial_usernames=b-mcjam&origins=Okta", nil, admin_header
+
+            parsed_response = MultiJson.load(last_response.body)
+            expected_pagination = {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/users?origins=Okta&page=1&partial_usernames=b-mcjam&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/users?origins=Okta&page=1&partial_usernames=b-mcjam&per_page=50" },
               'next' => nil,
               'previous' => nil
             }
