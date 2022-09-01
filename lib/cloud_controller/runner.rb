@@ -11,6 +11,7 @@ require 'cloud_controller/metrics/request_metrics'
 require 'cloud_controller/logs/request_logs'
 require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
+require 'cloud_controller/servers/thin_server'
 
 module VCAP::CloudController
   class Runner
@@ -27,6 +28,15 @@ module VCAP::CloudController
       parse_config(secrets_hash)
 
       @log_counter = Steno::Sink::Counter.new
+      setup_cloud_controller
+
+      @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
+
+      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+      builder = RackAppBuilder.new
+      app     = builder.build(@config, request_metrics, @request_logs)
+
+      @server = VCAP::CloudController::ThinServer.new(@config, app, logger)
     end
 
     def logger
@@ -76,17 +86,10 @@ module VCAP::CloudController
       create_pidfile
 
       EM.run do
-        start_cloud_controller
-
-        request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
         gather_periodic_metrics
 
-        @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
-
-        builder = RackAppBuilder.new
-        app     = builder.build(@config, request_metrics, @request_logs)
-
-        start_thin_server(app)
+        trap_signals
+        @server.start!
       rescue => e
         logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
         raise e
@@ -117,14 +120,14 @@ module VCAP::CloudController
     end
 
     def stop!
-      stop_thin_server
+      @server.stop!
       logger.info('Stopping EventMachine')
       EM.stop
     end
 
     private
 
-    def start_cloud_controller
+    def setup_cloud_controller
       setup_logging
       setup_telemetry_logging
       setup_db
@@ -188,31 +191,6 @@ module VCAP::CloudController
         host: @config.get(:fluent, :host) || 'localhost',
                 port: @config.get(:fluent, :port) || 24224,
       ))
-    end
-
-    def start_thin_server(app)
-      @thin_server = if @config.get(:nginx, :use_nginx)
-                       Thin::Server.new(@config.get(:nginx, :instance_socket), signals: false)
-                     else
-                       Thin::Server.new(@config.get(:external_host), @config.get(:external_port), signals: false)
-                     end
-
-      @thin_server.app = app
-      trap_signals
-
-      # The routers proxying to us handle killing inactive connections.
-      # Set an upper limit just to be safe.
-      @thin_server.timeout = @config.get(:request_timeout_in_seconds)
-      @thin_server.threaded = true
-      @thin_server.threadpool_size = @config.get(:threadpool_size)
-      logger.info("Starting thin server with #{EventMachine.threadpool_size} threads")
-      @thin_server.start!
-    end
-
-    def stop_thin_server
-      logger.info('Stopping Thin Server.')
-      @thin_server.stop if @thin_server
-      @request_logs.log_incomplete_requests if @request_logs
     end
 
     def periodic_updater

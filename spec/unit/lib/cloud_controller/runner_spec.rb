@@ -20,12 +20,11 @@ module VCAP::CloudController
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
       allow(VCAP::CloudController::Diagnostics).to receive(:new).and_return(diagnostics)
       allow(diagnostics).to receive(:collect)
+      allow_any_instance_of(VCAP::CloudController::ThinServer).to receive(:start!)
     end
 
     subject do
-      Runner.new(argv + ['-c', config_file.path]).tap do |r|
-        allow(r).to receive(:start_thin_server)
-      end
+      Runner.new(argv + ['-c', config_file.path])
     end
 
     describe '#run!' do
@@ -94,13 +93,9 @@ module VCAP::CloudController
         expect(subject.instance_variable_get(:@request_logs)).to eq(request_logs)
       end
 
-      it 'starts thin server on set up bind address' do
-        allow(subject).to receive(:start_thin_server).and_call_original
+      it 'sets a local ip in the host system' do
         expect_any_instance_of(VCAP::HostSystem).to receive(:local_ip).and_return('some_local_ip')
-        thin_server = double(:thin_server).as_null_object
-        expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(thin_server)
         subject.run!
-        expect(subject.instance_variable_get(:@thin_server)).to eq(thin_server)
       end
 
       it 'sets up varz updates' do
@@ -109,7 +104,7 @@ module VCAP::CloudController
       end
 
       it 'logs an error if an exception is raised' do
-        allow(subject).to receive(:start_cloud_controller).and_raise('we have a problem')
+        allow(subject).to receive(:gather_periodic_metrics).and_raise('we have a problem')
         expect(subject.logger).to receive(:error)
         expect { subject.run! }.to raise_exception('we have a problem')
       end
@@ -196,16 +191,16 @@ module VCAP::CloudController
     end
 
     describe '#stop!' do
-      let(:thin_server) { double(:thin_server) }
+      let(:server) { double(:server) }
       let(:request_logs) { double(:request_logs) }
 
       before do
-        subject.instance_variable_set(:@thin_server, thin_server)
+        subject.instance_variable_set(:@server, server)
         subject.instance_variable_set(:@request_logs, request_logs)
       end
 
       it 'should stop thin and EM, logs incomplete requests' do
-        expect(thin_server).to receive(:stop)
+        expect(server).to receive(:stop)
         expect(request_logs).to receive(:log_incomplete_requests)
         expect(EM).to receive(:stop)
         subject.stop!
@@ -300,39 +295,6 @@ module VCAP::CloudController
             end
           end
         end
-      end
-    end
-
-    describe '#start_thin_server' do
-      let(:app) { double(:app) }
-      let(:thin_server) { OpenStruct.new(start!: nil) }
-
-      subject(:start_thin_server) do
-        runner = Runner.new(argv + ['-c', config_file.path])
-        runner.send(:start_thin_server, app)
-      end
-
-      before do
-        allow(Thin::Server).to receive(:new).and_return(thin_server)
-        allow(thin_server).to receive(:start!)
-      end
-
-      it 'gets the timeout from the config' do
-        start_thin_server
-
-        expect(thin_server.timeout).to eq(600)
-      end
-
-      it "uses thin's experimental threaded mode intentionally" do
-        start_thin_server
-
-        expect(thin_server.threaded).to eq(true)
-      end
-
-      it 'starts the thin server' do
-        start_thin_server
-
-        expect(thin_server).to have_received(:start!)
       end
     end
 
