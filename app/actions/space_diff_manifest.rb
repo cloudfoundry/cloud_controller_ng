@@ -167,7 +167,7 @@ module VCAP::CloudController
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
             value = process_hash[key]
-            manifest_app_hash[index][key] = normalize_unit(value, key) unless value.nil? || value == -1
+            manifest_app_hash[index][key] = normalize_unit(value, key) unless value.nil?
           end
         end
         manifest_app_hash
@@ -182,8 +182,8 @@ module VCAP::CloudController
       end
 
       def normalize_unit(non_normalized_value, attribute_name)
-        if %w[-1 0].include?(non_normalized_value)
-          non_normalized_value
+        if %w(-1 0).include?(non_normalized_value.to_s)
+          non_normalized_value.to_s
         else
           byte_converter.human_readable_byte_value(byte_converter.convert_to_b(non_normalized_value))
         end

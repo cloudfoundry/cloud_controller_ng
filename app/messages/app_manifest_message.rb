@@ -292,8 +292,8 @@ module VCAP::CloudController
 
     def convert_to_bytes_per_second(human_readable_byte_value)
       return nil unless human_readable_byte_value.present?
-      return -1 if human_readable_byte_value == '-1'
-      return 0 if human_readable_byte_value == '0'
+      return -1 if human_readable_byte_value.to_s == '-1'
+      return 0 if human_readable_byte_value.to_s == '0'
 
       byte_converter.convert_to_b(human_readable_byte_value.strip)
     rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError

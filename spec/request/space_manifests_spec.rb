@@ -467,7 +467,7 @@ RSpec.describe 'Space Manifests' do
            'version' => 1,
            'applications' => [
              { 'name' => app1_model.name,
-               'log-rate-limit-per-second' => '-1'
+               'log-rate-limit-per-second' => -1
              },
            ]
         }.to_yaml

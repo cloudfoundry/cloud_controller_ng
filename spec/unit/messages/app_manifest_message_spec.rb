@@ -154,6 +154,16 @@ module VCAP::CloudController
               expect(message).to be_valid
             end
           end
+
+          context 'specified as the number -1' do
+            let(:params_from_yaml) { { name: 'eugene', 'log-rate-limit-per-second' => -1 } }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
+          end
+
           context 'with a bytes suffix' do
             let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1B' } }
 
@@ -175,6 +185,16 @@ module VCAP::CloudController
 
         context 'when log-rate-limit-per-second is 0' do
           let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '0' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
+          end
+        end
+
+        context 'when log-rate-limit-per-second is the number 0' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 0 } }
 
           it 'is valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
