@@ -3419,6 +3419,26 @@ RSpec.describe 'Routes Request' do
           )
         end
       end
+      context 'when data is not a hash' do
+        let(:request_body) do
+          {
+            data: [{ 'guid' => target_space.guid }]
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'Data must be an object',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
     end
 
     describe 'when route_sharing flag is disabled' do
