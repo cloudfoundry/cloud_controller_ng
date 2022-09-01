@@ -176,6 +176,10 @@ class RoutesController < ApplicationController
     target_space_error = check_if_space_is_accessible(target_space)
     unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
+    if !route.domain.usable_by_organization?(target_space.organization)
+      unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. Target space does not have access to route's domain")
+    end
+
     RouteTransferOwner.transfer(route, target_space, user_audit_info)
 
     render status: :ok, json: { status: 'ok' }
