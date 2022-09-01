@@ -172,6 +172,33 @@ RSpec.describe 'V3 service plans' do
         expect(parsed_response['included']['service_offerings'][0]['guid']).to eq(offering.guid)
       end
     end
+
+    describe 'costs' do
+      it 'doesnt break costs' do
+        service_plan =
+          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
+          {
+            "amount": {
+              "usd": 649.0,
+              "gbp": 500
+            },
+            "unit": "MONTHLY"
+          },
+          {
+            "amount": {
+              "usd": 6.00,
+              "gbp": 5.05
+            },
+            "unit": "daily"
+          }
+        ]}')
+        get "/v3/service_plans/#{service_plan.guid}", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        puts parsed_response
+        # expect(parsed_response['costs']).to eq 5
+        expect(parsed_response['metadata']).to eq 5
+      end
+    end
   end
 
   describe 'GET /v3/service_plans' do
