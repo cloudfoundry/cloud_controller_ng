@@ -79,6 +79,20 @@ module VCAP::CloudController
           end
         end
 
+        context 'when disk_quota is zero' do
+          let(:params_from_yaml) { { name: 'eugene', disk_quota: 0 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
+          end
+        end
+
         context 'when disk_quota is not a positive amount' do
           let(:params_from_yaml) { { name: 'eugene', disk_quota: '-1MB' } }
 

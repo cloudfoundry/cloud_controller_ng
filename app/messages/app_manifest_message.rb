@@ -300,7 +300,7 @@ module VCAP::CloudController
     end
 
     def validate_byte_format(human_readable_byte_value, attribute_name, allow_unlimited: false)
-      unless (allow_unlimited && human_readable_byte_value == '-1') || human_readable_byte_value == '0'
+      unless allow_unlimited && (human_readable_byte_value.to_s == '-1' || human_readable_byte_value.to_s == '0')
         byte_converter.convert_to_mb(human_readable_byte_value)
       end
 
