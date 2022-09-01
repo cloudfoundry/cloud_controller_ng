@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates :data, presence: true, hash: true, allow_nil: false
-    validate :data_content
+    validate :data_content, if: -> { data.is_a?(Hash) }
 
     def space_guid
       HashUtils.dig(data, :guid)
