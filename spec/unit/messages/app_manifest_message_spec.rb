@@ -226,6 +226,20 @@ module VCAP::CloudController
             expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
           end
         end
+
+        context 'when log-rate-limit-per-second is a positive integer without a suffix' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 9999 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
+          end
+        end
       end
 
       describe 'buildpack' do
