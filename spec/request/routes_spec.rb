@@ -3310,6 +3310,39 @@ RSpec.describe 'Routes Request' do
       expect(route.space).to eq target_space
     end
 
+    describe 'when using a private domain' do
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:route) { VCAP::CloudController::Route.make(space: space, domain: private_domain) }
+      let(:second_org) { VCAP::CloudController::Organization.make }
+      let(:another_space) { VCAP::CloudController::Space.make(organization: second_org) }
+      let(:request_body) do
+        {
+          data: { 'guid' => another_space.guid }
+        }
+      end
+      let(:space_dev_headers) do
+        org.add_user(user)
+        space.add_developer(user)
+        second_org.add_user(user)
+        another_space.add_developer(user)
+        headers_for(user)
+      end
+
+      it 'responds with 422' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{another_space.guid}'. "\
+                          "Target space does not have access to route's domain",
+              'title' => 'CF-UnprocessableEntity'
+            })
+        )
+      end
+    end
+
     describe 'target space to transfer to' do
       context 'does not exist' do
         let(:target_space_guid) { 'fake-target' }
