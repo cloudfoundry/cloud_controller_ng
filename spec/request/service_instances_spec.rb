@@ -4138,13 +4138,13 @@ RSpec.describe 'V3 service instances' do
 
       before do
         org.add_user(user)
-        space.add_developer(user)
       end
 
-      it 'returns a 200' do
+      it 'succeeds' do
         get "/v3/service_instances/#{guid}/permissions", nil, user_headers
-        expect(last_response.status).to eq(200)
-        expect(JSON.parse(last_response.body)).to eq(read_and_write)
+        expect(last_response).to have_status_code(200)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to match_json_response(no_permissions[:response_object])
       end
     end
 
