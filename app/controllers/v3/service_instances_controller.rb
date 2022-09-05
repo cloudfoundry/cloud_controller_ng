@@ -222,7 +222,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance_not_found! unless service_instance
 
     render status: :ok, json: {
-      manage: is_space_active?(service_instance.space) ? can_write_to_active_space?(service_instance.space) : permission_queryer.can_write_globally?,
+      manage: is_space_active?(service_instance.space) ? can_write_to_active_space?(service_instance.space) : admin?,
       read: can_read_service_instance?(service_instance),
     }
   end
