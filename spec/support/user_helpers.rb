@@ -59,12 +59,20 @@ module UserHelpers
   end
 
   # rubocop:disable all
+  def set_current_user_as_service_permissions_reader(opts = {})
+    # rubocop:enable all
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    scopes = { scopes: %w(cloud_controller_service_permissions.read) }
+    set_current_user(user, scopes.merge(opts))
+  end
+
+  # rubocop:disable all
   def set_current_user_as_role(role:, org: nil, space: nil, user: nil, scopes: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
     current_user = set_current_user(current_user, scopes: scopes)
 
-    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer)
+    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader)
     if org && !scope_roles.include?(role)
       org.add_user(current_user)
     end
@@ -108,6 +116,8 @@ module UserHelpers
       set_current_user_as_reader(user: current_user)
     when 'writer'
       set_current_user_as_writer(user: current_user)
+    when 'service_permissions_reader'
+      set_current_user_as_service_permissions_reader(user: current_user)
     when 'no_role'
       nil
     else

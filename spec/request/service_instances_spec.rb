@@ -1,8 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 
-UNAUTHENTICATED = %w[unauthenticated].freeze
-
 RSpec.describe 'V3 service instances' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
@@ -4098,10 +4096,14 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances/:guid/permissions' do
+    # For this endpoint we also want to test the 'cloud_controller_service_permissions.read' scope as well as unauthenticated calls.
+    ADDITIONAL_PERMISSIONS_TO_TEST = %w[service_permissions_reader unauthenticated].freeze
+
+    READ_AND_WRITE = { code: 200, response_object: { manage: true, read: true } }.freeze
+    READ_ONLY = { code: 200, response_object: { manage: false, read: true } }.freeze
+    NO_PERMISSIONS = { code: 200, response_object: { manage: false, read: false } }.freeze
+
     let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/permissions", nil, user_headers } }
-    read_and_write = { code: 200, response_object: { manage: true, read: true } }
-    read_only = { code: 200, response_object: { manage: false, read: true } }
-    no_permissions = { code: 200, response_object: { manage: false, read: false } }
 
     context 'when the service instance does not exist' do
       let(:guid) { 'no-such-guid' }
@@ -4112,7 +4114,7 @@ RSpec.describe 'V3 service instances' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
     end
 
     context 'when the user is a member of the org or space the service instance exists in' do
@@ -4121,68 +4123,65 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)
-        h['admin'] = h['space_developer'] = read_and_write
-        h['admin_read_only'] = h['global_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = h['space_supporter'] = read_only
-        h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = no_permissions
+        %w[admin space_developer].each { |r| h[r] = READ_AND_WRITE }
+        %w[admin_read_only global_auditor org_manager space_manager space_auditor space_supporter].each { |r| h[r] = READ_ONLY }
+        %w[org_billing_manager org_auditor no_role service_permissions_reader].each { |r| h[r] = NO_PERMISSIONS }
         h['unauthenticated'] = { code: 401 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
-    end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
 
-    context 'when the user has only the cloud_controller_service_permissions.read scope' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-      let(:guid) { instance.guid }
-      let(:user_headers) { set_user_with_header_as_role(user: user, role: 'cloud_controller_service_permissions_reader', org: org, space: space) }
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = READ_ONLY
+          h
+        end
 
-      before do
-        org.add_user(user)
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
       end
 
-      it 'succeeds' do
-        get "/v3/service_instances/#{guid}/permissions", nil, user_headers
-        expect(last_response).to have_status_code(200)
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to match_json_response(no_permissions[:response_object])
+      context 'request with only the cloud_controller_service_permissions.read scope' do
+        it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES do
+          let(:after_request_check) do
+            lambda do
+              # Store the HTTP status and response from the original call.
+              expected_status_code = last_response.status
+              expected_json_response = parsed_response
+
+              # Repeat the same call for the same user, but now with only the 'cloud_controller_service_permissions.read' scope.
+              api_call.call(set_user_with_header_as_service_permissions_reader(user: user))
+
+              # Both the HTTP status and response should be the same.
+              expect(last_response).to have_status_code(expected_status_code)
+              expect(parsed_response).to match_json_response(expected_json_response)
+            end
+          end
+        end
       end
     end
 
-    context 'when the user is not a member of the org or space the service exists in' do
+    context 'when the user is not a member of the org or space the service instance exists in' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)
-        h['admin'] = read_and_write
-        h['admin_read_only'] = h['global_auditor'] = read_only
-        h['org_billing_manager'] =
-          h['org_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = h['space_developer'] = h['space_supporter'] = h['no_role'] = no_permissions
+        h['admin'] = READ_AND_WRITE
+        %w[admin_read_only global_auditor].each { |r| h[r] = READ_ONLY }
+        %w[org_billing_manager org_auditor org_manager space_manager space_auditor space_developer space_supporter no_role service_permissions_reader].each do |r|
+          h[r] = NO_PERMISSIONS
+        end
         h['unauthenticated'] = { code: 401 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
-    end
-
-    context 'when the org containing the service instance is suspended' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-      let(:guid) { instance.guid }
-
-      let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
-        h['admin'] = read_and_write
-        h['admin_read_only'] = h['global_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = h['space_supporter'] = h['space_developer'] = read_only
-        h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = no_permissions
-        h['unauthenticated'] = { code: 401 }
-        h
-      end
-
-      before do
-        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
     end
   end
 

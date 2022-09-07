@@ -38,13 +38,6 @@ module UserHeaderHelpers
   end
 
   # rubocop:disable all
-  def set_user_with_header_as_cloud_controller_service_permissions_reader(opts = {})
-    # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
-    set_user_with_header(user, { cloud_controller_service_permissions_reader: true }.merge(opts))
-  end
-
-  # rubocop:disable all
   def set_user_with_header_as_unauthenticated(opts = {})
     # rubocop:enable all
     set_user_with_header(nil, opts)
@@ -75,11 +68,19 @@ module UserHeaderHelpers
   end
 
   # rubocop:disable all
+  def set_user_with_header_as_service_permissions_reader(opts = {})
+    # rubocop:enable all
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    scopes = { scopes: %w(cloud_controller_service_permissions.read) }
+    set_user_with_header(user, scopes.merge(opts))
+  end
+
+  # rubocop:disable all
   def set_user_with_header_as_role(role:, org: nil, space: nil, user: nil, scopes: nil, user_name: nil, email: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
 
-    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer)
+    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader)
     if org && !scope_roles.include?(role) && role.to_s != 'no_role'
       org.add_user(current_user)
     end
@@ -92,9 +93,6 @@ module UserHeaderHelpers
       set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
     when 'global_auditor'
       set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || ['cloud_controller.write'], user_name: user_name, email: email)
-    when 'cloud_controller_service_permissions_reader'
-      set_user_with_header_as_cloud_controller_service_permissions_reader(user: current_user, scopes: ['cloud_controller_service_permissions.read'], user_name: user_name,
-email: email)
     when 'space_developer'
       space.add_developer(current_user)
       set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
@@ -126,6 +124,8 @@ email: email)
       set_user_with_header_as_reader(user: current_user, user_name: user_name, email: email)
     when 'writer'
       set_user_with_header_as_writer(user: current_user, user_name: user_name, email: email)
+    when 'service_permissions_reader'
+      set_user_with_header_as_service_permissions_reader(user: current_user, user_name: user_name, email: email)
     when 'no_role' # not a real role - added for testing
       set_user_with_header(user, user_name: user_name, email: email)
     else
