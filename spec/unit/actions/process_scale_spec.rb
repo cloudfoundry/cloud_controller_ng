@@ -68,6 +68,15 @@ module VCAP::CloudController
         expect(process.log_rate_limit).to eq(original_value)
       end
 
+      it 'does not set log quota if null is provided' do
+        valid_message_params[:log_rate_limit_in_bytes_per_second] = nil
+        original_value = process.log_rate_limit
+
+        process_scale.scale
+
+        expect(process.log_rate_limit).to eq(original_value)
+      end
+
       describe 'audit events' do
         it 'creates a process audit event' do
           expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
