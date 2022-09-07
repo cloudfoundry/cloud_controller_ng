@@ -12,6 +12,7 @@ require 'cloud_controller/logs/request_logs'
 require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
 require 'cloud_controller/runners/thin_runner'
+require 'cloud_controller/runners/puma_runner'
 
 module VCAP::CloudController
   class Runner
@@ -36,7 +37,11 @@ module VCAP::CloudController
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, @request_logs)
 
-      @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater)
+      if @config.get(:webserver) == 'puma'
+        @server = VCAP::CloudController::PumaRunner.new
+      else
+        @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater)
+      end
     end
 
     def logger

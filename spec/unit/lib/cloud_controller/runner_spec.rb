@@ -189,14 +189,33 @@ module VCAP::CloudController
     end
 
     describe '#initialize' do
-      subject { Runner.new(argv_options) }
-      let(:argv_options) { [] }
-
       before do
         allow_any_instance_of(Runner).to receive(:deprecation_warning)
       end
 
+      describe 'web server selection' do
+        context 'when thin is specifed' do
+          it 'chooses ThinRunner as the web server' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(ThinRunner)
+          end
+        end
+
+        context 'when puma is specified' do
+          before do
+            TestConfig.override(webserver: 'puma')
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'chooses puma as the web server' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(PumaRunner)
+          end
+        end
+      end
+
       describe 'argument parsing' do
+        subject { Runner.new(argv_options) }
+        let(:argv_options) { [] }
+
         describe 'Configuration File' do
           ['-c', '--config'].each do |flag|
             describe flag do
