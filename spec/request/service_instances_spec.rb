@@ -4095,6 +4095,96 @@ RSpec.describe 'V3 service instances' do
     end
   end
 
+  describe 'GET /v3/service_instances/:guid/permissions' do
+    # For this endpoint we also want to test the 'cloud_controller_service_permissions.read' scope as well as unauthenticated calls.
+    ADDITIONAL_PERMISSIONS_TO_TEST = %w[service_permissions_reader unauthenticated].freeze
+
+    READ_AND_WRITE = { code: 200, response_object: { manage: true, read: true } }.freeze
+    READ_ONLY = { code: 200, response_object: { manage: false, read: true } }.freeze
+    NO_PERMISSIONS = { code: 200, response_object: { manage: false, read: false } }.freeze
+
+    let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/permissions", nil, user_headers } }
+
+    context 'when the service instance does not exist' do
+      let(:guid) { 'no-such-guid' }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['unauthenticated'] = { code: 401 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
+    end
+
+    context 'when the user is a member of the org or space the service instance exists in' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:guid) { instance.guid }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        %w[admin space_developer].each { |r| h[r] = READ_AND_WRITE }
+        %w[admin_read_only global_auditor org_manager space_manager space_auditor space_supporter].each { |r| h[r] = READ_ONLY }
+        %w[org_billing_manager org_auditor no_role service_permissions_reader].each { |r| h[r] = NO_PERMISSIONS }
+        h['unauthenticated'] = { code: 401 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = READ_ONLY
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
+      end
+
+      context 'request with only the cloud_controller_service_permissions.read scope' do
+        it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES do
+          let(:after_request_check) do
+            lambda do
+              # Store the HTTP status and response from the original call.
+              expected_status_code = last_response.status
+              expected_json_response = parsed_response
+
+              # Repeat the same call for the same user, but now with only the 'cloud_controller_service_permissions.read' scope.
+              api_call.call(set_user_with_header_as_service_permissions_reader(user: user))
+
+              # Both the HTTP status and response should be the same.
+              expect(last_response).to have_status_code(expected_status_code)
+              expect(parsed_response).to match_json_response(expected_json_response)
+            end
+          end
+        end
+      end
+    end
+
+    context 'when the user is not a member of the org or space the service instance exists in' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:guid) { instance.guid }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = READ_AND_WRITE
+        %w[admin_read_only global_auditor].each { |r| h[r] = READ_ONLY }
+        %w[org_billing_manager org_auditor org_manager space_manager space_auditor space_developer space_supporter no_role service_permissions_reader].each do |r|
+          h[r] = NO_PERMISSIONS
+        end
+        h['unauthenticated'] = { code: 401 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
+    end
+  end
+
   def create_managed_json(instance, labels: {}, annotations: {}, last_operation: {}, tags: [])
     {
       guid: instance.guid,

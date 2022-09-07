@@ -217,6 +217,16 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   end
 
+  def show_permissions
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    service_instance_not_found! unless service_instance
+
+    render status: :ok, json: {
+      manage: is_space_active?(service_instance.space) ? can_write_to_active_space?(service_instance.space) : admin?,
+      read: can_read_service_instance?(service_instance),
+    }
+  end
+
   private
 
   DECORATORS = [
@@ -423,5 +433,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def operation_in_progress!
     unprocessable!('There is an operation in progress for the service instance.')
+  end
+
+  def read_scope
+    %w(show_permissions).include?(action_name) && roles.cloud_controller_service_permissions_reader? ? true : super
   end
 end

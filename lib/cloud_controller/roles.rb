@@ -6,6 +6,9 @@ module VCAP::CloudController
     CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE = 'cloud_controller.admin_read_only'.freeze
     CLOUD_CONTROLLER_GLOBAL_AUDITOR = 'cloud_controller.global_auditor'.freeze
     CLOUD_CONTROLLER_BUILD_STATE_UPDATER = 'cloud_controller.update_build_state'.freeze
+    CLOUD_CONTROLLER_READER_SCOPE = 'cloud_controller.read'.freeze
+    CLOUD_CONTROLLER_WRITER_SCOPE = 'cloud_controller.write'.freeze
+    CLOUD_CONTROLLER_SERVICE_PERMISSIONS_READER = 'cloud_controller_service_permissions.read'.freeze
 
     ORG_ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
     SPACE_ROLE_NAMES = [:manager, :developer, :auditor].freeze
@@ -24,6 +27,18 @@ module VCAP::CloudController
 
     def global_auditor?
       @scopes.include?(CLOUD_CONTROLLER_GLOBAL_AUDITOR)
+    end
+
+    def cloud_controller_reader?
+      @scopes.include?(CLOUD_CONTROLLER_READER_SCOPE)
+    end
+
+    def cloud_controller_writer?
+      @scopes.include?(CLOUD_CONTROLLER_WRITER_SCOPE)
+    end
+
+    def cloud_controller_service_permissions_reader?
+      @scopes.include?(CLOUD_CONTROLLER_SERVICE_PERMISSIONS_READER)
     end
 
     def admin=(flag)

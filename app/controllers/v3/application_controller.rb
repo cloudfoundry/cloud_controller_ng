@@ -163,16 +163,19 @@ class ApplicationController < ActionController::Base
     !READ_SCOPE_HTTP_METHODS.include?(request.method)
   end
 
-  def check_read_permissions!
-    read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-    admin_read_only_scope = SecurityContext.scopes.include?('cloud_controller.admin_read_only')
-    global_auditor_scope = SecurityContext.scopes.include?('cloud_controller.global_auditor')
+  def read_scope
+    roles.cloud_controller_reader?
+  end
 
-    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope && !admin_read_only_scope && !global_auditor_scope
+  def write_scope
+    roles.cloud_controller_writer?
+  end
+
+  def check_read_permissions!
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !roles.admin_read_only? && !roles.global_auditor? && !read_scope
   end
 
   def check_write_permissions!
-    write_scope = SecurityContext.scopes.include?('cloud_controller.write')
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
   end
 
