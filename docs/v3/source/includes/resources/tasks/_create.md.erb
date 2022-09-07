@@ -51,6 +51,7 @@ Name | Type | Description | Default
 **name** | _string_ | Name of the task | auto-generated
 **disk_in_mb**<sup>[1]</sup> | _integer_ | Amount of disk to allocate for the task in MB | operator-configured `default_app_disk_in_mb`
 **memory_in_mb**<sup>[1]</sup> | _integer_ | Amount of memory to allocate for the task in MB | operator-configured `default_app_memory`
+**log_rate_limit_per_second**<sup>[1]</sup> | _integer_ | Amount of log rate to allocate for the task in bytes | operator-configured `default_app_log_rate_limit_in_bytes_per_second`
 **droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command | the app's current droplet
 **template.process.guid** | _uuid_ | The guid of the process that will be used as a template | `null`
 **metadata.labels** | [_label object_](#labels) | Labels applied to the package

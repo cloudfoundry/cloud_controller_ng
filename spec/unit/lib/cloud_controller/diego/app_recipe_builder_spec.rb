@@ -47,6 +47,7 @@ module VCAP::CloudController
             instances:            21,
             memory:               128,
             disk_quota:           256,
+            log_rate_limit:       1024,
             command:              command,
             file_descriptors:     32,
             health_check_type:    'port',
@@ -285,6 +286,7 @@ module VCAP::CloudController
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
+            expect(lrp.log_rate_limit.bytes_per_second).to eq(1024)
             expect(lrp.metrics_guid).to eq(process.app.guid)
 
             expect(lrp.metric_tags.keys.size).to eq(11)
@@ -872,6 +874,7 @@ module VCAP::CloudController
             expect(lrp.log_guid).to eq(process.app.guid)
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
+            expect(lrp.log_rate_limit.bytes_per_second).to eq(1024)
             expect(lrp.metrics_guid).to eq(process.app.guid)
 
             expect(lrp.metric_tags.keys.size).to eq(11)

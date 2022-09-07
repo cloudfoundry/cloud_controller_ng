@@ -12,7 +12,8 @@ curl "https://api.example.org/v3/processes/[guid]/actions/scale" \
   -d '{
     "instances": 5,
     "memory_in_mb": 256,
-    "disk_in_mb": 1024
+    "disk_in_mb": 1024,
+    "log_rate_limit_in_bytes_per_second": 1024
   }'
 ```
 
@@ -38,6 +39,7 @@ Name | Type | Description
 **instances** | _integer_ | The number of instances to run
 **memory_in_mb** | _integer_ | The memory in mb allocated per instance
 **disk_in_mb** | _integer_ | The disk in mb allocated per instance
+**log_rate_limit_in_bytes_per_second** | _integer_ | The log rate in bytes per second allocated per instance 
 
 #### Permitted roles
  |

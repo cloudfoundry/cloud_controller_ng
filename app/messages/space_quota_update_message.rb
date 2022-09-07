@@ -22,7 +22,7 @@ module VCAP::CloudController
     validate :services_validator, if: key_requested?(:services)
     validate :routes_validator, if: key_requested?(:routes)
 
-    delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
+    delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, :log_rate_limit_in_bytes_per_second, to: :apps_limits_message
     delegate :paid_services_allowed, :total_service_instances, :total_service_keys, to: :services_limits_message
     delegate :total_routes, :total_reserved_ports, to: :routes_limits_message
 

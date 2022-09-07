@@ -10,12 +10,14 @@ module VCAP::CloudController
         user_audit_info:         user_audit_info,
         memory_limit_calculator: memory_limit_calculator,
         disk_limit_calculator:   disk_limit_calculator,
+        log_rate_limit_calculator: log_rate_limit_calculator,
         environment_presenter:   environment_builder
       )
     end
 
     let(:memory_limit_calculator) { double(:memory_limit_calculator) }
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
+    let(:log_rate_limit_calculator) { double(:log_rate_limit_calculator) }
     let(:environment_builder) { double(:environment_builder) }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'charles@las.gym', user_guid: '1234', user_name: 'charles') }
 
@@ -24,6 +26,7 @@ module VCAP::CloudController
       {
         staging_memory_in_mb: staging_memory_in_mb,
         staging_disk_in_mb: staging_disk_in_mb,
+        staging_log_rate_limit_bytes_per_second: staging_log_rate_limit_bytes_per_second,
         lifecycle: request_lifecycle,
       }.deep_stringify_keys
     end
@@ -50,7 +53,7 @@ module VCAP::CloudController
     let(:space) { Space.make }
     let(:org) { space.organization }
     let(:app) { AppModel.make(space: space) }
-    let!(:process) { ProcessModel.make(app: app, memory: 8192, disk_quota: 512) }
+    let!(:process) { ProcessModel.make(app: app, memory: 8192, disk_quota: 512, log_rate_limit: 7168) }
 
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
@@ -65,9 +68,11 @@ module VCAP::CloudController
     let(:stager) { instance_double(Diego::Stager) }
     let(:calculated_mem_limit) { 32 }
     let(:calculated_staging_disk_in_mb) { 64 }
+    let(:calculated_staging_log_rate_limit) { 96 }
 
     let(:staging_memory_in_mb) { 1024 }
     let(:staging_disk_in_mb) { 2048 }
+    let(:staging_log_rate_limit_bytes_per_second) { 3072 }
     let(:environment_variables) { 'random string' }
 
     before do
@@ -76,6 +81,7 @@ module VCAP::CloudController
       allow(stager).to receive(:stage)
       allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_return(calculated_mem_limit)
       allow(disk_limit_calculator).to receive(:get_limit).with(staging_disk_in_mb).and_return(calculated_staging_disk_in_mb)
+      allow(log_rate_limit_calculator).to receive(:get_limit).with(staging_log_rate_limit_bytes_per_second, space, org).and_return(calculated_staging_log_rate_limit)
       allow(environment_builder).to receive(:build).and_return(environment_variables)
     end
 
@@ -93,6 +99,7 @@ module VCAP::CloudController
           expect(build.package_guid).to eq(package.guid)
           expect(build.staging_memory_in_mb).to eq(calculated_mem_limit)
           expect(build.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
+          expect(build.staging_log_rate_limit).to eq(calculated_staging_log_rate_limit)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
           expect(build.created_by_user_guid).to eq('1234')
           expect(build.created_by_user_name).to eq('charles')
@@ -174,6 +181,7 @@ module VCAP::CloudController
             expect(staging_details.staging_guid).to eq(build.guid)
             expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
             expect(staging_details.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
+            expect(staging_details.staging_log_rate_limit_bytes_per_second).to eq(calculated_staging_log_rate_limit)
             expect(staging_details.environment_variables).to eq(environment_variables)
             expect(staging_details.lifecycle).to eq(lifecycle)
             expect(staging_details.isolation_segment).to be_nil
@@ -207,6 +215,20 @@ module VCAP::CloudController
             expect(disk_limit_calculator).to receive(:get_limit).with(process.disk_quota)
             build = action.create_and_stage(package: package, lifecycle: lifecycle)
             expect(build.staging_disk_in_mb).to eq(process.disk_quota)
+          end
+        end
+
+        context 'when staging log rate limit is not specified in the message' do
+          before do
+            allow(log_rate_limit_calculator).to receive(:get_limit).with(process.log_rate_limit, space, org).and_return(process.log_rate_limit)
+          end
+          let(:staging_log_rate_limit_bytes_per_second) { nil }
+
+          it 'uses the app web process log rate limit for staging log rate limit' do
+            expect(log_rate_limit_calculator).to receive(:get_limit).with(process.log_rate_limit, space, org)
+
+            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            expect(build.staging_log_rate_limit).to eq(process.log_rate_limit)
           end
         end
 
@@ -340,6 +362,28 @@ module VCAP::CloudController
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle)
           }.to raise_error(BuildCreate::StagingInProgress)
+        end
+      end
+
+      context 'when the org quota is exceeded' do
+        before do
+          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, 'some-message')
+        end
+        it 'raises a LogRateLimitOrgQuotaExceeded error' do
+          expect {
+            action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
+          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitOrgQuotaExceeded, 'some-message')
+        end
+      end
+
+      context 'when the space quota is exceeded' do
+        before do
+          allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, 'some-message')
+        end
+        it 'raises a LogRateLimitSpaceQuotaExceeded error' do
+          expect {
+            action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
+          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitSpaceQuotaExceeded, 'some-message')
         end
       end
 

@@ -11,7 +11,6 @@ module VCAP::CloudController
             external_port: Integer,
             external_domain: String,
             temporary_disable_deployments: bool,
-            temporary_use_logcache: bool,
             optional(:temporary_disable_v2_staging) => bool,
             tls_port: Integer,
             external_protocol: String,
@@ -38,6 +37,7 @@ module VCAP::CloudController
 
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
+            default_app_log_rate_limit_in_bytes_per_second: Integer,
             maximum_app_disk_in_mb: Integer,
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,

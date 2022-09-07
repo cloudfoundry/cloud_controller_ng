@@ -8,6 +8,7 @@ module VCAP::CloudController
     include Validators
 
     MAX_DB_INT = 2**31 - 1
+    MAX_DB_BIGINT = 2**63 - 1
 
     attr_accessor :requested_keys, :extra_keys
 

@@ -67,17 +67,21 @@ module VCAP::CloudController
       validates_presence :name
       validate_org_quotas
       validate_space_quotas
+
+      MinLogRateLimitPolicy.new(self).validate
     end
 
     def validate_space_quotas
       TaskMaxMemoryPolicy.new(self, space, 'exceeds space memory quota').validate
       TaskMaxInstanceMemoryPolicy.new(self, space, 'exceeds space instance memory quota').validate
+      TaskMaxLogRateLimitPolicy.new(self, space, 'exceeds space log rate quota').validate
       new? && MaxAppTasksPolicy.new(self, space, 'quota exceeded').validate
     end
 
     def validate_org_quotas
       TaskMaxMemoryPolicy.new(self, organization, 'exceeds organization memory quota').validate
       TaskMaxInstanceMemoryPolicy.new(self, organization, 'exceeds organization instance memory quota').validate
+      TaskMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota').validate
       new? && MaxAppTasksPolicy.new(self, organization, 'quota exceeded').validate
     end
 

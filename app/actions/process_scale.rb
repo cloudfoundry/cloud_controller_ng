@@ -22,7 +22,9 @@ module VCAP::CloudController
         @process.instances = @message.instances if @message.requested?(:instances)
         @process.memory = @message.memory_in_mb if @message.requested?(:memory_in_mb)
         @process.disk_quota = @message.disk_in_mb if @message.requested?(:disk_in_mb)
-
+        if @message.requested?(:log_rate_limit_in_bytes_per_second) && !@message.log_rate_limit_in_bytes_per_second.nil?
+          @process.log_rate_limit = @message.log_rate_limit_in_bytes_per_second
+        end
         @process.save
 
         record_audit_event

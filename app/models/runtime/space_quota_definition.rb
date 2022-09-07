@@ -18,10 +18,10 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports
+      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports
+      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
 
     add_association_dependencies spaces: :nullify
 
@@ -34,11 +34,13 @@ module VCAP::CloudController
       validates_presence :organization
       validates_unique [:organization_id, :name]
 
-      errors.add(:memory_limit, :invalid_memory_limit) if memory_limit && memory_limit < UNLIMITED
-      errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
-      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED
-      errors.add(:app_task_limit, :invalid_app_task_limit) if app_task_limit && app_task_limit < UNLIMITED
-      errors.add(:total_service_keys, :invalid_total_service_keys) if total_service_keys && total_service_keys < UNLIMITED
+      validates_limit(:memory_limit, memory_limit)
+      validates_limit(:instance_memory_limit, instance_memory_limit)
+      validates_limit(:app_instance_limit, app_instance_limit)
+      validates_limit(:app_task_limit, app_task_limit)
+      validates_limit(:log_rate_limit, log_rate_limit)
+      validates_limit(:total_service_keys, total_service_keys)
+
       validate_total_reserved_ports
     end
 
@@ -57,6 +59,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def validates_limit(limit_name, limit)
+      errors.add(limit_name, :"invalid_#{limit_name}") if limit && limit < UNLIMITED
+    end
 
     def validate_total_reserved_ports
       return unless total_reserved_route_ports

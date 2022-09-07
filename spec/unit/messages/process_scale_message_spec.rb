@@ -158,5 +158,53 @@ module VCAP::CloudController
         expect(message.errors[:disk_in_mb]).to include('must be an integer')
       end
     end
+
+    context 'when log_rate_limit_in_bytes_per_second is not an number' do
+      let(:params) { { log_rate_limit_in_bytes_per_second: 'silly string thing' } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:log_rate_limit_in_bytes_per_second]).to include('is not a number')
+      end
+    end
+
+    context 'when log_rate_limit_in_bytes_per_second is < -1' do
+      let(:params) { { log_rate_limit_in_bytes_per_second: -2 } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:log_rate_limit_in_bytes_per_second]).to include('must be greater than or equal to -1')
+      end
+    end
+
+    context 'when log_rate_limit_in_bytes_per_second is > the max value allowed in the database' do
+      let(:params) { { log_rate_limit_in_bytes_per_second: BaseMessage::MAX_DB_BIGINT + 1 } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:log_rate_limit_in_bytes_per_second]).to include('must be less than or equal to 9223372036854775807')
+      end
+    end
+
+    context 'when log_rate_limit_in_bytes_per_second is not an integer' do
+      let(:params) { { log_rate_limit_in_bytes_per_second: 3.5 } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:log_rate_limit_in_bytes_per_second]).to include('must be an integer')
+      end
+    end
   end
 end
