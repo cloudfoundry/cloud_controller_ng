@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :username, string: true
-    validates :password, string: true
+    validates :username, string: true, presence: true
+    validates :password, string: true, presence: true
   end
 end
