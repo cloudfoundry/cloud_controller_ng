@@ -31,14 +31,14 @@ module VCAP::CloudController
       @log_counter = Steno::Sink::Counter.new
       setup_cloud_controller
 
-      @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
+      request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
 
       request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
       builder = RackAppBuilder.new
-      app     = builder.build(@config, request_metrics, @request_logs)
+      app     = builder.build(@config, request_metrics, request_logs)
 
       if @config.get(:webserver) == 'puma'
-        @server = VCAP::CloudController::PumaRunner.new
+        @server = VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
       else
         @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater)
       end
@@ -90,10 +90,6 @@ module VCAP::CloudController
     def run!
       create_pidfile
       @server.start!
-    end
-
-    def stop!
-      @server.stop!
     end
 
     private

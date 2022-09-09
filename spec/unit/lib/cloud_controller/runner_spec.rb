@@ -86,7 +86,6 @@ module VCAP::CloudController
         expect(builder).to receive(:build).with(anything, instance_of(VCAP::CloudController::Metrics::RequestMetrics),
                                                 request_logs)
         subject.run!
-        expect(subject.instance_variable_get(:@request_logs)).to eq(request_logs)
       end
 
       it 'sets a local ip in the host system' do
@@ -172,19 +171,6 @@ module VCAP::CloudController
         expect(package_blobstore).to have_received(:ensure_bucket_exists)
         expect(resource_blobstore).to have_received(:ensure_bucket_exists)
         expect(buildpack_blobstore).to have_received(:ensure_bucket_exists)
-      end
-    end
-
-    describe '#stop!' do
-      let(:server) { double(:server) }
-
-      before do
-        subject.instance_variable_set(:@server, server)
-      end
-
-      it 'should stop the server' do
-        expect(server).to receive(:stop!)
-        subject.stop!
       end
     end
 

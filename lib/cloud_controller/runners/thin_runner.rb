@@ -3,8 +3,8 @@ module VCAP::CloudController
     attr_reader :logger
 
     def initialize(config, app, logger, periodic_updater)
-      @logger = logger
       @config = config
+      @logger = logger
       @thin_server = if @config.get(:nginx, :use_nginx)
                        Thin::Server.new(@config.get(:nginx, :instance_socket), signals: false)
                      else
@@ -19,6 +19,7 @@ module VCAP::CloudController
       @thin_server.threaded = true
       @thin_server.threadpool_size = @config.get(:threadpool_size)
       @periodic_updater = periodic_updater
+      @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
     end
 
     def start!

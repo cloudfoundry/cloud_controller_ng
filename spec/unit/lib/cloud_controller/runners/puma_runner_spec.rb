@@ -5,24 +5,25 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.join(Paths::CONFIG, 'cloud_controller.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:app) { double(:app) }
+    let(:periodic_updater) { double(:periodic_updater) }
+    let(:logger) { double(:logger) }
+    let(:request_logs) { double(:request_logs) }
+
+    before do
+      allow(logger).to receive :info
+      allow(EM).to receive(:run).and_yield
+      allow_any_instance_of(Puma::Launcher).to receive(:run)
+      allow(periodic_updater).to receive :setup_updates
+      allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
+    end
+
+    subject do
+      config = Config.load_from_file(config_file.path, context: :api, secrets_hash: {})
+      config.set(:external_host, 'some_local_ip')
+      PumaRunner.new(config, app, logger, periodic_updater)
+    end
 
     describe 'start!' do
-      let(:app) { double(:app) }
-      let(:periodic_updater) { double(:periodic_updater) }
-      let(:logger) { double(:logger) }
-
-      before do
-        allow(EM).to receive(:run).and_yield
-        allow_any_instance_of(Puma::Launcher).to receive(:run)
-        allow(periodic_updater).to receive :setup_updates
-      end
-
-      subject do
-        config = Config.load_from_file(config_file.path, context: :api, secrets_hash: {})
-        config.set(:external_host, 'some_local_ip')
-        PumaRunner.new(config, app, logger, periodic_updater)
-      end
-
       it 'starts the puma server' do
         expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration)).and_call_original
         expect_any_instance_of(Puma::Launcher).to receive(:run)
@@ -45,6 +46,19 @@ module VCAP::CloudController
         allow_any_instance_of(Puma::Launcher).to receive(:run).and_raise('we have a problem')
         expect(logger).to receive(:error)
         expect { subject.start! }.to raise_exception('we have a problem')
+      end
+    end
+
+    describe '#stop!' do
+      it 'should stop puma and EM, logs incomplete requests' do
+        expect(request_logs).to receive(:log_incomplete_requests)
+        expect(EM).to receive(:stop)
+        subject.stop!
+      end
+
+      it 'should get called when the launcher stops' do
+        expect(subject).to receive(:stop!)
+        subject.instance_variable_get(:@puma_launcher).events.fire(:on_stopped)
       end
     end
   end

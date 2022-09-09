@@ -9,6 +9,7 @@ module VCAP::CloudController
     let(:argv) { [] }
     let(:periodic_updater) { double(:periodic_updater) }
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
+    let(:request_logs) { double(:request_logs) }
 
     before :each do
       allow(logger).to receive :info
@@ -18,6 +19,7 @@ module VCAP::CloudController
       allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Diagnostics).to receive(:new).and_return(diagnostics)
       allow(diagnostics).to receive(:collect)
+      allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
     end
 
     subject do
@@ -72,12 +74,10 @@ module VCAP::CloudController
     end
 
     describe '#stop!' do
-      let(:request_logs) { double(:request_logs) }
       let(:thin_server) { double(:thin_server) }
 
       before do
         subject.instance_variable_set(:@thin_server, thin_server)
-        subject.instance_variable_set(:@request_logs, request_logs)
       end
 
       it 'should stop thin and EM, logs incomplete requests' do
