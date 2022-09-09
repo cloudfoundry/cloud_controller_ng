@@ -14,18 +14,18 @@ module VCAP::CloudController
       allow(EM).to receive(:run).and_yield
       allow_any_instance_of(Puma::Launcher).to receive(:run)
       allow(periodic_updater).to receive :setup_updates
-      allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
     end
 
     subject do
-      config = Config.load_from_file(config_file.path, context: :api, secrets_hash: {})
-      config.set(:external_host, 'some_local_ip')
-      PumaRunner.new(config, app, logger, periodic_updater)
+      TestConfig.override(
+        external_host: 'some_local_ip'
+      )
+      PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
     end
 
     describe 'start!' do
       it 'starts the puma server' do
-        expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration)).and_call_original
+        expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration), events: anything).and_call_original
         expect_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
       end
