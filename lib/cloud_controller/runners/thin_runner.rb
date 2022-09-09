@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ThinRunner
     attr_reader :logger
 
-    def initialize(config, app, logger, periodic_updater)
+    def initialize(config, app, logger, periodic_updater, request_logs)
       @config = config
       @logger = logger
       @thin_server = if @config.get(:nginx, :use_nginx)
@@ -19,7 +19,7 @@ module VCAP::CloudController
       @thin_server.threaded = true
       @thin_server.threadpool_size = @config.get(:threadpool_size)
       @periodic_updater = periodic_updater
-      @request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
+      @request_logs = request_logs
     end
 
     def start!

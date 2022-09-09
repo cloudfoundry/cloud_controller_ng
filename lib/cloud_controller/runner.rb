@@ -40,7 +40,7 @@ module VCAP::CloudController
       if @config.get(:webserver) == 'puma'
         @server = VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
       else
-        @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater)
+        @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)
       end
     end
 

@@ -19,13 +19,12 @@ module VCAP::CloudController
       allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Diagnostics).to receive(:new).and_return(diagnostics)
       allow(diagnostics).to receive(:collect)
-      allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
     end
 
     subject do
       config = Config.load_from_file(config_file.path, context: :api, secrets_hash: {})
       config.set(:external_host, 'some_local_ip')
-      ThinRunner.new(config, app, logger, periodic_updater)
+      ThinRunner.new(config, app, logger, periodic_updater, request_logs)
     end
 
     it 'starts thin server on set up bind address' do
