@@ -52,13 +52,13 @@ module VCAP::CloudController
       prepare_aggregate_function
 
       syslog_drain_urls_query = ServiceBinding.
-                          distinct.
-                          exclude(syslog_drain_url: nil).
-                          exclude(syslog_drain_url: '').
-                          select(:syslog_drain_url).
-                          order(:syslog_drain_url).
-                          limit(batch_size).
-                          offset(last_id)
+                                distinct.
+                                exclude(syslog_drain_url: nil).
+                                exclude(syslog_drain_url: '').
+                                select(:syslog_drain_url).
+                                order(:syslog_drain_url).
+                                limit(batch_size).
+                                offset(last_id)
 
       bindings = ServiceBinding.
                  join(:apps, guid: :app_guid).
