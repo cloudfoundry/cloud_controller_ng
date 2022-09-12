@@ -94,6 +94,7 @@ Sequel::Model.plugin :timestamps, update_on_create: true
 Sequel::Model.plugin :validation_helpers
 
 Sequel::Database.extension(:current_datetime_timestamp)
+Sequel::Database.extension(:any_not_empty)
 
 require 'cloud_controller/encryptor'
 Sequel::Model.include VCAP::CloudController::Encryptor::FieldEncryptor

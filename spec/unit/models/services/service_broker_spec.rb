@@ -213,7 +213,7 @@ module VCAP::CloudController
         end
 
         it 'does a single db query' do
-          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select/i, 1)
+          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select 1.*limit 1/i, 1)
         end
       end
 
@@ -223,7 +223,7 @@ module VCAP::CloudController
         end
 
         it 'does a single db query' do
-          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select/i, 1)
+          expect { service_broker.has_service_instances? }.to have_queried_db_times(/select 1.*limit 1/i, 1)
         end
       end
     end
