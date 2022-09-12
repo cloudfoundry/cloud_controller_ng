@@ -51,38 +51,37 @@ module VCAP::CloudController
     def listv5
       prepare_aggregate_function
 
-      syslog_drain_urls = ServiceBinding.
+      syslog_drain_urls_query = ServiceBinding.
                           distinct.
-                          where(Sequel.lit('syslog_drain_url IS NOT NULL')).
-                          where(Sequel.lit("syslog_drain_url != ''")).
+                          exclude(syslog_drain_url: nil).
+                          exclude(syslog_drain_url: '').
                           select(:syslog_drain_url).
                           order(:syslog_drain_url).
                           limit(batch_size).
-                          offset(last_id).
-                          map(:syslog_drain_url)
+                          offset(last_id)
 
       bindings = ServiceBinding.
-                 join(AppModel.table_name, guid: :app_guid).
-                 join(Space.table_name, guid: :apps__space_guid).
-                 join(Organization.table_name, id: :spaces__organization_id).
+                 join(:apps, guid: :app_guid).
+                 join(:spaces, guid: :apps__space_guid).
+                 join(:organizations, id: :spaces__organization_id).
                  select(
-                   "#{ServiceBinding.table_name}__syslog_drain_url".to_sym,
-                   "#{ServiceBinding.table_name}__credentials".to_sym,
-                   "#{ServiceBinding.table_name}__salt".to_sym,
-                   "#{ServiceBinding.table_name}__encryption_key_label".to_sym,
-                   "#{ServiceBinding.table_name}__encryption_iterations".to_sym,
-                   "#{ServiceBinding.table_name}__app_guid".to_sym,
-                   "#{AppModel.table_name}__name".to_sym,
-                   "#{Space.table_name}__name___space_name".to_sym,
-                   "#{Organization.table_name}__name___organization_name".to_sym
+                   :service_bindings__syslog_drain_url,
+                   :service_bindings__credentials,
+                   :service_bindings__salt,
+                   :service_bindings__encryption_key_label,
+                   :service_bindings__encryption_iterations,
+                   :service_bindings__app_guid,
+                   :apps__name___app_name,
+                   :spaces__name___space_name,
+                   :organizations__name___organization_name
                  ).
-                 where("#{ServiceBinding.table_name}__syslog_drain_url": syslog_drain_urls).
+                 where(service_bindings__syslog_drain_url: syslog_drain_urls_query).
                  each_with_object({}) { |item, injected|
                    credentials = item.credentials
                    key = credentials.fetch('key', '')
                    cert = credentials.fetch('cert', '')
                    syslog_drain_url = item[:syslog_drain_url]
-                   hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:name])
+                   hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
                    if injected.include?(syslog_drain_url)
                      existing_item = injected[syslog_drain_url]
                      existing_apps = existing_item[:apps]
@@ -93,12 +92,12 @@ module VCAP::CloudController
                      injected[syslog_drain_url] = existing_item
                    else
                      target = {
-                       url: item[:syslog_drain_url],
+                       url: syslog_drain_url,
                        cert: cert,
                        key: key,
                        apps: [{ hostname: hostname, app_id: item[:app_guid] }]
                      }
-                     injected[item[:syslog_drain_url]] = target
+                     injected[syslog_drain_url] = target
                    end
                    injected
                  }.values

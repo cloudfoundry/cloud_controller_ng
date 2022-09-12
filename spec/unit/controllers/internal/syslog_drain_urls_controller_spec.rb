@@ -299,10 +299,10 @@ module VCAP::CloudController
         expect(decoded_results.count).to eq(3)
         expect(decoded_results).to include(
           { 'apps' =>
-             [{ 'app_id' => app_obj.guid,
-               'hostname' => 'org-1.space-1.app-1' },
-              { 'app_id' => app_obj2.guid,
-               'hostname' => 'org-1.space-1.app-2' }],
+             [{ 'app_id' => app_obj2.guid,
+               'hostname' => 'org-1.space-1.app-2' },
+              { 'app_id' => app_obj.guid,
+                'hostname' => 'org-1.space-1.app-1' }],
             'cert' => '',
             'key' => '',
             'url' => 'foobar' }
