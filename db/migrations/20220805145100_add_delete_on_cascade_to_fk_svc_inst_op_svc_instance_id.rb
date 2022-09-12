@@ -1,6 +1,6 @@
 Sequel.migration do
-  # Add delete cascade to fk_svc_inst_op_svc_instance_id, without there won't be cleaned up all ocurrencies in
-  # the service_instance_operations table
+  # Add DELETE CASCADE to foreign key fk_svc_inst_op_svc_instance_id to ensure that 'service instance operations'
+  # are deleted together with the referenced 'service instance'.
 
   up do
     alter_table :service_instance_operations do
