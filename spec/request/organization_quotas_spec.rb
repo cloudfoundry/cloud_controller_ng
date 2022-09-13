@@ -462,6 +462,20 @@ module VCAP::CloudController
           expect(last_response).to include_error_message("Organization Quota '#{organization_quota.name}' already exists.")
         end
       end
+
+      context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. ' \
+            "This quota is applied to org '#{org.name}' which contains apps running with an unlimited log rate limit.")
+        end
+      end
     end
 
     describe 'POST /v3/organization_quotas/:guid/relationships/organizations' do
@@ -522,6 +536,19 @@ module VCAP::CloudController
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[0] guid should be a string.')
+        end
+      end
+
+      context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
+        let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 100) }
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. The org(s) being assigned this quota contain apps running with an unlimited log rate limit.')
         end
       end
     end

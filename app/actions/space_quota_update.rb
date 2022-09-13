@@ -3,8 +3,17 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    MAX_SPACES_TO_LIST_ON_FAILURE = 2
+
     # rubocop:disable Metrics/CyclomaticComplexity
     def self.update(quota, message)
+      if log_rate_limit(message) != QuotaDefinition::UNLIMITED
+        spaces = spaces_with_unlimited_processes(quota)
+        if spaces.any?
+          unlimited_processes_exist_error!(spaces)
+        end
+      end
+
       quota.db.transaction do
         quota.lock!
 
@@ -79,5 +88,34 @@ module VCAP::CloudController
     def self.total_routes(message)
       default_if_nil(message.total_routes, SpaceQuotaDefinition::UNLIMITED)
     end
+
+    def self.spaces_with_unlimited_processes(quota)
+      quota.spaces_dataset.
+        distinct.
+        select(Sequel[:spaces][:name]).
+        join(:apps, space_guid: :guid).
+        join(:processes, app_guid: :guid).
+        where(log_rate_limit: QuotaDefinition::UNLIMITED).
+        order(:name).
+        all
+    end
+
+    def self.unlimited_processes_exist_error!(spaces)
+      named_spaces = spaces.take(MAX_SPACES_TO_LIST_ON_FAILURE).map(&:name).join("', '")
+      message = 'This quota is applied to ' +
+        if spaces.size == 1
+          "space '#{named_spaces}' which contains"
+        elsif spaces.size > MAX_SPACES_TO_LIST_ON_FAILURE
+          "spaces '#{named_spaces}' and #{spaces.drop(MAX_SPACES_TO_LIST_ON_FAILURE).size}" \
+          ' other spaces which contain'
+        else
+          "spaces '#{named_spaces}' which contain"
+        end + ' apps running with an unlimited log rate limit.'
+
+      raise Error.new("Current usage exceeds new quota values. #{message}")
+    end
+
+    private_class_method :spaces_with_unlimited_processes,
+                         :unlimited_processes_exist_error!
   end
 end

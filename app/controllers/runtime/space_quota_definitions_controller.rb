@@ -25,6 +25,23 @@ module VCAP::CloudController
       end
     end
 
+    def before_update(quota)
+      if request_attrs['space'] && quota.log_rate_limit != QuotaDefinition::UNLIMITED
+        affected_processes = Space.dataset.
+                             join(:apps, space_guid: :guid).
+                             join(:processes, app_guid: :guid).
+                             where(Sequel[:spaces][:guid] => request_attrs['space'])
+
+        unless affected_processes.where(log_rate_limit: ProcessModel::UNLIMITED_LOG_RATE).empty?
+          raise CloudController::Errors::ApiError.new_from_details(
+            'UnprocessableEntity',
+            'Current usage exceeds new quota values. This space currently contains apps running with an unlimited log rate limit.')
+        end
+      end
+
+      super(quota)
+    end
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
