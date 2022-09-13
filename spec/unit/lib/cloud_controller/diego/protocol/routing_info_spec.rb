@@ -107,10 +107,10 @@ module VCAP::CloudController
                 context 'when the app has no docker ports' do
                   let(:execution_metadata) { '{}' }
 
-                  it 'uses 8080 as a default' do
+                  it 'uses 3000 as a default' do
                     expected_http = [
-                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http1' },
-                      { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' }
+                      { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 3000, 'protocol' => 'http1' },
+                      { 'hostname' => route_without_service.uri, 'port' => 3000, 'protocol' => 'http1' }
                     ]
 
                     expect(ri.keys).to match_array ['http_routes', 'internal_routes']

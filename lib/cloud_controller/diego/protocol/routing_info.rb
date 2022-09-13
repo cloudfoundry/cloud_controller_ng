@@ -69,6 +69,7 @@ module VCAP::CloudController
           return route_mapping.app_port if route_mapping.has_app_port_specified?
           return process.docker_ports.first if process.docker? && process.docker_ports.present?
           return process.ports.first if process.ports.present?
+          return VCAP::CloudController::ProcessModel::DEFAULT_DOCKER_PORT if process.docker?
 
           VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
         end
