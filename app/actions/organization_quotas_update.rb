@@ -109,14 +109,15 @@ module VCAP::CloudController
 
     def self.unlimited_processes_exist_error!(orgs)
       named_orgs = orgs.take(MAX_ORGS_TO_LIST_ON_FAILURE).map(&:name).join("', '")
-      message = if orgs.size == 1
-                  "Org '#{named_orgs}' assigned this quota contains"
-                elsif orgs.size > MAX_ORGS_TO_LIST_ON_FAILURE
-                  "Orgs '#{named_orgs}' and #{orgs.drop(MAX_ORGS_TO_LIST_ON_FAILURE).size}" \
-                  ' other orgs assigned this quota contain'
-                else
-                  "Orgs '#{named_orgs}' assigned this quota contain"
-                end + ' apps running with an unlimited log rate limit.'
+      message = 'This quota is applied to ' +
+        if orgs.size == 1
+          "org '#{named_orgs}' which contains"
+        elsif orgs.size > MAX_ORGS_TO_LIST_ON_FAILURE
+          "orgs '#{named_orgs}' and #{orgs.drop(MAX_ORGS_TO_LIST_ON_FAILURE).size}" \
+          ' other orgs which contain'
+        else
+          "orgs '#{named_orgs}' which contain"
+        end + ' apps running with an unlimited log rate limit.'
 
       raise Error.new("Current usage exceeds new quota values. #{message}")
     end

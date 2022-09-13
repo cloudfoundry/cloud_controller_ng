@@ -109,8 +109,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user the affected space' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
-              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Space 'space-name-1' " \
-                                 'assigned this quota contains apps running with an unlimited log rate limit.')
+              end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
+                                 "'space-name-1' which contains apps running with an unlimited log rate limit.")
             end
           end
 
@@ -121,8 +121,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user the affected spaces' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
-              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Spaces 'space-name-1', 'space-name-2' " \
-                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+              end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
+                                 "'space-name-1', 'space-name-2' which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -133,8 +133,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user some of the affected spaces and a total count' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
-              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Spaces 'space-name-1', 'space-name-2' and 3 other spaces " \
-                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+              end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
+                                 "'space-name-1', 'space-name-2' and 3 other spaces which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -148,8 +148,8 @@ module VCAP::CloudController
             it 'only names the space once in the error message' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
-              end.to raise_error(SpaceQuotaUpdate::Error, "Current usage exceeds new quota values. Space 'space-name' assigned this quota contains apps " \
-                                                          'running with an unlimited log rate limit.')
+              end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
+                                 "'space-name' which contains apps running with an unlimited log rate limit.")
             end
           end
         end

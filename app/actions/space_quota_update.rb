@@ -102,14 +102,15 @@ module VCAP::CloudController
 
     def self.unlimited_processes_exist_error!(spaces)
       named_spaces = spaces.take(MAX_SPACES_TO_LIST_ON_FAILURE).map(&:name).join("', '")
-      message = if spaces.size == 1
-                  "Space '#{named_spaces}' assigned this quota contains"
-                elsif spaces.size > MAX_SPACES_TO_LIST_ON_FAILURE
-                  "Spaces '#{named_spaces}' and #{spaces.drop(MAX_SPACES_TO_LIST_ON_FAILURE).size}" \
-                  ' other spaces assigned this quota contain'
-                else
-                  "Spaces '#{named_spaces}' assigned this quota contain"
-                end + ' apps running with an unlimited log rate limit.'
+      message = 'This quota is applied to ' +
+        if spaces.size == 1
+          "space '#{named_spaces}' which contains"
+        elsif spaces.size > MAX_SPACES_TO_LIST_ON_FAILURE
+          "spaces '#{named_spaces}' and #{spaces.drop(MAX_SPACES_TO_LIST_ON_FAILURE).size}" \
+          ' other spaces which contain'
+        else
+          "spaces '#{named_spaces}' which contain"
+        end + ' apps running with an unlimited log rate limit.'
 
       raise Error.new("Current usage exceeds new quota values. #{message}")
     end

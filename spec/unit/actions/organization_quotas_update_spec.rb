@@ -121,8 +121,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user the affected org' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
-              end.to raise_error(OrganizationQuotasUpdate::Error, "Current usage exceeds new quota values. Org 'org-name-1' " \
-                                 'assigned this quota contains apps running with an unlimited log rate limit.')
+              end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
+                                 "'org-name-1' which contains apps running with an unlimited log rate limit.")
             end
           end
           context 'and they are in two orgs' do
@@ -132,8 +132,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user the affected orgs' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
-              end.to raise_error(OrganizationQuotasUpdate::Error, "Current usage exceeds new quota values. Orgs 'org-name-1', 'org-name-2' " \
-                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+              end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
+                                 "'org-name-1', 'org-name-2' which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -144,8 +144,8 @@ module VCAP::CloudController
             it 'errors with a message telling the user some of the affected orgs and a total count' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
-              end.to raise_error(OrganizationQuotasUpdate::Error, "Current usage exceeds new quota values. Orgs 'org-name-1', 'org-name-2' and 3 other orgs " \
-                                 'assigned this quota contain apps running with an unlimited log rate limit.')
+              end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
+                                 "'org-name-1', 'org-name-2' and 3 other orgs which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -159,8 +159,8 @@ module VCAP::CloudController
             it 'only names the org once in the error message' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
-              end.to raise_error(OrganizationQuotasUpdate::Error, "Current usage exceeds new quota values. Org 'org-name' assigned this quota contains apps " \
-                                                                  'running with an unlimited log rate limit.')
+              end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
+                                 "'org-name' which contains apps running with an unlimited log rate limit.")
             end
           end
         end

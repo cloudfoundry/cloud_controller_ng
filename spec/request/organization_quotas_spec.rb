@@ -473,7 +473,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message(
             'Current usage exceeds new quota values. ' \
-            "Org '#{org.name}' assigned this quota contains apps running with an unlimited log rate limit.")
+            "This quota is applied to org '#{org.name}' which contains apps running with an unlimited log rate limit.")
         end
       end
     end
