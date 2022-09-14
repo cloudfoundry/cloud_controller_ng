@@ -4,7 +4,8 @@ module VCAP::CloudController
   RSpec.describe PumaRunner do
     let(:valid_config_file_path) { File.join(Paths::CONFIG, 'cloud_controller.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
-    let(:app) { double(:app) }
+    let(:unix_socket) { '/path/to/socket' }
+    let(:app) { double(:app, call: nil) }
     let(:periodic_updater) { double(:periodic_updater) }
     let(:logger) { double(:logger) }
     let(:request_logs) { double(:request_logs) }
@@ -18,7 +19,10 @@ module VCAP::CloudController
 
     subject do
       TestConfig.override(
-        external_host: 'some_local_ip'
+        external_host: 'some_local_ip',
+        nginx: {
+          instance_socket: unix_socket
+        }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
     end
@@ -28,6 +32,33 @@ module VCAP::CloudController
         expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration), events: anything).and_call_original
         expect_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
+      end
+
+      it 'configures the app as middleware' do
+        allow_any_instance_of(Puma::Launcher).to receive(:run)
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        puma_launcher.config.app.call({})
+        expect(app).to have_received(:call)
+      end
+
+      it 'binds to the configured unix socket' do
+        allow_any_instance_of(Puma::Launcher).to receive(:run)
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        expect(puma_launcher.config.options.user_options[:binds]).to include("unix://#{unix_socket}")
+      end
+
+      it 'configures workers and threads' do
+        allow_any_instance_of(Puma::Launcher).to receive(:run)
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        expect(puma_launcher.config.options.user_options[:min_threads]).to eq(0)
+        expect(puma_launcher.config.options.user_options[:max_threads]).to eq(5)
+        expect(puma_launcher.config.options.user_options[:workers]).to eq(3)
       end
 
       it 'sets up metrics updates in the after_worker_fork' do

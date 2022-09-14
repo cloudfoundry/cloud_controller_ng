@@ -1,5 +1,6 @@
 require 'puma'
 require 'puma/configuration'
+require 'puma/events'
 
 module VCAP::CloudController
   class PumaRunner
@@ -18,6 +19,10 @@ module VCAP::CloudController
             end
           end
         }
+        conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
+        conf.threads(0, 5)
+        conf.workers 3
+        conf.app app
       end
       events = Puma::Events.new($stdout, $stderr)
       events.on_stopped do
