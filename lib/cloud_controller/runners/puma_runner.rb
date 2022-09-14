@@ -11,7 +11,7 @@ module VCAP::CloudController
       puma_config = Puma::Configuration.new do |conf|
         # this is actually called everytime a worker is started
         # https://github.com/puma/puma/blob/5f3f489ee867317c47724d0fc5b1d906f1b23de6/lib/puma/dsl.rb#L607
-        # we probably want to come up witha  different way to do this.  Perhaps a singleton?
+        # we probably want to come up with a different way to do this.  Perhaps a singleton?
         conf.after_worker_fork {
           Thread.new do
             EM.run do
@@ -23,6 +23,9 @@ module VCAP::CloudController
         conf.threads(0, 5)
         conf.workers 3
         conf.app app
+        conf.before_fork {
+          Sequel::Model.db.disconnect
+        }
       end
       events = Puma::Events.new($stdout, $stderr)
       events.on_stopped do

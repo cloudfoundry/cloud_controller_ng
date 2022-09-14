@@ -35,7 +35,6 @@ module VCAP::CloudController
       end
 
       it 'configures the app as middleware' do
-        allow_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
@@ -44,25 +43,30 @@ module VCAP::CloudController
       end
 
       it 'binds to the configured unix socket' do
-        allow_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
-        expect(puma_launcher.config.options.user_options[:binds]).to include("unix://#{unix_socket}")
+        expect(puma_launcher.config.final_options[:binds]).to include("unix://#{unix_socket}")
       end
 
       it 'configures workers and threads' do
-        allow_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
-        expect(puma_launcher.config.options.user_options[:min_threads]).to eq(0)
-        expect(puma_launcher.config.options.user_options[:max_threads]).to eq(5)
-        expect(puma_launcher.config.options.user_options[:workers]).to eq(3)
+        expect(puma_launcher.config.final_options[:min_threads]).to eq(0)
+        expect(puma_launcher.config.final_options[:max_threads]).to eq(5)
+        expect(puma_launcher.config.final_options[:workers]).to eq(3)
+      end
+
+      it 'disconnects the database before fork' do
+        expect(Sequel::Model.db).to receive(:disconnect)
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        puma_launcher.config.final_options[:before_fork].first.call
       end
 
       it 'sets up metrics updates in the after_worker_fork' do
-        allow_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
