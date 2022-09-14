@@ -3,6 +3,10 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController::Presenters::V3
   class EventPresenter < BasePresenter
     def to_hash
+      body.merge!({ links: build_links })
+    end
+
+    def body
       {
         guid: event.guid,
         created_at: event.timestamp,
@@ -13,7 +17,6 @@ module VCAP::CloudController::Presenters::V3
         data: event.data || {},
         space: space,
         organization: org,
-        links: build_links
       }
     end
 
