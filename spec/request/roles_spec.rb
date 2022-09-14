@@ -79,8 +79,6 @@ RSpec.describe 'Roles Request' do
           code: 201,
           response_object: expected_response
         }
-        h['org_auditor'] = { code: 422 }
-        h['org_billing_manager'] = { code: 422 }
         h
       end
 
@@ -332,8 +330,6 @@ RSpec.describe 'Roles Request' do
             code: 201,
             response_object: expected_response
           }
-          h['org_auditor'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
           h
         end
 
@@ -525,8 +521,6 @@ RSpec.describe 'Roles Request' do
           code: 201,
           response_object: expected_response
         }
-        h['org_auditor'] = { code: 422 }
-        h['org_billing_manager'] = { code: 422 }
         h
       end
 
@@ -567,8 +561,6 @@ RSpec.describe 'Roles Request' do
             response_object: expected_response
           }
 
-          h['org_auditor'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
           h
         end
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
