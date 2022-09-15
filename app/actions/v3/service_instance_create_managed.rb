@@ -148,14 +148,10 @@ module VCAP::CloudController
       end
 
       def save_instance(broker_response, instance)
-        ManagedServiceInstance.db.transaction do
-          instance.lock!
-          instance.last_operation.lock! if instance.last_operation
-          instance.save_with_new_operation(
-            broker_response[:instance] || {},
-            broker_response[:last_operation] || {}
-          )
-        end
+        instance.save_with_new_operation(
+          broker_response[:instance] || {},
+          broker_response[:last_operation] || {}
+        )
       end
 
       def fetch_service_instance(client, instance)
