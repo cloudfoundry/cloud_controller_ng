@@ -247,8 +247,9 @@ module VCAP::CloudController
             skip_cert_verify: bool,
 
             webserver: String, # thin or puma
-            # optional(:puma) => {
-            # }
+            optional(:puma) => {
+              workers: Integer
+            },
 
             install_buildpacks: [
               {

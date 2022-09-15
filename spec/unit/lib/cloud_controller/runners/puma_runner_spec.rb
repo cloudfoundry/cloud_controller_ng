@@ -22,6 +22,9 @@ module VCAP::CloudController
         external_host: 'some_local_ip',
         nginx: {
           instance_socket: unix_socket
+        },
+        puma: {
+          workers: 3
         }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)

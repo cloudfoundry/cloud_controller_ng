@@ -21,7 +21,7 @@ module VCAP::CloudController
         }
         conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
         conf.threads(0, 5)
-        conf.workers 3
+        conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
         conf.app app
         conf.before_fork {
           Sequel::Model.db.disconnect
