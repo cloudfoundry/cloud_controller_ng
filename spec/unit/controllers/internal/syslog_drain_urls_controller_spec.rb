@@ -296,11 +296,17 @@ module VCAP::CloudController
       it 'returns a list of syslog drain urls and their credentials' do
         get '/internal/v5/syslog_drain_urls', '{}'
         expect(last_response).to be_successful
+
+        decoded_results.select { |result| result['url'] == 'foobar' }.
+          first['apps'].
+          sort! { |x, y| x['hostname'] <=> y['hostname'] }
+
         expect(decoded_results.count).to eq(3)
+
         expect(decoded_results).to include(
           { 'apps' =>
              [{ 'app_id' => app_obj2.guid,
-               'hostname' => 'org-1.space-1.app-2' },
+                'hostname' => 'org-1.space-1.app-2' },
               { 'app_id' => app_obj.guid,
                 'hostname' => 'org-1.space-1.app-1' }],
             'cert' => '',
