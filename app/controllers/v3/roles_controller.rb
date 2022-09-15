@@ -65,7 +65,8 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     if role.for_space?
-      org_guid = Space.find(guid: role.space_guid).organization.guid
+      org_guid = Organization.join(:spaces, organization_id: :id).select(:organizations__guid).where(spaces__guid: role.space_guid)
+
       unauthorized! unless permission_queryer.can_update_active_space?(role.space_guid, org_guid)
       suspended! unless permission_queryer.is_space_active?(role.space_guid)
     else
