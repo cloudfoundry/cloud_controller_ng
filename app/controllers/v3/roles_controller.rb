@@ -114,29 +114,16 @@ class RolesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
     suspended! unless permission_queryer.is_org_active?(message.organization_guid)
 
-    if message.user_guid
-      user_guid = message.user_guid
-      unprocessable_user! if user_in_db?(user_guid) && !user_is_readable?(user_guid)
-    else
-      user_guid = lookup_user_guid_in_uaa(message.username, message.user_origin)
-      unprocessable_user! unless user_guid
-    end
+    user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
 
     user = User.first(guid: user_guid) || create_cc_user(user_guid)
+    unprocessable_user! unless user
 
     RoleCreate.new(message, user_audit_info).create_organization_role(
       type: message.type,
       user: user,
       organization: org
     )
-  end
-
-  def user_in_db?(user_guid)
-    !User.where(guid: user_guid).empty?
-  end
-
-  def user_is_readable?(user_guid)
-    !readable_users.where(guid: user_guid).empty?
   end
 
   def fetch_readable_user(user_guid)
