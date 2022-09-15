@@ -7,15 +7,17 @@ module VCAP::CloudController
     describe '.fetch' do
       before do
         Route.dataset.destroy
+        # shared_route.add_shared_space(space2)
       end
 
       let!(:space1) { Space.make }
       let!(:space2) { Space.make }
-      let!(:domain1) { PrivateDomain.make(owning_organization: space1.organization) }
-      let!(:domain2) { PrivateDomain.make(owning_organization: space2.organization) }
-      let!(:route1) { Route.make(host: 'host1', path: '/path1', space: space1, domain: domain1) }
-      let!(:route2) { Route.make(host: 'host2', path: '/path2', space: space1, domain: domain1) }
-      let!(:route3) { Route.make(host: 'host2', path: '/path1', space: space2, domain: domain2) }
+      let!(:domain1) { SharedDomain.make }
+      let!(:domain2) { SharedDomain.make }
+      let!(:route1) { Route.make(guid: 'route1_guid', host: 'host1', path: '/path1', space: space1, domain: domain1) }
+      let!(:route2) { Route.make(guid: 'route2_guid', host: 'host2', path: '/path2', space: space1, domain: domain1) }
+      let!(:route3) { Route.make(guid: 'route3_guid', host: 'host3', path: '/path1', space: space2, domain: domain2) }
+      # let!(:shared_route) { Route.make(guid: 'shared_route_guid', host: 'host2', path: '/path1', space: space1, domain: domain2) }
 
       let(:message) do
         RoutesListMessage.from_params(routes_filter)
@@ -101,6 +103,17 @@ module VCAP::CloudController
             it 'only returns the matching route' do
               expect(results.length).to eq(1)
               expect(results[0].guid).to eq(route3.guid)
+            end
+          end
+
+          context 'when there is a matching shared route' do
+            let(:routes_filter) { { space_guids: space2.guid } }
+
+            it 'only returns the matching route' do
+              space4 = Space.make
+              shared_route = Route.make(space: space4)
+              shared_route.add_shared_space(space2)
+              expect(results.map(&:guid)).to contain_exactly(shared_route.guid, route3.guid)
             end
           end
 
@@ -209,7 +222,7 @@ module VCAP::CloudController
 
           context 'and other filters are present' do
             let(:message) {
-              RoutesListMessage.from_params({ paths: '/path1', hosts: 'host2', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+              RoutesListMessage.from_params({ paths: '/path1', hosts: 'host3', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
             }
 
             it 'returns the desired app' do

@@ -37,10 +37,6 @@ module VCAP::CloudController
           dataset = dataset.where(space_id: space_ids)
         end
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(space_id: Space.where(guid: message.space_guids).select(:id))
-        end
-
         if message.requested?(:domain_guids)
           dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id))
         end
@@ -66,6 +62,13 @@ module VCAP::CloudController
             requirements: message.requirements,
             resource_klass: Route,
           )
+        end
+
+        if message.requested?(:space_guids)
+          dataset = dataset.where do
+            (Sequel[:spaces][:guid] =~ message.space_guids) |
+              (Sequel[:route_shares][:target_space_guid] =~ message.space_guids)
+          end
         end
 
         super(message, dataset, Route)
