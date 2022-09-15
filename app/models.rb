@@ -143,7 +143,6 @@ require 'models/services/service_key_annotation_model'
 require 'models/services/service_key_operation'
 require 'models/services/service_credential_binding_view'
 
-require 'models/request_count'
 require 'models/orphaned_blob'
 require 'models/runtime/space_auditor'
 require 'models/runtime/space_manager'
