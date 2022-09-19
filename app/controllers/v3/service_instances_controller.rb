@@ -289,18 +289,11 @@ class ServiceInstancesV3Controller < ApplicationController
 
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
-    service_instance, continue_async = action.try_update_sync
-
-    if continue_async
-      update_job = VCAP::CloudController::V3::UpdateServiceInstanceJob.new(
-        service_instance.guid,
-        message: message,
-        user_audit_info: user_audit_info,
-        audit_hash: message.audit_hash
-      )
-      pollable_job = Jobs::Enqueuer.new(update_job, queue: Jobs::Queues.generic).enqueue_pollable
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+    if action.update_broker_needed?
+      update_job = action.enqueue_update
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
+      service_instance = action.update_sync
       render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
     end
   rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
