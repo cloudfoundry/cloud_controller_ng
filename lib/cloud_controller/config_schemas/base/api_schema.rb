@@ -246,6 +246,11 @@ module VCAP::CloudController
             threadpool_size: Integer,
             skip_cert_verify: bool,
 
+            webserver: String, # thin or puma
+            optional(:puma) => {
+              workers: Integer
+            },
+
             install_buildpacks: [
               {
                 'name' => String,

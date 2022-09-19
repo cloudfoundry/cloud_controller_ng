@@ -335,6 +335,7 @@ GEM
     netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (8.9.0)
+    nio4r (2.5.8)
     nokogiri (1.13.8)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
@@ -367,6 +368,8 @@ GEM
     psych (4.0.5)
       stringio
     public_suffix (5.0.0)
+    puma (5.6.5)
+      nio4r (~> 2.0)
     racc (1.6.0)
     rack (2.2.4)
     rack-protection (2.2.2)
@@ -607,6 +610,7 @@ DEPENDENCIES
   pry-byebug
   psych (>= 4.0.4)
   public_suffix
+  puma
   rack-test
   railties (~> 6.1.5, >= 6.1.5.1)
   rake
