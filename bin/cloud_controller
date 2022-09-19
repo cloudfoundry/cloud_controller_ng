@@ -6,6 +6,7 @@ ENV['RAILS_ENV'] ||= 'production'
 ENV['SINATRA_ACTIVESUPPORT_WARNING'] ||= 'false'
 
 require 'cloud_controller'
+puts RUBY_DESCRIPTION
 begin
   VCAP::CloudController::Runner.new(ARGV).run!
 rescue => e

@@ -1,6 +1,8 @@
 namespace :clock do
   desc 'Start a recurring tasks'
   task :start do
+    puts RUBY_DESCRIPTION
+
     require 'cloud_controller/clock/scheduler'
 
     RakeConfig.context = :clock
