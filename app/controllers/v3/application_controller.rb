@@ -76,6 +76,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
   rescue_from CloudController::Errors::CompoundError, with: :handle_compound_error
   rescue_from ActionDispatch::Http::Parameters::ParseError, with: :handle_invalid_request_body
+  rescue_from Sequel::DatabaseConnectionError, Sequel::DatabaseDisconnectError, with: :handle_db_connection_error
 
   def configuration
     Config.config
@@ -196,6 +197,11 @@ class ApplicationController < ActionController::Base
 
   def handle_invalid_request_body(_error)
     error = CloudController::Errors::ApiError.new_from_details('MessageParseError', 'invalid request body')
+    handle_api_error(error)
+  end
+
+  def handle_db_connection_error(_)
+    error = CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Database connection failure')
     handle_api_error(error)
   end
 
