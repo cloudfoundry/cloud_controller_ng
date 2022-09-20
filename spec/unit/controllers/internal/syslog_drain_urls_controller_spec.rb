@@ -300,7 +300,7 @@ module VCAP::CloudController
         expect(decoded_results.count).to eq(3)
 
         foobar = decoded_results.select { |result| result['url'] == 'foobar' }.first
-        expect(foobar["apps"]).to include(
+        expect(foobar['apps']).to include(
           { 'app_id' => app_obj2.guid,
             'hostname' => 'org-1.space-1.app-2' },
           { 'app_id' => app_obj.guid,
