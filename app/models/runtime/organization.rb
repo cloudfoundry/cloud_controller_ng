@@ -61,7 +61,8 @@ module VCAP::CloudController
       },
       before_add:    proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
       before_remove: proc { |org, private_domain| org.cancel_action if private_domain.owned_by?(org) },
-      after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy }
+      after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy },
+      allow_eager:   true
     )
 
     one_to_many(
