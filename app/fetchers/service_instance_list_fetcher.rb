@@ -4,17 +4,17 @@ require 'fetchers/label_selector_query_generator'
 module VCAP::CloudController
   class ServiceInstanceListFetcher < BaseListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_space_guids: [], eager_loaded_associations: [])
-        dataset = ServiceInstance.dataset.eager(eager_loaded_associations).
+      def fetch(message, omniscient: false, readable_spaces: Space.dataset, eager_loaded_associations: [])
+        shared_dataset = ServiceInstance.dataset.eager(eager_loaded_associations).
                   join(:spaces, id: Sequel[:service_instances][:space_id]).
                   left_join(:service_instance_shares, service_instance_guid: Sequel[:service_instances][:guid])
 
-        unless omniscient
-          dataset = dataset.where do
-            (Sequel[:spaces][:guid] =~ readable_space_guids) |
-              (Sequel[:service_instance_shares][:target_space_guid] =~ readable_space_guids)
-          end
-        end
+        dataset = ServiceInstance.dataset.eager(eager_loaded_associations).
+                  join(readable_spaces, id: Sequel[:service_instances][:space_id]).
+                  left_join(:service_instance_shares, service_instance_guid: Sequel[:service_instances][:guid]).
+                  union(shared_dataset.where(Sequel[:service_instance_shares][:target_space_guid] =~ readable_spaces.map(&:guid)))
+
+
 
         if message.requested?(:service_plan_names) || message.requested?(:service_plan_guids)
           dataset = dataset.left_join(:service_plans, id: Sequel[:service_instances][:service_plan_id])

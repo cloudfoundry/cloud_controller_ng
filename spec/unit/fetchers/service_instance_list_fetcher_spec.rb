@@ -31,12 +31,13 @@ module VCAP::CloudController
       end
 
       it 'fetches the instances owned by readable spaces' do
-        dataset = fetcher.fetch(message, readable_space_guids: [space_1.guid, space_3.guid])
+        # dataset = fetcher.fetch(message, readable_space: [space_1.guid, space_3.guid])
+        dataset = fetcher.fetch(message, readable_spaces: Space.where(id: [space_1.id, space_3.id]))
         expect(dataset.all).to contain_exactly(msi_1, msi_3, upsi, ssi)
       end
 
       it 'fetches the instances shared to readable spaces' do
-        dataset = fetcher.fetch(message, readable_space_guids: [space_2.guid])
+        dataset = fetcher.fetch(message, readable_spaces: Space.where(id: space_2.id))
         expect(dataset.all).to contain_exactly(msi_2, ssi)
       end
 

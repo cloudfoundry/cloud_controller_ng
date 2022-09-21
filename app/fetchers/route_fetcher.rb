@@ -4,6 +4,7 @@ module VCAP::CloudController
   class RouteFetcher < BaseListFetcher
     class << self
       def fetch(message, readable_route_dataset, eager_loaded_associations: [])
+        raise 'error'
         dataset = readable_route_dataset.eager(eager_loaded_associations).qualify
         filter(message, dataset)
       end
