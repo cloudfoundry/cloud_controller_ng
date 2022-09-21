@@ -1373,18 +1373,6 @@ RSpec.describe 'v3 service credential bindings' do
             }))
           end
 
-          it 'returns a 422 when the plan is no longer available' do
-            service_instance.service_plan.update(active: false)
-
-            api_call.call admin_headers
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(include({
-              'detail' => include('Service plan is not available'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
-          end
-
           it 'responds with 422 when there is an operation in progress for the service instance' do
             service_instance.save_with_new_operation({}, { type: 'guacamole', state: 'in progress' })
             api_call.call admin_headers
@@ -1581,22 +1569,6 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
               'detail' => include('Service plan does not allow bindings.'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
-          end
-        end
-
-        context 'when the service instance is from unavailable plan' do
-          let(:plan) { VCAP::CloudController::ServicePlan.make(active: false) }
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
-
-          it 'returns a 422' do
-            api_call.call admin_headers
-
-            expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(include({
-              'detail' => include('Service plan is not available.'),
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008,
             }))
