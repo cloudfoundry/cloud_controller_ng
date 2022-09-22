@@ -559,7 +559,7 @@ module VCAP::CloudController
     end
 
     def docker_ports
-      if !self.needs_staging? && desired_droplet.present?
+      if desired_droplet.present? && desired_droplet.staged?
         return desired_droplet.docker_ports
       end
 
