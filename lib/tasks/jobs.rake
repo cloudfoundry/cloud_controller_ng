@@ -44,7 +44,6 @@ namespace :jobs do
       'prune_completed_deployments',
       'prune_completed_builds',
       'prune_excess_app_revisions',
-      'request_counts_cleanup',
     ]
 
     CloudController::DelayedWorker.new(queues: queues,
