@@ -30,7 +30,7 @@ module VCAP::CloudController
         db.logger = logger
         db.sql_log_level = opts[:log_level]
         db.extension :caller_logging
-        db.caller_logging_ignore = /sequel_paginator|query_length_logging/
+        db.caller_logging_ignore = /sequel_paginator|query_length_logging|sequel_pg/
         db.caller_logging_formatter = lambda do |caller|
           "(#{caller.sub(%r{^.*/cloud_controller_ng/}, '')})"
         end
