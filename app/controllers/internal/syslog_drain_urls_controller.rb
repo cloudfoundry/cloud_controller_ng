@@ -46,6 +46,69 @@ module VCAP::CloudController
       [HTTP::OK, MultiJson.dump({ results: drain_urls, next_id: next_page_token }, pretty: true)]
     end
 
+    get '/internal/v5/syslog_drain_urls', :listv5
+
+    def listv5
+      prepare_aggregate_function
+
+      syslog_drain_urls_query = ServiceBinding.
+                                distinct.
+                                exclude(syslog_drain_url: nil).
+                                exclude(syslog_drain_url: '').
+                                select(:syslog_drain_url).
+                                order(:syslog_drain_url).
+                                limit(batch_size).
+                                offset(last_id)
+
+      bindings = ServiceBinding.
+                 join(:apps, guid: :app_guid).
+                 join(:spaces, guid: :apps__space_guid).
+                 join(:organizations, id: :spaces__organization_id).
+                 select(
+                   :service_bindings__syslog_drain_url,
+                   :service_bindings__credentials,
+                   :service_bindings__salt,
+                   :service_bindings__encryption_key_label,
+                   :service_bindings__encryption_iterations,
+                   :service_bindings__app_guid,
+                   :apps__name___app_name,
+                   :spaces__name___space_name,
+                   :organizations__name___organization_name
+                 ).
+                 where(service_bindings__syslog_drain_url: syslog_drain_urls_query).
+                 each_with_object({}) { |item, injected|
+                   credentials = item.credentials
+                   key = credentials.fetch('key', '')
+                   cert = credentials.fetch('cert', '')
+                   syslog_drain_url = item[:syslog_drain_url]
+                   hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
+                   if injected.include?(syslog_drain_url)
+                     existing_item = injected[syslog_drain_url]
+                     existing_apps = existing_item[:apps]
+                     new_apps = existing_apps.push({ hostname: hostname, app_id: item[:app_guid] })
+                     existing_item[:apps] = new_apps
+                     existing_item[:key] = key unless key.empty?
+                     existing_item[:cert] = cert unless cert.empty?
+                     injected[syslog_drain_url] = existing_item
+                   else
+                     target = {
+                       url: syslog_drain_url,
+                       cert: cert,
+                       key: key,
+                       apps: [{ hostname: hostname, app_id: item[:app_guid] }]
+                     }
+                     injected[syslog_drain_url] = target
+                   end
+                   injected
+                 }.values
+
+      next_page_token = nil
+
+      next_page_token = last_id + batch_size unless bindings.empty?
+
+      [HTTP::OK, MultiJson.dump({ results: bindings, next_id: next_page_token }, pretty: true)]
+    end
+
     private
 
     def hostname_from_app_name(*names)
