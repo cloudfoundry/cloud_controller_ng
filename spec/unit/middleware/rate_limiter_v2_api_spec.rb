@@ -344,22 +344,11 @@ module CloudFoundry
 
         context 'when the user is excluded from rate limits' do
           let(:path_info) { '/v2/foo' }
-          let(:default_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
+          let(:default_env) { { 'some' => 'env', 'PATH_INFO' => path_info, 'v2_api_rate_limit_exempt' => 'true' } }
 
-          before do
-            allow(VCAP::CloudController::SecurityContext).to receive(:rate_limit_exemption?).and_return(true)
-          end
-
-          it 'contains the correct headers' do
-            valid_until = Time.now.utc
-            allow(request_counter).to receive(:get).and_return([per_process_admin_limit + 1, valid_until])
-            error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
-            allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
-
-            _, response_headers, _ = middleware.call(middleware_env)
-            expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
-            expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
-            expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
+          it 'returns 200 response' do
+            status, _, _ = middleware.call(middleware_env)
+            expect(status).to eq(200)
           end
         end
       end

@@ -36,6 +36,10 @@ module CloudFoundry
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
         end
 
+        if VCAP::CloudController::SecurityContext.token['cloud_controller.v2_api_rate_limit_exempt']
+          env['cf.v2_api_rate_limit_exempt'] = rate_limit_exemption_from_token
+        end
+
         status, headers, body = @app.call(env)
 
         # Return a 401 if the token is invalid and if the rate limit is already exceeded
@@ -55,6 +59,10 @@ module CloudFoundry
 
       def id_from_token
         VCAP::CloudController::SecurityContext.token['user_id'] || VCAP::CloudController::SecurityContext.token['client_id']
+      end
+
+      def rate_limit_exemption_from_token
+        VCAP::CloudController::SecurityContext.token['cloud_controller.v2_api_rate_limit_exempt']
       end
 
       def error_message(env, error_name)

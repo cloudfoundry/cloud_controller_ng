@@ -9,6 +9,7 @@ module VCAP::CloudController
     CLOUD_CONTROLLER_READER_SCOPE = 'cloud_controller.read'.freeze
     CLOUD_CONTROLLER_WRITER_SCOPE = 'cloud_controller.write'.freeze
     CLOUD_CONTROLLER_SERVICE_PERMISSIONS_READER = 'cloud_controller_service_permissions.read'.freeze
+    CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE = 'cloud_controller.v2_api_rate_limit_exempt'.freeze
 
     ORG_ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
     SPACE_ROLE_NAMES = [:manager, :developer, :auditor].freeze
@@ -23,6 +24,10 @@ module VCAP::CloudController
 
     def admin_read_only?
       @scopes.include?(CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE)
+    end
+
+    def rate_limit_exempted?
+      @scopes.include?(CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE)
     end
 
     def global_auditor?
