@@ -443,7 +443,7 @@ RSpec.describe 'Route Destinations Request' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
         end
 
@@ -499,7 +499,7 @@ RSpec.describe 'Route Destinations Request' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
         end
 
@@ -524,7 +524,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a ' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
-            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
+            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
       end
@@ -909,7 +909,7 @@ RSpec.describe 'Route Destinations Request' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
         end
 
@@ -965,7 +965,7 @@ RSpec.describe 'Route Destinations Request' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
         end
 
@@ -990,7 +990,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a ' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
-            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
+            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
       end
