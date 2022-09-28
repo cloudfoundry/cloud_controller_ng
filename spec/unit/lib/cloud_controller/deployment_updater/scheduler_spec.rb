@@ -23,14 +23,14 @@ module VCAP::CloudController
     end
 
     describe '#start' do
-      let(:lock_runner) { instance_double(Locket::LockRunner, start: nil, lock_acquired?: nil) }
+      let(:client) { instance_double(Locket::Client, start: nil, lock_acquired?: nil) }
       let(:lock_worker) { instance_double(Locket::LockWorker) }
       let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil, error: nil) }
       let(:statsd_client) { instance_double(Statsd) }
       let(:prometheus_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
       before do
-        allow(Locket::LockRunner).to receive(:new).and_return(lock_runner)
+        allow(Locket::Client).to receive(:new).and_return(client)
         allow(Locket::LockWorker).to receive(:new).and_return(lock_worker)
         allow(Steno).to receive(:logger).and_return(logger)
 
@@ -43,12 +43,10 @@ module VCAP::CloudController
         allow(prometheus_updater).to receive(:report_deployment_duration)
       end
 
-      it 'correctly configures a LockRunner and uses it to initialize a LockWorker' do
+      it 'correctly configures a Client and uses it to initialize a LockWorker' do
         DeploymentUpdater::Scheduler.start
 
-        expect(Locket::LockRunner).to have_received(:new).with(
-          key: TestConfig.config_instance.get(:deployment_updater, :lock_key),
-          owner: TestConfig.config_instance.get(:deployment_updater, :lock_owner),
+        expect(Locket::Client).to have_received(:new).with(
           host: TestConfig.config_instance.get(:locket, :host),
           port: TestConfig.config_instance.get(:locket, :port),
           client_ca_path: TestConfig.config_instance.get(:locket, :ca_file),
@@ -56,7 +54,7 @@ module VCAP::CloudController
           client_cert_path: TestConfig.config_instance.get(:locket, :cert_file),
         )
 
-        expect(Locket::LockWorker).to have_received(:new).with(lock_runner)
+        expect(Locket::LockWorker).to have_received(:new).with(client)
       end
 
       context 'when locket is not configured' do
@@ -73,8 +71,8 @@ module VCAP::CloudController
         it 'doesnt start any lock machinery' do
           DeploymentUpdater::Scheduler.start
 
-          expect(Locket::LockRunner).not_to have_received(:new)
-          expect(Locket::LockWorker).not_to have_received(:new).with(lock_runner)
+          expect(Locket::Client).not_to have_received(:new)
+          expect(Locket::LockWorker).not_to have_received(:new).with(client)
         end
 
         it 'runs the DeploymentUpdater::Dispatcher sleeps for the configured frequency' do

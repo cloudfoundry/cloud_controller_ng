@@ -1,8 +1,8 @@
 require 'support/paths'
-require 'locket/lock_runner'
+require 'locket/client'
 require 'rspec/wait'
 
-RSpec.describe Locket::LockRunner do
+RSpec.describe Locket::Client do
   let(:locket_service) { instance_double(Models::Locket::Stub) }
   let(:key) { 'lock-key' }
   let(:owner) { 'lock-owner' }
@@ -22,9 +22,7 @@ RSpec.describe Locket::LockRunner do
   end
 
   let(:client) do
-    Locket::LockRunner.new(
-      key: key,
-      owner: owner,
+    Locket::Client.new(
       host: host,
       port: port,
       client_ca_path: client_ca_path,
@@ -56,7 +54,7 @@ RSpec.describe Locket::LockRunner do
       allow(locket_service).to receive(:lock)
       allow(client).to receive(:sleep)
 
-      client.start
+      client.start(owner: owner, key: key)
 
       wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
     end
@@ -64,11 +62,11 @@ RSpec.describe Locket::LockRunner do
     it 'raises an error when restarted after it has already been started' do
       allow(locket_service).to receive(:lock)
 
-      client.start
+      client.start(owner: owner, key: key)
 
       expect {
-        client.start
-      }.to raise_error(Locket::LockRunner::Error, 'Cannot start more than once')
+        client.start(owner: owner, key: key)
+      }.to raise_error(Locket::Client::Error, 'Cannot start more than once')
     end
   end
 
@@ -92,7 +90,7 @@ RSpec.describe Locket::LockRunner do
           client.instance_variable_set(:@lock_acquired, true)
           allow(locket_service).to receive(:lock).and_raise(error)
 
-          client.start
+          client.start(owner: owner, key: key)
 
           wait_for(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
           wait_for(-> { client.lock_acquired? }).to be(false)
@@ -103,7 +101,7 @@ RSpec.describe Locket::LockRunner do
         it 'reports that it has a lock' do
           allow(locket_service).to receive(:lock).and_return(Models::LockResponse)
 
-          client.start
+          client.start(owner: owner, key: key)
 
           wait_for(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
           wait_for(-> { client.lock_acquired? }).to be(true)

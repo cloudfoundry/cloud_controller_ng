@@ -2,11 +2,11 @@ require 'steno'
 require 'locket/locket_services_pb'
 
 module Locket
-  class LockRunner
+  class Client
     class Error < StandardError
     end
 
-    def initialize(key:, owner:, host:, port:, client_ca_path:, client_cert_path:, client_key_path:)
+    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:)
       client_ca = File.open(client_ca_path).read
       client_key = File.open(client_key_path).read
       client_cert = File.open(client_cert_path).read
@@ -16,18 +16,15 @@ module Locket
         GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert)
       )
       @lock_acquired = false
-
-      @key = key
-      @owner = owner
     end
 
-    def start
+    def start(owner:, key:)
       raise Error.new('Cannot start more than once') if @thread
 
       @thread = Thread.new do
         loop do
           begin
-            service.lock(build_lock_request)
+            service.lock(build_lock_request(owner: owner, key: key))
             logger.debug("Acquired lock '#{key}' for owner '#{owner}'")
             @lock_acquired = true
           rescue GRPC::BadStatus => e
@@ -52,7 +49,7 @@ module Locket
 
     attr_reader :service, :lock_acquired, :key, :owner
 
-    def build_lock_request
+    def build_lock_request(owner:, key:)
       Models::LockRequest.new(
         {
           resource: {

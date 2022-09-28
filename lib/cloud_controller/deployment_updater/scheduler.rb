@@ -1,6 +1,6 @@
 require 'cloud_controller/deployment_updater/dispatcher'
 require 'locket/lock_worker'
-require 'locket/lock_runner'
+require 'locket/client'
 
 module VCAP::CloudController
   module DeploymentUpdater
@@ -24,18 +24,20 @@ module VCAP::CloudController
               return
             end
 
-            lock_runner = Locket::LockRunner.new(
-              key: config.get(:deployment_updater, :lock_key),
-              owner: config.get(:deployment_updater, :lock_owner),
+            client = Locket::Client.new(
               host: config.get(:locket, :host),
               port: config.get(:locket, :port),
               client_ca_path: config.get(:locket, :ca_file),
               client_key_path: config.get(:locket, :key_file),
               client_cert_path: config.get(:locket, :cert_file),
             )
-            lock_worker = Locket::LockWorker.new(lock_runner)
+            lock_worker = Locket::LockWorker.new(client)
 
-            lock_worker.acquire_lock_and_repeatedly_call(&update_step)
+            lock_worker.acquire_lock_and_repeatedly_call(
+              owner: config.get(:deployment_updater, :lock_owner),
+              key: config.get(:deployment_updater, :lock_key),
+              &update_step
+            )
           end
         end
 
