@@ -28,7 +28,7 @@ if ENV['CLOUD_CONTROLLER_NG_SECRETS']
   config_kwargs.merge!(secrets_hash: secrets_hash)
 end
 
-@config = VCAP::CloudController::Config.load_from_file(@config_file, config_kwargs)
+@config = VCAP::CloudController::Config.load_from_file(@config_file, **config_kwargs)
 logger = Logger.new($stdout)
 
 db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
