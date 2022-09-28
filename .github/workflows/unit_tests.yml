@@ -15,6 +15,9 @@ on:
       - 'decisions/**'
       - '.github/workflows/docs_test.yml'
 
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
 jobs:
   Rubocop:
     runs-on: ubuntu-latest
