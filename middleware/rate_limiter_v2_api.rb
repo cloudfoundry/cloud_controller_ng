@@ -20,7 +20,7 @@ module CloudFoundry
       end
 
       def rate_limit_exempted?(env)
-        env['cf.v2_api_rate_limit_exempt'] == 'true'
+        env['cf.v2_api_rate_limit_exempt'] == true
       end
 
       def v2_api?(env)

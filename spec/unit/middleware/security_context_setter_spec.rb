@@ -54,7 +54,7 @@ module CloudFoundry
           end
 
           context 'the token includes a rate limit exemption' do
-            let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato', 'cloud_controller.v2_api_rate_limit_exempt' => 'true' } }
+            let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato', 'cloud_controller.v2_api_rate_limit_exempt' => true } }
 
             before do
               allow(token_decoder).to receive(:decode_token).with('auth-token').and_return(token_information)
@@ -64,7 +64,7 @@ module CloudFoundry
               middleware.call(env)
 
               expect(app).to have_received(:call) do |passed_env|
-                expect(passed_env['cf.v2_api_rate_limit_exempt']).to eq('true')
+                expect(passed_env['cf.v2_api_rate_limit_exempt']).to eq(true)
               end
             end
           end
