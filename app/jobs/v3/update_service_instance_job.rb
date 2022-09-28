@@ -124,8 +124,6 @@ module VCAP::CloudController
       def raise_if_other_operations_in_progress!
         last_operation_type = service_instance.last_operation&.type
 
-        return if operation_type == 'delete' && last_operation_type == 'create'
-
         if service_instance.operation_in_progress? && last_operation_type != operation_type
           cancelled!(last_operation_type)
         end
