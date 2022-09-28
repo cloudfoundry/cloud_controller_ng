@@ -77,6 +77,15 @@ module VCAP::CloudController
               fog_aws_storage_options: Hash
             },
 
+            locket: {
+              host: String,
+              port: Integer,
+              ca_file: String,
+              cert_file: String,
+              key_file: String,
+              diego_client_timeout: Integer
+            },
+
             packages: {
               max_package_size: Integer,
               app_package_directory_key: String,

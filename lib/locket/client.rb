@@ -6,16 +6,21 @@ module Locket
     class Error < StandardError
     end
 
-    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:)
+    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, timeout: nil)
       client_ca = File.open(client_ca_path).read
       client_key = File.open(client_key_path).read
       client_cert = File.open(client_cert_path).read
 
       @service = Models::Locket::Stub.new(
         "#{host}:#{port}",
-        GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert)
+        GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
+        timeout: timeout
       )
       @lock_acquired = false
+    end
+
+    def fetch(key:)
+      service.fetch(build_fetch_request(key: key))
     end
 
     def start(owner:, key:)
@@ -47,7 +52,7 @@ module Locket
 
     private
 
-    attr_reader :service, :lock_acquired, :key, :owner
+    attr_reader :service, :lock_acquired
 
     def build_lock_request(owner:, key:)
       Models::LockRequest.new(
@@ -58,6 +63,14 @@ module Locket
             type_code: Models::TypeCode::LOCK,
           },
           ttl_in_seconds: 15,
+        }
+      )
+    end
+
+    def build_fetch_request(key:)
+      Models::FetchRequest.new(
+        {
+          key: key
         }
       )
     end

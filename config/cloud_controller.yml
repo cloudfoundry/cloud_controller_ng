@@ -401,6 +401,7 @@ locket:
   ca_file: 'spec/fixtures/certs/bbs_ca.crt'
   cert_file: 'spec/fixtures/certs/bbs_client.crt'
   key_file: 'spec/fixtures/certs/bbs_client.key'
+  diego_client_timeout: 5
 
 threadpool_size: 20
 webserver: thin

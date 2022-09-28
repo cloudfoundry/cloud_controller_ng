@@ -1,27 +1,30 @@
 require 'diego/bbs/bbs'
 require 'diego/errors'
 require 'diego/routes'
+require 'uri'
+require 'locket/client'
 
 module Diego
   class Client
     PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
 
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:,
-      connect_timeout:, send_timeout:, receive_timeout:)
+      connect_timeout:, send_timeout:, receive_timeout:, locket_config:)
       ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
       @client = build_client(
-        url,
         ca_cert_file,
         client_cert_file,
         client_key_file,
         connect_timeout,
         send_timeout,
         receive_timeout)
+      @locket_config = locket_config
+      @base_url = url
     end
 
     def ping
       response = with_request_error_handling do
-        client.post(Routes::PING)
+        client.post(URI.join(bbs_url, Routes::PING))
       end
 
       validate_status!(response: response, statuses: [200])
@@ -32,7 +35,7 @@ module Diego
       request = protobuf_encode!({ domain: domain, ttl: ttl.to_i }, Bbs::Models::UpsertDomainRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::UPSERT_DOMAIN, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::UPSERT_DOMAIN), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -43,7 +46,7 @@ module Diego
       request = protobuf_encode!({ task_definition: task_definition, domain: domain, task_guid: task_guid }, Bbs::Models::DesireTaskRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::DESIRE_TASK), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -54,7 +57,7 @@ module Diego
       request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskByGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::TASK_BY_GUID, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::TASK_BY_GUID), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -65,7 +68,7 @@ module Diego
       request = protobuf_encode!({ domain: domain, cell_id: cell_id }, Bbs::Models::TasksRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::LIST_TASKS, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::LIST_TASKS), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -76,7 +79,7 @@ module Diego
       request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::CANCEL_TASK, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::CANCEL_TASK), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -87,7 +90,7 @@ module Diego
       request = protobuf_encode!({ desired_lrp: lrp }, Bbs::Models::DesireLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_LRP, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::DESIRE_LRP), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -98,7 +101,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::DesiredLRPByProcessGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::DESIRED_LRP_BY_PROCESS_GUID), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -109,7 +112,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid, update: lrp_update }, Bbs::Models::UpdateDesiredLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::UPDATE_DESIRED_LRP, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::UPDATE_DESIRED_LRP), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -120,7 +123,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::RemoveDesiredLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::REMOVE_DESIRED_LRP, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::REMOVE_DESIRED_LRP), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -131,7 +134,7 @@ module Diego
       request = protobuf_encode!({ actual_lrp_key: actual_lrp_key }, Bbs::Models::RetireActualLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::RETIRE_ACTUAL_LRP, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::RETIRE_ACTUAL_LRP), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -142,7 +145,7 @@ module Diego
       request = protobuf_encode!({ domain: domain }, Bbs::Models::DesiredLRPsRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRED_LRP_SCHEDULING_INFOS, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::DESIRED_LRP_SCHEDULING_INFOS), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -153,7 +156,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::ActualLRPsRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::ACTUAL_LRPS, request, PROTOBUF_HEADER)
+        client.post(URI.join(bbs_url, Routes::ACTUAL_LRPS), request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
@@ -164,13 +167,29 @@ module Diego
       tries ||= 3
       yield
     rescue => e
+      @cached_active_bbs_id = nil
       retry unless (tries -= 1).zero?
       raise RequestError.new(e.message)
     end
 
+    def bbs_url
+      uri = URI(base_url)
+      uri.host = "#{active_bbs_id}.#{uri.host}"
+      uri.to_s
+    end
+
+    def active_bbs_id
+      tries ||= 3
+      @cached_active_bbs_id ||= latest_active_bbs_id
+    rescue GRPC::BadStatus => e
+      retry unless (tries -= 1).zero?
+      raise e
+    end
+
     private
 
-    attr_reader :client
+    attr_reader :client, :base_url, :locket_config
+    attr_accessor :cached_active_bbs_id
 
     def protobuf_encode!(hash, protobuf_message_class)
       # See below link to understand proto3 message encoding
@@ -190,15 +209,30 @@ module Diego
       raise DecodeError.new(e.message)
     end
 
-    def build_client(url, ca_cert_file, client_cert_file, client_key_file,
+    def build_client(ca_cert_file, client_cert_file, client_key_file,
       connect_timeout, send_timeout, receive_timeout)
-      client                 = HTTPClient.new(base_url: url)
+      client                 = HTTPClient.new
       client.connect_timeout = connect_timeout
       client.send_timeout    = send_timeout
       client.receive_timeout = receive_timeout
       client.ssl_config.set_client_cert_file(client_cert_file, client_key_file)
       client.ssl_config.set_trust_ca(ca_cert_file)
       client
+    end
+
+    def latest_active_bbs_id
+      locket_client.fetch(key: 'bbs').resource.owner
+    end
+
+    def locket_client
+      Locket::Client.new(
+        host: locket_config[:host],
+        port: locket_config[:port],
+        client_ca_path: locket_config[:ca_file],
+        client_key_path: locket_config[:key_file],
+        client_cert_path: locket_config[:cert_file],
+        timeout: locket_config[:diego_client_timeout]
+      )
     end
   end
 end

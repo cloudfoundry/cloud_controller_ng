@@ -20,6 +20,20 @@ RSpec.describe Locket::Client do
       }
     )
   end
+  let(:fetch_request) do
+    Models::FetchRequest.new(
+      {
+        key: key,
+      }
+    )
+  end
+  let(:fetch_response) do
+    Models::FetchResponse.new(
+      {
+        resource: { owner: owner },
+      }
+    )
+  end
 
   let(:client) do
     Locket::Client.new(
@@ -41,12 +55,22 @@ RSpec.describe Locket::Client do
       and_return(credentials)
 
     allow(Models::Locket::Stub).to receive(:new).
-      with("#{host}:#{port}", credentials).
+      with("#{host}:#{port}", credentials, timeout: nil).
       and_return(locket_service)
   end
 
   after do
     client.stop
+  end
+
+  describe '#fetch' do
+    it 'fetches a single lock by key' do
+      allow(locket_service).to receive(:fetch).and_return(fetch_response)
+      response = client.fetch(key: key)
+
+      expect(locket_service).to have_received(:fetch).with(fetch_request)
+      expect(response).to eq(fetch_response)
+    end
   end
 
   describe '#start' do

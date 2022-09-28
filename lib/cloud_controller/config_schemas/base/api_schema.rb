@@ -68,6 +68,15 @@ module VCAP::CloudController
               },
             },
 
+            locket: {
+              host: String,
+              port: Integer,
+              ca_file: String,
+              cert_file: String,
+              key_file: String,
+              diego_client_timeout: Integer
+            },
+
             log_audit_events: bool,
 
             optional(:telemetry_log_path) => String, # path to log telemetry to, omit to disable

@@ -3,6 +3,7 @@ require 'cloud_controller/deployment_updater/scheduler'
 
 module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Scheduler do
+    let(:config) { TestConfig.config_instance }
     let(:update_frequency) { 42 }
     before do
       TestConfig.context = :deployment_updater
@@ -12,13 +13,6 @@ module VCAP::CloudController
           lock_key: 'lock_key',
           lock_owner: 'lock_owner',
         },
-        locket: {
-          host: 'host',
-          port: 'port',
-          ca_file: 'ca_file',
-          key_file: 'key_file',
-          cert_file: 'cert_file',
-        }
       )
     end
 
@@ -47,50 +41,14 @@ module VCAP::CloudController
         DeploymentUpdater::Scheduler.start
 
         expect(Locket::Client).to have_received(:new).with(
-          host: TestConfig.config_instance.get(:locket, :host),
-          port: TestConfig.config_instance.get(:locket, :port),
-          client_ca_path: TestConfig.config_instance.get(:locket, :ca_file),
-          client_key_path: TestConfig.config_instance.get(:locket, :key_file),
-          client_cert_path: TestConfig.config_instance.get(:locket, :cert_file),
+          host: config.get(:locket, :host),
+          port: config.get(:locket, :port),
+          client_ca_path: config.get(:locket, :ca_file),
+          client_key_path: config.get(:locket, :key_file),
+          client_cert_path: config.get(:locket, :cert_file),
         )
 
         expect(Locket::LockWorker).to have_received(:new).with(client)
-      end
-
-      context 'when locket is not configured' do
-        before do
-          TestConfig.override(
-            deployment_updater: {
-              update_frequency_in_seconds: update_frequency,
-            },
-            locket: nil
-          )
-          allow(DeploymentUpdater::Scheduler).to receive(:loop).and_yield
-        end
-
-        it 'doesnt start any lock machinery' do
-          DeploymentUpdater::Scheduler.start
-
-          expect(Locket::Client).not_to have_received(:new)
-          expect(Locket::LockWorker).not_to have_received(:new).with(client)
-        end
-
-        it 'runs the DeploymentUpdater::Dispatcher sleeps for the configured frequency' do
-          update_duration = 5
-          Timecop.freeze do
-            allow(DeploymentUpdater::Dispatcher).to receive(:dispatch) do
-              Timecop.travel(update_duration)
-              true
-            end
-
-            DeploymentUpdater::Scheduler.start
-
-            expect(logger).to have_received(:info).with(start_with('Update loop took'))
-            expect(DeploymentUpdater::Scheduler).to have_received(:sleep).
-              with(be_within(0.01).of(update_frequency - update_duration))
-            expect(logger).to have_received(:info).with(start_with('Sleeping'))
-          end
-        end
       end
 
       it 'runs the DeploymentUpdater::Dispatcher sleeps for the configured frequency' do

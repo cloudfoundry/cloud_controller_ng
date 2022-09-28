@@ -70,7 +70,7 @@ module VCAP::CloudController
               optional(:lock_owner) => String
             },
 
-            optional(:locket) => {
+            locket: {
               host: String,
               port: Integer,
               ca_file: String,

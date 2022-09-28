@@ -6,8 +6,19 @@ RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
 
   let(:config) { TestConfig.config_instance }
+  let(:diego_client) { double }
 
-  before { locator.config = config }
+  before do
+    locator.config = config
+    allow(::Diego::Client).to receive(:new).with(url: config.get(:diego, :bbs, :url),
+      ca_cert_file: config.get(:diego, :bbs, :ca_file),
+      client_cert_file: config.get(:diego, :bbs, :cert_file),
+      client_key_file: config.get(:diego, :bbs, :key_file),
+      connect_timeout: config.get(:diego, :bbs, :connect_timeout),
+      send_timeout: config.get(:diego, :bbs, :send_timeout),
+      receive_timeout: config.get(:diego, :bbs, :receive_timeout),
+      locket_config: config.get(:locket)).and_return(diego_client)
+  end
 
   describe '#droplet_blobstore' do
     let(:config) do
@@ -296,7 +307,7 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#uaa_client' do
     context 'when a CA file is not configured for the UAA' do
       before do
-        TestConfig.override(uaa: { ca_file: nil, internal_url: TestConfig.config_instance.get(:uaa, :internal_url) })
+        TestConfig.override(uaa: { ca_file: nil, internal_url: config.get(:uaa, :internal_url) })
       end
 
       it 'returns a uaa client with credentials for looking up usernames' do
@@ -513,12 +524,6 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#bbs_stager_client' do
     context 'opi staging is disabled' do
-      let(:diego_client) { double }
-
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
       it 'uses diego' do
         expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
         expect(::OPI::StagerClient).to_not receive(:new)
@@ -547,12 +552,6 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#bbs_apps_client' do
     context 'opi is disabled' do
-      let(:diego_client) { double }
-
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
       it 'uses diego' do
         expect(VCAP::CloudController::Diego::BbsAppsClient).to receive(:new).with(diego_client, config)
         expect(::OPI::Client).to_not receive(:new)
@@ -568,7 +567,6 @@ RSpec.describe CloudController::DependencyLocator do
             url: 'http://custom-opi-url.service.cf.internal'
           }
         }.merge(generate_test_kubeconfig))
-        allow(::Diego::Client).to receive(:new)
       end
 
       it 'uses the opi apps client' do
@@ -599,12 +597,7 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#build_instances_client' do
-    let(:diego_client) { double }
     context 'opi is disabled' do
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
       it 'uses diego' do
         expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
         expect(::OPI::InstancesClient).to_not receive(:new)
@@ -620,7 +613,6 @@ RSpec.describe CloudController::DependencyLocator do
             url: 'http://custom-opi-url.service.cf.internal'
           }
         )
-        allow(::Diego::Client).to receive(:new)
       end
 
       it 'uses the opi apps client' do
@@ -638,12 +630,6 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#bbs_task_client' do
     context 'opi is disabled' do
-      let(:diego_client) { double }
-
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
       it 'uses diego' do
         expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
         expect(::OPI::TaskClient).to_not receive(:new)
@@ -659,7 +645,6 @@ RSpec.describe CloudController::DependencyLocator do
             url: 'http://custom-opi-url.service.cf.internal'
           }
         )
-        allow(::Diego::Client).to receive(:new)
       end
 
       it 'uses the opi task client' do

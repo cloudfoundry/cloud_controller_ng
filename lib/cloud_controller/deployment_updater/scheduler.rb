@@ -19,20 +19,14 @@ module VCAP::CloudController
             )
             }
 
-            if config.get(:locket).nil?
-              loop(&update_step)
-              return
-            end
-
-            client = Locket::Client.new(
+            locket_client = Locket::Client.new(
               host: config.get(:locket, :host),
               port: config.get(:locket, :port),
               client_ca_path: config.get(:locket, :ca_file),
               client_key_path: config.get(:locket, :key_file),
               client_cert_path: config.get(:locket, :cert_file),
             )
-            lock_worker = Locket::LockWorker.new(client)
-
+            lock_worker = Locket::LockWorker.new(locket_client)
             lock_worker.acquire_lock_and_repeatedly_call(
               owner: config.get(:deployment_updater, :lock_owner),
               key: config.get(:deployment_updater, :lock_key),

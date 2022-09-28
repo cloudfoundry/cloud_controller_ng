@@ -477,6 +477,7 @@ module CloudController
         connect_timeout: config.get(:diego, :bbs, :connect_timeout),
         send_timeout: config.get(:diego, :bbs, :send_timeout),
         receive_timeout: config.get(:diego, :bbs, :receive_timeout),
+        locket_config: config.get(:locket),
       )
     end
 
