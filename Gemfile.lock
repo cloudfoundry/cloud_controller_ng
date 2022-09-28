@@ -49,27 +49,26 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (6.1.5.1)
-      actionview (= 6.1.5.1)
-      activesupport (= 6.1.5.1)
-      rack (~> 2.0, >= 2.0.9)
+    actionpack (7.0.4)
+      actionview (= 7.0.4)
+      activesupport (= 7.0.4)
+      rack (~> 2.0, >= 2.2.0)
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.2.0)
-    actionview (6.1.5.1)
-      activesupport (= 6.1.5.1)
+    actionview (7.0.4)
+      activesupport (= 7.0.4)
       builder (~> 3.1)
       erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.1, >= 1.2.0)
-    activemodel (6.1.5.1)
-      activesupport (= 6.1.5.1)
-    activesupport (6.1.5.1)
+    activemodel (7.0.4)
+      activesupport (= 7.0.4)
+    activesupport (7.0.4)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
-      zeitwerk (~> 2.3)
     addressable (2.8.1)
       public_suffix (>= 2.0.2, < 6.0)
     aliyun-sdk (0.8.0)
@@ -133,8 +132,8 @@ GEM
       debase-ruby_core_source (>= 0.10.12)
     debase-ruby_core_source (0.10.12)
     declarative (0.0.20)
-    delayed_job (4.1.9)
-      activesupport (>= 3.0, < 6.2)
+    delayed_job (4.1.10)
+      activesupport (>= 3.0, < 8.0)
     diff-lcs (1.5.0)
     docile (1.1.5)
     domain_name (0.5.20190701)
@@ -148,7 +147,7 @@ GEM
       http_parser.rb (>= 0.6.0)
     em-socksify (0.3.2)
       eventmachine (>= 1.0.0.beta.4)
-    erubi (1.10.0)
+    erubi (1.11.0)
     eventmachine (1.2.7)
     excon (0.92.4)
     faraday (0.17.5)
@@ -270,7 +269,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.10.0)
+    i18n (1.12.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -300,7 +299,7 @@ GEM
       rb-inotify (~> 0.9, >= 0.9.10)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.18.0)
+    loofah (2.19.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
@@ -312,7 +311,7 @@ GEM
     mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
-    minitest (5.15.0)
+    minitest (5.16.3)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -375,12 +374,13 @@ GEM
       nokogiri (>= 1.6)
     rails-html-sanitizer (1.4.3)
       loofah (~> 2.3)
-    railties (6.1.5.1)
-      actionpack (= 6.1.5.1)
-      activesupport (= 6.1.5.1)
+    railties (7.0.4)
+      actionpack (= 7.0.4)
+      activesupport (= 7.0.4)
       method_source
       rake (>= 12.2)
       thor (~> 1.0)
+      zeitwerk (~> 2.5)
     rainbow (3.1.1)
     rake (13.0.6)
     rb-fsevent (0.11.0)
@@ -520,7 +520,7 @@ GEM
     timecop (0.9.5)
     timeliness (0.4.4)
     trailblazer-option (0.1.2)
-    tzinfo (2.0.4)
+    tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     uber (0.1.0)
     unf (0.1.4)
@@ -540,7 +540,7 @@ GEM
     yajl-ruby (1.4.3)
     yard (0.9.28)
       webrick (~> 1.7.0)
-    zeitwerk (2.5.4)
+    zeitwerk (2.6.0)
 
 PLATFORMS
   ruby
@@ -548,9 +548,9 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (~> 6.1.5, >= 6.1.5.1)
-  actionview (~> 6.1.5, >= 6.1.5.1)
-  activemodel (~> 6.1.5)
+  actionpack (= 7.0.4)
+  actionview (= 7.0.4)
+  activemodel (~> 7.0.4)
   addressable
   allowy (>= 2.1.0)
   awesome_print
@@ -604,7 +604,7 @@ DEPENDENCIES
   public_suffix
   puma
   rack-test
-  railties (~> 6.1.5, >= 6.1.5.1)
+  railties (~> 7.0.4)
   rake
   retryable
   rfc822
