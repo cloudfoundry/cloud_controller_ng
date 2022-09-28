@@ -13,6 +13,7 @@ module CloudFoundry
           'PATH_INFO' => path_info,
         }
       end
+
       let(:token_decoder) { instance_double(VCAP::CloudController::UaaTokenDecoder) }
       let(:security_context_configurer) { VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder) }
 
@@ -41,6 +42,22 @@ module CloudFoundry
             expect(app).to have_received(:call) do |passed_env|
               expect(passed_env['cf.user_guid']).to eq('user-id-1')
               expect(passed_env['cf.user_name']).to eq('mrpotato')
+            end
+          end
+
+          context 'the token includes a rate limit exemption' do
+            let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato', 'cloud_controller.v2_api_rate_limit_exempt' => 'true' } }
+
+            before do
+              allow(token_decoder).to receive(:decode_token).with('auth-token').and_return(token_information)
+            end
+
+            it 'sets a v2 rate limit exemption on the env' do
+              middleware.call(env)
+
+              expect(app).to have_received(:call) do |passed_env|
+                expect(passed_env['cf.v2_api_rate_limit_exempt']).to eq('true')
+              end
             end
           end
         end

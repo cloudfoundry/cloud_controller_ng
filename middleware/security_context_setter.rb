@@ -36,7 +36,7 @@ module CloudFoundry
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
         end
 
-        if VCAP::CloudController::SecurityContext.token['cloud_controller.v2_api_rate_limit_exempt']
+        if VCAP::CloudController::SecurityContext.token
           env['cf.v2_api_rate_limit_exempt'] = rate_limit_exemption_from_token
         end
 
