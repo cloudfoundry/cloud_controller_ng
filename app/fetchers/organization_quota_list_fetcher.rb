@@ -10,6 +10,11 @@ module VCAP::CloudController
         filter(message, dataset, readable_org_guids)
       end
 
+      def fetch_all(message:)
+        dataset = QuotaDefinition.dataset
+        filter(message, dataset, nil)
+      end
+
       private
 
       def filter(message, dataset, readable_org_guids)
@@ -18,9 +23,15 @@ module VCAP::CloudController
         end
 
         if message.requested? :organization_guids
+          if readable_org_guids
+            guids = message.organization_guids & readable_org_guids
+          else
+            guids = message.organization_guids
+          end
+
           dataset = dataset.
                     join(:organizations, quota_definition_id: :id).
-                    where(Sequel[:organizations][:guid] => message.organization_guids & readable_org_guids).distinct.
+                    where(Sequel[:organizations][:guid] => guids).distinct.
                     qualify(:quota_definitions)
         end
 
