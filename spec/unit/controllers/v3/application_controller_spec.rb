@@ -38,6 +38,14 @@ RSpec.describe ApplicationController, type: :controller do
       raise CloudController::Errors::NotFound.new_from_details('NotFound')
     end
 
+    def db_connection_error
+      raise Sequel::DatabaseConnectionError.new
+    end
+
+    def db_disconnect_error
+      raise Sequel::DatabaseDisconnectError.new
+    end
+
     def warnings_is_nil
       add_warning_headers(nil)
       render status: 200, json: {}
@@ -285,6 +293,30 @@ RSpec.describe ApplicationController, type: :controller do
       get :not_found
       expect(response.status).to eq(404)
       expect(response).to have_error_message('Unknown request')
+    end
+  end
+
+  describe '#handle_db_connection_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      routes.draw do
+        get 'db_connection_error' => 'anonymous#db_connection_error'
+        get 'db_disconnect_error' => 'anonymous#db_disconnect_error'
+      end
+    end
+
+    it 'rescues from Sequel::DatabaseConnectionError and renders an error presenter' do
+      get :db_connection_error
+      expect(response.status).to eq(503)
+      expect(response).to have_error_message(/Database connection failure/)
+    end
+
+    it 'rescues from Sequel::DatabaseDisconnectError and renders an error presenter' do
+      get :db_disconnect_error
+      expect(response.status).to eq(503)
+      expect(response).to have_error_message(/Database connection failure/)
     end
   end
 
