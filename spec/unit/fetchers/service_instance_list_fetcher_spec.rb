@@ -27,16 +27,16 @@ module VCAP::CloudController
       end
 
       it 'fetches nothing for users who cannot see any spaces' do
-        expect(fetcher.fetch(message).all).to be_empty
+        expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: -1).select(:guid)).all).to be_empty
       end
 
       it 'fetches the instances owned by readable spaces' do
-        dataset = fetcher.fetch(message, readable_space_guids: [space_1.guid, space_3.guid])
+        dataset = fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id, space_3.id]).select(:guid))
         expect(dataset.all).to contain_exactly(msi_1, msi_3, upsi, ssi)
       end
 
       it 'fetches the instances shared to readable spaces' do
-        dataset = fetcher.fetch(message, readable_space_guids: [space_2.guid])
+        dataset = fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_2.id]).select(:guid))
         expect(dataset.all).to contain_exactly(msi_2, ssi)
       end
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching name' do
             expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, ssi)
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id]).select(:guid))).to contain_exactly(msi_1)
           end
         end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching space guids' do
             expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, upsi)
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_1, upsi)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id, space_2.id]).select(:guid))).to contain_exactly(msi_1, upsi)
           end
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching org guids' do
             expect(fetcher.fetch(message, omniscient: true).map(&:guid)).to contain_exactly(*[msi_1, upsi, msi_2, ssi].map(&:guid))
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_3.guid])).to contain_exactly(msi_1, ssi, upsi)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id, space_3.id]).select(:guid))).to contain_exactly(msi_1, ssi, upsi)
           end
         end
 
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching labels' do
             expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_2)
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid, space_2.guid])).to contain_exactly(msi_2)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id, space_2.id]).select(:guid))).to contain_exactly(msi_2)
           end
         end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
             it 'returns instances with matching type' do
               expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_3, ssi)
-              expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1)
+              expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id]).select(:guid))).to contain_exactly(msi_1)
             end
           end
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
             it 'returns instances with matching type' do
               expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(upsi)
-              expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(upsi)
+              expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id]).select(:guid))).to contain_exactly(upsi)
             end
           end
         end
@@ -113,7 +113,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching service plan names' do
             expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_4)
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1, msi_4)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id]).select(:guid))).to contain_exactly(msi_1, msi_4)
           end
         end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
           it 'returns instances with matching service plan guids' do
             expect(fetcher.fetch(message, omniscient: true)).to contain_exactly(msi_1, msi_2, msi_4)
-            expect(fetcher.fetch(message, readable_space_guids: [space_1.guid])).to contain_exactly(msi_1, msi_4)
+            expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id]).select(:guid))).to contain_exactly(msi_1, msi_4)
           end
         end
       end
