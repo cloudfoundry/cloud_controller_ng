@@ -59,7 +59,9 @@ module CloudFoundry
       end
 
       def rate_limit_exemption_from_token
-        VCAP::CloudController::SecurityContext.token['cloud_controller.v2_api_rate_limit_exempt']
+        if VCAP::CloudController::SecurityContext.token['scope']
+          'cloud_controller.v2_api_rate_limit_exempt'.in?(VCAP::CloudController::SecurityContext.token['scope'])
+        end
       end
 
       def error_message(env, error_name)
