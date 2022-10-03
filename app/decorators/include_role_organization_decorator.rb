@@ -9,7 +9,7 @@ module VCAP::CloudController
 
       def decorate(hash, roles)
         hash[:included] ||= {}
-        organization_guids = roles.map(&:organization_guid).uniq
+        organization_guids = roles.map { |role| role.organization_guid if !role.for_space? }.uniq
         organizations = Organization.where(guid: organization_guids).
                         order(:created_at).eager(Presenters::V3::OrganizationPresenter.associated_resources).all
 
