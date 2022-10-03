@@ -60,7 +60,6 @@ module CloudFoundry
               allow(token_decoder).to receive(:decode_token).with('auth-token').and_return(token_information)
             end
 
-
             it 'sets a v2 rate limit exemption on the env' do
               middleware.call(env)
 
