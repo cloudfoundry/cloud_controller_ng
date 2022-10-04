@@ -22,10 +22,6 @@ module VCAP::CloudController
         osbapi_version: VCAP::CloudController::Constants::OSBAPI_VERSION,
       }
 
-      if @config.get(:bits_service, :enabled)
-        info[:bits_endpoint] = @config.get(:bits_service, :public_endpoint)
-      end
-
       if @config.get(:routing_api) && @config.get(:routing_api, :url)
         info[:routing_endpoint] = @config.get(:routing_api, :url)
       end

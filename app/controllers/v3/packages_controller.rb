@@ -81,7 +81,7 @@ class PackagesController < ApplicationController
         'user-id' => current_user.guid
       }
     )
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   def download
@@ -105,10 +105,7 @@ class PackagesController < ApplicationController
     package = PackageModel.where(guid: hashed_params[:guid]).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
 
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(
-      package,
-      show_bits_service_upload_link: permission_queryer.can_write_to_active_space?(package.space.guid) && permission_queryer.is_space_active?(package.space.guid)
-    )
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   def destroy
@@ -127,7 +124,7 @@ class PackagesController < ApplicationController
   def create
     package = hashed_params[:source_guid] ? create_copy : create_fresh
 
-    render status: :created, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
+    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCopy::InvalidPackage, PackageCreate::InvalidPackage => e
     unprocessable!(e.message)
   end
@@ -143,7 +140,7 @@ class PackagesController < ApplicationController
 
     package = PackageUpdate.new.update(package, message)
 
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   private

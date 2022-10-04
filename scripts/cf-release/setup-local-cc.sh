@@ -13,14 +13,6 @@ if ! cat /etc/hosts | grep "bbs.service.cf.internal" > /dev/null; then
   echo "10.244.16.2 bbs.service.cf.internal" | sudo tee -a /etc/hosts > /dev/null
 fi
 
-if ! cat /etc/hosts | grep "bits-service.service.cf.internal" > /dev/null; then
-  echo "10.244.0.74 bits-service.service.cf.internal" | sudo tee -a /etc/hosts > /dev/null
-fi
-
-if ! cat /etc/hosts | grep "bits-service.bosh-lite.com" > /dev/null; then
-  echo "10.244.0.74 bits-service.bosh-lite.com" | sudo tee -a /etc/hosts > /dev/null
-fi
-
 if ! cat /etc/hosts | grep "uaa.service.cf.internal" > /dev/null; then
   echo "10.244.0.134 uaa.service.cf.internal" | sudo tee -a /etc/hosts > /dev/null
 fi

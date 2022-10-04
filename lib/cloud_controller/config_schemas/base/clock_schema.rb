@@ -138,14 +138,6 @@ module VCAP::CloudController
               interpolate_service_bindings: bool
             },
 
-            bits_service: {
-              enabled: bool,
-              optional(:public_endpoint) => enum(String, NilClass),
-              optional(:private_endpoint) => enum(String, NilClass),
-              optional(:username) => enum(String, NilClass),
-              optional(:password) => enum(String, NilClass),
-            },
-
             opi: {
               enabled: bool,
               url: String,

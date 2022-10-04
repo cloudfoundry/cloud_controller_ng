@@ -40,7 +40,6 @@ add_internal_hostnames_to_etc_hosts() {
   # for each DNS name in list, run dig on the remote VM to print "$IP $HOSTNAME" or "UNKNOWN $HOSTNAME" if the DNS record can't be resolved
   internal_hostnames="auctioneer.service.cf.internal \
 bbs.service.cf.internal \
-bits-service.service.cf.internal \
 blobstore.service.cf.internal \
 cc-uploader.service.cf.internal \
 cell.service.cf.internal \

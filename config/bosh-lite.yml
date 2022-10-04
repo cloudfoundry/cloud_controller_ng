@@ -271,11 +271,4 @@ diego:
 
 shared_isolation_segment_name: shared
 
-bits_service:
-  enabled: false
-  public_endpoint: http://bits-service.bosh-lite.com
-  private_endpoint: http://bits-service.service.cf.internal
-  username: admin
-  password: admin
-
 threadpool_size: 20
