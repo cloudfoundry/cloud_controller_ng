@@ -34,7 +34,6 @@ module CloudFoundry
         if VCAP::CloudController::SecurityContext.valid_token?
           env['cf.user_guid'] = id_from_token
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
-          env['cf.v2_api_rate_limit_exempt'] = rate_limit_exemption_from_token
         end
 
         status, headers, body = @app.call(env)
@@ -56,12 +55,6 @@ module CloudFoundry
 
       def id_from_token
         VCAP::CloudController::SecurityContext.token['user_id'] || VCAP::CloudController::SecurityContext.token['client_id']
-      end
-
-      def rate_limit_exemption_from_token
-        if VCAP::CloudController::SecurityContext.token['scope']
-          'cloud_controller.v2_api_rate_limit_exempt'.in?(VCAP::CloudController::SecurityContext.token['scope'])
-        end
       end
 
       def error_message(env, error_name)

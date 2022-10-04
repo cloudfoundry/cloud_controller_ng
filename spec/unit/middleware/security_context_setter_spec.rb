@@ -44,30 +44,6 @@ module CloudFoundry
               expect(passed_env['cf.user_name']).to eq('mrpotato')
             end
           end
-
-          it 'does not set a rate limit exemption on the env by default' do
-            middleware.call(env)
-
-            expect(app).to have_received(:call) do |passed_env|
-              expect(passed_env['cf.v2_api_rate_limit_exempt']).to eq(nil)
-            end
-          end
-
-          context 'the token includes a rate limit exemption' do
-            let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato', 'scope' => ['cloud_controller.v2_api_rate_limit_exempt'] } }
-
-            before do
-              allow(token_decoder).to receive(:decode_token).with('auth-token').and_return(token_information)
-            end
-
-            it 'sets a v2 rate limit exemption on the env' do
-              middleware.call(env)
-
-              expect(app).to have_received(:call) do |passed_env|
-                expect(passed_env['cf.v2_api_rate_limit_exempt']).to eq(true)
-              end
-            end
-          end
         end
 
         context 'when given a UAA client token' do

@@ -16,11 +16,7 @@ module CloudFoundry
       private
 
       def apply_rate_limiting?(env)
-        !basic_auth?(env) && v2_api?(env) && !rate_limit_exempted?(env)
-      end
-
-      def rate_limit_exempted?(env)
-        env['cf.v2_api_rate_limit_exempt'] == true
+        !basic_auth?(env) && v2_api?(env) && !v2_rate_limit_exempted?
       end
 
       def v2_api?(env)
