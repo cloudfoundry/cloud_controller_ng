@@ -116,7 +116,6 @@ class RolesController < ApplicationController
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
 
     user = User.first(guid: user_guid) || create_cc_user(user_guid)
-    unprocessable_user! unless user
 
     RoleCreate.new(message, user_audit_info).create_organization_role(
       type: message.type,
@@ -167,10 +166,6 @@ class RolesController < ApplicationController
 
   def unprocessable_organization!
     unprocessable!('Invalid organization. Ensure that the organization exists and you have access to it.')
-  end
-
-  def unprocessable_user!
-    unprocessable!('Invalid user. Ensure that the user exists and you have access to it.')
   end
 
   def unprocessable_space_user!
