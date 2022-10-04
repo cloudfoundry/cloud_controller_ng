@@ -621,7 +621,7 @@ DEPENDENCIES
   rubyzip (>= 1.3.0)
   sequel (~> 5.61)
   sequel_pg
-  sinatra (= 3.0.2)
+  sinatra (~> 3.0)
   sinatra-contrib
   solargraph
   spork!
