@@ -225,7 +225,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    can_read_globally? || contains_any(isolation_segment.organizations.map(&:guid), readable_org_guids)
+    can_read_globally? || readable_org_guids_query.where(isolation_segment_models: isolation_segment).any?
   end
 
   def readable_route_guids
@@ -340,9 +340,5 @@ class VCAP::CloudController::Permissions
 
   def roles
     VCAP::CloudController::SecurityContext.roles
-  end
-
-  def contains_any(a, b) # rubocop:disable Naming/MethodParameterName
-    !(a & b).empty?
   end
 end
