@@ -88,7 +88,7 @@ module VCAP::CloudController
         authorized_org_guids = if omniscient
                                  org_guids
                                else
-                                 readable_org_guids = readable_orgs_query ? readable_orgs_query.select(:guid).all.map(&:guid) : []
+                                 readable_org_guids = readable_orgs_query ? readable_orgs_query.select_map(:guid) : []
                                  (Set.new(readable_org_guids) & Set.new(org_guids)).to_a
                                end
 
@@ -111,7 +111,7 @@ module VCAP::CloudController
         authorized_space_guids = if omniscient
                                    space_guids
                                  else
-                                   readable_space_guids = readable_spaces_query ? readable_spaces_query.select(:guid).all.map(&:guid) : []
+                                   readable_space_guids = readable_spaces_query ? readable_spaces_query.select_map(:guid) : []
                                    (Set.new(readable_space_guids) & Set.new(space_guids)).to_a
                                  end
 

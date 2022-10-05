@@ -1460,7 +1460,7 @@ module VCAP::CloudController
 
           it 'finds an available offset' do
             Route.make(host: 'gulp', domain: internal_domain)
-            expect(Route.all.map(&:vip_offset)).to match_array((1..4).to_a)
+            expect(Route.select_map(:vip_offset)).to match_array((1..4).to_a)
           end
 
           context 'when the taken offset is not the first' do

@@ -326,9 +326,9 @@ module VCAP::CloudController
           let(:org) { space.organization }
           let(:expected_codes_and_responses) do
             h = Hash.new(code: 200, response_guids: [org.guid])
-            h['admin'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
-            h['admin_read_only'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
-            h['global_auditor'] = { code: 200, response_guids: VCAP::CloudController::Organization.all.map(&:guid) }
+            h['admin'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
+            h['admin_read_only'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
+            h['global_auditor'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
             h['no_role'] = { code: 200, response_guids: [] }
             h
           end
