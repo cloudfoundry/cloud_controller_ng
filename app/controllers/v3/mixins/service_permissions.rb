@@ -10,11 +10,9 @@ module VCAP::CloudController
     def visible_in_readable_orgs?(service_plans)
       return false if !current_user
 
-      visible_orgs = ServicePlanVisibilityFetcher.new(permission_queryer).fetch_orgs(
+      ServicePlanVisibilityFetcher.new(permission_queryer).any_orgs?(
         service_plan_guids: service_plans.map(&:guid)
       )
-
-      visible_orgs.any?
     end
 
     def writable_space_scoped?(space)
