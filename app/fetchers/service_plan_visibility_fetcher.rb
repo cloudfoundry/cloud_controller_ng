@@ -5,16 +5,13 @@ module VCAP::CloudController
     end
 
     def fetch_orgs(service_plan_guids:)
-      omniscient = @permission_queryer.can_read_globally?
-      readable_org_guids = @permission_queryer.readable_org_guids unless omniscient
-
       dataset = Organization.dataset.
-                join(:service_plan_visibilities, organization_id: Sequel[:organizations][:id]).
-                join(:service_plans, id: Sequel[:service_plan_visibilities][:service_plan_id]).
-                where { Sequel[:service_plans][:guid] =~ service_plan_guids }
+                join(:service_plan_visibilities, organization_id: :organizations__id).
+                join(:service_plans, id: :service_plan_visibilities__service_plan_id).
+                where(service_plans__guid: service_plan_guids)
 
-      unless omniscient
-        dataset = dataset.where { Sequel[:organizations][:guid] =~ readable_org_guids }
+      unless @permission_queryer.can_read_globally?
+        dataset = dataset.where(organizations__guid: @permission_queryer.readable_org_guids_query)
       end
 
       dataset.
