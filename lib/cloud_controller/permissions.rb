@@ -116,7 +116,7 @@ class VCAP::CloudController::Permissions
 
   def readable_org_guids_query
     if can_read_globally?
-      VCAP::CloudController::Organization.select(:guid)
+      raise 'must not be called for users that can read globally'
     else
       membership.org_guids_for_roles_subquery(ROLES_FOR_ORG_READING)
     end
@@ -183,7 +183,7 @@ class VCAP::CloudController::Permissions
 
   def readable_space_guids_query
     if can_read_globally?
-      VCAP::CloudController::Space.select(:guid)
+      raise 'must not be called for users that can read globally'
     else
       membership.space_guids_for_roles_subquery(ROLES_FOR_SPACE_READING)
     end
