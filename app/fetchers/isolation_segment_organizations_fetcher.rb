@@ -8,8 +8,8 @@ module VCAP::CloudController
       @isolation_segment.organizations
     end
 
-    def fetch_for_organizations(org_guids:)
-      Organization.where(guid: org_guids, isolation_segment_models: @isolation_segment).all
+    def fetch_for_organizations(org_guids_query:)
+      Organization.where(guid: org_guids_query, isolation_segment_models: @isolation_segment).all
     end
   end
 end
