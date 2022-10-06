@@ -11,65 +11,14 @@ Sequel.migration do
       sorted_ids = self[:service_instance_operations].
                    select(:id).
                    where(service_instance_id: group[:service_instance_id]).
+                   order(Sequel.desc(:updated_at)).order_append(Sequel.desc(:id)).
+                   offset(1).
                    map(&:values).
                    flatten.
                    sort
       ids_to_remove = sorted_ids
 
-      same_si_same_updated_at_take_max_id = self[:service_instance_operations].
-                                            select(Sequel.function(:max, :id)).
-                                            where(service_instance_id: group[:service_instance_id]).
-                                            group_by(:updated_at, :service_instance_id).
-                                            having { count.function.* > 1 }.
-                                            map(&:values).
-                                            flatten.
-                                            sort
-
-      same_si_same_updated_at_take_si_ids = self[:service_instance_operations].exclude(id: same_si_same_updated_at_take_max_id).
-                                            select(:service_instance_id).
-                                            where(service_instance_id: group[:service_instance_id]).
-                                            group_by(:updated_at, :service_instance_id).
-                                            having { count.function.* > 1 }.
-                                            map(&:values).
-                                            flatten.
-                                            sort
-
-      same_si_same_updated_at_take_date = self[:service_instance_operations].exclude(id: same_si_same_updated_at_take_max_id).
-                                          select(:updated_at).
-                                          where(service_instance_id: group[:service_instance_id]).
-                                          group_by(:updated_at, :service_instance_id).
-                                          having { count.function.* > 1 }.
-                                          map(&:values).
-                                          flatten.
-                                          sort
-
-      id_for_same_si_same_updated_at = self[:service_instance_operations].
-                                       select(:id).
-                                       where(updated_at: same_si_same_updated_at_take_date, service_instance_id: same_si_same_updated_at_take_si_ids).
-                                       map(&:values).
-                                       flatten.
-                                       sort
-
-      same_si_diff_updated_at_take_max_updated_at = self[:service_instance_operations].exclude(id: id_for_same_si_same_updated_at).
-                                                    select(Sequel.function(:max, :updated_at)).
-                                                    where(service_instance_id: group[:service_instance_id]).
-                                                    group_by(:service_instance_id).
-                                                    having { count.function.* > 1 }.
-                                                    map(&:values).
-                                                    flatten.
-                                                    sort
-
-      id_for_same_si_diff_updated_at = self[:service_instance_operations].
-                                       select(:id).
-                                       where(updated_at: same_si_diff_updated_at_take_max_updated_at).
-                                       map(&:values).
-                                       flatten.
-                                       sort
-
-      ids_to_keep = same_si_same_updated_at_take_max_id + id_for_same_si_diff_updated_at
-
-      self[:service_instance_operations].exclude(id: ids_to_keep).
-        where(id: ids_to_remove).delete
+      self[:service_instance_operations].where(id: ids_to_remove).delete
     end
 
     alter_table :service_instance_operations do
