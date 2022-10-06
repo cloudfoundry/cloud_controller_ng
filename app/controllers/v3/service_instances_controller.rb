@@ -37,19 +37,12 @@ class ServiceInstancesV3Controller < ApplicationController
     message = ServiceInstancesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = if permission_queryer.can_read_globally?
-                ServiceInstanceListFetcher.fetch(
-                  message,
-                  eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  omniscient: true,
-                )
-              else
-                ServiceInstanceListFetcher.fetch(
-                  message,
-                  eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  readable_space_guids: permission_queryer.readable_space_guids,
-                )
-              end
+    dataset = ServiceInstanceListFetcher.fetch(
+      message,
+      eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
+      omniscient: permission_queryer.can_read_globally?,
+      readable_spaces_dataset: permission_queryer.readable_space_guids_query,
+    )
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
