@@ -341,16 +341,6 @@ module CloudFoundry
             expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
           end
         end
-
-        context 'when the user is excluded from rate limits' do
-          let(:path_info) { '/v2/foo' }
-          let(:exempted_user_env) { { 'v2_api_rate_limit_exempt' => true } }
-
-          it 'returns 200 response' do
-            status, _, _ = middleware.call(exempted_user_env)
-            expect(status).to eq(200)
-          end
-        end
       end
     end
   end
