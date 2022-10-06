@@ -107,7 +107,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_org_guids' do
-      it 'raises exception and does not SELECT all gudis for admins' do
+      it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
         expect {
@@ -115,15 +115,15 @@ module VCAP::CloudController
         }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'raises exception and does not SELECT all gudis for read-only admins' do
-        user = set_current_user_as_admin
+      it 'raises exception and does not SELECT all guids for read-only admins' do
+        user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
         expect {
           subject.readable_org_guids
         }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'raises exception and does not SELECT all gudis for global auditors' do
+      it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
         expect {
@@ -382,7 +382,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_space_guids' do
-      it 'raises exception and does not SELECT all gudis for admins' do
+      it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
         expect {
@@ -390,7 +390,7 @@ module VCAP::CloudController
         }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'raises exception and does not SELECT all gudis for read-only admins' do
+      it 'raises exception and does not SELECT all guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
         expect {
@@ -398,7 +398,7 @@ module VCAP::CloudController
         }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'raises exception and does not SELECT all gudis for global auditors' do
+      it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
         expect {
