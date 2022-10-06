@@ -236,7 +236,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       OrgListFetcher.fetch(
         message: message,
-        guids: permission_queryer.readable_org_guids,
+        guids: permission_queryer.readable_org_guids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
@@ -251,7 +251,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       isolation_segment, dataset = OrgListFetcher.fetch_for_isolation_segment(
         message: message,
-        guids: permission_queryer.readable_org_guids,
+        guids: permission_queryer.readable_org_guids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
