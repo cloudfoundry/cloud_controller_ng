@@ -342,6 +342,24 @@ module CloudFoundry
           end
         end
       end
+
+      context 'when the user is exempt from rate limiting' do
+        let(:path_info) { '/v2/foo' }
+        let(:middleware_env) do
+          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+        end
+
+        before(:each) { allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
+
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+        end
+
+        it 'returns 200 response' do
+          status, _, _ = middleware.call(middleware_env)
+          expect(status).to eq(200)
+        end
+      end
     end
   end
 end
