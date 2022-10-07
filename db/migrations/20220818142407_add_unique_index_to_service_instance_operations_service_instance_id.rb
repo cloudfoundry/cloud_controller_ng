@@ -8,13 +8,11 @@ Sequel.migration do
                  having { count.function.* > 1 }
 
     dup_groups.each do |group|
-      sorted_ids = self[:service_instance_operations].
+      ids_to_remove = self[:service_instance_operations].
                    where(service_instance_id: group[:service_instance_id]).
                    order(Sequel.desc(:updated_at)).order_append(Sequel.desc(:id)).
                    offset(1).
-                   select_map(:id).
-                   sort
-      ids_to_remove = sorted_ids
+                   select_map(:id)
 
       self[:service_instance_operations].where(id: ids_to_remove).delete
     end

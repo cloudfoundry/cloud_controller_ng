@@ -54,31 +54,12 @@ module VCAP::CloudController
 
     describe 'when two are created with the same id' do
       describe 'when a ServiceInstanceOperation exists' do
-        let(:service_instance_attrs) do
-          {
-            name: 'bommel_instance',
-            space: VCAP::CloudController::Space.make
-          }
-        end
-
-        let(:service_instance) { ServiceInstance.create(service_instance_attrs) }
-        let(:operation_attributes2) do
-          {
-            service_instance_id: service_instance.id,
-            state: 'in progress',
-            description: '50% all the time',
-            type: 'create',
-            proposed_changes: {
-              name: 'pizza',
-              service_plan_guid: '1800-pizza',
-            },
-          }
-        end
-        before { ServiceInstanceOperation.create(operation_attributes2) }
+        let(:service_instance) { ServiceInstance.make }
+        before { ServiceInstanceOperation.make(service_instance_id: service_instance.id) }
 
         it 'raises an exception when creating another ServiceInstanceOperation' do
           expect {
-            ServiceInstanceOperation.create(operation_attributes2)
+            ServiceInstanceOperation.make(service_instance_id: service_instance.id)
           }.to raise_error(Sequel::UniqueConstraintViolation)
         end
       end
