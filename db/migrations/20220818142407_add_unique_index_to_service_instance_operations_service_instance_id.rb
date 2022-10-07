@@ -9,10 +9,10 @@ Sequel.migration do
 
     dup_groups.each do |group|
       ids_to_remove = self[:service_instance_operations].
-                   where(service_instance_id: group[:service_instance_id]).
-                   order(Sequel.desc(:updated_at)).order_append(Sequel.desc(:id)).
-                   offset(1).
-                   select_map(:id)
+                      where(service_instance_id: group[:service_instance_id]).
+                      order(Sequel.desc(:updated_at)).order_append(Sequel.desc(:id)).
+                      offset(1).
+                      select_map(:id)
 
       self[:service_instance_operations].where(id: ids_to_remove).delete
     end
