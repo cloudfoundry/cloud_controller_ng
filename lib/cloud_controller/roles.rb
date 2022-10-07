@@ -26,10 +26,6 @@ module VCAP::CloudController
       @scopes.include?(CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE)
     end
 
-    def rate_limit_exempted?
-      @scopes.include?(CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE)
-    end
-
     def global_auditor?
       @scopes.include?(CLOUD_CONTROLLER_GLOBAL_AUDITOR)
     end
@@ -52,6 +48,10 @@ module VCAP::CloudController
 
     def build_state_updater?
       @scopes.include?(CLOUD_CONTROLLER_BUILD_STATE_UPDATER)
+    end
+
+    def v2_rate_limit_exempted?
+      @scopes.include?(CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE)
     end
 
     def none?

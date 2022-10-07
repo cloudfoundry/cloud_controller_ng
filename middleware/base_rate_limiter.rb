@@ -142,10 +142,6 @@ module CloudFoundry
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
 
-      def v2_rate_limit_exempted?
-        VCAP::CloudController::SecurityContext.rate_limit_exempted?
-      end
-
       def too_many_requests!(env, rate_limit_headers)
         headers = {}
         headers['Retry-After'] = rate_limit_headers.reset

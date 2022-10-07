@@ -28,8 +28,8 @@ module VCAP::CloudController
       roles.admin_read_only?
     end
 
-    def self.rate_limit_exempted?
-      roles.rate_limit_exempted?
+    def self.v2_rate_limit_exempted?
+      roles.v2_rate_limit_exempted?
     end
 
     def self.global_auditor?
