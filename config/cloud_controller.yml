@@ -406,3 +406,5 @@ threadpool_size: 20
 webserver: thin
 default_app_lifecycle: buildpack
 custom_metric_tag_prefix_list: ["metric.tag.cloudfoundry.org"]
+
+max_manifest_service_binding_poll_duration_in_seconds: 60

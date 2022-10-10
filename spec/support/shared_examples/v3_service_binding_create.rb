@@ -8,13 +8,17 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
     let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
     end
 
-    context 'sync binding' do
-      let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
+    it 'returns the binding' do
+      result = action.bind(precursor)
+      expect(result).to eq precursor.reload
+    end
 
+    context 'sync binding' do
       it 'creates and returns the route binding' do
         action.bind(precursor)
 

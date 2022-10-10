@@ -172,6 +172,8 @@ module VCAP::CloudController
             volume_services_enabled: bool,
             route_services_enabled: bool,
 
+            max_manifest_service_binding_poll_duration_in_seconds: Integer,
+
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
             internal_route_vip_range: String,
