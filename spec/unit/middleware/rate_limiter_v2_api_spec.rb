@@ -335,7 +335,7 @@ module CloudFoundry
           json_body = JSON.parse(body.first)
           expect(json_body).to include(
             'code' => 10018,
-            'description' => 'Rate Limit of V2 API Exceeded. Please consider to use V3 API',
+            'description' => 'Rate Limit of V2 API Exceeded. Please consider using the V3 API',
             'error_code' => 'CF-RateLimitV2APIExceeded',
           )
         end
