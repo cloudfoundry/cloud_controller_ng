@@ -65,8 +65,7 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     if role.for_space?
-      org_guid = Space.find(guid: role.space_guid).organization.guid
-      unauthorized! unless permission_queryer.can_update_active_space?(role.space_guid, org_guid)
+      unauthorized! unless permission_queryer.can_update_active_space?(role.space_guid, role.organization_guid)
       suspended! unless permission_queryer.is_space_active?(role.space_guid)
     else
       unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_guid)
@@ -94,9 +93,6 @@ class RolesController < ApplicationController
     unprocessable_space! unless space
     org = space.organization
 
-    unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
-      !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
-
     unauthorized! unless permission_queryer.can_update_active_space?(message.space_guid, org.guid)
     suspended! unless permission_queryer.is_space_active?(message.space_guid)
 
@@ -117,13 +113,7 @@ class RolesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
     suspended! unless permission_queryer.is_org_active?(message.organization_guid)
 
-    if message.user_guid
-      user_guid = message.user_guid
-      unprocessable_user! if user_in_db?(user_guid) && !user_is_readable?(user_guid)
-    else
-      user_guid = lookup_user_guid_in_uaa(message.username, message.user_origin)
-      unprocessable_user! unless user_guid
-    end
+    user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
 
     user = User.first(guid: user_guid) || create_cc_user(user_guid)
 
@@ -132,14 +122,6 @@ class RolesController < ApplicationController
       user: user,
       organization: org
     )
-  end
-
-  def user_in_db?(user_guid)
-    !User.where(guid: user_guid).empty?
-  end
-
-  def user_is_readable?(user_guid)
-    !readable_users.where(guid: user_guid).empty?
   end
 
   def fetch_readable_user(user_guid)
@@ -184,10 +166,6 @@ class RolesController < ApplicationController
 
   def unprocessable_organization!
     unprocessable!('Invalid organization. Ensure that the organization exists and you have access to it.')
-  end
-
-  def unprocessable_user!
-    unprocessable!('Invalid user. Ensure that the user exists and you have access to it.')
   end
 
   def unprocessable_space_user!

@@ -51,5 +51,18 @@ module VCAP::CloudController
         expect(operation.state).to eq 'finished'
       end
     end
+
+    describe 'when two are created with the same id' do
+      describe 'when a ServiceInstanceOperation exists' do
+        let(:service_instance) { ServiceInstance.make }
+        before { ServiceInstanceOperation.make(service_instance_id: service_instance.id) }
+
+        it 'raises an exception when creating another ServiceInstanceOperation' do
+          expect {
+            ServiceInstanceOperation.make(service_instance_id: service_instance.id)
+          }.to raise_error(Sequel::UniqueConstraintViolation)
+        end
+      end
+    end
   end
 end

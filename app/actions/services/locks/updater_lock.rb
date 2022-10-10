@@ -15,7 +15,6 @@ module VCAP::CloudController
     def lock!
       ManagedServiceInstance.db.transaction do
         service_instance.lock!
-        service_instance.last_operation.lock! if service_instance.last_operation
 
         raise_if_instance_locked(service_instance)
 

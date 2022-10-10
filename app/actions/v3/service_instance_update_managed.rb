@@ -143,14 +143,10 @@ module VCAP::CloudController
         attributes_to_update = {}
         attributes_to_update[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
 
-        ManagedServiceInstance.db.transaction do
-          instance.lock!
-          instance.last_operation.lock! if instance.last_operation
-          instance.save_with_new_operation(
-            attributes_to_update,
-            broker_response[:last_operation] || {}
-          )
-        end
+        instance.save_with_new_operation(
+          attributes_to_update,
+          broker_response[:last_operation] || {}
+        )
 
         event_repository.record_service_instance_event(:start_update, instance, @audit_hash)
       end

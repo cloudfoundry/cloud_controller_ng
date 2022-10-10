@@ -107,43 +107,28 @@ module VCAP::CloudController
     end
 
     describe '#readable_org_guids' do
-      it 'returns all the org guids for admins' do
+      it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
-
-        org1_guid = Organization.make.guid
-        org2_guid = Organization.make.guid
-
-        org_guids = subject.readable_org_guids
-
-        expect(org_guids).to include(org1_guid)
-        expect(org_guids).to include(org2_guid)
+        expect {
+          subject.readable_org_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'returns all the org guids for read-only admins' do
+      it 'raises exception and does not SELECT all guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
-
-        org1_guid = Organization.make.guid
-        org2_guid = Organization.make.guid
-
-        org_guids = subject.readable_org_guids
-
-        expect(org_guids).to include(org1_guid)
-        expect(org_guids).to include(org2_guid)
+        expect {
+          subject.readable_org_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'returns all the org guids for global auditors' do
+      it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
-
-        org1_guid = Organization.make.guid
-        org2_guid = Organization.make.guid
-
-        org_guids = subject.readable_org_guids
-
-        expect(org_guids).to include(org1_guid)
-        expect(org_guids).to include(org2_guid)
+        expect {
+          subject.readable_org_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
       it 'returns org guids from membership via subquery' do
@@ -397,49 +382,28 @@ module VCAP::CloudController
     end
 
     describe '#readable_space_guids' do
-      it 'returns all the space guids for admins' do
+      it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
+        expect {
+          subject.readable_space_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'returns all the space guids for read-only admins' do
+      it 'raises exception and does not SELECT all guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
+        expect {
+          subject.readable_space_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
-      it 'returns all the space guids for global auditors' do
+      it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
-
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-
-        space_guids = subject.readable_space_guids
-
-        expect(space_guids).to include(space1.guid)
-        expect(space_guids).to include(space2.guid)
+        expect {
+          subject.readable_space_guids
+        }.to raise_error('must not be called for users that can read globally')
       end
 
       it 'returns space guids from membership via subquery' do
