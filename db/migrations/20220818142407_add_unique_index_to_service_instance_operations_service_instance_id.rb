@@ -17,6 +17,8 @@ Sequel.migration do
       self[:service_instance_operations].where(id: ids_to_remove).delete
     end
 
+    # for mysql the foreign_key constraint which references service_instance_id has to be removed before you can
+    # delete the old index from service_instance_id
     alter_table :service_instance_operations do
       drop_constraint :fk_svc_inst_op_svc_instance_id, type: :foreign_key
       drop_index :service_instance_id, name: :svc_instance_id_index
