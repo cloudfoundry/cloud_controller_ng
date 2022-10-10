@@ -68,6 +68,25 @@ module CloudFoundry
             _, response_headers, _ = middleware.call(user_2_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('80')
           end
+
+          context 'the user is exempt from v2 rate limiting' do
+            before do
+              allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+            end
+
+            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/apps') }
+
+            it "doesn't decrease the count" do
+              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+              _, response_headers, _ = middleware.call(default_env)
+
+              expect(request_counter).not_to have_received(:get)
+              expect(request_counter).not_to have_received(:increment)
+              expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
+              expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
+              expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+            end
+          end
         end
 
         describe 'X-RateLimit-Reset-V2-API' do
