@@ -85,11 +85,10 @@ module VCAP::CloudController
       end
 
       def filter_by_org_guid(org_guids, plan_dataset, broker_dataset, omniscient, readable_orgs_query, readable_spaces_query, dataset)
-        authorized_org_guids = if omniscient
-                                 org_guids
+        authorized_org_guids = if !omniscient && !readable_orgs_query.nil?
+                                 readable_orgs_query.where(guid: org_guids).select_map(:guid)
                                else
-                                 readable_org_guids = readable_orgs_query ? readable_orgs_query.select(:guid).all.map(&:guid) : []
-                                 (Set.new(readable_org_guids) & Set.new(org_guids)).to_a
+                                 org_guids
                                end
 
         if omniscient || !readable_orgs_query.nil?
@@ -108,11 +107,10 @@ module VCAP::CloudController
       end
 
       def filter_by_space_guid(space_guids, plan_dataset, broker_dataset, omniscient, readable_orgs_query, readable_spaces_query, dataset)
-        authorized_space_guids = if omniscient
-                                   space_guids
+        authorized_space_guids = if !omniscient && !readable_spaces_query.nil?
+                                   readable_spaces_query.where(guid: space_guids).select_map(:guid)
                                  else
-                                   readable_space_guids = readable_spaces_query ? readable_spaces_query.select(:guid).all.map(&:guid) : []
-                                   (Set.new(readable_space_guids) & Set.new(space_guids)).to_a
+                                   space_guids
                                  end
 
         if omniscient || !readable_orgs_query.nil?

@@ -440,7 +440,7 @@ module VCAP::CloudController
       end
 
       it 'returns a list of spaces that the user is a member of' do
-        ids = user.membership_spaces.all.map(&:id)
+        ids = user.membership_spaces.select_map(:id)
         expect(ids).to match_array([developer_space, manager_space, auditor_space].map(&:id))
       end
 
@@ -452,7 +452,7 @@ module VCAP::CloudController
 
         different_space.add_developer outside_user
 
-        ids = user.membership_spaces.all.map(&:id)
+        ids = user.membership_spaces.select_map(:id)
         expect(ids).to match_array([developer_space, manager_space, auditor_space].map(&:id))
       end
     end
@@ -472,7 +472,7 @@ module VCAP::CloudController
       end
 
       it 'returns a list of orgs that the user is a member of' do
-        ids = user.membership_organizations.all.map(&:id)
+        ids = user.membership_organizations.select_map(:id)
 
         expect(ids).to match_array([
           user_organization,
@@ -483,7 +483,7 @@ module VCAP::CloudController
       end
 
       it "omits orgs that the user isn't a member of" do
-        ids = user.membership_organizations.all.map(&:id)
+        ids = user.membership_organizations.select_map(:id)
         expect(ids).to match_array([
           user_organization,
           billing_manager_organization,
@@ -525,9 +525,9 @@ module VCAP::CloudController
         auditor_organization.add_auditor(org_auditor)
         billing_manager_organization.add_billing_manager(org_billing_manager)
 
-        user_result = user.visible_users_in_my_orgs.all.map(&:id)
+        user_result = user.visible_users_in_my_orgs.select_map(:id)
         expect(user_result).to match_array([user.id, other_user1.id])
-        manager_result = org_manager.visible_users_in_my_orgs.all.map(&:id)
+        manager_result = org_manager.visible_users_in_my_orgs.select_map(:id)
         expect(manager_result).to match_array(
           [
             org_manager.id,
@@ -535,14 +535,14 @@ module VCAP::CloudController
             other_user2.id,
           ],
         )
-        auditor_result = org_auditor.visible_users_in_my_orgs.all.map(&:id)
+        auditor_result = org_auditor.visible_users_in_my_orgs.select_map(:id)
         expect(auditor_result).to match_array(
           [
             org_auditor.id,
             other_user3.id,
           ],
         )
-        billing_manager_result = org_billing_manager.visible_users_in_my_orgs.all.map(&:id)
+        billing_manager_result = org_billing_manager.visible_users_in_my_orgs.select_map(:id)
         expect(billing_manager_result).to match_array(
           [
             org_billing_manager.id,

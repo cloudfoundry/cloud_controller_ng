@@ -8,8 +8,8 @@ module VCAP::CloudController
         filter(message, dataset)
       end
 
-      def fetch_for_organizations(message, org_guids:)
-        dataset = IsolationSegmentModel.dataset.where(organizations: Organization.where(guid: org_guids))
+      def fetch_for_organizations(message, org_guids_query:)
+        dataset = IsolationSegmentModel.dataset.where(organizations: org_guids_query)
         filter(message, dataset)
       end
 
