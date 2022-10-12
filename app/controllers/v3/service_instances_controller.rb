@@ -47,7 +47,7 @@ class ServiceInstancesV3Controller < ApplicationController
                 ServiceInstanceListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  readable_space_guids: permission_queryer.readable_space_guids,
+                  readable_spaces_dataset: permission_queryer.readable_space_guids_query,
                 )
               end
 
