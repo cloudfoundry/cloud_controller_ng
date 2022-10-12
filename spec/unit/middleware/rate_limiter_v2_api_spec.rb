@@ -68,25 +68,6 @@ module CloudFoundry
             _, response_headers, _ = middleware.call(user_2_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('80')
           end
-
-          context 'the user is exempt from v2 rate limiting' do
-            before do
-              allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
-            end
-
-            let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/apps') }
-
-            it "doesn't decrease the count" do
-              allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              _, response_headers, _ = middleware.call(default_env)
-
-              expect(request_counter).not_to have_received(:get)
-              expect(request_counter).not_to have_received(:increment)
-              expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
-              expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
-              expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
-            end
-          end
         end
 
         describe 'X-RateLimit-Reset-V2-API' do
@@ -129,6 +110,21 @@ module CloudFoundry
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Reset-V2-API'].to_i).to eq(valid_until.utc.to_i)
           end
+        end
+      end
+
+      describe 'headers when the user is exempt from v2 rate limiting' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+        end
+        it "doesn't decrease the count" do
+          _, response_headers, _ = middleware.call(user_1_env)
+
+          expect(request_counter).not_to have_received(:get)
+          expect(request_counter).not_to have_received(:increment)
+          expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
+          expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
+          expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
         end
       end
 
@@ -341,7 +337,6 @@ module CloudFoundry
         end
 
         context 'when the user is admin' do
-          let(:path_info) { '/v2/foo' }
           let(:default_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           before do
@@ -360,23 +355,16 @@ module CloudFoundry
             expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
           end
         end
-      end
 
-      context 'when the user is exempt from rate limiting' do
-        let(:path_info) { '/v2/foo' }
-        let(:middleware_env) do
-          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
-        end
+        context 'when the user is exempt from rate limiting' do
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+          end
 
-        before(:each) { allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
-
-        before do
-          allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
-        end
-
-        it 'returns 200 response' do
-          status, _, _ = middleware.call(middleware_env)
-          expect(status).to eq(200)
+          it 'returns 200 response' do
+            status, _, _ = middleware.call(middleware_env)
+            expect(status).to eq(200)
+          end
         end
       end
     end
