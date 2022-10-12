@@ -116,7 +116,7 @@
 10018:
   name: RateLimitV2APIExceeded
   http_code: 429
-  message: "Rate Limit of V2 API Exceeded. Please consider to use V3 API"
+  message: "Rate Limit of V2 API Exceeded. Please consider using the V3 API"
 
 20001:
   name: UserInvalid
