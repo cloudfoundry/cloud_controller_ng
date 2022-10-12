@@ -113,11 +113,12 @@ module CloudFoundry
         end
       end
 
-      describe 'headers when the user is exempt from v2 rate limiting' do
+      describe "when the user has the 'cloud_controller.v2_api_rate_limit_exempt' scope" do
         before do
           allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
         end
-        it "doesn't decrease the count" do
+
+        it 'exempts them from rate limiting' do
           _, response_headers, _ = middleware.call(user_1_env)
 
           expect(request_counter).not_to have_received(:get)
