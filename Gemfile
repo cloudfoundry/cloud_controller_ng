@@ -54,9 +54,6 @@ gem 'actionview', '~> 6.1.5', '>= 6.1.5.1'
 gem 'activemodel', '~> 6.1.5'
 gem 'railties', '~> 6.1.5', '>= 6.1.5.1'
 
-# Blobstore and Bits Service Dependencies
-gem 'bits_service_client', '~> 3.3', '>= 3.3.0'
-
 gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
 
 gem 'fog-aliyun'

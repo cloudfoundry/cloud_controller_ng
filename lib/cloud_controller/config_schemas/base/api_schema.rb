@@ -281,14 +281,6 @@ module VCAP::CloudController
               file: String,
             },
 
-            bits_service: {
-              enabled: bool,
-              optional(:public_endpoint) => enum(String, NilClass),
-              optional(:private_endpoint) => enum(String, NilClass),
-              optional(:username) => enum(String, NilClass),
-              optional(:password) => enum(String, NilClass),
-            },
-
             rate_limiter: {
               enabled: bool,
               per_process_general_limit: Integer,

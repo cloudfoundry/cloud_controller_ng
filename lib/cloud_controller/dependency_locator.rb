@@ -23,9 +23,7 @@ require 'cloud_controller/diego/bbs_instances_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'cloud_controller/resource_pool_wrapper'
-require 'cloud_controller/bits_service_resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
-require 'cloud_controller/packager/bits_service_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
@@ -34,8 +32,6 @@ require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
 require 'cloud_controller/opi/task_client'
 require 'cloud_controller/metrics/prometheus_updater'
-
-require 'bits_service_client'
 
 module CloudController
   class DependencyLocator
@@ -325,40 +321,13 @@ module CloudController
       end
     end
 
-    def bits_service_resource_pool
-      return nil unless use_bits_service
-
-      BitsService::ResourcePool.new(
-        endpoint: bits_service_options[:private_endpoint],
-        request_timeout_in_seconds: config.get(:request_timeout_in_seconds),
-        ca_cert_path: bits_service_options[:ca_cert_path],
-        vcap_request_id: VCAP::Request.current_id,
-        username: bits_service_options[:username],
-        password: bits_service_options[:password]
-      )
-    end
-
     def resource_pool_wrapper
-      if bits_service_resource_pool
-        BitsServiceResourcePoolWrapper
-      else
-        ResourcePoolWrapper
-      end
-    end
-
-    def bits_service_options
-      config.get(:bits_service)
-    end
-
-    def use_bits_service
-      bits_service_options[:enabled]
+      ResourcePoolWrapper
     end
 
     def packer
       if config.package_image_registry_configured?
         Packager::RegistryBitsPacker.new
-      elsif use_bits_service
-        Packager::BitsServicePacker.new
       else
         Packager::LocalBitsPacker.new
       end
