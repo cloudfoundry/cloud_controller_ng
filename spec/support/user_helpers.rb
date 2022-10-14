@@ -217,14 +217,14 @@ module UserHelpers
   end
 
   def allow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
-    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.guid, space.organization_guid).and_return(true)
-    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.guid, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.id, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.id, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.id, space.organization_guid).and_return(true)
   end
 
   def allow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.guid).and_return(true)
-    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.id).and_return(true)
+    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.id).and_return(true)
   end
 
   def allow_user_read_access_for(user, orgs: [], spaces: [])
@@ -237,8 +237,8 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
     allow(permissions_double(user)).to receive(:can_read_from_space?).and_return(false)
     spaces.each do |space|
-      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
-      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(true)
+      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.id, space.organization_guid).and_return(true)
+      allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.id, space.organization_guid).and_return(true)
     end
 
     stub_readable_space_guids_for(user, spaces)
@@ -261,8 +261,8 @@ module UserHelpers
   end
 
   def disallow_user_read_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
-    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.id, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.id, space.organization_guid).and_return(false)
   end
 
   def disallow_user_build_update_access(user)
@@ -270,14 +270,14 @@ module UserHelpers
   end
 
   def disallow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
-    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.guid, space.organization_guid).and_return(false)
-    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.id, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_app_environment_variables?).with(space.id, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_system_environment_variables?).with(space.id, space.organization_guid).and_return(false)
   end
 
   def disallow_user_write_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.guid).and_return(false)
-    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_write_to_active_space?).with(space.id).and_return(false)
+    allow(permissions_double(user)).to receive(:can_manage_apps_in_active_space?).with(space.id).and_return(false)
   end
 
   def stub_readable_space_guids_for(user, spaces)

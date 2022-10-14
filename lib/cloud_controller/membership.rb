@@ -16,9 +16,8 @@ module VCAP::CloudController
       @user = user
     end
 
-    def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      if space_guid && space_role?(roles)
-        space_id = Space.where(guid: space_guid).select(:id)
+    def has_any_roles?(roles, space_id=nil, org_guid=nil)
+      if space_id && space_role?(roles)
         return true unless SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_id).empty?
       end
 

@@ -22,7 +22,7 @@ class PackagesController < ApplicationController
 
     if app_nested?
       app, dataset = PackageListFetcher.fetch_for_app(message: message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
                   PackageListFetcher.fetch_all(message: message)
@@ -56,8 +56,8 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: hashed_params[:guid]).first
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.guid)
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
     suspended! unless permission_queryer.is_space_active?(package.space.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
@@ -86,8 +86,8 @@ class PackagesController < ApplicationController
 
   def download
     package = PackageModel.where(guid: hashed_params[:guid]).first
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless permission_queryer.can_read_secrets_in_space?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization.guid)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(package.space.id, package.space.organization.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
@@ -103,15 +103,15 @@ class PackagesController < ApplicationController
 
   def show
     package = PackageModel.where(guid: hashed_params[:guid]).first
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   def destroy
     package = PackageModel.where(guid: hashed_params[:guid]).first
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.guid)
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
     suspended! unless permission_queryer.is_space_active?(package.space.guid)
 
     delete_action = PackageDelete.new(user_audit_info)
@@ -134,8 +134,8 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package, space, org = PackageFetcher.new.fetch(hashed_params[:guid])
-    package_not_found! unless package && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    package_not_found! unless package && permission_queryer.can_read_from_space?(space.id, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.guid)
 
     package = PackageUpdate.new.update(package, message)
@@ -151,8 +151,8 @@ class PackagesController < ApplicationController
 
     app = AppModel.where(guid: message.app_guid).first
     unprocessable_app! unless app &&
-      permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.guid)
+      permission_queryer.can_read_from_space?(app.space.id, app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.id)
     suspended! unless permission_queryer.is_space_active?(app.space.guid)
 
     if message.type != PackageModel::DOCKER_TYPE && app.docker?
@@ -170,14 +170,14 @@ class PackagesController < ApplicationController
     app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).first
     unprocessable_app! unless destination_app &&
-      permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.guid)
+      permission_queryer.can_read_from_space?(destination_app.space.id, destination_app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.id)
     suspended! unless permission_queryer.is_space_active?(destination_app.space.guid)
 
     source_package = PackageModel.where(guid: hashed_params[:source_guid]).first
     unprocessable_source_package! unless source_package &&
-      permission_queryer.can_read_from_space?(source_package.space.guid, source_package.space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(source_package.space.guid)
+      permission_queryer.can_read_from_space?(source_package.space.id, source_package.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(source_package.space.id)
     suspended! unless permission_queryer.is_space_active?(source_package.space.guid)
 
     PackageCopy.new.copy(

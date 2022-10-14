@@ -22,7 +22,7 @@ class TasksController < ApplicationController
 
     if app_nested?
       app, dataset = TaskListFetcher.fetch_for_app(message: message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.organization.guid)
       show_secrets = can_read_secrets?(app.organization, app.space)
     else
       dataset = if permission_queryer.can_read_globally?
@@ -49,8 +49,8 @@ class TasksController < ApplicationController
 
     app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: hashed_params[:app_guid], droplet_guid: message.droplet_guid)
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.guid)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
@@ -69,9 +69,9 @@ class TasksController < ApplicationController
 
   def cancel
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, org.guid)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.guid)
     TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
 
@@ -85,8 +85,8 @@ class TasksController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+    task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.guid)
 
     task = TaskUpdate.new.update(task, message)
@@ -107,11 +107,11 @@ class TasksController < ApplicationController
   end
 
   def can_read_secrets?(org, space)
-    permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+    permission_queryer.can_read_secrets_in_space?(space.id, org.guid)
   end
 
   def can_read_task?(org, space)
-    permission_queryer.can_read_from_space?(space.guid, org.guid)
+    permission_queryer.can_read_from_space?(space.id, org.guid)
   end
 
   def task_not_found!

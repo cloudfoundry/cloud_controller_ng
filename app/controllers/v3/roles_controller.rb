@@ -65,7 +65,7 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     if role.for_space?
-      unauthorized! unless permission_queryer.can_update_active_space?(role.space_guid, role.organization_guid)
+      unauthorized! unless permission_queryer.can_update_active_space?(role.space.id, role.organization_guid)
       suspended! unless permission_queryer.is_space_active?(role.space_guid)
     else
       unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_guid)
@@ -93,7 +93,7 @@ class RolesController < ApplicationController
     unprocessable_space! unless space
     org = space.organization
 
-    unauthorized! unless permission_queryer.can_update_active_space?(message.space_guid, org.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.id, org.guid)
     suspended! unless permission_queryer.is_space_active?(message.space_guid)
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)

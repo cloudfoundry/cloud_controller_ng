@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid']) unless route
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(process.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(process.space.id)
       raise CloudController::Errors::ApiError.new_from_details('OrgSuspended') unless permissions.is_space_active?(process.space.guid)
 
       route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
@@ -62,7 +62,7 @@ module VCAP::CloudController
       permissions = Permissions.new(SecurityContext.current_user)
 
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(route_mapping.space.guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless permissions.can_write_to_active_space?(route_mapping.space.id)
       raise CloudController::Errors::ApiError.new_from_details('OrgSuspended') unless permissions.is_space_active?(route_mapping.space.guid)
 
       RouteMappingDelete.new(UserAuditInfo.from_context(SecurityContext)).delete(route_mapping)

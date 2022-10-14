@@ -36,10 +36,10 @@ class RevisionsController < ApplicationController
     app = revision.app
     space = app.space
     org = space.organization
-    resource_not_found!(:revision) unless permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! if needs_write_permissions && !permission_queryer.can_write_to_active_space?(space.guid)
+    resource_not_found!(:revision) unless permission_queryer.can_read_from_space?(space.id, org.guid)
+    unauthorized! if needs_write_permissions && !permission_queryer.can_write_to_active_space?(space.id)
     suspended! if needs_write_permissions && !permission_queryer.is_space_active?(space.guid)
-    unauthorized! if needs_secrets_read_permission && !permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+    unauthorized! if needs_secrets_read_permission && !permission_queryer.can_read_secrets_in_space?(space.id, org.guid)
 
     revision
   end

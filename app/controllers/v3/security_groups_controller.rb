@@ -121,7 +121,7 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization.guid)
     suspended! unless permission_queryer.is_space_active?(space.guid)
     unprocessable_space! unless security_group.spaces.include?(space)
 
@@ -138,7 +138,7 @@ class SecurityGroupsController < ApplicationController
 
     space = Space.find(guid: hashed_params[:space_guid])
     unprocessable_space! unless space
-    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization.guid)
     suspended! unless permission_queryer.is_space_active?(space.guid)
     unprocessable_space! unless security_group.staging_spaces.include?(space)
 
@@ -172,9 +172,10 @@ class SecurityGroupsController < ApplicationController
     unauthorized_space = false
     suspended_space = false
     space_guids.each do |space_guid|
-      org = Space.find(guid: space_guid)&.organization
+      space = Space.find(guid: space_guid)
+      org = space.organization
       if org
-        if !permission_queryer.can_update_active_space?(space_guid, org.guid)
+        if !permission_queryer.can_update_active_space?(space.id, org.guid)
           unauthorized_space = true
           break
         elsif !suspended_space && !permission_queryer.is_space_active?(space_guid)
