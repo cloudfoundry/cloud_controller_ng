@@ -340,7 +340,7 @@ module VCAP::CloudController
             expect(user_with_role.reload.spaces).not_to include(space)
             expect { role.reload }.to raise_error Sequel::NoExistingObject
 
-            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization_id)
             expect(organization_user).not_to be_nil
           end
 
@@ -354,7 +354,7 @@ module VCAP::CloudController
             expect(user_with_role.reload.audited_spaces).not_to include(space)
             expect { role.reload }.to raise_error Sequel::NoExistingObject
 
-            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization_id)
             expect(organization_user).not_to be_nil
           end
 
@@ -368,7 +368,7 @@ module VCAP::CloudController
             expect(user_with_role.reload.managed_spaces).not_to include(space)
             expect { role.reload }.to raise_error Sequel::NoExistingObject
 
-            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization_id)
             expect(organization_user).not_to be_nil
           end
         end

@@ -4,9 +4,8 @@ module VCAP::CloudController
       app = AppModel.where(guid: app_guid).first
       return nil if app.nil?
 
-      org = app.space ? app.space.organization : nil
       droplet = app.droplets.detect { |d| d.guid == droplet_guid }
-      [app, app.space, org, droplet]
+      [app, app.space, droplet]
     end
   end
 end

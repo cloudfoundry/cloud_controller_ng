@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       task = app.tasks_dataset.where(guid: task_guid).first
 
-      [task, app, app.space, app.organization]
+      [task, app, app.space]
     end
 
     def fetch(task_guid:)
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       return nil unless task
 
-      [task, task.space, task.space.organization]
+      [task, task.space]
     end
   end
 end

@@ -26,7 +26,10 @@ class ProcessesController < ApplicationController
 
     if app_nested?
       app, dataset = ProcessListFetcher.fetch_for_app(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.organization.guid)
+      app_not_found! unless app
+
+      space = app.space
+      app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     else
       dataset = if permission_queryer.can_read_globally?
                   ProcessListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
@@ -49,7 +52,7 @@ class ProcessesController < ApplicationController
 
   def show
     # TODO
-    render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process, show_secrets: permission_queryer.can_read_secrets_in_space?(@space.id, @space.organization.guid))
+    render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process, show_secrets: permission_queryer.can_read_secrets_in_space?(@space.id, @space.organization_id))
   end
 
   def update
@@ -109,18 +112,19 @@ class ProcessesController < ApplicationController
 
   def find_process_and_space
     if app_nested?
-      @process, app, @space, org = ProcessFetcher.fetch_for_app_by_type(app_guid: hashed_params[:app_guid], process_type: hashed_params[:type])
-      app_not_found! unless app && permission_queryer.can_read_from_space?(@space.id, org.guid)
+      @process, app, @space = ProcessFetcher.fetch_for_app_by_type(app_guid: hashed_params[:app_guid], process_type: hashed_params[:type])
+
+      app_not_found! unless app && permission_queryer.can_read_from_space?(@space.id, @space.organization_id)
       process_not_found! unless @process
     else
-      @process, @space, org = ProcessFetcher.fetch(process_guid: hashed_params[:process_guid])
-      process_not_found! unless @process && permission_queryer.can_read_from_space?(@space.id, org.guid)
+      @process, @space = ProcessFetcher.fetch(process_guid: hashed_params[:process_guid])
+      process_not_found! unless @process && permission_queryer.can_read_from_space?(@space.id, @space.organization_id)
     end
   end
 
   def ensure_can_write
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(@space.id)
-    suspended! unless permission_queryer.is_space_active?(@space.guid)
+    suspended! unless permission_queryer.is_space_active?(@space.id)
   end
 
   def process_not_found!

@@ -4,8 +4,7 @@ module VCAP::CloudController
       package = PackageModel.where(guid: package_guid).first
       return nil if package.nil?
 
-      org = package.space ? package.space.organization : nil
-      [package, package.space, org]
+      [package, package.space]
     end
   end
 end

@@ -277,7 +277,7 @@ class ServiceCredentialBindingsController < ApplicationController
       readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
       readable_spaces.any? do |space|
-        permission_queryer.can_read_from_space?(space.id, space.organization_guid)
+        permission_queryer.can_read_from_space?(space.id, space.organization_id)
       end
     end
   end
@@ -352,15 +352,15 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_secrets_in_the_binding_space?
-    permission_queryer.can_read_secrets_in_space?(binding_space.id, binding_org.guid)
+    permission_queryer.can_read_secrets_in_space?(binding_space.id, binding_org.id)
   end
 
   def can_read_from_space?(space)
-    permission_queryer.can_read_from_space?(space.id, space.organization.guid)
+    permission_queryer.can_read_from_space?(space.id, space.organization_id)
   end
 
   def is_space_active?(space)
-    permission_queryer.is_space_active?(space.guid)
+    permission_queryer.is_space_active?(space.id)
   end
 
   def binding_space

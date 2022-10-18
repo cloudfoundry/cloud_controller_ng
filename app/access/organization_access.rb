@@ -9,7 +9,7 @@ module VCAP::CloudController
     def read_for_update?(org, params=nil)
       return true if context.queryer.can_write_globally?
       return false unless org.active?
-      return false unless context.queryer.can_write_to_active_org?(org.guid)
+      return false unless context.queryer.can_write_to_active_org?(org.id)
 
       if params.present?
         return false if params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s)
@@ -22,7 +22,7 @@ module VCAP::CloudController
       return true if context.queryer.can_write_globally?
 
       user_acting_on_themselves = user_acting_on_themselves?(params)
-      return false unless context.queryer.can_write_to_active_org?(org.guid) || user_acting_on_themselves
+      return false unless context.queryer.can_write_to_active_org?(org.id) || user_acting_on_themselves
       return false unless org.active?
 
       validate!(org, params)
@@ -34,7 +34,7 @@ module VCAP::CloudController
       return true if context.queryer.can_write_globally?
       return false unless org.active?
 
-      context.queryer.can_write_to_active_org?(org.guid)
+      context.queryer.can_write_to_active_org?(org.id)
     end
 
     def delete?(object)

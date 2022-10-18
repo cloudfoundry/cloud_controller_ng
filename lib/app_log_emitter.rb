@@ -22,7 +22,8 @@ module VCAP
       private
 
       def generate_tags(app_id)
-        app, space, org = VCAP::CloudController::AppFetcher.new.fetch(app_id)
+        app, space = VCAP::CloudController::AppFetcher.new.fetch(app_id)
+
         if app.nil?
           return {
             app_id: app_id,
@@ -33,6 +34,8 @@ module VCAP
             organization_name: ''
           }
         end
+
+        org = space.organization
 
         {
           app_id: app.guid,

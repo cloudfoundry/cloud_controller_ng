@@ -204,28 +204,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_read_from_org?(org.id)).to be true
           end
         end
 
         context 'and user is a read only admin' do
           it 'returns true' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_read_from_org?(org.id)).to be true
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns true' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_read_from_org?(org.id)).to be true
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_read_from_org?(org_guid)).to be false
+            expect(permissions.can_read_from_org?(org.id)).to be false
           end
         end
       end
@@ -233,22 +233,22 @@ module VCAP::CloudController
       context 'user has valid membership' do
         it 'returns true for org user' do
           org.add_user(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(permissions.can_read_from_org?(org.id)).to be true
         end
 
         it 'returns true for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(permissions.can_read_from_org?(org.id)).to be true
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(permissions.can_read_from_org?(org.id)).to be true
         end
 
         it 'returns true for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_read_from_org?(org_guid)).to be true
+          expect(permissions.can_read_from_org?(org.id)).to be true
         end
       end
     end
@@ -288,28 +288,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_org?(org_guid)).to be true
+            expect(permissions.can_read_from_org?(org.id)).to be true
           end
         end
 
         context 'and user is a read only admin' do
           it 'returns false' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_write_to_active_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org.id)).to be false
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_write_to_active_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org.id)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_write_to_active_org?(org_guid)).to be false
+            expect(permissions.can_write_to_active_org?(org.id)).to be false
           end
         end
       end
@@ -317,29 +317,29 @@ module VCAP::CloudController
       context 'user has valid membership' do
         it 'returns false for org user' do
           org.add_user(user)
-          expect(permissions.can_write_to_active_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org.id)).to be false
         end
 
         it 'returns false for org auditor' do
           org.add_auditor(user)
-          expect(permissions.can_write_to_active_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org.id)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_write_to_active_org?(org_guid)).to be true
+          expect(permissions.can_write_to_active_org?(org.id)).to be true
         end
 
         it 'returns false for org billing manager' do
           org.add_billing_manager(user)
-          expect(permissions.can_write_to_active_org?(org_guid)).to be false
+          expect(permissions.can_write_to_active_org?(org.id)).to be false
         end
       end
     end
 
     describe '#is_org_active?' do
       it 'returns true' do
-        expect(permissions.is_org_active?(org_guid)).to be true
+        expect(permissions.is_org_active?(org.id)).to be true
       end
 
       context 'org is suspended' do
@@ -349,19 +349,19 @@ module VCAP::CloudController
 
         it 'returns false' do
           set_current_user(user)
-          expect(permissions.is_org_active?(org_guid)).to be false
+          expect(permissions.is_org_active?(org.id)).to be false
         end
 
         it 'returns true for an admin' do
           set_current_user(user, { admin: true })
-          expect(permissions.is_org_active?(org_guid)).to be true
+          expect(permissions.is_org_active?(org.id)).to be true
         end
       end
     end
 
     describe '#is_space_active?' do
       it 'returns true' do
-        expect(permissions.is_space_active?(space_guid)).to be true
+        expect(permissions.is_space_active?(space.id)).to be true
       end
 
       context 'org is suspended' do
@@ -371,12 +371,12 @@ module VCAP::CloudController
 
         it 'returns false' do
           set_current_user(user)
-          expect(permissions.is_space_active?(space_guid)).to be false
+          expect(permissions.is_space_active?(space.id)).to be false
         end
 
         it 'returns true for an admin' do
           set_current_user(user, { admin: true })
-          expect(permissions.is_space_active?(space_guid)).to be true
+          expect(permissions.is_space_active?(space.id)).to be true
         end
       end
     end
@@ -436,62 +436,62 @@ module VCAP::CloudController
       end
       context 'user has no membership' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org_guid).and_return(false)
+          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org.id).and_return(false)
         end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+            expect(permissions.can_read_from_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and the user is a read only admin' do
           it 'returns true' do
             set_current_user(user, { admin_read_only: true })
-            expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+            expect(permissions.can_read_from_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and user is a global auditor' do
           it 'returns true' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+            expect(permissions.can_read_from_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and user is not an admin' do
           it 'returns false' do
             set_current_user(user)
-            expect(permissions.can_read_from_space?(space.id, org_guid)).to be false
+            expect(permissions.can_read_from_space?(space.id, org.id)).to be false
           end
         end
       end
 
       context 'user has valid membership' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org_guid).and_return(true)
+          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org.id).and_return(true)
         end
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+          expect(permissions.can_read_from_space?(space.id, org.id)).to be true
         end
 
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+          expect(permissions.can_read_from_space?(space.id, org.id)).to be true
         end
 
         it 'returns true for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+          expect(permissions.can_read_from_space?(space.id, org.id)).to be true
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_read_from_space?(space.id, org_guid)).to be true
+          expect(permissions.can_read_from_space?(space.id, org.id)).to be true
         end
       end
     end
@@ -504,45 +504,45 @@ module VCAP::CloudController
       end
       context 'user has no membership' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org_guid).and_return(false)
+          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org.id).and_return(false)
         end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user_as_admin
-            expect(permissions.can_read_secrets_in_space?(space.id, org_guid)).to be true
+            expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_read_secrets_in_space?(space.id, org_guid)).to be true
+            expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_read_secrets_in_space?(space.id, org_guid)).to be false
+            expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_read_secrets_in_space?(space.id, org_guid)).to be false
+            expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be false
           end
         end
       end
 
       context 'user has valid membership' do
         before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org_guid).and_return(true)
+          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org.id).and_return(true)
         end
         it 'returns true' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_read_secrets_in_space?(space.id, org_guid)).to be true
+          expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be true
         end
       end
     end
@@ -772,28 +772,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_update_active_space?(space.id, org_guid)).to be true
+            expect(permissions.can_update_active_space?(space.id, org.id)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_update_active_space?(space.id, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space.id, org.id)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_update_active_space?(space.id, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space.id, org.id)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_update_active_space?(space.id, org_guid)).to be false
+            expect(permissions.can_update_active_space?(space.id, org.id)).to be false
           end
         end
       end
@@ -802,24 +802,24 @@ module VCAP::CloudController
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_update_active_space?(space.id, org_guid)).to be true
+          expect(permissions.can_update_active_space?(space.id, org.id)).to be true
         end
 
         it 'returns false for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_update_active_space?(space.id, org_guid)).to be false
+          expect(permissions.can_update_active_space?(space.id, org.id)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_update_active_space?(space.id, org_guid)).to be false
+          expect(permissions.can_update_active_space?(space.id, org.id)).to be false
         end
 
         it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_update_active_space?(space.id, org_guid)).to be true
+          expect(permissions.can_update_active_space?(space.id, org.id)).to be true
         end
       end
     end
@@ -1114,152 +1114,152 @@ module VCAP::CloudController
     describe '#can_read_route?' do
       it 'returns true if user is an admin' do
         set_current_user(user, { admin: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true if user is a read-only admin' do
         set_current_user(user, { admin_read_only: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true if user is a global auditor' do
         set_current_user_as_global_auditor
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space developer' do
         org.add_user(user)
         space.add_developer(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space manager' do
         org.add_user(user)
         space.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space auditor' do
         org.add_user(user)
         space.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for org manager' do
         org.add_user(user)
         org.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for org auditor' do
         org.add_user(user)
         org.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space supporter' do
         org.add_user(user)
         space.add_supporter(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns false for org billing manager' do
         org.add_user(user)
         org.add_billing_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
 
       it 'returns false for regular org user' do
         org.add_user(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
 
       it 'returns false for other user' do
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
     end
 
     describe '#can_read_route?' do
       it 'returns true if user is an admin' do
         set_current_user(user, { admin: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true if user is a read-only admin' do
         set_current_user(user, { admin_read_only: true })
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true if user is a global auditor' do
         set_current_user_as_global_auditor
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space developer' do
         org.add_user(user)
         space.add_developer(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space manager' do
         org.add_user(user)
         space.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space auditor' do
         org.add_user(user)
         space.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for space supporter' do
         org.add_user(user)
         space.add_supporter(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for org manager' do
         org.add_user(user)
         org.add_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns true for org auditor' do
         org.add_user(user)
         org.add_auditor(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+        expect(permissions.can_read_route?(space_guid)).to be true
       end
 
       it 'returns false for org billing manager' do
         org.add_user(user)
         org.add_billing_manager(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
 
       it 'returns false for regular org user' do
         org.add_user(user)
 
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
 
       it 'returns false for other user' do
-        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+        expect(permissions.can_read_route?(space_guid)).to be false
       end
     end
 

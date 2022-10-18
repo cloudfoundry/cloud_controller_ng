@@ -141,30 +141,30 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def can_read_from_org?(org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
+  def can_read_from_org?(org_id)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_id)
   end
 
-  def can_write_to_active_org?(org_guid)
+  def can_write_to_active_org?(org_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+    membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_id)
   end
 
-  def is_org_active?(org_guid)
+  def is_org_active?(org_id)
     return true if can_write_globally? # admins can modify suspended orgs
 
     !VCAP::CloudController::Organization.
-      where(guid: org_guid, status: VCAP::CloudController::Organization::ACTIVE).
+      where(id: org_id, status: VCAP::CloudController::Organization::ACTIVE).
       empty?
   end
 
-  def is_space_active?(space_guid)
+  def is_space_active?(space_id)
     return true if can_write_globally? # admins can modify suspended orgs
 
     !VCAP::CloudController::Organization.
       join(:spaces, organization_id: :id).
-      where(spaces__guid: space_guid, organizations__status: VCAP::CloudController::Organization::ACTIVE).
+      where(spaces__id: space_id, organizations__status: VCAP::CloudController::Organization::ACTIVE).
       empty?
   end
 
@@ -180,21 +180,21 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def can_read_from_space?(space_id, org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_READING, space_id, org_guid)
+  def can_read_from_space?(space_id, org_id)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_READING, space_id, org_id)
   end
 
-  def can_download_droplet?(space_id, org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_DROPLET_DOWLOAD, space_id, org_guid)
+  def can_download_droplet?(space_id, org_id)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_DROPLET_DOWLOAD, space_id, org_id)
   end
 
-  def can_read_secrets_in_space?(space_id, org_guid)
+  def can_read_secrets_in_space?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_guid)
+      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
   end
 
-  def can_read_services_in_space?(space_id, org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SERVICES_READING, space_id, org_guid)
+  def can_read_services_in_space?(space_id, org_id)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SERVICES_READING, space_id, org_id)
   end
 
   def can_write_to_active_space?(space_id)
@@ -209,10 +209,10 @@ class VCAP::CloudController::Permissions
     membership.has_any_roles?(ROLES_FOR_APP_MANAGING, space_id)
   end
 
-  def can_update_active_space?(space_id, org_guid)
+  def can_update_active_space?(space_id, org_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_id, org_guid)
+    membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_id, org_id)
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
@@ -267,7 +267,7 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def can_read_route?(space_guid, org_guid)
+  def can_read_route?(space_guid)
     return true if can_read_globally?
 
     space = VCAP::CloudController::Space.where(guid: space_guid).first
@@ -278,14 +278,14 @@ class VCAP::CloudController::Permissions
       @user.audited_organizations.include?(org)
   end
 
-  def can_read_app_environment_variables?(space_id, org_guid)
+  def can_read_app_environment_variables?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_id, org_guid)
+      membership.has_any_roles?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_id, org_id)
   end
 
-  def can_read_system_environment_variables?(space_id, org_guid)
+  def can_read_system_environment_variables?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_guid)
+      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
   end
 
   def readable_app_guids
