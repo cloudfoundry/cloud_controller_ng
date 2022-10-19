@@ -55,26 +55,36 @@ module VCAP::CloudController
     describe '#deploying?' do
       it 'returns true if the deployment is deploying' do
         deployment.state = 'DEPLOYING'
-
         expect(deployment.deploying?).to be(true)
       end
 
-      it 'returns false if the deployment has been deployed' do
+      it 'returns false otherwise' do
         deployment.state = 'DEPLOYED'
-
         expect(deployment.deploying?).to be(false)
-      end
 
-      it 'returns false if the deployment is canceling' do
         deployment.state = 'CANCELING'
+        expect(deployment.deploying?).to be(false)
 
+        deployment.state = 'CANCELED'
         expect(deployment.deploying?).to be(false)
       end
+    end
 
-      it 'returns false if the deployment has been canceled' do
+    describe '#canceling?' do
+      it 'returns true if the deployment is canceling' do
+        deployment.state = 'CANCELING'
+        expect(deployment.canceling?).to be(true)
+      end
+
+      it 'returns false otherwise' do
         deployment.state = 'CANCELED'
+        expect(deployment.canceling?).to be(false)
 
-        expect(deployment.deploying?).to be(false)
+        deployment.state = 'DEPLOYING'
+        expect(deployment.canceling?).to be(false)
+
+        deployment.state = 'DEPLOYED'
+        expect(deployment.canceling?).to be(false)
       end
     end
 

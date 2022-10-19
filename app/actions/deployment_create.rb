@@ -5,6 +5,7 @@ require 'cloud_controller/deployments/deployment_target_state'
 module VCAP::CloudController
   class DeploymentCreate
     class Error < StandardError; end
+    class InvalidStatus < Error; end
 
     class << self
       def create(app:, user_audit_info:, message:)
@@ -12,13 +13,13 @@ module VCAP::CloudController
 
         DeploymentModel.db.transaction do
           app.lock!
+          reject_invalid_state! if app.canceling?
 
           target_state = DeploymentTargetState.new(app, message)
 
           previous_droplet = app.droplet
           target_state.apply_to_app(app, user_audit_info)
 
-          revision = nil
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
             log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
@@ -153,6 +154,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def reject_invalid_state!
+        raise InvalidStatus.new('Cannot create deployment while previous deployment is being cancelled.')
+      end
 
       def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
         # Do not create a revision here because AppStart will not handle the rollback case

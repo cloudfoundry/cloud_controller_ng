@@ -956,6 +956,18 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the previous deployment is in the CANCELING state' do
+        before do
+          DeploymentModel.make(app: app, state: DeploymentModel::CANCELING_STATE)
+        end
+
+        it 'raises an error' do
+          expect {
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          }.to raise_error(DeploymentCreate::InvalidStatus, 'Cannot create deployment while previous deployment is being cancelled.')
+        end
+      end
     end
   end
 end
