@@ -18,7 +18,7 @@ RSpec.describe Locket::LockWorker do
     it 'should start the Client' do
       lock_worker.acquire_lock_and_repeatedly_call(owner: owner, key: key, &{})
 
-      expect(client).to have_received(:start)
+      expect(client).to have_received(:start).with(owner: owner, key: key)
     end
 
     describe 'when it does not have the lock' do

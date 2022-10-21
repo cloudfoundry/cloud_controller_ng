@@ -189,7 +189,6 @@ module Diego
     private
 
     attr_reader :client, :base_url, :locket_config
-    attr_accessor :cached_active_bbs_id
 
     def protobuf_encode!(hash, protobuf_message_class)
       # See below link to understand proto3 message encoding

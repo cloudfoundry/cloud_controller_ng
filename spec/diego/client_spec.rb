@@ -12,13 +12,6 @@ module Diego
     let(:test_config) { TestConfig.config_instance }
     let(:locket_config) { test_config.get(:locket) }
     let(:key) { 'bbs' }
-    let(:fetch_request) do
-      Models::FetchRequest.new(
-        {
-          key: key,
-        }
-      )
-    end
     let(:fetch_response) do
       Models::FetchResponse.new(
         {
@@ -683,7 +676,7 @@ module Diego
           end
           stub_request(:post, 'https://bbs-1.bbs.example.com:4443/v1/ping').to_timeout
           stub_request(:post, 'https://bbs-2.bbs.example.com:4443/v1/ping').to_return(status: 200,
-body: Bbs::Models::PingResponse.encode(Bbs::Models::PingResponse.new(available: true)).to_s)
+          body: Bbs::Models::PingResponse.encode(Bbs::Models::PingResponse.new(available: true)).to_s)
         end
 
         it 'tries locket again to get the new active bbs id' do
