@@ -63,7 +63,7 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization.id))
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
@@ -86,7 +86,7 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization.id))
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
@@ -111,7 +111,7 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization.id))
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     space_guid = hashed_params[:space_guid]
@@ -133,7 +133,7 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization.id))
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces.empty?
