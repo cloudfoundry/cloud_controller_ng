@@ -22,7 +22,7 @@ RSpec.describe Locket::LockWorker do
     end
 
     describe 'when it does not have the lock' do
-      it 'does not yield to the block if it does not have the lock' do
+      it 'does not yield to the block' do
         allow(client).to receive(:lock_acquired?).and_return(false)
 
         expect { |b| lock_worker.acquire_lock_and_repeatedly_call(owner: owner, key: key, &b) }.not_to yield_control
@@ -36,8 +36,8 @@ RSpec.describe Locket::LockWorker do
       end
     end
 
-    describe 'when it does not have the lock' do
-      it 'yields to the block if it does have the lock' do
+    describe 'when it does have the lock' do
+      it 'yields to the block' do
         allow(client).to receive(:lock_acquired?).and_return(true)
 
         expect { |b| lock_worker.acquire_lock_and_repeatedly_call(owner: owner, key: key, &b) }.to yield_control
