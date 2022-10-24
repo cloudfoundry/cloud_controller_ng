@@ -1264,9 +1264,7 @@ RSpec.describe 'Apps' do
     let!(:revision) do
       VCAP::CloudController::RevisionModel.make(
         app: process.app,
-        environment_variables: {
-
-        }
+        environment_variables: {}
       )
     end
 

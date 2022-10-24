@@ -37,8 +37,7 @@ module VCAP::CloudController::Validators
       let(:authentication) do
         {
           type: 'basic',
-          credentials: {
-          },
+          credentials: {},
         }
       end
 
