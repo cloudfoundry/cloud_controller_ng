@@ -1190,7 +1190,7 @@ They are queryable, identifying attributes of a resource, but they do not affect
 <p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
 
 <p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
-only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
+only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">true</code>.</p>
 
 <h4 id="labels">Labels</h4>
 
@@ -2568,7 +2568,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>include</strong></td>
 <td><em>list of strings</em></td>
-<td>Optionally include a list of unique related resources in the response; valid values are <code class="prettyprint">space</code> and <code class="prettyprint">spaceorganization</code></td>
+<td>Optionally include a list of unique related resources in the response; valid values are <code class="prettyprint">space</code> and <code class="prettyprint">space.organization</code></td>
 </tr>
 <tr>
 <td><strong>created_ats</strong></td>
@@ -24796,14 +24796,17 @@ will continue in the background. The operation can be retried until it is succes
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
+<td>Can only purge service instances from space-scoped brokers</td>
 </tr>
 </tbody></table>
 <h3 id="update-a-service-instance">Update a service instance</h3>
