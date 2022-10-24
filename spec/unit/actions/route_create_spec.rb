@@ -80,8 +80,7 @@ module VCAP::CloudController
           let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
           let!(:config) do
             TestConfig.override(
-              kubernetes: {
-              },
+              kubernetes: {},
                 )
           end
 

@@ -175,8 +175,7 @@ RSpec.describe 'Builds' do
         {
           lifecycle: {
             type: 'kpack',
-            data: {
-            },
+            data: {},
           },
           package: {
             guid: package.guid

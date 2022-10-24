@@ -246,8 +246,7 @@ RSpec.describe 'Events' do
               'type' => 'app',
               'name' => ''
             },
-            'data' => {
-            },
+            'data' => {},
             'space' => {
               'guid' => space.guid
             },
