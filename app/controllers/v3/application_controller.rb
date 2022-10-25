@@ -89,8 +89,11 @@ class ApplicationController < ActionController::Base
   def parsed_yaml
     return @parsed_yaml if @parsed_yaml
 
+    bad_request!('Manifest size is too large. The maximum supported size is 1MB.') if request.body.size > 1.megabyte
+
     allow_yaml_aliases = false
-    yaml = Psych.safe_load(request.body.string, permitted_classes: [], permitted_symbols: [], aliases: allow_yaml_aliases, strict_integer: true)
+    yaml = Psych.safe_load(request.body.read, permitted_classes: [], permitted_symbols: [], aliases: allow_yaml_aliases, strict_integer: true)
+
     message_parse_error!('invalid request body') if !yaml.is_a? Hash
     @parsed_yaml = yaml
   rescue Psych::BadAlias
