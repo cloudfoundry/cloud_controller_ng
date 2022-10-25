@@ -8,7 +8,7 @@ module VCAP::CloudController
       extend TruncationMixin
 
       def self.record_create(process, user_audit_info, manifest_triggered: false)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Added process: \"#{process.type}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Added process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
           process_guid: process.guid,
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       def self.record_delete(process, user_audit_info)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Deleting process: \"#{process.type}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Deleting process: \"#{process.type}\"")
 
         create_event(
           process:        process,
@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       def self.record_update(process, user_audit_info, request, manifest_triggered: false)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Updating process: \"#{process.type}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Updating process: \"#{process.type}\"")
 
         request           = request.dup.symbolize_keys
         request[:command] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if request.key?(:command)
@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       def self.record_scale(process, user_audit_info, request, manifest_triggered: false)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Scaling process: \"#{process.type}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Scaling process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
           process_guid: process.guid,
@@ -82,7 +82,7 @@ module VCAP::CloudController
       end
 
       def self.record_terminate(process, user_audit_info, index)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
 
         create_event(
           process:        process,
@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
 
       def self.record_crash(process, crash_payload)
-        VCAP::AppLogEmitter.emit(process.app.guid, "Process has crashed with type: \"#{process.type}\"")
+        VCAP::AppLogEmitter.emit(process.app_guid, "Process has crashed with type: \"#{process.type}\"")
         crash_payload['exit_description'] = truncate(crash_payload['exit_description'])
 
         create_event(
@@ -113,7 +113,7 @@ module VCAP::CloudController
       end
 
       def self.record_rescheduling(process, rescheduling_payload)
-        VCAP::AppLogEmitter.emit(process.app.guid, 'Process is being rescheduled')
+        VCAP::AppLogEmitter.emit(process.app_guid, 'Process is being rescheduled')
 
         create_event(
           process:    process,

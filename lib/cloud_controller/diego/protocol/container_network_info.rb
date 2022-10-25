@@ -18,7 +18,7 @@ module VCAP::CloudController
             'properties' => {
               'policy_group_id' => app.guid,
               'app_id' => app.guid,
-              'space_id' => app.space.guid,
+              'space_id' => app.space_guid,
               'org_id' => app.organization.guid,
               'ports' => app.processes.map(&:open_ports).flatten.sort.uniq.join(','),
               'container_workload' => container_workload,

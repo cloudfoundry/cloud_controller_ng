@@ -161,7 +161,7 @@ module VCAP::CloudController
       TelemetryLogger.v2_emit(
         'delete-app',
         {
-          'app-id' => process.app.guid,
+          'app-id' => process.app_guid,
           'user-id' => current_user.guid,
         }
       )
@@ -300,7 +300,7 @@ module VCAP::CloudController
       TelemetryLogger.v2_emit(
         'update-app',
         {
-          'app-id' => process.app.guid,
+          'app-id' => process.app_guid,
           'user-id' => current_user.guid,
         }
       )
@@ -309,7 +309,7 @@ module VCAP::CloudController
         TelemetryLogger.v2_emit(
           'scale-app',
           {
-            'app-id' => process.app.guid,
+            'app-id' => process.app_guid,
             'user-id' => current_user.guid,
           },
           {
@@ -326,7 +326,7 @@ module VCAP::CloudController
           TelemetryLogger.v2_emit(
             'start-app',
             {
-              'app-id' => process.app.guid,
+              'app-id' => process.app_guid,
               'user-id' => current_user.guid,
             }
           )
@@ -335,7 +335,7 @@ module VCAP::CloudController
           TelemetryLogger.v2_emit(
             'stop-app',
             {
-              'app-id' => process.app.guid,
+              'app-id' => process.app_guid,
               'user-id' => current_user.guid,
             }
           )
@@ -366,7 +366,7 @@ module VCAP::CloudController
       TelemetryLogger.v2_emit(
         'create-app',
         {
-          'app-id' => process.app.guid,
+          'app-id' => process.app_guid,
           'user-id' => current_user.guid,
         }
       )

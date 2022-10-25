@@ -227,7 +227,7 @@ class ServiceCredentialBindingsController < ApplicationController
       {
         'service-id' =>  binding.service_instance.managed_instance? ? binding.service_instance.service_plan.service.guid : 'user-provided',
         'service-instance-id' => binding.service_instance.guid,
-        'app-id' => binding.app.guid,
+        'app-id' => binding.app_guid,
         'user-id' => user_audit_info.user_guid,
       }
     )

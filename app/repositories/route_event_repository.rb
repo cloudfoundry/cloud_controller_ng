@@ -117,7 +117,7 @@ module VCAP::CloudController
       def record_route_map(route_mapping, actor_audit_info)
         Event.create(
           type:              'audit.app.map-route',
-          actee:             route_mapping.app.guid,
+          actee:             route_mapping.app_guid,
           actee_type:        'app',
           actee_name:        route_mapping.app.name,
           actor:             actor_audit_info.user_guid,
@@ -128,7 +128,7 @@ module VCAP::CloudController
           space_guid:        route_mapping.space.guid,
           organization_guid: route_mapping.space.organization.guid,
           metadata:          {
-            route_guid:       route_mapping.route.guid,
+            route_guid:       route_mapping.route_guid,
             app_port:         route_mapping.app_port,
             destination_guid: route_mapping.guid,
             process_type:     route_mapping.process_type,
@@ -140,7 +140,7 @@ module VCAP::CloudController
       def record_route_unmap(route_mapping, actor_audit_info)
         Event.create(
           type:              'audit.app.unmap-route',
-          actee:             route_mapping.app.guid,
+          actee:             route_mapping.app_guid,
           actee_type:        'app',
           actee_name:        route_mapping.app.name,
           actor:             actor_audit_info.user_guid,
@@ -151,7 +151,7 @@ module VCAP::CloudController
           space_guid:        route_mapping.space.guid,
           organization_guid: route_mapping.space.organization.guid,
           metadata:          {
-            route_guid:       route_mapping.route.guid,
+            route_guid:       route_mapping.route_guid,
             app_port:         route_mapping.app_port,
             destination_guid: route_mapping.guid,
             process_type:     route_mapping.process_type,

@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def read?(route)
-      context.queryer.can_read_route?(route.space.guid)
+      context.queryer.can_read_route?(route.space_id)
     end
 
     def read_for_update?(route, params=nil)

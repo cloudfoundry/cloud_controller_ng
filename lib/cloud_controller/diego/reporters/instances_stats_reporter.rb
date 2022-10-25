@@ -117,7 +117,7 @@ module VCAP::CloudController
       def envelopes(desired_lrp, process)
         if desired_lrp.metric_tags['process_id']
           filter = ->(envelope) { envelope.tags.any? { |key, value| key == 'process_id' && value == process.guid } }
-          source_guid = process.app.guid
+          source_guid = process.app_guid
         else
           filter = ->(_) { true }
           source_guid = process.guid

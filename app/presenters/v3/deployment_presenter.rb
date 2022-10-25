@@ -29,7 +29,7 @@ module VCAP::CloudController::Presenters::V3
         relationships: {
           app: {
             data: {
-              guid: deployment.app.guid
+              guid: deployment.app_guid
             }
           }
         },
@@ -66,7 +66,7 @@ module VCAP::CloudController::Presenters::V3
           href: url_builder.build_url(path: "/v3/deployments/#{deployment.guid}")
         },
         app: {
-          href: url_builder.build_url(path: "/v3/apps/#{deployment.app.guid}")
+          href: url_builder.build_url(path: "/v3/apps/#{deployment.app_guid}")
         },
       }.tap do |links|
         if deployment.cancelable?

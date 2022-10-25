@@ -72,8 +72,8 @@ module VCAP::CloudController
           privileged:                       desired_lrp_builder.privileged?,
           ports:                            ports,
           log_source:                       LRP_LOG_SOURCE,
-          log_guid:                         process.app.guid,
-          metrics_guid:                     process.app.guid,
+          log_guid:                         process.app_guid,
+          metrics_guid:                     process.app_guid,
           metric_tags:                      metric_tags(process),
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
@@ -94,7 +94,7 @@ module VCAP::CloudController
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app.guid}"]
+            organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
           image_username:                   process.desired_droplet.docker_receipt_username,
           image_password:                   process.desired_droplet.docker_receipt_password,
@@ -103,14 +103,14 @@ module VCAP::CloudController
 
       def metric_tags(process)
         tags = {
-          'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'source_id' => METRIC_TAG_VALUE.new(static: process.app_guid),
           'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
           'process_type' => METRIC_TAG_VALUE.new(static: process.type),
           'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
           'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
           'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
           'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
-          'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'app_id' => METRIC_TAG_VALUE.new(static: process.app_guid),
           'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
           'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
           'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),

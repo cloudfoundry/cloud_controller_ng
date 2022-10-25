@@ -42,7 +42,7 @@ module VCAP::CloudController
       TelemetryLogger.v2_emit(
         'restage-app',
         {
-          'app-id' => process.app.guid,
+          'app-id' => process.app_guid,
           'user-id' => current_user.guid,
         }, {
         'lifecycle' => process.app.lifecycle_type,

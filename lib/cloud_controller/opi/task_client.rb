@@ -72,7 +72,7 @@ module OPI
         {
           buildpack_lifecycle: {
             droplet_hash: task.droplet.droplet_hash,
-            droplet_guid: task.droplet.guid,
+            droplet_guid: task.droplet_guid,
             start_command: task.command
           }
         }

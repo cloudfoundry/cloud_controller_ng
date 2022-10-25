@@ -20,7 +20,7 @@ module VCAP::CloudController
         def build_usage_summary
           count = Hash.new(0).tap do |h|
             service_instance.service_bindings.each do |binding|
-              h[binding.app.space.guid] += 1
+              h[binding.app.space_guid] += 1
             end
           end
 

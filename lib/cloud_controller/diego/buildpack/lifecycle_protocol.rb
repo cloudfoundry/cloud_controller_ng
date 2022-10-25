@@ -84,7 +84,7 @@ module VCAP
 
           def droplet_download_uri(task)
             download_url = @blobstore_url_generator.droplet_download_url(task.droplet)
-            raise InvalidDownloadUri.new("Failed to get blobstore download url for droplet #{task.droplet.guid}") unless download_url
+            raise InvalidDownloadUri.new("Failed to get blobstore download url for droplet #{task.droplet_guid}") unless download_url
 
             download_url
           end

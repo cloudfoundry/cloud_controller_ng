@@ -229,7 +229,7 @@ class RoutesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: hashed_params[:guid])
-    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space_id)
     suspended! unless permission_queryer.is_space_active?(route.space_id)
 
@@ -246,7 +246,7 @@ class RoutesController < ApplicationController
   def route
     @route || begin
       @route = Route.find(guid: hashed_params[:guid])
-      route_not_found! unless @route && permission_queryer.can_read_route?(@route.space.guid)
+      route_not_found! unless @route && permission_queryer.can_read_route?(@route.space_id)
       @route
     end
   end
@@ -266,7 +266,7 @@ class RoutesController < ApplicationController
     route = Route.find(guid: hashed_params[:guid])
     route_not_found! unless route
 
-    route_not_found! unless permission_queryer.can_read_route?(route.space.guid)
+    route_not_found! unless permission_queryer.can_read_route?(route.space_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space_id)
     suspended! unless permission_queryer.is_space_active?(route.space_id)
 

@@ -144,7 +144,7 @@ module VCAP::CloudController
       plan_ids = []
       user.spaces.each do |space|
         space.service_instances.select(&:managed_instance?).each do |service_instance|
-          plan_ids << service_instance.service_plan.id
+          plan_ids << service_instance.service_plan_id
         end
       end
       plan_ids.uniq

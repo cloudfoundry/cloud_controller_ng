@@ -45,7 +45,7 @@ class BuildsController < ApplicationController
     TelemetryLogger.v3_emit(
       'create-build',
       {
-        'app-id' => package.app.guid,
+        'app-id' => package.app_guid,
         'build-id' => build.guid,
         'user-id' => current_user.guid,
       },

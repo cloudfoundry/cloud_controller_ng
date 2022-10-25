@@ -34,7 +34,7 @@ module VCAP::CloudController
           dataset = dataset.extension(:null_dataset)
           return dataset.nullify unless app.droplet
 
-          dataset = dataset.where(guid: app.droplet.guid)
+          dataset = dataset.where(guid: app.droplet_guid)
         end
 
         if message.requested?(:app_guids)

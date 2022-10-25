@@ -57,7 +57,7 @@ module OPI
             GUID: process.guid,
             version: process.version,
             processType: process.type,
-            appGUID: process.app.guid,
+            appGUID: process.app_guid,
             appName: process.app.name,
             spaceGUID: process.space.guid,
             spaceName: process.space.name,

@@ -55,7 +55,7 @@ module VCAP::CloudController
     # if this needs to be called from somewhere else, we should move it to the revision sidecar model
     def rehydrate(revision_sidecar)
       sidecar = SidecarModel.create(
-        app_guid: revision_sidecar.revision.app.guid,
+        app_guid: revision_sidecar.revision.app_guid,
         name: revision_sidecar.name,
         command: revision_sidecar.command,
         memory: revision_sidecar.memory,
