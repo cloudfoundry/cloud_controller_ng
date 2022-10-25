@@ -150,7 +150,7 @@ class DomainsController < ApplicationController
     DomainDeleteSharedOrg.delete(domain: domain, shared_organization: shared_org)
     head :no_content
   rescue DomainDeleteSharedOrg::OrgError
-    not_shared_to_org!(shared_org.name)
+    unprocessable!("Unable to unshare domain from organization with name '#{shared_org.name}'. Ensure the domain is shared to this organization.")
   rescue DomainDeleteSharedOrg::RouteError
     unprocessable!('This domain has associated routes in this organization. Delete the routes before unsharing.')
   end
@@ -219,10 +219,6 @@ class DomainsController < ApplicationController
 
   def unprocessable_org!(org_guid)
     unprocessable!("Organization with guid '#{org_guid}' does not exist or you do not have access to it.")
-  end
-
-  def not_shared_to_org!(org_name)
-    unprocessable!("Unable to unshare domain from organization with name '#{org_name}'. Ensure the domain is shared to this organization.")
   end
 
   def can_write_to_active_org?(org_id)
