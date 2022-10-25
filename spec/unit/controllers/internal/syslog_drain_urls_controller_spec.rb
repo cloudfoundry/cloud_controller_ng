@@ -174,10 +174,6 @@ module VCAP::CloudController
         end
       end
 
-      def decoded_results
-        decoded_response.fetch('results')
-      end
-
       describe 'paging' do
         before do
           3.times do
@@ -299,31 +295,31 @@ module VCAP::CloudController
         syslog_drain_url: 'barfoo',
         app: app_obj3,
         service_instance: instance4,
-        credentials: { 'cert' => 'a cert', 'key' => 'a key' })
+        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
       }
       let!(:binding_with_drain5) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
-        app: app_obj3,
-        service_instance: instance5,
-        credentials: { 'cert' => 'a cert', 'key' => 'a key' })
+        app: app_obj,
+        service_instance: instance7,
+        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
       }
       let!(:binding_with_drain6) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
-        app: app_obj4,
-        service_instance: instance6,
-        credentials: { 'cert' => 'a cert', 'key' => 'a key' })
+        app: app_obj2,
+        service_instance: instance8,
+        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
       }
       let!(:binding_with_drain7) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
-        app: app_obj,
-        service_instance: instance7,
-        credentials: { 'cert' => 'a second cert', 'key' => 'a second key' })
+        app: app_obj3,
+        service_instance: instance5,
+        credentials: { 'cert' => 'cert2', 'key' => 'key2' })
       }
       let!(:binding_with_drain8) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
-        app: app_obj2,
-        service_instance: instance8,
-        credentials: { 'cert' => 'a second cert', 'key' => 'a second key' })
+        app: app_obj4,
+        service_instance: instance6,
+        credentials: { 'cert' => 'cert2', 'key' => 'key2' })
       }
 
       it 'returns a list of syslog drain urls and their credentials' do
@@ -333,6 +329,11 @@ module VCAP::CloudController
         expect(decoded_results.count).to eq(4)
 
         foobar = decoded_results.select { |result| result['url'] == 'foobar' }.first
+        barfoo2 = decoded_results.select { |result| result['url'] == 'barfoo2' }.first
+        sorted_credentials = barfoo2['credentials'].sort_by { |credentials| credentials['key'] }
+        sorted_credentials[0]['apps'] = sorted_credentials[0]['apps'].sort_by { |apps| apps['hostname'] }
+        sorted_credentials[1]['apps'] = sorted_credentials[1]['apps'].sort_by { |apps| apps['hostname'] }
+
         expect(foobar['credentials'].first['apps']).to include(
           { 'app_id' => app_obj2.guid,
             'hostname' => 'org-1.space-1.app-2' },
@@ -351,28 +352,26 @@ module VCAP::CloudController
         expect(decoded_results).to include(
           { 'credentials' => [{
               'apps' => [{ 'app_id' => app_obj3.guid, 'hostname' => 'org-1.space-1.app-3' }],
-              'cert' => 'a cert',
-              'key' => 'a key'
+              'cert' => 'cert1',
+              'key' => 'key1'
               }],
             'url' => 'barfoo' }
         )
-        expect(decoded_results).to include(
-          { 'credentials' => [{
-              'apps' => [
-                { 'app_id' => app_obj4.guid, 'hostname' => 'org-1.space-1.app-4' },
-                { 'app_id' => app_obj3.guid, 'hostname' => 'org-1.space-1.app-3' }
-              ],
-              'cert' => 'a cert',
-              'key' => 'a key'
-            },
-                              { 'apps' => [
-                                  { 'app_id' => app_obj2.guid, 'hostname' => 'org-1.space-1.app-2' },
-                                  { 'app_id' => app_obj.guid, 'hostname' => 'org-1.space-1.app-1' }
-                                ],
-                                'cert' => 'a second cert',
-                                'key' => 'a second key'
-                              }],
-            'url' => 'barfoo2' }
+
+        expect(sorted_credentials[0]).to include(
+          { 'apps' => [
+              { 'app_id' => app_obj.guid, 'hostname' => 'org-1.space-1.app-1' },
+              { 'app_id' => app_obj2.guid, 'hostname' => 'org-1.space-1.app-2' }],
+            'cert' => 'cert1',
+            'key' => 'key1' }
+        )
+
+        expect(sorted_credentials[1]).to include(
+          { 'apps' => [
+              { 'app_id' => app_obj3.guid, 'hostname' => 'org-1.space-1.app-3' },
+              { 'app_id' => app_obj4.guid, 'hostname' => 'org-1.space-1.app-4' }],
+            'cert' => 'cert2',
+            'key' => 'key2' }
         )
       end
 

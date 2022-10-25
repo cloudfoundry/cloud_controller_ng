@@ -50,14 +50,7 @@ module VCAP::CloudController
 
     def listv5
       prepare_aggregate_function
-      syslog_drain_urls_query = ServiceBinding.
-                                distinct.
-                                exclude(syslog_drain_url: nil).
-                                exclude(syslog_drain_url: '').
-                                select(:syslog_drain_url).
-                                order(:syslog_drain_url).
-                                limit(batch_size).
-                                offset(last_id)
+      syslog_drain_urls_query = syslog_drain_urls_query()
 
       bindings = ServiceBinding.
                  join(:apps, guid: :app_guid).
@@ -83,24 +76,24 @@ module VCAP::CloudController
                    hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
                    if injected.include?(syslog_drain_url)
                      existing_item = injected[syslog_drain_url]
-                     existing_cert_apps_map = existing_item[:cert_apps_map]
-                     if existing_cert_apps_map.key?(cert)
-                       existing_cert_entry = existing_cert_apps_map[cert]
-                       existing_apps = existing_cert_entry[:apps]
+                     existing_binding_data_map = existing_item[:binding_data_map]
+                     if existing_binding_data_map.key?(cert)
+                       existing_binding_data_entry = existing_binding_data_map[cert]
+                       existing_apps = existing_binding_data_entry[:apps]
                        new_apps = existing_apps.push({ hostname: hostname, app_id: item[:app_guid] })
-                       existing_cert_entry[:apps] = new_apps
+                       existing_binding_data_entry[:apps] = new_apps
                      else
-                       cert_apps_arr = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
-                       existing_cert_apps_map[cert] = cert_apps_arr
+                       binding_data_entry = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
+                       existing_binding_data_map[cert] = binding_data_entry
                      end
                      injected[syslog_drain_url] = existing_item
                    else
-                     cert_apps_arr = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
-                     cert_map = {}
-                     cert_map[cert] = cert_apps_arr
+                     binding_data_entry = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
+                     initial_binding_data_map = {}
+                     initial_binding_data_map[cert] = binding_data_entry
                      target = {
                        url: syslog_drain_url,
-                       cert_apps_map: cert_map
+                       binding_data_map: initial_binding_data_map
                      }
                      injected[syslog_drain_url] = target
                    end
@@ -108,8 +101,8 @@ module VCAP::CloudController
                  }.values
 
       bindings.each do |binding|
-        binding[:credentials] = binding[:cert_apps_map].values
-        binding.reject! { |targets| targets == :cert_apps_map }
+        binding[:credentials] = binding[:binding_data_map].values
+        binding.reject! { |targets| targets == :binding_data_map }
       end
 
       next_page_token = nil
@@ -118,6 +111,17 @@ module VCAP::CloudController
     end
 
     private
+
+    def syslog_drain_urls_query
+      ServiceBinding.
+        distinct.
+        exclude(syslog_drain_url: nil).
+        exclude(syslog_drain_url: '').
+        select(:syslog_drain_url).
+        order(:syslog_drain_url).
+        limit(batch_size).
+        offset(last_id)
+    end
 
     def hostname_from_app_name(*names)
       names.map { |name|
