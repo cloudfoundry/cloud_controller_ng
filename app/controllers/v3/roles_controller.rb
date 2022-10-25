@@ -65,9 +65,8 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     if role.for_space?
-      space = role.space
-      unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
-      suspended! unless permission_queryer.is_space_active?(space.id)
+      unauthorized! unless permission_queryer.can_update_active_space?(role.space_id, role.space.organization_id)
+      suspended! unless permission_queryer.is_space_active?(role.space_id)
     else
       unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_id)
       suspended! unless permission_queryer.is_org_active?(role.organization_id)

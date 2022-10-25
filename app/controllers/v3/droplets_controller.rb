@@ -31,14 +31,10 @@ class DropletsController < ApplicationController
 
     if app_nested?
       app, dataset = DropletListFetcher.fetch_for_app(message)
-      app_not_found! unless app
-      space = app.space
-      app_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     elsif package_nested?
       package, dataset = DropletListFetcher.fetch_for_package(message)
-      package_not_found! unless package
-      space = package.space
-      package_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+      package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
     else
       dataset = if permission_queryer.can_read_globally?
                   DropletListFetcher.fetch_all(message)
@@ -57,11 +53,9 @@ class DropletsController < ApplicationController
 
   def show
     droplet = DropletModel.where(guid: hashed_params[:guid]).first
-    droplet_not_found! unless droplet
 
-    space = droplet.space
-    droplet_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    show_secrets = permission_queryer.can_read_secrets_in_space?(space.id, space.organization_id)
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.id, droplet.space.organization_id)
+    show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.id, droplet.space.organization_id)
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
   end
 
@@ -101,18 +95,14 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).first
-    droplet_not_found! unless source_droplet
 
-    source_droplet_space = source_droplet.space
-    droplet_not_found! unless permission_queryer.can_read_from_space?(source_droplet_space.id, source_droplet_space.organization_id)
+    droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.id, source_droplet.space.organization_id)
 
     destination_app = AppModel.where(guid: message.app_guid).first
-    app_not_found! unless destination_app
 
-    destination_app_space = destination_app.space
-    app_not_found! unless permission_queryer.can_read_from_space?(destination_app_space.id, destination_app_space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app_space.id)
-    suspended! unless permission_queryer.is_space_active?(destination_app_space.id)
+    app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.id, destination_app.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.id)
+    suspended! unless permission_queryer.is_space_active?(destination_app.space.id)
 
     DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
   end
@@ -122,12 +112,10 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.relationships_message.app_guid).first
-    unprocessable_app!(message.relationships_message.app_guid) unless app
 
-    space = app.space
-    unprocessable_app!(message.relationships_message.app_guid) unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.id)
+    suspended! unless permission_queryer.is_space_active?(app.space.id)
 
     DropletCreate.new.create(app, message, user_audit_info)
   end
@@ -137,13 +125,11 @@ class DropletsController < ApplicationController
     combine_messages(message.errors.full_messages) unless message.valid?
 
     droplet = DropletModel.where(guid: hashed_params[:guid]).first
-    droplet_not_found! unless droplet
 
-    space = droplet.space
-    droplet_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.id, droplet.space.organization_id)
 
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(droplet.space.id)
+    suspended! unless permission_queryer.is_space_active?(droplet.space.id)
 
     unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
       unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.')
@@ -163,12 +149,10 @@ class DropletsController < ApplicationController
 
   def download
     droplet = DropletModel.where(guid: hashed_params[:guid]).first
-    droplet_not_found! unless droplet
 
-    space = droplet.space
-    droplet_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.id, droplet.space.organization_id)
 
-    unauthorized! unless permission_queryer.can_download_droplet?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_download_droplet?(droplet.space.id, droplet.space.organization_id)
 
     unless droplet.buildpack?
       unprocessable!("Cannot download droplets with 'docker' lifecycle.")
@@ -182,8 +166,8 @@ class DropletsController < ApplicationController
       droplet,
       user_audit_info,
       droplet.app.name,
-      space.guid,
-      space.organization.guid,
+      droplet.space.guid,
+      droplet.space.organization.guid,
     )
 
     send_droplet_blob(droplet)

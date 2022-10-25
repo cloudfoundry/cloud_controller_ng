@@ -429,15 +429,7 @@ module VCAP::CloudController
     end
 
     describe '#can_read_from_space?' do
-      let(:membership) { instance_double(Membership) }
-
-      before do
-        allow(Membership).to receive(:new).with(user).and_return(membership)
-      end
       context 'user has no membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org.id).and_return(false)
-        end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
@@ -468,9 +460,6 @@ module VCAP::CloudController
       end
 
       context 'user has valid membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_READING, space.id, org.id).and_return(true)
-        end
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
@@ -497,15 +486,7 @@ module VCAP::CloudController
     end
 
     describe '#can_read_secrets_in_space?' do
-      let(:membership) { instance_double(Membership) }
-
-      before do
-        allow(Membership).to receive(:new).with(user).and_return(membership)
-      end
       context 'user has no membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org.id).and_return(false)
-        end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user_as_admin
@@ -536,13 +517,27 @@ module VCAP::CloudController
       end
 
       context 'user has valid membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_SECRETS_READING, space.id, org.id).and_return(true)
-        end
-        it 'returns true' do
+        it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
           expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be true
+        end
+
+        it 'returns false for space manager' do
+          org.add_user(user)
+          space.add_manager(user)
+          expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be false
+        end
+
+        it 'returns false for space auditor' do
+          org.add_user(user)
+          space.add_auditor(user)
+          expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be false
+        end
+
+        it 'returns false for org manager' do
+          org.add_manager(user)
+          expect(permissions.can_read_secrets_in_space?(space.id, org.id)).to be false
         end
       end
     end
@@ -666,15 +661,7 @@ module VCAP::CloudController
     end
 
     describe '#can_write_to_active_space?' do
-      let(:membership) { instance_double(Membership) }
-
-      before do
-        allow(Membership).to receive(:new).with(user).and_return(membership)
-      end
       context 'user has no membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_WRITING, space.id).and_return(false)
-        end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
@@ -705,9 +692,6 @@ module VCAP::CloudController
       end
 
       context 'user has valid membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_SPACE_WRITING, space.id).and_return(true)
-        end
         it 'returns true' do
           org.add_user(user)
           space.add_developer(user)
@@ -717,15 +701,7 @@ module VCAP::CloudController
     end
 
     describe '#can_manage_apps_in_active_space?' do
-      let(:membership) { instance_double(Membership) }
-
-      before do
-        allow(Membership).to receive(:new).with(user).and_return(membership)
-      end
       context 'user has no membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_APP_MANAGING, space.id).and_return(false)
-        end
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
@@ -756,12 +732,32 @@ module VCAP::CloudController
       end
 
       context 'user has valid membership' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(Permissions::ROLES_FOR_APP_MANAGING, space.id).and_return(true)
-        end
-        it 'returns true' do
+        it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
+          expect(permissions.can_write_to_active_space?(space.id)).to be true
+        end
+
+        it 'returns false for space manager' do
+          org.add_user(user)
+          space.add_manager(user)
+          expect(permissions.can_write_to_active_space?(space.id)).to be false
+        end
+
+        it 'returns false for space auditor' do
+          org.add_user(user)
+          space.add_auditor(user)
+          expect(permissions.can_write_to_active_space?(space.id)).to be false
+        end
+
+        it 'returns false for org manager' do
+          org.add_manager(user)
+          expect(permissions.can_write_to_active_space?(space.id)).to be false
+        end
+
+        it 'returns true for space supporter' do
+          org.add_user(user)
+          space.add_supporter(user)
           expect(permissions.can_manage_apps_in_active_space?(space.id)).to be true
         end
       end

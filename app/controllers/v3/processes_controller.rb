@@ -26,10 +26,8 @@ class ProcessesController < ApplicationController
 
     if app_nested?
       app, dataset = ProcessListFetcher.fetch_for_app(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
-      app_not_found! unless app
 
-      space = app.space
-      app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     else
       dataset = if permission_queryer.can_read_globally?
                   ProcessListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)

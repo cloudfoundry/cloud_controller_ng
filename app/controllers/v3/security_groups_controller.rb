@@ -173,7 +173,7 @@ class SecurityGroupsController < ApplicationController
     suspended_space = false
     space_guids.each do |space_guid|
       space = Space.find(guid: space_guid)
-      if space&.organization
+      if space
         if !permission_queryer.can_update_active_space?(space.id, space.organization_id)
           unauthorized_space = true
           break

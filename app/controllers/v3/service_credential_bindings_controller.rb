@@ -352,7 +352,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_secrets_in_the_binding_space?
-    permission_queryer.can_read_secrets_in_space?(binding_space.id, binding_org.id)
+    permission_queryer.can_read_secrets_in_space?(binding_space.id, binding_space.organization_id)
   end
 
   def can_read_from_space?(space)
@@ -365,10 +365,6 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def binding_space
     service_credential_binding.space
-  end
-
-  def binding_org
-    service_credential_binding.space.organization
   end
 
   def list_fetcher

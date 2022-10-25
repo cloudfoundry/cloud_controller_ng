@@ -34,11 +34,9 @@ class DeploymentsController < ApplicationController
 
     unable_to_use = 'Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.'
     app = AppModel.find(guid: message.app_guid)
-    unprocessable!(unable_to_use) unless app
 
-    space = app.space
-    unprocessable!(unable_to_use) unless permission_queryer.can_manage_apps_in_active_space?(space.id) &&
-      permission_queryer.is_space_active?(space.id)
+    unprocessable!(unable_to_use) unless app && permission_queryer.can_manage_apps_in_active_space?(app.space.id) &&
+      permission_queryer.is_space_active?(app.space.id)
     unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
     begin
@@ -62,12 +60,10 @@ class DeploymentsController < ApplicationController
 
   def update
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
-    resource_not_found!(:deployment) unless deployment
 
-    space = deployment.app.space
-    resource_not_found!(:deployment) unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_read_from_space?(deployment.app.space.id, deployment.app.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(deployment.app.space.id)
+    suspended! unless permission_queryer.is_space_active?(deployment.app.space.id)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -79,21 +75,17 @@ class DeploymentsController < ApplicationController
 
   def show
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
-    resource_not_found!(:deployment) unless deployment
 
-    space = deployment.app.space
-    resource_not_found!(:deployment) unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_read_from_space?(deployment.app.space.id, deployment.app.space.organization_id)
 
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end
 
   def cancel
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
-    resource_not_found!(:deployment) unless deployment
 
-    space = deployment.app.space
-    resource_not_found!(:deployment) unless permission_queryer.can_manage_apps_in_active_space?(space.id) &&
-      permission_queryer.is_space_active?(space.id)
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_manage_apps_in_active_space?(deployment.app.space.id) &&
+      permission_queryer.is_space_active?(deployment.app.space.id)
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
