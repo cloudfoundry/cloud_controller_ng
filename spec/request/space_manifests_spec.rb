@@ -590,6 +590,33 @@ RSpec.describe 'Space Manifests' do
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end
+
+    context 'manifest as temporary file' do
+      let(:yml_manifest_tempfile) do
+        f = Tempfile.new
+        f.write(yml_manifest)
+        f.rewind
+        f
+      end
+
+      it 'loads the manifest' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_tempfile, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+      end
+
+      context 'manifest too large' do
+        let(:yml_manifest) { 'A' * (1.megabyte + 1) }
+
+        it 'does NOT accept files > 1MB' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_tempfile, yml_headers(user_header)
+
+          expect(last_response.status).to eq(400)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest size is too large. The maximum supported size is 1MB.')
+        end
+      end
+    end
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
