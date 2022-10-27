@@ -196,11 +196,10 @@ module VCAP::CloudController
                 service_instance.service_plan.update(active: false)
               end
 
-              it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'Service plan is not available'
-                )
+              it 'does not raise an error' do
+                expect {
+                  action.precursor(service_instance, app: app, volume_mount_services_enabled: true, message: message)
+                }.not_to raise_error
               end
             end
 

@@ -15,6 +15,7 @@ module VCAP::CloudController::Presenters::V3
         app:     app,
         staging_memory_in_mb: 1024,
         staging_disk_in_mb: 1024,
+        staging_log_rate_limit: 2048,
         created_by_user_guid: 'happy user guid',
         created_by_user_name: 'happier user name',
         created_by_user_email: 'this user emailed in'
@@ -46,6 +47,7 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:staging_memory_in_mb]).to eq(1024)
           expect(result[:staging_disk_in_mb]).to eq(1024)
+          expect(result[:staging_log_rate_limit_bytes_per_second]).to eq(2048)
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)

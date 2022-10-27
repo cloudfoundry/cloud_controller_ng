@@ -2,9 +2,14 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Tasks' do
+  let(:org_quota_definition) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: org_log_rate_limit) }
+  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
+  let(:space_log_rate_limit) { -1 }
+  let(:org_log_rate_limit) { -1 }
+  let(:task_log_rate_limit_in_bytes_per_second) { -1 }
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { space.organization }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
+  let(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota_definition, organization: org) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(
@@ -101,6 +106,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 5,
           disk_in_mb:   10,
+          log_rate_limit: 20,
         )
         task2 = VCAP::CloudController::TaskModel.make(
           name:         'task two',
@@ -109,6 +115,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 100,
           disk_in_mb:   500,
+          log_rate_limit: 1024,
         )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
@@ -137,7 +144,8 @@ RSpec.describe 'Tasks' do
               'state'        => 'RUNNING',
               'memory_in_mb' => 5,
               'disk_in_mb'   => 10,
-              'result'       => {
+              'log_rate_limit_in_bytes_per_second' => 20,
+              'result' => {
                 'failure_reason' => nil
               },
               'droplet_guid' => task1.droplet.guid,
@@ -168,7 +176,8 @@ RSpec.describe 'Tasks' do
               'state'        => 'RUNNING',
               'memory_in_mb' => 100,
               'disk_in_mb'   => 500,
-              'result'       => {
+              'log_rate_limit_in_bytes_per_second' => 1024,
+              'result' => {
                 'failure_reason' => nil
               },
               'droplet_guid' => task2.droplet.guid,
@@ -216,6 +225,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 5,
           disk_in_mb:   10,
+          log_rate_limit: 20,
         )
       end
 
@@ -228,7 +238,8 @@ RSpec.describe 'Tasks' do
             'state'        => 'RUNNING',
             'memory_in_mb' => 256,
             'disk_in_mb'   => nil,
-            'result'       => {
+            'log_rate_limit_in_bytes_per_second' => -1,
+            'result' => {
               'failure_reason' => nil
             },
             'droplet_guid' => task1.droplet.guid,
@@ -259,7 +270,8 @@ RSpec.describe 'Tasks' do
             'state'        => 'RUNNING',
             'memory_in_mb' => 5,
             'disk_in_mb'   => 10,
-            'result'       => {
+            'log_rate_limit_in_bytes_per_second' => 20,
+            'result' => {
               'failure_reason' => nil
             },
             'droplet_guid' => task2.droplet.guid,
@@ -407,6 +419,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 5,
           disk_in_mb:   50,
+          log_rate_limit: 64,
         )
       end
       let(:api_call) { lambda { |user_headers| get "/v3/tasks/#{task.guid}", nil, user_headers } }
@@ -418,7 +431,8 @@ RSpec.describe 'Tasks' do
           'state'        => 'RUNNING',
           'memory_in_mb' => 5,
           'disk_in_mb'   => 50,
-          'result'       => {
+          'log_rate_limit_in_bytes_per_second' => 64,
+          'result' => {
             'failure_reason' => nil
           },
           'droplet_guid' => task.droplet.guid,
@@ -498,8 +512,10 @@ RSpec.describe 'Tasks' do
       command: 'echo task',
       app_guid: app_model.guid,
       droplet_guid: app_model.droplet.guid,
-    disk_in_mb: 50,
-    memory_in_mb: 5)
+      disk_in_mb: 50,
+      memory_in_mb: 5,
+      log_rate_limit: 10,
+    )
     }
     let(:request_body) do
       {
@@ -528,7 +544,8 @@ RSpec.describe 'Tasks' do
         'state'        => 'RUNNING',
         'memory_in_mb' => 5,
         'disk_in_mb'   => 50,
-        'result'       => {
+        'log_rate_limit_in_bytes_per_second' => 10,
+        'result' => {
           'failure_reason' => nil
         },
         'droplet_guid' => task.droplet.guid,
@@ -605,6 +622,7 @@ RSpec.describe 'Tasks' do
         state: 'CANCELING',
         memory_in_mb: 256,
         disk_in_mb: nil,
+        log_rate_limit_in_bytes_per_second: -1,
         result: {
           failure_reason: nil
         },
@@ -683,6 +701,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 5,
           disk_in_mb:   50,
+          log_rate_limit: 64,
         )
         task2 = VCAP::CloudController::TaskModel.make(
           name:         'task two',
@@ -691,6 +710,7 @@ RSpec.describe 'Tasks' do
           droplet:      app_model.droplet,
           memory_in_mb: 100,
           disk_in_mb:   500,
+          log_rate_limit: 256,
         )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
@@ -718,7 +738,8 @@ RSpec.describe 'Tasks' do
                 'state'        => 'RUNNING',
                 'memory_in_mb' => 5,
                 'disk_in_mb'   => 50,
-                'result'       => {
+                'log_rate_limit_in_bytes_per_second' => 64,
+                'result' => {
                   'failure_reason' => nil
                 },
                 'droplet_guid' => task1.droplet.guid,
@@ -750,7 +771,8 @@ RSpec.describe 'Tasks' do
                 'state'        => 'RUNNING',
                 'memory_in_mb' => 100,
                 'disk_in_mb'   => 500,
-                'result'       => {
+                'log_rate_limit_in_bytes_per_second' => 256,
+                'result' => {
                   'failure_reason' => nil
                 },
                 'droplet_guid' => task2.droplet.guid,
@@ -815,7 +837,8 @@ RSpec.describe 'Tasks' do
             'state'        => 'RUNNING',
             'memory_in_mb' => 256,
             'disk_in_mb'   => nil,
-            'result'       => {
+            'log_rate_limit_in_bytes_per_second' => -1,
+            'result' => {
               'failure_reason' => nil
             },
             'droplet_guid' => task1.droplet.guid,
@@ -846,7 +869,8 @@ RSpec.describe 'Tasks' do
             'state'        => 'RUNNING',
             'memory_in_mb' => 5,
             'disk_in_mb'   => 10,
-            'result'       => {
+            'log_rate_limit_in_bytes_per_second' => -1,
+            'result' => {
               'failure_reason' => nil
             },
             'droplet_guid' => task2.droplet.guid,
@@ -997,6 +1021,7 @@ RSpec.describe 'Tasks' do
       command:      'be rake && true',
       memory_in_mb: 1234,
       disk_in_mb:   1000,
+      log_rate_limit_in_bytes_per_second: task_log_rate_limit_in_bytes_per_second,
       metadata: {
         labels: {
           bananas: 'gros_michel',
@@ -1029,7 +1054,8 @@ RSpec.describe 'Tasks' do
         'state'        => 'RUNNING',
         'memory_in_mb' => 1234,
         'disk_in_mb'   => 1000,
-        'result'       => {
+        'log_rate_limit_in_bytes_per_second' => task_log_rate_limit_in_bytes_per_second,
+        'result' => {
           'failure_reason' => nil
         },
         'droplet_guid' => droplet.guid,
@@ -1080,6 +1106,71 @@ RSpec.describe 'Tasks' do
           'memory_in_mb' => 1234,
         }
       })
+    end
+
+    describe 'log_rate_limit' do
+      context 'when the request does not specify a log rate limit' do
+        before do
+          TestConfig.config[:default_app_log_rate_limit_in_bytes_per_second] = 9876
+        end
+
+        it 'the default is applied' do
+          post "/v3/apps/#{app_model.guid}/tasks", body.except(:log_rate_limit_in_bytes_per_second).to_json, developer_headers
+          expect(last_response.status).to eq(202)
+          expect(VCAP::CloudController::TaskModel.last.log_rate_limit).to eq(9876)
+        end
+      end
+
+      context 'when there are org or space log rate limits' do
+        let(:space_log_rate_limit) { 200 }
+        let(:org_log_rate_limit) { 201 }
+
+        context 'when the task specifies a rate limit that fits in the quota' do
+          let(:task_log_rate_limit_in_bytes_per_second) { 199 }
+
+          it 'succeeds' do
+            post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+            expect(last_response.status).to eq(202)
+          end
+        end
+
+        context 'when the task specifies unlimited rate limit' do
+          let(:task_log_rate_limit_in_bytes_per_second) { -1 }
+
+          it 'returns an error' do
+            post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in organization '#{org.name}'.")
+            expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in space '#{space.name}'.")
+          end
+        end
+
+        context 'when the task specifies a rate limit that does not fit in the quota' do
+          let(:task_log_rate_limit_in_bytes_per_second) { 202 }
+
+          context 'fails to fit in space quota' do
+            let(:space_log_rate_limit) { 200 }
+            let(:org_log_rate_limit) { -1 }
+
+            it 'returns an error' do
+              post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+              expect(last_response.status).to eq(422)
+              expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+            end
+          end
+
+          context 'fails to fit in org quota' do
+            let(:space_log_rate_limit) { -1 }
+            let(:org_log_rate_limit) { 200 }
+
+            it 'returns an error' do
+              post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+              expect(last_response.status).to eq(422)
+              expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+            end
+          end
+        end
+      end
     end
 
     context 'when requesting a specific droplet' do
@@ -1137,7 +1228,8 @@ RSpec.describe 'Tasks' do
           'state'        => 'RUNNING',
           'memory_in_mb' => 1234,
           'disk_in_mb'   => 1000,
-          'result'       => {
+          'log_rate_limit_in_bytes_per_second' => process.log_rate_limit,
+          'result' => {
             'failure_reason' => nil
           },
           'droplet_guid' => droplet.guid,

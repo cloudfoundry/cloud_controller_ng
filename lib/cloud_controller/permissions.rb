@@ -111,12 +111,12 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_org_guids
-    readable_org_guids_query.all.map(&:guid)
+    readable_org_guids_query.select_map(:guid)
   end
 
   def readable_org_guids_query
     if can_read_globally?
-      VCAP::CloudController::Organization.select(:guid)
+      raise 'must not be called for users that can read globally'
     else
       membership.org_guids_for_roles_subquery(ROLES_FOR_ORG_READING)
     end
@@ -144,7 +144,7 @@ class VCAP::CloudController::Permissions
 
   def readable_org_contents_org_guids
     if can_read_globally?
-      VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+      VCAP::CloudController::Organization.select_map(:guid)
     else
       membership.org_guids_for_roles(ROLES_FOR_ORG_CONTENT_READING)
     end
@@ -178,12 +178,12 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_space_guids
-    readable_space_guids_query.all.map(&:guid)
+    readable_space_guids_query.select_map(:guid)
   end
 
   def readable_space_guids_query
     if can_read_globally?
-      VCAP::CloudController::Space.select(:guid)
+      raise 'must not be called for users that can read globally'
     else
       membership.space_guids_for_roles_subquery(ROLES_FOR_SPACE_READING)
     end
@@ -225,7 +225,7 @@ class VCAP::CloudController::Permissions
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    can_read_globally? || contains_any(isolation_segment.organizations.map(&:guid), readable_org_guids)
+    can_read_globally? || readable_org_guids_query.where(isolation_segment_models: isolation_segment).any?
   end
 
   def readable_route_guids
@@ -242,7 +242,7 @@ class VCAP::CloudController::Permissions
 
   def readable_secret_space_guids
     if can_read_secrets_globally?
-      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+      VCAP::CloudController::Space.select_map(:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
     end
@@ -250,7 +250,7 @@ class VCAP::CloudController::Permissions
 
   def readable_services_space_guids
     if can_read_secrets_globally?
-      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+      VCAP::CloudController::Space.select_map(:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_SERVICES_READING)
     end
@@ -258,7 +258,7 @@ class VCAP::CloudController::Permissions
 
   def readable_space_scoped_space_guids
     if can_read_globally?
-      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+      VCAP::CloudController::Space.select_map(:guid)
     else
       membership.space_guids_for_roles(SPACE_ROLES)
     end
@@ -298,7 +298,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_app_guids
-    VCAP::CloudController::AppModel.where(space_guid: readable_space_guids).select(:guid).map(&:guid)
+    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).select(:guid).map(&:guid)
   end
 
   def readable_route_mapping_guids
@@ -310,7 +310,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_security_group_guids
-    readable_security_group_guids_query.all.map(&:guid)
+    readable_security_group_guids_query.select_map(:guid)
   end
 
   def readable_security_group_guids_query
@@ -340,9 +340,5 @@ class VCAP::CloudController::Permissions
 
   def roles
     VCAP::CloudController::SecurityContext.roles
-  end
-
-  def contains_any(a, b) # rubocop:disable Naming/MethodParameterName
-    !(a & b).empty?
   end
 end

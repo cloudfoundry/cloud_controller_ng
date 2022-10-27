@@ -6,13 +6,6 @@ RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
 
   let(:config) { TestConfig.config_instance }
-  let(:bits_service_config) do
-    {
-      enabled: true,
-      public_endpoint: 'https://bits-service.com',
-      private_endpoint: 'http://bits-service.service.cf.internal'
-    }
-  end
 
   before { locator.config = config }
 
@@ -30,23 +23,6 @@ RSpec.describe CloudController::DependencyLocator do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
         with(options: config.get(:droplets), directory_key: 'key', resource_type: :droplets)
       locator.droplet_blobstore
-    end
-
-    context('when bits service is enabled') do
-      let(:config) do VCAP::CloudController::Config.new({
-        droplets: {
-          fog_connection: 'fog_connection',
-          droplet_directory_key: 'key',
-        },
-        bits_service: bits_service_config
-      })
-      end
-
-      it 'creates the client with the right arguments' do
-        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config.get(:droplets), directory_key: 'key', resource_type: :droplets)
-        locator.droplet_blobstore
-      end
     end
   end
 
@@ -68,24 +44,6 @@ RSpec.describe CloudController::DependencyLocator do
         resource_type: :buildpack_cache)
       locator.buildpack_cache_blobstore
     end
-
-    context('when bits service is enabled') do
-      let(:config) do
-        VCAP::CloudController::Config.new({
-          droplets: {
-            fog_connection: 'fog_connection',
-            droplet_directory_key: 'key',
-          },
-          bits_service: bits_service_config
-})
-      end
-
-      it 'creates the client with the right arguments' do
-        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config.get(:droplets), directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache)
-        locator.buildpack_cache_blobstore
-      end
-    end
   end
 
   describe '#package_blobstore' do
@@ -102,23 +60,6 @@ RSpec.describe CloudController::DependencyLocator do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
         with(options: config.get(:packages), directory_key: 'key', resource_type: :packages)
       locator.package_blobstore
-    end
-
-    context('when bits service is enabled') do
-      let(:config) do
-        VCAP::CloudController::Config.new({
-          packages: {
-            app_package_directory_key: 'key'
-          },
-          bits_service: bits_service_config
-        })
-      end
-
-      it 'creates the client with the right arguments' do
-        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config.get(:packages), directory_key: 'key', resource_type: :packages)
-        locator.package_blobstore
-      end
     end
   end
 
@@ -477,13 +418,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  context '#traffic_controller_client' do
-    it 'returns the tc client' do
-      expect(locator.traffic_controller_client).to be_an_instance_of(TrafficController::Client)
-    end
-  end
-
-  describe '#traffic_controller_compatible_logcache_client' do
+  describe '#log_cache_metrics_client' do
     let(:logcache_client) { instance_double(Logcache::Client) }
     before do
       allow(Logcache::Client).to receive(:new).and_return(logcache_client)
@@ -493,7 +428,7 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.override(
         logcache_tls: nil
       )
-      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(locator.log_cache_metrics_client).to be_an_instance_of(Logcache::ContainerMetricBatcher)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'http://doppler.service.cf.internal',
         port: 8080,
@@ -517,7 +452,7 @@ RSpec.describe CloudController::DependencyLocator do
           subject_name: 'some-tls-cert-san'
         }
       )
-      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(locator.log_cache_metrics_client).to be_an_instance_of(Logcache::ContainerMetricBatcher)
       expect(Logcache::Client).to have_received(:new).with(
         host: 'some-logcache-host',
         port: 1234,

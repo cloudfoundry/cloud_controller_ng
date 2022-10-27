@@ -100,10 +100,10 @@ module VCAP::CloudController
             end
           end
 
-          context 'when SpaceQuotaExceeded error is raised' do
+          context 'when MemorySpaceQuotaExceeded error is raised' do
             before do
               allow(build_create).to receive(:create_and_stage_without_event).and_raise(
-                BuildCreate::SpaceQuotaExceeded.new('helpful message')
+                BuildCreate::MemorySpaceQuotaExceeded.new('helpful message')
               )
             end
 
@@ -115,10 +115,10 @@ module VCAP::CloudController
             end
           end
 
-          context 'when OrgQuotaExceeded error is raised' do
+          context 'when MemoryOrgQuotaExceeded error is raised' do
             before do
               allow(build_create).to receive(:create_and_stage_without_event).and_raise(
-                BuildCreate::OrgQuotaExceeded.new('helpful message')
+                BuildCreate::MemoryOrgQuotaExceeded.new('helpful message')
               )
             end
 
@@ -139,6 +139,32 @@ module VCAP::CloudController
               expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError, /too much disk requested/) do |err|
                 expect(err.details.name).to eq('AppInvalid')
               end
+            end
+          end
+
+          context 'when LogRateLimitSpaceQuotaExceeded error is raised' do
+            before do
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(
+                BuildCreate::LogRateLimitSpaceQuotaExceeded.new('helpful message')
+              )
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to(raise_error(CloudController::Errors::ApiError,
+                /helpful message/)) { |err| expect(err.details.name).to eq('SpaceQuotaLogRateLimitExceeded') }
+            end
+          end
+
+          context 'when LogRateLimitOrgQuotaExceeded error is raised' do
+            before do
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(
+                BuildCreate::LogRateLimitOrgQuotaExceeded.new('helpful message')
+              )
+            end
+
+            it 'translates it to an ApiError' do
+              expect { action.stage(process) }.to(raise_error(CloudController::Errors::ApiError,
+                /helpful message/)) { |err| expect(err.details.name).to eq('OrgQuotaLogRateLimitExceeded') }
             end
           end
         end

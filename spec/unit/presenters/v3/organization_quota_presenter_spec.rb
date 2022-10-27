@@ -6,15 +6,16 @@ module VCAP::CloudController::Presenters::V3
     let(:org) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
     let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid') }
-    let(:visible_org_guids) { [org.guid] }
     let(:all_orgs_visible) { false }
+    let(:visible_org_guids) { [org.guid] }
+    let(:visible_org_guids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:guid) }
 
     before do
       organization_quota.add_organization(org)
       organization_quota.add_organization(org2)
     end
     describe '#to_hash' do
-      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_org_guids, all_orgs_visible: all_orgs_visible).to_hash }
+      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids_query: visible_org_guids_query, all_orgs_visible: all_orgs_visible).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(organization_quota.guid)
@@ -48,8 +49,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:relationships][:organizations][:data]).to match_array([
             { guid: org.guid },
             { guid: org2.guid }
-          ]
-                                                                   )
+          ])
         end
       end
     end

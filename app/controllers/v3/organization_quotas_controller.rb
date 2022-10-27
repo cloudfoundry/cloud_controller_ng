@@ -52,7 +52,11 @@ class OrganizationQuotasController < ApplicationController
     message = OrganizationQuotasListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids: permission_queryer.readable_org_guids)
+    if permission_queryer.can_read_globally?
+      dataset = OrganizationQuotaListFetcher.fetch_all(message: message)
+    else
+      dataset = OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids_query: permission_queryer.readable_org_guids_query)
+    end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::OrganizationQuotaPresenter,
@@ -106,7 +110,7 @@ class OrganizationQuotasController < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_guids: permission_queryer.readable_org_guids }
+      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
     end
   end
 end

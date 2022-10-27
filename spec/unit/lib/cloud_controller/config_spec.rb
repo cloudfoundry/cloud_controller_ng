@@ -33,7 +33,6 @@ module VCAP::CloudController
             password: 'password',
           },
         },
-        bits_service: { enabled: false },
         reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
         diego: {},
         stacks_file: 'path/to/stacks/file',

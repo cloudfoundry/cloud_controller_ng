@@ -11,10 +11,8 @@ module VCAP::CloudController
         def initialize(
           resource,
           show_secrets: false,
-          censored_message: Censorship::REDACTED_CREDENTIAL,
-          show_bits_service_upload_link: false
+          censored_message: Censorship::REDACTED_CREDENTIAL
         )
-          @show_bits_service_upload_link = show_bits_service_upload_link
 
           super(resource, show_secrets: show_secrets, censored_message: censored_message)
         end
@@ -65,11 +63,7 @@ module VCAP::CloudController
           upload_link   = nil
           download_link = nil
           if package.type == 'bits'
-            upload_link = if VCAP::CloudController::Config.config.get(:bits_service, :enabled)
-                            bits_service_upload_link
-                          else
-                            { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
-                          end
+            upload_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
 
             download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download") }
           end
@@ -82,16 +76,6 @@ module VCAP::CloudController
           }
 
           links.delete_if { |_, v| v.nil? }
-        end
-
-        def bits_service_upload_link
-          return nil unless @show_bits_service_upload_link
-
-          { href: bits_service_client.blob(package.guid).public_upload_url, method: 'PUT' }
-        end
-
-        def bits_service_client
-          CloudController::DependencyLocator.instance.package_blobstore
         end
       end
     end

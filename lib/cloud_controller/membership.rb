@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def org_guids_for_roles(roles)
-      org_guids_for_roles_subquery(roles).all.map(&:guid)
+      org_guids_for_roles_subquery(roles).select_map(:guid)
     end
 
     def org_guids_for_roles_subquery(roles)
@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def space_guids_for_roles(roles)
-      space_guids_for_roles_subquery(roles).all.map(&:guid)
+      space_guids_for_roles_subquery(roles).select_map(:guid)
     end
 
     def space_guids_for_roles_subquery(roles)

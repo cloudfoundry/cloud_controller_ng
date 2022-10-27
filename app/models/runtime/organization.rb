@@ -61,7 +61,8 @@ module VCAP::CloudController
       },
       before_add:    proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
       before_remove: proc { |org, private_domain| org.cancel_action if private_domain.owned_by?(org) },
-      after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy }
+      after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy },
+      allow_eager:   true
     )
 
     one_to_many(
@@ -230,11 +231,19 @@ module VCAP::CloudController
     end
 
     def has_remaining_memory(mem)
-      quota_definition.memory_limit == -1 || memory_remaining >= mem
+      quota_definition.memory_limit == QuotaDefinition::UNLIMITED || memory_remaining >= mem
+    end
+
+    def has_remaining_log_rate_limit(log_rate_limit_desired)
+      quota_definition.log_rate_limit == QuotaDefinition::UNLIMITED || log_rate_limit_remaining >= log_rate_limit_desired
     end
 
     def instance_memory_limit
       quota_definition ? quota_definition.instance_memory_limit : QuotaDefinition::UNLIMITED
+    end
+
+    def log_rate_limit
+      quota_definition ? quota_definition.log_rate_limit : QuotaDefinition::UNLIMITED
     end
 
     def app_task_limit
@@ -314,12 +323,24 @@ module VCAP::CloudController
       quota_definition.memory_limit - memory_used
     end
 
+    def log_rate_limit_remaining
+      quota_definition.log_rate_limit - (started_app_log_rate_limit + running_task_log_rate_limit)
+    end
+
     def running_task_memory
       tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:memory_in_mb) || 0
     end
 
     def started_app_memory
       processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:memory, :instances)) || 0
+    end
+
+    def running_task_log_rate_limit
+      tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:log_rate_limit) || 0
+    end
+
+    def started_app_log_rate_limit
+      processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:log_rate_limit, :instances)) || 0
     end
 
     def running_and_pending_tasks_count

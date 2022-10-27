@@ -16,6 +16,7 @@ Name | Type | Description
 **command** | _string_ or _null_ | The command used to start the process; use _null_ to revert to the buildpack-detected or procfile-provided start command
 **instances** | _integer_ | The number of instances to run
 **memory_in_mb** | _integer_ | The memory in MB allocated per instance
+**log_rate_limit_in_bytes_per_second** | _integer_ | The log rate in bytes per second allocated per instance 
 **disk_in_mb** | _integer_ | The disk in MB allocated per instance
 **health_check** | [_health check object_](#the-health-check-object) | The health check to perform on the process
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the process belongs to

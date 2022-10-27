@@ -127,8 +127,7 @@ module VCAP::Services
 
             context 'and there are multiple validation failures' do
               let(:broker_response_body) {
-                {
-                }.to_json
+                {}.to_json
               }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
@@ -639,8 +638,7 @@ module VCAP::Services
         end
 
         def self.without_volume_mounts
-          {
-          }
+          {}
         end
 
         # rubocop:disable Layout/LineLength

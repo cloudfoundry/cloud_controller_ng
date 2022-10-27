@@ -4,7 +4,6 @@ module VCAP::CloudController
   RSpec.describe Runner do
     let(:valid_config_file_path) { File.join(Paths::CONFIG, 'cloud_controller.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
-    let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
     let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
 
@@ -14,18 +13,14 @@ module VCAP::CloudController
       allow(Steno).to receive(:init)
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
       allow(EM).to receive(:run).and_yield
-      allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:new).and_return(periodic_updater)
       allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
-      allow(VCAP::CloudController::Diagnostics).to receive(:new).and_return(diagnostics)
-      allow(diagnostics).to receive(:collect)
+      allow_any_instance_of(VCAP::CloudController::ThinRunner).to receive(:start!)
     end
 
     subject do
-      Runner.new(argv + ['-c', config_file.path]).tap do |r|
-        allow(r).to receive(:start_thin_server)
-      end
+      Runner.new(argv + ['-c', config_file.path])
     end
 
     describe '#run!' do
@@ -91,27 +86,11 @@ module VCAP::CloudController
         expect(builder).to receive(:build).with(anything, instance_of(VCAP::CloudController::Metrics::RequestMetrics),
                                                 request_logs)
         subject.run!
-        expect(subject.instance_variable_get(:@request_logs)).to eq(request_logs)
       end
 
-      it 'starts thin server on set up bind address' do
-        allow(subject).to receive(:start_thin_server).and_call_original
+      it 'sets a local ip in the host system' do
         expect_any_instance_of(VCAP::HostSystem).to receive(:local_ip).and_return('some_local_ip')
-        thin_server = double(:thin_server).as_null_object
-        expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(thin_server)
         subject.run!
-        expect(subject.instance_variable_get(:@thin_server)).to eq(thin_server)
-      end
-
-      it 'sets up varz updates' do
-        expect(periodic_updater).to receive(:setup_updates)
-        subject.run!
-      end
-
-      it 'logs an error if an exception is raised' do
-        allow(subject).to receive(:start_cloud_controller).and_raise('we have a problem')
-        expect(subject.logger).to receive(:error)
-        expect { subject.run! }.to raise_exception('we have a problem')
       end
 
       it 'sets up logging before creating a logger' do
@@ -195,68 +174,34 @@ module VCAP::CloudController
       end
     end
 
-    describe '#stop!' do
-      let(:thin_server) { double(:thin_server) }
-      let(:request_logs) { double(:request_logs) }
-
-      before do
-        subject.instance_variable_set(:@thin_server, thin_server)
-        subject.instance_variable_set(:@request_logs, request_logs)
-      end
-
-      it 'should stop thin and EM, logs incomplete requests' do
-        expect(thin_server).to receive(:stop)
-        expect(request_logs).to receive(:log_incomplete_requests)
-        expect(EM).to receive(:stop)
-        subject.stop!
-      end
-    end
-
-    describe '#trap_signals' do
-      it 'registers TERM, INT, QUIT and USR1 handlers' do
-        expect(subject).to receive(:trap).with('TERM')
-        expect(subject).to receive(:trap).with('INT')
-        expect(subject).to receive(:trap).with('QUIT')
-        expect(subject).to receive(:trap).with('USR1')
-        subject.trap_signals
-      end
-
-      it 'calls #stop! when the handlers are triggered' do
-        callbacks = []
-
-        expect(subject).to receive(:trap).with('TERM') do |_, &blk|
-          callbacks << blk
-        end
-
-        expect(subject).to receive(:trap).with('INT') do |_, &blk|
-          callbacks << blk
-        end
-
-        expect(subject).to receive(:trap).with('QUIT') do |_, &blk|
-          callbacks << blk
-        end
-
-        expect(subject).to receive(:trap).with('USR1') do |_, &blk|
-          callbacks << blk
-        end
-
-        subject.trap_signals
-
-        expect(subject).to receive(:stop!).exactly(3).times
-
-        callbacks.each(&:call)
-      end
-    end
-
     describe '#initialize' do
-      subject { Runner.new(argv_options) }
-      let(:argv_options) { [] }
-
       before do
         allow_any_instance_of(Runner).to receive(:deprecation_warning)
       end
 
+      describe 'web server selection' do
+        context 'when thin is specifed' do
+          it 'chooses ThinRunner as the web server' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(ThinRunner)
+          end
+        end
+
+        context 'when puma is specified' do
+          before do
+            TestConfig.override(webserver: 'puma')
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'chooses puma as the web server' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(PumaRunner)
+          end
+        end
+      end
+
       describe 'argument parsing' do
+        subject { Runner.new(argv_options) }
+        let(:argv_options) { [] }
+
         describe 'Configuration File' do
           ['-c', '--config'].each do |flag|
             describe flag do
@@ -300,72 +245,6 @@ module VCAP::CloudController
             end
           end
         end
-      end
-    end
-
-    describe '#start_thin_server' do
-      let(:app) { double(:app) }
-      let(:thin_server) { OpenStruct.new(start!: nil) }
-
-      subject(:start_thin_server) do
-        runner = Runner.new(argv + ['-c', config_file.path])
-        runner.send(:start_thin_server, app)
-      end
-
-      before do
-        allow(Thin::Server).to receive(:new).and_return(thin_server)
-        allow(thin_server).to receive(:start!)
-      end
-
-      it 'gets the timeout from the config' do
-        start_thin_server
-
-        expect(thin_server.timeout).to eq(600)
-      end
-
-      it "uses thin's experimental threaded mode intentionally" do
-        start_thin_server
-
-        expect(thin_server.threaded).to eq(true)
-      end
-
-      it 'starts the thin server' do
-        start_thin_server
-
-        expect(thin_server).to have_received(:start!)
-      end
-    end
-
-    describe '#collect_diagnostics' do
-      callback = nil
-
-      before do
-        callback = nil
-        expect(subject).to receive(:trap).with('TERM')
-        expect(subject).to receive(:trap).with('INT')
-        expect(subject).to receive(:trap).with('QUIT')
-        expect(subject).to receive(:trap).with('USR1') do |_, &blk|
-          callback = blk
-        end
-        subject.trap_signals
-      end
-
-      let(:config_file) do
-        config = YAMLConfig.safe_load_file(valid_config_file_path)
-        config['directories'] ||= { 'tmpdir' => 'tmpdir' }
-        config['directories']['diagnostics'] = 'diagnostics/dir'
-        file = Tempfile.new('config')
-        file.write(YAML.dump(config))
-        file.rewind
-        file
-      end
-
-      it 'uses the configured directory' do
-        expect(Dir).not_to receive(:mktmpdir)
-        expect(subject).to receive(:collect_diagnostics).and_call_original
-        expect(diagnostics).to receive(:collect).with('diagnostics/dir')
-
-        callback.call
       end
     end
   end

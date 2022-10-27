@@ -211,6 +211,47 @@ module VCAP::CloudController
       end
     end
 
+    describe '#staging_log_rate_limit_bytes_per_second' do
+      subject(:build_create_message) { BuildCreateMessage.new(params) }
+      let(:params) { { staging_log_rate_limit_bytes_per_second: -1 } }
+
+      it 'returns the staging_log_rate_limit_bytes_per_second' do
+        expect(build_create_message.staging_log_rate_limit_bytes_per_second).to eq(-1)
+      end
+
+      context 'when not provided' do
+        let(:params) { nil }
+
+        it 'returns nil' do
+          expect(build_create_message.staging_log_rate_limit_bytes_per_second).to eq(nil)
+        end
+      end
+
+      context 'when the value is less than -1' do
+        let(:params) do
+          {
+            package: { guid: 'some-guid' },
+            staging_log_rate_limit_bytes_per_second: -2
+          }
+        end
+        it 'is invalid' do
+          expect(build_create_message.valid?).to be false
+        end
+      end
+
+      context 'when the value is too large' do
+        let(:params) do
+          {
+            package: { guid: 'some-guid' },
+            staging_log_rate_limit_bytes_per_second: 2**63
+          }
+        end
+        it 'is invalid' do
+          expect(build_create_message.valid?).to be false
+        end
+      end
+    end
+
     describe '#environment variables' do
       subject(:build_create_message) { BuildCreateMessage.new(params) }
 

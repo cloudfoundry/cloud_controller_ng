@@ -109,6 +109,7 @@ module VCAP::CloudController
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,
           disk_quota: web_process.disk_quota,
+          log_rate_limit: web_process.log_rate_limit,
           metadata: web_process.metadata, # execution_metadata, not labels & annotations metadata!
           detected_buildpack: web_process.detected_buildpack,
           health_check_timeout: web_process.health_check_timeout,

@@ -247,7 +247,7 @@ RSpec.describe AppPackager do
 
         output = `zipinfo #{input_zip}`
 
-        (0..20).each do |i|
+        21.times do |i|
           expect(output).to include("folder_#{i}/")
           expect(output).to include("folder_#{i}/empty_file")
         end

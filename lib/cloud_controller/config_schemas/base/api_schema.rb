@@ -11,7 +11,6 @@ module VCAP::CloudController
             external_port: Integer,
             external_domain: String,
             temporary_disable_deployments: bool,
-            temporary_use_logcache: bool,
             optional(:temporary_disable_v2_staging) => bool,
             tls_port: Integer,
             external_protocol: String,
@@ -38,6 +37,7 @@ module VCAP::CloudController
 
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
+            default_app_log_rate_limit_in_bytes_per_second: Integer,
             maximum_app_disk_in_mb: Integer,
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,
@@ -246,6 +246,11 @@ module VCAP::CloudController
             threadpool_size: Integer,
             skip_cert_verify: bool,
 
+            webserver: String, # thin or puma
+            optional(:puma) => {
+              workers: Integer
+            },
+
             install_buildpacks: [
               {
                 'name' => String,
@@ -274,14 +279,6 @@ module VCAP::CloudController
             security_event_logging: {
               enabled: bool,
               file: String,
-            },
-
-            bits_service: {
-              enabled: bool,
-              optional(:public_endpoint) => enum(String, NilClass),
-              optional(:private_endpoint) => enum(String, NilClass),
-              optional(:username) => enum(String, NilClass),
-              optional(:password) => enum(String, NilClass),
             },
 
             rate_limiter: {
@@ -366,8 +363,6 @@ module VCAP::CloudController
               write_key: String,
               dataset: String,
             },
-
-            optional(:use_optimized_json_encoder) => bool,
           }
         end
         # rubocop:enable Metrics/BlockLength

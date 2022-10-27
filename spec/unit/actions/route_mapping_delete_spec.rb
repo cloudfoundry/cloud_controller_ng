@@ -23,8 +23,7 @@ module VCAP::CloudController
       allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
       allow(event_repository).to receive(:record_unmap_route)
       TestConfig.override(
-        kubernetes: {
-        },
+        kubernetes: {},
       )
     end
 

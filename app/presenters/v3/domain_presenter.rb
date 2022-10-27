@@ -7,12 +7,12 @@ module VCAP::CloudController::Presenters::V3
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
     def initialize(
       resource,
-        show_secrets: false,
-        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        visible_org_guids: [],
-        all_orgs_visible: false
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      visible_org_guids_query: nil,
+      all_orgs_visible: false
     )
-      @visible_org_guids = visible_org_guids
+      @visible_org_guids_query = visible_org_guids_query
       @all_orgs_visible = all_orgs_visible
 
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
@@ -45,12 +45,12 @@ module VCAP::CloudController::Presenters::V3
 
     private
 
-    attr_reader :visible_org_guids, :all_orgs_visible
+    attr_reader :visible_org_guids_query, :all_orgs_visible
 
     def shared_org_guids
-      org_guids = domain.shared_organizations.map(&:guid)
-      org_guids &= visible_org_guids unless all_orgs_visible
-      org_guids.map { |org_guid| { guid: org_guid } }
+      ds = domain.shared_organizations_dataset
+      ds = ds.where(guid: @visible_org_guids_query) unless @all_orgs_visible
+      ds.select_map(:guid).map { |g| { guid: g } }
     end
 
     def owning_org_guid

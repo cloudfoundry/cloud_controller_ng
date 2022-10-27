@@ -37,8 +37,7 @@ module VCAP::CloudController::Validators
       let(:authentication) do
         {
           type: 'basic',
-          credentials: {
-          },
+          credentials: {},
         }
       end
 
@@ -116,6 +115,38 @@ module VCAP::CloudController::Validators
       it 'is not valid' do
         expect(message).not_to be_valid
         expect(message.errors_on(:authentication)).to include(/Field\(s\) \["password"\] must be valid/)
+      end
+    end
+
+    context 'when username is an empty string' do
+      let(:authentication) do
+        {
+          credentials: {
+            username: '',
+            password: 'pass'
+          },
+        }
+      end
+
+      it 'is not valid' do
+        expect(message).not_to be_valid
+        expect(message.errors_on(:authentication)).to include(/Username can't be blank/)
+      end
+    end
+
+    context 'when password is an empty string' do
+      let(:authentication) do
+        {
+          credentials: {
+            username: 'user',
+            password: ''
+          },
+        }
+      end
+
+      it 'is not valid' do
+        expect(message).not_to be_valid
+        expect(message.errors_on(:authentication)).to include(/Password can't be blank/)
       end
     end
   end

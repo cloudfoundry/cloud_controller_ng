@@ -31,6 +31,7 @@ applications:
   - type: web
     instances: 2
     memory: 512M
+    log-rate-limit-per-second: 1KB
     disk_quota: 1024M
     health-check-type: port
 ```

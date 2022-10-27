@@ -11,6 +11,7 @@ require 'volume_mount_pb'
 require 'network_pb'
 require 'certificate_properties_pb'
 require 'image_layer_pb'
+require 'log_rate_limit_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "diego.bbs.models.TaskDefinition" do
     optional :root_fs, :string, 1
@@ -38,6 +39,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :image_username, :string, 23
     optional :image_password, :string, 24
     repeated :image_layers, :message, 25, "diego.bbs.models.ImageLayer"
+    optional :log_rate_limit, :message, 26, "diego.bbs.models.LogRateLimit"
   end
   add_message "diego.bbs.models.Task" do
     optional :task_definition, :message, 1, "diego.bbs.models.TaskDefinition"

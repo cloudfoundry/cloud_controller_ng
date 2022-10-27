@@ -24,7 +24,6 @@ module VCAP::CloudController
     serialize_attributes :json, :tags
 
     one_to_one :service_instance_operation
-    add_association_dependencies service_instance_operation: :destroy
 
     one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
     one_to_many :service_keys
@@ -229,17 +228,20 @@ module VCAP::CloudController
     end
 
     def save_with_new_operation(instance_attributes, last_operation)
-      update_attributes(instance_attributes)
+      ServiceInstance.db.transaction do
+        self.lock!
+        update_attributes(instance_attributes)
 
-      if self.last_operation
-        self.last_operation.destroy
+        if self.last_operation
+          self.last_operation.destroy
+        end
+
+        # it is important to create the service instance operation with the service instance
+        # instead of doing self.service_instance_operation = x
+        # because mysql will deadlock when requests happen concurrently otherwise.
+        ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
+        self.service_instance_operation(reload: true)
       end
-
-      # it is important to create the service instance operation with the service instance
-      # instead of doing self.service_instance_operation = x
-      # because mysql will deadlock when requests happen concurrently otherwise.
-      ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
-      self.service_instance_operation(reload: true)
     end
 
     private

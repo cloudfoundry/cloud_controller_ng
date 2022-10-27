@@ -147,6 +147,15 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
         end
       end
+
+      context 'log quota is -1' do
+        before do
+          process.log_rate_limit = -1
+        end
+        it 'displays it as unlimited' do
+          expect(result[:log_rate_limit_in_bytes_per_second]).to eq(-1)
+        end
+      end
     end
   end
 end

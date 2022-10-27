@@ -6,7 +6,6 @@ RSpec.describe BackgroundJobEnvironment do
 
     TestConfig.override(
       logging: { level: 'debug2' },
-      bits_service: { enabled: false },
     )
   end
   let(:config) { VCAP::CloudController::Config.config }

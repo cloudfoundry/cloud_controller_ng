@@ -27,7 +27,7 @@ and will not modify any unspecified properties or remove any existing
 environment variables, routes, or services.
 
 <aside class="notice">
-Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties require an app restart to take effect.
+Apply manifest will only trigger an immediate update for the "instances" property or routing changes. All other properties require an app restart to take effect.
 </aside>
 
 #### Definition

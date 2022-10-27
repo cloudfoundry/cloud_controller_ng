@@ -78,6 +78,7 @@ RSpec.describe 'Builds' do
           'state' => 'STAGING',
           'staging_memory_in_mb' => 42,
           'staging_disk_in_mb' => 42,
+          'staging_log_rate_limit_bytes_per_second' => -1,
           'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
           'error' => nil,
           'lifecycle' => {
@@ -174,8 +175,7 @@ RSpec.describe 'Builds' do
         {
           lifecycle: {
             type: 'kpack',
-            data: {
-            },
+            data: {},
           },
           package: {
             guid: package.guid
@@ -347,6 +347,7 @@ RSpec.describe 'Builds' do
         created_by_user_email: 'bob@loblaw.com',
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 234
       )
     end
     let!(:second_build) do
@@ -358,7 +359,8 @@ RSpec.describe 'Builds' do
         created_by_user_guid: developer.guid,
         created_by_user_email: 'bob@loblaw.com',
         staging_memory_in_mb: 789,
-        staging_disk_in_mb: 12
+        staging_disk_in_mb: 12,
+        staging_log_rate_limit: 345
       )
     end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -468,6 +470,7 @@ RSpec.describe 'Builds' do
               'state' => 'STAGED',
               'staging_memory_in_mb' => 123,
               'staging_disk_in_mb' => 456,
+              'staging_log_rate_limit_bytes_per_second' => 234,
               'error' => nil,
               'lifecycle' => {
                 'type' => 'buildpack',
@@ -496,6 +499,7 @@ RSpec.describe 'Builds' do
               'state' => 'STAGED',
               'staging_memory_in_mb' => 789,
               'staging_disk_in_mb' => 12,
+              'staging_log_rate_limit_bytes_per_second' => 345,
               'error' => nil,
               'lifecycle' => {
                 'type' => 'buildpack',
@@ -557,6 +561,7 @@ RSpec.describe 'Builds' do
         app: app_model,
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 789,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: developer.guid,
         created_by_user_email: 'bob@loblaw.com'
@@ -593,6 +598,7 @@ RSpec.describe 'Builds' do
           'state' => 'STAGED',
           'staging_memory_in_mb' => 123,
           'staging_disk_in_mb' => 456,
+          'staging_log_rate_limit_bytes_per_second' => 789,
           'error' => nil,
           'lifecycle' => {
             'type' => 'buildpack',

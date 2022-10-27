@@ -7,8 +7,7 @@ module VCAP::CloudController
       subject(:task_cancel) { described_class.new(config) }
 
       let(:config) do
-        Config.new({
-        })
+        Config.new({})
       end
 
       let(:app) { AppModel.make }

@@ -3046,7 +3046,16 @@ RSpec.describe 'Routes Request' do
 
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_developer space_supporter].each { |r| h[r] = { code: 422 } }
+          %w[space_developer space_supporter].each { |r|
+            h[r] = {
+              code: 422,
+              errors: [{
+                detail: "Unable to unshare route '#{route.uri}' from space '#{space_to_unshare.guid}'. The target organization is suspended.",
+                title: 'CF-UnprocessableEntity',
+                code: 10008
+              }]
+            }
+          }
           h
         end
 
@@ -3097,19 +3106,6 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    it 'responds with 404 when the space specified is bogus' do
-      delete "/v3/routes/#{route.guid}/relationships/shared_spaces/this-space-guid-is-jifeaioeawjfai", request_body.to_json, space_dev_headers
-
-      expect(last_response).to have_status_code(404)
-      expect(parsed_response['errors']).to include(
-        include(
-          {
-            'detail' => 'Space not found',
-            'title' => 'CF-ResourceNotFound'
-          })
-      )
-    end
-
     it 'responds with 204 when the route is not shared with the specified space' do
       delete "/v3/routes/#{route.guid}/relationships/shared_spaces/#{target_space_not_shared_with_route.guid}", request_body.to_json, space_dev_headers
 
@@ -3149,8 +3145,354 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    describe 'errors while unsharing' do
-      # isolation segments?
+    describe 'target space to unshare with' do
+      context 'does not exist' do
+        let(:unshared_space_guid) { 'fake-target' }
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to unshare route '#{route.uri}' from space '#{unshared_space_guid}'. " \
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have read access to the target space' do
+        let(:unshared_space_guid) { VCAP::CloudController::Space.make(organization: org).guid }
+
+        it 'responds with 422 and does not share the route' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to unshare route '#{route.uri}' from space '#{unshared_space_guid}'. "\
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have write access to the target space' do
+        let(:no_write_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:unshared_space_guid) { no_write_access_target_space.guid }
+
+        before do
+          no_write_access_target_space.add_auditor(user)
+        end
+
+        it 'responds with 422 and does not share the route' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to unshare route '#{route.uri}' from space '#{no_write_access_target_space.guid}'. "\
+                "You don't have write permission for the target space.",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+  end
+
+  describe 'PATCH /v3/routes/:guid/relationships/space' do
+    let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+    let(:route) { VCAP::CloudController::Route.make(space: space, domain: shared_domain) }
+    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/relationships/space", request_body.to_json, user_headers } }
+    let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:request_body) do
+      {
+        data: { 'guid' => target_space.guid }
+      }
+    end
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+    let!(:feature_flag) do
+      VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: true, error_message: nil)
+    end
+
+    before do
+      org.add_user(user)
+      target_space.add_developer(user)
+    end
+
+    context 'when the user logged in' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h['admin'] = { code: 200 }
+        h['no_role'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['space_developer'] = { code: 200 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer].each { |r| h[r] = { code: 403, errors: CF_ORG_SUSPENDED } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when target organization is suspended' do
+        let(:suspended_space) { VCAP::CloudController::Space.make }
+        let(:request_body) do
+          {
+            data: { 'guid' => suspended_space.guid }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer].each { |r|
+            h[r] = {
+              code: 422,
+              errors: [{
+                detail: "Unable to transfer owner of route '#{route.uri}' to space '#{suspended_space.guid}'. The target organization is suspended.",
+                title: 'CF-UnprocessableEntity',
+                code: 10008
+              }]
+            }
+          }
+          h
+        end
+
+        before do
+          suspended_space.organization.add_user(user)
+          suspended_space.add_developer(user)
+          suspended_space.organization.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
+    it 'changes the route owner to the given space and logs an event', isolation: :truncation do
+      api_call.call(space_dev_headers)
+
+      expect(last_response.status).to eq(200)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.route.transfer-owner',
+        actor: user.guid,
+        actee_type: 'route',
+        actee_name: route.host,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['target_space_guid']).to eq(target_space.guid)
+
+      route.reload
+      expect(route.space).to eq target_space
+    end
+
+    describe 'when using a private domain' do
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:route) { VCAP::CloudController::Route.make(space: space, domain: private_domain) }
+      let(:second_org) { VCAP::CloudController::Organization.make }
+      let(:another_space) { VCAP::CloudController::Space.make(organization: second_org) }
+      let(:request_body) do
+        {
+          data: { 'guid' => another_space.guid }
+        }
+      end
+      let(:space_dev_headers) do
+        org.add_user(user)
+        space.add_developer(user)
+        second_org.add_user(user)
+        another_space.add_developer(user)
+        headers_for(user)
+      end
+
+      it 'responds with 422' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{another_space.guid}'. "\
+                          "Target space does not have access to route's domain",
+              'title' => 'CF-UnprocessableEntity'
+            })
+        )
+      end
+    end
+
+    describe 'target space to transfer to' do
+      context 'does not exist' do
+        let(:target_space_guid) { 'fake-target' }
+        let(:request_body) do
+          {
+            data: { 'guid' => target_space_guid }
+          }
+        end
+
+        it 'responds with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{target_space_guid}'. " \
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+
+      context 'user does not have read access to the target space' do
+        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            data: { 'guid' => no_access_target_space.guid }
+          }
+        end
+
+        it 'responds with 422 and does not share the route' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_access_target_space.guid}'. "\
+                            'Ensure the space exists and that you have access to it.',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+      context 'user does not have write access to the target space' do
+        let(:no_write_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:request_body) do
+          {
+            data: { 'guid' => no_write_access_target_space.guid }
+          }
+        end
+
+        before do
+          no_write_access_target_space.add_auditor(user)
+        end
+
+        it 'responds with 422 and does not share the route' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_write_access_target_space.guid}'. "\
+                "You don't have write permission for the target space.",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+
+    it 'responds with 404 when the route does not exist' do
+      patch '/v3/routes/some-fake-guid/relationships/space', request_body.to_json, space_dev_headers
+
+      expect(last_response).to have_status_code(404)
+      expect(parsed_response['errors']).to include(
+        include(
+          {
+            'detail' => 'Route not found',
+            'title' => 'CF-ResourceNotFound'
+          })
+      )
+    end
+
+    describe 'when the request body is invalid' do
+      context 'when there are additional keys' do
+        let(:request_body) do
+          {
+            data: { 'guid' => target_space.guid },
+            'fake-key' => 'foo'
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => "Unknown field(s): 'fake-key'",
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+      context 'when data is not a hash' do
+        let(:request_body) do
+          {
+            data: [{ 'guid' => target_space.guid }]
+          }
+        end
+
+        it 'should respond with 422' do
+          api_call.call(space_dev_headers)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors']).to include(
+            include(
+              {
+                'detail' => 'Data must be an object',
+                'title' => 'CF-UnprocessableEntity'
+              })
+          )
+        end
+      end
+    end
+
+    describe 'when route_sharing flag is disabled' do
+      before do
+        feature_flag.enabled = false
+        feature_flag.save
+      end
+
+      it 'makes users unable to transfer-owner' do
+        api_call.call(space_dev_headers)
+
+        expect(last_response).to have_status_code(403)
+        expect(parsed_response['errors']).to include(
+          include(
+            {
+              'detail' => 'Feature Disabled: route_sharing',
+              'title' => 'CF-FeatureDisabled',
+              'code' => 330002,
+            })
+        )
+      end
     end
   end
 

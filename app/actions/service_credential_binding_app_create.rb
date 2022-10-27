@@ -51,7 +51,6 @@ module VCAP::CloudController
         space_mismatch! unless all_space_guids(service_instance).include? app.space.guid
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
-          service_not_available! unless service_instance.service_plan.active?
           volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
           service_instance_not_found! if service_instance.create_failed?
           operation_in_progress! if service_instance.operation_in_progress?

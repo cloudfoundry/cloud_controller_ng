@@ -74,6 +74,11 @@ module VCAP::CloudController
           expect(process.ports).to eq([8081, 8082])
         end
       end
+
+      it 'has a default log_rate_limit' do
+        TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 873565)
+        expect(process.log_rate_limit).to eq(873565)
+      end
     end
 
     describe 'Associations' do
@@ -193,6 +198,7 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(MaxDiskQuotaPolicy)
         expect_validator(MinDiskQuotaPolicy)
+        expect_validator(MinLogRateLimitPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
@@ -286,6 +292,15 @@ module VCAP::CloudController
           process.disk_quota = 4096
           expect(process).to_not be_valid
           expect(process.errors.on(:disk_quota)).to be_present
+        end
+      end
+
+      describe 'log_rate_limit' do
+        subject(:process) { ProcessModelFactory.make }
+
+        it 'does not allow a log_rate_limit below the minimum' do
+          process.log_rate_limit = -2
+          expect(process).to_not be_valid
         end
       end
 
@@ -402,11 +417,12 @@ module VCAP::CloudController
 
       describe 'quota' do
         subject(:process) { ProcessModelFactory.make }
+        let(:log_rate_limit) { 1024 }
         let(:quota) do
-          QuotaDefinition.make(memory_limit: 128)
+          QuotaDefinition.make(memory_limit: 128, log_rate_limit: log_rate_limit)
         end
         let(:space_quota) do
-          SpaceQuotaDefinition.make(memory_limit: 128, organization: org)
+          SpaceQuotaDefinition.make(memory_limit: 128, organization: org, log_rate_limit: log_rate_limit)
         end
 
         context 'app update' do
@@ -420,15 +436,52 @@ module VCAP::CloudController
           let(:org) { Organization.make(quota_definition: quota) }
           let(:space) { Space.make(name: 'hi', organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
-          subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
+          subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, log_rate_limit: 512, instances: 2, state: 'STOPPED') }
 
           it 'should raise error when quota is exceeded' do
             process.memory = 65
-            expect { process.save }.to raise_error(/quota_exceeded/)
+            process.state = 'STARTED'
+            expect { process.save }.to raise_error(/memory quota_exceeded/)
+          end
+
+          it 'should raise error when log quota is exceeded' do
+            number = (log_rate_limit / 2) + 1
+            process.log_rate_limit = number
+            process.state = 'STARTED'
+            expect { process.save }.to raise_error(/exceeds space log rate quota/)
+          end
+
+          context 'when only exceeding the org quota' do
+            before do
+              org.quota_definition = QuotaDefinition.make(log_rate_limit: 5)
+              org.save
+            end
+
+            it 'raises an error' do
+              process.log_rate_limit = 10
+              process.state = 'STARTED'
+              expect { process.save }.to raise_error(/exceeds organization log rate quota/)
+            end
+          end
+
+          it 'should not raise error when log quota is not exceeded' do
+            number = (log_rate_limit / 2)
+            process.log_rate_limit = number
+            process.state = 'STARTED'
+            expect { process.save }.not_to raise_error
+          end
+
+          it 'should raise an error when starting an app with unlimited log rate and a limited quota' do
+            process.log_rate_limit = -1
+            process.state = 'STARTED'
+            expect { process.save }.to raise_error(Sequel::ValidationFailed)
+            expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in organization '#{org.name}'.")
+            expect(process.errors.on(:log_rate_limit)).to include("cannot be unlimited in space '#{space.name}'.")
           end
 
           it 'should not raise error when quota is not exceeded' do
             process.memory = 63
+            process.state = 'STARTED'
             expect { process.save }.to_not raise_error
           end
 
@@ -436,12 +489,15 @@ module VCAP::CloudController
             quota.memory_limit = 32
             quota.save
             process.memory = 100
+            process.state = 'STARTED'
             process.save(validate: false)
             expect(process.reload).to_not be_valid
             expect { process.delete }.not_to raise_error
           end
 
           it 'allows scaling down instances of an app from above quota to below quota' do
+            process.update(state: 'STARTED')
+
             org.quota_definition = QuotaDefinition.make(memory_limit: 72)
             act_as_cf_admin { org.save }
 
@@ -460,6 +516,7 @@ module VCAP::CloudController
             quota.save
 
             process.instances = 5
+            process.state = 'STARTED'
             expect { process.save }.to raise_error(/instance_limit_exceeded/)
           end
 
@@ -471,10 +528,13 @@ module VCAP::CloudController
             quota.save
 
             process.instances = 5
+            process.state = 'STARTED'
             expect { process.save }.to raise_error(/instance_limit_exceeded/)
           end
 
           it 'raises when scaling down number of instances but remaining above quota' do
+            process.update(state: 'STARTED')
+
             org.quota_definition = QuotaDefinition.make(memory_limit: 32)
             act_as_cf_admin { org.save }
 
@@ -487,6 +547,7 @@ module VCAP::CloudController
           end
 
           it 'allows stopping an app that is above quota' do
+            process.update(state: 'STARTED')
             org.quota_definition = QuotaDefinition.make(memory_limit: 72)
             act_as_cf_admin { org.save }
 
@@ -503,6 +564,7 @@ module VCAP::CloudController
             act_as_cf_admin { org.save }
 
             process.memory = 40
+            process.state = 'STARTED'
             expect { process.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
 
             process.memory = 32
@@ -565,6 +627,7 @@ module VCAP::CloudController
           :health_check_timeout,
           :health_check_type,
           :instances,
+          :log_rate_limit,
           :memory,
           :name,
           :package_state,
@@ -598,6 +661,7 @@ module VCAP::CloudController
           :health_check_timeout,
           :health_check_type,
           :instances,
+          :log_rate_limit,
           :memory,
           :name,
           :production,
@@ -1330,6 +1394,22 @@ module VCAP::CloudController
         it 'should use the default quota' do
           process = ProcessModel.make
           expect(process.disk_quota).to eq(512)
+        end
+      end
+
+      describe 'default log_rate_limit' do
+        before do
+          TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 1024)
+        end
+
+        it 'should use the provided quota' do
+          process = ProcessModel.make(log_rate_limit: 256)
+          expect(process.log_rate_limit).to eq(256)
+        end
+
+        it 'should use the default quota' do
+          process = ProcessModel.make
+          expect(process.log_rate_limit).to eq(1024)
         end
       end
 

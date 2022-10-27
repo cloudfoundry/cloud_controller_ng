@@ -5,7 +5,7 @@ require 'messages/deployment_create_message'
 module VCAP::CloudController
   RSpec.describe DeploymentCreate do
     let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
-    let!(:web_process) { ProcessModel.make(app: app, instances: 3) }
+    let!(:web_process) { ProcessModel.make(app: app, instances: 3, log_rate_limit: 101) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
     let!(:route1) { Route.make(space: app.space) }
@@ -169,6 +169,7 @@ module VCAP::CloudController
             expect(deploying_web_process.memory).to eq(web_process.memory)
             expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
             expect(deploying_web_process.disk_quota).to eq(web_process.disk_quota)
+            expect(deploying_web_process.log_rate_limit).to eq(web_process.log_rate_limit)
             expect(deploying_web_process.metadata).to eq(web_process.metadata)
             expect(deploying_web_process.detected_buildpack).to eq(web_process.detected_buildpack)
             expect(deploying_web_process.health_check_timeout).to eq(web_process.health_check_timeout)
@@ -206,6 +207,7 @@ module VCAP::CloudController
                 health_check_type: 'http',
                 health_check_http_endpoint: '/old_dawg',
                 health_check_invocation_timeout: 9,
+                log_rate_limit: 11,
                 enable_ssh: true,
                 ports: [],
               )
@@ -227,6 +229,7 @@ module VCAP::CloudController
                 health_check_type: 'port',
                 health_check_http_endpoint: '/new_cat',
                 health_check_invocation_timeout: 10,
+                log_rate_limit: 12,
                 enable_ssh: false,
                 ports: nil,
               )
@@ -244,6 +247,7 @@ module VCAP::CloudController
               expect(deploying_web_process.memory).to eq(newer_web_process.memory)
               expect(deploying_web_process.file_descriptors).to eq(newer_web_process.file_descriptors)
               expect(deploying_web_process.disk_quota).to eq(newer_web_process.disk_quota)
+              expect(deploying_web_process.log_rate_limit).to eq(newer_web_process.log_rate_limit)
               expect(deploying_web_process.metadata).to eq(newer_web_process.metadata)
               expect(deploying_web_process.detected_buildpack).to eq(newer_web_process.detected_buildpack)
               expect(deploying_web_process.health_check_timeout).to eq(newer_web_process.health_check_timeout)

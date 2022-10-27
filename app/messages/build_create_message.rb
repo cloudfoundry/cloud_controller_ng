@@ -4,7 +4,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class BuildCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :environment_variables, :lifecycle, :package]
+    register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :staging_log_rate_limit_bytes_per_second, :environment_variables, :lifecycle, :package]
 
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
@@ -12,6 +12,7 @@ module VCAP::CloudController
 
     validates :staging_disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :staging_memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :staging_log_rate_limit_bytes_per_second, numericality: { only_integer: true, greater_than_or_equal_to: -1, less_than_or_equal_to: MAX_DB_BIGINT }, allow_nil: true
 
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?

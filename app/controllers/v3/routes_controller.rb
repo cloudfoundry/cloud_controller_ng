@@ -4,6 +4,7 @@ require 'messages/route_destination_update_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
+require 'messages/route_transfer_owner_message'
 require 'messages/route_update_destinations_message'
 require 'actions/update_route_destinations'
 require 'decorators/include_route_domain_decorator'
@@ -16,6 +17,7 @@ require 'actions/route_delete'
 require 'actions/route_update'
 require 'actions/route_share'
 require 'actions/route_unshare'
+require 'actions/route_transfer_owner'
 require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
 require 'fetchers/route_destinations_list_fetcher'
@@ -143,14 +145,8 @@ class RoutesController < ApplicationController
     space_guid = hashed_params[:space_guid]
 
     target_space = Space.first(guid: space_guid)
-    resource_not_found!(:space) unless target_space && permission_queryer.can_read_from_space?(space_guid, target_space.organization.guid)
-
-    target_space_error = if !permission_queryer.can_manage_apps_in_active_space?(target_space.guid)
-                           "You don't have write permission for the target space."
-                         elsif !permission_queryer.is_space_active?(target_space.guid)
-                           'The target organization is suspended.'
-                         end
-    unprocessable!("Unable to unshare route '#{route.uri}' from space '#{target_space.name}'. #{target_space_error}") unless target_space_error.nil?
+    target_space_error = check_if_space_is_accessible(target_space)
+    unprocessable!("Unable to unshare route '#{route.uri}' from space '#{space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
     unshare = RouteUnshare.new
     unshare.unshare(route, target_space, user_audit_info)
@@ -165,6 +161,28 @@ class RoutesController < ApplicationController
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
+  end
+
+  def transfer_owner
+    FeatureFlag.raise_unless_enabled!(:route_sharing)
+
+    message = RouteTransferOwnerMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.guid)
+    suspended! unless permission_queryer.is_space_active?(route.space.guid)
+
+    target_space = Space.first(guid: message.space_guid)
+    target_space_error = check_if_space_is_accessible(target_space)
+    unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. #{target_space_error}") unless target_space_error.nil?
+
+    if !route.domain.usable_by_organization?(target_space.organization)
+      unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. Target space does not have access to route's domain")
+    end
+
+    RouteTransferOwner.transfer(route, target_space, user_audit_info)
+
+    render status: :ok, json: { status: 'ok' }
   end
 
   def index_destinations
@@ -314,14 +332,18 @@ class RoutesController < ApplicationController
   def validate_app_guids!(apps_hash, desired_app_guids)
     existing_app_guids = apps_hash.keys
 
-    missing_app_guids = desired_app_guids - (existing_app_guids & permission_queryer.readable_app_guids)
+    not_existing_app_guids = desired_app_guids - existing_app_guids
+    unprocessable!("App(s) with guid(s) \"#{not_existing_app_guids.join('", "')}\" do not exist.") unless not_existing_app_guids.empty?
 
-    unprocessable!("App(s) with guid(s) \"#{missing_app_guids.join('", "')}\" do not exist or you do not have access.") unless missing_app_guids.empty?
+    unless permission_queryer.can_read_globally?
+      unauthorized_app_guids = desired_app_guids - permission_queryer.readable_app_guids
+      unprocessable!("App(s) with guid(s) \"#{unauthorized_app_guids.join('", "')}\" you do not have access.") unless unauthorized_app_guids.empty?
+    end
   end
 
   def validate_app_spaces!(apps_hash, route)
-    if apps_hash.values.any? { |app| app.space != route.space }
-      unprocessable!('Routes cannot be mapped to destinations in different spaces.')
+    if apps_hash.values.any? { |app| app.space != route.space && !route.shared_spaces.include?(app.space) }
+      unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
     end
   end
 
@@ -374,5 +396,17 @@ class RoutesController < ApplicationController
       "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. "\
       'Write permission is required in order to share a route with a space and the containing organization must not be suspended.'
     end
+  end
+
+  def check_if_space_is_accessible(space)
+    if space.nil? || !can_read_space?(space)
+      return 'Ensure the space exists and that you have access to it.'
+    elsif !permission_queryer.can_manage_apps_in_active_space?(space.guid)
+      return "You don't have write permission for the target space."
+    elsif !permission_queryer.is_space_active?(space.guid)
+      return 'The target organization is suspended.'
+    end
+
+    nil
   end
 end

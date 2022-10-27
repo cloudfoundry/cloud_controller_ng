@@ -17,11 +17,13 @@ Name | Type | Description
 **usage.cpu** | _number_ | The current cpu usage of the instance
 **usage.mem** | _integer_ | The current memory usage of the instance
 **usage.disk** | _integer_ | The current disk usage of the instance
+**usage.log_rate** | _integer_ | The current logging usage of the instance
 **host** | _string_ | The host the instance is running on
 **instance_ports** | _object_ | JSON array of port mappings between the network-exposed port used to communicate with the app (`external`) and port opened to the running process that it can listen on (`internal`)
 **uptime** | _integer_ | The uptime in seconds for the instance
 **mem_quota** | _integer_ | The current maximum memory allocated for the instance; the value is `null` when memory quota data is unavailable
 **disk_quota** | _integer_ | The current maximum disk allocated for the instance; the value is `null` when disk quota data is unavailable
+**log_rate_limit** | _integer_ | The current maximum log rate allocated for the instance; the value `-1` is unlimited, the value is `null` when the log_rate_limit is unavailable
 **fds_quota** | _integer_ | The maximum file descriptors the instance is allowed to use
 **isolation_segment** | _string_ | The current isolation segment that the instance is running on; the value is `null` when the instance is not placed on a particular isolation segment
 **details** | _string_ | Information about errors placing the instance; the value is `null`  if there are no placement errors

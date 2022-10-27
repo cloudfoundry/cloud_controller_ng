@@ -1778,6 +1778,7 @@ RSpec.describe 'Apps' do
         app: app_model,
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 789,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
         created_by_user_email: 'bob@loblaw.com'
@@ -1789,6 +1790,7 @@ RSpec.describe 'Apps' do
         app: app_model,
         staging_memory_in_mb: 123,
         staging_disk_in_mb: 456,
+        staging_log_rate_limit: 789,
         created_at: build.created_at - 1.day,
         created_by_user_name: 'bob the builder',
         created_by_user_guid: user.guid,
@@ -1874,6 +1876,7 @@ RSpec.describe 'Apps' do
               'error' => nil,
               'staging_memory_in_mb' => 123,
               'staging_disk_in_mb' => 456,
+              'staging_log_rate_limit_bytes_per_second' => 789,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -1902,6 +1905,7 @@ RSpec.describe 'Apps' do
               'error' => nil,
               'staging_memory_in_mb' => 123,
               'staging_disk_in_mb' => 456,
+              'staging_log_rate_limit_bytes_per_second' => 789,
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -2377,6 +2381,152 @@ RSpec.describe 'Apps' do
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        describe 'limiting the application log rates' do
+          let(:log_rate_limit) { -1 }
+          let(:space_log_rate_limit) { -1 }
+          let(:org_log_rate_limit) { -1 }
+          let(:org_quota_definition) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: org_log_rate_limit) }
+          let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
+          let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
+          let(:space) { VCAP::CloudController::Space.make(organization: org, space_quota_definition: space_quota_definition) }
+          let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: log_rate_limit) }
+          let(:app_model) {
+            VCAP::CloudController::AppModel.make(
+              :buildpack,
+              name: 'app-name',
+              space: space,
+              desired_state: 'STOPPED',
+            )
+          }
+          let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
+
+          before do
+            app_model.update(droplet_guid: droplet.guid)
+          end
+
+          describe 'space quotas' do
+            context 'when both the space and the app do not specify a log rate limit' do
+              let(:log_rate_limit) { -1 }
+              let(:space_log_rate_limit) { -1 }
+
+              it 'starts the app successfully' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(200)
+              end
+            end
+
+            context "when the app fits in the space's log rate limit" do
+              let(:log_rate_limit) { 199 }
+              let(:space_log_rate_limit) { 200 }
+
+              it 'starts the app successfully' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(200)
+              end
+            end
+
+            context "when the app's log rate limit is unspecified, but the space specifies a log rate limit" do
+              let(:log_rate_limit) { -1 }
+              let(:space_log_rate_limit) { 200 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in space '#{space.name}'.")
+              end
+            end
+
+            context "when the app's log rate limit is larger than the limit specified by the space" do
+              let(:log_rate_limit) { 201 }
+              let(:space_log_rate_limit) { 200 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+              end
+            end
+
+            context "when the space's quota is more strict that the org's quota, the space quota controls" do
+              let(:log_rate_limit) { 201 }
+              let(:space_log_rate_limit) { 200 }
+              let(:org_log_rate_limit) { 201 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
+              end
+            end
+          end
+
+          describe 'organization quotas' do
+            context 'when both the org and the app do not specify a log rate limit' do
+              let(:log_rate_limit) { -1 }
+              let(:org_log_rate_limit) { -1 }
+
+              it 'starts the app successfully' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(200)
+              end
+            end
+
+            context "when the app fits in the org's log rate limit" do
+              let(:log_rate_limit) { 199 }
+              let(:org_log_rate_limit) { 200 }
+
+              it 'starts the app successfully' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(200)
+              end
+            end
+
+            context "when the app's log rate limit is unspecified, but the org specifies a log rate limit" do
+              let(:log_rate_limit) { -1 }
+              let(:org_log_rate_limit) { 200 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in organization '#{org.name}'.")
+              end
+            end
+
+            context "when the app's log rate limit is larger than the limit specified by the org" do
+              let(:log_rate_limit) { 201 }
+              let(:org_log_rate_limit) { 200 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+              end
+            end
+
+            context "when the org's quota is more strict that the space's quota, the org quota controls" do
+              let(:log_rate_limit) { 201 }
+              let(:space_log_rate_limit) { 202 }
+              let(:org_log_rate_limit) { 200 }
+
+              it 'fails to start the app' do
+                post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
+
+                expect(last_response.status).to eq(422)
+                expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
+              end
+            end
+          end
         end
       end
 

@@ -116,7 +116,7 @@
 10018:
   name: RateLimitV2APIExceeded
   http_code: 429
-  message: "Rate Limit of V2 API Exceeded. Please consider to use V3 API"
+  message: "Rate Limit of V2 API Exceeded. Please consider using the V3 API"
 
 20001:
   name: UserInvalid
@@ -472,6 +472,11 @@
   name: AppMemoryInsufficientForSidecars
   http_code: 400
   message: "The requested memory allocation is not large enough to run all of your sidecar processes."
+
+100010:
+  name: OrgQuotaLogRateLimitExceeded
+  http_code: 400
+  message: "You have exceeded your organization's log rate limit: %s"
 
 110001:
   name: ServicePlanInvalid
@@ -1018,11 +1023,6 @@
   http_code: 400
   message: "Resource inside space %s must first be deleted, or specify recursive delete."
 
-290012:
-  name: BitsServiceError
-  http_code: 500
-  message: "The bits service returned an error: %s"
-
 290013:
   name: OrganizationRolesDeletionTimeout
   http_code: 524
@@ -1117,6 +1117,11 @@
   name: SpaceQuotaTotalReservedRoutePortsExceeded
   http_code: 400
   message: "You have exceeded the total reserved route ports for your space's quota."
+
+310011:
+  name: SpaceQuotaLogRateLimitExceeded
+  http_code: 400
+  message: "You have exceeded your space's log rate limit: %s"
 
 320001:
   name: DiegoDisabled

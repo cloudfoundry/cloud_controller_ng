@@ -36,32 +36,6 @@ module VCAP::CloudController
         expect(hash['osbapi_version']).to eq(VCAP::CloudController::Constants::OSBAPI_VERSION)
       end
 
-      it 'includes bits_endpoint when bits service is enabled' do
-        TestConfig.override(bits_service: {
-          enabled: true,
-          public_endpoint: 'http://public-bits-service.example.com',
-          private_endpoint: 'http://private-bits-service.example.com',
-          username: 'some-username',
-          password: 'some-password',
-        })
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash['bits_endpoint']).to eq('http://public-bits-service.example.com')
-      end
-
-      it 'does not include bits_service when bits service is not enabled' do
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash).to_not include('bits_endpoint')
-      end
-
-      it 'does not include bits_endpoint when bits service is not enabled, despite a configured public endpoint' do
-        TestConfig.override(bits_service: { public_endpoint: 'bits-service.example.com' })
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash).to_not include('bits_endpoint')
-      end
-
       it 'includes the routing api endpoint when configured' do
         TestConfig.override(routing_api: { url: 'some_routing_api' })
         get '/v2/info'

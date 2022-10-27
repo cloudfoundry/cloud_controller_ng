@@ -61,6 +61,7 @@ RSpec.describe 'Apps' do
               'memory'                     => 1024,
               'instances'                  => 1,
               'disk_quota'                 => 1024,
+              'log_rate_limit'             => 1_048_576,
               'state'                      => 'STOPPED',
               'version'                    => process.version,
               'command'                    => 'hello_world',
@@ -228,6 +229,7 @@ RSpec.describe 'Apps' do
                 'memory'                     => 1024,
                 'instances'                  => 1,
                 'disk_quota'                 => 1024,
+                'log_rate_limit'             => 1_048_576,
                 'state'                      => 'STOPPED',
                 'version'                    => process.version,
                 'command'                    => 'hello_world',
@@ -447,6 +449,7 @@ RSpec.describe 'Apps' do
             'memory'                     => 1024,
             'instances'                  => 1,
             'disk_quota'                 => 1024,
+            'log_rate_limit'             => 1_048_576,
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => 'app-command',
@@ -522,6 +525,7 @@ RSpec.describe 'Apps' do
             'memory'                     => 1024,
             'instances'                  => 1,
             'disk_quota'                 => 1024,
+            'log_rate_limit'             => 1_048_576,
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => nil,
@@ -667,6 +671,7 @@ RSpec.describe 'Apps' do
               'memory'                     => 1024,
               'instances'                  => 1,
               'disk_quota'                 => 1024,
+              'log_rate_limit'             => 1_048_576,
               'state'                      => 'STOPPED',
               'version'                    => process.version,
               'command'                    => nil,
@@ -746,6 +751,7 @@ RSpec.describe 'Apps' do
             },
             'memory'                     => 1024,
             'instances'                  => 1,
+            'log_rate_limit'             => 1_048_576,
             'disk_quota'                 => 1024,
             'state'                      => 'STARTED',
             'version'                    => process.version,
@@ -1012,6 +1018,7 @@ RSpec.describe 'Apps' do
               'memory'                     => 1024,
               'instances'                  => 1,
               'disk_quota'                 => 1024,
+              'log_rate_limit'             => 1_048_576,
               'state'                      => 'STARTED',
               'version'                    => process.version,
               'command'                    => nil,
@@ -1089,6 +1096,7 @@ RSpec.describe 'Apps' do
                 'memory'                     => 1024,
                 'instances'                  => 1,
                 'disk_quota'                 => 1024,
+                'log_rate_limit'             => 1_048_576,
                 'state'                      => 'STARTED',
                 'version'                    => process.version,
                 'command'                    => nil,
@@ -1217,6 +1225,7 @@ RSpec.describe 'Apps' do
           'environment_json'           => nil,
           'memory'                     => 1024,
           'instances'                  => 1,
+          'log_rate_limit'             => 1_048_576,
           'disk_quota'                 => 1024,
           'state'                      => 'STOPPED',
           'version'                    => process.version,
@@ -1255,9 +1264,7 @@ RSpec.describe 'Apps' do
     let!(:revision) do
       VCAP::CloudController::RevisionModel.make(
         app: process.app,
-        environment_variables: {
-
-        }
+        environment_variables: {}
       )
     end
 
@@ -1388,7 +1395,7 @@ RSpec.describe 'Apps' do
               'fds_quota'  => 16384,
               'usage'      => {
                 'time' => '2014-06-19 22:37:58 +0000',
-                'cpu'  => 0.13511219703079957,
+                'cpu'  => 0.1351121970307996,
                 'mem'  => 29880320,
                 'disk' => 66392064
               }
@@ -1497,6 +1504,7 @@ RSpec.describe 'Apps' do
             'memory'                     => 1024,
             'instances'                  => 1,
             'disk_quota'                 => 1024,
+            'log_rate_limit'             => 1_048_576,
             'state'                      => 'STARTED',
             'version'                    => process.version,
             'command'                    => nil,
@@ -1852,6 +1860,7 @@ RSpec.describe 'Apps' do
             'memory'                     => 1024,
             'instances'                  => 1,
             'disk_quota'                 => 1024,
+            'log_rate_limit'             => 1_048_576,
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => nil,

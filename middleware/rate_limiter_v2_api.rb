@@ -16,7 +16,7 @@ module CloudFoundry
       private
 
       def apply_rate_limiting?(env)
-        !basic_auth?(env) && v2_api?(env)
+        !basic_auth?(env) && v2_api?(env) && !v2_rate_limit_exempted?
       end
 
       def v2_api?(env)
@@ -30,6 +30,10 @@ module CloudFoundry
 
       def per_process_request_limit(env)
         admin? ? @per_process_admin_limit : @per_process_general_limit
+      end
+
+      def v2_rate_limit_exempted?
+        VCAP::CloudController::SecurityContext.v2_rate_limit_exempted?
       end
 
       def rate_limit_error(env)

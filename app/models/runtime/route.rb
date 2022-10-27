@@ -167,7 +167,9 @@ module VCAP::CloudController
     end
 
     def validate_changed_space(new_space)
-      raise CloudController::Errors::InvalidAppRelation.new('Route and apps not in same space') if apps.any? { |app| app.space.id != space.id }
+      unless FeatureFlag.enabled? :route_sharing
+        raise CloudController::Errors::InvalidAppRelation.new('Route and apps not in same space') if apps.any? { |app| app.space.id != space.id }
+      end
       raise InvalidOrganizationRelation.new("Organization cannot use domain #{domain.name}") if domain && !domain.usable_by_organization?(new_space.organization)
     end
 

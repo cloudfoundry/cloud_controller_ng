@@ -76,6 +76,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
   rescue_from CloudController::Errors::CompoundError, with: :handle_compound_error
   rescue_from ActionDispatch::Http::Parameters::ParseError, with: :handle_invalid_request_body
+  rescue_from Sequel::DatabaseConnectionError, Sequel::DatabaseDisconnectError, with: :handle_db_connection_error
 
   def configuration
     Config.config
@@ -163,16 +164,19 @@ class ApplicationController < ActionController::Base
     !READ_SCOPE_HTTP_METHODS.include?(request.method)
   end
 
-  def check_read_permissions!
-    read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-    admin_read_only_scope = SecurityContext.scopes.include?('cloud_controller.admin_read_only')
-    global_auditor_scope = SecurityContext.scopes.include?('cloud_controller.global_auditor')
+  def read_scope
+    roles.cloud_controller_reader?
+  end
 
-    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope && !admin_read_only_scope && !global_auditor_scope
+  def write_scope
+    roles.cloud_controller_writer?
+  end
+
+  def check_read_permissions!
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !roles.admin_read_only? && !roles.global_auditor? && !read_scope
   end
 
   def check_write_permissions!
-    write_scope = SecurityContext.scopes.include?('cloud_controller.write')
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
   end
 
@@ -193,6 +197,11 @@ class ApplicationController < ActionController::Base
 
   def handle_invalid_request_body(_error)
     error = CloudController::Errors::ApiError.new_from_details('MessageParseError', 'invalid request body')
+    handle_api_error(error)
+  end
+
+  def handle_db_connection_error(_)
+    error = CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Database connection failure')
     handle_api_error(error)
   end
 

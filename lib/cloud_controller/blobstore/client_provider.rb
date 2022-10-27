@@ -4,18 +4,13 @@ require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
-require 'bits_service_client'
 require 'google/apis/errors'
 
 module CloudController
   module Blobstore
     class ClientProvider
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
-        bits_service_options = VCAP::CloudController::Config.config.get(:bits_service)
-
-        if bits_service_options[:enabled] && resource_type
-          provide_bits_service(bits_service_options, resource_type)
-        elsif options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
+        if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
         else
           provide_webdav(options, directory_key, root_dir)
@@ -53,16 +48,6 @@ module CloudController
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
           Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
-        end
-
-        def provide_bits_service(bits_service_options, resource_type)
-          client = BitsService::Client.new(
-            bits_service_options: bits_service_options,
-            resource_type: resource_type,
-            vcap_request_id: VCAP::Request.current_id,
-          )
-
-          Client.new(client)
         end
 
         def provide_webdav(options, directory_key, root_dir)
