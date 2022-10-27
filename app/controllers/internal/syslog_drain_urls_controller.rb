@@ -50,7 +50,6 @@ module VCAP::CloudController
 
     def listv5
       prepare_aggregate_function
-      syslog_drain_urls_query = syslog_drain_urls_query()
 
       bindings = ServiceBinding.
                  join(:apps, guid: :app_guid).
@@ -68,41 +67,32 @@ module VCAP::CloudController
                    :organizations__name___organization_name
                  ).
                  where(service_bindings__syslog_drain_url: syslog_drain_urls_query).
+
                  each_with_object({}) { |item, injected|
-                   credentials = item.credentials
-                   key = credentials.fetch('key', '')
-                   cert = credentials.fetch('cert', '')
                    syslog_drain_url = item[:syslog_drain_url]
+                   credentials = item.credentials
+                   cert = credentials.fetch('cert', '')
+                   key = credentials.fetch('key', '')
                    hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
-                   if injected.include?(syslog_drain_url)
-                     existing_item = injected[syslog_drain_url]
-                     existing_binding_data_map = existing_item[:binding_data_map]
-                     if existing_binding_data_map.key?(cert)
-                       existing_binding_data_entry = existing_binding_data_map[cert]
-                       existing_apps = existing_binding_data_entry[:apps]
-                       new_apps = existing_apps.push({ hostname: hostname, app_id: item[:app_guid] })
-                       existing_binding_data_entry[:apps] = new_apps
-                     else
-                       binding_data_entry = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
-                       existing_binding_data_map[cert] = binding_data_entry
-                     end
-                     injected[syslog_drain_url] = existing_item
-                   else
-                     binding_data_entry = { cert: cert, key: key, apps: [{ hostname: hostname, app_id: item[:app_guid] }] }
-                     initial_binding_data_map = {}
-                     initial_binding_data_map[cert] = binding_data_entry
-                     target = {
-                       url: syslog_drain_url,
-                       binding_data_map: initial_binding_data_map
-                     }
-                     injected[syslog_drain_url] = target
-                   end
+                   app_guid = item[:app_guid]
+
+                   injected_item = injected[syslog_drain_url] ||= {
+                     url: syslog_drain_url,
+                     binding_data_map: {}
+                   }
+                   cert_item = injected_item[:binding_data_map][cert] ||= {
+                     cert: cert,
+                     key: key,
+                     apps: []
+                   }
+                   cert_item[:apps].push({ hostname: hostname, app_id: app_guid })
+
                    injected
                  }.values
 
       bindings.each do |binding|
         binding[:credentials] = binding[:binding_data_map].values
-        binding.reject! { |targets| targets == :binding_data_map }
+        binding.delete(:binding_data_map)
       end
 
       next_page_token = nil

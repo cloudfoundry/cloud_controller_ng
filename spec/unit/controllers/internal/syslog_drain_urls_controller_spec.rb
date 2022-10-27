@@ -274,22 +274,15 @@ module VCAP::CloudController
     end
 
     describe 'GET /internal/v5/syslog_drain_urls' do
-      let(:org) { Organization.make(name: 'org-1') }
-      let(:space) { Space.make(name: 'space-1', organization: org) }
-      let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
       let(:app_obj2) { AppModel.make(name: 'app-2', space: space) }
       let(:app_obj3) { AppModel.make(name: 'app-3', space: space) }
       let(:app_obj4) { AppModel.make(name: 'app-4', space: space) }
-      let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let(:instance3) { UserProvidedServiceInstance.make(space: app_obj2.space) }
       let(:instance4) { UserProvidedServiceInstance.make(space: app_obj3.space) }
       let(:instance5) { UserProvidedServiceInstance.make(space: app_obj3.space) }
       let(:instance6) { UserProvidedServiceInstance.make(space: app_obj4.space) }
       let(:instance7) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let(:instance8) { UserProvidedServiceInstance.make(space: app_obj2.space) }
-      let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
-      let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
       let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
       let!(:binding_with_drain4) { ServiceBinding.make(
         syslog_drain_url: 'barfoo',
@@ -326,53 +319,46 @@ module VCAP::CloudController
         get '/internal/v5/syslog_drain_urls', '{}'
         expect(last_response).to be_successful
 
-        expect(decoded_results.count).to eq(4)
+        sorted_results = decoded_results.sort { |a, b| a['url'] <=> b['url'] }.each do |binding|
+          binding['credentials'].sort! { |a, b| a['cert'] <=> b['cert'] }.each do |credential|
+            credential['apps'].sort! { |a, b| a['hostname'] <=> b['hostname'] }
+          end
+        end
 
-        foobar = decoded_results.select { |result| result['url'] == 'foobar' }.first
-        barfoo2 = decoded_results.select { |result| result['url'] == 'barfoo2' }.first
-        sorted_credentials = barfoo2['credentials'].sort_by { |credentials| credentials['key'] }
-        sorted_credentials[0]['apps'] = sorted_credentials[0]['apps'].sort_by { |apps| apps['hostname'] }
-        sorted_credentials[1]['apps'] = sorted_credentials[1]['apps'].sort_by { |apps| apps['hostname'] }
+        expect(sorted_results.count).to eq(4)
 
-        expect(foobar['credentials'].first['apps']).to include(
-          { 'app_id' => app_obj2.guid,
-            'hostname' => 'org-1.space-1.app-2' },
-          { 'app_id' => app_obj.guid,
-            'hostname' => 'org-1.space-1.app-1' }
-        )
-
-        expect(decoded_results).to include(
-          { 'credentials' => [{
-              'apps' => [{ 'app_id' => app_obj.guid, 'hostname' => 'org-1.space-1.app-1' }],
-              'cert' => '',
-              'key' => ''
-              }],
-            'url' => 'fish%2cfinger' }
-        )
-        expect(decoded_results).to include(
-          { 'credentials' => [{
-              'apps' => [{ 'app_id' => app_obj3.guid, 'hostname' => 'org-1.space-1.app-3' }],
-              'cert' => 'cert1',
-              'key' => 'key1'
-              }],
-            'url' => 'barfoo' }
-        )
-
-        expect(sorted_credentials[0]).to include(
-          { 'apps' => [
-              { 'app_id' => app_obj.guid, 'hostname' => 'org-1.space-1.app-1' },
-              { 'app_id' => app_obj2.guid, 'hostname' => 'org-1.space-1.app-2' }],
-            'cert' => 'cert1',
-            'key' => 'key1' }
-        )
-
-        expect(sorted_credentials[1]).to include(
-          { 'apps' => [
-              { 'app_id' => app_obj3.guid, 'hostname' => 'org-1.space-1.app-3' },
-              { 'app_id' => app_obj4.guid, 'hostname' => 'org-1.space-1.app-4' }],
-            'cert' => 'cert2',
-            'key' => 'key2' }
-        )
+        expect(sorted_results).to eq(
+          [
+            { 'url' => 'barfoo',
+             'credentials' => [
+               { 'cert' => 'cert1',
+                'key' => 'key1',
+                'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
+            { 'url' => 'barfoo2',
+             'credentials' => [
+               { 'cert' => 'cert1',
+                'key' => 'key1',
+                'apps' => [
+                  { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                  { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] },
+               { 'cert' => 'cert2',
+                'key' => 'key2',
+                 'apps' => [
+                   { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
+                   { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+            { 'url' => 'fish%2cfinger',
+             'credentials' => [
+               { 'cert' => '',
+                'key' => '',
+                'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
+            { 'url' => 'foobar',
+             'credentials' => [
+               { 'cert' => '',
+                'key' => '',
+                'apps' => [
+                  { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                  { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] }] }
+          ])
       end
 
       it 'supports paging' do
