@@ -5,14 +5,14 @@ module VCAP::CloudController::Presenters::V3
   class OrganizationQuotaPresenter < BasePresenter
     def initialize(
       resource,
-        show_secrets: false,
-        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        all_orgs_visible: false,
-        visible_org_guids: []
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      all_orgs_visible: false,
+      visible_org_guids_query: nil
     )
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
       @all_orgs_visible = all_orgs_visible
-      @visible_org_guids = visible_org_guids
+      @visible_org_guids_query = visible_org_guids_query
     end
 
     def to_hash
@@ -26,6 +26,7 @@ module VCAP::CloudController::Presenters::V3
           per_process_memory_in_mb: convert_unlimited_to_nil(organization_quota.instance_memory_limit),
           total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
           per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
+          log_rate_limit_in_bytes_per_second: convert_unlimited_to_nil(organization_quota.log_rate_limit),
         },
         services: {
           paid_services_allowed: organization_quota.non_basic_services_allowed,
@@ -51,12 +52,9 @@ module VCAP::CloudController::Presenters::V3
     private
 
     def filtered_visible_orgs
-      visible_orgs = if @all_orgs_visible
-                       organization_quota.organizations
-                     else
-                       organization_quota.organizations.select { |org| @visible_org_guids.include? org.guid }
-                     end
-      visible_orgs.map { |org| { guid: org.guid } }
+      ds = organization_quota.organizations_dataset
+      ds = ds.where(guid: @visible_org_guids_query) unless @all_orgs_visible
+      ds.select_map(:guid).map { |g| { guid: g } }
     end
 
     def organization_quota

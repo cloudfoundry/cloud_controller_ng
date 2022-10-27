@@ -62,6 +62,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
+        let(:visible_space_guids) { [space.guid] }
+        let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+        let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: 2000) }
+
+        it 'raises an error' do
+          expect {
+            subject.apply(space_quota, message, visible_space_guids: visible_space_guids)
+          }.to raise_error(SpaceQuotaApply::Error,
+            'Current usage exceeds new quota values. ' \
+            'The space(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+        end
+      end
+
       context "when the space is outside the space quota's org" do
         let(:other_space) { VCAP::CloudController::Space.make }
         let(:invalid_space_guid) { other_space.guid }

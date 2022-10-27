@@ -37,6 +37,7 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit:  1_048_576,
         command:    'rackup',
       )
     }
@@ -48,6 +49,7 @@ RSpec.describe 'Processes' do
         instances:  1,
         memory:     100,
         disk_quota: 200,
+        log_rate_limit:  400,
         command:    'start worker',
       )
     }
@@ -111,11 +113,12 @@ RSpec.describe 'Processes' do
                 }
               },
             },
-            'type'         => 'web',
-            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'instances'    => 2,
-            'memory_in_mb' => 1024,
-            'disk_in_mb'   => 1024,
+            'type'             => 'web',
+            'command'          => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'instances'        => 2,
+            'memory_in_mb'     => 1024,
+            'disk_in_mb'       => 1024,
+            'log_rate_limit_in_bytes_per_second' => 1_048_576,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -140,11 +143,12 @@ RSpec.describe 'Processes' do
               'app' => { 'data' => { 'guid' => app_model.guid } },
               'revision' => nil,
             },
-            'type'         => 'worker',
-            'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'instances'    => 1,
-            'memory_in_mb' => 100,
-            'disk_in_mb'   => 200,
+            'type'             => 'worker',
+            'command'          => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'instances'        => 1,
+            'memory_in_mb'     => 100,
+            'disk_in_mb'       => 200,
+            'log_rate_limit_in_bytes_per_second' => 400,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -229,6 +233,7 @@ RSpec.describe 'Processes' do
             instances:  2,
             memory:     1024,
             disk_quota: 1024,
+            log_rate_limit:  1_048_576,
             command:    'rackup',
           )
         }
@@ -270,6 +275,7 @@ RSpec.describe 'Processes' do
             instances:  2,
             memory:     1024,
             disk_quota: 1024,
+            log_rate_limit:  1_048_576,
             command:    'rackup',
           )
         }
@@ -307,6 +313,7 @@ RSpec.describe 'Processes' do
             instances:  3,
             memory:     2048,
             disk_quota: 2048,
+            log_rate_limit:  2_097_152,
             command:    'at ease'
           )
         end
@@ -383,6 +390,7 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit:  1_048_576,
         command:    'rackup',
       )
     end
@@ -394,10 +402,11 @@ RSpec.describe 'Processes' do
           'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => { 'data' => { 'guid' => revision.guid } },
         },
-        'command'      => 'rackup',
-        'instances'    => 2,
-        'memory_in_mb' => 1024,
-        'disk_in_mb'   => 1024,
+        'command'          => 'rackup',
+        'instances'        => 2,
+        'memory_in_mb'     => 1024,
+        'disk_in_mb'       => 1024,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -494,12 +503,14 @@ RSpec.describe 'Processes' do
             uptime: 12345,
             mem_quota:  process[:memory] * 1024 * 1024,
             disk_quota: process[:disk_quota] * 1024 * 1024,
+            log_rate_limit: process[:log_rate_limit],
             fds_quota: process.file_descriptors,
             usage: {
               time: usage_time,
               cpu:  80,
               mem:  128,
               disk: 1024,
+              log_rate: 1024,
             }
           }
         },
@@ -522,6 +533,7 @@ RSpec.describe 'Processes' do
             'cpu'  => 80,
             'mem'  => 128,
             'disk' => 1024,
+            'log_rate' => 1024,
           },
           'host'           => 'toast',
           'instance_ports' => [
@@ -541,7 +553,8 @@ RSpec.describe 'Processes' do
           'uptime'         => 12345,
           'mem_quota'      => 1073741824,
           'disk_quota'     => 1073741824,
-          'fds_quota'      => 16384
+          'fds_quota'      => 16384,
+          'log_rate_limit' => 1_048_576
         }]
     }
     end
@@ -602,6 +615,7 @@ RSpec.describe 'Processes' do
         instances:            2,
         memory:               1024,
         disk_quota:           1024,
+        log_rate_limit:            1_048_576,
         command:              'rackup',
         ports:                [4444, 5555],
         health_check_type:    'port',
@@ -634,6 +648,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'process',
           'data' => {
@@ -748,15 +763,17 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit: 1_048_576,
         command:    'rackup',
       )
     end
 
     let(:scale_request) do
       {
-        instances:    5,
+        instances: 5,
         memory_in_mb: 10,
-        disk_in_mb:   20,
+        disk_in_mb: 20,
+        log_rate_limit_in_bytes_per_second: 40,
       }
     end
 
@@ -773,6 +790,7 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'log_rate_limit_in_bytes_per_second' => 40,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -805,6 +823,7 @@ RSpec.describe 'Processes' do
       expect(process.instances).to eq(5)
       expect(process.memory).to eq(10)
       expect(process.disk_quota).to eq(20)
+      expect(process.log_rate_limit).to eq(40)
 
       events = VCAP::CloudController::Event.where(actor: developer.guid).all
 
@@ -826,7 +845,8 @@ RSpec.describe 'Processes' do
         'request'      => {
           'instances'    => 5,
           'memory_in_mb' => 10,
-          'disk_in_mb'   => 20
+          'disk_in_mb'   => 20,
+          'log_rate_limit_in_bytes_per_second' => 40,
         }
       })
     end
@@ -875,6 +895,7 @@ RSpec.describe 'Processes' do
           instances:    5,
           memory_in_mb: 10,
           disk_in_mb:   20,
+          log_rate_limit_in_bytes_per_second: 40,
         }
 
         post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, headers_for(space_supporter)
@@ -886,6 +907,7 @@ RSpec.describe 'Processes' do
         expect(process.instances).to eq(5)
         expect(process.memory).to eq(10)
         expect(process.disk_quota).to eq(20)
+        expect(process.log_rate_limit).to eq(40)
       end
     end
 
@@ -924,6 +946,20 @@ RSpec.describe 'Processes' do
       expect(process.memory).to eq(1024)
     end
 
+    it 'returns a helpful error when the log quota is too small' do
+      scale_request = {
+        log_rate_limit_in_bytes_per_second: -2,
+      }
+
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
+      expect(last_response.status).to eq(422)
+      expect(parsed_response['errors'][0]['detail']).to eq 'Log rate limit in bytes per second must be greater than or equal to -1'
+
+      process.reload
+      expect(process.log_rate_limit).to eq(1_048_576)
+    end
+
     context 'telemetry' do
       let(:process) {
         VCAP::CloudController::ProcessModel.make(
@@ -933,6 +969,7 @@ RSpec.describe 'Processes' do
           instances:  2,
           memory:     1024,
           disk_quota: 1024,
+          log_rate_limit:  1_048_576,
           command:    'rackup',
         )
       }
@@ -941,6 +978,7 @@ RSpec.describe 'Processes' do
           instances:    5,
           memory_in_mb: 10,
           disk_in_mb:   20,
+          log_rate_limit_in_bytes_per_second: 40,
         }
       end
 
@@ -954,6 +992,7 @@ RSpec.describe 'Processes' do
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
+              'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
               'app-id' => Digest::SHA256.hexdigest(process.app.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),
@@ -1042,6 +1081,7 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit:  1_048_576,
         command:    'rackup',
       )
     }
@@ -1055,6 +1095,7 @@ RSpec.describe 'Processes' do
         instances:  1,
         memory:     100,
         disk_quota: 200,
+        log_rate_limit:  400,
         command:    'start worker',
       )
     }
@@ -1103,6 +1144,7 @@ RSpec.describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
+            'log_rate_limit_in_bytes_per_second' => 1_048_576,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -1136,6 +1178,7 @@ RSpec.describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
+            'log_rate_limit_in_bytes_per_second' => 400,
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -1237,6 +1280,7 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit:  1_048_576,
         command:    'rackup',
       )
     }
@@ -1253,6 +1297,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -1322,6 +1367,7 @@ RSpec.describe 'Processes' do
         instances:            2,
         memory:               1024,
         disk_quota:           1024,
+        log_rate_limit:            1_048_576,
         command:              'rackup',
         ports:                [4444, 5555],
         health_check_type:    'port',
@@ -1353,6 +1399,7 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
+        'log_rate_limit_in_bytes_per_second' => 1_048_576,
         'health_check' => {
           'type' => 'http',
           'data' => {
@@ -1435,7 +1482,9 @@ RSpec.describe 'Processes' do
         instances:  2,
         memory:     1024,
         disk_quota: 1024,
+        log_rate_limit:  1_048_576,
         command:    'rackup',
+        state: 'STARTED',
       )
     end
 
@@ -1443,6 +1492,7 @@ RSpec.describe 'Processes' do
       instances:    5,
       memory_in_mb: 10,
       disk_in_mb:   20,
+      log_rate_limit_in_bytes_per_second: 40,
     }
     end
 
@@ -1459,6 +1509,7 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
+        'log_rate_limit_in_bytes_per_second' => 40,
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -1490,6 +1541,7 @@ RSpec.describe 'Processes' do
       expect(process.instances).to eq(5)
       expect(process.memory).to eq(10)
       expect(process.disk_quota).to eq(20)
+      expect(process.log_rate_limit).to eq(40)
 
       events = VCAP::CloudController::Event.where(actor: developer.guid).all
 
@@ -1511,9 +1563,32 @@ RSpec.describe 'Processes' do
         'request'      => {
           'instances'    => 5,
           'memory_in_mb' => 10,
-          'disk_in_mb'   => 20
+          'disk_in_mb'   => 20,
+          'log_rate_limit_in_bytes_per_second' => 40,
         }
       })
+    end
+
+    context 'when the log rate limit would be exceeded by adding additional instances' do
+      let(:scale_request) do
+        {
+          instances: 5
+        }
+      end
+
+      before do
+        org.update(quota_definition: VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 2_097_152))
+      end
+
+      it 'fails to scale the process' do
+        post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'log_rate_limit exceeds organization log rate quota'
+
+        process.reload
+        expect(process.instances).to eq(2)
+      end
     end
 
     context 'when the user is assigned the space_supporter role' do
@@ -1534,6 +1609,7 @@ RSpec.describe 'Processes' do
         expect(process.instances).to eq(5)
         expect(process.memory).to eq(10)
         expect(process.disk_quota).to eq(20)
+        expect(process.log_rate_limit).to eq(40)
       end
     end
 
@@ -1548,6 +1624,7 @@ RSpec.describe 'Processes' do
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
+              'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
               'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),

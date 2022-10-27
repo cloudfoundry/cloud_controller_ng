@@ -119,18 +119,37 @@ module VCAP::CloudController
 
         context 'when authentication is not valid' do
           let(:request_body) do
+            valid_body[:authentication] = valid_body[:authentication].except(:type)
             valid_body
-          end
-
-          before do
-            allow_any_instance_of(VCAP::CloudController::Validators::AuthenticationValidator).to receive(:validate) do |_, record|
-              record.errors.add(:authentication, 'this authentication is not valid!')
-            end
           end
 
           it 'is not valid' do
             expect(message).not_to be_valid
-            expect(message.errors_on(:authentication)).to include('this authentication is not valid!')
+            expect(message.errors_on(:authentication)).to include('authentication.type must be one of ["basic"]')
+          end
+        end
+
+        context 'when username is an empty string' do
+          let(:request_body) do
+            valid_body[:authentication][:credentials][:username] = ''
+            valid_body
+          end
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors_on(:authentication)).to include(/Username can't be blank/)
+          end
+        end
+
+        context 'when password is an empty string' do
+          let(:request_body) do
+            valid_body[:authentication][:credentials][:password] = ''
+            valid_body
+          end
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors_on(:authentication)).to include(/Password can't be blank/)
           end
         end
       end

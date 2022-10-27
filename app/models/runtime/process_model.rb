@@ -27,12 +27,14 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
+      self.log_rate_limit   ||= Config.config.get(:default_app_log_rate_limit_in_bytes_per_second)
       self.metadata         ||= {}
     end
 
     NO_APP_PORT_SPECIFIED = -1
     DEFAULT_HTTP_PORT     = 8080
     DEFAULT_PORTS         = [DEFAULT_HTTP_PORT].freeze
+    UNLIMITED_LOG_RATE    = -1
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :revision, class: 'VCAP::CloudController::RevisionModel', key: :revision_guid, primary_key: :guid, without_guid_generation: true
@@ -144,17 +146,19 @@ module VCAP::CloudController
     add_association_dependencies annotations: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-                      :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
-                      :state, :version, :command, :console, :debug, :staging_task_id,
-                      :package_state, :health_check_type, :health_check_timeout, :health_check_http_endpoint,
-                      :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh, :ports
+      :detected_buildpack, :detected_buildpack_guid, :environment_json,
+      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version, :command,
+      :console, :debug, :staging_task_id, :package_state, :health_check_type,
+      :health_check_timeout, :health_check_http_endpoint, :staging_failed_reason,
+      :staging_failed_description, :diego, :docker_image, :package_updated_at,
+      :detected_start_command, :enable_ssh, :ports
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :state, :command, :console, :debug, :staging_task_id,
-      :service_binding_guids, :route_guids, :health_check_type, :health_check_http_endpoint,
-      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh, :ports
+      :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
+      :service_binding_guids, :route_guids, :health_check_type,
+      :health_check_http_endpoint, :health_check_timeout, :diego,
+      :docker_image, :app_guid, :enable_ssh, :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
@@ -258,6 +262,9 @@ module VCAP::CloudController
         InstancesPolicy.new(self),
         MaxAppInstancesPolicy.new(self, organization, organization && organization.quota_definition, :app_instance_limit_exceeded),
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
+        MinLogRateLimitPolicy.new(self),
+        AppMaxLogRateLimitPolicy.new(self, space, 'exceeds space log rate quota'),
+        AppMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota'),
         HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
         DockerPolicy.new(self),
         PortsPolicy.new(self)
@@ -371,10 +378,6 @@ module VCAP::CloudController
 
     def being_stopped?
       column_changed?(:state) && stopped?
-    end
-
-    def scaling_operation?
-      started?
     end
 
     def desired_instances
@@ -556,7 +559,7 @@ module VCAP::CloudController
     end
 
     def docker_ports
-      if !self.needs_staging? && desired_droplet.present?
+      if desired_droplet.present? && desired_droplet.staged?
         return desired_droplet.docker_ports
       end
 

@@ -6,6 +6,16 @@ module VCAP::CloudController
     def apply(space_quota, message, visible_space_guids: [], all_spaces_visible: false)
       spaces = valid_spaces(message.space_guids, visible_space_guids, all_spaces_visible, space_quota.organization_id)
 
+      if space_quota.log_rate_limit != QuotaDefinition::UNLIMITED
+        affected_processes = Space.where(Sequel[:spaces][:id] => spaces.map(&:id)).
+                             join(:apps, space_guid: :guid).
+                             join(:processes, app_guid: :guid)
+
+        unless affected_processes.where(log_rate_limit: ProcessModel::UNLIMITED_LOG_RATE).empty?
+          error!('Current usage exceeds new quota values. The space(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+        end
+      end
+
       SpaceQuotaDefinition.db.transaction do
         spaces.each { |space| space_quota.add_space(space) }
       end

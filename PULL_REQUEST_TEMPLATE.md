@@ -14,4 +14,4 @@ Thanks for contributing to cloud_controller_ng. To speed up the process of revie
 
 * [ ] I have run all the unit tests using `bundle exec rake`
 
-* [ ] I have run [CF Acceptance Tests](https://github.com/cloudfoundry/cloud_controller_ng#cf-acceptance-tests-cats)
+* [ ] I have run [CF Acceptance Tests](https://github.com/cloudfoundry/cloud_controller_ng/blob/main/spec/README.md#cf-acceptance-tests-cats)

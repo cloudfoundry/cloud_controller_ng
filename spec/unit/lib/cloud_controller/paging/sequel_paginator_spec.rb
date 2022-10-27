@@ -108,11 +108,11 @@ module VCAP::CloudController
       it 'does not order by GUID when the table has no GUID' do
         options = { page: page, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
-        request_count_dataset = RequestCount.dataset
-        RequestCount.make.save
+        orphaned_blob_dataset = OrphanedBlob.dataset
+        OrphanedBlob.make.save
         paginated_result = nil
         expect {
-          paginated_result = paginator.get_page(request_count_dataset, pagination_options)
+          paginated_result = paginator.get_page(orphaned_blob_dataset, pagination_options)
         }.not_to raise_error
         expect(paginated_result.total).to be 1
       end

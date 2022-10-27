@@ -1,0 +1,34 @@
+### Get permissions for a service instance
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/permissions" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :service_instance_permissions %>
+```
+
+Get the current user's permissions for the given service instance. If a user can get a service instance then they can 'read' it. Users who can update a service instance can 'manage' it.
+
+This endpoint's primary purpose is to enable third-party service dashboards to determine the permissions of a given Cloud Foundry user that has authenticated with the dashboard via single sign-on (SSO). For more information, see the Cloud Foundry documentation on [Dashboard Single Sign-On](https://docs.cloudfoundry.org/services/dashboard-sso.html).
+
+#### Definition
+`GET /v3/service_instances/:guid/permissions`
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |

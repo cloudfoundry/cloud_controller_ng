@@ -7,7 +7,4 @@ ENDSSH
 
 sed "/blobstore.service.cf.internal/d" /etc/hosts | sudo tee /etc/hosts > /dev/null
 sed "/bbs.service.cf.internal/d" /etc/hosts | sudo tee /etc/hosts > /dev/null
-sed "/bits-service.service.cf.internal/d" /etc/hosts | sudo tee /etc/hosts > /dev/null
-sed "/bits-service.bosh-lite.com/d" /etc/hosts | sudo tee /etc/hosts > /dev/null
 sed "/uaa.service.cf.internal/d" /etc/hosts | sudo tee /etc/hosts > /dev/null
-sed "/loggregator-trafficcontroller.service.cf.internal/d" /etc/hosts | sudo tee /etc/hosts > /dev/null

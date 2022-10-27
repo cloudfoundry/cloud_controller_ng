@@ -138,14 +138,6 @@ module VCAP::CloudController
               interpolate_service_bindings: bool
             },
 
-            bits_service: {
-              enabled: bool,
-              optional(:public_endpoint) => enum(String, NilClass),
-              optional(:private_endpoint) => enum(String, NilClass),
-              optional(:username) => enum(String, NilClass),
-              optional(:password) => enum(String, NilClass),
-            },
-
             opi: {
               enabled: bool,
               url: String,
@@ -155,6 +147,7 @@ module VCAP::CloudController
 
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
+            default_app_log_rate_limit_in_bytes_per_second: Integer,
             instance_file_descriptor_limit: Integer,
             maximum_app_disk_in_mb: Integer,
             max_retained_deployments_per_app: Integer,

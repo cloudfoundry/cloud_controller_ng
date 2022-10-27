@@ -15,8 +15,6 @@ module VCAP::CloudController
             href: api_url_builder.build_url
           },
 
-          bits_service: bits_service_link,
-
           cloud_controller_v2: {
             href: api_url_builder.build_url(path: '/v2'),
             meta: {
@@ -92,12 +90,6 @@ module VCAP::CloudController
       return unless config.get(:routing_api).present?
 
       { href: config.get(:routing_api, :url) }
-    end
-
-    def bits_service_link
-      if config.get(:bits_service, :enabled)
-        { href: config.get(:bits_service, :public_endpoint) }
-      end
     end
   end
 end

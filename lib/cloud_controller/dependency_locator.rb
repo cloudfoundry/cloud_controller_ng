@@ -12,9 +12,8 @@ require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/nginx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
-require 'traffic_controller/client'
 require 'logcache/client'
-require 'logcache/traffic_controller_decorator'
+require 'logcache/container_metric_batcher'
 require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/app_recipe_builder'
 require 'cloud_controller/diego/bbs_apps_client'
@@ -24,9 +23,7 @@ require 'cloud_controller/diego/bbs_instances_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'cloud_controller/resource_pool_wrapper'
-require 'cloud_controller/bits_service_resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
-require 'cloud_controller/packager/bits_service_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
@@ -35,8 +32,6 @@ require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
 require 'cloud_controller/opi/task_client'
 require 'cloud_controller/metrics/prometheus_updater'
-
-require 'bits_service_client'
 
 module CloudController
   class DependencyLocator
@@ -102,17 +97,13 @@ module CloudController
       @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_instances_client)
     end
 
-    def traffic_controller_client
-      @dependencies[:traffic_controller_client] || register(:traffic_controller_client, build_traffic_controller_client)
-    end
-
     def logcache_client
       @dependencies[:logcache_client] || register(:logcache_client, build_logcache_client)
     end
 
-    def traffic_controller_compatible_logcache_client
-      @dependencies[:traffic_controller_compatible_logcache_client] ||
-          register(:traffic_controller_compatible_logcache_client, Logcache::TrafficControllerDecorator.new(logcache_client))
+    def log_cache_metrics_client
+      @dependencies[:log_cache_metrics_client] ||
+          register(:log_cache_metrics_client, Logcache::ContainerMetricBatcher.new(logcache_client))
     end
 
     def upload_handler
@@ -330,40 +321,13 @@ module CloudController
       end
     end
 
-    def bits_service_resource_pool
-      return nil unless use_bits_service
-
-      BitsService::ResourcePool.new(
-        endpoint: bits_service_options[:private_endpoint],
-        request_timeout_in_seconds: config.get(:request_timeout_in_seconds),
-        ca_cert_path: bits_service_options[:ca_cert_path],
-        vcap_request_id: VCAP::Request.current_id,
-        username: bits_service_options[:username],
-        password: bits_service_options[:password]
-      )
-    end
-
     def resource_pool_wrapper
-      if bits_service_resource_pool
-        BitsServiceResourcePoolWrapper
-      else
-        ResourcePoolWrapper
-      end
-    end
-
-    def bits_service_options
-      config.get(:bits_service)
-    end
-
-    def use_bits_service
-      bits_service_options[:enabled]
+      ResourcePoolWrapper
     end
 
     def packer
       if config.package_image_registry_configured?
         Packager::RegistryBitsPacker.new
-      elsif use_bits_service
-        Packager::BitsServicePacker.new
       else
         Packager::LocalBitsPacker.new
       end
@@ -514,10 +478,6 @@ module CloudController
         send_timeout: config.get(:diego, :bbs, :send_timeout),
         receive_timeout: config.get(:diego, :bbs, :receive_timeout),
       )
-    end
-
-    def build_traffic_controller_client
-      TrafficController::Client.new(url: config.get(:loggregator, :internal_url))
     end
 
     def build_logcache_client

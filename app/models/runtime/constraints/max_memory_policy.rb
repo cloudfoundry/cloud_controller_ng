@@ -37,7 +37,7 @@ class AppMaxMemoryPolicy < BaseMaxMemoryPolicy
   private
 
   def additional_checks
-    resource.scaling_operation?
+    resource.started?
   end
 
   def requested_memory

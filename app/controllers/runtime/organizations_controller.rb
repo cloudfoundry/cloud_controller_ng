@@ -73,6 +73,18 @@ module VCAP::CloudController
         end
       end
 
+      if request_attrs['quota_definition_guid']
+        quota = QuotaDefinition.first(guid: request_attrs['quota_definition_guid'])
+        if quota.log_rate_limit != QuotaDefinition::UNLIMITED
+          affected_processes = org.processes_dataset
+          unless affected_processes.where(log_rate_limit: ProcessModel::UNLIMITED_LOG_RATE).empty?
+            raise CloudController::Errors::ApiError.new_from_details(
+              'UnprocessableEntity',
+              'Current usage exceeds new quota values. This org currently contains apps running with an unlimited log rate limit.')
+          end
+        end
+      end
+
       super(org)
     end
 

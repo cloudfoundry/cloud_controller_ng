@@ -51,7 +51,7 @@ module VCAP::CloudController
       super
       if Config.config.get(:log_audit_events)
         logger = Steno.logger('cc.model.event')
-        logger.info "Audit event: #{type} enacted by #{actor_type} #{actor_username || actor_name} on #{actee_type} #{actee_name}"
+        logger.info Presenters::V3::EventPresenter.new(self).body.to_json
       end
     end
 

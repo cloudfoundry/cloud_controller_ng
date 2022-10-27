@@ -36,6 +36,7 @@ completed_tasks:
 
 default_app_memory: 256
 default_app_disk_in_mb: 1024
+default_app_log_rate_limit_in_bytes_per_second: 1_048_576
 maximum_app_disk_in_mb: 2048
 
 instance_file_descriptor_limit: 16384
@@ -269,12 +270,5 @@ diego:
   pid_limit: 1024
 
 shared_isolation_segment_name: shared
-
-bits_service:
-  enabled: false
-  public_endpoint: http://bits-service.bosh-lite.com
-  private_endpoint: http://bits-service.service.cf.internal
-  username: admin
-  password: admin
 
 threadpool_size: 20

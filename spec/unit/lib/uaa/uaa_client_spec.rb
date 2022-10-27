@@ -527,6 +527,7 @@ module VCAP::CloudController
     describe '#ids_for_usernames_and_origins' do
       let(:username1) { 'user1@example.com' }
       let(:username2) { 'user2@example.com' }
+      let(:partial_username) { 'user' }
 
       context 'with usernames but no origins' do
         it 'returns the ids for the usernames' do
@@ -552,6 +553,31 @@ module VCAP::CloudController
         end
       end
 
+      context 'with partial_usernames but no origin' do
+        it 'returns the ids for the usernames' do
+          response_body = {
+            'resources' => [
+              { 'id' => '123' },
+              { 'id' => '456' },
+              { 'id' => '789' },
+            ],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 1 }
+
+          WebMock::API.stub_request(:get, "#{url}/Users").
+            with(query: { 'filter' => "username co \"#{partial_username}\"",
+                          'attributes' => 'id' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          expect(uaa_client.ids_for_usernames_and_origins([partial_username], nil, false)).to eq(%w(123 456 789))
+        end
+      end
+
       context 'with usernames and origins' do
         it 'returns the intersection of the usernames and the origins' do
           response_body = {
@@ -572,6 +598,30 @@ module VCAP::CloudController
               body: response_body.to_json)
 
           uaa_client.ids_for_usernames_and_origins([username1, username2], ['Okta'])
+        end
+      end
+
+      context 'with partial_usernames and origin' do
+        it 'returns the ids for the usernames' do
+          response_body = {
+            'resources' => [
+              { 'id' => '456' },
+              { 'id' => '789' },
+            ],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 1 }
+
+          WebMock::API.stub_request(:get, "#{url}/Users").
+            with(query: { 'filter' => "( username co \"#{partial_username}\" ) and ( origin eq \"Okta\" )",
+                          'attributes' => 'id' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          expect(uaa_client.ids_for_usernames_and_origins([partial_username], ['Okta'], false)).to eq(%w(456 789))
         end
       end
 
@@ -630,6 +680,25 @@ module VCAP::CloudController
           expect {
             uaa_client.ids_for_usernames_and_origins([username1], nil)
           }.to raise_error(UaaEndpointDisabled)
+        end
+      end
+    end
+
+    describe '#construct_filter_string' do
+      let(:username_filter_string) { 'username eq \"someone\"' }
+      let(:origin_filter_string) { 'origin eq \"Okta\"' }
+
+      context 'when username_filter_string and origin_filter string are provided' do
+        it 'returns a new string with the two filter strings combined' do
+          filter_string = uaa_client.construct_filter_string(username_filter_string, origin_filter_string)
+          expect(filter_string).to eq("( #{username_filter_string} ) and ( #{origin_filter_string} )")
+        end
+      end
+
+      context 'when only username_filter_string is provided' do
+        it 'returns just username_filter_string' do
+          filter_string = uaa_client.construct_filter_string(username_filter_string, nil)
+          expect(filter_string).to eq(username_filter_string)
         end
       end
     end

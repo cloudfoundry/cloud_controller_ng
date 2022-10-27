@@ -30,7 +30,7 @@ module VCAP::CloudController
         db.logger = logger
         db.sql_log_level = opts[:log_level]
         db.extension :caller_logging
-        db.caller_logging_ignore = /sequel_paginator|query_length_logging/
+        db.caller_logging_ignore = /sequel_paginator|query_length_logging|sequel_pg/
         db.caller_logging_formatter = lambda do |caller|
           "(#{caller.sub(%r{^.*/cloud_controller_ng/}, '')})"
         end
@@ -94,6 +94,7 @@ Sequel::Model.plugin :timestamps, update_on_create: true
 Sequel::Model.plugin :validation_helpers
 
 Sequel::Database.extension(:current_datetime_timestamp)
+Sequel::Database.extension(:any_not_empty)
 
 require 'cloud_controller/encryptor'
 Sequel::Model.include VCAP::CloudController::Encryptor::FieldEncryptor

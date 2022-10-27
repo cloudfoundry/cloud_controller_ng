@@ -88,7 +88,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_rate_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -112,7 +113,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_rate_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -208,6 +210,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(200)
           expect(space_quota_to_update.reload.app_task_limit).to eq(9)
           expect(space_quota_to_update.reload.memory_limit).to eq(-1)
+          expect(space_quota_to_update.reload.log_rate_limit).to eq(-1)
           expect(space_quota_to_update.reload.total_services).to eq(14)
           expect(space_quota_to_update.reload.non_basic_services_allowed).to be_falsey
         end
@@ -219,6 +222,7 @@ module VCAP::CloudController
             expect(last_response).to have_status_code(200)
             expect(space_quota_to_update.reload.app_task_limit).to eq(9)
             expect(space_quota_to_update.reload.memory_limit).to eq(-1)
+            expect(space_quota_to_update.reload.log_rate_limit).to eq(-1)
             expect(space_quota_to_update.reload.total_services).to eq(14)
             expect(space_quota_to_update.reload.non_basic_services_allowed).to be_falsey
           end
@@ -254,6 +258,18 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message("Unknown field(s): 'wat'")
+        end
+      end
+      context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            "Current usage exceeds new quota values. This quota is applied to space '#{space.name}' which contains apps running with an unlimited log rate limit.")
         end
       end
     end
@@ -406,7 +422,8 @@ module VCAP::CloudController
               total_memory_in_mb: nil,
               per_process_memory_in_mb: nil,
               total_instances: nil,
-              per_app_tasks: nil
+              per_app_tasks: nil,
+              log_rate_limit_in_bytes_per_second: nil
             },
             services: {
               paid_services_allowed: true,
@@ -495,7 +512,8 @@ module VCAP::CloudController
               total_memory_in_mb: nil,
               per_process_memory_in_mb: nil,
               total_instances: nil,
-              per_app_tasks: nil
+              per_app_tasks: nil,
+              log_rate_limit_in_bytes_per_second: nil
             },
             services: {
               paid_services_allowed: true,
@@ -555,7 +573,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_rate_limit_in_bytes_per_second: 3000
             },
             services: {
               paid_services_allowed: false,
@@ -589,7 +608,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_rate_limit_in_bytes_per_second: 3000
             },
             services: {
               paid_services_allowed: false,
@@ -802,6 +822,19 @@ module VCAP::CloudController
           expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[1] guid should be a string.')
         end
       end
+      context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
+        let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'space-quota-guid', organization: org, log_rate_limit: 100) }
+        let!(:other_space) { VCAP::CloudController::Space.make(guid: 'other-space-guid', organization: org, space_quota_definition: space_quota) }
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: other_space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. The space(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+        end
+      end
     end
 
     describe 'DELETE /v3/space_quotas/:guid/relationships/spaces' do
@@ -968,7 +1001,8 @@ module VCAP::CloudController
           total_memory_in_mb: 20480,
           per_process_memory_in_mb: nil,
           total_instances: nil,
-          per_app_tasks: 5
+          per_app_tasks: 5,
+          log_rate_limit_in_bytes_per_second: nil
         },
         services: {
           paid_services_allowed: true,

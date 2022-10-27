@@ -35,7 +35,8 @@ module VCAP::CloudController
             total_memory_in_mb: nil,
             per_process_memory_in_mb: nil,
             total_instances: nil,
-            per_app_tasks: nil
+            per_app_tasks: nil,
+            log_rate_limit_in_bytes_per_second: nil
           },
           services: {
             paid_services_allowed: true,
@@ -91,7 +92,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_rate_limit_in_bytes_per_second: 2000
             },
             services: {
               paid_services_allowed: false,
@@ -118,7 +120,8 @@ module VCAP::CloudController
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
               total_instances: 10,
-              per_app_tasks: 5
+              per_app_tasks: 5,
+              log_rate_limit_in_bytes_per_second: 2000
             },
             services: {
               paid_services_allowed: false,
@@ -319,7 +322,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_rate_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -346,7 +350,8 @@ module VCAP::CloudController
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
             total_instances: nil,
-            per_app_tasks: 5
+            per_app_tasks: 5,
+            log_rate_limit_in_bytes_per_second: 2000
           },
           services: {
             paid_services_allowed: false,
@@ -423,6 +428,7 @@ module VCAP::CloudController
           expect(org_quota_to_update.reload.app_task_limit).to eq(9)
           expect(org_quota_to_update.reload.memory_limit).to eq(-1)
           expect(org_quota_to_update.reload.total_services).to eq(14)
+          expect(org_quota_to_update.reload.log_rate_limit).to eq(-1)
           expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
         end
 
@@ -434,6 +440,7 @@ module VCAP::CloudController
             expect(org_quota_to_update.reload.app_task_limit).to eq(9)
             expect(org_quota_to_update.reload.memory_limit).to eq(-1)
             expect(org_quota_to_update.reload.total_services).to eq(14)
+            expect(org_quota_to_update.reload.log_rate_limit).to eq(-1)
             expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
           end
         end
@@ -453,6 +460,20 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message("Organization Quota '#{organization_quota.name}' already exists.")
+        end
+      end
+
+      context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. ' \
+            "This quota is applied to org '#{org.name}' which contains apps running with an unlimited log rate limit.")
         end
       end
     end
@@ -515,6 +536,19 @@ module VCAP::CloudController
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[0] guid should be a string.')
+        end
+      end
+
+      context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
+        let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 100) }
+        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+
+        it 'returns 422' do
+          post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message(
+            'Current usage exceeds new quota values. The org(s) being assigned this quota contain apps running with an unlimited log rate limit.')
         end
       end
     end
@@ -591,7 +625,8 @@ def generate_org_quota_single_response(list_of_orgs)
       total_memory_in_mb: 20480,
       per_process_memory_in_mb: nil,
       total_instances: nil,
-      per_app_tasks: nil
+      per_app_tasks: nil,
+      log_rate_limit_in_bytes_per_second: nil
     },
     services: {
       paid_services_allowed: true,
@@ -639,7 +674,8 @@ def generate_default_org_quota_response(global_read)
       total_memory_in_mb: 10240,
       per_process_memory_in_mb: nil,
       total_instances: nil,
-      per_app_tasks: nil
+      per_app_tasks: nil,
+      log_rate_limit_in_bytes_per_second: nil
     },
     services: {
       paid_services_allowed: true,

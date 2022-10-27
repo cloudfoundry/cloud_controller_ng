@@ -13,6 +13,9 @@ on:
       - 'docs/**'
       - '.github/workflows/docs_test.yml'
 
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
 jobs:
   Test-Docs:
     runs-on: ubuntu-latest

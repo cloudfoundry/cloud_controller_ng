@@ -36,8 +36,7 @@ module VCAP::CloudController
 
     before do
       TestConfig.override(
-        kubernetes: {
-        },
+        kubernetes: {},
       )
     end
 

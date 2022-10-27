@@ -359,8 +359,7 @@ module VCAP::Services::ServiceBrokers
             {
               'schemas' => {
                 'service_instance' => {
-                  'create' => {
-                  }
+                  'create' => {}
                 }
               }
             }
@@ -378,8 +377,7 @@ module VCAP::Services::ServiceBrokers
             {
               'schemas' => {
                 'service_instance' => {
-                  'update' => {
-                  }
+                  'update' => {}
                 }
               }
             }
@@ -397,8 +395,7 @@ module VCAP::Services::ServiceBrokers
             {
               'schemas' => {
                 'service_binding' => {
-                  'create' => {
-                  }
+                  'create' => {}
                 }
               }
             }

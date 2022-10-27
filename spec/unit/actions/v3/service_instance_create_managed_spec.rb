@@ -286,9 +286,7 @@ module VCAP::CloudController
       describe '#provision' do
         let(:provision_response) do
           {
-            instance: {
-
-            },
+            instance: {},
             last_operation: {
               state: 'succeeded',
             }

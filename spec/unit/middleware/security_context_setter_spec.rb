@@ -13,6 +13,7 @@ module CloudFoundry
           'PATH_INFO' => path_info,
         }
       end
+
       let(:token_decoder) { instance_double(VCAP::CloudController::UaaTokenDecoder) }
       let(:security_context_configurer) { VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder) }
 

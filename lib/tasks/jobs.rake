@@ -11,6 +11,7 @@ namespace :jobs do
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
 
   task :local, [:name] do |t, args|
+    puts RUBY_DESCRIPTION
     queue = VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s
     args.with_defaults(name: queue)
 
@@ -22,6 +23,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker.'
   task :generic, [:name] do |t, args|
+    puts RUBY_DESCRIPTION
     args.with_defaults(name: ENV['HOSTNAME'])
 
     RakeConfig.context = :worker
@@ -42,7 +44,6 @@ namespace :jobs do
       'prune_completed_deployments',
       'prune_completed_builds',
       'prune_excess_app_revisions',
-      'request_counts_cleanup',
     ]
 
     CloudController::DelayedWorker.new(queues: queues,

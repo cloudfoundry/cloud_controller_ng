@@ -46,6 +46,7 @@ applications:
     health-check-invocation-timeout: 10
     instances: 3
     memory: 500M
+    log-rate-limit-per-second: 1KB
     timeout: 10
   - type: worker
     command: start-worker.sh
@@ -53,6 +54,7 @@ applications:
     health-check-type: process
     instances: 2
     memory: 256M
+    log-rate-limit-per-second: 1KB
     timeout: 15
 - name: app2
   env:
@@ -61,6 +63,7 @@ applications:
   - type: web
     instances: 1
     memory: 256M
+    log-rate-limit-per-second: 1KB
   sidecars:
   - name: authenticator
     process_types: [ 'web', 'worker' ]
@@ -117,6 +120,7 @@ Name | Type | Description
 **health-check-type** | _string_ | Type of health check to perform; `none` is deprecated and an alias to `process`
 **instances** | _integer_ | The number of instances to run
 **memory** | _string_ | The memory limit for all instances of the web process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
+**log-rate-limit-per-second** | _string_ | The log rate limit for all the instances of the process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case, or -1 or 0
 **timeout** | _integer_ | Time in seconds at which the health-check will report failure
 
 ####  <a name="space-manifest-route-level-configuration"></a> Route-level configuration

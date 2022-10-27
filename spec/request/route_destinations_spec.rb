@@ -221,6 +221,7 @@ RSpec.describe 'Route Destinations Request' do
     let(:user_header) { headers_for(user) }
     let!(:existing_destination) do
       VCAP::CloudController::RouteMappingModel.make(
+        guid: '00000000', # early guid to ensure order
         app: app_model,
         route: route,
         process_type: 'worker',
@@ -366,6 +367,33 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
 
+      context "when the app is in the route's shared space" do
+        let(:app_model) { VCAP::CloudController::AppModel.make }
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: {
+                  guid: app_model.guid,
+                  process: {
+                    type: 'web'
+                  }
+                }
+              }
+            ]
+          }
+        end
+
+        before do
+          route.add_shared_space app_model.space
+          set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+        end
+
+        it 'succeeds' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+          expect(last_response.status).to eq(200)
+        end
+      end
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
           let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -391,6 +419,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a 403' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
 
@@ -414,7 +443,7 @@ RSpec.describe 'Route Destinations Request' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
         end
 
@@ -470,7 +499,7 @@ RSpec.describe 'Route Destinations Request' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
         end
 
@@ -495,7 +524,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a ' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
-            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
+            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
       end
@@ -856,6 +885,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a 403' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
 
@@ -879,7 +909,7 @@ RSpec.describe 'Route Destinations Request' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
         end
 
@@ -935,7 +965,7 @@ RSpec.describe 'Route Destinations Request' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist or you do not have access.')
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
         end
 
@@ -960,7 +990,7 @@ RSpec.describe 'Route Destinations Request' do
           it 'returns a ' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
-            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
+            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
       end
@@ -1140,6 +1170,35 @@ RSpec.describe 'Route Destinations Request' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
         expect(last_response.status).to eq 422
         expect(parsed_response['errors'][0]['detail']).to eq 'Destinations cannot contain duplicate entries'
+      end
+    end
+
+    context "when the app is in the route's shared space" do
+      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'web'
+                }
+              }
+            }
+          ]
+        }
+      end
+
+      before do
+        route.add_shared_space app_model.space
+        set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
+        set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+      end
+
+      it 'succeeds' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+        expect(last_response.status).to eq(200)
       end
     end
   end

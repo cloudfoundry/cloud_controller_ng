@@ -680,10 +680,6 @@ module VCAP::CloudController
     weight { nil }
   end
 
-  RequestCount.blueprint do
-    valid_until { Time.now.utc }
-  end
-
   SidecarModel.blueprint do
     name { Sham.name }
     command { 'bundle exec rackup' }
@@ -739,6 +735,9 @@ module VCAP::CloudController
 
   RevisionSidecarProcessTypeModel.blueprint do
     type { 'web' }
+  end
+
+  OrphanedBlob.blueprint do
   end
 
   TestModel.blueprint do

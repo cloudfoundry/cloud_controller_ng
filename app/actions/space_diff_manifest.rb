@@ -14,8 +14,10 @@ module VCAP::CloudController
       # rubocop:todo Metrics/CyclomaticComplexity
       def generate_diff(app_manifests, space)
         json_diff = []
-        recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s)
-        app_manifests = convert_byte_measurements_to_mb(app_manifests)
+
+        recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s).map(&:dasherize)
+
+        app_manifests = normalize_units(app_manifests)
         app_manifests.each_with_index do |manifest_app_hash, index|
           manifest_app_hash = filter_manifest_app_hash(manifest_app_hash)
           existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] }
@@ -90,7 +92,7 @@ module VCAP::CloudController
               'memory'
             )
           end
-          manifest_app_hash['sidecars'] = convert_byte_measurements_to_mb(manifest_app_hash['sidecars'])
+          manifest_app_hash['sidecars'] = normalize_units(manifest_app_hash['sidecars'])
           manifest_app_hash = manifest_app_hash.except('sidecars') if manifest_app_hash['sidecars'] == [{}]
         end
         if manifest_app_hash.key? 'processes'
@@ -99,6 +101,7 @@ module VCAP::CloudController
               'type',
               'command',
               'disk_quota',
+              'log-rate-limit-per-second',
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
               'health-check-type',
@@ -107,7 +110,7 @@ module VCAP::CloudController
               'timeout'
             )
           end
-          manifest_app_hash['processes'] = convert_byte_measurements_to_mb(manifest_app_hash['processes'])
+          manifest_app_hash['processes'] = normalize_units(manifest_app_hash['processes'])
           manifest_app_hash = manifest_app_hash.except('processes') if manifest_app_hash['processes'] == [{}]
         end
 
@@ -151,7 +154,7 @@ module VCAP::CloudController
         end
       end
 
-      def convert_byte_measurements_to_mb(manifest_app_hash)
+      def normalize_units(manifest_app_hash)
         byte_measurement_key_words = ['memory', 'disk-quota', 'disk_quota']
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
@@ -159,11 +162,31 @@ module VCAP::CloudController
             manifest_app_hash[index][key] = convert_to_mb(value, key) unless value.nil?
           end
         end
+
+        byte_measurement_key_words = ['log-rate-limit-per-second']
+        manifest_app_hash.each_with_index do |process_hash, index|
+          byte_measurement_key_words.each do |key|
+            value = process_hash[key]
+            manifest_app_hash[index][key] = normalize_unit(value, key) unless value.nil?
+          end
+        end
         manifest_app_hash
       end
 
       def convert_to_mb(human_readable_byte_value, attribute_name)
         byte_converter.convert_to_mb(human_readable_byte_value).to_s + 'M'
+      rescue ByteConverter::InvalidUnitsError
+        "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
+      rescue ByteConverter::NonNumericError
+        "#{attribute_name} is not a number"
+      end
+
+      def normalize_unit(non_normalized_value, attribute_name)
+        if %w(-1 0).include?(non_normalized_value.to_s)
+          non_normalized_value.to_s
+        else
+          byte_converter.human_readable_byte_value(byte_converter.convert_to_b(non_normalized_value))
+        end
       rescue ByteConverter::InvalidUnitsError
         "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
       rescue ByteConverter::NonNumericError

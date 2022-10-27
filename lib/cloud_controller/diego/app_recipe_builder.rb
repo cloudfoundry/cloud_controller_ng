@@ -68,6 +68,7 @@ module VCAP::CloudController
           start_timeout_ms:                 health_check_timeout_in_seconds * 1000,
           disk_mb:                          process.disk_quota,
           memory_mb:                        process.memory, # sums up
+          log_rate_limit:                   ::Diego::Bbs::Models::LogRateLimit.new(bytes_per_second: process.log_rate_limit),
           privileged:                       desired_lrp_builder.privileged?,
           ports:                            ports,
           log_source:                       LRP_LOG_SOURCE,

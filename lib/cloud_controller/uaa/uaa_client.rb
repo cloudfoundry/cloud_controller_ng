@@ -62,21 +62,30 @@ module VCAP::CloudController
       raise UaaEndpointDisabled
     end
 
-    def ids_for_usernames_and_origins(usernames, origins)
-      username_filter_string = usernames&.map { |u| "username eq \"#{u}\"" }&.join(' or ')
+    def ids_for_usernames_and_origins(usernames, origins, precise_username_match=true)
+      operator = precise_username_match ? 'eq' : 'co'
+      username_filter_string = usernames&.map { |u| "username #{operator} \"#{u}\"" }&.join(' or ')
       origin_filter_string = origins&.map { |o| "origin eq \"#{o}\"" }&.join(' or ')
 
-      filter_string = username_filter_string || origin_filter_string
+      filter_string = construct_filter_string(username_filter_string, origin_filter_string)
 
-      if username_filter_string && origin_filter_string
-        filter_string = "( #{username_filter_string} ) and ( #{origin_filter_string} )"
+      if precise_username_match
+        results = query(:user_id, includeInactive: true, filter: filter_string)
+      else
+        results = query(:user, filter: filter_string, attributes: 'id')
       end
-
-      results = query(:user_id, includeInactive: true, filter: filter_string)
 
       results['resources'].map { |r| r['id'] }
     rescue CF::UAA::TargetError, CF::UAA::BadTarget
       raise UaaEndpointDisabled
+    end
+
+    def construct_filter_string(username_filter_string, origin_filter_string)
+      if username_filter_string && origin_filter_string
+        "( #{username_filter_string} ) and ( #{origin_filter_string} )"
+      else
+        username_filter_string || origin_filter_string
+      end
     end
 
     def origins_for_username(username)

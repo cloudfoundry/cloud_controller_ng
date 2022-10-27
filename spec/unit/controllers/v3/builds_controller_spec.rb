@@ -521,10 +521,10 @@ RSpec.describe BuildsController, type: :controller do
         end
       end
 
-      context 'when the space quota is exceeded' do
+      context 'when the space memory quota is exceeded' do
         before do
           allow(build_create).to receive(:create_and_stage).and_raise(
-            VCAP::CloudController::BuildCreate::SpaceQuotaExceeded.new('helpful message')
+            VCAP::CloudController::BuildCreate::MemorySpaceQuotaExceeded.new('helpful message')
           )
         end
 
@@ -537,10 +537,10 @@ RSpec.describe BuildsController, type: :controller do
         end
       end
 
-      context 'when the org quota is exceeded' do
+      context 'when the org memory quota is exceeded' do
         before do
           allow(build_create).to receive(:create_and_stage).and_raise(
-            VCAP::CloudController::BuildCreate::OrgQuotaExceeded.new('helpful message')
+            VCAP::CloudController::BuildCreate::MemoryOrgQuotaExceeded.new('helpful message')
           )
         end
 
@@ -563,6 +563,38 @@ RSpec.describe BuildsController, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include('disk limit exceeded')
+        end
+      end
+
+      context 'when the space log rate limit quota is exceeded' do
+        before do
+          allow(build_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::BuildCreate::LogRateLimitSpaceQuotaExceeded.new('helpful message')
+          )
+        end
+
+        it 'returns 422 Unprocessable' do
+          post :create, params: req_body, as: :json
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include("space's log rate limit exceeded")
+          expect(response.body).to include('helpful message')
+        end
+      end
+
+      context 'when the org log rate limit quota is exceeded' do
+        before do
+          allow(build_create).to receive(:create_and_stage).and_raise(
+            VCAP::CloudController::BuildCreate::LogRateLimitOrgQuotaExceeded.new('helpful message')
+          )
+        end
+
+        it 'returns 422 Unprocessable' do
+          post :create, params: req_body, as: :json
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include("organization's log rate limit exceeded")
+          expect(response.body).to include('helpful message')
         end
       end
     end

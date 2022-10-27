@@ -79,6 +79,20 @@ module VCAP::CloudController
           end
         end
 
+        context 'when disk_quota is zero' do
+          let(:params_from_yaml) { { name: 'eugene', disk_quota: 0 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
+          end
+        end
+
         context 'when disk_quota is not a positive amount' do
           let(:params_from_yaml) { { name: 'eugene', disk_quota: '-1MB' } }
 
@@ -100,6 +114,130 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Process "web": Disk quota is not a number')
+          end
+        end
+      end
+
+      describe 'log-rate-limit-per-second' do
+        context 'when log-rate-limit-per-second unit is not part of expected set of values' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '200INVALID' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
+          end
+        end
+
+        context 'when log-rate-limit-per-second is less than -1 bytes' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1M' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include('Process "web": Log rate limit must be an integer greater than or equal to -1')
+          end
+        end
+
+        context 'when log-rate-limit-per-second is not numeric' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 'gerg herscheisers' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Log rate limit per second is not a number'
+            )
+          end
+        end
+
+        context 'when log-rate-limit-per-second is an unlimited amount' do
+          context 'specified as -1' do
+            let(:params_from_yaml) { { name: 'eugene', 'log-rate-limit-per-second' => '-1' } }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
+          end
+
+          context 'specified as the number -1' do
+            let(:params_from_yaml) { { name: 'eugene', 'log-rate-limit-per-second' => -1 } }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
+          end
+
+          context 'with a bytes suffix' do
+            let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '-1B' } }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml)
+              expect(message).to be_valid
+            end
+          end
+        end
+
+        context 'when log-rate-limit-per-second is in megabytes' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '1MB' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when log-rate-limit-per-second is 0' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '0' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
+          end
+        end
+
+        context 'when log-rate-limit-per-second is the number 0' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 0 } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
+          end
+        end
+
+        context 'when log-rate-limit-per-second is 0TB' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: '0TB' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(0)
+          end
+        end
+
+        context 'when log-rate-limit-per-second is a positive integer without a suffix' do
+          let(:params_from_yaml) { { name: 'eugene', log_rate_limit_per_second: 9999 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include(
+              'Process "web": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
           end
         end
       end
@@ -572,6 +710,7 @@ module VCAP::CloudController
                 'instances' => -30,
                 'memory' => 'potato',
                 'disk_quota' => '100',
+                'log-rate-limit-per-second' => 'kumara',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -585,6 +724,7 @@ module VCAP::CloudController
                 'instances' => 'cassava',
                 'memory' => 'potato',
                 'disk_quota' => '100',
+                'log-rate-limit-per-second' => '100',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
@@ -602,10 +742,11 @@ module VCAP::CloudController
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).to_not be_valid
-              expect(message.errors).to have(16).items
+              expect(message.errors).to have(18).items
               expect(message.errors.full_messages).to match_array([
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type1": Log rate limit per second is not a number',
                 'Process "type1": Instances must be greater than or equal to 0',
                 'Process "type1": Memory is not a number',
                 'Process "type1": Timeout is not a number',
@@ -614,6 +755,7 @@ module VCAP::CloudController
                 'Process "type1": Health check invocation timeout is not a number',
                 'Process "type2": Command must be between 1 and 4096 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type2": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',
                 'Process "type2": Memory is not a number',
                 'Process "type2": Timeout is not a number',
@@ -637,6 +779,28 @@ module VCAP::CloudController
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to include('Process "foo" may only be present once')
             expect(message.errors.full_messages).to include('Process "bob" may only be present once')
+          end
+        end
+
+        context 'log-rate-limit-per-second' do
+          context 'when log-rate-limit-per-second is an unlimited amount' do
+            context 'specified as -1' do
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => '-1' }] } }
+
+              it 'is valid' do
+                message = AppManifestMessage.create_from_yml(params_from_yaml)
+                expect(message).to be_valid
+                expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(-1)
+              end
+            end
+            context 'with a bytes suffix' do
+              let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => '-1B' }] } }
+
+              it 'is valid' do
+                message = AppManifestMessage.create_from_yml(params_from_yaml)
+                expect(message).to be_valid
+              end
+            end
           end
         end
       end

@@ -88,14 +88,15 @@ module VCAP::CloudController
 
               describe 'docker ports' do
                 let(:parent_app) { AppModel.make(:docker, space: space) }
-                let(:process) { ProcessModelFactory.make(app: parent_app, diego: true) }
+                let(:process) { ProcessModel.make(app: parent_app, diego: true, state: ProcessModel::STARTED) }
                 let(:droplet) do
                   DropletModel.make(
                     :docker,
                       state: DropletModel::STAGED_STATE,
                       app: parent_app,
                       execution_metadata: execution_metadata,
-                      docker_receipt_image: 'foo/bar'
+                      docker_receipt_image: 'foo/bar',
+                      package: PackageModel.make(app: parent_app)
                   )
                 end
 
@@ -129,6 +130,16 @@ module VCAP::CloudController
 
                     expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                     expect(ri['http_routes']).to match_array expected_http
+                  end
+
+                  context 'when there is a newer droplet (e.g. due to a canceled deployment)' do
+                    before do
+                      DropletModel.make(app: parent_app, created_at: droplet.created_at + 1)
+                    end
+
+                    it 'still uses the correct docker port' do
+                      expect(ri['http_routes'][0]['port']).to eq(1024)
+                    end
                   end
                 end
               end

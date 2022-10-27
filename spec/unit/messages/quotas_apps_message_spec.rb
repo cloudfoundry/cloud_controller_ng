@@ -256,6 +256,68 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'log_rate_limit_in_bytes_per_second' do
+        context 'when the type is a string' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: 'bob' }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Log rate limit in bytes per second is not a number')
+          end
+        end
+
+        context 'when the type is decimal' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: 1.1 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be an integer')
+          end
+        end
+
+        context 'when the type is a negative integer' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: -1 }
+          end
+
+          it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be greater than or equal to 0')
+          end
+        end
+
+        context 'when the type is zero' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: 0 }
+          end
+
+          it { is_expected.to be_valid }
+        end
+
+        context 'when the type is nil (unlimited)' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: nil }
+          end
+
+          it { is_expected.to be_valid }
+        end
+
+        context 'when the value is greater than the maximum allowed value in the DB' do
+          let(:params) do
+            { log_rate_limit_in_bytes_per_second: 2**64 }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be less than or equal to 9223372036854775807')
+          end
+        end
+      end
     end
   end
 end

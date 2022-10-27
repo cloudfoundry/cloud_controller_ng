@@ -151,7 +151,7 @@ class OrganizationsV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(domains, message.try(:pagination_options)),
       path: "/v3/organizations/#{org.guid}/domains",
       message: message,
-      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids }
+      extra_presenter_args: presenter_args
     )
   end
 
@@ -163,7 +163,7 @@ class OrganizationsV3Controller < ApplicationController
     domain_not_found! unless domain
     domain_not_found! if domain.private? && permission_queryer.readable_org_guids_for_domains_query.where(guid: org.guid).empty?
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
 
   def list_members
@@ -236,7 +236,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       OrgListFetcher.fetch(
         message: message,
-        guids: permission_queryer.readable_org_guids,
+        guids: permission_queryer.readable_org_guids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
@@ -251,11 +251,19 @@ class OrganizationsV3Controller < ApplicationController
     else
       isolation_segment, dataset = OrgListFetcher.fetch_for_isolation_segment(
         message: message,
-        guids: permission_queryer.readable_org_guids,
+        guids: permission_queryer.readable_org_guids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
     isolation_segment_not_found! unless isolation_segment && permission_queryer.can_read_from_isolation_segment?(isolation_segment)
     dataset
+  end
+
+  def presenter_args
+    if permission_queryer.can_read_globally?
+      { all_orgs_visible: true }
+    else
+      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
+    end
   end
 end

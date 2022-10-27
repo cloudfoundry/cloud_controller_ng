@@ -113,6 +113,22 @@ module CloudFoundry
         end
       end
 
+      describe "when the user has the 'cloud_controller.v2_api_rate_limit_exempt' scope" do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+        end
+
+        it 'exempts them from rate limiting' do
+          _, response_headers, _ = middleware.call(user_1_env)
+
+          expect(request_counter).not_to have_received(:get)
+          expect(request_counter).not_to have_received(:increment)
+          expect(response_headers['X-RateLimit-Limit-V2-API']).to be_nil
+          expect(response_headers['X-RateLimit-Remaining-V2-API']).to be_nil
+          expect(response_headers['X-RateLimit-Reset-V2-API']).to be_nil
+        end
+      end
+
       it 'increments the counter and allows the request to continue' do
         _, _, _ = middleware.call(user_1_env)
         expect(request_counter).to have_received(:increment).with(user_1_guid)
@@ -316,13 +332,12 @@ module CloudFoundry
           json_body = JSON.parse(body.first)
           expect(json_body).to include(
             'code' => 10018,
-            'description' => 'Rate Limit of V2 API Exceeded. Please consider to use V3 API',
+            'description' => 'Rate Limit of V2 API Exceeded. Please consider using the V3 API',
             'error_code' => 'CF-RateLimitV2APIExceeded',
           )
         end
 
         context 'when the user is admin' do
-          let(:path_info) { '/v2/foo' }
           let(:default_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           before do
@@ -339,6 +354,17 @@ module CloudFoundry
             expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
             expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
+          end
+        end
+
+        context 'when the user is exempt from rate limiting' do
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:v2_rate_limit_exempted?).and_return(true)
+          end
+
+          it 'returns 200 response' do
+            status, _, _ = middleware.call(middleware_env)
+            expect(status).to eq(200)
           end
         end
       end

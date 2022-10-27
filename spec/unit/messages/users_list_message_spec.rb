@@ -9,6 +9,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'guids' => 'user1-guid,user2-guid',
+          'partial_usernames' => 'user',
           'usernames' => 'user1-name,user2-name',
           'origins' => 'user1-origin,user2-origin',
         }
@@ -22,6 +23,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.guids).to eq(%w[user1-guid user2-guid])
         expect(message.usernames).to eq(%w[user1-name user2-name])
+        expect(message.partial_usernames).to eq(%w[user])
         expect(message.origins).to eq(%w[user1-origin user2-origin])
       end
 
@@ -33,6 +35,21 @@ module VCAP::CloudController
         expect(message.requested?(:guids)).to be_truthy
         expect(message.requested?(:usernames)).to be_truthy
         expect(message.requested?(:origins)).to be_truthy
+      end
+
+      context 'partial_usernames is used in .from_params' do
+        let(:params) do
+          {
+            partial_usernames: ['bob'],
+            origins: ['uaa']
+          }
+        end
+
+        it 'is valid' do
+          message = UsersListMessage.from_params(params)
+          expect(message).to be_valid
+          expect(message.partial_usernames).to eq(%w[bob])
+        end
       end
 
       context 'guids, usernames, origins are nil' do
@@ -69,25 +86,45 @@ module VCAP::CloudController
       end
     end
 
-    describe 'origin_requires_username' do
+    describe 'accepts no usernames no origins' do
+      it 'is valid' do
+        message = UsersListMessage.from_params({})
+        expect(message).to be_valid
+      end
+    end
+
+    describe 'origin_requires_username_or_partial_usernames' do
       it 'accepts usernames and origins' do
         message = UsersListMessage.from_params({ usernames: ['bob'], origins: ['uaa'] })
         expect(message).to be_valid
       end
-      it 'accepts no usernames no origins' do
-        message = UsersListMessage.from_params({})
-        expect(message).to be_valid
-      end
 
-      it 'accepts usernames without origins' do
-        message = UsersListMessage.from_params({ usernames: ['bob'] })
+      it 'accepts partial_usernames and origins' do
+        message = UsersListMessage.from_params({ partial_usernames: ['bob'], origins: ['uaa'] })
         expect(message).to be_valid
       end
 
       it 'does NOT accept origins without usernames' do
         message = UsersListMessage.from_params({ origins: ['uaa'] })
         expect(message).to be_invalid
-        expect(message.errors[:origins]).to include('filter cannot be provided without usernames filter.')
+        expect(message.errors[:origins]).to include('filter cannot be provided without usernames or partial_usernames filter.')
+      end
+    end
+
+    describe 'usernames_or_partial_usernames' do
+      it 'accepts usernames' do
+        message = UsersListMessage.from_params({ usernames: ['bob'] })
+        expect(message).to be_valid
+      end
+      it 'accepts partial_usernames' do
+        message = UsersListMessage.from_params({ partial_usernames: ['bob'] })
+        expect(message).to be_valid
+      end
+
+      it 'does NOT accept partial_usernames and usernames' do
+        message = UsersListMessage.from_params({ partial_usernames: ['juan'], usernames: ['bob'] })
+        expect(message).to be_invalid
+        expect(message.errors[:usernames]).to include('filter cannot be provided with both usernames and partial_usernames filter.')
       end
     end
   end

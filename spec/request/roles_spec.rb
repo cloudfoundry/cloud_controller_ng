@@ -79,8 +79,6 @@ RSpec.describe 'Roles Request' do
           code: 201,
           response_object: expected_response
         }
-        h['org_auditor'] = { code: 422 }
-        h['org_billing_manager'] = { code: 422 }
         h
       end
 
@@ -273,6 +271,62 @@ RSpec.describe 'Roles Request' do
           )
         end
       end
+      context 'creating role by user GUID for unaffiliated user' do
+        let(:params) do
+          {
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { guid: user_unaffiliated.guid }
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            }
+          }
+        end
+
+        let(:expected_response) do
+          {
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { guid: user_unaffiliated.guid }
+              },
+              space: {
+                data: nil
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+              user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = h['org_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h
+        end
+
+        before do
+          allow(uaa_client).to receive(:users_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => { 'username' => user_unaffiliated.username } })
+          allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'creating a role by username' do
@@ -332,8 +386,6 @@ RSpec.describe 'Roles Request' do
             code: 201,
             response_object: expected_response
           }
-          h['org_auditor'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
           h
         end
 
@@ -408,66 +460,6 @@ RSpec.describe 'Roles Request' do
       end
     end
 
-    context 'creating role by user GUID for unaffiliated user' do
-      let(:params) do
-        {
-          type: 'organization_auditor',
-          relationships: {
-            user: {
-              data: { guid: user_unaffiliated.guid }
-            },
-            organization: {
-              data: { guid: org.guid }
-            }
-          }
-        }
-      end
-
-      let(:expected_response) do
-        {
-          guid: UUID_REGEX,
-          created_at: iso8601,
-          updated_at: iso8601,
-          type: 'organization_auditor',
-          relationships: {
-            user: {
-              data: { guid: user_unaffiliated.guid }
-            },
-            space: {
-              data: nil
-            },
-            organization: {
-              data: { guid: org.guid }
-            }
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-          }
-        }
-      end
-
-      let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
-        h['admin'] = {
-          code: 201,
-          response_object: expected_response
-        }
-        h['org_manager'] = {
-          code: 422
-        }
-        h
-      end
-
-      before do
-        allow(uaa_client).to receive(:users_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => { 'username' => user_unaffiliated.username } })
-        allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
     context 'creating a role by username and origin' do
       let(:params) do
         {
@@ -525,8 +517,6 @@ RSpec.describe 'Roles Request' do
           code: 201,
           response_object: expected_response
         }
-        h['org_auditor'] = { code: 422 }
-        h['org_billing_manager'] = { code: 422 }
         h
       end
 
@@ -567,8 +557,6 @@ RSpec.describe 'Roles Request' do
             response_object: expected_response
           }
 
-          h['org_auditor'] = { code: 422 }
-          h['org_billing_manager'] = { code: 422 }
           h
         end
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

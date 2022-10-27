@@ -169,11 +169,8 @@ module VCAP::CloudController
                 service_instance.service_plan.update(active: false)
               end
 
-              it 'raises an error' do
-                expect { action.precursor(service_instance, message: message) }.to raise_error(
-                  ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-                  'Service plan is not available.'
-                )
+              it 'does not raise an error' do
+                expect { action.precursor(service_instance, message: message) }.to_not raise_error
               end
             end
 

@@ -29,6 +29,7 @@ module VCAP::CloudController
           command:               command(message, template_process),
           disk_in_mb:            disk_in_mb(message, template_process),
           memory_in_mb:          memory_in_mb(message, template_process),
+          log_rate_limit:        log_rate_limit(message, template_process),
           sequence_id:           app.max_task_sequence_id
         )
 
@@ -70,15 +71,15 @@ module VCAP::CloudController
     end
 
     def memory_in_mb(message, template_process)
-      return message.memory_in_mb if message.memory_in_mb
+      message.memory_in_mb || template_process.try(:memory) || config.get(:default_app_memory)
+    end
 
-      template_process.present? ? template_process.memory : config.get(:default_app_memory)
+    def log_rate_limit(message, template_process)
+      message.log_rate_limit_in_bytes_per_second || template_process.try(:log_rate_limit) || config.get(:default_app_log_rate_limit_in_bytes_per_second)
     end
 
     def disk_in_mb(message, template_process)
-      return message.disk_in_mb if message.disk_in_mb
-
-      template_process.present? ? template_process.disk_quota : config.get(:default_app_disk_in_mb)
+      message.disk_in_mb || template_process.try(:disk_quota) || config.get(:default_app_disk_in_mb)
     end
 
     def submit_task(task)

@@ -103,11 +103,13 @@ module VCAP::CloudController
     end
 
     def organization_guid
-      organization&.guid
+      return organization.guid unless organization_id == SPACE_OR_ORGANIZATION_NOT_SPECIFIED
+
+      space.organization_guid
     end
 
     def space_guid
-      space&.guid
+      space.guid unless space_id == SPACE_OR_ORGANIZATION_NOT_SPECIFIED
     end
 
     def for_space?

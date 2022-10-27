@@ -110,11 +110,16 @@ module VCAP::CloudController
           actee: 'nimoy',
           actee_type: 'vulcan',
           actee_name: 'Mr. Spock',
-          space_guid: space.guid
+          space: space
+
         }
-        e = Event.new(required_attrs)
-        expect(fake_logger).to receive(:info).with('Audit event: audit.test enacted by pork chop on vulcan Mr. Spock')
-        e.save
+        event = Event.new(required_attrs)
+        allow(fake_logger).to receive(:info)
+
+        event.save
+
+        expect(fake_logger).to have_received(:info).with(/audit.test/)
+        expect(fake_logger).to have_received(:info).with(/#{event.guid}/)
       end
     end
 

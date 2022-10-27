@@ -404,7 +404,10 @@ RSpec.describe 'Droplets' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'downloads the bit(s) for a droplet' do
-        get "/v3/droplets/#{guid}/download", nil, developer_headers
+        Timecop.freeze do
+          get "/v3/droplets/#{guid}/download", nil, developer_headers
+          bits_download_url
+        end
 
         expect(last_response.status).to eq(302)
         expect(last_response.headers['Location']).to eq(bits_download_url)

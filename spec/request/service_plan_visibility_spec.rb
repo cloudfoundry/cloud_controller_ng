@@ -617,7 +617,7 @@ RSpec.describe 'V3 service plan visibility' do
     context 'permissions' do
       let(:db_check) do
         lambda do
-          expect(VCAP::CloudController::ServicePlanVisibility.all.map(&:organization_id)).to eq([other_org.id])
+          expect(VCAP::CloudController::ServicePlanVisibility.select_map(:organization_id)).to eq([other_org.id])
         end
       end
 

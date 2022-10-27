@@ -15,6 +15,7 @@ Name | Type | Description
 **state** | _string_ | State of the build; valid states are `STAGING`, `STAGED`, or `FAILED`
 **staging_memory_in_mb** | _integer_ | Memory in MB allocated for staging of the build
 **staging_disk_in_mb** | _integer_ | Disk space in MB allocated for staging of the build
+**staging_log_rate_limit_bytes_per_second** | _integer_ | Log rate limit in bytes per second allocated for staging of the build
 **error** | _string_ | A string describing errors during the build process
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging; this will override the build's application's default lifecycle for this build
 **package.guid** | _string_ | The package that is the input to the staging process

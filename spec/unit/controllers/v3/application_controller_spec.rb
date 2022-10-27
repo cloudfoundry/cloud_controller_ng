@@ -38,6 +38,14 @@ RSpec.describe ApplicationController, type: :controller do
       raise CloudController::Errors::NotFound.new_from_details('NotFound')
     end
 
+    def db_connection_error
+      raise Sequel::DatabaseConnectionError.new
+    end
+
+    def db_disconnect_error
+      raise Sequel::DatabaseDisconnectError.new
+    end
+
     def warnings_is_nil
       add_warning_headers(nil)
       render status: 200, json: {}
@@ -56,7 +64,7 @@ RSpec.describe ApplicationController, type: :controller do
 
   describe '#check_read_permissions' do
     before do
-      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: [])
+      set_current_user(VCAP::CloudController::User.make, scopes: [])
     end
 
     it 'is required on index' do
@@ -75,7 +83,7 @@ RSpec.describe ApplicationController, type: :controller do
 
     context 'cloud_controller.read' do
       before do
-        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
+        set_current_user_as_reader
       end
 
       it 'grants reading access' do
@@ -91,7 +99,7 @@ RSpec.describe ApplicationController, type: :controller do
 
     context 'cloud_controller.admin_read_only' do
       before do
-        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.admin_read_only'])
+        set_current_user_as_admin_read_only
       end
 
       it 'grants reading access' do
@@ -133,7 +141,7 @@ RSpec.describe ApplicationController, type: :controller do
 
     context 'post' do
       before do
-        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write'])
+        set_current_user_as_writer
       end
 
       it 'is not required on other actions' do
@@ -144,9 +152,33 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
+  describe 'when a user has the cloud_controller_service_permissions.read scope' do
+    before do
+      set_current_user_as_service_permissions_reader
+    end
+
+    it 'cannot index' do
+      get :index
+      expect(response.status).to eq(403)
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
+    end
+
+    it 'cannot show' do
+      get :show, params: { id: 1 }
+      expect(response.status).to eq(403)
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
+    end
+
+    it 'cannot create' do
+      post :create
+      expect(response.status).to eq(403)
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
+    end
+  end
+
   describe 'when a user does not have cloud_controller.write scope' do
     before do
-      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
+      set_current_user_as_reader
     end
 
     it 'is not required on index' do
@@ -261,6 +293,30 @@ RSpec.describe ApplicationController, type: :controller do
       get :not_found
       expect(response.status).to eq(404)
       expect(response).to have_error_message('Unknown request')
+    end
+  end
+
+  describe '#handle_db_connection_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      routes.draw do
+        get 'db_connection_error' => 'anonymous#db_connection_error'
+        get 'db_disconnect_error' => 'anonymous#db_disconnect_error'
+      end
+    end
+
+    it 'rescues from Sequel::DatabaseConnectionError and renders an error presenter' do
+      get :db_connection_error
+      expect(response.status).to eq(503)
+      expect(response).to have_error_message(/Database connection failure/)
+    end
+
+    it 'rescues from Sequel::DatabaseDisconnectError and renders an error presenter' do
+      get :db_disconnect_error
+      expect(response.status).to eq(503)
+      expect(response).to have_error_message(/Database connection failure/)
     end
   end
 

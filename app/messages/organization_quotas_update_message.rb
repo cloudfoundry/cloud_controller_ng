@@ -26,7 +26,7 @@ module VCAP::CloudController
     validate :domains_validator, if: key_requested?(:domains)
 
     # Apps validations
-    delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
+    delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, :log_rate_limit_in_bytes_per_second, to: :apps_limits_message
 
     def validates_hash(key, sym)
       return true if key.is_a?(Hash)

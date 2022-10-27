@@ -7,10 +7,12 @@ module VCAP::CloudController
 
     let(:organization1) { Organization.make(name: 'first-organization') }
     let(:organization2) { Organization.make(name: 'second-organization') }
+    let(:orguser) { OrganizationUser.make(organization: organization1) }
+    let(:orgauditor) { OrganizationAuditor.make(organization: organization2) }
     let(:roles) do
       [
-        OrganizationUser.make(organization: organization1),
-        OrganizationAuditor.make(organization: organization2)
+        Role.where(user_id: orguser.user_id, organization_id: organization1.id).first,
+        Role.where(user_id: orgauditor.user_id, organization_id: organization2.id).first
       ]
     end
 
