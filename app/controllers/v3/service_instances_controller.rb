@@ -198,7 +198,7 @@ class ServiceInstancesV3Controller < ApplicationController
   def credentials
     service_instance = UserProvidedServiceInstance.first(guid: hashed_params[:guid])
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
-    unauthorized! unless permission_queryer.can_read_secrets_in_space?(service_instance.space.id, service_instance.space.organization_id)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(service_instance.space_id, service_instance.space.organization_id)
 
     render status: :ok, json: (service_instance.credentials || {})
   end
