@@ -18,11 +18,6 @@ contained in V2, but the JSON is structured a little differently. In particular:
 - Actee-related fields have been grouped under the `target` key (e.g.
   `target.type` instead of `actee_type`).
 
-At the time of this writing, V3 does not support greater-than or less-than
-filtering for the `created_at` field. In V2, this was supported via
-`/v2/events?q=timestamp>some_timestamp`. There are plans support this in the
-future.
-
 V3 endpoints attempt to report audit events in the same way as V2 endpoints did.
 A notable case where this was not possible is for the `audit.app.restage` event.
 Read more about [restaging](#restage) in V3.
