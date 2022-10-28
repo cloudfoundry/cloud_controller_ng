@@ -22,7 +22,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
   end
@@ -98,7 +98,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show_default_isolation_segment
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
 
@@ -112,7 +112,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show_usage_summary
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     render status: :ok, json: Presenters::V3::OrganizationUsageSummaryPresenter.new(org)
   end
@@ -139,7 +139,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def index_org_domains
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     message = DomainsListMessage.from_params(query_params.except(:guid))
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -157,7 +157,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show_default_domain
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
     domain = org.default_domain
 
     domain_not_found! unless domain
@@ -171,7 +171,7 @@ class OrganizationsV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     users = UserListFetcher.fetch_all(message, org.members)
 
@@ -193,15 +193,15 @@ class OrganizationsV3Controller < ApplicationController
 
   def fetch_editable_org(guid)
     org = fetch_org(guid)
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_org?(org.guid)
-    suspended! unless permission_queryer.is_org_active?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    suspended! unless permission_queryer.is_org_active?(org.id)
     org
   end
 
   def fetch_deletable_org(guid)
     org = fetch_org(guid)
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
     unauthorized! unless permission_queryer.can_write_globally?
     org
   end

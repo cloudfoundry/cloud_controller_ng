@@ -88,8 +88,8 @@ class DomainsController < ApplicationController
     domain = find_domain(message)
     domain_not_found! unless domain
 
-    unauthorized! unless permission_queryer.can_write_to_active_org?(domain.owning_organization_guid)
-    suspended! unless permission_queryer.is_org_active?(domain.owning_organization_guid)
+    unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
+    suspended! unless org_active?(domain.owning_organization_id)
 
     domain = DomainUpdate.new.update(domain: domain, message: message)
 
@@ -103,8 +103,8 @@ class DomainsController < ApplicationController
     domain = find_domain(message)
     domain_not_found! unless domain
 
-    unauthorized! unless permission_queryer.can_write_to_active_org?(domain.owning_organization_guid)
-    suspended! unless permission_queryer.is_org_active?(domain.owning_organization_guid)
+    unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
+    suspended! unless org_active?(domain.owning_organization_id)
 
     unprocessable!('This domain is shared with other organizations. Unshare before deleting.') unless domain.shared_organizations.empty?
 
@@ -122,8 +122,8 @@ class DomainsController < ApplicationController
     domain = find_domain(message)
     domain_not_found! unless domain
 
-    unauthorized! unless permission_queryer.can_write_to_active_org?(domain.owning_organization_guid)
-    suspended! unless permission_queryer.is_org_active?(domain.owning_organization_guid)
+    unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
+    suspended! unless org_active?(domain.owning_organization_id)
 
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
 
@@ -140,23 +140,12 @@ class DomainsController < ApplicationController
     domain = find_domain(message)
     domain_not_found! unless domain
 
-    permission_check = lambda do |owning_org_guid, shared_org_guid|
-      can_write_to_owning_org = permission_queryer.can_write_to_active_org?(owning_org_guid)
-      return if can_write_to_owning_org && permission_queryer.is_org_active?(owning_org_guid)
-
-      can_write_to_shared_org = permission_queryer.can_write_to_active_org?(shared_org_guid)
-      return if can_write_to_shared_org && permission_queryer.is_org_active?(shared_org_guid)
-
-      if !can_write_to_owning_org && !can_write_to_shared_org
-        unauthorized!
-      else
-        suspended!
-      end
-    end
-    permission_check.call(domain.owning_organization_guid, message.org_guid)
-
     shared_org = Organization.find(guid: message.org_guid)
-    unprocessable_org!(message.org_guid) unless shared_org && permission_queryer.can_read_from_org?(shared_org.guid)
+    unprocessable_org!(message.org_guid) unless shared_org
+
+    check_unshare_domain_permissions!(domain.owning_organization_id, shared_org.id)
+
+    unprocessable_org!(message.org_guid) unless permission_queryer.can_read_from_org?(shared_org.id)
 
     DomainDeleteSharedOrg.delete(domain: domain, shared_organization: shared_org)
     head :no_content
@@ -185,11 +174,23 @@ class DomainsController < ApplicationController
     domain
   end
 
-  def check_create_private_domain_permissions!(message)
-    unprocessable_org!(message.organization_guid) unless Organization.find(guid: message.organization_guid)
+  def check_unshare_domain_permissions!(owning_org_id, shared_org_id)
+    owning_org_writable = can_write_to_active_org?(owning_org_id)
+    return if owning_org_writable && org_active?(owning_org_id)
 
-    unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
-    suspended! unless permission_queryer.is_org_active?(message.organization_guid)
+    shared_org_writable = can_write_to_active_org?(shared_org_id)
+    return if shared_org_writable && org_active?(shared_org_id)
+
+    unauthorized! unless owning_org_writable || shared_org_writable
+    suspended!
+  end
+
+  def check_create_private_domain_permissions!(message)
+    org = Organization.find(guid: message.organization_guid)
+    unprocessable_org!(message.organization_guid) unless org
+
+    unauthorized! unless can_write_to_active_org?(org.id)
+    suspended! unless org_active?(org.id)
 
     FeatureFlag.raise_unless_enabled!(:private_domain_creation) unless permission_queryer.can_write_globally?
   end
@@ -202,9 +203,9 @@ class DomainsController < ApplicationController
     end
 
     organizations.each do |org|
-      unprocessable!("Organization with guid '#{org.guid}' either does not exist, or you do not have access to it.") unless permission_queryer.can_read_from_org?(org.guid)
-      unprocessable!("You do not have sufficient permissions for organization '#{org.name}' to share domain.") unless permission_queryer.can_write_to_active_org?(org.guid)
-      unprocessable!("Organization '#{org.name}' is suspended.") unless permission_queryer.is_org_active?(org.guid)
+      unprocessable!("Organization with guid '#{org.guid}' either does not exist, or you do not have access to it.") unless permission_queryer.can_read_from_org?(org.id)
+      unprocessable!("You do not have sufficient permissions for organization '#{org.name}' to share domain.") unless can_write_to_active_org?(org.id)
+      unprocessable!("Organization '#{org.name}' is suspended.") unless org_active?(org.id)
     end
 
     unprocessable!('Domain cannot be shared with owning organization.') if message.shared_organizations_guids.include?(owning_org_guid)
@@ -218,6 +219,14 @@ class DomainsController < ApplicationController
 
   def unprocessable_org!(org_guid)
     unprocessable!("Organization with guid '#{org_guid}' does not exist or you do not have access to it.")
+  end
+
+  def can_write_to_active_org?(org_id)
+    permission_queryer.can_write_to_active_org?(org_id)
+  end
+
+  def org_active?(org_id)
+    permission_queryer.is_org_active?(org_id)
   end
 
   def domain_not_found!

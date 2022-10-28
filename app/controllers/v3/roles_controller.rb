@@ -65,11 +65,11 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     if role.for_space?
-      unauthorized! unless permission_queryer.can_update_active_space?(role.space_guid, role.organization_guid)
-      suspended! unless permission_queryer.is_space_active?(role.space_guid)
+      unauthorized! unless permission_queryer.can_update_active_space?(role.space_id, role.space.organization_id)
+      suspended! unless permission_queryer.is_space_active?(role.space_id)
     else
-      unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_guid)
-      suspended! unless permission_queryer.is_org_active?(role.organization_guid)
+      unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_id)
+      suspended! unless permission_queryer.is_org_active?(role.organization_id)
 
       if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         org = Organization.find(id: role.organization_id)
@@ -91,10 +91,9 @@ class RolesController < ApplicationController
   def create_space_role(message)
     space = Space.find(guid: message.space_guid)
     unprocessable_space! unless space
-    org = space.organization
 
-    unauthorized! unless permission_queryer.can_update_active_space?(message.space_guid, org.guid)
-    suspended! unless permission_queryer.is_space_active?(message.space_guid)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)
     user = fetch_readable_user(user_guid)
@@ -110,8 +109,8 @@ class RolesController < ApplicationController
   def create_org_role(message)
     org = Organization.find(guid: message.organization_guid)
     unprocessable_organization! unless org
-    unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
-    suspended! unless permission_queryer.is_org_active?(message.organization_guid)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    suspended! unless permission_queryer.is_org_active?(org.id)
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
 

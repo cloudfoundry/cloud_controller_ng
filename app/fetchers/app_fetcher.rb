@@ -4,8 +4,7 @@ module VCAP::CloudController
       app = AppModel.where(guid: app_guid).first
       return nil if app.nil?
 
-      org = app.space ? app.space.organization : nil
-      [app, app.space, org]
+      [app, app.space]
     end
   end
 end

@@ -16,14 +16,12 @@ module VCAP::CloudController
       @user = user
     end
 
-    def has_any_roles?(roles, space_guid=nil, org_guid=nil)
-      if space_guid && space_role?(roles)
-        space_id = Space.where(guid: space_guid).select(:id)
+    def has_any_roles?(roles, space_id=nil, org_id=nil)
+      if space_id && space_role?(roles)
         return true unless SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_id).empty?
       end
 
-      if org_guid && org_role?(roles)
-        org_id = Organization.where(guid: org_guid).select(:id)
+      if org_id && org_role?(roles)
         return true unless OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_id).empty?
       end
 

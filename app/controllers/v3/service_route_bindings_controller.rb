@@ -225,19 +225,19 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def can_read_from_space?(space)
-    permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+    permission_queryer.can_read_from_space?(space.id, space.organization_id)
   end
 
   def can_bind_in_active_space?(space)
-    permission_queryer.can_manage_apps_in_active_space?(space.guid)
+    permission_queryer.can_manage_apps_in_active_space?(space.id)
   end
 
   def can_write_to_active_space?(space)
-    permission_queryer.can_write_to_active_space?(space.guid)
+    permission_queryer.can_write_to_active_space?(space.id)
   end
 
   def is_space_active?(space)
-    permission_queryer.is_space_active?(space.guid)
+    permission_queryer.is_space_active?(space.id)
   end
 
   def route_services_enabled?

@@ -6,14 +6,14 @@ module VCAP::CloudController
         return nil unless app
 
         process = app.processes_dataset.where(type: process_type).last
-        [process, app, app.space, app.organization]
+        [process, app, app.space]
       end
 
       def fetch(process_guid:)
         process = ProcessModel.where(guid: process_guid).first
         return nil unless process
 
-        [process, process.space, process.organization]
+        [process, process.space]
       end
     end
   end

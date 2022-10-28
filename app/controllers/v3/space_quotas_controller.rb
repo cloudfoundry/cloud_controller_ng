@@ -15,11 +15,11 @@ class SpaceQuotasController < ApplicationController
     message = VCAP::CloudController::SpaceQuotasCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
-    suspended! unless permission_queryer.is_org_active?(message.organization_guid)
-
     org = Organization.find(guid: message.organization_guid)
     unprocessable_organization!(message.organization_guid) unless org
+
+    unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    suspended! unless permission_queryer.is_org_active?(org.id)
 
     space_quota = SpaceQuotasCreate.new.create(message, organization: org)
 
@@ -63,8 +63,8 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_guid))
-    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_guid)
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -86,8 +86,8 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_guid))
-    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_guid)
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -111,8 +111,8 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_guid))
-    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_guid)
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     space_guid = hashed_params[:space_guid]
     space = Space.first(guid: space_guid)
@@ -133,8 +133,8 @@ class SpaceQuotasController < ApplicationController
       readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_guid))
-    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_guid)
+      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces.empty?
 

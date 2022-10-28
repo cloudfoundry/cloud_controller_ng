@@ -13,8 +13,8 @@ class AppRevisionsController < ApplicationController
     message = AppRevisionsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app, space = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     dataset = AppRevisionsListFetcher.fetch(app, message)
 
@@ -30,8 +30,8 @@ class AppRevisionsController < ApplicationController
     message = AppDeployedRevisionsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app, space = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     dataset = AppRevisionsListFetcher.fetch_deployed(app)
 

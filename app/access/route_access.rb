@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def read?(route)
-      context.queryer.can_read_route?(route.space.guid, route.space.organization.guid)
+      context.queryer.can_read_route?(route.space.guid)
     end
 
     def read_for_update?(route, params=nil)
@@ -82,7 +82,7 @@ module VCAP::CloudController
       return false if route.wildcard_host? && route.domain.shared?
 
       FeatureFlag.raise_unless_enabled!(:route_creation) if is_create
-      context.queryer.can_write_to_active_space?(route.space.guid)
+      context.queryer.can_write_to_active_space?(route.space_id)
     end
   end
 end

@@ -22,8 +22,9 @@ class TasksController < ApplicationController
 
     if app_nested?
       app, dataset = TaskListFetcher.fetch_for_app(message: message)
-      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
-      show_secrets = can_read_secrets?(app.organization, app.space)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
+
+      show_secrets = can_read_secrets?(app.space)
     else
       dataset = if permission_queryer.can_read_globally?
                   TaskListFetcher.fetch_all(message: message)
@@ -47,11 +48,11 @@ class TasksController < ApplicationController
     message = TaskCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: hashed_params[:app_guid], droplet_guid: message.droplet_guid)
+    app, space, droplet = TaskCreateFetcher.new.fetch(app_guid: hashed_params[:app_guid], droplet_guid: message.droplet_guid)
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
@@ -68,11 +69,11 @@ class TasksController < ApplicationController
   end
 
   def cancel
-    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
     TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
@@ -84,20 +85,20 @@ class TasksController < ApplicationController
     message = TaskUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
 
     task = TaskUpdate.new.update(task, message)
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task)
   end
 
   def show
-    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && can_read_task?(org, space)
+    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && can_read_task?(space)
 
-    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(org, space))
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(space))
   end
 
   private
@@ -106,12 +107,12 @@ class TasksController < ApplicationController
     permission_queryer.readable_space_guids
   end
 
-  def can_read_secrets?(org, space)
-    permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+  def can_read_secrets?(space)
+    permission_queryer.can_read_secrets_in_space?(space.id, space.organization_id)
   end
 
-  def can_read_task?(org, space)
-    permission_queryer.can_read_from_space?(space.guid, org.guid)
+  def can_read_task?(space)
+    permission_queryer.can_read_from_space?(space.id, space.organization_id)
   end
 
   def task_not_found!

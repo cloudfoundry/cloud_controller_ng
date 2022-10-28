@@ -39,7 +39,7 @@ class SpacesV3Controller < ApplicationController
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     message = SpaceShowMessage.from_params(query_params)
 
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
@@ -50,15 +50,14 @@ class SpacesV3Controller < ApplicationController
 
   def create
     message = SpaceCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
     missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
-    unprocessable!(message.errors.full_messages) unless message.valid?
-    unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
-    unauthorized! unless permission_queryer.can_write_to_active_org?(message.organization_guid)
-    suspended! unless permission_queryer.is_org_active?(message.organization_guid)
-
     org = fetch_organization(message.organization_guid)
-    unprocessable!(missing_org) unless org
+    unprocessable!(missing_org) unless org && permission_queryer.can_read_from_org?(org.id)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    suspended! unless permission_queryer.is_org_active?(org.id)
+
     space = SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
@@ -68,9 +67,9 @@ class SpacesV3Controller < ApplicationController
 
   def update
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_update_active_space?(space.guid, space.organization.guid)
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -84,9 +83,9 @@ class SpacesV3Controller < ApplicationController
 
   def destroy
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-    unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization.guid)
-    suspended! unless permission_queryer.is_org_active?(space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization_id)
+    suspended! unless permission_queryer.is_org_active?(space.organization_id)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
@@ -101,7 +100,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unfiltered_group_guids = fetch_running_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
@@ -120,7 +119,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unfiltered_group_guids = fetch_staging_security_group_guids(space)
     dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
@@ -139,10 +138,10 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
-    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
 
     deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
@@ -155,7 +154,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
     org = space.organization
     org_not_found! unless org
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
     message = SpaceUpdateIsolationSegmentMessage.new(hashed_params[:body])
@@ -178,8 +177,7 @@ class SpacesV3Controller < ApplicationController
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space
 
-    org = space.organization
-    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
@@ -195,7 +193,7 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     users = UserListFetcher.fetch_all(message, space.members)
 

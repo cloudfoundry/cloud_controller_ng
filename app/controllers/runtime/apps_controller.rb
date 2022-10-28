@@ -465,7 +465,7 @@ module VCAP::CloudController
       })]
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        process    = find_guid(guid, ProcessModel)
+        process = find_guid(guid, ProcessModel)
         membership = VCAP::CloudController::Membership.new(current_user)
 
         basic_access = [
@@ -475,7 +475,7 @@ module VCAP::CloudController
         ]
 
         raise e unless SecurityContext.global_auditor? ||
-          membership.has_any_roles?(basic_access, process.space.guid, process.organization.guid)
+          membership.has_any_roles?(basic_access, process.space.id, process.organization.id)
 
         [HTTP::OK, JSON.generate({
           read_sensitive_data: false,

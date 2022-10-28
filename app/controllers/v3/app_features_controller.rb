@@ -16,8 +16,8 @@ class AppFeaturesController < ApplicationController
   APP_FEATURES = (TRUSTED_APP_FEATURES + UNTRUSTED_APP_FEATURES).freeze
 
   def index
-    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app, space = AppFetcher.new.fetch(hashed_params[:app_guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     resources = presented_app_features(app)
 
     render status: :ok, json: {
@@ -27,26 +27,26 @@ class AppFeaturesController < ApplicationController
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app, space = AppFetcher.new.fetch(hashed_params[:app_guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     resource_not_found!(:feature) unless APP_FEATURES.include?(hashed_params[:name])
 
     render status: :ok, json: feature_presenter_for(hashed_params[:name], app)
   end
 
   def update
-    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
+    app, space = AppFetcher.new.fetch(hashed_params[:app_guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     name = hashed_params[:name]
     resource_not_found!(:feature) unless APP_FEATURES.include?(name)
     if UNTRUSTED_APP_FEATURES.include?(name)
-      unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.guid)
+      unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
     else
-      unauthorized! unless permission_queryer.can_write_to_active_space?(space.guid)
+      unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     end
-    suspended! unless permission_queryer.is_space_active?(space.guid)
+    suspended! unless permission_queryer.is_space_active?(space.id)
 
     message = VCAP::CloudController::AppFeatureUpdateMessage.new(hashed_params['body'])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -56,9 +56,9 @@ class AppFeaturesController < ApplicationController
   end
 
   def ssh_enabled
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app, space = AppFetcher.new.fetch(hashed_params[:guid])
 
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, Config.config.get(:allow_app_ssh_access))
   end
