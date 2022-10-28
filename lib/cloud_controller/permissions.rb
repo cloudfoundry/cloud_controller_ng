@@ -109,7 +109,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       raise 'must not be called for users that can read globally'
     else
-      membership.org_guids_for_roles_subquery(ROLES_FOR_ORG_READING)
+      membership.authorized_org_guids_subquery(ROLES_FOR_ORG_READING)
     end
   end
 
@@ -121,7 +121,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Organization.select(:id, :guid)
     else
-      membership.orgs_for_roles_subquery(ROLES_FOR_ORG_READING)
+      membership.authorized_orgs_subquery(ROLES_FOR_ORG_READING)
     end
   end
 
@@ -129,7 +129,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid)
     else
-      membership.org_guids_for_roles_subquery(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + SPACE_ROLES)
+      membership.authorized_org_guids_subquery(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + SPACE_ROLES)
     end
   end
 
@@ -137,18 +137,18 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Organization.select_map(:guid)
     else
-      membership.org_guids_for_roles(ROLES_FOR_ORG_CONTENT_READING)
+      membership.authorized_org_guids(ROLES_FOR_ORG_CONTENT_READING)
     end
   end
 
   def can_read_from_org?(org_id)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_id)
+    can_read_globally? || membership.role_applies?(ROLES_FOR_ORG_READING, nil, org_id)
   end
 
   def can_write_to_active_org?(org_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_id)
+    membership.role_applies?(ROLES_FOR_ORG_WRITING, nil, org_id)
   end
 
   def is_org_active?(org_id)
@@ -176,43 +176,43 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       raise 'must not be called for users that can read globally'
     else
-      membership.space_guids_for_roles_subquery(ROLES_FOR_SPACE_READING)
+      membership.authorized_space_guids_subquery(ROLES_FOR_SPACE_READING)
     end
   end
 
   def can_read_from_space?(space_id, org_id)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_READING, space_id, org_id)
+    can_read_globally? || membership.role_applies?(ROLES_FOR_SPACE_READING, space_id, org_id)
   end
 
   def can_download_droplet?(space_id, org_id)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_DROPLET_DOWLOAD, space_id, org_id)
+    can_read_globally? || membership.role_applies?(ROLES_FOR_DROPLET_DOWLOAD, space_id, org_id)
   end
 
   def can_read_secrets_in_space?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
+      membership.role_applies?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
   end
 
   def can_read_services_in_space?(space_id, org_id)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_SERVICES_READING, space_id, org_id)
+    can_read_globally? || membership.role_applies?(ROLES_FOR_SPACE_SERVICES_READING, space_id, org_id)
   end
 
   def can_write_to_active_space?(space_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_id)
+    membership.role_applies?(ROLES_FOR_SPACE_WRITING, space_id)
   end
 
   def can_manage_apps_in_active_space?(space_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_APP_MANAGING, space_id)
+    membership.role_applies?(ROLES_FOR_APP_MANAGING, space_id)
   end
 
   def can_update_active_space?(space_id, org_id)
     return true if can_write_globally?
 
-    membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_id, org_id)
+    membership.role_applies?(ROLES_FOR_SPACE_UPDATING, space_id, org_id)
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
@@ -235,7 +235,7 @@ class VCAP::CloudController::Permissions
     if can_read_secrets_globally?
       VCAP::CloudController::Space.select_map(:guid)
     else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
+      membership.authorized_space_guids(ROLES_FOR_SPACE_SECRETS_READING)
     end
   end
 
@@ -243,7 +243,7 @@ class VCAP::CloudController::Permissions
     if can_read_secrets_globally?
       VCAP::CloudController::Space.select_map(:guid)
     else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_SERVICES_READING)
+      membership.authorized_space_guids(ROLES_FOR_SPACE_SERVICES_READING)
     end
   end
 
@@ -251,7 +251,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Space.select_map(:guid)
     else
-      membership.space_guids_for_roles(SPACE_ROLES)
+      membership.authorized_space_guids(SPACE_ROLES)
     end
   end
 
@@ -263,7 +263,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Space.select(:id, :guid)
     else
-      membership.spaces_for_roles_subquery(SPACE_ROLES)
+      membership.authorized_spaces_subquery(SPACE_ROLES)
     end
   end
 
@@ -280,12 +280,12 @@ class VCAP::CloudController::Permissions
 
   def can_read_app_environment_variables?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_id, org_id)
+      membership.role_applies?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_id, org_id)
   end
 
   def can_read_system_environment_variables?(space_id, org_id)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
+      membership.role_applies?(ROLES_FOR_SPACE_SECRETS_READING, space_id, org_id)
   end
 
   def readable_app_guids
@@ -315,8 +315,8 @@ class VCAP::CloudController::Permissions
   def readable_event_dataset
     return VCAP::CloudController::Event.dataset if can_read_globally?
 
-    spaces_with_permitted_roles = membership.space_guids_for_roles(SPACE_ROLES_FOR_EVENTS)
-    orgs_with_permitted_roles = membership.org_guids_for_roles(VCAP::CloudController::Membership::ORG_AUDITOR)
+    spaces_with_permitted_roles = membership.authorized_space_guids(SPACE_ROLES_FOR_EVENTS)
+    orgs_with_permitted_roles = membership.authorized_org_guids(VCAP::CloudController::Membership::ORG_AUDITOR)
     VCAP::CloudController::Event.dataset.filter(Sequel.or([
       [:space_guid, spaces_with_permitted_roles],
       [:organization_guid, orgs_with_permitted_roles]
