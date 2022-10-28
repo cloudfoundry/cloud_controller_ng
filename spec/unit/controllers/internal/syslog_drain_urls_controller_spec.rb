@@ -283,6 +283,9 @@ module VCAP::CloudController
       let(:instance6) { UserProvidedServiceInstance.make(space: app_obj4.space) }
       let(:instance7) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let(:instance8) { UserProvidedServiceInstance.make(space: app_obj2.space) }
+      let(:instance9) { UserProvidedServiceInstance.make(space: app_obj3.space) }
+      let(:instance10) { UserProvidedServiceInstance.make(space: app_obj4.space) }
+      let(:instance11) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
       let!(:binding_with_drain4) { ServiceBinding.make(
         syslog_drain_url: 'barfoo',
@@ -314,6 +317,24 @@ module VCAP::CloudController
         service_instance: instance6,
         credentials: { 'cert' => 'cert2', 'key' => 'key2' })
       }
+      let!(:binding_with_drain9) { ServiceBinding.make(
+        syslog_drain_url: 'no_credentials_1',
+        app: app_obj3,
+        service_instance: instance9,
+        credentials: nil)
+      }
+      let!(:binding_with_drain10) { ServiceBinding.make(
+        syslog_drain_url: 'no_credentials_2',
+        app: app_obj4,
+        service_instance: instance10,
+        credentials: { 'cert' => '', 'key' => '' })
+      }
+      let!(:binding_with_drain11) { ServiceBinding.make(
+        syslog_drain_url: 'no_credentials_3',
+        app: app_obj,
+        service_instance: instance11,
+        credentials: { 'foo' => '', 'cert' => '' })
+      }
 
       it 'returns a list of syslog drain urls and their credentials' do
         get '/internal/v5/syslog_drain_urls', '{}'
@@ -325,39 +346,54 @@ module VCAP::CloudController
           end
         end
 
-        expect(sorted_results.count).to eq(4)
+        expect(sorted_results.count).to eq(7)
 
         expect(sorted_results).to eq(
           [
             { 'url' => 'barfoo',
-             'credentials' => [
-               { 'cert' => 'cert1',
-                'key' => 'key1',
-                'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
+              'credentials' => [
+                { 'cert' => 'cert1',
+                  'key' => 'key1',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
             { 'url' => 'barfoo2',
-             'credentials' => [
-               { 'cert' => 'cert1',
-                'key' => 'key1',
-                'apps' => [
-                  { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                  { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] },
-               { 'cert' => 'cert2',
-                'key' => 'key2',
-                 'apps' => [
-                   { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
-                   { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+              'credentials' => [
+                { 'cert' => 'cert1',
+                  'key' => 'key1',
+                  'apps' => [
+                    { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] },
+                { 'cert' => 'cert2',
+                  'key' => 'key2',
+                   'apps' => [
+                     { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
+                     { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
             { 'url' => 'fish%2cfinger',
-             'credentials' => [
-               { 'cert' => '',
-                'key' => '',
-                'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
             { 'url' => 'foobar',
-             'credentials' => [
-               { 'cert' => '',
-                'key' => '',
-                'apps' => [
-                  { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                  { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] }] }
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'apps' => [
+                    { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] }] },
+            { 'url' => 'no_credentials_1',
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
+            { 'url' => 'no_credentials_2',
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+            { 'url' => 'no_credentials_3',
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
           ])
       end
 
@@ -378,6 +414,17 @@ module VCAP::CloudController
           'next_id' => decoded_next_id
         }
         expect(last_response).to be_successful
+        expect(decoded_next_id).to be(6)
+        get '/internal/v5/syslog_drain_urls', {
+          'batch_size' => 2,
+          'next_id' => decoded_next_id
+        }
+        expect(last_response).to be_successful
+        expect(decoded_next_id).to be(8)
+        get '/internal/v5/syslog_drain_urls', {
+          'batch_size' => 2,
+          'next_id' => decoded_next_id
+        }
         expect(decoded_next_id).to be(nil)
         expect(decoded_results.length).to be(0)
       end

@@ -71,8 +71,8 @@ module VCAP::CloudController
                  each_with_object({}) { |item, injected|
                    syslog_drain_url = item[:syslog_drain_url]
                    credentials = item.credentials
-                   cert = credentials.fetch('cert', '')
-                   key = credentials.fetch('key', '')
+                   cert = credentials&.fetch('cert', '') || ''
+                   key = credentials&.fetch('key', '') || ''
                    hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
                    app_guid = item[:app_guid]
 
