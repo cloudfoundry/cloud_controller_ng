@@ -137,7 +137,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:org_guids_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(membership).to receive(:authorized_org_guids_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
         expect(subquery).to receive(:select_map).and_return(org_guid_records)
         expect(permissions.readable_org_guids).to eq([guid1, guid2])
       end
@@ -148,7 +148,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:org_guids_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(membership).to receive(:authorized_org_guids_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
         expect(permissions.readable_org_guids_query).to be(subquery)
       end
     end
@@ -158,7 +158,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:orgs_for_roles_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(membership).to receive(:authorized_orgs_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
         expect(permissions.readable_orgs_query).to be(subquery)
       end
     end
@@ -172,14 +172,14 @@ module VCAP::CloudController
         let(:second_org_guid) { double(:second_org_guid) }
 
         before do
-          allow(membership).to receive(:org_guids_for_roles_subquery).
+          allow(membership).to receive(:authorized_org_guids_subquery).
             with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + Permissions::SPACE_ROLES).
             and_return(subquery)
           allow(Membership).to receive(:new).with(user).and_return(membership)
         end
 
         it 'combines readable orgs for both org-scoped and space-scoped roles' do
-          allow(membership).to receive(:space_guids_for_roles).
+          allow(membership).to receive(:authorized_space_guids).
             with(Permissions::SPACE_ROLES).
             and_return([space_guid])
 
@@ -372,7 +372,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:space_guids_for_roles_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
+        expect(membership).to receive(:authorized_space_guids_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
         expect(subquery).to receive(:select_map).and_return(space_guid_records)
         expect(permissions.readable_space_guids).to eq([guid1, guid2])
       end
@@ -383,7 +383,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:space_guids_for_roles_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
+        expect(membership).to receive(:authorized_space_guids_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
         expect(permissions.readable_space_guids_query).to be(subquery)
       end
     end
@@ -517,7 +517,7 @@ module VCAP::CloudController
         membership = instance_double(Membership)
         subquery = instance_double(Sequel::Dataset)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:spaces_for_roles_subquery).with(Permissions::SPACE_ROLES).and_return(subquery)
+        expect(membership).to receive(:authorized_spaces_subquery).with(Permissions::SPACE_ROLES).and_return(subquery)
         expect(permissions.readable_space_scoped_spaces_query).to be(subquery)
       end
     end
@@ -728,10 +728,10 @@ module VCAP::CloudController
       it 'returns event datasets from space membership' do
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:space_guids_for_roles).
+        expect(membership).to receive(:authorized_space_guids).
           with(Permissions::SPACE_ROLES_FOR_EVENTS).
           and_return([space_guid])
-        expect(membership).to receive(:org_guids_for_roles).with(Membership::ORG_AUDITOR).and_return([])
+        expect(membership).to receive(:authorized_org_guids).with(Membership::ORG_AUDITOR).and_return([])
         event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
 
         expect(event_guids).to contain_exactly(space_scoped_event.guid)
@@ -740,10 +740,10 @@ module VCAP::CloudController
       it 'returns event datasets from org membership' do
         membership = instance_double(Membership)
         expect(Membership).to receive(:new).with(user).and_return(membership)
-        expect(membership).to receive(:space_guids_for_roles).
+        expect(membership).to receive(:authorized_space_guids).
           with(Permissions::SPACE_ROLES_FOR_EVENTS).
           and_return([])
-        expect(membership).to receive(:org_guids_for_roles).with(Membership::ORG_AUDITOR).and_return(org_guid)
+        expect(membership).to receive(:authorized_org_guids).with(Membership::ORG_AUDITOR).and_return(org_guid)
         event_guids = Permissions.new(user).readable_event_dataset.map(&:guid)
 
         expect(event_guids).to contain_exactly(org_scoped_event.guid)

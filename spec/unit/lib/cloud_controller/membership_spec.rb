@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     let(:membership) { Membership.new(user) }
 
-    describe '#has_any_roles?' do
+    describe '#role_applies?' do
       context 'when space roles are provided' do
         before do
           organization.add_user(user)
@@ -21,7 +21,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::SPACE_DEVELOPER, space.id)
+              result = membership.role_applies?(Membership::SPACE_DEVELOPER, space.id)
               expect(result).to be_truthy
             end
           end
@@ -32,7 +32,31 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::SPACE_DEVELOPER, space.id)
+              result = membership.role_applies?(Membership::SPACE_DEVELOPER, space.id)
+              expect(result).to be_falsey
+            end
+          end
+        end
+
+        describe 'SPACE_SUPPORTER' do
+          context 'when the user has the role' do
+            before do
+              space.add_supporter(user)
+            end
+
+            it 'returns true' do
+              result = membership.role_applies?(Membership::SPACE_SUPPORTER, space.id)
+              expect(result).to be_truthy
+            end
+          end
+
+          context 'when the user does not have the role' do
+            before do
+              space.remove_supporter(user)
+            end
+
+            it 'returns false' do
+              result = membership.role_applies?(Membership::SPACE_SUPPORTER, space.id)
               expect(result).to be_falsey
             end
           end
@@ -45,7 +69,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::SPACE_MANAGER, space.id)
+              result = membership.role_applies?(Membership::SPACE_MANAGER, space.id)
               expect(result).to be_truthy
             end
           end
@@ -56,7 +80,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::SPACE_MANAGER, space.id)
+              result = membership.role_applies?(Membership::SPACE_MANAGER, space.id)
               expect(result).to be_falsey
             end
           end
@@ -69,7 +93,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::SPACE_AUDITOR, space.id)
+              result = membership.role_applies?(Membership::SPACE_AUDITOR, space.id)
               expect(result).to be_truthy
             end
           end
@@ -80,7 +104,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::SPACE_AUDITOR, space.id)
+              result = membership.role_applies?(Membership::SPACE_AUDITOR, space.id)
               expect(result).to be_falsey
             end
           end
@@ -94,7 +118,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR], space.id)
@@ -111,7 +135,7 @@ module VCAP::CloudController
           end
 
           it 'returns false' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR], space.id)
@@ -122,7 +146,7 @@ module VCAP::CloudController
 
         context 'when the space id is nil' do
           it 'returns false' do
-            result = membership.has_any_roles?(Membership::SPACE_DEVELOPER)
+            result = membership.role_applies?(Membership::SPACE_DEVELOPER)
             expect(result).to be_falsey
           end
         end
@@ -138,7 +162,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_MANAGER,
               Membership::SPACE_AUDITOR],
@@ -164,7 +188,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::ORG_USER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_USER, nil, organization.id)
               expect(result).to be_truthy
             end
           end
@@ -175,7 +199,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::ORG_USER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_USER, nil, organization.id)
               expect(result).to be_falsey
             end
           end
@@ -188,7 +212,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::ORG_MANAGER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_MANAGER, nil, organization.id)
               expect(result).to be_truthy
             end
           end
@@ -199,7 +223,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::ORG_MANAGER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_MANAGER, nil, organization.id)
               expect(result).to be_falsey
             end
           end
@@ -212,7 +236,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::ORG_AUDITOR, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_AUDITOR, nil, organization.id)
               expect(result).to be_truthy
             end
           end
@@ -223,7 +247,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::ORG_AUDITOR, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_AUDITOR, nil, organization.id)
               expect(result).to be_falsey
             end
           end
@@ -236,7 +260,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::ORG_BILLING_MANAGER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_BILLING_MANAGER, nil, organization.id)
               expect(result).to be_truthy
             end
           end
@@ -247,7 +271,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::ORG_BILLING_MANAGER, nil, organization.id)
+              result = membership.role_applies?(Membership::ORG_BILLING_MANAGER, nil, organization.id)
               expect(result).to be_falsey
             end
           end
@@ -261,7 +285,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
               Membership::ORG_AUDITOR], nil, organization.id)
@@ -278,7 +302,7 @@ module VCAP::CloudController
           end
 
           it 'returns false' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
               Membership::ORG_AUDITOR], nil, organization.id)
@@ -293,7 +317,7 @@ module VCAP::CloudController
           end
 
           it 'returns false' do
-            result = membership.has_any_roles?(Membership::ORG_USER, space.id, nil)
+            result = membership.role_applies?(Membership::ORG_USER, space.id, nil)
             expect(result).to be_falsey
           end
         end
@@ -310,7 +334,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::ORG_USER,
               Membership::ORG_MANAGER,
               Membership::ORG_AUDITOR,
@@ -335,7 +359,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
@@ -356,7 +380,7 @@ module VCAP::CloudController
           end
 
           it 'returns false' do
-            result = membership.has_any_roles?([
+            result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
@@ -370,12 +394,12 @@ module VCAP::CloudController
       end
     end
 
-    describe '#org_guids_for_roles' do
+    describe '#authorized_org_guids' do
       context 'when the user has a role in the organization' do
         context 'for org users' do
           it 'returns all orgs in which the user is a member' do
             organization.add_user(user)
-            guids = membership.org_guids_for_roles(Membership::ORG_USER)
+            guids = membership.authorized_org_guids(Membership::ORG_USER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -383,7 +407,7 @@ module VCAP::CloudController
         context 'for org auditors' do
           it 'returns all orgs in which the user is an auditor' do
             organization.add_auditor(user)
-            guids = membership.org_guids_for_roles(Membership::ORG_AUDITOR)
+            guids = membership.authorized_org_guids(Membership::ORG_AUDITOR)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -391,7 +415,7 @@ module VCAP::CloudController
         context 'for org managers' do
           it 'returns all orgs in which the user is a manager' do
             organization.add_manager(user)
-            guids = membership.org_guids_for_roles(Membership::ORG_MANAGER)
+            guids = membership.authorized_org_guids(Membership::ORG_MANAGER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -399,7 +423,7 @@ module VCAP::CloudController
         context 'for org billing managers' do
           it 'returns all orgs in which the user is a billing manager' do
             organization.add_billing_manager(user)
-            guids = membership.org_guids_for_roles(Membership::ORG_BILLING_MANAGER)
+            guids = membership.authorized_org_guids(Membership::ORG_BILLING_MANAGER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -407,7 +431,7 @@ module VCAP::CloudController
         context 'for space managers' do
           it 'returns all orgs for spaces in which the user is a space manager' do
             SpaceManager.create(user: user, space: space)
-            guids = membership.org_guids_for_roles(Membership::SPACE_MANAGER)
+            guids = membership.authorized_org_guids(Membership::SPACE_MANAGER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -415,7 +439,7 @@ module VCAP::CloudController
         context 'for space developers' do
           it 'returns all orgs for spaces in which the user is a space developer' do
             SpaceDeveloper.create(user: user, space: space)
-            guids = membership.org_guids_for_roles(Membership::SPACE_DEVELOPER)
+            guids = membership.authorized_org_guids(Membership::SPACE_DEVELOPER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -423,7 +447,7 @@ module VCAP::CloudController
         context 'for space supporters' do
           it 'returns all orgs for spaces in which the user is a space supporters' do
             SpaceSupporter.create(user: user, space: space)
-            guids = membership.org_guids_for_roles(Membership::SPACE_SUPPORTER)
+            guids = membership.authorized_org_guids(Membership::SPACE_SUPPORTER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -431,7 +455,7 @@ module VCAP::CloudController
         context 'for space auditors' do
           it 'returns all orgs for spaces in which the user is a space auditor' do
             SpaceAuditor.create(user: user, space: space)
-            guids = membership.org_guids_for_roles(Membership::SPACE_AUDITOR)
+            guids = membership.authorized_org_guids(Membership::SPACE_AUDITOR)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -441,7 +465,7 @@ module VCAP::CloudController
             organization.add_auditor(user)
             organization.add_billing_manager(user)
 
-            guids = membership.org_guids_for_roles([Membership::ORG_BILLING_MANAGER, Membership::ORG_AUDITOR])
+            guids = membership.authorized_org_guids([Membership::ORG_BILLING_MANAGER, Membership::ORG_AUDITOR])
 
             expect(guids).to eq([organization.guid])
           end
@@ -450,16 +474,16 @@ module VCAP::CloudController
 
       context 'when the user has no role in any organization' do
         it 'should return an empty list' do
-          guids = membership.org_guids_for_roles([Membership::ORG_USER,
-                                                  Membership::ORG_AUDITOR,
-                                                  Membership::ORG_BILLING_MANAGER,
-                                                  Membership::ORG_MANAGER])
+          guids = membership.authorized_org_guids([Membership::ORG_USER,
+                                                   Membership::ORG_AUDITOR,
+                                                   Membership::ORG_BILLING_MANAGER,
+                                                   Membership::ORG_MANAGER])
           expect(guids).to be_empty
         end
       end
     end
 
-    describe '#space_guids_for_roles' do
+    describe '#authorized_space_guids' do
       let(:user) { User.make }
 
       before do
@@ -472,7 +496,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces in which the user develops' do
-          guids = membership.space_guids_for_roles(Membership::SPACE_DEVELOPER)
+          guids = membership.authorized_space_guids(Membership::SPACE_DEVELOPER)
 
           expect(guids).to eq([space.guid])
         end
@@ -484,7 +508,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces that the user managers' do
-          guids = membership.space_guids_for_roles(Membership::SPACE_MANAGER)
+          guids = membership.authorized_space_guids(Membership::SPACE_MANAGER)
 
           expect(guids).to eq([space.guid])
         end
@@ -496,7 +520,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces that the user audits' do
-          guids = membership.space_guids_for_roles(Membership::SPACE_AUDITOR)
+          guids = membership.authorized_space_guids(Membership::SPACE_AUDITOR)
 
           expect(guids).to eq([space.guid])
         end
@@ -508,7 +532,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces in which the user supports applications' do
-          guids = membership.space_guids_for_roles(Membership::SPACE_SUPPORTER)
+          guids = membership.authorized_space_guids(Membership::SPACE_SUPPORTER)
 
           expect(guids).to eq([space.guid])
         end
@@ -516,7 +540,7 @@ module VCAP::CloudController
 
       context 'org user' do
         it 'returns all spaces that the user is in the org' do
-          guids = membership.space_guids_for_roles(Membership::ORG_USER)
+          guids = membership.authorized_space_guids(Membership::ORG_USER)
 
           expect(guids).to eq([space.guid])
         end
@@ -528,7 +552,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces that the user org manages' do
-          guids = membership.space_guids_for_roles(Membership::ORG_MANAGER)
+          guids = membership.authorized_space_guids(Membership::ORG_MANAGER)
 
           expect(guids).to eq([space.guid])
         end
@@ -540,7 +564,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces that the user org billing manages' do
-          guids = membership.space_guids_for_roles(Membership::ORG_BILLING_MANAGER)
+          guids = membership.authorized_space_guids(Membership::ORG_BILLING_MANAGER)
 
           expect(guids).to eq([space.guid])
         end
@@ -552,7 +576,7 @@ module VCAP::CloudController
         end
 
         it 'returns all spaces that the user org audits' do
-          guids = membership.space_guids_for_roles(Membership::ORG_AUDITOR)
+          guids = membership.authorized_space_guids(Membership::ORG_AUDITOR)
 
           expect(guids).to eq([space.guid])
         end
@@ -574,7 +598,7 @@ module VCAP::CloudController
         end
 
         it 'returns the correct space guids without duplicates' do
-          guids = membership.space_guids_for_roles([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER, Membership::SPACE_AUDITOR])
+          guids = membership.authorized_space_guids([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER, Membership::SPACE_AUDITOR])
 
           expect(guids).to contain_exactly(space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid)
         end
