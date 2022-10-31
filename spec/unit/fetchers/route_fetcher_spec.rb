@@ -197,8 +197,6 @@ module VCAP::CloudController
             VCAP::CloudController::RouteLabelModel.make(resource_guid: route3.guid, key_name: 'dog', value: 'chihuahua')
           end
 
-          # let(:results) { RouteFetcher.fetch(message, Route.where(guid: [route1.guid, route3.guid])).all }
-
           context 'only the label_selector is present' do
             let(:message) {
               RoutesListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
