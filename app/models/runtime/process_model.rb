@@ -509,7 +509,7 @@ module VCAP::CloudController
     end
 
     def uris
-      routes.map(&:uri)
+      routes_dataset.select_map(:uri)
     end
 
     def buildpack

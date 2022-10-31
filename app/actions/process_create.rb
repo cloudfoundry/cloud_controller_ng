@@ -25,8 +25,8 @@ module VCAP::CloudController
       process = nil
       app.class.db.transaction do
         process = app.add_process(attrs)
-        route_mappings = process.route_mappings
-        process.update(ports: route_mappings.map(&:app_port)) unless route_mappings.empty?
+        app_ports = process.route_mappings_dataset.select_map(:app_port)
+        process.update(ports: app_ports) unless app_ports.empty?
         Repositories::ProcessEventRepository.record_create(process, @user_audit_info, manifest_triggered: @manifest_triggered)
       end
 

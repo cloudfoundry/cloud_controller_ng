@@ -82,13 +82,15 @@ module VCAP::CloudController
     end
 
     def validate_organization(org)
-      return if org && organizations.include?(org)
+      return if org && organizations_dataset.where(id: org.id).any?
 
       raise InvalidOrganizationRelation.new("Cannot add role, user does not belong to Organization with guid #{org.guid}")
     end
 
     def validate_organization_roles(org)
-      return unless org && (managed_organizations.include?(org) || billing_managed_organizations.include?(org) || audited_organizations.include?(org))
+      return unless org && (managed_organizations_dataset.where(id: org.id).any? ||
+        billing_managed_organizations_dataset.where(id: org.id).any? ||
+        audited_organizations_dataset.where(id: org.id).any?)
 
       raise InvalidOrganizationRelation.new("Cannot remove user from Organization with guid #{org.guid} if the user has the OrgManager, BillingManager, or Auditor role")
     end

@@ -27,7 +27,10 @@ module VCAP::CloudController
         dataset = dataset.where(port: message.ports) if message.requested?(:ports)
 
         if message.requested?(:organization_guids)
-          space_ids = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:id)
+          space_ids = Space.
+                      join(:organizations, id: :organization_id).
+                      where(organizations__guid: message.organization_guids).
+                      select(:spaces__id)
           dataset = dataset.where(space_id: space_ids)
         end
 

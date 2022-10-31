@@ -29,9 +29,9 @@ module VCAP::CloudController
 
     class << self
       def public_visible
-        public_active_plans = ServicePlan.where(active: true, public: true).all
-        service_ids = public_active_plans.map(&:service_id).uniq
-        dataset.filter(id: service_ids)
+        public_active_plans = ServicePlan.where(active: true, public: true)
+
+        dataset.filter(id: public_active_plans.select(:service_id).distinct)
       end
 
       def user_visibility_filter(current_user, operation=nil)
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       def unauthenticated_visibility_filter
-        { id: public_visible.map(&:id) }
+        { id: public_visible.select(:id) }
       end
 
       def space_or_org_visible_for_user(space, user)

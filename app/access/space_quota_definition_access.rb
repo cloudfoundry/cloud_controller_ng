@@ -68,7 +68,7 @@ module VCAP::CloudController
     def read?(space_quota_definition, *_)
       context.admin_override || (
         !context.user.nil? && (
-          (context.user.managed_organizations.include? space_quota_definition.organization) ||
+          context.user.managed_organizations_dataset.where(id: space_quota_definition.organization_id).any? ||
           !(context.user.managed_spaces & space_quota_definition.spaces).empty? ||
           !(context.user.audited_spaces & space_quota_definition.spaces).empty? ||
           !(context.user.spaces & space_quota_definition.spaces).empty?

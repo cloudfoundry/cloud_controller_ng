@@ -27,10 +27,10 @@ module VCAP::CloudController::Presenters::V3
         },
         relationships: {
           running_spaces: {
-            data: space_guid_hash_for(security_group.spaces)
+            data: space_guid_hash_for(security_group.spaces_dataset)
           },
           staging_spaces: {
-            data: space_guid_hash_for(security_group.staging_spaces)
+            data: space_guid_hash_for(security_group.staging_spaces_dataset)
           }
         },
         links: build_links
@@ -43,13 +43,13 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    def space_guid_hash_for(spaces)
-      visible_spaces = if @all_spaces_visible
-                         spaces
-                       else
-                         spaces.select { |space| @visible_space_guids.include? space.guid }
-                       end
-      visible_spaces.map { |space| { guid: space.guid } }
+    def space_guid_hash_for(spaces_dataset)
+      visible_spaces_dataset = if @all_spaces_visible
+                                 spaces_dataset
+                               else
+                                 spaces_dataset.where(guid: @visible_space_guids)
+                               end
+      visible_spaces_dataset.select_map(:guid).map { |guid| { guid: guid } }
     end
 
     def build_links

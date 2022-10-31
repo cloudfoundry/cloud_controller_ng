@@ -150,7 +150,7 @@ module VCAP::CloudController
 
       def unshare_all_spaces
         # The array from `service_instance.shared_spaces` gets updated as spaces are unshared, so we make list of guids
-        space_guids = service_instance.shared_spaces.map(&:guid)
+        space_guids = service_instance.shared_spaces_dataset.select_map(:guid)
 
         unshare_action = ServiceInstanceUnshare.new
         space_guids.each_with_object([]) do |space_guid, errors|
