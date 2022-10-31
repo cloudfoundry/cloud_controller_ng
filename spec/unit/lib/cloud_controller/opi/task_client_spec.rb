@@ -30,6 +30,7 @@ RSpec.describe(OPI::TaskClient) do
           droplet_hash: 'DROPLET_HASH',
           guid: 'DROPLET_GUID'
         ),
+        droplet_guid: 'DROPLET_GUID',
         space: double(
           guid: 'SPACE_GUID',
           name: 'SPACE_NAME',

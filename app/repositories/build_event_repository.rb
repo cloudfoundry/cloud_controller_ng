@@ -6,7 +6,7 @@ module VCAP::CloudController
 
         metadata = {
           build_guid: build.guid,
-          package_guid: build.package.guid,
+          package_guid: build.package_guid,
         }
 
         Event.create(

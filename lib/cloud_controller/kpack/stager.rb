@@ -19,7 +19,7 @@ module Kpack
 
     def stage(staging_details)
       builder_reference = find_or_create_builder_reference(staging_details)
-      image_resource_name = staging_details.package.app.guid
+      image_resource_name = staging_details.package.app_guid
 
       unless client.get_image(image_resource_name, builder_namespace).present?
         return client.create_image(image_resource(staging_details, builder_reference))
@@ -67,10 +67,10 @@ module Kpack
     def image_resource(staging_details, builder_spec)
       Kubeclient::Resource.new({
         metadata: {
-          name: staging_details.package.app.guid,
+          name: staging_details.package.app_guid,
           namespace: builder_namespace,
           labels: {
-            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
+            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app_guid,
             BUILD_GUID_LABEL_KEY.to_sym => staging_details.staging_guid,
             DROPLET_GUID_LABEL_KEY.to_sym => create_droplet_and_get_guid(staging_details),
             STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
@@ -82,7 +82,7 @@ module Kpack
         spec: {
           serviceAccount: registry_service_account_name,
           builder: builder_spec,
-          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}",
+          tag: "#{registry_tag_base}/#{staging_details.package.app_guid}",
           source: configure_source(staging_details),
           build: {
             env: get_environment_variables(staging_details),
@@ -108,7 +108,7 @@ module Kpack
     def find_or_create_builder_reference(staging_details)
       return CF_DEFAULT_BUILDER_REFERENCE unless staging_details.lifecycle.buildpack_infos.present?
 
-      builder_name = "app-#{staging_details.package.app.guid}"
+      builder_name = "app-#{staging_details.package.app_guid}"
       create_or_update_builder(builder_name, staging_details)
 
       {
@@ -139,7 +139,7 @@ module Kpack
           name: name,
           namespace: builder_namespace,
           labels: {
-            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app.guid,
+            APP_GUID_LABEL_KEY.to_sym => staging_details.package.app_guid,
             BUILD_GUID_LABEL_KEY.to_sym => staging_details.staging_guid,
             STAGING_SOURCE_LABEL_KEY.to_sym => 'STG'
           },
@@ -148,7 +148,7 @@ module Kpack
           serviceAccount: default_builder.spec.serviceAccount,
           stack: default_builder.spec.stack,
           store: default_builder.spec.store,
-          tag: "#{registry_tag_base}/#{staging_details.package.app.guid}-builder",
+          tag: "#{registry_tag_base}/#{staging_details.package.app_guid}-builder",
           order: [
             { group: staging_details.lifecycle.buildpack_infos.map { |buildpack| { id: buildpack } } }
           ]

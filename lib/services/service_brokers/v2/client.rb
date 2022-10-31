@@ -315,7 +315,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_binding(service_binding, user_guid: nil)
-      path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)
+      path = service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)
       response = @http_client.get(path, user_guid: user_guid)
       @response_parser.parse_fetch_binding_parameters(path, response).deep_symbolize_keys
     end
@@ -407,7 +407,7 @@ module VCAP::Services::ServiceBrokers::V2
       if service_binding.last_operation.broker_provided_operation
         query_params['operation'] = service_binding.last_operation.broker_provided_operation
       end
-      "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)}/last_operation?#{query_params.to_query}"
+      "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)}/last_operation?#{query_params.to_query}"
     end
 
     def service_instance_resource_path(instance, opts={})

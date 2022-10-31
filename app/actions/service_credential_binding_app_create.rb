@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       def validate_service_instance!(app, service_instance, volume_mount_services_enabled)
         app_is_required! unless app.present?
-        space_mismatch! unless all_space_guids(service_instance).include? app.space.guid
+        space_mismatch! unless all_space_guids(service_instance).include? app.space_guid
         if service_instance.managed_instance?
           service_not_bindable! unless service_instance.service_plan.bindable?
           volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled

@@ -109,7 +109,7 @@ module VCAP::CloudController
       end
 
       def validate_space!
-        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space.guid == route.space.guid
+        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space_guid == route.space.guid
       end
 
       def app_event_repository

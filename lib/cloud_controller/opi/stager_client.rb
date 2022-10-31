@@ -97,7 +97,7 @@ module OPI
           org_name: staging_details.package.app.organization.name,
           org_guid: staging_details.package.app.organization.guid,
           space_name: staging_details.package.app.space.name,
-          space_guid: staging_details.package.app.space.guid,
+          space_guid: staging_details.package.app.space_guid,
           environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables.to_a,
           completion_callback: staging_completion_callback(staging_details),
           lifecycle: lifecycle,

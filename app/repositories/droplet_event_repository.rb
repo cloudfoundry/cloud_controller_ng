@@ -6,7 +6,7 @@ module VCAP::CloudController
 
         metadata = {
           droplet_guid: droplet.guid,
-          package_guid: droplet.package.guid
+          package_guid: droplet.package_guid
         }
 
         Event.create(

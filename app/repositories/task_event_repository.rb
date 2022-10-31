@@ -19,7 +19,7 @@ module VCAP
             actor_type:        'user',
             actor_name:        user_audit_info.user_email,
             actor_username:    user_audit_info.user_name,
-            actee:             task.app.guid,
+            actee:             task.app_guid,
             actee_type:        'app',
             actee_name:        task.app.name,
             timestamp:         Sequel::CURRENT_TIMESTAMP,

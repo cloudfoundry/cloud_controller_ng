@@ -25,7 +25,7 @@ module VCAP::CloudController
           cpu_weight:                       cpu_weight(task),
           disk_mb:                          task.disk_in_mb,
           egress_rules:                     @egress_rules.running_protobuf_rules(task.app),
-          log_guid:                         task.app.guid,
+          log_guid:                         task.app_guid,
           log_rate_limit:                   ::Diego::Bbs::Models::LogRateLimit.new(bytes_per_second: task.log_rate_limit),
           log_source:                       TASK_LOG_SOURCE,
           max_pids:                         config.get(:diego, :pid_limit),
@@ -44,8 +44,8 @@ module VCAP::CloudController
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: [
               "organization:#{task.app.organization.guid}",
-              "space:#{task.app.space.guid}",
-              "app:#{task.app.guid}"
+              "space:#{task.app.space_guid}",
+              "app:#{task.app_guid}"
             ]
           ),
           image_username:                   task.droplet.docker_receipt_username,
@@ -81,7 +81,7 @@ module VCAP::CloudController
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: [
               "organization:#{staging_details.package.app.organization.guid}",
-              "space:#{staging_details.package.app.space.guid}",
+              "space:#{staging_details.package.app.space_guid}",
               "app:#{staging_details.package.app_guid}"
             ]
           ),

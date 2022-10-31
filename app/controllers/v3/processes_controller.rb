@@ -83,7 +83,7 @@ class ProcessesController < ApplicationController
     TelemetryLogger.v3_emit(
       'scale-app',
       {
-        'app-id' => @process.app.guid,
+        'app-id' => @process.app_guid,
         'user-id' => current_user.guid
       },
       {

@@ -46,7 +46,7 @@ module VCAP::CloudController
                  end
 
         processes = ProcessModel.where(
-          app_guid: sidecar.app.guid,
+          app_guid: sidecar.app_guid,
           type: process_types,
         )
         policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, memory)

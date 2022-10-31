@@ -66,7 +66,7 @@ module VCAP::CloudController
         def build_links
           {
             self: { href: url_builder.build_url(path: "/v3/builds/#{build.guid}") },
-            app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") }
+            app: { href: url_builder.build_url(path: "/v3/apps/#{build.app_guid}") }
           }.tap do |links|
             links[:droplet] = { href: url_builder.build_url(path: "/v3/droplets/#{build.droplet.guid}") } if droplet
           end

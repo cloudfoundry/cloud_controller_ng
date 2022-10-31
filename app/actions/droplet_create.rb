@@ -29,7 +29,7 @@ module VCAP::CloudController
         droplet,
         user_audit_info,
         app.name,
-        app.space.guid,
+        app.space_guid,
         app.organization.guid
       )
 
@@ -81,8 +81,8 @@ module VCAP::CloudController
 
     def droplet_from_build(build)
       DropletModel.new(
-        app_guid:             build.app.guid,
-        package_guid:         build.package.guid,
+        app_guid:             build.app_guid,
+        package_guid:         build.package_guid,
         state:                DropletModel::STAGING_STATE,
         build:                build,
       )

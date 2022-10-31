@@ -25,7 +25,7 @@ module VCAP::CloudController
           space_name:                         process.space.name,
           buildpack_guid:                     process.detected_buildpack_guid,
           buildpack_name:                     buildpack_name_for_app(process),
-          parent_app_guid:                    process.app.guid,
+          parent_app_guid:                    process.app_guid,
           parent_app_name:                    process.app.name,
           process_type:                       process.type
         )
@@ -48,7 +48,7 @@ module VCAP::CloudController
           space_name:                         task.space.name,
           buildpack_guid:                     nil,
           buildpack_name:                     nil,
-          parent_app_guid:                    task.app.guid,
+          parent_app_guid:                    task.app_guid,
           parent_app_name:                    task.app.name,
           process_type:                       nil,
           task_guid:                          task.guid,
@@ -67,7 +67,7 @@ module VCAP::CloudController
           org_guid:                           build.space.organization.guid,
           space_guid:                         build.space.guid,
           space_name:                         build.space.name,
-          parent_app_guid:                    build.app.guid,
+          parent_app_guid:                    build.app_guid,
           parent_app_name:                    build.app.name,
           package_guid:                       build.package_guid,
           app_guid:                           '',

@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_upload(package, user_audit_info)
-        VCAP::AppLogEmitter.emit(package.app.guid, "Uploading app package for app with guid #{package.app.guid}")
+        VCAP::AppLogEmitter.emit(package.app_guid, "Uploading app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.upload'
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_upload_bits(package, user_audit_info)
-        VCAP::AppLogEmitter.emit(package.app.guid, "Uploading bits for app with guid #{package.app.guid}")
+        VCAP::AppLogEmitter.emit(package.app_guid, "Uploading bits for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.upload-bits'
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_delete(package, user_audit_info)
-        VCAP::AppLogEmitter.emit(package.app.guid, "Deleting app package for app with guid #{package.app.guid}")
+        VCAP::AppLogEmitter.emit(package.app_guid, "Deleting app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.delete'
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_download(package, user_audit_info)
-        VCAP::AppLogEmitter.emit(package.app.guid, "Downloading app package for app with guid #{package.app.guid}")
+        VCAP::AppLogEmitter.emit(package.app_guid, "Downloading app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.download'
 

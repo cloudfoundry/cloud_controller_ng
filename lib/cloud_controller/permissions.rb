@@ -267,15 +267,14 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def can_read_route?(space_guid)
+  def can_read_route?(space_id)
     return true if can_read_globally?
 
-    space = VCAP::CloudController::Space.where(guid: space_guid).first
-    org = space.organization
+    space = VCAP::CloudController::Space.where(id: space_id).first
 
     space.has_member?(@user) || space.has_supporter?(@user) ||
-      @user.managed_organizations.include?(org) ||
-      @user.audited_organizations.include?(org)
+      @user.managed_organizations.map(&:id).include?(space.organization_id) ||
+      @user.audited_organizations.map(&:id).include?(space.organization_id)
   end
 
   def can_read_app_environment_variables?(space_id, org_id)

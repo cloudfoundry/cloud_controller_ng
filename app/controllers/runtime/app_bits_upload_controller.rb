@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'cannot upload bits to a docker app') if process.docker?
 
-      relationships  = { app: { data: { guid: process.app.guid } } }
+      relationships  = { app: { data: { guid: process.app_guid } } }
       create_message = PackageCreateMessage.new({ type: 'bits', relationships: relationships })
       package        = PackageCreate.create_without_event(create_message)
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
       TelemetryLogger.v2_emit(
         'upload-package',
         {
-          'app-id' => process.app.guid,
+          'app-id' => process.app_guid,
           'user-id' => current_user.guid,
         })
       result
@@ -84,7 +84,7 @@ module VCAP::CloudController
       dest_process = find_guid_and_validate_access(:upload, dest_app_guid)
 
       copier = PackageCopy.new
-      copier.copy_without_event(dest_process.app.guid, src_process.latest_package)
+      copier.copy_without_event(dest_process.app_guid, src_process.latest_package)
 
       @app_event_repository.record_src_copy_bits(dest_process.app, src_process.app, UserAuditInfo.from_context(SecurityContext))
       @app_event_repository.record_dest_copy_bits(dest_process.app, src_process.app, UserAuditInfo.from_context(SecurityContext))

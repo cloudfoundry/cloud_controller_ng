@@ -18,7 +18,7 @@ module VCAP::CloudController
             TelemetryLogger.v3_emit(
               'create-sidecar',
               {
-                'app-id' => sidecar.app.guid,
+                'app-id' => sidecar.app_guid,
               },
               {
                 'api-version' => 'v3',
