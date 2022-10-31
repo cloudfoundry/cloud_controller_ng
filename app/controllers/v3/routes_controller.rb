@@ -27,11 +27,19 @@ class RoutesController < ApplicationController
     message = RoutesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = RouteFetcher.fetch(
-      message,
-      permission_queryer.readable_route_dataset,
-      eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
-    )
+    dataset = if permission_queryer.can_read_globally?
+                RouteFetcher.fetch(
+                  message,
+                  omniscient: true,
+                  eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+                )
+              else
+                RouteFetcher.fetch(
+                  message,
+                  readable_space_guids_dataset: permission_queryer.readable_route_space_guids_query,
+                  eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+                )
+              end
 
     decorators = []
     decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
@@ -287,11 +295,19 @@ class RoutesController < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params['guid'])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
-    dataset = RouteFetcher.fetch(
-      message,
-      permission_queryer.readable_route_dataset,
-      eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
-    )
+    dataset = if permission_queryer.can_read_globally?
+                RouteFetcher.fetch(
+                  message,
+                  omniscient: true,
+                  eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+                )
+              else
+                RouteFetcher.fetch(
+                  message,
+                  readable_space_guids_dataset: permission_queryer.readable_space_guids_query,
+                  eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+                )
+              end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,

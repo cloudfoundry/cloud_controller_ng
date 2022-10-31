@@ -56,6 +56,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_SUPPORTER
   ].freeze
 
+  ROLES_FOR_ROUTE_READING ||= ROLES_FOR_SPACE_READING + [
+    VCAP::CloudController::Membership::ORG_AUDITOR
+  ].freeze
+
   ROLES_FOR_SPACE_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
@@ -235,6 +239,14 @@ class VCAP::CloudController::Permissions
     space.has_member?(@user) || space.has_supporter?(@user) ||
       @user.managed_organizations.map(&:id).include?(space.organization_id) ||
       @user.audited_organizations.map(&:id).include?(space.organization_id)
+  end
+
+  def space_guids_with_readable_routes_query
+    if can_read_globally?
+      VCAP::CloudController::SPACE.select(:guid)
+    else
+      membership.space_guids_for_roles_subquery(ROLES_FOR_ROUTE_READING)
+    end
   end
 
   def can_read_app_environment_variables?(space_id, org_id)

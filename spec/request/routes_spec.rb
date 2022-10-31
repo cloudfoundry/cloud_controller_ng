@@ -906,7 +906,6 @@ RSpec.describe 'Routes Request' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
           anything,
-          anything,
           hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
         ).and_call_original
 
@@ -3649,7 +3648,6 @@ RSpec.describe 'Routes Request' do
     describe 'eager loading' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
-          anything,
           anything,
           hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
         ).and_call_original
