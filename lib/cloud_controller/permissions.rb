@@ -93,14 +93,6 @@ class VCAP::CloudController::Permissions
     roles.admin?
   end
 
-  def can_write_global_service_broker?
-    can_write_globally?
-  end
-
-  def can_write_space_scoped_service_broker?(space_id)
-    can_write_to_active_space?(space_id)
-  end
-
   def readable_org_guids
     readable_org_guids_query.select_map(:guid)
   end
@@ -111,10 +103,6 @@ class VCAP::CloudController::Permissions
     else
       membership.org_guids_for_roles_subquery(ROLES_FOR_ORG_READING)
     end
-  end
-
-  def readable_orgs
-    readable_orgs_query.all
   end
 
   def readable_orgs_query
@@ -130,14 +118,6 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Organization.select(:guid)
     else
       membership.org_guids_for_roles_subquery(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + SPACE_ROLES)
-    end
-  end
-
-  def readable_org_contents_org_guids
-    if can_read_globally?
-      VCAP::CloudController::Organization.select_map(:guid)
-    else
-      membership.org_guids_for_roles(ROLES_FOR_ORG_CONTENT_READING)
     end
   end
 
@@ -219,10 +199,6 @@ class VCAP::CloudController::Permissions
     can_read_globally? || readable_org_guids_query.where(isolation_segment_models: isolation_segment).any?
   end
 
-  def readable_route_guids
-    readable_route_dataset.map(&:guid)
-  end
-
   def readable_route_dataset
     if can_read_globally?
       VCAP::CloudController::Route.dataset
@@ -231,27 +207,11 @@ class VCAP::CloudController::Permissions
     end
   end
 
-  def readable_secret_space_guids
-    if can_read_secrets_globally?
-      VCAP::CloudController::Space.select_map(:guid)
-    else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
-    end
-  end
-
   def readable_services_space_guids
     if can_read_secrets_globally?
       VCAP::CloudController::Space.select_map(:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_SERVICES_READING)
-    end
-  end
-
-  def readable_space_scoped_space_guids
-    if can_read_globally?
-      VCAP::CloudController::Space.select_map(:guid)
-    else
-      membership.space_guids_for_roles(SPACE_ROLES)
     end
   end
 
@@ -289,10 +249,6 @@ class VCAP::CloudController::Permissions
 
   def readable_app_guids
     VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).select(:guid).map(&:guid)
-  end
-
-  def readable_route_mapping_guids
-    VCAP::CloudController::RouteMappingModel.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
   def readable_space_quota_guids
