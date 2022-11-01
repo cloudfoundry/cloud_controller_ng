@@ -271,12 +271,8 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       {
-        spaces__id: dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).
-          union(dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)).
-          union(dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)).
-          union(dataset.join_table(:inner, :spaces_supporters, space_id: :id, user_id: user.id).select(:spaces__id)).
-          union(dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)).
-          select(:id)
+        spaces__id: dataset.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id).
+          union(SpaceRole.where(user_id: user.id).select(:space_id)).select(:id)
       }
     end
 

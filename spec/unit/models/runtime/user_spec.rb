@@ -514,7 +514,7 @@ module VCAP::CloudController
         outside_organization.add_billing_manager(outside_other_user)
       end
 
-      it 'returns a list of users in orgs that the user is a member of' do
+      it 'returns a list of ids for users in the same orgs that the user is a member of' do
         user = User.make
         org_manager = User.make
         org_auditor = User.make
@@ -525,9 +525,9 @@ module VCAP::CloudController
         auditor_organization.add_auditor(org_auditor)
         billing_manager_organization.add_billing_manager(org_billing_manager)
 
-        user_result = user.visible_users_in_my_orgs.select_map(:id)
+        user_result = user.visible_users_in_my_orgs
         expect(user_result).to match_array([user.id, other_user1.id])
-        manager_result = org_manager.visible_users_in_my_orgs.select_map(:id)
+        manager_result = org_manager.visible_users_in_my_orgs
         expect(manager_result).to match_array(
           [
             org_manager.id,
@@ -535,14 +535,14 @@ module VCAP::CloudController
             other_user2.id,
           ],
         )
-        auditor_result = org_auditor.visible_users_in_my_orgs.select_map(:id)
+        auditor_result = org_auditor.visible_users_in_my_orgs
         expect(auditor_result).to match_array(
           [
             org_auditor.id,
             other_user3.id,
           ],
         )
-        billing_manager_result = org_billing_manager.visible_users_in_my_orgs.select_map(:id)
+        billing_manager_result = org_billing_manager.visible_users_in_my_orgs
         expect(billing_manager_result).to match_array(
           [
             org_billing_manager.id,

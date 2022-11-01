@@ -127,7 +127,7 @@ module VCAP::CloudController
     end
 
     def self.plan_ids_from_private_brokers(user)
-      plan_ids_from_brokers(user.membership_spaces.join(:service_brokers, space_id: :id))
+      plan_ids_from_brokers(ServiceBroker.where(space_id: user.membership_space_ids))
     end
 
     def self.plan_ids_from_private_brokers_by_space(space)
