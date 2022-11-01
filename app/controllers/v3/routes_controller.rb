@@ -36,7 +36,7 @@ class RoutesController < ApplicationController
               else
                 RouteFetcher.fetch(
                   message,
-                  readable_space_guids_dataset: permission_queryer.readable_route_space_guids_query,
+                  readable_space_guids_dataset: permission_queryer.space_guids_with_readable_routes_query,
                   eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
                 )
               end
