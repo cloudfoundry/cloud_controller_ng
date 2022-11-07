@@ -43,7 +43,7 @@ task :check_doc_links do
       cmd = 'bundle install && npm install && npm run checkdocs'
       py2_path = '/usr/bin/python2.7'
       if File.exist?(py2_path)
-        cmd = "npm config set python #{py2_path} && #{cmd}"
+        cmd = "npm config set python=#{py2_path} && #{cmd}"
       end
       status = system(cmd)
       exit $CHILD_STATUS.exitstatus if !status
