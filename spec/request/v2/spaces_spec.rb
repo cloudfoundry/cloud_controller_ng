@@ -258,12 +258,14 @@ RSpec.describe 'Spaces' do
     let(:maintenance_info) { { version: '1.0.0', desciption: 'this is description about the maintenance' } }
     let!(:service_plan) { VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info) }
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, maintenance_info: maintenance_info) }
-    let(:build_client) { instance_double(HTTPClient, post: nil) }
+    let(:build_client) { instance_double(Net::HTTP, request: nil) }
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+      allow(build_client).to receive(:ipaddr=).and_return('1.2.3.4')
+      allow(::Resolv).to receive(:getaddresses).and_return(['1.2.3.4'])
+      allow_any_instance_of(::Diego::Client).to receive(:new_http_client).and_return(build_client)
     end
 
     it 'returns the space summary' do

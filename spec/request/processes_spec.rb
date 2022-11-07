@@ -11,7 +11,7 @@ RSpec.describe 'Processes' do
   let(:user) { VCAP::CloudController::User.make }
   let(:admin_header) { admin_headers_for(user) }
   let(:user_name) { 'ProcHudson' }
-  let(:build_client) { instance_double(HTTPClient, post: nil) }
+  let(:build_client) { instance_double(Net::HTTP, request: nil) }
   let(:metadata) do
     {
       labels: {
@@ -22,7 +22,9 @@ RSpec.describe 'Processes' do
     }
   end
   before do
-    allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+    allow(build_client).to receive(:ipaddr=).and_return('1.2.3.4')
+    allow(::Resolv).to receive(:getaddresses).and_return(['1.2.3.4'])
+    allow_any_instance_of(::Diego::Client).to receive(:new_http_client).and_return(build_client)
   end
 
   describe 'GET /v3/processes' do
