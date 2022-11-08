@@ -11,6 +11,7 @@ module Diego
     let(:client_key_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.key') }
     let(:bbs_ip_1) { '1.2.3.4' }
     let(:bbs_ip_2) { '5.6.7.8' }
+    let(:logger) { instance_double(Steno::Logger) }
 
     subject(:client) do
       Client.new(url: bbs_uri, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file,
@@ -18,6 +19,8 @@ module Diego
     end
     before do
       allow(::Resolv).to receive(:getaddresses).with(bbs_domain).and_return([bbs_ip_1, bbs_ip_2])
+      allow(Steno).to receive(:logger).and_return(logger)
+      allow(logger).to receive(:info)
     end
 
     describe 'configuration' do
@@ -795,6 +798,21 @@ module Diego
           expect(a_request(:post, "https://#{bbs_domain}:#{bbs_port}/fake_path")).to have_been_made.times(5)
           expect(http_client).to have_received(:ipaddr=).with(bbs_ip_1).exactly(3).times
           expect(http_client).to have_received(:ipaddr=).with(bbs_ip_2).twice
+        end
+      end
+
+      context 'logging' do
+        before do
+          stub_request(:post, "https://#{bbs_domain}:#{bbs_port}/fake_path").
+            to_raise(StandardError.new('error message')).then.
+            to_return(status: 200)
+        end
+
+        it 'logs before each request and after each failed request' do
+          client.request_with_error_handling(Net::HTTP::Post.new('/fake_path'))
+          expect(logger).to have_received(:info).with(%r{attempt 1: trying bbs endpoint /fake_path on #{bbs_ip_1}}).once
+          expect(logger).to have_received(:info).with(/attempt 1: failed to reach bbs server on #{bbs_ip_1}, removing from list/).once
+          expect(logger).to have_received(:info).with(%r{attempt 1: trying bbs endpoint /fake_path on #{bbs_ip_2}}).once
         end
       end
     end
