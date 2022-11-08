@@ -17,7 +17,7 @@ module VCAP::CloudController
     private
 
     def segment_associated_with_space?(isolation_segment, organization)
-      !Space.dataset.where(isolation_segment_model: isolation_segment, organization: organization).empty?
+      Space.dataset.where(isolation_segment_model: isolation_segment, organization: organization).any?
     end
 
     def associated_spaces(isolation_segment, organization)

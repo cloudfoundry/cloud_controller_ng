@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       app_droplet = app.droplet
-      if app_droplet && !app_droplet.docker_ports.empty?
+      if app_droplet && app_droplet.docker_ports.any?
         return app_droplet.docker_ports.first
       end
 
