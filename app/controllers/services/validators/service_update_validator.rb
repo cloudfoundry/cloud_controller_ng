@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       def plan_in_different_service?(service_plan, service)
-        service_plan.service.guid != service.guid
+        service_plan.service_guid != service.guid
       end
 
       def plan_update_requested?(requested_plan_guid, old_plan)

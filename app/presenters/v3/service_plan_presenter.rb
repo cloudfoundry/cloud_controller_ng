@@ -120,7 +120,7 @@ module VCAP::CloudController
           relationships = {
             service_offering: {
               data: {
-                guid: service_plan.service.guid
+                guid: service_plan.service_guid
               }
             }
           }
@@ -138,7 +138,7 @@ module VCAP::CloudController
               href: url_builder.build_url(path: "/v3/service_plans/#{service_plan.guid}")
             },
             service_offering: {
-              href: url_builder.build_url(path: "/v3/service_offerings/#{service_plan.service.guid}")
+              href: url_builder.build_url(path: "/v3/service_offerings/#{service_plan.service_guid}")
             },
             visibility: {
               href: url_builder.build_url(path: "/v3/service_plans/#{service_plan.guid}/visibility")

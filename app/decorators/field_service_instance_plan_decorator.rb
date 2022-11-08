@@ -27,7 +27,7 @@ module VCAP::CloudController
           plan_view[:relationships] = {
             service_offering: {
               data: {
-                guid: plan.service.guid
+                guid: plan.service_guid
               }
             }
           }
