@@ -49,12 +49,15 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
+      visible_space_ids = user.space_developer_space_ids.
+                          union(user.space_manager_space_ids, from_self: false).
+                          union(user.space_auditor_space_ids, from_self: false).
+                          union(user.space_supporter_space_ids, from_self: false).
+                          select_map(:space_id)
+
       Sequel.or([
-        [:organization, user.managed_organizations_dataset],
-        [:spaces, user.spaces_dataset],
-        [:spaces, user.supported_spaces_dataset],
-        [:spaces, user.managed_spaces_dataset],
-        [:spaces, user.audited_spaces_dataset]
+        [:id, Space.where(id: visible_space_ids).select(:space_quota_definition_id)],
+        [:organization_id, user.org_manager_org_ids]
       ])
     end
 
