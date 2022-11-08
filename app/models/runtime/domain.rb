@@ -190,7 +190,7 @@ module VCAP::CloudController
     end
 
     def matching_route(route_domain, route_host)
-      Route.dataset.filter(host: route_host, domain: route_domain).count > 0
+      !Route.dataset.filter(host: route_host, domain: route_domain).empty?
     end
   end
 end

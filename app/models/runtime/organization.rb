@@ -271,7 +271,7 @@ module VCAP::CloudController
     end
 
     def has_user?(user)
-      user.present? && users_dataset.where(user_id: user.id).present?
+      user.present? && !users_dataset.where(user_id: user.id).empty?
     end
 
     def default_domain
