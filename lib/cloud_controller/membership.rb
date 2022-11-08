@@ -71,13 +71,13 @@ module VCAP::CloudController
     private
 
     def role_applies_to_space?(roles, space_id)
-      return false unless space_id && space_role_sufficient?(roles)
+      return false unless space_id && contains_space_role?(roles)
 
       member_space_ids(roles).include?(space_id)
     end
 
     def role_applies_to_org?(roles, org_id)
-      return false unless org_id && org_role_sufficient?(roles)
+      return false unless org_id && contains_org_role?(roles)
 
       member_org_ids(roles).include?(org_id)
     end
@@ -86,11 +86,11 @@ module VCAP::CloudController
       Array(roles).intersection(filter)
     end
 
-    def space_role_sufficient?(roles)
+    def contains_space_role?(roles)
       roles_filter(roles, SPACE_ROLES).any?
     end
 
-    def org_role_sufficient?(roles)
+    def contains_org_role?(roles)
       roles_filter(roles, ORG_ROLES).any?
     end
 

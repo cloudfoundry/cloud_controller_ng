@@ -492,7 +492,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#visible_users_in_my_orgs' do
+    describe '#visible_user_ids_in_my_orgs' do
       let(:user_organization) { Organization.make }
       let(:manager_organization) { Organization.make }
       let(:auditor_organization) { Organization.make }
@@ -525,9 +525,9 @@ module VCAP::CloudController
         auditor_organization.add_auditor(org_auditor)
         billing_manager_organization.add_billing_manager(org_billing_manager)
 
-        user_result = user.visible_users_in_my_orgs
+        user_result = user.visible_user_ids_in_my_orgs
         expect(user_result).to match_array([user.id, other_user1.id])
-        manager_result = org_manager.visible_users_in_my_orgs
+        manager_result = org_manager.visible_user_ids_in_my_orgs
         expect(manager_result).to match_array(
           [
             org_manager.id,
@@ -535,14 +535,14 @@ module VCAP::CloudController
             other_user2.id,
           ],
         )
-        auditor_result = org_auditor.visible_users_in_my_orgs
+        auditor_result = org_auditor.visible_user_ids_in_my_orgs
         expect(auditor_result).to match_array(
           [
             org_auditor.id,
             other_user3.id,
           ],
         )
-        billing_manager_result = org_billing_manager.visible_users_in_my_orgs
+        billing_manager_result = org_billing_manager.visible_user_ids_in_my_orgs
         expect(billing_manager_result).to match_array(
           [
             org_billing_manager.id,

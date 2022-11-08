@@ -164,7 +164,7 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       {
-        id: OrganizationRole.where(user_id: user.id).select(Sequel.as(:organization_id, :id))
+        id: user.membership_org_ids
       }
     end
 

@@ -177,11 +177,19 @@ module VCAP::CloudController
     end
 
     def membership_space_ids
-      SpaceRole.where(user_id: id).select_map(:space_id)
+      space_developer_space_ids.
+        union(space_manager_space_ids, from_self: false).
+        union(space_auditor_space_ids, from_self: false).
+        union(space_supporter_space_ids, from_self: false).
+        select_map(:space_id)
     end
 
     def membership_org_ids
-      OrganizationRole.where(user_id: id).select_map(:organization_id)
+      org_manager_org_ids.
+        union(org_user_org_ids, from_self: false).
+        union(org_billing_manager_org_ids, from_self: false).
+        union(org_auditor_org_ids, from_self: false).
+        select_map(:organization_id)
     end
 
     def org_user_org_ids
@@ -216,15 +224,19 @@ module VCAP::CloudController
       SpaceManager.where(user_id: id).select(:space_id)
     end
 
-    def visible_users_in_my_orgs
-      OrganizationRole.where(organization_id: membership_organizations).select_map(:user_id)
+    def visible_user_ids_in_my_orgs
+      OrganizationUser.where(organization_id: membership_org_ids).select(:user_id).
+        union(OrganizationManager.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        union(OrganizationAuditor.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        union(OrganizationBillingManager.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        select_map(:user_id)
     end
 
     def readable_users(can_read_globally)
       if can_read_globally
         User.dataset
       else
-        User.where(id: visible_users_in_my_orgs).or(id: id)
+        User.where(id: visible_user_ids_in_my_orgs).or(id: id)
       end
     end
 
