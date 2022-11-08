@@ -22,7 +22,7 @@ module VCAP::CloudController
         return unless parameters
         return if SecurityContext.admin?
 
-        if ServicePlan.user_visible(SecurityContext.current_user).filter(guid: service_instance.service_plan.guid).count == 0
+        if ServicePlan.user_visible(SecurityContext.current_user).filter(guid: service_instance.service_plan.guid).empty?
           raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceWithInaccessiblePlanNotUpdateable', 'parameters')
         end
       end
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       def plan_in_different_service?(service_plan, service)
-        service_plan.service.guid != service.guid
+        service_plan.service_guid != service.guid
       end
 
       def plan_update_requested?(requested_plan_guid, old_plan)
