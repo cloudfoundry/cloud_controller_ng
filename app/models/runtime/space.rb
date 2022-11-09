@@ -200,11 +200,11 @@ module VCAP::CloudController
     end
 
     def has_developer?(user)
-      user.present? && !SpaceDeveloper.where(space_id: id, user_id: user.id).empty?
+      user.present? && SpaceDeveloper.where(space_id: id, user_id: user.id).any?
     end
 
     def has_supporter?(user)
-      user.present? && !SpaceSupporter.where(space_id: id, user_id: user.id).empty?
+      user.present? && SpaceSupporter.where(space_id: id, user_id: user.id).any?
     end
 
     def has_member?(user)
@@ -331,11 +331,11 @@ module VCAP::CloudController
     private
 
     def has_manager?(user)
-      user.present? && !SpaceManager.where(space_id: id, user_id: user.id).empty?
+      user.present? && SpaceManager.where(space_id: id, user_id: user.id).any?
     end
 
     def has_auditor?(user)
-      user.present? && !SpaceAuditor.where(space_id: id, user_id: user.id).empty?
+      user.present? && SpaceAuditor.where(space_id: id, user_id: user.id).any?
     end
 
     def memory_remaining
