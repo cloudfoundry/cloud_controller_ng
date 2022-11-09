@@ -173,38 +173,70 @@ module VCAP::CloudController
     end
 
     def membership_organizations
-      Organization.join(:organizations_users, organization_id: :id, user_id: id).select(:organizations__id).
-        union(
-          Organization.join(:organizations_auditors, organization_id: :id, user_id: id).select(:organizations__id)
-        ).
-        union(
-          Organization.join(:organizations_managers, organization_id: :id, user_id: id).select(:organizations__id)
-        ).
-        union(
-          Organization.join(:organizations_billing_managers, organization_id: :id, user_id: id).select(:organizations__id)
-        )
+      Organization.where(id: membership_org_ids).select(:id)
     end
 
-    def visible_users_in_my_orgs
-      User.join(:organizations_users, user_id: :id).select(:id).where(organization_id: membership_organizations).
-        union(
-          User.join(:organizations_auditors, user_id: :id).select(:id).where(organization_id: membership_organizations)
-        ).
-        union(
-          User.join(:organizations_managers, user_id: :id).select(:id).where(organization_id: membership_organizations)
-        ).
-        union(
-          User.join(:organizations_billing_managers, user_id: :id).select(:id).where(organization_id: membership_organizations)
-        ).
-        distinct
+    def membership_space_ids
+      space_developer_space_ids.
+        union(space_manager_space_ids, from_self: false).
+        union(space_auditor_space_ids, from_self: false).
+        union(space_supporter_space_ids, from_self: false).
+        select_map(:space_id)
+    end
+
+    def membership_org_ids
+      org_manager_org_ids.
+        union(org_user_org_ids, from_self: false).
+        union(org_billing_manager_org_ids, from_self: false).
+        union(org_auditor_org_ids, from_self: false).
+        select_map(:organization_id)
+    end
+
+    def org_user_org_ids
+      OrganizationUser.where(user_id: id).select(:organization_id)
+    end
+
+    def org_manager_org_ids
+      OrganizationManager.where(user_id: id).select(:organization_id)
+    end
+
+    def org_billing_manager_org_ids
+      OrganizationBillingManager.where(user_id: id).select(:organization_id)
+    end
+
+    def org_auditor_org_ids
+      OrganizationAuditor.where(user_id: id).select(:organization_id)
+    end
+
+    def space_developer_space_ids
+      SpaceDeveloper.where(user_id: id).select(:space_id)
+    end
+
+    def space_auditor_space_ids
+      SpaceAuditor.where(user_id: id).select(:space_id)
+    end
+
+    def space_supporter_space_ids
+      SpaceSupporter.where(user_id: id).select(:space_id)
+    end
+
+    def space_manager_space_ids
+      SpaceManager.where(user_id: id).select(:space_id)
+    end
+
+    def visible_user_ids_in_my_orgs
+      OrganizationUser.where(organization_id: membership_org_ids).select(:user_id).
+        union(OrganizationManager.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        union(OrganizationAuditor.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        union(OrganizationBillingManager.where(organization_id: membership_org_ids).select(:user_id), from_self: false).
+        select_map(:user_id)
     end
 
     def readable_users(can_read_globally)
       if can_read_globally
         User.dataset
       else
-        readable_users = visible_users_in_my_orgs.union(User.where(id: id).select(:id))
-        User.where(id: readable_users)
+        User.where(id: visible_user_ids_in_my_orgs).or(id: id)
       end
     end
 

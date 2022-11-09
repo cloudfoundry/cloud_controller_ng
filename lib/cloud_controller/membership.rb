@@ -16,77 +16,112 @@ module VCAP::CloudController
       @user = user
     end
 
-    def has_any_roles?(roles, space_id=nil, org_id=nil)
-      if space_id && space_role?(roles)
-        return true unless SpaceRole.where(type: space_roles(roles), user_id: @user.id, space_id: space_id).empty?
+    def role_applies?(roles, space_id=nil, org_id=nil)
+      role_applies_to_space?(roles, space_id) || role_applies_to_org?(roles, org_id)
+    end
+
+    def authorized_org_guids(roles)
+      authorized_org_guids_subquery(roles).select_map(:guid)
+    end
+
+    def authorized_org_guids_subquery(roles)
+      authorized_orgs_subquery(roles).select(:guid)
+    end
+
+    def authorized_orgs_subquery(roles)
+      space_ids = member_space_ids(roles)
+      org_ids_from_space_roles = Space.where(id: space_ids).select(:organization_id) if space_ids
+
+      if org_ids_from_space_roles
+        Organization.where(id: member_org_ids(roles)).or(id: org_ids_from_space_roles)
+      else
+        Organization.where(id: member_org_ids(roles))
       end
+    end
 
-      if org_id && org_role?(roles)
-        return true unless OrganizationRole.where(type: org_roles(roles), user_id: @user.id, organization_id: org_id).empty?
+    def authorized_space_guids(roles)
+      authorized_space_guids_subquery(roles).select_map(:guid)
+    end
+
+    def authorized_space_guids_subquery(roles)
+      authorized_spaces_subquery(roles).select(:guid)
+    end
+
+    def authorized_spaces_subquery(roles)
+      org_ids = member_org_ids(roles)
+      if org_ids
+        Space.where(id: member_space_ids(roles)).or(organization_id: org_ids).select(:id, :guid)
+      else
+        Space.where(id: member_space_ids(roles)).select(:id, :guid)
       end
-
-      false
     end
 
-    def org_guids_for_roles(roles)
-      org_guids_for_roles_subquery(roles).select_map(:guid)
+    def member_space_ids(roles)
+      space_role_subqueries(roles).reduce do |query, subquery|
+        query.union(subquery, from_self: false)
+      end&.select_map(:space_id)
     end
 
-    def org_guids_for_roles_subquery(roles)
-      orgs_for_roles_subquery(roles).select(:guid)
-    end
-
-    def orgs_for_roles_subquery(roles)
-      org_ids = org_ids_for_org_roles(roles)
-      space_ids = space_ids_for_space_roles(roles)
-      org_ids_from_space_roles = if space_ids
-                                   Space.where(id: space_ids).select(:organization_id)
-                                 end
-      Organization.where(id: org_ids).or(id: org_ids_from_space_roles).select(:id, :guid)
-    end
-
-    def space_guids_for_roles(roles)
-      space_guids_for_roles_subquery(roles).select_map(:guid)
-    end
-
-    def space_guids_for_roles_subquery(roles)
-      spaces_for_roles_subquery(roles).select(:guid)
-    end
-
-    def spaces_for_roles_subquery(roles)
-      space_ids = space_ids_for_space_roles(roles)
-      org_ids = org_ids_for_org_roles(roles)
-      Space.where(id: space_ids).or(organization_id: org_ids).select(:id, :guid)
+    def member_org_ids(roles)
+      org_role_subqueries(roles).reduce do |query, subquery|
+        query.union(subquery, from_self: false)
+      end&.select_map(:organization_id)
     end
 
     private
 
-    def space_roles(roles)
-      Array(roles) & SPACE_ROLES
+    def role_applies_to_space?(roles, space_id)
+      return false unless space_id && contains_space_role?(roles)
+
+      member_space_ids(roles).include?(space_id)
     end
 
-    def org_roles(roles)
-      Array(roles) & ORG_ROLES
+    def role_applies_to_org?(roles, org_id)
+      return false unless org_id && contains_org_role?(roles)
+
+      member_org_ids(roles).include?(org_id)
     end
 
-    def space_role?(roles)
-      space_roles(roles).any?
+    def roles_filter(roles, filter)
+      Array(roles).intersection(filter)
     end
 
-    def org_role?(roles)
-      org_roles(roles).any?
+    def contains_space_role?(roles)
+      roles_filter(roles, SPACE_ROLES).any?
     end
 
-    def space_ids_for_space_roles(roles)
-      if space_role?(roles)
-        SpaceRole.where(type: space_roles(roles), user_id: @user.id).select(:space_id)
-      end
+    def contains_org_role?(roles)
+      roles_filter(roles, ORG_ROLES).any?
     end
 
-    def org_ids_for_org_roles(roles)
-      if org_role?(roles)
-        OrganizationRole.where(type: org_roles(roles), user_id: @user.id).select(:organization_id)
-      end
+    def space_role_subqueries(roles)
+      roles_filter(roles, SPACE_ROLES).map do |space_role|
+        case space_role
+        when SPACE_DEVELOPER
+          SpaceDeveloper.select(:space_id).where(user_id: @user.id)
+        when SPACE_MANAGER
+          SpaceManager.select(:space_id).where(user_id: @user.id)
+        when SPACE_AUDITOR
+          SpaceAuditor.select(:space_id).where(user_id: @user.id)
+        when SPACE_SUPPORTER
+          SpaceSupporter.select(:space_id).where(user_id: @user.id)
+        end
+      end.compact
+    end
+
+    def org_role_subqueries(roles)
+      roles_filter(roles, ORG_ROLES).map do |org_role|
+        case org_role
+        when ORG_MANAGER
+          OrganizationManager.where(user_id: @user.id).select(:organization_id)
+        when ORG_AUDITOR
+          OrganizationAuditor.where(user_id: @user.id).select(:organization_id)
+        when ORG_BILLING_MANAGER
+          OrganizationBillingManager.where(user_id: @user.id).select(:organization_id)
+        when ORG_USER
+          OrganizationUser.where(user_id: @user.id).select(:organization_id)
+        end
+      end.compact
     end
   end
 end

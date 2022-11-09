@@ -30,24 +30,18 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      managed_organizations_spaces_dataset = Space.where(id:
-                  user.managed_organizations_dataset.
-                  join(:spaces, spaces__organization_id: :organizations__id).
-                  select(:spaces__id))
+      visible_space_ids = user.space_developer_space_ids.
+                          union(user.space_manager_space_ids, from_self: false).
+                          union(user.space_auditor_space_ids, from_self: false).
+                          union(user.space_supporter_space_ids, from_self: false).
+                          union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id), from_self: false).
+                          select_map(:space_id)
 
       Sequel.or([
-        [:spaces, user.spaces_dataset],
-        [:spaces, user.supported_spaces_dataset],
-        [:spaces, user.managed_spaces_dataset],
-        [:spaces, user.audited_spaces_dataset],
-        [:spaces, managed_organizations_spaces_dataset],
-        [:staging_spaces, user.spaces_dataset],
-        [:staging_spaces, user.supported_spaces_dataset],
-        [:staging_spaces, user.managed_spaces_dataset],
-        [:staging_spaces, user.audited_spaces_dataset],
-        [:staging_spaces, managed_organizations_spaces_dataset],
         [:running_default, true],
         [:staging_default, true],
+        [:id, SecurityGroupsSpace.where(space_id: visible_space_ids).select(:security_group_id).
+                union(StagingSecurityGroupsSpace.where(staging_space_id: visible_space_ids).select(:staging_security_group_id), from_self: false)]
       ])
     end
 

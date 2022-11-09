@@ -475,7 +475,7 @@ module VCAP::CloudController
         ]
 
         raise e unless SecurityContext.global_auditor? ||
-          membership.has_any_roles?(basic_access, process.space.id, process.organization.id)
+          membership.role_applies?(basic_access, process.space.id, process.organization.id)
 
         [HTTP::OK, JSON.generate({
           read_sensitive_data: false,
