@@ -245,7 +245,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       raise 'must not be called for users that can read globally'
     else
-      membership.space_guids_for_roles_subquery(ROLES_FOR_ROUTE_READING)
+      membership.authorized_space_guids_subquery(ROLES_FOR_ROUTE_READING)
     end
   end
 
