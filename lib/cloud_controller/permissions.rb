@@ -243,7 +243,7 @@ class VCAP::CloudController::Permissions
 
   def space_guids_with_readable_routes_query
     if can_read_globally?
-      VCAP::CloudController::SPACE.select(:guid)
+      raise 'must not be called for users that can read globally'
     else
       membership.space_guids_for_roles_subquery(ROLES_FOR_ROUTE_READING)
     end
