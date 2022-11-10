@@ -18,9 +18,9 @@ module Diego
                  connect_timeout: 10, send_timeout: 10, receive_timeout: 10)
     end
     before do
-      allow(::Resolv).to receive(:getaddresses).with(bbs_domain).and_return([bbs_ip_1, bbs_ip_2])
+      allow(Resolv).to receive(:getaddresses).with(bbs_domain).and_return([bbs_ip_1, bbs_ip_2])
       allow(Steno).to receive(:logger).and_return(logger)
-      allow(logger).to receive(:info)
+      allow(logger).to receive(:debug)
     end
 
     describe 'configuration' do
@@ -801,18 +801,39 @@ module Diego
         end
       end
 
+      context 'when DNS resolution times out' do
+        before do
+          allow(Resolv).to receive(:getaddresses).and_raise(Resolv::ResolvTimeout.new('soz, you timed out'))
+        end
+
+        it 'raises an error' do
+          expect { client.request_with_error_handling(Net::HTTP::Post.new('/fake_path')) }.
+            to raise_error(DnsResolutionError, /dns resolution failed for #{bbs_domain}: soz, you timed out/)
+        end
+      end
+
+      context 'when we reach the DNS server but the host fails to resolve' do
+        before do
+          allow(Resolv).to receive(:getaddresses).and_raise(Resolv::ResolvError.new('your domain sucks'))
+        end
+
+        it 'raises an error' do
+          expect { client.request_with_error_handling(Net::HTTP::Post.new('/fake_path')) }.
+            to raise_error(DnsResolutionError, /dns resolution failed for #{bbs_domain}: your domain sucks/)
+        end
+      end
+
       context 'logging' do
         before do
           stub_request(:post, "https://#{bbs_domain}:#{bbs_port}/fake_path").
             to_raise(StandardError.new('error message')).then.
             to_return(status: 200)
+          allow(http_client).to receive(:ipaddr=).and_call_original
         end
 
-        it 'logs before each request and after each failed request' do
+        it 'emits a debug log after each failed request' do
           client.request_with_error_handling(Net::HTTP::Post.new('/fake_path'))
-          expect(logger).to have_received(:info).with(%r{attempt 1: trying bbs endpoint /fake_path on #{bbs_ip_1}}).once
-          expect(logger).to have_received(:info).with(/attempt 1: failed to reach bbs server on #{bbs_ip_1}, removing from list/).once
-          expect(logger).to have_received(:info).with(%r{attempt 1: trying bbs endpoint /fake_path on #{bbs_ip_2}}).once
+          expect(logger).to have_received(:debug).with(/attempt 1 of 3: failed to reach the active bbs server on #{bbs_ip_1}, removing from list/).once
         end
       end
     end

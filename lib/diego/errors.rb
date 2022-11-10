@@ -13,4 +13,7 @@ module Diego
 
   class EncodeError < Error
   end
+
+  class DnsResolutionError < Error
+  end
 end
