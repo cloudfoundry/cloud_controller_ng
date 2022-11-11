@@ -3,8 +3,17 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class RouteFetcher < BaseListFetcher
     class << self
-      def fetch(message, readable_route_dataset, eager_loaded_associations: [])
-        dataset = readable_route_dataset.eager(eager_loaded_associations).qualify
+      def fetch(message, readable_space_guids_dataset: nil, eager_loaded_associations: [], omniscient: false)
+        dataset = Route.dataset.eager(eager_loaded_associations).
+                  join(:spaces, id: Sequel[:routes][:space_id]).
+                  left_join(:route_shares, route_guid: Sequel[:routes][:guid]).qualify
+
+        unless omniscient
+          dataset = dataset.where do
+            (Sequel[:spaces][:guid] =~ readable_space_guids_dataset) |
+              (Sequel[:route_shares][:target_space_guid] =~ readable_space_guids_dataset)
+          end
+        end
         filter(message, dataset)
       end
 
@@ -28,26 +37,22 @@ module VCAP::CloudController
           dataset = dataset.where(space_id: space_ids)
         end
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(space_id: Space.where(guid: message.space_guids).select(:id))
-        end
-
         if message.requested?(:domain_guids)
           dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id))
         end
 
         if message.requested?(:app_guids)
           destinations_route_guids = RouteMappingModel.where(app_guid: message.app_guids).select(:route_guid)
-          dataset = dataset.where(guid: destinations_route_guids)
+          dataset = dataset.where(Sequel[:routes][:guid] =~ destinations_route_guids)
         end
 
         if message.requested?(:service_instance_guids)
           service_instance_route_guids = RouteBinding.
                                          join(:routes, id: :route_id).
                                          join(:service_instances, id: :route_bindings__service_instance_id).
-                                         where { { service_instances[:guid] => message.service_instance_guids } }.
+                                         where { { Sequel[:service_instances][:guid] => message.service_instance_guids } }.
                                          select(:routes__guid)
-          dataset = dataset.where(guid: service_instance_route_guids)
+          dataset = dataset.where(Sequel[:routes][:guid] =~ service_instance_route_guids)
         end
 
         if message.requested?(:label_selector)
@@ -57,6 +62,13 @@ module VCAP::CloudController
             requirements: message.requirements,
             resource_klass: Route,
           )
+        end
+
+        if message.requested?(:space_guids)
+          dataset = dataset.where do
+            (Sequel[:spaces][:guid] =~ message.space_guids) |
+              (Sequel[:route_shares][:target_space_guid] =~ message.space_guids)
+          end
         end
 
         super(message, dataset, Route)

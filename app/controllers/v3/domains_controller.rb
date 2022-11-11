@@ -62,7 +62,7 @@ class DomainsController < ApplicationController
     message = RoutesListMessage.from_params(check_route_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    dataset = RouteFetcher.fetch(message, Route.dataset)
+    dataset = RouteFetcher.fetch(message, omniscient: true)
     matching_route = false
     if dataset.any?
       matching_route = true
