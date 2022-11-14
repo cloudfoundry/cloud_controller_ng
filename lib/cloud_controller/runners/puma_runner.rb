@@ -24,7 +24,7 @@ module VCAP::CloudController
         else
           conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
         end
-        conf.threads(0, config.get(:puma, :max_threads))
+        conf.threads(0, config.get(:puma, :max_threads)) if config.get(:puma, :max_threads)
         conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
         conf.app app
         conf.before_fork {
