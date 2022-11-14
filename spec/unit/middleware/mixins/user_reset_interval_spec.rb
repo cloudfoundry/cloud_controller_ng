@@ -14,23 +14,23 @@ module CloudFoundry
       before(:each) { Timecop.freeze Time.now.utc.beginning_of_hour }
       after(:each) { Timecop.return }
 
-      it 'returns the next time interval including offset' do
-        next_interval = implementor.next_reset_interval(user_guid, reset_interval_in_minutes)
-        expect(next_interval).to eq(Time.now.utc.beginning_of_hour + user_guid_offset)
+      it 'returns the next expires in including offset' do
+        expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)
+        expect(expires_in).to eq(user_guid_offset)
       end
 
-      it 'returns a new interval that is reset_interval_in_minutes later when current time is after offset' do
-        Timecop.freeze(Time.now.utc.beginning_of_hour + user_guid_offset + 1.minutes) do
-          next_interval = implementor.next_reset_interval(user_guid, reset_interval_in_minutes)
-          expect(next_interval).to eq(Time.now.utc.beginning_of_hour + user_guid_offset + reset_interval_in_minutes.minutes)
+      it 'returns a new expires in that is reset_interval_in_minutes later when current time is after offset' do
+        Timecop.freeze(Time.now.utc.beginning_of_hour + user_guid_offset + 1.minute) do
+          expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)
+          expect(expires_in).to eq(reset_interval_in_minutes.minutes - 1.minute)
         end
       end
 
-      it 'returns offsets between 0 and 1 times the reset_interval' do
+      it 'returns offsets between 0 and the reset_interval in seconds' do
         1000.times do
           guid = SecureRandom.alphanumeric
-          next_interval = implementor.next_reset_interval(guid, reset_interval_in_minutes)
-          expect(next_interval).to be_within(reset_interval_in_minutes.minutes).of(Time.now.utc.beginning_of_hour)
+          expires_in = implementor.next_expires_in(guid, reset_interval_in_minutes)
+          expect(expires_in).to be_between(0, reset_interval_in_minutes.minutes)
         end
       end
     end

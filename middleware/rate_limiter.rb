@@ -3,7 +3,7 @@ require 'base_rate_limiter'
 module CloudFoundry
   module Middleware
     class RateLimiter < BaseRateLimiter
-      REQUEST_COUNTER = RequestCounter.new
+      REQUEST_COUNTER = RequestCounter.new('rate-limit')
 
       def initialize(app, opts)
         @per_process_general_limit         = opts[:per_process_general_limit]

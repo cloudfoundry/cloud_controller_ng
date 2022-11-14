@@ -342,11 +342,11 @@ module CloudFoundry
     end
 
     RSpec.describe RequestCounter do
-      let(:request_counter) { RequestCounter.new }
+      let(:request_counter) { RequestCounter.new('test') }
       let(:reset_interval_in_minutes) { 60 }
       let(:logger) { double('logger', info: nil) }
-      let(:user_guid) { 'user-id' }
-      let(:user_guid_2) { 'user-id-2' }
+      let(:user_guid) { SecureRandom.uuid }
+      let(:user_guid_2) { SecureRandom.uuid }
 
       describe 'get' do
         before(:each) do
@@ -355,28 +355,28 @@ module CloudFoundry
         after(:each) do Timecop.return end
 
         it 'should return next offset valid until interval and 0 requests for a new user' do
-          new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
+          expires_in = reset_interval_in_minutes.minutes
+          expect(request_counter).to receive(:next_expires_in).and_return(expires_in)
 
           count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           expect(count).to eq(0)
-          expect(valid_until).to eq(new_valid_until)
+          expect(valid_until).to eq(Time.now.utc.change(usec: 0) + expires_in)
         end
 
         it 'should return offset valid untils for different users' do
-          new_valid_until_1 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect(request_counter).to receive(:next_reset_interval).with(user_guid, reset_interval_in_minutes).and_return(new_valid_until_1)
+          expires_in_1 = reset_interval_in_minutes.minutes
+          expect(request_counter).to receive(:next_expires_in).with(user_guid, reset_interval_in_minutes).and_return(expires_in_1)
           _, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-          expect(valid_until).to eq(new_valid_until_1)
+          expect(valid_until).to eq(Time.now.utc.change(usec: 0) + expires_in_1)
 
-          new_valid_until_2 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes - 5.minutes
-          expect(request_counter).to receive(:next_reset_interval).with(user_guid_2, reset_interval_in_minutes).and_return(new_valid_until_2)
+          expires_in_2 = reset_interval_in_minutes.minutes - 5.minutes
+          expect(request_counter).to receive(:next_expires_in).with(user_guid_2, reset_interval_in_minutes).and_return(expires_in_2)
           _, valid_until = request_counter.get(user_guid_2, reset_interval_in_minutes, logger)
-          expect(valid_until).to eq(new_valid_until_2)
+          expect(valid_until).to eq(Time.now.utc.change(usec: 0) + expires_in_2)
         end
 
         it 'should return valid until and requests for an existing user' do
-          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+          expect(request_counter).to receive(:next_expires_in).and_return(reset_interval_in_minutes.minutes)
           _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           request_counter.increment(user_guid)
 
@@ -388,17 +388,16 @@ module CloudFoundry
         end
 
         it 'should return new valid until and 0 requests for an existing user with expired rate limit' do
-          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
+          expect(request_counter).to receive(:next_expires_in).and_return(reset_interval_in_minutes.minutes)
           _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
           request_counter.increment(user_guid)
 
           Timecop.travel(original_valid_until + 1.minutes) do
-            new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-            expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
+            expires_in = reset_interval_in_minutes.minutes
+            expect(request_counter).to receive(:next_expires_in).and_return(expires_in)
             count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
             expect(count).to eq(0)
-            expect(valid_until).to eq(new_valid_until)
-            expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id'"
+            expect(valid_until).to eq(Time.now.utc.change(usec: 0) + expires_in)
           end
         end
       end

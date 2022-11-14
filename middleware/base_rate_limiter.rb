@@ -1,47 +1,42 @@
 require 'mixins/client_ip'
 require 'mixins/user_reset_interval'
+require 'redis'
 
 module CloudFoundry
   module Middleware
     class RequestCounter
       include CloudFoundry::Middleware::UserResetInterval
 
-      RequestCount = Struct.new(:requests, :valid_until)
-
-      def initialize
-        @mutex = Mutex.new
-        @data = {}
+      def initialize(redis_prefix)
+        @redis = ConnectionPool::Wrapper.new do
+          Redis.new(path: VCAP::CloudController::Config.config.get(:redis, :socket))
+        end
+        @redis_prefix = redis_prefix
       end
 
       def get(user_guid, reset_interval_in_minutes, logger)
-        @mutex.synchronize do
-          return create_new_request_count(user_guid, reset_interval_in_minutes) unless @data.key? user_guid
+        create_new_request_count(user_guid, reset_interval_in_minutes) unless @redis.exists?(key(user_guid))
 
-          request_count = @data[user_guid]
-          if request_count.valid_until < Time.now.utc
-            logger.info("Resetting request count of #{request_count.requests} for user '#{user_guid}'")
-            return create_new_request_count(user_guid, reset_interval_in_minutes)
-          end
-
-          [request_count.requests, request_count.valid_until]
+        count_str, ttl = @redis.pipelined do |pipeline|
+          pipeline.get(key(user_guid))
+          pipeline.ttl(key(user_guid))
         end
+        [count_str.to_i, Time.at(Time.now.utc.to_i + ttl).utc]
       end
 
       def increment(user_guid)
-        @mutex.synchronize do
-          request_count = @data[user_guid]
-          request_count.requests += 1
-          @data[user_guid] = request_count
-        end
+        @redis.incr(key(user_guid))
       end
 
       private
 
+      def key(user_guid)
+        "#{@redis_prefix}:#{user_guid}"
+      end
+
       def create_new_request_count(user_guid, reset_interval_in_minutes)
-        requests = 0
-        valid_until = next_reset_interval(user_guid, reset_interval_in_minutes)
-        @data[user_guid] = RequestCount.new(requests, valid_until)
-        [requests, valid_until]
+        expires_in = next_expires_in(user_guid, reset_interval_in_minutes)
+        @redis.set(key(user_guid), 0, ex: expires_in, nx: true)
       end
     end
 

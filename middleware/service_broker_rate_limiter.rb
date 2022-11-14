@@ -1,4 +1,4 @@
-require 'concurrent-ruby'
+require 'redis'
 
 module CloudFoundry
   module Middleware
@@ -6,7 +6,10 @@ module CloudFoundry
       include Singleton
 
       def initialize
-        @data = {}
+        @redis = ConnectionPool::Wrapper.new do
+          Redis.new(path: VCAP::CloudController::Config.config.get(:redis, :socket))
+        end
+        @redis_prefix = 'service-broker-rate-limit'
       end
 
       def limit=(limit)
@@ -14,12 +17,23 @@ module CloudFoundry
       end
 
       def try_acquire?(user_guid)
-        @data[user_guid] = Concurrent::Semaphore.new(@limit) unless @data.key?(user_guid)
-        @data[user_guid].try_acquire
+        @redis.set(key(user_guid), 0, nx: true)
+        if @redis.get(key(user_guid)).to_i < @limit
+          @redis.incr(key(user_guid))
+          true
+        else
+          false
+        end
       end
 
       def release(user_guid)
-        @data[user_guid].release if @data.key?(user_guid)
+        @redis.decr(key(user_guid))
+      end
+
+      private
+
+      def key(user_guid)
+        "#{@redis_prefix}:#{user_guid}"
       end
     end
 

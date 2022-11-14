@@ -1,5 +1,6 @@
 SPEC_HELPER_LOADED = true
 require 'rubygems'
+require 'mock_redis'
 
 begin
   require 'spork'
@@ -170,6 +171,9 @@ each_run_block = proc do
 
       VCAP::CloudController::SecurityContext.clear
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
+
+      mock_redis = MockRedis.new
+      allow(Redis).to receive(:new).and_return(mock_redis)
     end
 
     rspec_config.around :each do |example|
