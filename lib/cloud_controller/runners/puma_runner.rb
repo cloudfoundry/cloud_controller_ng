@@ -19,7 +19,11 @@ module VCAP::CloudController
             end
           end
         }
-        conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
+        if config.get(:nginx, :use_nginx)
+          conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
+        else
+          conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
+        end
         conf.threads(0, config.get(:puma, :max_threads))
         conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
         conf.app app
