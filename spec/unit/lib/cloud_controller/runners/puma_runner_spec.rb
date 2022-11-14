@@ -24,7 +24,8 @@ module VCAP::CloudController
           instance_socket: unix_socket
         },
         puma: {
-          workers: 3
+          workers: 3,
+          max_threads: 4,
         }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
@@ -57,7 +58,7 @@ module VCAP::CloudController
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
         expect(puma_launcher.config.final_options[:min_threads]).to eq(0)
-        expect(puma_launcher.config.final_options[:max_threads]).to eq(5)
+        expect(puma_launcher.config.final_options[:max_threads]).to eq(4)
         expect(puma_launcher.config.final_options[:workers]).to eq(3)
       end
 

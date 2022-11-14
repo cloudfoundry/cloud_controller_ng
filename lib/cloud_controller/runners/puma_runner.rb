@@ -20,7 +20,7 @@ module VCAP::CloudController
           end
         }
         conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
-        conf.threads(0, 5)
+        conf.threads(0, config.get(:puma, :max_threads))
         conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
         conf.app app
         conf.before_fork {
