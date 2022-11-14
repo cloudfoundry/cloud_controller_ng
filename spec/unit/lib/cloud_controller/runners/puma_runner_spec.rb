@@ -5,6 +5,8 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.join(Paths::CONFIG, 'cloud_controller.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:unix_socket) { '/path/to/socket' }
+    let(:use_nginx) { true }
+    let(:local_port) { '8181' }
     let(:app) { double(:app, call: nil) }
     let(:periodic_updater) { double(:periodic_updater) }
     let(:logger) { double(:logger) }
@@ -21,10 +23,12 @@ module VCAP::CloudController
       TestConfig.override(
         external_host: 'some_local_ip',
         nginx: {
+          use_nginx:  use_nginx,
           instance_socket: unix_socket
         },
         puma: {
-          workers: 3
+          workers: 3,
+          max_threads: 4,
         }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
@@ -57,7 +61,7 @@ module VCAP::CloudController
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
         expect(puma_launcher.config.final_options[:min_threads]).to eq(0)
-        expect(puma_launcher.config.final_options[:max_threads]).to eq(5)
+        expect(puma_launcher.config.final_options[:max_threads]).to eq(4)
         expect(puma_launcher.config.final_options[:workers]).to eq(3)
       end
 
@@ -84,6 +88,17 @@ module VCAP::CloudController
         allow_any_instance_of(Puma::Launcher).to receive(:run).and_raise('we have a problem')
         expect(logger).to receive(:error)
         expect { subject.start! }.to raise_exception('we have a problem')
+      end
+    end
+
+    describe '#start! with local port' do
+      let(:use_nginx) { false }
+
+      it 'binds to the configured local port' do
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        expect(puma_launcher.config.final_options[:binds]).to include("tcp://0.0.0.0:#{local_port}")
       end
     end
 
