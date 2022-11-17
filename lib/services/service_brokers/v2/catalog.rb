@@ -122,7 +122,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def can_delete_service?(service)
-      service.service_plans_dataset.map(&:service_instances_dataset).map(&:count).all?(0)
+      service.service_plans_dataset.all? { |plan| plan.service_instances_dataset.empty? }
     end
 
     def updating_service?(new_service, old_service)
