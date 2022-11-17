@@ -3,7 +3,7 @@ module VCAP::CloudController
     class AssociationNotEmptyError < StandardError; end
 
     def delete(service_offering_model)
-      association_not_empty! unless ServicePlan.where(service_id: service_offering_model.id).empty?
+      association_not_empty! if ServicePlan.where(service_id: service_offering_model.id).any?
       service_offering_model.destroy
     end
 
