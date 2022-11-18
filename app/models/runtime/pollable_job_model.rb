@@ -32,7 +32,7 @@ module VCAP::CloudController
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end
 
-      !!model.find(guid: resource_guid)
+      !!model.where(guid: resource_guid).first
     end
 
     def self.find_by_delayed_job(delayed_job)
