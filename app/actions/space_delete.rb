@@ -82,7 +82,13 @@ module VCAP::CloudController
     def delete_service_brokers(space_model)
       broker_remover = service_broker_remover(@services_event_repository)
       private_service_brokers = space_model.service_brokers
-      deletable_brokers = private_service_brokers.reject { |broker| broker.service_plans.map(&:service_instances).flatten.any? }
+      deletable_brokers = private_service_brokers.reject do |broker|
+        ServiceInstance.
+          join(:service_plans, id: :service_instances__service_plan_id).
+          join(:services, id: :service_plans__service_id).
+          where(services__service_broker_id: broker.id).
+          any?
+      end
 
       deletable_brokers.each do |broker|
         broker_remover.remove(broker)

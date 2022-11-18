@@ -106,7 +106,7 @@ module VCAP::CloudController
     end
 
     def staging_in_progress?
-      builds.any?(&:staging?)
+      builds_dataset.where(state: BuildModel::STAGING_STATE).any?
     end
 
     def docker?
@@ -122,7 +122,7 @@ module VCAP::CloudController
     end
 
     def deploying?
-      deployments.any?(&:deploying?)
+      deployments_dataset.where(state: DeploymentModel::DEPLOYING_STATE).any?
     end
 
     def self.user_visibility_filter(user)

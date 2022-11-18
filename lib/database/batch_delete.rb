@@ -12,7 +12,7 @@ module Database
 
       loop do
         set = dataset.limit(amount)
-        break if set.count == 0
+        break if set.empty?
 
         total_count += delete_batch(set)
       end

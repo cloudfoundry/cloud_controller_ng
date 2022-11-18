@@ -122,7 +122,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def can_delete_service?(service)
-      service.service_plans_dataset.map(&:service_instances_dataset).map(&:count).all?(0)
+      VCAP::CloudController::ServiceInstance.
+        join(:service_plans, id: :service_instances__service_plan_id).
+        where(service_plans__service_id: service.id).
+        empty?
     end
 
     def updating_service?(new_service, old_service)
