@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     def authorized_orgs_subquery(roles)
-      space_ids = member_space_ids(roles)
-      org_ids_from_space_roles = Space.where(id: space_ids).select(:organization_id) if space_ids
+      space_ids_query = member_space_ids(roles)
+      org_ids_from_space_roles = Space.where(id: space_ids_query).select(:organization_id) if space_ids_query
 
       if org_ids_from_space_roles
         Organization.where(id: member_org_ids(roles)).or(id: org_ids_from_space_roles)
@@ -59,13 +59,13 @@ module VCAP::CloudController
     def member_space_ids(roles)
       space_role_subqueries(roles).reduce do |query, subquery|
         query.union(subquery, from_self: false)
-      end&.select_map(:space_id)
+      end&.select(:space_id)
     end
 
     def member_org_ids(roles)
       org_role_subqueries(roles).reduce do |query, subquery|
         query.union(subquery, from_self: false)
-      end&.select_map(:organization_id)
+      end&.select(:organization_id)
     end
 
     private
@@ -73,13 +73,13 @@ module VCAP::CloudController
     def role_applies_to_space?(roles, space_id)
       return false unless space_id && contains_space_role?(roles)
 
-      member_space_ids(roles).include?(space_id)
+      member_space_ids(roles).select_map(:space_id).include?(space_id)
     end
 
     def role_applies_to_org?(roles, org_id)
       return false unless org_id && contains_org_role?(roles)
 
-      member_org_ids(roles).include?(org_id)
+      member_org_ids(roles).select_map(:organization_id).include?(org_id)
     end
 
     def roles_filter(roles, filter)

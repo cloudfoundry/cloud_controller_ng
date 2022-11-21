@@ -34,8 +34,7 @@ module VCAP::CloudController
                           union(user.space_manager_space_ids, from_self: false).
                           union(user.space_auditor_space_ids, from_self: false).
                           union(user.space_supporter_space_ids, from_self: false).
-                          union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id), from_self: false).
-                          select_map(:space_id)
+                          union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id), from_self: false)
 
       Sequel.or([
         [:running_default, true],

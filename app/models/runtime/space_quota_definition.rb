@@ -52,8 +52,7 @@ module VCAP::CloudController
       visible_space_ids = user.space_developer_space_ids.
                           union(user.space_manager_space_ids, from_self: false).
                           union(user.space_auditor_space_ids, from_self: false).
-                          union(user.space_supporter_space_ids, from_self: false).
-                          select_map(:space_id)
+                          union(user.space_supporter_space_ids, from_self: false)
 
       Sequel.or([
         [:id, Space.where(id: visible_space_ids).select(:space_quota_definition_id)],
