@@ -443,10 +443,24 @@ module VCAP::CloudController
           }.by(1)
         end
       end
+
+      context 'deployment got superseded' do
+        before do
+          deployment.update(state: 'DEPLOYED', status_reason: 'SUPERSEDED')
+
+          allow(deployment).to receive(:update).and_call_original
+        end
+
+        it 'skips execution' do
+          subject.scale
+          expect(deployment).to_not have_received(:update)
+        end
+      end
     end
 
     describe '#cancel' do
       before do
+        deployment.update(state: 'CANCELING')
         allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
       end
 
@@ -495,6 +509,19 @@ module VCAP::CloudController
         it 'sets the most recent interim web process as the only web process' do
           subject.cancel
           expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+        end
+      end
+
+      context 'deployment got superseded' do
+        before do
+          deployment.update(state: 'CANCELED', status_reason: 'SUPERSEDED')
+
+          allow(deployment).to receive(:update).and_call_original
+        end
+
+        it 'skips execution' do
+          subject.cancel
+          expect(deployment).to_not have_received(:update)
         end
       end
     end

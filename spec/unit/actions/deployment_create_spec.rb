@@ -416,6 +416,19 @@ module VCAP::CloudController
                 expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
               end
             end
+
+            context 'when the existing deployment is CANCELING' do
+              let(:existing_state) { DeploymentModel::CANCELING_STATE }
+
+              it 'sets the existing deployment to CANCELED, with reason SUPERSEDED' do
+                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                existing_deployment.reload
+
+                expect(existing_deployment.state).to eq(DeploymentModel::CANCELED_STATE)
+                expect(existing_deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+                expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
+              end
+            end
           end
 
           context 'when the message specifies metadata' do

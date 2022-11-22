@@ -39,9 +39,9 @@ module VCAP::CloudController
 
       def cancel_deployment
         deployment.db.transaction do
-          deployment.lock!
-
           app.lock!
+          return unless deployment.lock!.state == DeploymentModel::CANCELING_STATE
+
           deploying_web_process.lock!
 
           prior_web_process = web_processes.
@@ -63,10 +63,10 @@ module VCAP::CloudController
 
       def scale_deployment
         deployment.db.transaction do
-          deployment.lock!
+          app.lock!
+          return unless deployment.lock!.state == DeploymentModel::DEPLOYING_STATE
 
           oldest_web_process_with_instances.lock!
-          app.lock!
           deploying_web_process.lock!
 
           return unless ready_to_scale?
