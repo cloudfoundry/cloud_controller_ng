@@ -14,13 +14,11 @@ module VCAP::CloudController
     end
 
     def self.visible_private_plan_ids_for_user(user)
-      user.organizations.map { |org|
-        visible_private_plan_ids_for_organization(org)
-      }.flatten.uniq
+      visible_private_plan_ids_for_organization(user.membership_org_ids).distinct
     end
 
-    def self.visible_private_plan_ids_for_organization(organization)
-      organization.service_plan_visibilities.map(&:service_plan_id)
+    def self.visible_private_plan_ids_for_organization(org_id)
+      dataset.where(organization_id: org_id).select(:service_plan_id)
     end
 
     private

@@ -57,7 +57,7 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        expect(ServicePlanVisibility.visible_private_plan_ids_for_user(user)).to match_array([
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_user(user).select_map(:service_plan_id)).to match_array([
           plan_visible_to_both.id, plan_visible_to_org1.id, plan_visible_to_org2.id
         ])
       end
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        expect(ServicePlanVisibility.visible_private_plan_ids_for_organization(organization)).to match_array([visible_plan.id])
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_organization(organization.id).select_map(:service_plan_id)).to match_array([visible_plan.id])
       end
     end
   end
