@@ -88,12 +88,12 @@ module VCAP::CloudController
       end
 
       context 'when the deploying_web_process_guid is nil and state is DEPLOYED' do
-        let!(:scaling_deployment) {
+        let!(:scaling_deployment) do
           DeploymentModel.make(state: DeploymentModel::DEPLOYED_STATE,
                                status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
                                status_reason: DeploymentModel::DEPLOYED_STATUS_REASON,
-         deploying_web_process: nil)
-        }
+                               deploying_web_process: nil)
+        end
 
         before do
           allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
