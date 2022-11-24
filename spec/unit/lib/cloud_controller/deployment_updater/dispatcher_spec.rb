@@ -87,6 +87,26 @@ module VCAP::CloudController
         it_behaves_like 'a degenerated deployment'
       end
 
+      context 'when the deploying_web_process_guid is nil and state is DEPLOYED' do
+        let!(:scaling_deployment) {
+          DeploymentModel.make(state: DeploymentModel::DEPLOYED_STATE,
+                               status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+                               status_reason: DeploymentModel::DEPLOYED_STATUS_REASON,
+         deploying_web_process: nil)
+        }
+
+        before do
+          allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
+        end
+
+        it 'does not change the status_reason to DEGENERATED' do
+          subject.dispatch
+          deployment = scaling_deployment.reload
+
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
+        end
+      end
+
       context 'when the deploying_web_process_guid references a non-existent process' do
         let!(:scaling_deployment) do
           deployment = DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE)
