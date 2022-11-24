@@ -99,7 +99,7 @@ module VCAP::CloudController
           allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
         end
 
-        it 'does not change the status_reason to DEGENERATED' do
+        it 'does not change the status_reason to DEGENERATE' do
           subject.dispatch
           deployment = scaling_deployment.reload
 
