@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     def authorized_orgs_subquery(roles)
-      space_ids = member_space_ids(roles)
-      org_ids_from_space_roles = Space.where(id: space_ids).select(:organization_id) if space_ids
+      space_ids_query = member_space_ids(roles)
+      org_ids_from_space_roles = Space.where(id: space_ids_query).select(:organization_id) if space_ids_query
 
       if org_ids_from_space_roles
         Organization.where(id: member_org_ids(roles)).or(id: org_ids_from_space_roles)
@@ -56,16 +56,16 @@ module VCAP::CloudController
       end
     end
 
-    def member_space_ids(roles)
-      space_role_subqueries(roles).reduce do |query, subquery|
+    def member_space_ids(roles, extra_filters={})
+      space_role_subqueries(roles, extra_filters).reduce do |query, subquery|
         query.union(subquery, from_self: false)
-      end&.select_map(:space_id)
+      end&.select(:space_id)
     end
 
-    def member_org_ids(roles)
-      org_role_subqueries(roles).reduce do |query, subquery|
+    def member_org_ids(roles, extra_filters={})
+      org_role_subqueries(roles, extra_filters).reduce do |query, subquery|
         query.union(subquery, from_self: false)
-      end&.select_map(:organization_id)
+      end&.select(:organization_id)
     end
 
     private
@@ -73,13 +73,13 @@ module VCAP::CloudController
     def role_applies_to_space?(roles, space_id)
       return false unless space_id && contains_space_role?(roles)
 
-      member_space_ids(roles).include?(space_id)
+      member_space_ids(roles, space_id: space_id).any?
     end
 
     def role_applies_to_org?(roles, org_id)
       return false unless org_id && contains_org_role?(roles)
 
-      member_org_ids(roles).include?(org_id)
+      member_org_ids(roles, organization_id: org_id).any?
     end
 
     def roles_filter(roles, filter)
@@ -94,32 +94,32 @@ module VCAP::CloudController
       roles_filter(roles, ORG_ROLES).any?
     end
 
-    def space_role_subqueries(roles)
+    def space_role_subqueries(roles, extra_filters={})
       roles_filter(roles, SPACE_ROLES).map do |space_role|
         case space_role
         when SPACE_DEVELOPER
-          SpaceDeveloper.select(:space_id).where(user_id: @user.id)
+          SpaceDeveloper.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
         when SPACE_MANAGER
-          SpaceManager.select(:space_id).where(user_id: @user.id)
+          SpaceManager.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
         when SPACE_AUDITOR
-          SpaceAuditor.select(:space_id).where(user_id: @user.id)
+          SpaceAuditor.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
         when SPACE_SUPPORTER
-          SpaceSupporter.select(:space_id).where(user_id: @user.id)
+          SpaceSupporter.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
         end
       end.compact
     end
 
-    def org_role_subqueries(roles)
+    def org_role_subqueries(roles, extra_filters={})
       roles_filter(roles, ORG_ROLES).map do |org_role|
         case org_role
         when ORG_MANAGER
-          OrganizationManager.where(user_id: @user.id).select(:organization_id)
+          OrganizationManager.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
         when ORG_AUDITOR
-          OrganizationAuditor.where(user_id: @user.id).select(:organization_id)
+          OrganizationAuditor.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
         when ORG_BILLING_MANAGER
-          OrganizationBillingManager.where(user_id: @user.id).select(:organization_id)
+          OrganizationBillingManager.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
         when ORG_USER
-          OrganizationUser.where(user_id: @user.id).select(:organization_id)
+          OrganizationUser.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
         end
       end.compact
     end
