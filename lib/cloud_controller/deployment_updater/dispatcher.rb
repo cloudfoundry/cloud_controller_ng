@@ -39,8 +39,8 @@ module VCAP::CloudController
         def finalize_degenerate_deployments(logger)
           deployments_without_deploying_web_process = DeploymentModel.qualify.
                                                       left_join(:processes, guid: :deploying_web_process_guid).
-                                                      exclude(status_reason: DeploymentModel::DEGENERATE_STATUS_REASON).
-                                                      where(processes__id: nil)
+                                                      where(processes__id: nil).
+                                                      where(status_value: DeploymentModel::ACTIVE_STATUS_VALUE)
           deployments_without_deploying_web_process.each do |d|
             d.update(
               state: DeploymentModel::DEPLOYED_STATE,
