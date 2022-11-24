@@ -73,13 +73,13 @@ module VCAP::CloudController
     def role_applies_to_space?(roles, space_id)
       return false unless space_id && contains_space_role?(roles)
 
-      member_space_ids(roles).select_map(:space_id).include?(space_id)
+      member_space_ids(roles).where(space_id: space_id).any?
     end
 
     def role_applies_to_org?(roles, org_id)
       return false unless org_id && contains_org_role?(roles)
 
-      member_org_ids(roles).select_map(:organization_id).include?(org_id)
+      member_org_ids(roles).where(organization_id: org_id).any?
     end
 
     def roles_filter(roles, filter)
