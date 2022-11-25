@@ -36,20 +36,15 @@ module CloudFoundry
       end
 
       def space_supporter_and_only_space_supporter?(current_user)
-        user_roles =
-          VCAP::CloudController::SpaceManager.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_MANAGER, :type)).limit(1).where(user_id: current_user.id).
-          union(VCAP::CloudController::SpaceDeveloper.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_DEVELOPER, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::SpaceAuditor.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_AUDITOR, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::SpaceSupporter.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_SUPPORTER, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationManager.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER,
-                                                                            :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationBillingManager.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER,
-                                                                                   :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationAuditor.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR,
-                                                                            :type)).limit(1).where(user_id: current_user.id)).
-          all
+        return false unless current_user.org_manager_org_ids.limit(1).
+                            union(current_user.org_billing_manager_org_ids.limit(1), from_self: false).
+                            union(current_user.org_auditor_org_ids.limit(1), from_self: false).
+                            union(current_user.space_manager_space_ids.limit(1), from_self: false).
+                            union(current_user.space_auditor_space_ids.limit(1), from_self: false).
+                            union(current_user.space_developer_space_ids.limit(1), from_self: false).
+                            empty?
 
-        user_roles.count == 1 && user_roles[0][:type] == 'space_supporter'
+        current_user.space_supporter_space_ids.limit(1).any?
       end
 
       def roles
