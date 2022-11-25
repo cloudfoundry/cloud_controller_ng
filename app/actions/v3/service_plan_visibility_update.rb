@@ -45,10 +45,16 @@ module VCAP::CloudController
       end
 
       def append_service_plan_visibilities(service_plan, requested_org_guids)
-        requested_org_guids.each do |org_guid|
-          unless already_has_visibility?(service_plan, org_guid)
-            service_plan.add_service_plan_visibility(organization_guid: org_guid)
-          end
+        requested_orgs = Organization.where(guid: requested_org_guids).all
+        existing_visibilities = ServicePlanVisibility.where(service_plan_id: service_plan.id, organization_id: requested_orgs.map(&:id))
+
+        org_guids_to_add = requested_org_guids.reject do |org_guid|
+          org_id = requested_orgs.find { |org| org.guid == org_guid }&.id
+          existing_visibilities.any? { |visibility| visibility.organization_id == org_id }
+        end
+
+        org_guids_to_add.each do |org_guid|
+          service_plan.add_service_plan_visibility(organization_guid: org_guid)
         end
       end
 
@@ -57,13 +63,6 @@ module VCAP::CloudController
         requested_org_guids.each do |org_guid|
           service_plan.add_service_plan_visibility(organization_guid: org_guid)
         end
-      end
-
-      def already_has_visibility?(service_plan, org_guid)
-        service_plan.service_plan_visibilities_dataset.
-          join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
-          where(Sequel[:organizations][:guid] =~ org_guid).
-          any?
       end
 
       def error!(message)
