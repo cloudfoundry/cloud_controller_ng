@@ -135,6 +135,7 @@ Migration/AddConstraintName:
   Exclude:
     # skip old migration files since we do not want to fix them after they are in the wild
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]).+\.rb$/
+    - db/migrations/20221125134500_add_request_count_table.rb
 
 Migration/IncludeStringSize:
   Include:
@@ -142,6 +143,7 @@ Migration/IncludeStringSize:
   Exclude:
     # skip old migration files since we do not want to fix them after they are in the wild
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]|707[01]).+\.rb$/
+    - db/migrations/20221125134500_add_request_count_table.rb
 
 Migration/RequirePrimaryKey:
   Include:
