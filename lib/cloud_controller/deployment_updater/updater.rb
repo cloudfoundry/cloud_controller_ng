@@ -44,9 +44,7 @@ module VCAP::CloudController
 
           deploying_web_process.lock!
 
-          prior_web_process = web_processes.
-                              reject { |p| p.guid == deploying_web_process.guid }.
-                              max_by(&:created_at)
+          prior_web_process = interim_web_process || app.oldest_web_process
           prior_web_process.lock!
 
           prior_web_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
@@ -97,11 +95,18 @@ module VCAP::CloudController
       end
 
       def oldest_web_process_with_instances
-        @oldest_web_process_with_instances ||= app.processes.select { |process| process.web? && process.instances > 0 }.min_by(&:created_at)
+        @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by(&:created_at)
       end
 
-      def web_processes
-        app.processes.select(&:web?)
+      def interim_web_process
+        # Find newest interim web process belonging to a SUPERSEDED (DEPLOYED) deployment.
+        app.web_processes_dataset.
+          qualify.
+          join(:deployments, deploying_web_process_guid: :guid).
+          where(deployments__state: DeploymentModel::DEPLOYED_STATE).
+          where(deployments__status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON).
+          order(Sequel.desc(:created_at), Sequel.desc(:id)).
+          first
       end
 
       def is_original_web_process?(process)
@@ -142,7 +147,7 @@ module VCAP::CloudController
       end
 
       def cleanup_web_processes_except(protected_process)
-        web_processes.
+        app.web_processes.
           reject { |p| p.guid == protected_process.guid }.
           map(&:destroy)
       end

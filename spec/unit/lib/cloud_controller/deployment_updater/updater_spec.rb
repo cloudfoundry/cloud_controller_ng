@@ -483,7 +483,7 @@ module VCAP::CloudController
       end
 
       context 'when there are interim deployments' do
-        let!(:interim_deploying_web_process) {
+        let!(:interim_deploying_web_process) do
           ProcessModel.make(
             app: app,
             created_at: an_hour_ago,
@@ -491,14 +491,20 @@ module VCAP::CloudController
             instances: 1,
             guid: 'guid-interim'
           )
-        }
-
-        let!(:interim_route_mapping) {
+        end
+        let!(:interim_deployed_superseded_deployment) do
+          DeploymentModel.make(
+            deploying_web_process: interim_deploying_web_process,
+            state: 'DEPLOYED',
+            status_reason: 'SUPERSEDED'
+          )
+        end
+        let!(:interim_route_mapping) do
           RouteMappingModel.make(
             app: web_process.app,
             process_type: interim_deploying_web_process.type
           )
-        }
+        end
 
         it 'it scales up the most recent interim web process' do
           subject.cancel
@@ -509,6 +515,30 @@ module VCAP::CloudController
         it 'sets the most recent interim web process as the only web process' do
           subject.cancel
           expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+        end
+
+        context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
+          let!(:interim_canceling_web_process) do
+            ProcessModel.make(
+              app: app,
+              created_at: an_hour_ago + 1,
+              type: ProcessTypes::WEB,
+              instances: 1,
+              guid: 'guid-canceling'
+            )
+          end
+          let!(:interim_canceled_superseded_deployment) do
+            DeploymentModel.make(
+              deploying_web_process: interim_canceling_web_process,
+              state: 'CANCELED',
+              status_reason: 'SUPERSEDED'
+            )
+          end
+
+          it 'sets the most recent interim web process belonging to a SUPERSEDED (DEPLOYED) deployment as the only web process' do
+            subject.cancel
+            expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+          end
         end
       end
 
