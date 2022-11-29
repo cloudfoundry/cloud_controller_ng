@@ -64,6 +64,8 @@ module VCAP::CloudController
           app.lock!
           return unless deployment.lock!.state == DeploymentModel::DEPLOYING_STATE
 
+          scale_canceled_web_processes_to_zero
+
           oldest_web_process_with_instances.lock!
           deploying_web_process.lock!
 
@@ -115,6 +117,18 @@ module VCAP::CloudController
 
       def is_interim_process?(process)
         !is_original_web_process?(process)
+      end
+
+      def scale_canceled_web_processes_to_zero
+        # Find interim web processes that (a) belong to a SUPERSEDED (CANCELED) deployment and (b) have instances
+        # and scale them to zero.
+        app.web_processes_dataset.
+          qualify.
+          join(:deployments, deploying_web_process_guid: :guid).
+          where(deployments__state: DeploymentModel::CANCELED_STATE).
+          where(deployments__status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON).
+          where(Sequel[:processes__instances] > 0).
+          each { |p| p.lock!.update(instances: 0) }
       end
 
       def scale_down_oldest_web_process_with_instances

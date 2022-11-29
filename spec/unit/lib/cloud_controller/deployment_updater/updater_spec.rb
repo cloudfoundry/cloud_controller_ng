@@ -444,6 +444,30 @@ module VCAP::CloudController
         end
       end
 
+      context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
+        let!(:interim_canceling_web_process) do
+          ProcessModel.make(
+            app: app,
+            created_at: an_hour_ago,
+            type: ProcessTypes::WEB,
+            instances: 1,
+            guid: 'guid-canceling'
+          )
+        end
+        let!(:interim_canceled_superseded_deployment) do
+          DeploymentModel.make(
+            deploying_web_process: interim_canceling_web_process,
+            state: 'CANCELED',
+            status_reason: 'SUPERSEDED'
+          )
+        end
+
+        it 'scales the canceled web process to zero' do
+          subject.scale
+          expect(interim_canceling_web_process.reload.instances).to eq(0)
+        end
+      end
+
       context 'deployment got superseded' do
         before do
           deployment.update(state: 'DEPLOYED', status_reason: 'SUPERSEDED')
