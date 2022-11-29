@@ -45,13 +45,10 @@ module VCAP::CloudController
       end
 
       def append_service_plan_visibilities(service_plan, requested_org_guids)
-        requested_orgs = Organization.where(guid: requested_org_guids).all
-        existing_visibilities = ServicePlanVisibility.where(service_plan_id: service_plan.id, organization_id: requested_orgs.map(&:id))
+        plan_visibility = ServicePlanVisibility.where(service_plan_id: service_plan.id)
+        org_guids_alredy_visible = Organization.where(id: plan_visibility.select(:organization_id)).select_map(:guid)
 
-        org_guids_to_add = requested_org_guids.reject do |org_guid|
-          org_id = requested_orgs.find { |org| org.guid == org_guid }&.id
-          existing_visibilities.any? { |visibility| visibility.organization_id == org_id }
-        end
+        org_guids_to_add = requested_org_guids - org_guids_alredy_visible
 
         org_guids_to_add.each do |org_guid|
           service_plan.add_service_plan_visibility(organization_guid: org_guid)
