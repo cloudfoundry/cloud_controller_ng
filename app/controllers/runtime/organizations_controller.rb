@@ -269,7 +269,7 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:delete, guid)
       raise_if_has_dependent_associations!(org) unless recursive_delete?
 
-      if !org.spaces.empty? && !recursive_delete?
+      if org.spaces_dataset.any? && !recursive_delete?
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 

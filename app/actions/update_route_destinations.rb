@@ -66,7 +66,7 @@ module VCAP::CloudController
             Copilot::Adapter.unmap_route(route_mapping)
             route_mapping.processes.each do |process|
               processes_to_ports_map[process] ||= { to_add: [], to_delete: [] }
-              processes_to_ports_map[process][:to_delete] << route_mapping.app_port unless process.route_mappings.any? do |process_route_mapping|
+              processes_to_ports_map[process][:to_delete] << route_mapping.app_port unless process.route_mappings_dataset.any? do |process_route_mapping|
                 process_route_mapping.guid != route_mapping.guid && process_route_mapping.app_port == route_mapping.app_port
               end
             end
