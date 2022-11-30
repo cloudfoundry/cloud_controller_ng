@@ -54,12 +54,12 @@ module VCAP::CloudController
     let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
-    describe '#scale' do
-      before do
-        allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-        allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
-      end
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
+      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+    end
 
+    describe '#scale' do
       it 'locks the deployment' do
         allow(deployment).to receive(:lock!).and_call_original
         subject.scale
@@ -560,6 +560,41 @@ module VCAP::CloudController
           end
 
           it 'sets the most recent interim web process belonging to a SUPERSEDED (DEPLOYED) deployment as the only web process' do
+            subject.cancel
+            expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+          end
+        end
+
+        context 'when there is an interim deployment that has no running web process instance' do
+          let(:no_running_instance) do
+            {
+              0 => { state: 'STARTING' },
+              1 => { state: 'CRASHED' },
+              2 => { state: 'DOWN' },
+            }
+          end
+          let!(:interim_deploying_web_process_no_running_instance) do
+            ProcessModel.make(
+              app: app,
+              created_at: an_hour_ago + 1,
+              type: ProcessTypes::WEB,
+              instances: 1,
+              guid: 'guid-no-running-instance'
+            )
+          end
+          let!(:interim_deployed_superseded_deployment_no_running_instance) do
+            DeploymentModel.make(
+              deploying_web_process: interim_deploying_web_process_no_running_instance,
+              state: 'DEPLOYED',
+              status_reason: 'SUPERSEDED'
+            )
+          end
+
+          before do
+            allow(instances_reporters).to receive(:all_instances_for_app).and_return(no_running_instance, all_instances_results)
+          end
+
+          it 'sets the most recent interim web process having at least one running instance as the only web process' do
             subject.cancel
             expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
           end
