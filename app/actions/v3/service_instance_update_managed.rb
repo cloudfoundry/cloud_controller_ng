@@ -287,7 +287,7 @@ module VCAP::CloudController
 
       def raise_if_bind_inconsistency!
         return unless message.service_plan_guid
-        return unless service_instance.service_bindings.any?
+        return unless service_instance.service_bindings_dataset.any?
         return if ServicePlan.first(guid: message.service_plan_guid).bindable?
 
         raise UnprocessableUpdate.new_from_details(

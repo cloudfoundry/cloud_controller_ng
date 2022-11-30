@@ -80,7 +80,7 @@ module VCAP::CloudController
           requested_plan = ServicePlan.find(guid: requested_plan_guid)
           invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
 
-          unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings.any?
+          unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings_dataset.any?
         end
       end
 

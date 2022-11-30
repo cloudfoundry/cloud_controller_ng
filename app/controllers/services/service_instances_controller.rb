@@ -545,19 +545,19 @@ module VCAP::CloudController
     end
 
     def has_routes?(service_instance)
-      !service_instance.routes.empty?
+      service_instance.routes_dataset.any?
     end
 
     def has_bindings?(service_instance)
-      !service_instance.service_bindings.empty?
+      service_instance.service_bindings_dataset.any?
     end
 
     def has_keys?(service_instance)
-      !service_instance.service_keys.empty?
+      service_instance.service_keys_dataset.any?
     end
 
     def has_shares?(service_instance)
-      !service_instance.shared_spaces.empty?
+      service_instance.shared_spaces_dataset.any?
     end
 
     def status_from_operation_state(service_instance)

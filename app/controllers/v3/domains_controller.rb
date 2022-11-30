@@ -106,7 +106,7 @@ class DomainsController < ApplicationController
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
     suspended! unless org_active?(domain.owning_organization_id)
 
-    unprocessable!('This domain is shared with other organizations. Unshare before deleting.') unless domain.shared_organizations.empty?
+    unprocessable!('This domain is shared with other organizations. Unshare before deleting.') unless domain.shared_organizations_dataset.empty?
 
     delete_action = DomainDelete.new
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Domain, domain.guid, delete_action)

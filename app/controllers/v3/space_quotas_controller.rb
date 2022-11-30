@@ -136,7 +136,7 @@ class SpaceQuotasController < ApplicationController
       (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
-    unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces.empty?
+    unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces_dataset.empty?
 
     delete_action = SpaceQuotaDeleteAction.new
 
