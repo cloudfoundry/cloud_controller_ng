@@ -34,9 +34,14 @@ module CloudFoundry
         if VCAP::CloudController::SecurityContext.valid_token?
           env['cf.user_guid'] = id_from_token
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
+          ::VCAP::Request.user_guid = id_from_token
         end
 
-        status, headers, body = @app.call(env)
+        begin
+          status, headers, body = @app.call(env)
+        ensure
+          ::VCAP::Request.user_guid = nil
+        end
 
         # Return a 401 if the token is invalid and if the rate limit is already exceeded
         if status == 429 && VCAP::CloudController::SecurityContext.invalid_token? && !VCAP::CloudController::SecurityContext.missing_token?

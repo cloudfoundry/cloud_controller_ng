@@ -106,5 +106,19 @@ module VCAP
         expect(Thread.current[:b3_span_id]).to eq(span_id)
       end
     end
+
+    describe '.user_guid' do
+      after do
+        Request.user_guid = nil
+      end
+
+      let(:user_guid) { SecureRandom.uuid }
+
+      it 'sets the new user_guid on the Steno logger context' do
+        Request.user_guid = user_guid
+
+        expect(Steno.config.context.data['user_guid']).to eq user_guid
+      end
+    end
   end
 end
