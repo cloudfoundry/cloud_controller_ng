@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_apply_manifest'
 
 module VCAP::CloudController
-  RSpec.describe AppApplyManifest do
+  RSpec.describe AppApplyManifest, job_context: :worker do
     context 'when everything is mocked out' do
       subject(:app_apply_manifest) { AppApplyManifest.new(user_audit_info) }
       let(:user_audit_info) { instance_double(UserAuditInfo) }
@@ -725,7 +725,9 @@ module VCAP::CloudController
 
             before do
               allow(ServiceCredentialAppBindingCreateMessage).to receive(:new).and_return(service_binding_create_message_1, service_binding_create_message_2)
-              allow(service_cred_binding_create).to receive(:bind).and_return({ async: false })
+              allow(service_cred_binding_create).to receive(:bind) { ServiceBinding.make }
+              allow_any_instance_of(ServiceBinding).to receive(:terminal_state?).and_return true
+
               allow(service_cred_binding_create).to receive(:precursor).and_return(ServiceBinding.make)
               allow(service_binding_create_message_1).to receive(:audit_hash).and_return({ foo: 'bar-1' })
               allow(service_binding_create_message_1).to receive(:parameters)
@@ -796,8 +798,8 @@ module VCAP::CloudController
 
               app_apply_manifest.apply(app.guid, message)
 
-              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
-              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil, accepts_incomplete: false)
+              expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' }, accepts_incomplete: false)
             end
 
             it 'wraps the error when precursor errors' do
@@ -828,7 +830,7 @@ module VCAP::CloudController
 
                   app_apply_manifest.apply(app.guid, message)
 
-                  expect(service_cred_binding_create).to have_received(:bind).with(binding, parameters: nil)
+                  expect(service_cred_binding_create).to have_received(:bind).with(binding, parameters: nil, accepts_incomplete: false)
                 end
               end
             end
@@ -837,7 +839,6 @@ module VCAP::CloudController
               let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name] }) }
               before do
                 TestConfig.override(volume_services_enabled: true)
-                allow(service_cred_binding_create).to receive(:bind).and_return({ async: false })
               end
 
               it 'passes the volume_services_enabled_flag to ServiceBindingCreate' do
@@ -852,31 +853,195 @@ module VCAP::CloudController
               context 'bind happens async' do
                 context 'action starts async binding' do
                   before do
-                    allow(service_cred_binding_create).to receive(:bind).and_return({ async: true })
+                    allow(service_cred_binding_create).to receive(:bind).with(anything, parameters: nil, accepts_incomplete: false).and_return({ async: true })
                   end
 
                   it 'raises an error' do
                     expect {
                       app_apply_manifest.apply(app.guid, message)
                     }.to raise_error(AppApplyManifest::ServiceBindingError,
-/For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+/For service 'si-name': The service broker responded asynchronously when a synchronous bind was requested./)
+                  end
+                end
+              end
+            end
+
+            context 'service broker support sync or async bindings' do
+              context 'action prefers sync binding' do
+                let(:binding1) { ServiceBinding.make(service_instance: service_instance, app: app) }
+                let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
+
+                before do
+                  allow_any_instance_of(ServiceBinding).to receive(:terminal_state?).and_call_original
+                  allow_any_instance_of(AppApplyManifest).to receive(:sleep)
+
+                  precursor_count = 0
+                  allow(service_cred_binding_create).to receive(:precursor) do
+                    precursor_count += 1
+                    if precursor_count == 1
+                      binding1
+                    else
+                      binding2
+                    end
+                  end
+
+                  count = 0
+                  allow(service_cred_binding_create).to receive(:bind).with(anything, accepts_incomplete: false) do
+                    count += 1
+                    if count == 1
+                      ServiceBindingOperation.make(type: 'create', state: 'succeeded', service_binding: binding1)
+                      binding1
+                    else
+                      ServiceBindingOperation.make(type: 'create', state: 'succeeded', service_binding: binding2)
+                      binding2
+                    end
                   end
                 end
 
-                context 'bind fails with BindingNotRetrievable' do
-                  before do
-                    allow(service_cred_binding_create).to receive(:bind).and_raise(V3::ServiceBindingCreate::BindingNotRetrievable)
+                it 'completes binding synchronously and does not try to poll' do
+                  expect(service_cred_binding_create).to receive(:poll).exactly(0).times
+
+                  app_apply_manifest.apply(app.guid, message)
+                end
+              end
+            end
+
+            context 'broker only supports async bindings' do
+              context 'action starts async binding' do
+                let(:binding1) { ServiceBinding.make(service_instance: service_instance, app: app) }
+                let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
+
+                before do
+                  response = double(body: '{}', code: '422')
+                  allow(service_cred_binding_create).to receive(:bind).
+                    with(anything, parameters: anything, accepts_incomplete: false).and_raise VCAP::Services::ServiceBrokers::V2::Errors::AsyncRequired.new('fake message',
+                                                                                                                                                            'POST', response)
+                  allow_any_instance_of(ServiceBinding).to receive(:terminal_state?).and_call_original
+                  allow_any_instance_of(AppApplyManifest).to receive(:sleep)
+
+                  precursor_count = 0
+                  allow(service_cred_binding_create).to receive(:precursor) do
+                    precursor_count += 1
+                    if precursor_count == 1
+                      binding1
+                    else
+                      binding2
+                    end
                   end
 
-                  it 'fails with async error' do
+                  count = 0
+                  allow(service_cred_binding_create).to receive(:bind).with(anything, parameters: anything, accepts_incomplete: true) do
+                    count += 1
+                    if count == 1
+                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding1)
+                      binding1
+                    else
+                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding2)
+                      binding2
+                    end
+                  end
+                end
+
+                it 'polls service bindings until they are complete' do
+                  allow(service_cred_binding_create).to receive(:poll).and_return(V3::ServiceBindingCreate::ContinuePolling.call(1.second),
+                                                                                  V3::ServiceBindingCreate::ContinuePolling.call(1.second),
+                                                                                  V3::ServiceBindingCreate::PollingFinished,
+                                                                                  V3::ServiceBindingCreate::ContinuePolling.call(1.second),
+                                                                                  V3::ServiceBindingCreate::PollingFinished)
+
+                  expect(service_cred_binding_create).to receive(:poll).exactly(5).times
+                  expect(app_apply_manifest).to receive(:sleep).with(1).exactly(3).times
+
+                  app_apply_manifest.apply(app.guid, message)
+                end
+
+                it 'polls service bindings with the default sleep value' do
+                  allow(service_cred_binding_create).to receive(:poll).and_return(V3::ServiceBindingCreate::ContinuePolling.call(nil),
+                                                                                  V3::ServiceBindingCreate::ContinuePolling.call(nil),
+                                                                                  V3::ServiceBindingCreate::PollingFinished,
+                                                                                  V3::ServiceBindingCreate::ContinuePolling.call(nil),
+                                                                                  V3::ServiceBindingCreate::PollingFinished)
+
+                  expect(service_cred_binding_create).to receive(:poll).exactly(5).times
+                  expect(app_apply_manifest).to receive(:sleep).with(5).exactly(3).times
+
+                  app_apply_manifest.apply(app.guid, message)
+                end
+
+                it 'verifies exception is thrown if maximum polling duration is exceeded' do
+                  TestConfig.override(max_manifest_service_binding_poll_duration_in_seconds: 15)
+                  allow_any_instance_of(AppApplyManifest).to receive(:sleep) do |_action, seconds|
+                    Timecop.travel(seconds.from_now)
+                  end
+                  allow(service_cred_binding_create).to receive(:poll).and_return(V3::ServiceBindingCreate::ContinuePolling.call(20.seconds),
+                                                                                  V3::ServiceBindingCreate::ContinuePolling.call(20.seconds),
+                                                                                  V3::ServiceBindingCreate::PollingFinished)
+                  expect { app_apply_manifest.apply(app.guid, message) }.to raise_error(AppApplyManifest::ServiceBindingError)
+
+                  expect(binding1.last_operation.state).to eq('failed')
+                  expect(binding1.last_operation.description).to eq('Polling exceed the maximum polling duration')
+
+                  orphan_mitigation_job = Delayed::Job.first
+                  expect(orphan_mitigation_job).not_to be_nil
+                  expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
+                end
+
+                it 'has a maximum retry_after' do
+                  allow(service_cred_binding_create).to receive(:poll).and_return(V3::ServiceBindingCreate::ContinuePolling.call(24.hours),
+                                                                                  V3::ServiceBindingCreate::PollingFinished)
+                  expect(app_apply_manifest).to receive(:sleep).with(60)
+
+                  app_apply_manifest.apply(app.guid, message)
+                end
+
+                context 'async binding fails' do
+                  let(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+
+                  before do
+                    allow(service_cred_binding_create).to receive(:precursor) { binding }
+
+                    allow(service_cred_binding_create).to receive(:bind).with(anything, parameters: anything, accepts_incomplete: true) do
+                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding)
+                      binding
+                    end
+
+                    count = 0
+                    allow(service_cred_binding_create).to receive(:poll) do
+                      count += 1
+                      if count < 3
+                        V3::ServiceBindingCreate::ContinuePolling.call(1.second)
+                      else
+                        raise V3::LastOperationFailedState
+                      end
+                    end
+                  end
+
+                  it 'polls service bindings until they are in a terminal state' do
+                    expect(service_cred_binding_create).to receive(:poll).exactly(3).times
+                    expect(app_apply_manifest).to receive(:sleep).with(1).exactly(2).times
                     expect {
                       app_apply_manifest.apply(app.guid, message)
-                    }.to raise_error(AppApplyManifest::ServiceBindingError,
-/For service 'si-name': The service broker responded asynchronously, but async bindings are not supported./)
+                    }.to raise_error(AppApplyManifest::ServiceBindingError)
                   end
                 end
               end
 
+              context 'bind fails with BindingNotRetrievable' do
+                before do
+                  error = V3::ServiceBindingCreate::BindingNotRetrievable.new('The broker responded asynchronously but does not support fetching binding data.')
+                  allow(service_cred_binding_create).to receive(:bind).and_raise(error)
+                end
+
+                it 'fails with async error' do
+                  expect {
+                    app_apply_manifest.apply(app.guid, message)
+                  }.to raise_error(AppApplyManifest::ServiceBindingError,
+                                   /For service 'si-name': The broker responded asynchronously but does not support fetching binding data./)
+                end
+              end
+            end
+
+            context 'service binding errors' do
               context 'generic binding errors' do
                 before do
                   allow(service_cred_binding_create).to receive(:bind).and_raise('fake binding error')
@@ -965,8 +1130,8 @@ module VCAP::CloudController
 
                   app_apply_manifest.apply(app.guid, message)
 
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil, accepts_incomplete: false)
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' }, accepts_incomplete: false)
                 end
               end
 
@@ -1015,8 +1180,8 @@ module VCAP::CloudController
 
                   app_apply_manifest.apply(app.guid, message)
 
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil, accepts_incomplete: false)
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' }, accepts_incomplete: false)
                 end
               end
 
@@ -1036,8 +1201,8 @@ module VCAP::CloudController
 
                   app_apply_manifest.apply(app.guid, message)
 
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil, accepts_incomplete: false)
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' }, accepts_incomplete: false)
                 end
               end
 
@@ -1072,8 +1237,8 @@ module VCAP::CloudController
 
                   app_apply_manifest.apply(app.guid, message)
 
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil)
-                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' })
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_1, parameters: nil, accepts_incomplete: false)
+                  expect(service_cred_binding_create).to have_received(:bind).with(service_binding_2, parameters: { 'foo' => 'bar' }, accepts_incomplete: false)
                 end
               end
             end

@@ -7,14 +7,18 @@ require 'actions/manifest_route_update'
 require 'cloud_controller/strategies/manifest_strategy'
 require 'cloud_controller/app_manifest/manifest_route'
 require 'cloud_controller/random_route_generator'
+require 'services/service_brokers/v2/orphan_mitigator'
 
 module VCAP::CloudController
   class AppApplyManifest
     class Error < StandardError; end
     class NoDefaultDomain < StandardError; end
     class ServiceBindingError < StandardError; end
+    class MaximumPollingDurationExceeded < StandardError; end
     class ServiceBrokerRespondedAsyncWhenNotAllowed < StandardError; end
     SERVICE_BINDING_TYPE = 'app'.freeze
+    DEFAULT_POLLING_INTERVAL = 5.seconds
+    MAX_POLLING_INTERVAL = 60
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
@@ -142,6 +146,7 @@ module VCAP::CloudController
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
 
         binding = ServiceBinding.first(service_instance: service_instance, app: app)
+
         next if binding&.create_succeeded?
 
         raise_binding_operation_in_progress!(service_instance, binding.last_operation.type) if binding&.operation_in_progress?
@@ -157,18 +162,41 @@ module VCAP::CloudController
             message: binding_message)
 
           begin
-            result = action.bind(binding, parameters: binding_message.parameters)
-            if result[:async]
-              raise ServiceBrokerRespondedAsyncWhenNotAllowed
+            binding = action.bind(binding, parameters: binding_message.parameters, accepts_incomplete: false)
+            if binding[:async]
+              raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously when a synchronous bind was requested.')
             end
-          rescue ServiceBrokerRespondedAsyncWhenNotAllowed,
-                 V3::ServiceBindingCreate::BindingNotRetrievable
-
-            raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously, but async bindings are not supported.')
+          rescue VCAP::Services::ServiceBrokers::V2::Errors::AsyncRequired
+            binding = action.bind(binding, parameters: binding_message.parameters, accepts_incomplete: true)
+            poll_async_binding(action, binding)
           end
         rescue => e
           raise_binding_error!(service_instance, e.message)
         end
+      end
+    end
+
+    def poll_async_binding(action, binding)
+      start = Time.now
+      poll_result = action.poll(binding)
+
+      while !poll_result[:finished] && Time.now < (start + max_polling_duration)
+        retry_after = poll_result[:retry_after] || DEFAULT_POLLING_INTERVAL
+        sleep [retry_after, MAX_POLLING_INTERVAL].min
+        poll_result = action.poll(binding)
+      end
+
+      if !poll_result[:finished]
+        binding.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'failed',
+            description: 'Polling exceed the maximum polling duration',
+          }
+        )
+        VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding)
+        raise MaximumPollingDurationExceeded.new("Polling exceeded the maximum duration of #{max_polling_duration}")
       end
     end
 
@@ -217,6 +245,10 @@ module VCAP::CloudController
 
     def volume_services_enabled?
       VCAP::CloudController::Config.config.get(:volume_services_enabled)
+    end
+
+    def max_polling_duration
+      VCAP::CloudController::Config.config.get(:max_manifest_service_binding_poll_duration_in_seconds)
     end
 
     def logger
