@@ -144,6 +144,48 @@ By default, `bundle exec rake` will run the unit tests first, and then `rubocop`
 
     RUBOCOP_FIRST=1 bundle exec rake
 
+#### Running unit tests with a debugger
+
+As of ruby 2.6 this can be done with the Standard Library's `debug` gem, which is installed by the Gemfile's development group. The following instructions give an example of how to debug specs with Visual Studio Code.
+
+Copy the following into `.vscode/launch.json` at the root of this git repository (more info [here](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations)):
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+          {
+            "type": "rdbg",
+            "name": "Debug specs file",
+            "request": "launch",
+            "command": "bundle exec rspec",
+            "script": "${file}",
+            "args": [],
+            "askParameters": false,
+            "env": { "DB": "postgres" },
+            "localfs": true
+          },
+          {
+            "type": "rdbg",
+            "name": "Debug specs specific line",
+            "request": "launch",
+            "command": "bundle exec rspec",
+            "script": "${file}:${lineNumber}",
+            "args": [],
+            "askParameters": false,
+            "env": { "DB": "postgres" },
+            "localfs": true
+          }
+  ]
+}
+```
+
+If you're using mysql, swap that in as the value of the `DB` environment variable. If you're using a non-default DB connection string (see [here]((https://github.com/cloudfoundry/cloud_controller_ng#unit-tests))), also add that as an environment variable.
+
+Assuming your database is running, you can now click `Run and Debug` in the left-hand navigation bar. You should have a dropdown menu from which you can select the names of either of the two configurations above. Pick one of these and, after [setting breakpoints](https://code.visualstudio.com/docs/editor/debugging#_breakpoints), navigate to the spec file you want to debug. 
+
+If you've chosen to debug while running an entire spec file, open that file and, while keeping it in focus, hit the 'play' button in `Run and Debug`. If you want to run one part of a spec file - i.e. a specific `Describe`, `Context` or `It` block - then open the file, click with your cursor on the desired line, then choose the `Debug specs specific line` configuration, and hit 'play'.
+
 ## Logs
 
 Cloud Controller uses [Steno](http://github.com/cloudfoundry/steno) to manage its logs.
