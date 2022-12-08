@@ -291,31 +291,31 @@ module VCAP::CloudController
         syslog_drain_url: 'barfoo',
         app: app_obj3,
         service_instance: instance4,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
+        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
       }
       let!(:binding_with_drain5) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
         app: app_obj,
         service_instance: instance7,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
+        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
       }
       let!(:binding_with_drain6) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
         app: app_obj2,
         service_instance: instance8,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1' })
+        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
       }
       let!(:binding_with_drain7) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
         app: app_obj3,
         service_instance: instance5,
-        credentials: { 'cert' => 'cert2', 'key' => 'key2' })
+        credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
       }
       let!(:binding_with_drain8) { ServiceBinding.make(
         syslog_drain_url: 'barfoo2',
         app: app_obj4,
         service_instance: instance6,
-        credentials: { 'cert' => 'cert2', 'key' => 'key2' })
+        credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
       }
       let!(:binding_with_drain9) { ServiceBinding.make(
         syslog_drain_url: 'no_credentials_1',
@@ -327,13 +327,13 @@ module VCAP::CloudController
         syslog_drain_url: 'no_credentials_2',
         app: app_obj4,
         service_instance: instance10,
-        credentials: { 'cert' => '', 'key' => '' })
+        credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
       }
       let!(:binding_with_drain11) { ServiceBinding.make(
         syslog_drain_url: 'no_credentials_3',
         app: app_obj,
         service_instance: instance11,
-        credentials: { 'foo' => '', 'cert' => '' })
+        credentials: { 'foo' => '', 'cert' => '', 'ca' => '' })
       }
 
       it 'returns a list of syslog drain urls and their credentials' do
@@ -354,16 +354,19 @@ module VCAP::CloudController
               'credentials' => [
                 { 'cert' => 'cert1',
                   'key' => 'key1',
+                  'ca' => 'ca1',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
             { 'url' => 'barfoo2',
               'credentials' => [
                 { 'cert' => 'cert1',
                   'key' => 'key1',
+                  'ca' => 'ca1',
                   'apps' => [
                     { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
                     { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] },
                 { 'cert' => 'cert2',
                   'key' => 'key2',
+                  'ca' => 'ca2',
                    'apps' => [
                      { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
                      { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
@@ -371,11 +374,13 @@ module VCAP::CloudController
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
+                  'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
             { 'url' => 'foobar',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
+                  'ca' => '',
                   'apps' => [
                     { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
                     { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] }] },
@@ -383,16 +388,19 @@ module VCAP::CloudController
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
+                  'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
             { 'url' => 'no_credentials_2',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
+                  'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
             { 'url' => 'no_credentials_3',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
+                  'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
           ])
       end
